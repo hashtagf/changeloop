@@ -13,19 +13,28 @@ Investigate? → Change → Build → Prove → Land
 Coding agent เขียนโค้ด ส่วน harness ดูแลสถานะ พื้นที่ทำงาน หลักฐาน และการกู้คืน
 คุณยังใช้ test framework, Git และ CI เดิมได้
 
-**Version 3.6.11** · ชื่อ package และ CLI ที่ติดตั้ง: `claude-foundation`
+**Version 3.6.11** · คำสั่ง: `cloop` (alias `claude-foundation` ที่ agent ใช้)
+
+## หลักการ
+
+Change Loop ทำงานแบบ **Proof-Driven Development**: change เสร็จก็ต่อเมื่อมีหลักฐาน
+ที่รันได้จริงและเป็นปัจจุบันจากเครื่องมือของโปรเจกต์ยืนยันว่าทำตามที่ตกลงไว้ และการส่งมอบ
+จบที่ `archived` ไม่ใช่แค่ `proven` นอกจากนี้ยังยึด Spec-Driven Development,
+การแบ่งความรับผิดชอบที่ชัดเจน, isolation จนถึง Land, fail closed, ความเข้มตามความเสี่ยง,
+ใช้ซ้ำก่อนรันใหม่ และการหยุดที่กู้คืนได้ อ่าน
+[หลักการทั้งแปดข้อ](https://changeloop.ai/docs/th/principles/)
 
 ## เริ่มอ่านตรงไหน
 
-README นี้สำหรับผู้ใช้ Change Loop ส่วน [คู่มือเจ้าของไฟล์](https://claude-foundation.dev/docs/th/artifacts/)
+README นี้สำหรับผู้ใช้ Change Loop ส่วน [คู่มือเจ้าของไฟล์](https://changeloop.ai/docs/th/artifacts/)
 แยกเอกสารของโปรเจกต์ คำสั่งระบบที่ติดตั้ง และบันทึก runtime
 เอกสารสำหรับพัฒนา Change Loop เองแยกลิงก์ไว้ด้านล่าง
 
 | ต้องการทำอะไร | เริ่มที่นี่ |
 |---|---|
 | ใช้ Change Loop ในโปรเจกต์ | [ติดตั้ง](#ติดตั้ง) แล้วตาม [ตัวอย่าง change แรก](#สอนทำ-change-แรก) |
-| ทำตามตัวอย่างทีละขั้น | [เริ่มใช้งาน](https://claude-foundation.dev/docs/th/quickstart/) |
-| เข้าใจคำสั่งและจุดตัดสินใจ | [ภาพรวม workflow](https://claude-foundation.dev/docs/th/loop/) และ [การอนุมัติ](https://claude-foundation.dev/docs/th/approval/) |
+| ทำตามตัวอย่างทีละขั้น | [เริ่มใช้งาน](https://changeloop.ai/docs/th/quickstart/) |
+| เข้าใจคำสั่งและจุดตัดสินใจ | [ภาพรวม workflow](https://changeloop.ai/docs/th/loop/) และ [การอนุมัติ](https://changeloop.ai/docs/th/approval/) |
 | พัฒนา Change Loop เอง | [Contributing](CONTRIBUTING.md) → [คู่มือ maintainer](CLAUDE.md) → [คู่มือทดสอบ](.claude/tests/README.md) |
 | เชื่อมต่อเครื่องมือหรือวิเคราะห์ปัญหา harness | [คู่มือ operator](.claude/harness/README.md) และ [เอกสารหลักฐาน](.claude/harness/EVIDENCE.md) |
 | เตรียม release หรืออ่านผลการตรวจที่ผ่านมา | [ขั้นตอน release](RELEASING.md) และ [ดัชนีรายงาน](docs/reports/README.md) |
@@ -37,10 +46,10 @@ README นี้สำหรับผู้ใช้ Change Loop ส่วน [�
 หากยังไม่มี CLI ต้องเข้าถึง npm ได้
 
 ```bash
-brew tap maximumsoft-co-ltd/claude-foundation \
-  https://github.com/Maximumsoft-Co-LTD/claude-foundation
-brew install claude-foundation
-claude-foundation init /path/to/your-project --yes
+brew tap hashtagf/changeloop \
+  https://github.com/hashtagf/changeloop
+brew install cloop
+cloop init /path/to/your-project --yes
 ```
 
 Claude Code ใช้ได้โดยไม่ต้องเพิ่ม adapter หากใช้ host อื่น ให้เพิ่ม
@@ -51,7 +60,7 @@ Claude Code ใช้ได้โดยไม่ต้องเพิ่ม adap
 การติดตั้งไม่ได้ให้อำนาจ agent ทำ commit แทนคุณ
 
 วิธีติดตั้งจาก source, ข้อกำหนด, ความต่างของ host, การใช้ headless/CI และการ
-upgrade อยู่ใน [คู่มือติดตั้ง](https://claude-foundation.dev/docs/th/install/)
+upgrade อยู่ใน [คู่มือติดตั้ง](https://changeloop.ai/docs/th/install/)
 Agent ตรวจความพร้อมได้ด้วย `claude-foundation doctor --stage change`
 
 ## สอนทำ Change แรก
@@ -153,7 +162,7 @@ Deliver ไม่ merge หรือ deploy ดู [Deliver](WORKFLOW.md#deliver
   เป็นการยกเว้น assurance อย่างชัดเจน Risk-tiered routing
   ไม่ได้ทำให้ reviewer กลับมาเป็นอิสระหรือทำให้เกิด model diversity
 - **อำนาจ:** Land, การกระทำผ่าน Git และการกระทำภายนอกมีอำนาจแยกกัน
-  ดู [การอนุมัติโดยคน](https://claude-foundation.dev/docs/th/approval/)
+  ดู [การอนุมัติโดยคน](https://changeloop.ai/docs/th/approval/)
 
 ## Operator Commands และการแก้ปัญหา
 
@@ -208,9 +217,9 @@ Agent ดูแลการกู้คืนตามปกติ ถ้า tar
 | เรื่อง | เอกสารละเอียด |
 |---|---|
 | หน้าที่ สถานะ lane และกฎ lifecycle | [WORKFLOW.md](WORKFLOW.md) |
-| ไฟล์ที่สร้าง เจ้าของข้อมูล และแหล่งอ้างอิงหลัก | [Artifacts](https://claude-foundation.dev/docs/th/artifacts/) |
-| นโยบาย review และขีดจำกัดการทำงาน | [foundation.json](https://claude-foundation.dev/docs/th/foundation-config/) |
-| หลาย repository | [Workflow หลาย Repository](https://claude-foundation.dev/docs/th/multi-repository/) |
+| ไฟล์ที่สร้าง เจ้าของข้อมูล และแหล่งอ้างอิงหลัก | [Artifacts](https://changeloop.ai/docs/th/artifacts/) |
+| นโยบาย review และขีดจำกัดการทำงาน | [foundation.json](https://changeloop.ai/docs/th/foundation-config/) |
+| หลาย repository | [Workflow หลาย Repository](https://changeloop.ai/docs/th/multi-repository/) |
 | Provider, receipt และความสดของ proof | [เอกสารหลักฐาน](.claude/harness/EVIDENCE.md) |
 | Skill ของ agent และการเชื่อมต่อ runtime | [คู่มือ harness](.claude/harness/README.md) |
 | หลักฐาน release ปัจจุบันและรายงานย้อนหลัง | [ดัชนีรายงาน](docs/reports/README.md) |

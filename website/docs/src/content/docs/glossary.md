@@ -32,6 +32,9 @@ decisions, and the machinery.
 | **Receipt** | The recorded result of one check, tied to the exact code and settings it ran on. A receipt is a pass, a fail, or "could not be checked" | receipt | [Receipts](/docs/evidence/receipts/) |
 | **Stale** | A result that no longer matches the current code or agreement, so it is not trusted and is rerun. Only invalidated checks rerun | stale, `workspace hash` | [Receipts](/docs/evidence/receipts/) |
 | **Proof** / **proven** | All required checks passed on the current code. It means the evidence is good, not that anything was delivered | `proven`, `/prove <change>` | [Prove](/docs/loop/prove/) |
+| **Proof-Driven Development** | The way Change Loop works: a change is done only when current, tool-produced evidence shows it does what was agreed | — | [Principles](/docs/principles/#proof-driven-development) |
+| **Spec-Driven Development** | The approved agreement, not the code, defines correct behavior. Code and tests are evidence that it holds | — | [Principles](/docs/principles/#spec-driven-development) |
+| **Fail closed** | When a result cannot be established, it is never treated as a pass. Unknown stays unknown | `error`, `inconclusive` | [Principles](/docs/principles/#fail-closed) |
 | **Gate** | A required check that must pass before the flow moves on, for example one capability's evidence or review | gate, assurance | [Prove](/docs/loop/prove/) |
 | **Waiver** | Your recorded decision to stop requiring one failed check. It stays visible as `user-waived`, is never a pass, and can be revoked | `change waive`, `user-waived` | [Human approval](/docs/approval/) |
 | **Preview** | An early look at behavior from a throwaway copy before Build. Useful for the decision, never counted as proof | preview, `.foundation/previews/` | [Human approval](/docs/approval/#approval-package-previews-and-role-lanes) |

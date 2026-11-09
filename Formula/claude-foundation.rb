@@ -1,10 +1,10 @@
 class ClaudeFoundation < Formula
   desc "OpenSpec-native change harness for AI coding agents"
-  homepage "https://github.com/Maximumsoft-Co-LTD/claude-foundation"
+  homepage "https://changeloop.ai/"
   url "https://github.com/Maximumsoft-Co-LTD/claude-foundation/archive/refs/tags/v3.6.11.tar.gz"
   sha256 "d7616bd121a04a8ef2a157949e25d61d5c2bc19231872a009ca1bc9012190348"
   license "MIT"
-  head "https://github.com/Maximumsoft-Co-LTD/claude-foundation.git", branch: "main"
+  head "https://github.com/hashtagf/changeloop.git", branch: "main"
 
   # This formula compiles nothing — `install` only copies files. But Homebrew
   # runs its fatal "Xcode/CLT too outdated" check on every *build-from-source*
@@ -47,6 +47,9 @@ class ClaudeFoundation < Formula
       exec "#{libexec}/cli.sh" "$@"
     EOS
     chmod 0755, bin/"claude-foundation"
+    # `cloop` is the short command for people. `claude-foundation` stays the
+    # compatibility name that agents, permission allowlists, and scripts use.
+    bin.install_symlink bin/"claude-foundation" => "cloop"
   end
 
   test do
@@ -58,6 +61,7 @@ class ClaudeFoundation < Formula
     assert_match "proof readiness", full_help
     assert_match "land check", full_help
     assert_match version.to_s, shell_output("#{bin}/claude-foundation version")
+    assert_match version.to_s, shell_output("#{bin}/cloop version")
 
     instruction = JSON.parse(shell_output("#{bin}/claude-foundation host instruction changes"))
     assert_equal 1, instruction.fetch("protocol")

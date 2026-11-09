@@ -6,8 +6,9 @@ description: requirement และวิธีติดตั้ง Change Loop 
 <!-- docs-audience: project-maintainers -->
 **ผู้อ่าน:** ผู้ดูแลโปรเจกต์และ agent ที่ได้รับอนุญาตให้ตั้งค่า หากต้องการใช้งานตามปกติ เริ่มที่ [เริ่มใช้งาน](/docs/th/quickstart/)
 
-ติดตั้ง CLI `claude-foundation` ครั้งเดียวในเครื่อง แล้ว initialize Change Loop
-ในแต่ละโปรเจกต์ การรัน `init` ซ้ำคือการอัปเกรดไฟล์ที่ระบบดูแล ใช้กับรีโปที่มีของ
+ติดตั้ง CLI `cloop` ครั้งเดียวในเครื่อง แล้ว initialize Change Loop
+ในแต่ละโปรเจกต์ `cloop` คือชื่อสั้นของ `claude-foundation` ทั้งสองชื่อรันโปรแกรมเดียวกัน
+และ agent ยังใช้ `claude-foundation` ต่อไป การรัน `init` ซ้ำคือการอัปเกรดไฟล์ที่ระบบดูแล ใช้กับรีโปที่มีของ
 อยู่แล้วได้: ระบบเติมสิ่งที่ขาด รีเฟรชเฉพาะไฟล์ของตัวเอง และไม่แตะไฟล์ของโปรเจกต์
 
 ## สิ่งที่จำเป็นและเครื่องมือที่แนะนำ
@@ -29,22 +30,22 @@ installer จะทำงานต่อโดยเก็บไฟล์เด�
 ## ติดตั้งจาก source
 
 ```bash
-git clone https://github.com/Maximumsoft-Co-LTD/claude-foundation.git
-cd claude-foundation
+git clone https://github.com/hashtagf/changeloop.git
+cd changeloop
 ./install.sh /path/to/your-project
 ```
 
 ## ติดตั้งด้วย Homebrew
 
 ```bash
-brew tap maximumsoft-co-ltd/claude-foundation \
-  https://github.com/Maximumsoft-Co-LTD/claude-foundation
-brew install claude-foundation
-claude-foundation init /path/to/your-project --yes
+brew tap hashtagf/changeloop \
+  https://github.com/hashtagf/changeloop
+brew install cloop
+cloop init /path/to/your-project --yes
 ```
 
-`claude-foundation init` คือ installer ตัวเดียวกัน ส่วน `--yes` คือข้ามการถามยืนยัน
-เวลาอัปเกรดให้รัน `brew upgrade claude-foundation` แล้วรัน `init` ในแต่ละโปรเจกต์
+`cloop init` คือ installer ตัวเดียวกัน ส่วน `--yes` คือข้ามการถามยืนยัน
+เวลาอัปเกรดให้รัน `brew upgrade cloop` แล้วรัน `init` ในแต่ละโปรเจกต์
 ที่ต้องการรีเฟรช
 
 :::tip
@@ -56,7 +57,7 @@ claude-foundation init /path/to/your-project --yes
 Claude Code ไม่ต้องใช้ adapter ส่วน host อื่นใช้ `--host` เพื่อวาง adapter ทับการติดตั้งชุดเดียวกัน:
 
 ```bash
-claude-foundation init /path/to/your-project --host cursor    # หรือ opencode, codex
+cloop init /path/to/your-project --host cursor    # หรือ opencode, codex
 ```
 
 | Host | adapter เพิ่มอะไรให้ |
@@ -72,8 +73,8 @@ Codex รัน guard แบบ live ไม่ได้ ดังนั้น se
 ## ตรวจสอบ
 
 ```bash
-claude-foundation version
-claude-foundation doctor --stage change
+cloop version
+cloop doctor --stage change
 ```
 
 `doctor` คือคำสั่งที่ควรหยิบใช้ทุกครั้งที่รู้สึกว่ามีอะไรผิดปกติ มันวินิจฉัยสถานะของโปรเจกต์ provider และ lifecycle และรายงาน apply transaction ที่ค้างอยู่ก่อนที่ Land จะไปเจอเข้า

@@ -11,7 +11,7 @@ Investigate? → Change → Build → Prove → Land
 
 **Audience:** coding agents, integrators, maintainers, and users checking exact
 behavior. This is an installed system reference, not a file consumers customize.
-For everyday use, follow the [quickstart](https://claude-foundation.dev/docs/quickstart/).
+For everyday use, follow the [quickstart](https://changeloop.ai/docs/quickstart/).
 The [ownership reference](.claude/harness/README.md#file-ownership-and-writers)
 separates project agreements, installed instructions, and runtime records.
 

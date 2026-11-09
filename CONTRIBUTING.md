@@ -30,8 +30,8 @@ Requirements:
 - A POSIX shell (`sh`), `git`, and `jq`
 
 ```sh
-git clone https://github.com/Maximumsoft-Co-LTD/claude-foundation
-cd claude-foundation
+git clone https://github.com/hashtagf/changeloop
+cd changeloop
 npm install
 ```
 

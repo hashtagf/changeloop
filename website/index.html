@@ -3,19 +3,42 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>claude-foundation — an OpenSpec-native change harness</title>
+    <title>Change Loop — Proof-Driven Development for AI coding agents</title>
     <meta
       name="description"
-      content="A lean, evidence-driven software change harness for brownfield repositories. OpenSpec holds the agreement, the native agent builds, and deterministic providers prove every claim."
+      content="Change Loop (claude-foundation) is an open-source, OpenSpec-native harness for Proof-Driven Development: your AI coding agent agrees on a change, builds it in isolation, and proves it with your project's own tools before it lands."
     />
+    <link rel="canonical" href="https://changeloop.ai/" />
     <meta name="color-scheme" content="light" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="claude-foundation — prove the change, not the ceremony" />
+    <meta property="og:site_name" content="Change Loop" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:title" content="Change Loop — prove the change, skip the ceremony" />
     <meta
       property="og:description"
-      content="Investigate when needed. Agree with OpenSpec. Build in isolation. Prove claims with reusable executable evidence. Land transactionally."
+      content="Proof-Driven Development for AI coding agents. Agree with OpenSpec, build in isolation, prove claims with reusable executable evidence, and land transactionally."
     />
-    <meta property="og:url" content="https://claude-foundation.dev/" />
+    <meta property="og:url" content="https://changeloop.ai/" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Change Loop — Proof-Driven Development for AI coding agents" />
+    <meta
+      name="twitter:description"
+      content="Your AI coding agent agrees on the change, builds it in isolation, and proves it with your project's own tools before it lands."
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Change Loop",
+        "alternateName": ["claude-foundation", "cloop"],
+        "description": "An OpenSpec-native harness for Proof-Driven Development with AI coding agents: agree on a change, build it in isolation, prove it with project-owned tools, then land it.",
+        "applicationCategory": "DeveloperApplication",
+        "license": "https://opensource.org/licenses/MIT",
+        "url": "https://changeloop.ai/",
+        "codeRepository": "https://github.com/hashtagf/changeloop",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2317181c'/%3E%3Ccircle cx='32' cy='32' r='15' fill='none' stroke='%23ff5c35' stroke-width='5' stroke-linecap='round' stroke-dasharray='70.7 23.55' transform='rotate(-45 32 32)'/%3E%3Cpath d='M26.3 16.5 24.9 24.9 17.9 17.9Z' fill='%23ff5c35' stroke='%23ff5c35' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M25 33l5 5 9-11' fill='none' stroke='%23f2eee5' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
@@ -40,7 +63,7 @@
           <a class="nav-docs" href="./docs/">Docs</a>
           <a
             class="nav-github"
-            href="https://github.com/Maximumsoft-Co-LTD/claude-foundation"
+            href="https://github.com/hashtagf/changeloop"
             target="_blank"
             rel="noopener"
           >GitHub ↗</a>
@@ -135,6 +158,10 @@
               deterministic execution.
             </p>
             <p class="callout">Rigor scales with risk and evidence—not with a task-size phase matrix.</p>
+            <p>
+              We call it <strong>Proof-Driven Development</strong>: a change is done only when current,
+              executable evidence says so. <a href="./docs/principles/">Read all eight principles →</a>
+            </p>
           </div>
         </div>
 
@@ -527,14 +554,14 @@
                 <button class="install-tab" data-install="source" role="tab" aria-selected="false">Source</button>
                 <button class="copy-button" id="copy-install" type="button">Copy</button>
               </div>
-              <pre><code id="install-command">brew tap maximumsoft-co-ltd/claude-foundation \
-  https://github.com/Maximumsoft-Co-LTD/claude-foundation
-brew install claude-foundation
-claude-foundation init /path/to/project --yes</code></pre>
+              <pre><code id="install-command">brew tap hashtagf/changeloop \
+  https://github.com/hashtagf/changeloop
+brew install cloop
+cloop init /path/to/project --yes</code></pre>
             </div>
 
             <ol class="start-steps reveal" data-delay="1">
-              <li><span>1</span><div><strong>Check readiness</strong><code>claude-foundation doctor --stage change</code></div></li>
+              <li><span>1</span><div><strong>Check readiness</strong><code>cloop doctor --stage change</code></div></li>
               <li><span>2</span><div><strong>Define the change</strong><code>/change add profile authentication</code></div></li>
               <li><span>3</span><div><strong>Build and prove</strong><code>/build profile-auth → /prove profile-auth</code></div></li>
               <li><span>4</span><div><strong>Accept explicitly</strong><code>/land profile-auth</code></div></li>
@@ -553,7 +580,7 @@ claude-foundation init /path/to/project --yes</code></pre>
             <div class="playwright-mark">HOST</div>
             <div>
               <strong>More hosts than Claude Code.</strong>
-              <p><code>claude-foundation init --host cursor|opencode|codex</code> layers a host adapter over the same install: Cursor gets the commands and an always-on rule, OpenCode gets the commands plus a plugin that replays the live guards, and Codex gets the prompts with Land gates as the enforcement. Worktree sandboxes can also install their own dependencies via <code>sandbox.setupCommand</code> in <code>foundation.json</code>.</p>
+              <p><code>cloop init --host cursor|opencode|codex</code> layers a host adapter over the same install: Cursor gets the commands and an always-on rule, OpenCode gets the commands plus a plugin that replays the live guards, and Codex gets the prompts with Land gates as the enforcement. Worktree sandboxes can also install their own dependencies via <code>sandbox.setupCommand</code> in <code>foundation.json</code>.</p>
             </div>
           </div>
 
@@ -602,7 +629,7 @@ claude-foundation init /path/to/project --yes</code></pre>
           <h2>Keep the quality.<br /><em>Cut the orchestration.</em></h2>
           <p>One agreement, one implementation owner, executable evidence, and an explicit landing boundary.</p>
           <div class="hero-actions">
-            <a class="button primary" href="https://github.com/Maximumsoft-Co-LTD/claude-foundation" target="_blank" rel="noopener">View source <span>↗</span></a>
+            <a class="button primary" href="https://github.com/hashtagf/changeloop" target="_blank" rel="noopener">View source <span>↗</span></a>
             <a class="button text" href="./docs/">Read the docs <span>→</span></a>
           </div>
         </div>
@@ -619,9 +646,9 @@ claude-foundation init /path/to/project --yes</code></pre>
         <div class="footer-links">
           <a href="./docs/">Docs</a>
           <a href="./docs/th/">เอกสารภาษาไทย</a>
-          <a href="https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/README.md">README</a>
-          <a href="https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/WORKFLOW.md">Workflow</a>
-          <a href="https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/CHANGELOG.md">Changelog</a>
+          <a href="https://github.com/hashtagf/changeloop/blob/main/README.md">README</a>
+          <a href="https://github.com/hashtagf/changeloop/blob/main/WORKFLOW.md">Workflow</a>
+          <a href="https://github.com/hashtagf/changeloop/blob/main/CHANGELOG.md">Changelog</a>
         </div>
       </div>
     </footer>

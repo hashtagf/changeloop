@@ -66,7 +66,7 @@ your-project/
 โปรเจกต์คุณ ส่วน tests, reports และเว็บไซต์เอกสารของ upstream มีไว้พัฒนา
 Change Loop ไม่ใช่สิ่งที่ผู้ใช้ต้องทำก่อนใช้งาน
 
-[เอกสาร ownership ของระบบ](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/.claude/harness/README.md#file-ownership-and-writers)
+[เอกสาร ownership ของระบบ](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/README.md#file-ownership-and-writers)
 กำหนดประเภทและผู้เขียนฉบับเต็ม สำเนาที่ติดตั้งอยู่ใน `.claude/harness/README.md`
 รายการ `MANAGED` ของ installer และ `.foundation/install-manifest.txt`
 เป็นตัวกำหนดความเป็นเจ้าของไฟล์ที่ติดตั้ง
@@ -183,7 +183,7 @@ Draft และโค้ดใน sandbox เป็นข้อมูลที�
 ข้อยกเว้นเหล่านี้ไม่ได้อนุญาตให้แก้ receipt หรือ lifecycle state ด้วยมือ
 
 รายการ state ฉบับเต็มอยู่ใน
-[Runtime state reference](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/.claude/harness/README.md#runtime-state)
+[Runtime state reference](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/README.md#runtime-state)
 ซึ่งแยก generated record, cache และข้อมูลระหว่างทำงานพร้อมหน้าที่
 
 หัวข้อถัดไปอธิบายหลักฐานและ archive ที่คุณอาจต้องอ่านตรวจ

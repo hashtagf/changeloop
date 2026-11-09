@@ -3,7 +3,7 @@
 **Audience:** coding agents, host integrators, evidence authors, and maintainers.
 This installed reference is maintained by Change Loop; consumers should not
 customize it in place. For everyday use, follow the
-[user quickstart](https://claude-foundation.dev/docs/quickstart/).
+[user quickstart](https://changeloop.ai/docs/quickstart/).
 
 This directory contains the deterministic runtime installed with Change Loop.
 It turns an OpenSpec change into a bounded implementation and

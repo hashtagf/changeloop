@@ -1,6 +1,6 @@
 ---
 title: Change Loop คืออะไร
-description: Change harness ที่ทำงานบน OpenSpec — บังคับให้ AI coding agent ตกลงขอบเขตก่อน ลงมือแยกพื้นที่ พิสูจน์ด้วยหลักฐานจริง แล้วจึงนำเข้าโปรเจกต์
+description: Change harness สำหรับ Proof-Driven Development ที่ทำงานบน OpenSpec — บังคับให้ AI coding agent ตกลงขอบเขตก่อน ลงมือแยกพื้นที่ พิสูจน์ด้วยหลักฐานจริง แล้วจึงนำเข้าโปรเจกต์
 ---
 
 <!-- docs-audience: users -->
@@ -16,8 +16,8 @@ Investigate? → Change → Build → Prove → Land
 
 Change Loop ไม่ใช่ AI และไม่ได้เขียนโค้ดเอง มันเป็น control plane แบบ deterministic ที่ครอบ coding agent ของคุณอีกที และไม่ได้มาแทน agent, test framework, CI หรือ Git workflow เดิม — มันสั่งเครื่องมือที่รีโปคุณมีอยู่แล้ว
 
-ชื่อ workflow คือ **Change Loop** ส่วน package และ CLI ที่ติดตั้งยังใช้
-`claude-foundation` เหมือนเดิม คำสั่งและ integration เดิมจึงยังทำงานต่อได้
+ชื่อ workflow คือ **Change Loop** คำสั่งที่คุณพิมพ์คือ `cloop` ส่วนชื่อเดิม
+`claude-foundation` ยังเป็น alias ถาวรที่ agent, permission rule และ integration เดิมใช้ต่อ
 
 ผู้ใช้มีเจ็ดคำสั่งระดับ intent คือ `/investigate`, `/change`, `/build`, `/prove`,
 `/land`, `/deliver` ซึ่งเป็นทางเลือก และ `/dev` Agent compile semantic draft หนึ่งชุดแล้วขับ coordinator
@@ -29,6 +29,13 @@ compile แล้วคือ source of truth
 AI coding agent จะบอกคุณว่า "เสร็จแล้ว" เสมอ และคำพูดนั้นคือจุดที่อ่อนที่สุดของทั้ง workflow เพราะ agent อ่านผลงานตัวเอง ตัดสินว่าดูถูกต้อง แล้วรายงานว่าสำเร็จ ไม่มีอะไรตรวจอย่างเป็นอิสระเลยว่าโค้ดรันได้จริง เทสที่อ้างว่าเขียนไว้มีอยู่จริง หรือสิ่งที่ส่งมอบคือสิ่งที่คุณขอ
 
 Change Loop ไม่รับคำพูดของ agent เป็นหลักฐาน พฤติกรรมที่สังเกตได้ทุกข้อที่ change สัญญาไว้จะกลายเป็น **claim** ที่มี ID คงที่ และ claim จะถือว่าผ่านได้ก็ต่อเมื่อมี **receipt** ที่เกิดจากการรันเครื่องมือของโปรเจกต์จริง ๆ เท่านั้น คำสั่งที่ผ่านไม่ได้แปลว่าเป็นหลักฐานโดยอัตโนมัติ และบทสรุปของ agent ไม่เคยนับเป็นหลักฐาน
+
+## Proof-Driven Development
+
+เราเรียกวิธีทำงานนี้ว่า **Proof-Driven Development** คือ change ยังไม่ถือว่าเสร็จ
+จนกว่าจะมีหลักฐานที่รันได้จริงและเป็นปัจจุบันยืนยันว่าทำตามที่ตกลงไว้ และ `proven`
+จะกลายเป็นการส่งมอบก็ต่อเมื่อ Land ไปถึง `archived` นี่คือข้อแรกจาก
+[หลักการ](/docs/th/principles/) แปดข้อที่กำหนดรูปแบบของ harness
 
 ## ใครรับผิดชอบอะไร
 

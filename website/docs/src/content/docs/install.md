@@ -6,8 +6,9 @@ description: Requirements and the two supported ways to install Change Loop into
 <!-- docs-audience: project-maintainers -->
 **Audience:** project maintainers and authorized agents configuring an installation. For the everyday workflow, start with [Quickstart](/docs/quickstart/).
 
-Install the `claude-foundation` CLI once on your machine, then initialize Change
-Loop in each project. Running `init` again upgrades the managed files. It is
+Install the `cloop` CLI once on your machine, then initialize Change Loop in
+each project. `cloop` is the short name of `claude-foundation`; both run the same
+program, and the agent keeps using `claude-foundation`. Running `init` again upgrades the managed files. It is
 safe for brownfield repositories: it seeds what is missing, refreshes what it
 owns, and leaves project-owned files alone.
 
@@ -30,22 +31,22 @@ existing file, and writes `.claude/settings.foundation.json` for manual review.
 ## Install from source
 
 ```bash
-git clone https://github.com/Maximumsoft-Co-LTD/claude-foundation.git
-cd claude-foundation
+git clone https://github.com/hashtagf/changeloop.git
+cd changeloop
 ./install.sh /path/to/your-project
 ```
 
 ## Install with Homebrew
 
 ```bash
-brew tap maximumsoft-co-ltd/claude-foundation \
-  https://github.com/Maximumsoft-Co-LTD/claude-foundation
-brew install claude-foundation
-claude-foundation init /path/to/your-project --yes
+brew tap hashtagf/changeloop \
+  https://github.com/hashtagf/changeloop
+brew install cloop
+cloop init /path/to/your-project --yes
 ```
 
-`claude-foundation init` is the same installer; `--yes` skips the confirmation prompt.
-Later upgrades use `brew upgrade claude-foundation`, followed by `init` for each
+`cloop init` is the same installer; `--yes` skips the confirmation prompt.
+Later upgrades use `brew upgrade cloop`, followed by `init` for each
 project you want to refresh.
 
 :::tip
@@ -57,7 +58,7 @@ Open a **new** agent session in the target project after installing, so the slas
 Claude Code needs no adapter. For other hosts, `--host` layers one over the same shared install:
 
 ```bash
-claude-foundation init /path/to/your-project --host cursor    # or opencode, codex
+cloop init /path/to/your-project --host cursor    # or opencode, codex
 ```
 
 | Host | What the adapter adds |
@@ -73,8 +74,8 @@ Codex cannot run live guards, so the secrets and phase-mutation hooks are inert 
 ## Verify
 
 ```bash
-claude-foundation version
-claude-foundation doctor --stage change
+cloop version
+cloop doctor --stage change
 ```
 
 `doctor` is the readiness check you should reach for whenever something looks wrong. It diagnoses project, provider, and lifecycle state, and it reports unresolved apply transactions before Land ever reaches them.

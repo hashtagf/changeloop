@@ -1,10 +1,10 @@
 # website/
 
-The public site at <https://claude-foundation.dev/>.
+The public site at <https://changeloop.ai/>.
 
 Published to a **custom domain**, configured on the repository's Pages settings
-(`cname: claude-foundation.dev`). The site is therefore served at the domain
-root — the bare `maximumsoft-co-ltd.github.io/claude-foundation/` URL is not the
+(`cname: changeloop.ai`). The site is therefore served at the domain
+root — the bare `hashtagf.github.io/changeloop/` URL is not the
 canonical address, and assuming it is puts the docs one path segment too deep.
 There is no `CNAME` file in this directory; the domain lives in repo settings and
 survives each Actions deploy.

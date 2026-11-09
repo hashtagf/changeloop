@@ -78,7 +78,7 @@ Twenty-five capabilities. Most changes use two or three. The last two are
 post-release rollout gates: they are listed in the archived proposal and never
 block proof or Land. The work types that require the specialist capabilities
 (for example `ml` → `evaluation`, `infra` → `plan-check`) are listed in the
-[evidence contract](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/.claude/harness/EVIDENCE.md#work-type-capabilities).
+[evidence contract](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#work-type-capabilities).
 
 A `security-static`, `resilience`, `compatibility`, `data-migration`, or
 `cross-repo-contract` provider that only re-runs the test command observes

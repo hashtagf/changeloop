@@ -2,14 +2,14 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
 
-// The site is published to the custom domain https://claude-foundation.dev
+// The site is published to the custom domain https://changeloop.ai
 // (configured on the repository's Pages settings), so the landing page is served
 // at the domain ROOT — not under a /claude-foundation/ repository subpath, which
 // is only how the bare github.io URL would address it. `base` must therefore be
 // just "/docs"; getting this wrong 404s every internal link in production while
 // still looking correct under `astro dev`.
 export default defineConfig({
-  site: "https://claude-foundation.dev",
+  site: "https://changeloop.ai",
   base: "/docs",
   trailingSlash: "always",
   integrations: [
@@ -37,12 +37,12 @@ export default defineConfig({
         {
           icon: "github",
           label: "GitHub",
-          href: "https://github.com/Maximumsoft-Co-LTD/claude-foundation",
+          href: "https://github.com/hashtagf/changeloop",
         },
       ],
       editLink: {
         baseUrl:
-          "https://github.com/Maximumsoft-Co-LTD/claude-foundation/edit/main/website/docs/",
+          "https://github.com/hashtagf/changeloop/edit/main/website/docs/",
       },
       defaultLocale: "root",
       locales: {
@@ -63,6 +63,7 @@ export default defineConfig({
           translations: { th: "1 · ทำความเข้าใจ" },
           items: [
             { slug: "index", label: "What is Change Loop?", translations: { th: "Change Loop คืออะไร" } },
+            { slug: "principles", label: "Principles", translations: { th: "หลักการ" } },
             { slug: "journey", label: "One change, start to finish", translations: { th: "หนึ่ง change ตั้งแต่ต้นจนจบ" } },
             { slug: "glossary", label: "Glossary", translations: { th: "อภิธานศัพท์" } },
           ],

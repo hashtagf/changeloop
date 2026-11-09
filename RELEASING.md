@@ -132,8 +132,8 @@ Use this if the workflow is unavailable or you're releasing by hand. Replace `X.
      The runtime and protocol-API numbers alongside them come from `protocol.json` and only move when a wire contract does.
    - In `CHANGELOG.md`, rename the `## [Unreleased]` heading to `## [X.Y.Z] - YYYY-MM-DD`, add a fresh empty `## [Unreleased]` above it, and update the link-reference block at the bottom:
      ```
-     [Unreleased]: https://github.com/Maximumsoft-Co-LTD/claude-foundation/compare/vX.Y.Z...HEAD
-     [X.Y.Z]: https://github.com/Maximumsoft-Co-LTD/claude-foundation/compare/v<prev>...vX.Y.Z
+     [Unreleased]: https://github.com/hashtagf/changeloop/compare/vX.Y.Z...HEAD
+     [X.Y.Z]: https://github.com/hashtagf/changeloop/compare/v<prev>...vX.Y.Z
      ```
 
 2. **Tag the source snapshot and push it.** Tag the commit you want to release (usually the tip of `main`):
@@ -142,11 +142,11 @@ Use this if the workflow is unavailable or you're releasing by hand. Replace `X.
    git push origin vX.Y.Z
    ```
    Pushing the tag makes GitHub generate the source tarball at
-   `https://github.com/Maximumsoft-Co-LTD/claude-foundation/archive/refs/tags/vX.Y.Z.tar.gz`.
+   `https://github.com/hashtagf/changeloop/archive/refs/tags/vX.Y.Z.tar.gz`.
 
 3. **Compute the tarball `sha256`:**
    ```bash
-   curl -fsSL https://github.com/Maximumsoft-Co-LTD/claude-foundation/archive/refs/tags/vX.Y.Z.tar.gz \
+   curl -fsSL https://github.com/hashtagf/changeloop/archive/refs/tags/vX.Y.Z.tar.gz \
      | shasum -a 256
    ```
 
@@ -169,7 +169,7 @@ Use this if the workflow is unavailable or you're releasing by hand. Replace `X.
 8. **Ship the bottle** (skips Homebrew's Xcode/CLT check — see below). Publishing the release in step 7 fires `.github/workflows/bottle.yml` on a `macos-latest` runner. It checks out the formula from `main` for its *shape* but **rewrites `url`/`sha256` to the tag being bottled** before building (so release order can't produce a wrong-payload bottle — the v2.8.1 lesson), builds a per-platform bottle, uploads it to the `vX.Y.Z` release, and prints a `bottle do` block in the job summary. Copy/merge that block into `Formula/claude-foundation.rb` **right after the `head` line**, then commit + merge (a formula-only commit — no re-tag needed; `root_url` points at the already-published release):
    ```ruby
    bottle do
-     root_url "https://github.com/Maximumsoft-Co-LTD/claude-foundation/releases/download/vX.Y.Z"
+     root_url "https://github.com/hashtagf/changeloop/releases/download/vX.Y.Z"
      sha256 cellar: :any_skip_relocation, arm64_tahoe: "<sha256 from the bottle job summary>"
    end
    ```
@@ -208,7 +208,7 @@ The gate is purely `pour_bottle?` — it never inspects whether a compiler is ac
 Because `brew install --HEAD` and the tap clone both track `main`, a force-push to `main` would ship rewritten history to everyone tracking HEAD. Enabling branch protection on `main` is recommended:
 
 ```bash
-gh api -X PUT repos/Maximumsoft-Co-LTD/claude-foundation/branches/main/protection \
+gh api -X PUT repos/hashtagf/changeloop/branches/main/protection \
   -H "Accept: application/vnd.github+json" \
   -f "required_pull_request_reviews[required_approving_review_count]=1" \
   -F "enforce_admins=false" \

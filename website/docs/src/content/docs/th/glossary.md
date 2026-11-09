@@ -31,6 +31,9 @@ description: ความหมายของคำที่ Change Loop ใช
 | **Receipt** | ผลที่บันทึกไว้ของ check หนึ่งครั้ง ผูกกับโค้ดและการตั้งค่าที่รันจริง receipt คือ ผ่าน, ไม่ผ่าน หรือ "ตรวจไม่ได้" | receipt | [Receipts](/docs/th/evidence/receipts/) |
 | **Stale** | ผลที่ไม่ตรงกับโค้ดหรือ agreement ปัจจุบันแล้ว จึงไม่ถูกเชื่อถือและรันใหม่ เฉพาะ check ที่ invalidated เท่านั้นที่รันซ้ำ | stale, `workspace hash` | [Receipts](/docs/th/evidence/receipts/) |
 | **Proof** / **proven** | check ที่จำเป็นทั้งหมดผ่านบนโค้ดปัจจุบัน แปลว่าหลักฐานดี ไม่ได้แปลว่าส่งมอบแล้ว | `proven`, `/prove <change>` | [Prove](/docs/th/loop/prove/) |
+| **Proof-Driven Development** | วิธีทำงานของ Change Loop: change เสร็จก็ต่อเมื่อมีหลักฐานจากเครื่องมือที่ตรงกับโค้ดปัจจุบัน ยืนยันว่าทำตามที่ตกลงไว้ | — | [หลักการ](/docs/th/principles/#proof-driven-development) |
+| **Spec-Driven Development** | ข้อตกลงที่อนุมัติแล้ว ไม่ใช่โค้ด เป็นตัวกำหนดพฤติกรรมที่ถูกต้อง โค้ดและเทสเป็นหลักฐานว่าข้อตกลงเป็นจริง | — | [หลักการ](/docs/th/principles/#spec-driven-development) |
+| **Fail closed** | เมื่อยืนยันผลไม่ได้ จะไม่ถือว่าผ่าน ค่าที่ไม่รู้ยังคงเป็น "ไม่ทราบ" | `error`, `inconclusive` | [หลักการ](/docs/th/principles/#fail-closed) |
 | **Gate** | check ที่จำเป็นต้องผ่านก่อน flow จะไปต่อ เช่นหลักฐานของ capability หนึ่งหรือ review | gate, assurance | [Prove](/docs/th/loop/prove/) |
 | **Waiver** | การตัดสินใจที่บันทึกไว้ของคุณว่าเลิกบังคับ check ที่ไม่ผ่านหนึ่งตัว ยังมองเห็นเป็น `user-waived` ไม่เคยเป็นการผ่าน และถอนได้ | `change waive`, `user-waived` | [การอนุมัติโดยคน](/docs/th/approval/) |
 | **Preview** | ภาพพฤติกรรมเบื้องต้นจากสำเนาที่ทิ้งได้ก่อน Build ช่วยตัดสินใจ แต่ไม่เคยนับเป็น proof | preview, `.foundation/previews/` | [การอนุมัติโดยคน](/docs/th/approval/) |

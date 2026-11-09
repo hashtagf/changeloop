@@ -12,7 +12,7 @@ export const UPDATE_NOTIFICATION_STATE_VERSION = 1;
 export const UPDATE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 export const UPDATE_CHECK_TIMEOUT_MS = 1200;
 export const LATEST_RELEASE_URL =
-  "https://api.github.com/repos/Maximumsoft-Co-LTD/claude-foundation/releases/latest";
+  "https://api.github.com/repos/hashtagf/changeloop/releases/latest";
 export const UPDATE_BOUNDARY_COMMANDS = Object.freeze(new Set([
   "investigate", "change", "build"
 ]));

@@ -124,7 +124,7 @@ Retiring a change is also an explicit decision; let the agent perform the
 supported recovery rather than deleting files.
 
 See [human approval](/docs/approval/) and the
-[lifecycle reference](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/WORKFLOW.md)
+[lifecycle reference](https://github.com/hashtagf/changeloop/blob/main/WORKFLOW.md)
 for the exact authority and recovery contract.
 
 ## Next steps

@@ -385,7 +385,7 @@ anything is committed; correct the setting and run `/deliver` again.
 | `review.fallbackReviewers` | `["codex-sol", "main-session"]` in the shipped file | Reviewers tried in order only after an infrastructure error; a delivered `fail` or `inconclusive` never triggers fallback. Names must exist, must not repeat `defaultReviewer`, and `main-session` requires `independence: "self"` |
 | `review.infraFailureThreshold` | `2` in the shipped file | Integer `1..5` |
 | `telemetry.requireUsage` | `true` in the shipped file | Boolean; Land requires a measured usage dimension |
-| `land.riskBasedCi` | `false` | Boolean; see the signed CI contract in [EVIDENCE.md](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/.claude/harness/EVIDENCE.md) |
+| `land.riskBasedCi` | `false` | Boolean; see the signed CI contract in [EVIDENCE.md](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md) |
 | `workflow.handoffDefaultOwner` | `"devops-team"` | Non-empty team name for permission-bound handoffs |
 
 ## Common mistakes

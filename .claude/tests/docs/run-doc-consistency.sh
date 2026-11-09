@@ -52,9 +52,9 @@ assert_file_contains "English README keeps harness metadata internal" \
 assert_file_contains "Thai README keeps harness metadata internal" \
   "$README_TH" "ผู้ใช้ไม่ต้องประกอบ receipt command"
 assert_file_contains "English README documents Homebrew installation" \
-  "$README" "brew install claude-foundation"
+  "$README" "brew install cloop"
 assert_file_contains "Thai README documents Homebrew installation" \
-  "$README_TH" "brew install claude-foundation"
+  "$README_TH" "brew install cloop"
 
 assert_file_contains "hook documentation names the canonical host capability contract" \
   "$HOOKS_README" '.claude/harness/adapters/host-capabilities.json'
@@ -260,9 +260,9 @@ assert_file_contains "English loop documents convergent gates" \
 assert_file_contains "Thai loop documents convergent gates" \
   "$DOCS/th/loop.md" "## ทุก gate เดินจนจบอย่างไร"
 assert_file_contains "English install guide documents Homebrew" \
-  "$DOCS/install.md" "brew install claude-foundation"
+  "$DOCS/install.md" "brew install cloop"
 assert_file_contains "Thai install guide documents Homebrew" \
-  "$DOCS/th/install.md" "brew install claude-foundation"
+  "$DOCS/th/install.md" "brew install cloop"
 assert_file_contains "English install guide requires committing setup before work" \
   "$DOCS/install.md" "## Commit the installation"
 assert_file_contains "Thai install guide requires committing setup before work" \

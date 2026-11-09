@@ -22,7 +22,7 @@ already invalidated by the runtime's own version pinning.
 Report privately through GitHub's private vulnerability reporting:
 
 1. Go to the repository's **Security** tab.
-2. Choose **Report a vulnerability** ([direct link](https://github.com/Maximumsoft-Co-LTD/claude-foundation/security/advisories/new)).
+2. Choose **Report a vulnerability** ([direct link](https://github.com/hashtagf/changeloop/security/advisories/new)).
 3. Describe the issue, the affected surface (installer, harness runtime, hooks,
    host adapters, dashboard), and reproduction steps.
 

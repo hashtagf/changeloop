@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `cloop` command. Homebrew installs `cloop` as the short command next to
+  `claude-foundation`, and the tap resolves `brew install cloop`. Both names
+  run the same program; agents, permission allowlists, runtime routes, and the
+  `.foundation/bin/claude-foundation` shim keep the original name.
+- Principles page and SEO metadata. The docs gain a Principles page (English
+  and Thai) naming Proof-Driven Development and seven related principles; the
+  landing page gains canonical, social, and structured metadata plus
+  `robots.txt`.
+
+### Changed
+
+- Project home moved to `https://github.com/hashtagf/changeloop` and the site to
+  `https://changeloop.ai`. The update advisory reads releases from the new
+  repository, and the release workflow rewrites the formula's full source URL.
+  Installed state paths and file names are unchanged.
+
 ## [3.6.11] - 2026-11-09
 
 ### Added

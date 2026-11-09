@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Maximumsoft-Co-LTD/claude-foundation.git"
+    "url": "git+https://github.com/hashtagf/changeloop.git"
   },
   "engines": {
     "node": ">=20.19.0"

@@ -35,7 +35,7 @@ jobs:
     runs-on: macos-latest
     env:
       TAG: ${{ github.event.inputs.tag || github.event.release.tag_name }}
-      TAP: maximumsoft-co-ltd/claude-foundation
+      TAP: hashtagf/changeloop
       GH_TOKEN: ${{ github.token }}
     steps:
       # Check out `main` for the formula *shape* only. Its `url`/`sha256` are

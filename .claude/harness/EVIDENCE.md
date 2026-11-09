@@ -7,7 +7,7 @@ dependencies; the project owns and locks every executable named by an adapter.
 This is the canonical provider/receipt reference for maintainers and evidence
 authors. Commands and schemas here are for the agent, configured tool, or
 integration operator; users provide decisions rather than hand-writing receipts.
-For everyday use, start with the [user quickstart](https://claude-foundation.dev/docs/quickstart/).
+For everyday use, start with the [user quickstart](https://changeloop.ai/docs/quickstart/).
 For file ownership and permitted writers, use
 [the ownership reference](README.md#file-ownership-and-writers).
 

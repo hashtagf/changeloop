@@ -31,7 +31,7 @@ is `42`. A delta between the two is advisory while both doctors still pass:
    working. Only a doctor that exits non-zero is a blocked machine.
 3. When the CLI itself is behind, upgrade it: `brew upgrade claude-foundation`.
    If instead the pinned source is absent, clone tag `v3.6.11` from
-   `Maximumsoft-Co-LTD/claude-foundation` into
+   `hashtagf/changeloop` into
    `~/.local/share/claude-foundation/3.6.11`.
 4. Install or refresh the runtime inside the project with
    `claude-foundation init <project-path>`. The equivalent entrypoint inside a

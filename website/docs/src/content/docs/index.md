@@ -1,6 +1,6 @@
 ---
 title: What is Change Loop?
-description: An OpenSpec-native change harness that makes an AI coding agent agree on a change, build it in isolation, prove it with real evidence, and only then land it.
+description: Change Loop is an OpenSpec-native harness for Proof-Driven Development — it makes an AI coding agent agree on a change, build it in isolation, prove it with real evidence, and only then land it.
 ---
 
 <!-- docs-audience: users -->
@@ -16,8 +16,9 @@ Investigate? → Change → Build → Prove → Land
 
 It is not an AI, and it does not write code. It is a deterministic control plane *around* your coding agent. It does not replace your agent, test framework, CI system, or Git workflow either — it drives the tools your repository already owns.
 
-The workflow is called **Change Loop**. Its installed package and CLI remain
-`claude-foundation`, so current commands and integrations keep working.
+The workflow is called **Change Loop**. You type `cloop`; the original
+name `claude-foundation` remains a permanent alias that the agent, permission
+rules, and existing integrations keep using.
 
 Users keep seven intent-level commands: `/investigate`, `/change`, `/build`,
 `/prove`, `/land`, optional `/deliver`, and `/dev`. The agent compiles one semantic draft and drives
@@ -29,6 +30,13 @@ chain. The compiled OpenSpec packet remains the source of truth.
 An AI coding agent will tell you it finished. That claim is usually the weakest link in the whole workflow: the agent read its own output, decided it looked right, and reported success. Nothing independently checked that the code runs, that the tests it claims to have written exist, or that the thing you asked for is the thing that shipped.
 
 Change Loop refuses to take the agent's word for it. Every observable behaviour the change promises becomes a **claim** with a stable ID, and a claim is only satisfied by a **receipt** produced by actually executing a project-owned tool. A passing command is not automatically proof, and an agent's summary is never proof.
+
+## Proof-Driven Development
+
+We call this way of working **Proof-Driven Development**: a change is not done
+until current, executable evidence shows that it does what was agreed, and
+`proven` becomes delivered only when Land reaches `archived`. It is the first of
+eight [principles](/docs/principles/) that shape the harness.
 
 ## Who does what
 

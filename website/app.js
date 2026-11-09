@@ -135,14 +135,14 @@
 
   var installs = {
     brew:
-      "brew tap maximumsoft-co-ltd/claude-foundation \\\n" +
-      "  https://github.com/Maximumsoft-Co-LTD/claude-foundation\n" +
-      "brew install claude-foundation\n" +
-      "claude-foundation init /path/to/project --yes",
+      "brew tap hashtagf/changeloop \\\n" +
+      "  https://github.com/hashtagf/changeloop\n" +
+      "brew install cloop\n" +
+      "cloop init /path/to/project --yes",
     source:
       "npm install -g @fission-ai/openspec@1.7.0\n" +
-      "git clone https://github.com/Maximumsoft-Co-LTD/claude-foundation.git\n" +
-      "cd claude-foundation\n" +
+      "git clone https://github.com/hashtagf/changeloop.git\n" +
+      "cd changeloop\n" +
       "./install.sh /path/to/project"
   };
 

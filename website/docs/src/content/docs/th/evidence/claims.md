@@ -77,7 +77,7 @@ override อยู่ใน [`execution.yaml`](/docs/th/evidence/adapters/) แ�
 รวม 25 ตัว change ส่วนใหญ่ใช้แค่สองสามตัว สองตัวสุดท้ายเป็นด่าน rollout หลัง release
 ที่ถูกบันทึกใน proposal ที่ archive และไม่เคยบล็อก proof หรือ Land work type ที่ต้องใช้
 capability เฉพาะทาง (เช่น `ml` → `evaluation`, `infra` → `plan-check`) ดูที่
-[evidence contract](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/.claude/harness/EVIDENCE.md#work-type-capabilities)
+[evidence contract](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#work-type-capabilities)
 
 provider ของ `security-static`, `resilience`, `compatibility`, `data-migration`
 หรือ `cross-repo-contract` ที่แค่รันคำสั่งเทสซ้ำ ไม่ได้สังเกตอะไรเกินกว่าเทส

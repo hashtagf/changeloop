@@ -153,7 +153,7 @@ test("the documented headless run grants exactly the seeded allowlist", () => {
     // example is reintroduced there, it must still obey the exact allowlist.
     if (!example && /^README(?:\.th)?\.md$/.test(path)) {
       const locale = path === "README.th.md" ? "th/" : "";
-      assert.ok(body.includes(`https://claude-foundation.dev/docs/${locale}install/`),
+      assert.ok(body.includes(`https://changeloop.ai/docs/${locale}install/`),
         `${path} must lead to the checked installation example`);
       continue;
     }

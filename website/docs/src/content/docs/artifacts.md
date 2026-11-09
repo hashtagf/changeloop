@@ -69,7 +69,7 @@ maintainers. In your installed project, files with those names remain your
 project instructions. Repository tests, reports, and the documentation website
 are upstream maintenance material, not prerequisites for using Change Loop.
 
-The [system ownership reference](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/.claude/harness/README.md#file-ownership-and-writers)
+The [system ownership reference](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/README.md#file-ownership-and-writers)
 defines the full categories and writer rules; your installed copy is at
 `.claude/harness/README.md`. The installer's `MANAGED` list and your
 `.foundation/install-manifest.txt` determine installed-file ownership.
@@ -189,7 +189,7 @@ optional `.foundation/policy.json` is project-authored capability policy.
 These exceptions do not permit manual edits to receipts or lifecycle state.
 
 For the complete state inventory, use the installed
-[Runtime state reference](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/.claude/harness/README.md#runtime-state).
+[Runtime state reference](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/README.md#runtime-state).
 It lists generated records, caches, working inputs, and their purposes.
 
 The sections below explain the evidence and archive records you may need to

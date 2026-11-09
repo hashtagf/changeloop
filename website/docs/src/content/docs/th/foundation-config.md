@@ -374,7 +374,7 @@ placeholder ที่ใช้ได้คือ `{changeId}`, `{title}`, `{comm
 | `review.fallbackReviewers` | `["codex-sol", "main-session"]` ในไฟล์ที่ติดตั้ง | reviewer ที่ลองตามลำดับเฉพาะเมื่อเกิด infrastructure error; verdict `fail` หรือ `inconclusive` ไม่ trigger fallback ชื่อต้องมีอยู่จริง ห้ามซ้ำ `defaultReviewer` และ `main-session` ต้องใช้คู่กับ `independence: "self"` |
 | `review.infraFailureThreshold` | `2` ในไฟล์ที่ติดตั้ง | จำนวนเต็ม `1..5` |
 | `telemetry.requireUsage` | `true` ในไฟล์ที่ติดตั้ง | Boolean; Land ต้องมี usage dimension ที่วัดได้จริง |
-| `land.riskBasedCi` | `false` | Boolean ดู contract ของ signed CI ใน [EVIDENCE.md](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/.claude/harness/EVIDENCE.md) |
+| `land.riskBasedCi` | `false` | Boolean ดู contract ของ signed CI ใน [EVIDENCE.md](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md) |
 | `workflow.handoffDefaultOwner` | `"devops-team"` | ชื่อทีมที่ไม่ว่างสำหรับ handoff ที่ต้องมีสิทธิ์ |
 
 ## จุดที่พลาดบ่อย

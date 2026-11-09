@@ -119,7 +119,7 @@ Agent รายงานสิ่งที่ขาดและทางเล�
 แทนการลบไฟล์
 
 อ่าน [การอนุมัติโดยคน](/docs/th/approval/) และ
-[สัญญา lifecycle](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/WORKFLOW.md)
+[สัญญา lifecycle](https://github.com/hashtagf/changeloop/blob/main/WORKFLOW.md)
 สำหรับขอบเขตอำนาจและการกู้คืนแบบละเอียด
 
 ## ทำอะไรต่อ

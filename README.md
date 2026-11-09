@@ -13,19 +13,28 @@ Investigate? → Change → Build → Prove → Land
 Your coding agent implements it; the harness manages state, isolation,
 evidence, and recovery. Keep using your existing test framework, Git, and CI.
 
-**Version 3.6.11** · Installed package and CLI: `claude-foundation`.
+**Version 3.6.11** · Command: `cloop` (alias `claude-foundation`, used by the agent).
+
+## Principles
+
+Change Loop practices **Proof-Driven Development**: a change is done only when
+current, executable evidence from your project's tools shows it does what was
+agreed, and delivery completes at `archived`, not merely `proven`. It also
+follows Spec-Driven Development, clear ownership, isolation until Land, fail
+closed, risk-based rigor, reuse before rerun, and recoverable stops. Read
+[all eight principles](https://changeloop.ai/docs/principles/).
 
 ## Where to start
 
-This README is for people using Change Loop. The [file ownership guide](https://claude-foundation.dev/docs/artifacts/)
+This README is for people using Change Loop. The [file ownership guide](https://changeloop.ai/docs/artifacts/)
 separates project documents, installed system instructions, and runtime records.
 Upstream development instructions are linked separately below.
 
 | I want to… | Start here |
 |---|---|
 | Use Change Loop in my project | [Install](#install), then [Your first change](#your-first-change) |
-| Follow a guided example | [Quickstart](https://claude-foundation.dev/docs/quickstart/) |
-| Understand a command or decision | [Workflow overview](https://claude-foundation.dev/docs/loop/) and [human approval](https://claude-foundation.dev/docs/approval/) |
+| Follow a guided example | [Quickstart](https://changeloop.ai/docs/quickstart/) |
+| Understand a command or decision | [Workflow overview](https://changeloop.ai/docs/loop/) and [human approval](https://changeloop.ai/docs/approval/) |
 | Develop Change Loop itself | [Contributing](CONTRIBUTING.md) → [maintainer guide](CLAUDE.md) → [test guide](.claude/tests/README.md) |
 | Integrate tools or debug the harness | [Operator guide](.claude/harness/README.md) and [evidence reference](.claude/harness/EVIDENCE.md) |
 | Prepare a release or read past findings | [Release procedure](RELEASING.md) and [report index](docs/reports/README.md) |
@@ -37,10 +46,10 @@ The installer prepares the pinned OpenSpec CLI when needed; npm access is
 required if it is not already available.
 
 ```bash
-brew tap maximumsoft-co-ltd/claude-foundation \
-  https://github.com/Maximumsoft-Co-LTD/claude-foundation
-brew install claude-foundation
-claude-foundation init /path/to/your-project --yes
+brew tap hashtagf/changeloop \
+  https://github.com/hashtagf/changeloop
+brew install cloop
+cloop init /path/to/your-project --yes
 ```
 
 Claude Code works without an adapter. For another host, add
@@ -51,7 +60,7 @@ Review and commit the installation files before your first change in a Git
 project. The installer does not grant commit authority to the agent.
 
 For source installation, prerequisites, host differences, headless/CI trust,
-and upgrades, follow the [installation guide](https://claude-foundation.dev/docs/install/).
+and upgrades, follow the [installation guide](https://changeloop.ai/docs/install/).
 The agent can check readiness with `claude-foundation doctor --stage change`.
 
 ## Your first change
@@ -154,7 +163,7 @@ For exact semantics, use [WORKFLOW.md](WORKFLOW.md).
 - **Review:** defaults `independence: "self"` and `diversity: "single-model"` are
   explicit assurance waivers. Risk-tiered routing does not restore reviewer independence or model diversity.
 - **Authority:** Land, Git operations, and external actions have separate
-  authority. See [human approval](https://claude-foundation.dev/docs/approval/).
+  authority. See [human approval](https://changeloop.ai/docs/approval/).
 
 ## Operator commands and troubleshooting
 
@@ -197,9 +206,9 @@ Do not manually repair `.foundation/` records.
 | Topic | Detailed guide |
 |---|---|
 | Roles, states, lanes, and lifecycle rules | [WORKFLOW.md](WORKFLOW.md) |
-| Files created, ownership, and sources of truth | [Artifacts](https://claude-foundation.dev/docs/artifacts/) |
-| Review policy and execution limits | [foundation.json](https://claude-foundation.dev/docs/foundation-config/) |
-| Multiple repositories | [Multi-repository workflow](https://claude-foundation.dev/docs/multi-repository/) |
+| Files created, ownership, and sources of truth | [Artifacts](https://changeloop.ai/docs/artifacts/) |
+| Review policy and execution limits | [foundation.json](https://changeloop.ai/docs/foundation-config/) |
+| Multiple repositories | [Multi-repository workflow](https://changeloop.ai/docs/multi-repository/) |
 | Providers, receipts, and proof freshness | [Evidence reference](.claude/harness/EVIDENCE.md) |
 | Agent skills and runtime integration | [Harness guide](.claude/harness/README.md) |
 | Current release evidence versus historical reports | [Report index](docs/reports/README.md) |
