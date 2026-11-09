@@ -1,7 +1,7 @@
 # Move to `hashtagf/changeloop`, `changeloop.ai`, and the `cloop` command
 
-**Status:** plan with in-repository steps implemented on 2026-11-09; external
-steps pending. **Audience:** maintainers. This record holds the decisions and
+**Status:** in-repository and hosting steps completed on 2026-11-09; the next
+release from the new repository and a clean-machine Homebrew check are pending. **Audience:** maintainers. This record holds the decisions and
 the remaining external checklist. It is not a release report.
 
 ## Decisions (owner: user, 2026-11-09)
@@ -37,25 +37,33 @@ because the release and bottle workflows build it by that name.
 
 ## External checklist (owner in brackets)
 
-1. **[user]** `changeloop.ai` is delegated to Cloudflare (`ernest`/`brianna`
-   nameservers on 2026-11-09) but has no `A` record yet; complete step 4.
-2. **[agent, with authority]** Create `hashtagf/changeloop` (public, required for
-   free GitHub Pages with a custom domain), push `main`, branches, and tags.
-3. **[user]** In the new repository: enable Pages (GitHub Actions source), set
-   the custom domain to `changeloop.ai`, enforce HTTPS, and copy the release
-   and bottle secrets.
-4. **[user]** In Cloudflare: apex `A` records to GitHub Pages
-   (`185.199.108–111.153`), `www` `CNAME` to `hashtagf.github.io`, DNS-only
-   (grey cloud) until the Pages certificate is issued.
-5. **[user]** Keep `claude-foundation.dev` and redirect it with a 301 to
-   `https://changeloop.ai/$path` (Cloudflare Redirect Rule) so search ranking
-   and existing links carry over. Then submit the new domain and sitemap in
-   Google Search Console and use its change-of-address tool.
-6. **[user]** In the old repository: add a README notice pointing to the new
-   home, and publish one final release whose notes say where releases now live.
-   Installs older than this change check the old repository for updates.
-7. **[agent]** Cut the next release from `hashtagf/changeloop`. The formula then
-   points to the new source tarball and bottle.
+Done on 2026-11-09:
+
+1. **[agent]** Created public `hashtagf/changeloop`; pushed `main` and all tags.
+2. **[agent]** Enabled Pages (GitHub Actions), custom domain `changeloop.ai`,
+   certificate approved for `changeloop.ai` and `www.changeloop.ai`, HTTPS
+   enforced. No repository secrets are needed: the workflows use `GITHUB_TOKEN`.
+3. **[agent, user-authorized Cloudflare session]** `changeloop.ai`: apex `A`
+   records to `185.199.108–111.153` and `www` `CNAME` to `hashtagf.github.io`,
+   all DNS-only.
+4. **[agent]** `claude-foundation.dev`: two Single Redirect rules, apex and
+   `www` only (`http*://claude-foundation.dev/*` and
+   `http*://www.claude-foundation.dev/*` → `https://changeloop.ai/${2}`, 301,
+   query preserved); the apex `A` and `www` `CNAME` records switched to
+   proxied so the rules apply. `9router.`, `chat.`, and `dashboard.` records
+   were not changed.
+5. **[agent]** Google Search Console: both domains verified by DNS `TXT`,
+   `https://changeloop.ai/docs/sitemap-index.xml` submitted, and a change of
+   address from `claude-foundation.dev` to `changeloop.ai` started.
+6. **[agent]** Old repository README (English and Thai) points to the new home
+   (`Maximumsoft-Co-LTD/claude-foundation` commit `46ba15de`).
+
+Pending:
+
+7. **[user decision]** Cut the next release from `hashtagf/changeloop`. It needs
+   the scenario checkpoint in `RELEASING.md`, which requires paid-run authority.
+   The formula then points to the new source tarball and bottle, and installs
+   older than this change still check the old repository for updates.
 8. **[agent]** On a clean machine, verify
    `brew tap hashtagf/changeloop https://github.com/hashtagf/changeloop`,
    `brew install cloop`, `cloop version`, and whether Homebrew asks for
