@@ -171,6 +171,13 @@ are preserved. A report failure preserves research and returns a regeneration
 route with no current report or handoff advertised; the persisted state records
 that route, never `DONE`. Reporting never starts Change.
 
+When the project has `openspec/lessons.md` (durable lessons linked to records in
+`openspec/incidents/`), investigation and change intake add it to their
+grounding seed sources, so the agent reads project lessons first; editing it
+while a change is in flight returns the usual `refresh-source-coverage` EDIT.
+This file is unrelated to `claude-foundation lessons`, which groups recurring
+blocker and review codes.
+
 Set the optional `activeChange` field to an existing change ID when the question
 arises during Build or Prove. The harness then reads the active isolated root
 and binds its workspace identity and base into state and handoff. If that
@@ -314,6 +321,17 @@ tells its failure story in its own section. Each type adds:
 User-visible work (feature, api, library, ui, deprecation, client-release) also
 owes a `releaseNote`. A missing section is one agent EDIT naming the field's
 shape and an example, never a user question.
+
+A hotfix also owes a regression for its incident: at least one scenario must set
+`regressionOf` to `bugfix.incident.link`, in a requirement with an executable
+capability (anything beyond `review`, `acceptance`, or `semantic-acceptance`
+alone; the default `test` qualifies). Otherwise `change start` returns an agent
+EDIT naming the missing regression. The created change records
+`regressionRequired: true`, and `change revise` enforces the rule only for a
+change carrying that marker, so a hotfix created before the upgrade is never
+blocked. The compiled spec shows the scenario's incident ("Regression of:
+<link>"); evidence claims and protocol pins are unchanged. Other bugfix variants
+are unaffected.
 
 `data-fix` is a one-off change to production data (`dataFix`: scope, snapshot,
 dryRun, rerunSafe, rollback); `security` is hardening with no single bug to
@@ -1856,6 +1874,13 @@ expired dispatch is a reviewer infrastructure failure, not a user question.
 Timeout is not a pass. Try repair first; if it cannot progress, explain the
 attempted remedies and offer further work before Land. Conflicts, incomplete Apply, and missing side-effect authority
 still require their actual resolution, never a claim of successful delivery.
+
+An AI reviewer also reads the project's `REVIEW.md`, when present, as advisory
+guidance: it shapes what the reviewer looks at and how it reports, but never
+changes pass or fail. Each review receipt binds the file's hash, so editing,
+deleting, or creating `REVIEW.md` after a review expires that review
+(`review-rules-changed`); receipts recorded before this binding existed are not
+expired by it. Details: [project review rules](.claude/harness/EVIDENCE.md#project-review-rules).
 
 Under `workflow.reviewPolicy: "risk-tiered"` every change receives review, with
 the correction circuit bounded by risk; `RESOLVED` prints the route, such as

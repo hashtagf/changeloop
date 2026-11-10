@@ -342,6 +342,114 @@ assert_cmd_zero "Claude Code reviewer profile is installed" \
     .providerFamily == "anthropic" and .sandbox == "read-only" and
     .ephemeral == true' "$TARGET/foundation.json"
 assert_file_exists "runtime ignore installed" "$TARGET/.foundation/.gitignore"
+
+# Advisory review rules: project-owned, seeded only when absent, on a fresh
+# install and on an upgrade alike, and removed again by a rolled-back install.
+REVIEW_TEMPLATE="$ROOT/.claude/harness/templates/REVIEW.md"
+assert_cmd_zero "upgrade without REVIEW.md seeds the starter review rules" \
+  cmp -s "$REVIEW_TEMPLATE" "$TARGET/REVIEW.md"
+assert_file_contains "starter review rules say they are advisory" \
+  "$REVIEW_TEMPLATE" "**advisory**"
+review_fresh="$TMP/review-fresh"
+mkdir -p "$review_fresh"
+review_plan="$(bash "$ROOT/install.sh" "$review_fresh" --source "$ROOT" --yes --dry-run 2>&1)"
+assert_contains "install plan announces a missing REVIEW.md" "$review_plan" "+ REVIEW.md"
+assert_file_absent "a dry run creates no REVIEW.md" "$review_fresh/REVIEW.md"
+assert_cmd_zero "fresh install applies with review rules" \
+  bash "$ROOT/install.sh" "$review_fresh" --source "$ROOT" --yes
+assert_cmd_zero "fresh install seeds the starter review rules" \
+  cmp -s "$REVIEW_TEMPLATE" "$review_fresh/REVIEW.md"
+printf '# Our own review rules\n\nKeep\tthis byte for byte.\n' > "$review_fresh/REVIEW.md"
+cp "$review_fresh/REVIEW.md" "$TMP/review-custom.md"
+review_plan="$(bash "$ROOT/install.sh" "$review_fresh" --source "$ROOT" --yes --dry-run 2>&1)"
+assert_not_contains "install plan omits an existing REVIEW.md" "$review_plan" "+ REVIEW.md"
+assert_cmd_zero "reinstall over custom review rules applies" \
+  bash "$ROOT/install.sh" "$review_fresh" --source "$ROOT" --yes
+assert_cmd_zero "an existing REVIEW.md is kept byte for byte" \
+  cmp -s "$TMP/review-custom.md" "$review_fresh/REVIEW.md"
+# In a git target the installer stages the REVIEW.md it seeded beside the other
+# installed files, and never stages a project's own uncommitted edits.
+review_git="$TMP/review-git"
+mkdir -p "$review_git"
+git -C "$review_git" init -q
+assert_cmd_zero "git install with review rules applies" \
+  bash "$ROOT/install.sh" "$review_git" --source "$ROOT" --yes
+assert_eq "a seeded REVIEW.md is staged" "REVIEW.md" \
+  "$(git -C "$review_git" diff --cached --name-only -- REVIEW.md)"
+git -C "$review_git" -c user.name=t -c user.email=t@example.invalid \
+  commit -q -m install --no-verify
+printf '# Edited by the project, not yet staged\n' >> "$review_git/REVIEW.md"
+assert_cmd_zero "git reinstall over edited review rules applies" \
+  bash "$ROOT/install.sh" "$review_git" --source "$ROOT" --yes
+assert_eq "a project's uncommitted REVIEW.md edit is not staged" "" \
+  "$(git -C "$review_git" diff --cached --name-only -- REVIEW.md)"
+assert_eq "the project's REVIEW.md edit is kept in the working tree" "REVIEW.md" \
+  "$(git -C "$review_git" diff --name-only -- REVIEW.md)"
+review_failed="$TMP/review-rollback"
+mkdir -p "$review_failed"
+printf '{ not json\n' > "$review_failed/foundation.json"
+if bash "$ROOT/install.sh" "$review_failed" --source "$ROOT" --yes >/dev/null 2>&1; then
+  fail "install over an unreadable foundation.json fails and rolls back"
+else
+  pass "install over an unreadable foundation.json fails and rolls back"
+fi
+assert_file_absent "a rolled-back install removes the REVIEW.md it seeded" \
+  "$review_failed/REVIEW.md"
+assert_file_contains "a rolled-back install restores the project's foundation.json" \
+  "$review_failed/foundation.json" "{ not json"
+
+# Incident and lesson records: project-owned like REVIEW.md, seeded per file
+# only when absent, staged only when this run created them, rolled back.
+RECORD_TEMPLATES="$ROOT/.claude/harness/templates"
+for record in "openspec/incidents/README.md|incidents/README.md" \
+    "openspec/incidents/_template.md|incidents/_template.md" \
+    "openspec/lessons.md|lessons.md"; do
+  rel="${record%%|*}"
+  assert_cmd_zero "upgrade without $rel seeds the starter record" \
+    cmp -s "$RECORD_TEMPLATES/${record#*|}" "$TARGET/$rel"
+  assert_cmd_zero "fresh install seeds $rel" \
+    cmp -s "$RECORD_TEMPLATES/${record#*|}" "$review_fresh/$rel"
+  assert_file_absent "a rolled-back install removes the seeded $rel" \
+    "$review_failed/$rel"
+done
+assert_file_not_contains "starter records stay project-neutral" \
+  "$RECORD_TEMPLATES/incidents/README.md" "claude-foundation"
+assert_file_contains "the incident template names the hotfix regression link" \
+  "$RECORD_TEMPLATES/incidents/README.md" "regressionOf"
+records_custom="$TMP/records-custom"
+mkdir -p "$records_custom/openspec"
+printf '# Our lessons\n\n| keep | this |\n' > "$records_custom/openspec/lessons.md"
+cp "$records_custom/openspec/lessons.md" "$TMP/lessons-custom.md"
+records_plan="$(bash "$ROOT/install.sh" "$records_custom" --source "$ROOT" --yes --dry-run 2>&1)"
+assert_not_contains "install plan omits an existing lessons.md" "$records_plan" \
+  "+ openspec/lessons.md"
+assert_contains "install plan announces a missing incident template" "$records_plan" \
+  "+ openspec/incidents/_template.md"
+assert_cmd_zero "install over custom lessons applies" \
+  bash "$ROOT/install.sh" "$records_custom" --source "$ROOT" --yes
+assert_cmd_zero "an existing lessons.md is kept byte for byte" \
+  cmp -s "$TMP/lessons-custom.md" "$records_custom/openspec/lessons.md"
+assert_cmd_zero "missing incident records are seeded beside custom lessons" \
+  cmp -s "$RECORD_TEMPLATES/incidents/_template.md" \
+    "$records_custom/openspec/incidents/_template.md"
+records_git="$TMP/records-git"
+mkdir -p "$records_git"
+git -C "$records_git" init -q
+assert_cmd_zero "git install with incident records applies" \
+  bash "$ROOT/install.sh" "$records_git" --source "$ROOT" --yes
+assert_eq "seeded incident and lesson records are staged" \
+  "openspec/incidents/README.md openspec/incidents/_template.md openspec/lessons.md" \
+  "$(git -C "$records_git" diff --cached --name-only -- openspec/incidents openspec/lessons.md | LC_ALL=C sort | tr '\n' ' ' | sed 's/ $//')"
+git -C "$records_git" -c user.name=t -c user.email=t@example.invalid \
+  commit -q -m install --no-verify
+printf '| 2026-01-01 | Project lesson | none | none |\n' >> "$records_git/openspec/lessons.md"
+assert_cmd_zero "git reinstall over edited lessons applies" \
+  bash "$ROOT/install.sh" "$records_git" --source "$ROOT" --yes
+assert_eq "a project's uncommitted lessons.md edit is not staged" "" \
+  "$(git -C "$records_git" diff --cached --name-only -- openspec/lessons.md)"
+assert_eq "the project's lessons.md edit is kept in the working tree" "openspec/lessons.md" \
+  "$(git -C "$records_git" diff --name-only -- openspec/lessons.md)"
+
 # Ask git what it ignores rather than matching directory names in the file. The
 # name-matching version passed while `authority/`, `attestations/`, and
 # `install-manifest.txt` were all leaking into `git status`, because it could
