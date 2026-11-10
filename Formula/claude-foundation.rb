@@ -27,7 +27,7 @@ class ClaudeFoundation < Formula
     libexec.install ".claude", ".foundation", "openspec",
                     "WORKFLOW.md", "CLAUDE.md", "package.json", "package-lock.json",
                     "foundation.json", "install.sh", "install-cursor.sh",
-                    "install-opencode.sh", "install-codex.sh", "cli.sh", "dashboard"
+                    "install-opencode.sh", "install-codex.sh", "install-pi.sh", "cli.sh", "dashboard"
 
     # VERSION is cli.sh's source of truth for `claude-foundation version`.
     # Ship the repo file when present (HEAD builds, and tags cut after it was

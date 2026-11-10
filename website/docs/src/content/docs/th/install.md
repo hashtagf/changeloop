@@ -57,14 +57,24 @@ cloop init /path/to/your-project --yes
 Claude Code ไม่ต้องใช้ adapter ส่วน host อื่นใช้ `--host` เพื่อวาง adapter ทับการติดตั้งชุดเดียวกัน:
 
 ```bash
-cloop init /path/to/your-project --host cursor    # หรือ opencode, codex
+cloop init /path/to/your-project --host cursor    # หรือ opencode, codex, pi
 ```
 
 | Host | adapter เพิ่มอะไรให้ |
 |---|---|
+| **Pi ≥1.5.2** | extension ต่อโปรเจกต์ที่ `.pi/extensions/changeloop.ts` ลงทะเบียนคำสั่งจากต้นฉบับ โหลด agent contract จากแพ็กเกจ และเชื่อม guard ของ built-in tools, lint feedback, session identity และ shell `!`/`!!` ต้องใช้ `@earendil-works/pi-coding-agent`, Change Loop CLI รุ่นตรงกับโปรเจกต์, Node.js และ jq |
 | **Cursor** | เจ็ด lifecycle prompt หลักรวม `/deliver` แบบ optional พร้อม `/changes` และ alias `/feature` ใน `.cursor/commands/` และ skill router แบบ always-on เป็น rule `.mdc` ที่ตั้ง `alwaysApply: true` |
 | **OpenCode** | prompt หลักเจ็ดตัวรวม `/deliver` แบบ optional พร้อม utility/alias สองตัวใน `.opencode/commands/` และ guard plugin ที่ `.opencode/plugins/foundation.js` ซึ่ง replay hook ที่ ship มา — secrets guard กับ phase-mutation guard บล็อกแบบ live ส่วน lint ให้ feedback ตอนแก้ไฟล์ ส่วน skill กับ agent contract ไม่ต้องมี adapterเลย เพราะ OpenCode อ่าน `.claude/skills/` และ `AGENTS.md` ได้เอง |
 | **Codex CLI** | prompt หลักเจ็ดตัวรวม `/deliver` แบบ optional พร้อม utility/alias สองตัวใน `$CODEX_HOME/prompts` (Codex ไม่มีไดเรกทอรี prompt ต่อโปรเจกต์) พร้อม ownership marker เพื่อให้การติดตั้งซ้ำรีเฟรชเฉพาะ prompt ของ Change Loop โดยไม่ทับ prompt ชื่อซ้ำของผู้ใช้ |
+
+เมื่อ Pi ถาม ให้ยืนยันความเชื่อถือโปรเจกต์ แล้วเปิด session ใหม่หรือใช้ `/reload`
+ใช้ `/land <change>` เพื่อสั่ง Land โดยชัดเจน ส่วน `/build` และ `/prove` ไม่ให้สิทธิ์ Land
+การ reload หรือข้อความใหม่จากผู้ใช้จะยกเลิกสิทธิ์ Land จากคำสั่งก่อนหน้า
+guard ของ Pi ครอบคลุมบางส่วน: custom/MCP tools และ extension อื่นอยู่นอกขอบเขต
+live guard และยังไม่มี session-digest import การวิเคราะห์ shell ใช้นโยบายร่วมของ runtime
+(ค่าเริ่มต้นเป็น audit; ตั้ง `FOUNDATION_SHELL_GUARD=block` เพื่อบังคับตรวจ shell)
+extension นี้ไม่ใช่ OS sandbox และไม่ออก unattended sandbox attestation
+การกำหนด model และ reviewer ยังคงอยู่ใน `foundation.json`
 
 :::caution[Codex ไม่มี tool hook]
 Codex รัน guard แบบ live ไม่ได้ ดังนั้น secrets guard กับ phase-mutation guard จะไม่ทำงานที่นั่น — การบังคับใช้จึงเหลือ Land gate กับ `no-direct-main-commit.sh` ที่เป็น opt-in

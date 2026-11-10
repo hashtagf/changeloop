@@ -77,6 +77,7 @@ failure.
 
 | Suite | Contract |
 |---|---|
+| `.claude/harness/tests/pi-extension.test.mjs` | Installed Pi commands, opaque arguments, sandbox and secret guards, exact-change Land/Deliver authority, reload revocation, shell identity, lint feedback, ownership and upgrades |
 | `harness/installer-transaction.test.mjs` | Failed upgrade restores legacy and retired managed files; all installer dry-runs preserve absent targets |
 | `.claude/harness/tests/process-lock.test.mjs` | A dead holder's lock is recovered, and recovery never removes a descriptor a live process acquired after the dead holder was read |
 | `.claude/harness/tests/npm-lockfile-{check,auto-seam}.test.mjs` | Offline npm install-plan validation, missing dependency graphs, non-mutating checks, and automatic consumer proof wiring |

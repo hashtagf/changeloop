@@ -63,7 +63,7 @@ assert_file_contains "hook documentation separates native dispatch" \
 assert_cmd_zero "host capability contract covers every supported host truthfully" \
   node -e '
     const c = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-    const expected = ["claude-code", "opencode", "cursor", "codex", "gemini"];
+    const expected = ["claude-code", "opencode", "cursor", "codex", "gemini", "pi"];
     const keys = Object.keys(c.hosts || {}).sort();
     const guards = c.hosts || {};
     const ok = c.version === 2 && JSON.stringify(keys) === JSON.stringify(expected.sort()) &&
@@ -77,6 +77,9 @@ assert_cmd_zero "host capability contract covers every supported host truthfully
       guards.opencode.liveMutationGuards.coverage === "partial" &&
       guards.opencode.liveMutationGuards.sessionDigest === "unavailable" &&
       guards.opencode.workflowGuarantees.phaseIsolation === "live-plugin-and-runtime" &&
+      guards.pi.liveMutationGuards.coverage === "partial" &&
+      guards.pi.liveMutationGuards.sessionDigest === "unavailable" &&
+      guards.pi.workflowGuarantees.phaseIsolation === "live-extension-and-runtime" &&
       guards.cursor.liveMutationGuards.coverage === "unavailable" &&
       guards.codex.liveMutationGuards.coverage === "unavailable" &&
       guards.gemini.liveMutationGuards.coverage === "unavailable" &&
@@ -93,7 +96,7 @@ assert_cmd_zero "host wiring table matches the canonical capability rows" \
     const [contractPath, docsPath] = process.argv.slice(1);
     const hosts = JSON.parse(fs.readFileSync(contractPath, "utf8")).hosts;
     const docs = fs.readFileSync(docsPath, "utf8");
-    const labels = {"claude-code":"Claude Code", opencode:"OpenCode", cursor:"Cursor", codex:"Codex CLI", gemini:"Gemini CLI"};
+    const labels = {"claude-code":"Claude Code", opencode:"OpenCode", cursor:"Cursor", codex:"Codex CLI", gemini:"Gemini CLI", pi:"Pi"};
     const ok = Object.entries(hosts).every(([id, row]) => {
       const line = docs.split(/\r?\n/).find((candidate) => candidate.startsWith(`| ${labels[id]} |`));
       const guards = row.liveMutationGuards;

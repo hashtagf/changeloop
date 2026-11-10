@@ -53,7 +53,7 @@ cloop init /path/to/your-project --yes
 ```
 
 Claude Code works without an adapter. For another host, add
-`--host cursor`, `--host opencode`, or `--host codex` to the init command.
+`--host cursor`, `--host opencode`, `--host codex`, or `--host pi` to the init command.
 Open a new agent session after installation.
 
 Review and commit the installation files before your first change in a Git

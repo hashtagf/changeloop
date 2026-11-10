@@ -11,7 +11,7 @@ const contract = JSON.parse(readFileSync(join(harness, "adapters",
 test("every shipped host declares typed workflow guarantees", () => {
   assert.equal(contract.version, 2);
   assert.deepEqual(Object.keys(contract.hosts).sort(),
-    ["claude-code", "codex", "cursor", "gemini", "opencode"]);
+    ["claude-code", "codex", "cursor", "gemini", "opencode", "pi"]);
   for (const [host, row] of Object.entries(contract.hosts)) {
     // Gemini CLI native dispatch is not verified, so it is declared unavailable
     // rather than guessed.

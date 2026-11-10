@@ -88,8 +88,15 @@ const recorded = recordedPhaseContext({
   readText: readFileSync,
   nowMs: Date.now
 });
-const landSession = landAuthorityCommand && currentTranscriptIsLand(transcriptPath);
-const deliverInvocation = currentTranscriptIsDeliver(transcriptPath);
+// Pi's trusted extension exports the current user-invoked command, not a
+// fabricated Claude transcript. Bind privileged primitives to that exact id.
+const piCommand = process.env.FOUNDATION_HOST === "pi"
+  ? String(process.env.FOUNDATION_HOST_COMMAND || "") : "";
+const piArguments = String(process.env.FOUNDATION_HOST_ARGUMENTS || "");
+const piTarget = harnessCommand.trim().match(/\s([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\s*$/)?.[1];
+const landSession = landAuthorityCommand && (currentTranscriptIsLand(transcriptPath) ||
+  (piCommand === "land" && piArguments === piTarget));
+const deliverInvocation = currentTranscriptIsDeliver(transcriptPath) || piCommand === "deliver";
 // "เปิด PR ให้เลย", "open a PR", or a yes to the delivery question the hook
 // asked last turn is the user's /deliver for this one composite command. It
 // authorizes nothing else in the turn.
@@ -97,11 +104,13 @@ const exchange = deliverAuthorityCommand || looksGitPublication()
   ? currentPromptExchange(transcriptPath) : { latest: "", previousTurn: "" };
 const deliverSession = deliverAuthorityCommand && (deliverInvocation ||
   promptRequestsDelivery(exchange.latest) ||
-  (isApprovalReply(exchange.latest) && exchange.previousTurn.includes("ASK_USER: delivering ")));
+  (isApprovalReply(exchange.latest) && exchange.previousTurn.includes("ASK_USER: delivering "))) &&
+  (!piCommand || (piCommand === "deliver" && piArguments === piTarget));
 let gitAuthorityQuestion = null;
 const phase = String(process.env.FOUNDATION_ACTIVE_PHASE ||
   (deliverInvocation ? "deliver" : recorded?.phase ||
-    (landSession ? "land" : investigateSession.active ? "investigate" : ""))).toLowerCase();
+    (landSession ? "land" : investigateSession.active || piCommand === "investigate" ? "investigate"
+      : ["change", "feature", "dev"].includes(piCommand) ? "change" : ""))).toLowerCase();
 const mode = devSession || landAuthorityCommand || deliverAuthorityCommand ||
   deliverInvocation || configuredMode === "block" ||
   (configuredMode === "auto" && Boolean(phase)) ? "block" : "audit";

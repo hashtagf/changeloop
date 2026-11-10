@@ -474,7 +474,7 @@ claude-foundation host agent-contract --protocol 1 --format json
 ```
 
 Instruction protocol 1 supports `investigate`, `change`, `build`, `prove`,
-`land`, `changes`, `feature`, and `dev`. It returns the command, description,
+`land`, `deliver`, `changes`, `feature`, and `dev`. It returns the command, description,
 rendered instruction, argument mode, protocol, and Change Loop version.
 Arguments are opaque and `changes` accepts none. Agent-contract protocol 1
 returns the exact package-owned `AGENT.md` text, protocol, and version; it does
@@ -485,6 +485,29 @@ protocols or formats fail closed with stable JSON error codes. These endpoints
 ship before a host adopts them. A host that cannot obtain protocol 1 must request
 a compatible Change Loop release rather than read consumer command files or
 bundle its own copy.
+
+### Pi adapter
+
+`claude-foundation init <target> --host pi` adds the project-local
+`.pi/extensions/changeloop.ts` for Pi ≥1.5.2 (`@earendil-works/pi-coding-agent`).
+Trust the project and start a new Pi session or `/reload`. The extension calls
+the package-owned host endpoints above and requires matching CLI/project
+versions and jq. It preserves the user's prompt, adds the agent contract, and
+exposes all canonical commands. It never copies workflow prose into the adapter.
+
+Built-in Read/Grep/Bash use secret guards; Write/Edit/Bash use phase guards;
+successful structured edits feed lint diagnostics back as tool results.
+The bash wrapper and `!`/`!!` backend export the Pi session/model identity to
+runtime children without changing the parent environment. Each bash call starts
+in the session cwd: anchor every Build call to its absolute workspace.
+
+`/land <change>` grants only that change's Land in the current session; reload,
+session replacement, or new user input revokes it. `/deliver <change>` separately
+authorizes the matching publication workflow. Runtime proof and Land gates remain
+authoritative. Custom/MCP tools and other extensions are outside this partial
+live boundary; PowerShell is refused. The shared shell policy audits by default
+(`FOUNDATION_SHELL_GUARD=block` enables strict checks). This is not OS isolation,
+does not issue unattended attestations, and does not import a session digest.
 
 When the packaged CLI is not on `PATH`, use the source checkout's public router:
 

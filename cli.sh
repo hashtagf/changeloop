@@ -240,7 +240,7 @@ case "${1:-}" in
     while [ "$#" -gt 0 ]; do
       case "$1" in
         --host)
-          [ "$#" -ge 2 ] || fail "--host needs one of: claude, cursor, opencode, codex"
+          [ "$#" -ge 2 ] || fail "--host needs one of: claude, cursor, opencode, codex, pi"
           host="$2"; shift 2 ;;
         --host=*)
           host="${1#--host=}"; shift ;;
@@ -252,7 +252,8 @@ case "${1:-}" in
       cursor) installer="install-cursor.sh" ;;
       opencode) installer="install-opencode.sh" ;;
       codex) installer="install-codex.sh" ;;
-      *) fail "unknown host '$host'; expected claude, cursor, opencode, or codex" ;;
+      pi) installer="install-pi.sh" ;;
+      *) fail "unknown host '$host'; expected claude, cursor, opencode, codex, or pi" ;;
     esac
     exec bash "$SCRIPT_DIR/$installer" ${init_args[@]+"${init_args[@]}"} --source "$SCRIPT_DIR" ;;
   update)

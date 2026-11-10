@@ -1,6 +1,20 @@
 {
   "version": 2,
   "hosts": {
+    "pi": {
+      "nativeDispatch": "available",
+      "liveMutationGuards": {
+        "coverage": "partial", "phase": "live", "secrets": "live",
+        "lint": "live", "sessionDigest": "unavailable"
+      },
+      "finalEnforcement": "Land gates",
+      "workflowGuarantees": {
+        "terminalTruth": "runtime-enforced",
+        "phaseIsolation": "live-extension-and-runtime",
+        "staleProof": "runtime-enforced", "explicitLand": "runtime-enforced"
+      },
+      "unattendedWrites": { "mode": "supported", "requires": "Pi >=1.5.2, trusted Change Loop extension, built-in tools only and isolated workspace; no OS sandbox attestation" }
+    },
     "claude-code": {
       "nativeDispatch": "available",
       "liveMutationGuards": {

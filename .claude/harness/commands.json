@@ -475,7 +475,7 @@
     },
     {
       "name": "init",
-      "usage": "init [target-path] [--host claude|cursor|opencode|codex] [options]",
+      "usage": "init [target-path] [--host claude|cursor|opencode|codex|pi] [options]",
       "audience": "admin",
       "kind": "authority",
       "idempotent": true,

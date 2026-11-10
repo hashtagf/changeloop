@@ -58,14 +58,24 @@ Open a **new** agent session in the target project after installing, so the slas
 Claude Code needs no adapter. For other hosts, `--host` layers one over the same shared install:
 
 ```bash
-cloop init /path/to/your-project --host cursor    # or opencode, codex
+cloop init /path/to/your-project --host cursor    # or opencode, codex, pi
 ```
 
 | Host | What the adapter adds |
 |---|---|
+| **Pi ≥1.5.2** | Project-local `.pi/extensions/changeloop.ts` registers the canonical commands, loads the package-owned agent contract, and bridges built-in tool guards, lint feedback, session identity, and `!`/`!!` shell execution. Requires `@earendil-works/pi-coding-agent`, the matching Change Loop CLI, Node.js and jq |
 | **Cursor** | Seven primary lifecycle prompts including optional `/deliver`, plus `/changes` and the `/feature` compatibility alias in `.cursor/commands/`, and the always-on skill router as a `.mdc` rule with `alwaysApply: true` |
 | **OpenCode** | The same seven primary prompts plus two utility/alias prompts in `.opencode/commands/`, and a guard plugin at `.opencode/plugins/foundation.js` that replays the shipped hooks — the secrets and phase-mutation guards block live, lint feeds back on edit. Skills and the agent contract need no adapter: OpenCode reads `.claude/skills/` and `AGENTS.md` natively |
 | **Codex CLI** | The nine prompts in `$CODEX_HOME/prompts` (Codex has no per-project prompt directory), stamped with an ownership marker so re-installs refresh Change Loop prompts without clobbering a same-named user prompt |
+
+Trust the Pi project when Pi asks, then start a new session or run `/reload`.
+Use `/land <change>` for explicit Land; `/build` and `/prove` never authorize it.
+Reload or a new user message revokes the previous command's Land authority.
+Pi guard coverage is partial: custom/MCP tools and other extensions are outside
+the live boundary, and session-digest import is unavailable. Shell analysis uses
+the shared runtime policy (audit by default; `FOUNDATION_SHELL_GUARD=block` enables
+strict shell checks). This extension does not provide an OS sandbox or issue
+unattended sandbox attestations. Review/model routing stays in `foundation.json`.
 
 :::caution[Codex has no tool hooks]
 Codex cannot run live guards, so the secrets and phase-mutation hooks are inert there. Land gates and the opt-in `no-direct-main-commit.sh` remain the enforcement.

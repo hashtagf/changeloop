@@ -36,7 +36,7 @@ test(`install preflight preserves external symlink and all prior files: ${path}`
 
 for (const [script, path] of [["install-codex.sh", ".agents"],
   ["install-codex.sh", "codex-home/prompts"], ["install-cursor.sh", ".cursor"],
-  ["install-opencode.sh", ".opencode"]])
+  ["install-opencode.sh", ".opencode"], ["install-pi.sh", ".pi"]])
 test(`adapter preflights before shared installation: ${script} ${path}`, (t) => {
   const temp = mkdtempSync(join(tmpdir(), "adapter-containment-"));
   t.after(() => rmSync(temp, { recursive: true, force: true }));
@@ -84,7 +84,7 @@ test("failed doctor restores retired files and the previous ownership manifest",
 test("every installer dry-run leaves a nonexistent target absent", () => {
   const temp = mkdtempSync(join(tmpdir(), "installer-dry-"));
   try {
-    for (const script of ["install.sh", "install-codex.sh", "install-cursor.sh", "install-opencode.sh"]) {
+    for (const script of ["install.sh", "install-codex.sh", "install-cursor.sh", "install-opencode.sh", "install-pi.sh"]) {
       const target = join(temp, script, "absent");
       const result = spawnSync("bash", [join(source, script), target, "--dry-run"], { encoding: "utf8" });
       assert.equal(result.status, 0, `${script}: ${result.stderr}`);

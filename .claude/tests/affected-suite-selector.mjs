@@ -42,6 +42,7 @@ const LAND = [
 ];
 
 const RULES = [
+  [/pi-extension|install-pi|adapters\/install-support|host-capabilities/, ["Pi host adapter", "installer smoke", "host capability matrix"]],
   [/^README(?:\.th)?\.md$/, ["user guidance contracts"]],
   [/^(?:(?:README(?:\.th)?|AGENTS|CLAUDE|CONTRIBUTING|WORKFLOW|RELEASING)\.md$|docs\/.*\.md$|website\/docs\/|\.claude\/harness\/(?:README|EVIDENCE|CONSUMER-QUALITY)\.md$|\.claude\/tests\/README\.md$)/,
     ["workflow documentation contracts"]],

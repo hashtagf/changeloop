@@ -18,6 +18,9 @@ adapter_manifest_preflight() {
     done < "$manifest"
   fi
   case "$host" in
+    pi)
+      install_assert_destination "$target" .pi/extensions
+      install_assert_destination "$target" .pi/extensions/changeloop.ts yes ;;
     codex)
       install_assert_destination "$target" .agents/skills
       install_assert_destination "$target" .codex
@@ -91,6 +94,7 @@ adapter_manifest_validate_entry() {
     cursor:project:.cursor/agents/team-codebase-explorer.md|\
     cursor:project:.cursor/agents/team-type-design-analyzer.md) ;;
     opencode:project:.opencode/commands/*|opencode:project:.opencode/plugins/foundation.js) ;;
+    pi:project:.pi/extensions/changeloop.ts) ;;
     codex:project:.agents/skills/*|codex:project:.codex/foundation-rules|codex:project:.codex/hooks) ;;
     codex:codex-home:prompts/*) ;;
     *) fail "refusing adapter manifest path outside $ADAPTER_MANIFEST_HOST ownership: $scope:$rel" ;;

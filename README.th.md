@@ -53,7 +53,7 @@ cloop init /path/to/your-project --yes
 ```
 
 Claude Code ใช้ได้โดยไม่ต้องเพิ่ม adapter หากใช้ host อื่น ให้เพิ่ม
-`--host cursor`, `--host opencode` หรือ `--host codex` ในคำสั่ง init
+`--host cursor`, `--host opencode`, `--host codex` หรือ `--host pi` ในคำสั่ง init
 เปิด session ของ agent ใหม่หลังติดตั้ง
 
 สำหรับโปรเจกต์ Git ให้ตรวจและ commit ไฟล์ติดตั้งก่อนเริ่ม change แรก
