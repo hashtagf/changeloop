@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Hotfix regression for its incident. A new hotfix draft must include a
+  scenario whose `regressionOf` equals `bugfix.incident.link`, in a requirement
+  with an executable capability; otherwise `change start` returns an agent
+  EDIT. The change records `regressionRequired: true` and `change revise`
+  enforces it only for marked changes, so hotfixes created before the upgrade
+  are never blocked. The compiled spec shows "Regression of: <link>"; evidence
+  claims and protocol pins are unchanged.
+- Project incident records and lessons. Install and upgrade seed
+  `openspec/incidents/README.md`, `openspec/incidents/_template.md`, and
+  `openspec/lessons.md` only when missing, and never overwrite them.
+- Lessons as grounding. When `openspec/lessons.md` exists, investigation and
+  change intake read it as a grounding source.
+- Advisory project review rules. The AI reviewer packet (review packet schema
+  7) now carries the project's `REVIEW.md` as `reviewRules`, shown to the
+  reviewer as advisory guidance that never changes pass or fail. Review receipts
+  record `review.reviewRulesHash`; editing, deleting, or creating `REVIEW.md`
+  after a review makes it stale (`review-rules-changed`), while receipts recorded
+  before this release stay valid. A missing or empty `REVIEW.md` keeps the
+  previous behavior. Install and upgrade seed a starter `REVIEW.md` only when
+  the project has none, and never overwrite one.
+
+### Fixed
+
+- An AI review whose cheaper first round (fast or standard model) was
+  interrupted while its receipt was recorded now recovers instead of failing
+  "configured review result integrity or reviewer provenance does not match";
+  recovery compares against the reviewer the request was dispatched to.
+  `authority abort` now refuses a request whose AI result completed without a
+  receipt, which previously blocked every later review of the change.
+
+## [3.7.0] - 2026-11-10
+
+### Added
+
 - `cloop` command. Homebrew installs `cloop` as the short command next to
   `claude-foundation`, and the tap resolves `brew install cloop`. Both names
   run the same program; agents, permission allowlists, runtime routes, and the
@@ -5042,7 +5076,8 @@ Fast-first, goal-driven overhaul of the `/dev` pipeline — five workstreams fro
 - `.claude/agents/orchestrator.md` sub-agent file (replaced by the main-agent script at `.claude/orchestrator.md`). ([acf8964](../../commit/acf8964))
   - **Note:** a short-lived *redirect-only* stub at the same path was introduced in [5bd0475](../../commit/5bd0475) and removed again later — see the matching entry under `Fixed`. There is now **no** `orchestrator` sub-agent. The only worker sub-agents are `pm | lead | engineer | qa | retro`.
 
-[Unreleased]: https://github.com/Maximumsoft-Co-LTD/claude-foundation/compare/v3.6.11...HEAD
+[Unreleased]: https://github.com/hashtagf/changeloop/compare/v3.7.0...HEAD
+[3.7.0]: https://github.com/hashtagf/changeloop/compare/v3.6.11...v3.7.0
 [3.6.11]: https://github.com/Maximumsoft-Co-LTD/claude-foundation/compare/v3.6.10...v3.6.11
 [3.6.10]: https://github.com/Maximumsoft-Co-LTD/claude-foundation/compare/v3.6.9...v3.6.10
 [3.6.9]: https://github.com/Maximumsoft-Co-LTD/claude-foundation/compare/v3.6.8...v3.6.9

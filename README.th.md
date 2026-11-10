@@ -2,6 +2,11 @@
 
 [English](README.md) | **ภาษาไทย**
 
+> **โปรเจกต์นี้ย้ายแล้ว** การพัฒนา release และ Homebrew tap อยู่ที่
+> [hashtagf/changeloop](https://github.com/hashtagf/changeloop) ส่วนเอกสารอยู่ที่
+> [changeloop.ai](https://changeloop.ai) release ใหม่จะออกที่นั่น
+> ติดตั้ง: `brew tap hashtagf/changeloop https://github.com/hashtagf/changeloop && brew install cloop`
+
 Change Loop ช่วยให้ AI coding agent ตกลงขอบเขตงาน ลงมือในพื้นที่แยก
 ตรวจผลด้วยเครื่องมือของโปรเจกต์ แล้วนำงานกลับมาให้คุณตรวจทาน
 
@@ -13,7 +18,7 @@ Investigate? → Change → Build → Prove → Land
 Coding agent เขียนโค้ด ส่วน harness ดูแลสถานะ พื้นที่ทำงาน หลักฐาน และการกู้คืน
 คุณยังใช้ test framework, Git และ CI เดิมได้
 
-**Version 3.6.11** · คำสั่ง: `cloop` (alias `claude-foundation` ที่ agent ใช้)
+**Version 3.7.0** · คำสั่ง: `cloop` (alias `claude-foundation` ที่ agent ใช้)
 
 ## หลักการ
 

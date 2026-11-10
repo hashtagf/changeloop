@@ -1,8 +1,8 @@
 class ClaudeFoundation < Formula
   desc "OpenSpec-native change harness for AI coding agents"
   homepage "https://changeloop.ai/"
-  url "https://github.com/Maximumsoft-Co-LTD/claude-foundation/archive/refs/tags/v3.6.11.tar.gz"
-  sha256 "d7616bd121a04a8ef2a157949e25d61d5c2bc19231872a009ca1bc9012190348"
+  url "https://github.com/hashtagf/changeloop/archive/refs/tags/v3.7.0.tar.gz"
+  sha256 "cc9fd1ce646a4df66acd5236101e5f93ac6b404e2d4559941a51f0d090965607"
   license "MIT"
   head "https://github.com/hashtagf/changeloop.git", branch: "main"
 
@@ -19,8 +19,8 @@ class ClaudeFoundation < Formula
   # `sha256 … <tag>:` line per platform (see .github/workflows/bottle.yml +
   # RELEASING.md). Platforms with no line fall back to build-from-source.
   bottle do
-    root_url "https://github.com/Maximumsoft-Co-LTD/claude-foundation/releases/download/v3.6.11"
-    sha256 cellar: :any_skip_relocation, arm64_sequoia: "af6c43d0aad5d902da323c79d0ed047b2fd3a3c4e463e68fb7fb823902a4f249"
+    root_url "https://github.com/hashtagf/changeloop/releases/download/v3.7.0"
+    sha256 cellar: :any_skip_relocation, arm64_sequoia: "ef86739d93f623787ef8347470fd435baefaa03ad700f71e293a7b27a57c6639"
   end
 
   def install
