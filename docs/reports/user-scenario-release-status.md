@@ -18,6 +18,19 @@ comparison: 2026-10-08, no-harness/v3.6.0/v3.6.1/v3.6.2.
 
 ## Current scenario checkpoint
 
+### v3.7.0 candidate `88f28fe` — 2026-11-10 (all-lane smoke, exception for one failure)
+
+Source moves the project to `hashtagf/changeloop` and `changeloop.ai`, adds the
+`cloop` command, and changes no shipped runtime behavior except the update
+advisory's release URL. The all-lane paid smoke ran on `claude-sonnet-5-5`
+([report](scenario-checkpoint-candidate-88f28fe-2026-11-10.md)): 30 of 31 lanes
+reached `archived` and passed the hidden oracle, clean install, and post-install
+command. `order-inventory-lifecycle` failed in the run and its rerun: after the
+first change landed, the second change's sandbox sync and `--resolve` disagreed
+about conflicts ([incident](../../openspec/incidents/2026-11-10-stacked-sync-resolve-disagrees.md)).
+The maintainer authorized publication as an explicit exception. Repeated
+assurance is not claimed.
+
 ### v3.6.11 candidate `ca200a3` — 2026-11-09 (all-lane smoke, exception for one pre-existing failure)
 
 Source adds the prototype-bound visual check and its fixes. The all-lane paid
