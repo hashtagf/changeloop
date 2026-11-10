@@ -1,7 +1,8 @@
 # Move to `hashtagf/changeloop`, `changeloop.ai`, and the `cloop` command
 
-**Status:** in-repository and hosting steps completed on 2026-11-09; the next
-release from the new repository and a clean-machine Homebrew check are pending. **Audience:** maintainers. This record holds the decisions and
+**Status:** in-repository and hosting steps completed on 2026-11-09; v3.7.0
+published from the new repository on 2026-11-10; a clean-machine Homebrew check
+is pending. **Audience:** maintainers. This record holds the decisions and
 the remaining external checklist. It is not a release report.
 
 ## Decisions (owner: user, 2026-11-09)
@@ -60,10 +61,11 @@ Done on 2026-11-09:
 
 Pending:
 
-7. **[user decision]** Cut the next release from `hashtagf/changeloop`. It needs
-   the scenario checkpoint in `RELEASING.md`, which requires paid-run authority.
-   The formula then points to the new source tarball and bottle, and installs
-   older than this change still check the old repository for updates.
+7. **[done 2026-11-10]** v3.7.0 published from `hashtagf/changeloop` after the
+   [all-lane checkpoint](scenario-checkpoint-candidate-88f28fe-2026-11-10.md)
+   (one failing lane accepted as an explicit exception). The formula points to
+   the new tarball and bottle, and the update advisory reads the new
+   repository. Installs older than v3.7.0 still check the old repository.
 8. **[agent]** On a clean machine, verify
    `brew tap hashtagf/changeloop https://github.com/hashtagf/changeloop`,
    `brew install cloop`, `cloop version`, and whether Homebrew asks for
