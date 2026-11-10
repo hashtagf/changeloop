@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.7.0] - 2026-11-10
+
 ### Added
 
 - `cloop` command. Homebrew installs `cloop` as the short command next to
@@ -5042,7 +5044,8 @@ Fast-first, goal-driven overhaul of the `/dev` pipeline — five workstreams fro
 - `.claude/agents/orchestrator.md` sub-agent file (replaced by the main-agent script at `.claude/orchestrator.md`). ([acf8964](../../commit/acf8964))
   - **Note:** a short-lived *redirect-only* stub at the same path was introduced in [5bd0475](../../commit/5bd0475) and removed again later — see the matching entry under `Fixed`. There is now **no** `orchestrator` sub-agent. The only worker sub-agents are `pm | lead | engineer | qa | retro`.
 
-[Unreleased]: https://github.com/Maximumsoft-Co-LTD/claude-foundation/compare/v3.6.11...HEAD
+[Unreleased]: https://github.com/hashtagf/changeloop/compare/v3.7.0...HEAD
+[3.7.0]: https://github.com/hashtagf/changeloop/compare/v3.6.11...v3.7.0
 [3.6.11]: https://github.com/Maximumsoft-Co-LTD/claude-foundation/compare/v3.6.10...v3.6.11
 [3.6.10]: https://github.com/Maximumsoft-Co-LTD/claude-foundation/compare/v3.6.9...v3.6.10
 [3.6.9]: https://github.com/Maximumsoft-Co-LTD/claude-foundation/compare/v3.6.8...v3.6.9

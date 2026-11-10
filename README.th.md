@@ -13,7 +13,7 @@ Investigate? → Change → Build → Prove → Land
 Coding agent เขียนโค้ด ส่วน harness ดูแลสถานะ พื้นที่ทำงาน หลักฐาน และการกู้คืน
 คุณยังใช้ test framework, Git และ CI เดิมได้
 
-**Version 3.6.11** · คำสั่ง: `cloop` (alias `claude-foundation` ที่ agent ใช้)
+**Version 3.7.0** · คำสั่ง: `cloop` (alias `claude-foundation` ที่ agent ใช้)
 
 ## หลักการ
 
