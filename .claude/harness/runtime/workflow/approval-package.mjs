@@ -199,11 +199,6 @@ function proposalSummary(path) {
 const SCRATCH_LINES = ["get", "asIs", "toBe", "ifFail"];
 const RISK_STEP = Object.freeze({ Low: 1, Medium: 2, High: 3, Critical: 4 });
 
-// The wording the approval question uses for this page, by the draft's language.
-export function approvalPageName(language) {
-  return language === "th" ? "หน้าอนุมัติ" : "approval page";
-}
-
 export function createApprovalPackageRuntime({
   root, runtimeDir, previewsDir, receiptsDir, loadRuntime, saveRuntime = () => {}, activeChangePath,
   changeWorkTypes, evidence, providerCapability, receiptValidity, fail,

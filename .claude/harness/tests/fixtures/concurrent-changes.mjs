@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import { installConsumer } from "./installed-consumer.mjs";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
@@ -20,11 +21,9 @@ export function world() {
   const run = (command, args, cwd = project) => execFileSync(command, args, {
     cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]
   }).trim();
-  run("git", ["init", "-q"]);
+  installConsumer(project, { sourceRoot });
   run("git", ["config", "user.email", "fixture@example.test"]);
   run("git", ["config", "user.name", "Fixture"]);
-  run("bash", [join(sourceRoot, "install.sh"), project, "--source", sourceRoot, "--yes"],
-    sourceRoot);
   const policyPath = join(project, "foundation.json");
   const policy = JSON.parse(readFileSync(policyPath, "utf8"));
   policy.workflow.grounding = "optional";

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import { installConsumer } from "./fixtures/installed-consumer.mjs";
 import {
   existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 } from "node:fs";
@@ -47,13 +48,11 @@ function lifecycle(t, { repository }) {
   t.after(() => rmSync(temp, { recursive: true, force: true }));
   const project = join(temp, "consumer");
   mkdirSync(project, { recursive: true });
+  installConsumer(project, { sourceRoot, git: Boolean(repository) });
   if (repository) {
-    run("git", ["init", "-q"], project);
     run("git", ["config", "user.email", "fixture@example.test"], project);
     run("git", ["config", "user.name", "Fixture"], project);
   }
-  run("bash", [join(sourceRoot, "install.sh"), project, "--source", sourceRoot, "--yes"],
-    sourceRoot);
   const policyPath = join(project, "foundation.json");
   const policy = JSON.parse(readFileSync(policyPath, "utf8"));
   policy.workflow.grounding = "optional";

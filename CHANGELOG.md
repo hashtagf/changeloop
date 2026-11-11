@@ -38,6 +38,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   previous behavior. Install and upgrade seed a starter `REVIEW.md` only when
   the project has none, and never overwrite one.
 
+### Changed
+
+- Installation copies each managed directory's files in one batch instead of
+  forking `dirname`, `mkdir`, and `cp` per file (about 1,450 processes down to
+  about 320). A fresh install is roughly twice as fast; the installed tree is
+  byte-identical.
+- The deterministic test gate is faster and steadier: one pool worker per core,
+  the slowest suites start first, the workload suite runs once (inside the
+  sentinel), end-to-end fixtures copy one installed consumer instead of
+  reinstalling, and `run-all.sh --quick` skips only the slowest suites for the
+  inner loop. Six test files that no runner named now run in the gate, and a
+  registration check keeps new ones from going unrun.
+
+### Removed
+
+- Twelve unused internal runtime functions (old proposal renderers and
+  helpers replaced in 3.7). No command, output, or file format changes.
+
 ### Fixed
 
 - An AI review whose cheaper first round (fast or standard model) was

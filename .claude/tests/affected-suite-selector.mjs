@@ -84,6 +84,9 @@ const RULES = [
   ]],
   [/benchmark-runtime|test-discrimination|proof-execution-runtime|adapter-runtime|receipt-runtime|provider-catalog/,
     ["benchmark evidence"]],
+  // The sentinel runs the workload suite itself; it has no registered runner row.
+  [/^\.claude\/tests\/bench\/(?:openspec-native\/|tasks\/|config\/|tests\/fixtures\/|tests\/openspec-native-workloads\.test\.mjs$)/,
+    ["openspec native sentinel"]],
   [/outcomes-runtime|lessons-runtime|^\.claude\/harness\/commands\.json$|^cli\.sh$/,
     ["outcomes and lessons"]],
   [/skill-routing|task-change/, ["skill routing", "advance lifecycle outcomes"]],

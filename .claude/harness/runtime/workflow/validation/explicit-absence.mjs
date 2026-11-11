@@ -15,13 +15,6 @@ export function absenceKind(value) {
   return match[2] !== undefined && match[2].trim() !== "" ? "reasoned" : "bare";
 }
 
-export const isReasonedAbsence = (value) => absenceKind(value) === "reasoned";
-
-// The reason an absence answer carries, for display.
-export function absenceReason(value) {
-  return isReasonedAbsence(value) ? value.match(ABSENCE)[2].trim() : null;
-}
-
 // One repair issue for an absence answer that gives no reason.
 export function bareAbsenceIssue(value, path) {
   return absenceKind(value) === "bare"

@@ -410,10 +410,6 @@ export function visualReceiptResult(report, executedStatus) {
   };
 }
 
-export function visualBlockingFindings(findings = []) {
-  return findings.filter((finding) => BLOCKING.has(finding?.severity));
-}
-
 // The user question once visual repair is spent and every other gate is done.
 // Recommendation first; accepting is never the only choice.
 export function visualDriftDecision(id, drift) {

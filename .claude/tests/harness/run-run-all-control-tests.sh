@@ -111,6 +111,22 @@ grep -q 'openspec native benchmark' "$WORK/missing-dependencies-list.out" || {
   exit 1
 }
 
+# `--quick` is the inner-loop gate: it keeps ordinary suites and drops the
+# slowest ones and the exclusive benchmark, which the full run still owns.
+sh "$HERE/../run-all.sh" --quick --list > "$WORK/quick-list.out"
+sh "$HERE/../run-all.sh" --list > "$WORK/full-list.out"
+for label in 'runtime syntax' 'run-all process control'; do
+  grep -qFx "$label" "$WORK/quick-list.out" || {
+    echo "FAIL: --quick dropped ordinary suite: $label"; exit 1; }
+done
+for label in 'installer smoke' 'openspec native sentinel' 'openspec native benchmark'; do
+  grep -qFx "$label" "$WORK/full-list.out" || {
+    echo "FAIL: full list is missing: $label"; exit 1; }
+  if grep -qFx "$label" "$WORK/quick-list.out"; then
+    echo "FAIL: --quick kept slow suite: $label"; exit 1
+  fi
+done
+
 # The watchdog's limits and its timeout reporting are checked as structured
 # node:test cases, which is also the report Prove reads from this script.
 node --test "$HERE/../../harness/tests/run-all-timeout.test.mjs"

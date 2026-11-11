@@ -272,8 +272,6 @@ export function renderComplianceRecord(value, { language } = {}) {
   return rows.length === 0 ? "" : table([l.item, l.value], rows);
 }
 
-export const renderCompliance = renderComplianceRecord;
-
 // openspec/config.yaml opts into the compliance change record with a top-level
 // `compliance: change-record` (or `true`/`enabled`). Any other value, or no
 // key, leaves it off.

@@ -293,7 +293,10 @@ function adapterFixture(t, { slowMs, baseHead: recordBase = true, config = {} })
 }
 
 test("the benchmark adapter compares a real base archive with head and records the receipt", async (t) => {
-  const fixture = adapterFixture(t, { slowMs: 150 });
+  // Each sample includes a Node start-up, which a loaded runner stretches by
+  // hundreds of milliseconds per run. A 600ms head delay keeps the injected
+  // regression well clear of that noise; 150ms once read as a pass under load.
+  const fixture = adapterFixture(t, { slowMs: 600 });
   const result = await fixture.runtime.executeAdapter(
     "change-a", "perf", fixture.providerConfig, "proof-1", new Map());
   assert.equal(result.status, "fail");

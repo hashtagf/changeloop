@@ -49,6 +49,9 @@ rtk test bash .claude/tests/run-all.sh --affected --list
 rtk test bash .claude/tests/run-all.sh --affected
 ```
 
+For a broad check that skips only the slowest end-to-end suites, run
+`run-all.sh --quick`. It never replaces the full gate.
+
 The full suite remains the authoritative final gate before commit. You do not
 need to run it before and after every edit:
 

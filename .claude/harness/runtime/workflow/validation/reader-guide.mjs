@@ -1,5 +1,5 @@
 import { scopeAllowsPath } from "../../core/graph-execution.mjs";
-import { renderInvestigationContext, renderRetainedInvestigation } from "./investigation-coverage.mjs";
+import { renderInvestigationContext } from "./investigation-coverage.mjs";
 import { lightweightDraft } from "./design-blueprints.mjs";
 import { isSemanticV4Plus } from "./draft-version.mjs";
 import { hasAuthoredProposalProse } from "../draft-folder.mjs";
@@ -134,12 +134,6 @@ function requirementTasks(draft) {
   return byRequirement;
 }
 
-export function renderProposalLead(draft) {
-  const parts = [];
-  if (text(draft.summary)) parts.push(`## Summary\n\n${text(draft.summary)}`);
-  return parts.join("\n\n");
-}
-
 // Section bodies (no heading) for the proposal renderer, which owns the
 // outline order and the localized headings.
 export function renderUserStories(draft, language = draft?.language) {
@@ -166,17 +160,6 @@ export function renderSuccessCriteria(draft) {
 
 export function renderOpenQuestions(draft) {
   return openQuestionItems(draft || {}).map((row) => `- ${row}`).join("\n");
-}
-
-export function renderProposalReader(draft) {
-  const parts = [];
-  const stories = renderUserStories(draft);
-  if (stories) parts.push(`## User stories\n\n${stories}`);
-  const criteria = renderSuccessCriteria(draft);
-  if (criteria) parts.push(`## Success criteria\n\n${criteria}`);
-  const index = capabilityIndex(draft);
-  if (index) parts.push(index);
-  return parts.join("\n\n");
 }
 
 // Where a reader of many spec files should start: each capability, the
@@ -227,11 +210,6 @@ export function discoveryAppendixBody(draft, language = draft?.language) {
   return parts.join("\n\n");
 }
 
-export function renderDiscoveryAppendix(draft) {
-  const body = discoveryAppendixBody(draft);
-  return body ? `## Appendix: discovery coverage\n\n${body}` : "";
-}
-
 // A row the harness derived from draft content says so and names that content,
 // so a reviewer can tell it from a row the agent wrote.
 export function coverageStatus(row) {
@@ -241,22 +219,6 @@ export function coverageStatus(row) {
 export function coverageRationale(row) {
   if (row?.derived) return `Derived from ${strings(row.derivedFrom).join(", ")}`;
   return row?.rationale && row.rationale !== "none" ? row.rationale : "";
-}
-
-export function renderInvestigationSummary(investigation) {
-  if (!investigation) return "";
-  return "## Investigation handoff\n\n" +
-    `- **ID:** ${cell(investigation.id)}\n` +
-    `- **Outcome:** ${cell(investigation.outcome)}\n` +
-    `- **Summary:** ${cell(investigation.summary)}`;
-}
-
-export function renderInvestigationAppendix(investigation, language = "en") {
-  if (!investigation) return "";
-  return "## Appendix: investigation provenance\n\n" +
-    `- **Change intent:** ${cell(investigation.changeIntent)}\n` +
-    `- **State:** ${cell(investigation.statePath)} @ ${cell(investigation.stateDigest)}\n` +
-    `- **Sources:** ${cell(investigation.sourceDigest)}` + renderRetainedInvestigation(investigation, language);
 }
 
 // The one investigation appendix of a proposal (body, no heading): the
@@ -277,22 +239,6 @@ export function investigationAppendixBody(draft, title = "") {
     investigation.sourceDigest ? `- **Sources:** ${cell(investigation.sourceDigest)}` : ""
   ].filter(Boolean);
   return [lines.join("\n"), renderInvestigationContext(draft)].filter(Boolean).join("\n\n");
-}
-
-export function renderDesignOverview(draft) {
-  const parts = [];
-  const source = diagramSource(draft.diagram);
-  if (source) {
-    const purpose = typeof draft.diagram === "object" ? text(draft.diagram?.purpose) : "";
-    parts.push(`## Overview\n\n${purpose ? `${purpose}\n\n` : ""}\`\`\`mermaid\n${source}\n\`\`\``);
-  }
-  const assumptions = strings(draft.assumptions);
-  const questions = openQuestionItems(draft);
-  if (assumptions.length || questions.length)
-    parts.push("## Assumptions and open questions" +
-      (assumptions.length ? `\n\n### Assumptions\n\n${assumptions.map((row) => `- ${row}`).join("\n")}` : "") +
-      (questions.length ? `\n\n### Open questions\n\n${questions.map((row) => `- ${row}`).join("\n")}` : ""));
-  return parts.join("\n\n");
 }
 
 // Fill the file map's Tasks column from each task's [paths:] scope.

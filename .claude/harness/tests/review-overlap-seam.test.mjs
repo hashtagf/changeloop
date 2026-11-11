@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import { installConsumer } from "./fixtures/installed-consumer.mjs";
 import {
   chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync
 } from "node:fs";
@@ -63,11 +64,9 @@ function consumer({ reviewer: mode = "pass", testExit = 0,
   const run = (command, args, cwd = project) => execFileSync(command, args, {
     cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]
   }).trim();
-  run("git", ["init", "-q"]);
+  installConsumer(project, { sourceRoot });
   run("git", ["config", "user.email", "fixture@example.test"]);
   run("git", ["config", "user.name", "Fixture"]);
-  run("bash", [join(sourceRoot, "install.sh"), project, "--source", sourceRoot, "--yes"],
-    sourceRoot);
   const events = join(temp, "events.log");
   const reviewer = join(temp, "fake-claude.js");
   writeFileSync(reviewer, fakeReviewerSource(events, mode));

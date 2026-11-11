@@ -70,38 +70,6 @@ export function investigationCoverageIssues(source) {
   return issues;
 }
 
-export function renderRetainedInvestigation(binding, language = "en") {
-  if (binding?.version !== 2) return "";
-  const intake = binding.intake || {};
-  const th = String(language).startsWith("th");
-  const esc = (v) => String(v ?? "").replace(/[\\`*_[\]<>]/g, "\\$&");
-  const section = (title, values) => values.length
-    ? `\n### ${title}\n\n${values.map((v) => `- ${v}`).join("\n")}\n` : "";
-  let result = `\n## ${th ? "บริบทที่รับจาก Investigate" : "Retained investigation context"}\n\n`;
-  if (intake.intent?.goal) result += `${th ? "เป้าหมาย" : "Goal"}: ${esc(intake.intent.goal)}\n\n`;
-  if (intake.intent?.outcome) result += `${th ? "ผลลัพธ์ที่ต้องการ" : "Desired outcome"}: ${esc(intake.intent.outcome)}\n\n`;
-  result += section(th ? "ขอบเขตและผู้เกี่ยวข้อง" : "Scope and actors",
-    [...rows(intake.intent?.scope), ...rows(intake.intent?.actors)].map(esc));
-  result += section(th ? "ข้อกำหนดและประวัติการแก้ไข" : "Requirements and revision history",
-    rows(intake.requirements).filter(Boolean).map((r) =>
-      `**${esc(sourceId(r))}** [${esc(r.kind)} / ${esc(r.status)} / ${esc(r.origin)}]: ${esc(r.statement)}` +
-      (rows(r.examples).length ? `; examples: ${rows(r.examples).map(esc).join(" / ")}` : "") +
-      (rows(r.criteria).length ? `; criteria: ${rows(r.criteria).map(esc).join(" / ")}` : "") +
-      (r.reason ? `; ${esc(r.reason)}` : "") +
-      (r.supersededBy ? `; → ${esc(sourceId(r.supersededBy))}` : "")));
-  result += section(th ? "คำถามและการตัดสินใจ" : "Questions and decisions",
-    rows(intake.questions).filter(Boolean).map((q) =>
-      `${esc(q.key)} [${esc(q.status)}]: ${esc(q.question)}${q.answer ? " → " + esc(q.answer) : ""}${q.reason ? "; " + esc(q.reason) : ""}`));
-  result += section(th ? "ผลทดลองและข้อจำกัด (ไม่ใช่ proof)" : "Experiments and limitations (not proof)",
-    rows(intake.experiments).filter(Boolean).map((e) =>
-      `${esc(e.key)} [${esc(e.status)}]: ${esc(e.question)}; criteria: ${rows(e.criteria).map(esc).join(" / ")}; findings: ${rows(e.findings).map(esc).join(" / ")}; limitations: ${rows(e.limitations).map(esc).join(" / ")}; refs: ${rows(e.requirementRefs).map((r) => esc(sourceId(r))).join(", ")}${e.supersededBy ? "; → " + esc(e.supersededBy) : ""}`));
-  result += section(th ? "สาระจากบทสนทนา" : "Conversation provenance",
-    rows(intake.conversation).filter(Boolean).map((e) =>
-      `${esc(e.key)} [${esc(e.speaker)}]: ${esc(e.statement)} (${esc(e.source)})`));
-  result += section(th ? "ช่องว่างของประวัติ" : "Unavailable history gaps", rows(intake.historyGaps).map(esc));
-  return result;
-}
-
 export function renderInvestigationCoverage(source) {
   if (source?.investigation?.version !== 2) return "";
   const esc = (v) => String(v ?? "").replace(/[\\|\n\r]/g, " ");

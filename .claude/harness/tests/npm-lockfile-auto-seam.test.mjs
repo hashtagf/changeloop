@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import { installConsumer } from "./fixtures/installed-consumer.mjs";
 import {
   mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync
 } from "node:fs";
@@ -18,11 +19,9 @@ test("installed consumer activates npm lockfile consistency without provider wir
   const project = join(temp, "consumer");
   mkdirSync(project, { recursive: true });
   try {
-    run("git", ["init", "-q"], project);
+    installConsumer(project, { sourceRoot });
     run("git", ["config", "user.email", "fixture@example.test"], project);
     run("git", ["config", "user.name", "Fixture"], project);
-    run("bash", [join(sourceRoot, "install.sh"), project,
-      "--source", sourceRoot, "--yes"], sourceRoot);
     const policyPath = join(project, "foundation.json");
     const policy = JSON.parse(readFileSync(policyPath, "utf8"));
     policy.workflow.grounding = "optional";

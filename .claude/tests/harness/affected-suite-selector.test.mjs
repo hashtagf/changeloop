@@ -137,3 +137,16 @@ test("domain matches do not suppress runner stem self-selection", () => {
   ], [...labels, selfLabel]);
   assert.ok(selected.includes(selfLabel));
 });
+
+test("workload and benchmark fixture edits select the sentinel that runs the workload suite", () => {
+  const known = [...labels, "openspec native sentinel"];
+  for (const file of [
+    ".claude/tests/bench/tests/openspec-native-workloads.test.mjs",
+    ".claude/tests/bench/tests/fixtures/order-inventory-repair.mjs",
+    ".claude/tests/bench/tasks/24-order-inventory/oracle/run.sh",
+    ".claude/tests/bench/openspec-native/sentinel.mjs"
+  ]) {
+    const { selected } = selectAffectedSuites([file], known);
+    assert.ok(selected.includes("openspec native sentinel"), file);
+  }
+});

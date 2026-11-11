@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
+import { installConsumer } from "./installed-consumer.mjs";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
@@ -24,6 +25,10 @@ export function repositoriesWorld() {
   const run = (command, args, cwd = project) => execFileSync(command, args, {
     cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"]
   }).trim();
+  // Installing into the empty directory first is equivalent to installing over
+  // these product files: the installer and its post-install doctor read none
+  // of them, so the shared installed template applies.
+  installConsumer(project, { sourceRoot, git: false });
   for (const repository of REPOSITORIES) {
     mkdirSync(join(project, repository, "test"), { recursive: true });
     writeFileSync(join(project, repository, "package.json"),
@@ -36,7 +41,6 @@ export function repositoriesWorld() {
   writeFileSync(join(project, "package.json"),
     '{"name":"consumer","version":"1.0.0","type":"module","scripts":{"test":"node --test"}}\n');
   writeFileSync(join(project, ".gitignore"), ".foundation/\n");
-  run("bash", [join(sourceRoot, "install.sh"), project, "--source", sourceRoot, "--yes"], sourceRoot);
   mkdirSync(join(project, "openspec"), { recursive: true });
   writeFileSync(join(project, "openspec/repositories.yaml"), `${JSON.stringify({
     version: 1,

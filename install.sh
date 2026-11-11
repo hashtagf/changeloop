@@ -305,12 +305,24 @@ for rel in "${MANAGED[@]}"; do
   mkdir -p "$(dirname "$dst")"
   if [ -d "$src" ]; then
     mkdir -p "$dst"
+    # Copy one directory's files with a single `cp` (same per-file semantics as
+    # `cp file dir/file`). Forking dirname/mkdir/cp for each of ~500 files made
+    # every install several seconds slower.
+    batch_dir=""
+    batch=()
     while IFS= read -r -d '' file; do
       file_rel="${file#"$SOURCE_PATH/"}"
       if is_unshipped "$file_rel"; then continue; fi
-      mkdir -p "$(dirname "$TARGET_PATH/$file_rel")"
-      cp "$file" "$TARGET_PATH/$file_rel"
-    done < <(find "$src" -type f -print0)
+      file_dir="$TARGET_PATH/${file_rel%/*}"
+      if [ "$file_dir" != "$batch_dir" ]; then
+        [ "${#batch[@]}" -eq 0 ] || cp "${batch[@]}" "$batch_dir/"
+        batch=()
+        batch_dir="$file_dir"
+        [ -d "$batch_dir" ] || mkdir -p "$batch_dir"
+      fi
+      batch+=("$file")
+    done < <(find "$src" -type f -print0 | LC_ALL=C sort -z)
+    [ "${#batch[@]}" -eq 0 ] || cp "${batch[@]}" "$batch_dir/"
   else
     cp "$src" "$dst"
   fi

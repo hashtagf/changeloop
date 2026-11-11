@@ -33,18 +33,44 @@ list_mode=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --affected) selection_mode="affected"; shift ;;
+    --quick) selection_mode="quick"; shift ;;
     --list) list_mode=1; shift ;;
     *) break ;;
   esac
 done
 
+# The slowest suites (each minutes long on a loaded machine), slowest first.
+# The pool starts them first so none stretches the tail of a full run, and
+# `--quick` leaves them out: it is the fast inner-loop gate, not the final one.
+LONG_FIRST='openspec native sentinel
+harness contracts (topology planning)
+concurrent repositories seam
+installer smoke
+apply conflict
+proof loop end to end
+pull request delivery
+land carry and undo
+agent evals
+upgrade compatibility
+target drift mutation
+landed carry sync seam
+harness reliability gaps
+evidence binding mutation
+concurrent changes seam
+change loop seams
+review overlap seam
+feedback review
+harness contracts (change policy)
+rapid fast path seam
+harness contracts (sandbox land)
+command registry'
+
 # label|command — `!` prefixes a label that must run with the repository to
 # itself. Commands are expanded by the child with $HERE and $ROOT in scope.
 #
-# Shared rows are listed longest-first: xargs hands them to the pool in table
-# order, and starting the long suites first keeps the pool packed instead of
-# leaving a long tail behind a late-started slow suite. Replay order below
-# follows the same table, so the printed report order matches.
+# The pool starts the suites named in LONG_FIRST before the rest, so a slow
+# suite never starts late and leaves a long tail. Replay order below follows
+# this table, so the printed report order is unaffected.
 suites() {
   cat <<'TABLE'
 evidence binding mutation|sh "$HERE/harness/run-evidence-binding-mutation.sh"
@@ -183,7 +209,8 @@ host execution contract|node --test "$ROOT/.claude/harness/tests/host-execution-
 openspec benchmark matrix|node --test "$ROOT/.claude/tests/bench/tests/openspec-native-matrix.test.mjs"
 agent eval tooling|node --test "$HERE/evals/evals.test.mjs"
 agent evals|node "$HERE/evals/run-evals.mjs"
-!openspec native benchmark|node --test --test-concurrency=1 "$ROOT/.claude/tests/bench/tests/openspec-native-scorecard.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-runner.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-lab.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-workloads.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-lifecycle.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-aggregate.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-sentinel.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-release-report.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-cost.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-time-gate.test.mjs"
+!openspec native benchmark|node --test --test-concurrency=1 "$ROOT/.claude/tests/bench/tests/openspec-native-scorecard.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-runner.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-lab.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-lifecycle.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-aggregate.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-release-report.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-cost.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-time-gate.test.mjs"
+!openspec native sentinel|node --test "$ROOT/.claude/tests/bench/tests/openspec-native-sentinel.test.mjs"
 signed CI|node --test "$ROOT/.claude/harness/tests/signed-ci.test.mjs"
 adapter fingerprint|node --test "$ROOT/.claude/harness/tests/adapter-fingerprint.test.mjs"
 provider workspace hash|node --test "$ROOT/.claude/harness/tests/provider-workspace-hash.test.mjs"
@@ -299,6 +326,7 @@ review repair attempt store|node --test "$ROOT/.claude/harness/tests/review-repa
 review guard reconciliation|node "$HERE/harness/run-review-guard-fix-tests.mjs"
 current hook contracts|sh "$HERE/hooks/run-hook-tests.sh"
 phase mutation guard|sh "$HERE/hooks/run-phase-mutation-guard-tests.sh"
+standalone contracts|node --test "$ROOT/.claude/harness/tests/implied-change.test.mjs" "$ROOT/.claude/harness/tests/security-policy.test.mjs" "$ROOT/.claude/harness/tests/authority-lock-process.test.mjs" "$ROOT/.claude/harness/tests/opencode-plugin-session.test.mjs" "$ROOT/.claude/tests/hooks/dev-terminal-guard.test.mjs" "$ROOT/.claude/tests/e2e/consumer-crap-provider.test.mjs" "$HERE/harness/test-registration.test.mjs"
 instruction contracts|sh "$HERE/harness/run-instruction-contract-tests.sh"
 instruction provenance and host execution|sh "$HERE/harness/run-provenance-contract-tests.sh"
 blocked decision contracts|node "$HERE/harness/run-blocked-decision-tests.mjs"
@@ -329,6 +357,10 @@ if [ "$list_mode" -eq 1 ]; then
       node "$HERE/affected-suite-selector.mjs" "$ROOT"
   else
     printf '%s\n' "$suite_registry" | while IFS='|' read -r label _command; do
+      if [ "$selection_mode" = "quick" ]; then
+        case "$label" in '!'*) continue ;; esac
+        printf '%s\n' "$LONG_FIRST" | grep -qFx -- "$label" && continue
+      fi
       label_of "$label"
       printf '\n'
     done
@@ -479,11 +511,12 @@ pool_size() {
   [ -n "${FOUNDATION_TEST_JOBS:-}" ] && { echo "$FOUNDATION_TEST_JOBS"; return; }
   cores="$( { nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null; } | head -1 )"
   case "$cores" in "" | *[!0-9]*) cores=4 ;; esac
-  # These suites spend substantial time in short-lived Node/git children and
-  # filesystem waits. Two workers per logical core keeps those gaps filled;
-  # the cap prevents an unusually large host from flooding its process table.
-  jobs=$((cores * 2))
-  [ "$jobs" -gt 24 ] && jobs=24
+  # One worker per logical core. Most suites already fan out into several
+  # Node/git children (and `node --test` runs files in parallel), so two
+  # workers per core drove the load average to ~4x the core count and pushed
+  # healthy suites past their watchdog. The cap bounds very large hosts.
+  jobs=$cores
+  [ "$jobs" -gt 16 ] && jobs=16
   [ "$jobs" -lt 1 ] && jobs=1
   echo "$jobs"
 }
@@ -535,6 +568,11 @@ while [ "$index" -le "$TOTAL" ]; do
     index=$((index + 1))
     continue
   fi
+  if [ "$selection_mode" = "quick" ] && {
+       exclusive "$line" || printf '%s\n' "$LONG_FIRST" | grep -qFx -- "$label"; }; then
+    index=$((index + 1))
+    continue
+  fi
   selected="$selected $index"
   if exclusive "$line"; then alone="$alone $index"; else shared="$shared $index"; fi
   index=$((index + 1))
@@ -561,7 +599,19 @@ if [ "$selection_mode" = "full" ]; then
   export FOUNDATION_PREPROVEN_SUITES
 fi
 
-printf '%s\n' $shared | xargs -P "$JOBS" -I@ sh "$0" --suite @ "$WORK" &
+# Longest suites start first so none of them begins late and stretches the
+# tail of the run (longest-processing-time-first). Order of the replayed output
+# is unaffected: it follows the table.
+ordered="$(suites | SHARED_SUITES="$shared" LONG_FIRST="$LONG_FIRST" awk '
+  BEGIN {
+    n = split(ENVIRON["SHARED_SUITES"], ids, " "); for (i = 1; i <= n; i++) want[ids[i]] = 1
+    m = split(ENVIRON["LONG_FIRST"], names, "\n"); for (i = 1; i <= m; i++) rank[names[i]] = i
+  }
+  {
+    label = $0; sub(/\|.*/, "", label); sub(/^!/, "", label)
+    if (NR in want) printf "%d %d\n", (label in rank) ? rank[label] : 1000, NR
+  }' | sort -n -k1,1 -k2,2 | cut -d' ' -f2)"
+printf '%s\n' $ordered | xargs -P "$JOBS" -I@ sh "$0" --suite @ "$WORK" &
 pool_pid=$!
 (
   monitor_ticks=0
