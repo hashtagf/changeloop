@@ -1,6 +1,6 @@
 ---
 title: Adapters and wiring
-description: The five executable adapters, derived and custom wiring, and how resources keep providers from colliding.
+description: The six executable adapters, derived and custom wiring, and how resources keep providers from colliding.
 ---
 
 <!-- docs-audience: agents-integrators -->
@@ -33,7 +33,7 @@ wiring change invalidates only the affected provider fingerprints.
 }
 ```
 
-## The five adapters
+## The six adapters
 
 | Adapter | Purpose |
 |---|---|
@@ -41,6 +41,7 @@ wiring change invalidates only the affected provider fingerprints.
 | `test-discovery` | Run a test command once and emit both test and discovery receipts |
 | `playwright` | Run project-owned Playwright tests and map structured claim annotations |
 | `contract-digest` | Hash one declared artifact in two or more repositories; pass only when the bytes agree |
+| `benchmark` | Time one command on the original code and on the change; pass only when the change is not slower than the allowed threshold |
 | `external` | Require a receipt from a system Change Loop does not execute |
 
 ### command
@@ -146,6 +147,27 @@ Executes no command. It hashes the same declared contract artifact in every part
 ```
 
 At least two repositories are required: a "shared" contract with one participant proves nothing about agreement. A `contract-digest` provider spans repositories and therefore cannot declare a single `repository`.
+
+### benchmark
+
+Catches performance regressions by comparing against the original code.
+
+```json
+"performance": {
+  "adapter": "benchmark",
+  "command": ["npm", "run", "bench"],
+  "runs": 5,
+  "maxRegressionPercent": 10
+}
+```
+
+The harness runs the command alternately on the base and on the change
+(`runs` times each, at least 3, default 5) and compares the median times. It
+passes when every run succeeds and the change is at most
+`maxRegressionPercent` slower (default 10). A regression is re-measured once
+with twice the runs before it counts, so one noisy round cannot fail the
+change. When the base cannot be built or run, the result says the comparison
+was unavailable and only the change's own runs decide.
 
 ### external
 

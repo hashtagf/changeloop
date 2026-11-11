@@ -17,8 +17,15 @@ owns, and leaves project-owned files alone.
 | Tool | Status | Why |
 |---|---|---|
 | **Node.js 20.19 or later** | Required | The runtime is plain ESM Node with no compile step |
-| **OpenSpec CLI 1.7.0** | Required | Spec synchronization and archive |
+| **OpenSpec CLI 1.7** | Required, prepared automatically | Spec synchronization and archive |
 | **Git** | Recommended | Enables worktree isolation; a dirty or non-Git project falls back to an isolated copy |
+
+You normally do not install OpenSpec yourself: the installer uses a compatible
+`openspec` already in the project or on `PATH`, and otherwise downloads the
+pinned version into `.foundation/tools` (this needs npm registry access). If
+that fails, installation still finishes with a warning, and the harness tries
+again before Build, Prove, and Land. On a machine without registry access,
+install it yourself:
 
 ```bash
 npm install -g @fission-ai/openspec@1.7.0
@@ -168,6 +175,8 @@ openspec/config.yaml           # copied only when missing
 openspec/repositories.yaml     # copied only when missing
 foundation.json                # seeded; supported missing-field/default migrations
 CLAUDE.md / AGENTS.md          # only the marked pointer block is rewritten
+REVIEW.md                      # copied only when missing
+openspec/incidents/, openspec/lessons.md  # copied only when missing
 ```
 
 Your specs, active changes, runtime state, custom agents, and hooks survive every upgrade. A path dropped from the managed list is removed from your project only if the manifest previously claimed it — so Change Loop never deletes a file it did not install.

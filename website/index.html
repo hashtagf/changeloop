@@ -139,8 +139,8 @@
       <section class="fact-strip" aria-label="Change Loop properties">
         <div class="wrap facts">
           <div class="fact reveal"><strong>8</strong><span>agent slash commands</span></div>
-          <div class="fact reveal" data-delay="1"><strong>5</strong><span>executable adapter types</span></div>
-          <div class="fact reveal" data-delay="2"><strong>25</strong><span>evidence capabilities</span></div>
+          <div class="fact reveal" data-delay="1"><strong>6</strong><span>executable adapter types</span></div>
+          <div class="fact reveal" data-delay="2"><strong>28</strong><span>evidence capabilities</span></div>
           <div class="fact reveal" data-delay="3"><strong>1</strong><span>task ledger: tasks.md</span></div>
         </div>
       </section>
@@ -282,6 +282,7 @@
               <button class="adapter-tab" data-adapter="test-discovery" role="tab" aria-selected="false">test-discovery</button>
               <button class="adapter-tab" data-adapter="playwright" role="tab" aria-selected="false">playwright</button>
               <button class="adapter-tab" data-adapter="contract-digest" role="tab" aria-selected="false">contract-digest</button>
+              <button class="adapter-tab" data-adapter="benchmark" role="tab" aria-selected="false">benchmark</button>
               <button class="adapter-tab" data-adapter="external" role="tab" aria-selected="false">external</button>
             </div>
 
@@ -580,7 +581,7 @@ cloop init /path/to/project --yes</code></pre>
             <div class="playwright-mark">HOST</div>
             <div>
               <strong>More hosts than Claude Code.</strong>
-              <p><code>cloop init --host cursor|opencode|codex</code> layers a host adapter over the same install: Cursor gets the commands and an always-on rule, OpenCode gets the commands plus a plugin that replays the live guards, and Codex gets the prompts with Land gates as the enforcement. Worktree sandboxes can also install their own dependencies via <code>sandbox.setupCommand</code> in <code>foundation.json</code>.</p>
+              <p><code>cloop init --host cursor|opencode|codex|pi</code> layers a host adapter over the same install: Cursor gets the commands and an always-on rule, OpenCode gets the commands plus a plugin that replays the live guards, Codex gets the prompts with Land gates as the enforcement, and Pi gets a project-local extension that registers the commands and bridges the built-in tool guards. Worktree sandboxes can also install their own dependencies via <code>sandbox.setupCommand</code> in <code>foundation.json</code>.</p>
             </div>
           </div>
 

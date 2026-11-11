@@ -207,7 +207,7 @@ AI อีกหนึ่งรอบพอดี หรือพัก review �
 - การติดตั้งหรืออัปเกรดจะใส่ `REVIEW.md` ตั้งต้นให้เฉพาะเมื่อยังไม่มีไฟล์
   และไม่เขียนทับไฟล์ของคุณ แก้ไขได้เหมือนไฟล์อื่นของโปรเจกต์
 
-รายละเอียด: [เกณฑ์รีวิวของโปรเจกต์ใน evidence reference](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/.claude/harness/EVIDENCE.md#project-review-rules)
+รายละเอียด: [เกณฑ์รีวิวของโปรเจกต์ใน evidence reference](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#project-review-rules)
 
 ## การตัดสินใจถูกบันทึกไว้ที่ไหน
 

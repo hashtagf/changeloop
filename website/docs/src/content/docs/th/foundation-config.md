@@ -366,6 +366,18 @@ placeholder ที่ใช้ได้คือ `{changeId}`, `{title}`, `{comm
 ใด ๆ ให้แก้การตั้งค่าแล้วสั่ง `/deliver` อีกครั้ง กฎการตั้งชื่อฉบับเต็มอยู่ใน
 `WORKFLOW.md` (`/deliver <change>`)
 
+ปลายทางและวิธีเปิด pull request:
+
+| Field | ค่าเริ่มต้น | ความหมาย |
+|---|---|---|
+| `provider` | `"auto"` | `auto` หรือ `github` ตอนนี้ Deliver รองรับเฉพาะ remote บน GitHub |
+| `remote` | `"origin"` | Git remote ที่จะ push และเปิด PR |
+| `allowedHosts` | `["github.com"]` | host ของ remote ที่ Deliver push ได้ host อื่นจะทำให้ Deliver หยุด |
+| `defaultBaseBranch` | default branch ของ remote | base branch ของ PR โดย Deliver ไม่ push เข้า default branch ตรง ๆ เด็ดขาด |
+| `missingRequiredEvidence` | `"block"` | `block` หยุด Deliver เมื่อหลักฐานที่จำเป็นไม่ครบ ค่าอื่นจะเปิด PR ต่อ |
+| `missingPresentationEvidence` | `"draft"` | `draft` เปิดเป็น draft PR เมื่อ receipt ที่ผ่านแล้วไม่มีหลักฐานที่เหมาะกับประเภท change (เช่น screenshot สำหรับ frontend หรือ benchmark สำหรับ performance) |
+| `updateOwnedPullRequest` | `true` | สงวนไว้ ตอนนี้ยังไม่มีผล |
+
 ## field อื่น ๆ
 
 | Field | ค่าเริ่มต้น | ความหมาย |
@@ -373,6 +385,8 @@ placeholder ที่ใช้ได้คือ `{changeId}`, `{title}`, `{comm
 | `execution.budgetWatchdog` | `false` | Boolean ถ้า `false` ยังบันทึก usage แต่ packet ไม่มี spend directive หรือขีดจำกัด; ถ้า `true` จะมี signal `budget-warning` เมื่อใช้ถึง 70% |
 | `review.fallbackReviewers` | `["codex-sol", "main-session"]` ในไฟล์ที่ติดตั้ง | reviewer ที่ลองตามลำดับเฉพาะเมื่อเกิด infrastructure error; verdict `fail` หรือ `inconclusive` ไม่ trigger fallback ชื่อต้องมีอยู่จริง ห้ามซ้ำ `defaultReviewer` และ `main-session` ต้องใช้คู่กับ `independence: "self"` |
 | `review.infraFailureThreshold` | `2` ในไฟล์ที่ติดตั้ง | จำนวนเต็ม `1..5` |
+| `review.lowRiskModel` | `"fast"` | `fast` หรือ `configured` change ความเสี่ยงต่ำได้ review เฉพาะ diff หนึ่งรอบด้วย model ระดับ fast ส่วน `configured` ใช้ model ที่ตั้งไว้ให้ reviewer แทน |
+| `review.modelByTier` | ไม่ได้ตั้ง | map `low` และ/หรือ `medium` ไปที่ `fast`, `standard` หรือ `configured` เพื่อเลือก model ที่ใช้ review ตามระดับความเสี่ยง ส่วน `high` ใช้ model ที่ตั้งไว้เสมอและตั้งไม่ได้ |
 | `telemetry.requireUsage` | `true` ในไฟล์ที่ติดตั้ง | Boolean; Land ต้องมี usage dimension ที่วัดได้จริง |
 | `land.riskBasedCi` | `false` | Boolean ดู contract ของ signed CI ใน [EVIDENCE.md](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md) |
 | `workflow.handoffDefaultOwner` | `"devops-team"` | ชื่อทีมที่ไม่ว่างสำหรับ handoff ที่ต้องมีสิทธิ์ |

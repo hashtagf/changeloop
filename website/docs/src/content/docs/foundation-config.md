@@ -377,6 +377,18 @@ invalid subject or branch stops Deliver as a `delivery-policy` wait before
 anything is committed; correct the setting and run `/deliver` again.
 `WORKFLOW.md` (`/deliver <change>`) owns the full naming rules.
 
+Where and how the pull request is opened:
+
+| Field | Default | Meaning |
+|---|---|---|
+| `provider` | `"auto"` | `auto` or `github`; Deliver currently supports GitHub remotes only |
+| `remote` | `"origin"` | Git remote to push to and open the PR against |
+| `allowedHosts` | `["github.com"]` | Remote hosts Deliver may push to; any other host stops Deliver |
+| `defaultBaseBranch` | remote default branch | PR base branch; Deliver never pushes to the default branch itself |
+| `missingRequiredEvidence` | `"block"` | `block` stops Deliver when required evidence is incomplete; any other value opens the PR anyway |
+| `missingPresentationEvidence` | `"draft"` | `draft` opens a draft PR when the proven receipts lack evidence that fits the change type (for example screenshots for a frontend feature, a benchmark for performance) |
+| `updateOwnedPullRequest` | `true` | Reserved; currently has no effect |
+
 ## Other fields
 
 | Field | Default | Meaning |
@@ -384,6 +396,8 @@ anything is committed; correct the setting and run `/deliver` again.
 | `execution.budgetWatchdog` | `false` | Boolean. When `false`, usage is still recorded but packets carry no spend directives or limits; when `true`, a `budget-warning` signal appears at 70% of spend |
 | `review.fallbackReviewers` | `["codex-sol", "main-session"]` in the shipped file | Reviewers tried in order only after an infrastructure error; a delivered `fail` or `inconclusive` never triggers fallback. Names must exist, must not repeat `defaultReviewer`, and `main-session` requires `independence: "self"` |
 | `review.infraFailureThreshold` | `2` in the shipped file | Integer `1..5` |
+| `review.lowRiskModel` | `"fast"` | `fast` or `configured`. Low-risk changes get one diff-only review on the fast model; `configured` uses the reviewer's configured model instead |
+| `review.modelByTier` | unset | Map `low` and/or `medium` to `fast`, `standard`, or `configured` to pick the review model per risk tier; `high` always uses the configured model and cannot be set |
 | `telemetry.requireUsage` | `true` in the shipped file | Boolean; Land requires a measured usage dimension |
 | `land.riskBasedCi` | `false` | Boolean; see the signed CI contract in [EVIDENCE.md](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md) |
 | `workflow.handoffDefaultOwner` | `"devops-team"` | Non-empty team name for permission-bound handoffs |

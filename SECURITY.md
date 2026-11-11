@@ -42,5 +42,5 @@ Surfaces of particular interest:
 - The observability dashboard under `dashboard/`
 
 Vulnerabilities in the AI coding agents Foundation orchestrates (Claude Code,
-Cursor, OpenCode, Codex) belong to their respective vendors, but issues in how
+Cursor, OpenCode, Codex, Pi) belong to their respective vendors, but issues in how
 Foundation *configures or instructs* those hosts are in scope here.

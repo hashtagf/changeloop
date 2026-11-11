@@ -132,5 +132,5 @@ Use your real name and a reachable email address.
 ## Reporting bugs and requesting features
 
 Use the issue templates. For bugs, include your Foundation `VERSION`, host
-(Claude Code, Cursor, OpenCode, Codex), and the output of
+(Claude Code, Cursor, OpenCode, Codex, Pi), and the output of
 `claude-foundation doctor` where relevant — they shortcut most round trips.

@@ -16,8 +16,13 @@ description: requirement และวิธีติดตั้ง Change Loop 
 | เครื่องมือ | สถานะ | เหตุผล |
 |---|---|---|
 | **Node.js 20.19 ขึ้นไป** | จำเป็น | runtime เป็น ESM Node ล้วน ไม่มีขั้นตอน compile |
-| **OpenSpec CLI 1.7.0** | จำเป็น | ใช้ sync spec และ archive |
+| **OpenSpec CLI 1.7** | จำเป็น (เตรียมให้อัตโนมัติ) | ใช้ sync spec และ archive |
 | **Git** | แนะนำ | ใช้แยกงานด้วย worktree; โปรเจกต์ที่ dirty หรือไม่ใช่ Git จะใช้ isolated copy แทน |
+
+ปกติไม่ต้องติดตั้ง OpenSpec เอง: installer จะใช้ `openspec` รุ่นที่เข้ากันได้ที่มีอยู่ในโปรเจกต์
+หรือบน `PATH` ถ้าไม่มีจะดาวน์โหลดรุ่นที่กำหนดไว้ลง `.foundation/tools` (ต้องเข้า npm registry ได้)
+ถ้าไม่สำเร็จ การติดตั้งยังจบได้พร้อมคำเตือน และ harness จะลองใหม่ก่อน Build, Prove และ Land
+ถ้าเครื่องเข้า registry ไม่ได้ ให้ติดตั้งเอง:
 
 ```bash
 npm install -g @fission-ai/openspec@1.7.0
@@ -166,6 +171,8 @@ openspec/config.yaml           # คัดลอกเฉพาะตอนย�
 openspec/repositories.yaml     # คัดลอกเฉพาะตอนยังไม่มี
 foundation.json                # สร้างเริ่มต้น; เติม field/ย้าย default เก่าที่รองรับ
 CLAUDE.md / AGENTS.md          # เขียนทับเฉพาะบล็อก pointer ที่ทำเครื่องหมายไว้
+REVIEW.md                      # คัดลอกเฉพาะตอนยังไม่มี
+openspec/incidents/, openspec/lessons.md  # คัดลอกเฉพาะตอนยังไม่มี
 ```
 
 spec, change ที่ยัง active, runtime state, agent ที่คุณเขียนเอง และ hook ของคุณรอดทุกการอัปเกรด และถ้ามี path ถูกถอดออกจากรายการที่ Change Loop ดูแล มันจะถูกลบจากโปรเจกต์คุณก็ต่อเมื่อ manifest เคยระบุว่าเป็นเจ้าของไฟล์นั้นเท่านั้น — Change Loop จึงไม่เคยลบไฟล์ที่มันไม่ได้ติดตั้งเอง

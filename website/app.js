@@ -86,6 +86,19 @@
         "  }\n" +
         "}"
     },
+    benchmark: {
+      kicker: "BASE VS CHANGE · MEDIAN TIME",
+      title: "benchmark",
+      description: "Time one command alternately on the original code and on the change; pass only when the change stays within the allowed slowdown. A regression is re-measured before it counts.",
+      code:
+        "// execution.yaml\n" +
+        '"performance": {\n' +
+        '  "adapter": "benchmark",\n' +
+        '  "command": ["npm", "run", "bench"],\n' +
+        '  "runs": 5,\n' +
+        '  "maxRegressionPercent": 10\n' +
+        "}"
+    },
     external: {
       kicker: "REMOTE OR HUMAN · EXPLICIT RECEIPT",
       title: "external",

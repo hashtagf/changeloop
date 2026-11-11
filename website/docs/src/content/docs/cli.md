@@ -59,6 +59,9 @@ its own read-only HTML file.
 | `models` | Inspect model-tier policy |
 | `providers` | Inspect evidence wiring while defining a change contract |
 | `version` | Print the installed package version |
+| `describe [command] [--json]` | Describe the slash commands and CLI commands; every command also answers `--help` |
+| `outcomes [--pretty]` | Summarize archived changes: proof runs, first-proof pass, user decisions, known cost, and declared escaped defects |
+| `lessons [--min-changes <n>] [--pretty]` | Group blocker and review codes that recur across at least `n` changes (default 3) into advisory check proposals for `/change` |
 
 ## Consumer quality
 
@@ -104,6 +107,8 @@ language profiles, baselines, and rollout policy.
 | `evidence init <change> [--write]` | Preview, or explicitly write, high-confidence provider wiring |
 | `evidence doctor <change>` | Explain configured, detectable, and unresolved wiring |
 | `evidence verify-ci <change> <provider> <signed.json>` | Verify signed CI provenance bound to the provider workspace |
+| `hash <change> [provider]` | Print the workspace hash a signed CI envelope must bind |
+| `evidence upgrade <change>` | Explicitly upgrade legacy evidence wiring |
 
 ## External authority
 
@@ -158,6 +163,9 @@ delivery receipt.
 | `change abandon <change> --reason <r> --decision-ref <ref>` | Quarantine a change that cannot be proven |
 | `change waive <change> --capability <c> --reason <r> --decision-ref <ref>` | Withdraw one capability's enforcement after its provider ran and failed; `--revoke` restores it |
 | `budget continue <change> --reason <r> --decision-ref <ref>` | Optional explicit widening; exhausted windows auto-continue |
+| `authority reset-infra <change> --decision-ref <ref> [--reviewer <id>]` | Restore AI review dispatch after reviewer infrastructure retries were used up and `doctor` passes |
+| `authority extend-review <change> --decision-ref <ref>` | Allow one more AI review wave after every routed wave was delivered |
+| `authority reset-base-move <change> --decision-ref <ref>` | Release the passing review attempt that a sandbox base move expired, so the forced fresh review does not exhaust the cap |
 | `agents release <change> <task> --owner <id> [--lease-id <id>] [--force]` | Release a lease; a taken-over generation requires its acquired lease id, and `--force` takes over one whose owner crashed |
 
 Commands marked as needing a `--decision-ref` require an **explicit host-recorded user decision**. The runtime will not accept the agent's own judgement in their place.
@@ -166,10 +174,28 @@ Commands marked as needing a `--decision-ref` require an **explicit host-recorde
 
 | Command | Purpose |
 |---|---|
-| `init [target-path] [--host claude\|cursor\|opencode\|codex] [--yes]` | Install or upgrade Change Loop in a project; `--host` adds that host's adapter |
+| `init [target-path] [--host claude\|cursor\|opencode\|codex\|pi] [--yes]` | Install or upgrade Change Loop in a project; `--host` adds that host's adapter |
 | `help [--all]` | Canonical commands; `--all` includes compatibility routes |
 | `dashboard [-up\|-status\|-down]` | Manage the optional team-presence client |
 | `migrate [legacy-id] [--apply]` | Migrate corroborated legacy workflow records |
+| `update check [--refresh] [--json]` | Show the latest stable release advisory; never applies an update |
+| `dashboard snapshot --json` | Print the read-only dashboard projection for this project |
+
+## Host integration
+
+Used by host adapters (Pi, OpenCode, and others) and parallel Build; not by users.
+
+| Command | Purpose |
+|---|---|
+| `host agent-contract [--protocol 1] [--format json]` | Return the package-owned agent contract |
+| `host instruction <command> [--protocol 1] [--format json] [--arguments <text>]` | Return one package-owned workflow instruction, such as `/change` |
+| `agents plan <change> [--group <n>] [--full]` | Plan dispatch for independently verifiable parallel work |
+| `agents dispatch <change>` | Return the next graph- and lease-bound Build action without invoking a model |
+| `agents acquire <change> <task> --owner <id>` | Acquire a task lease |
+| `telemetry sync <change> [transcript.jsonl]` | Synchronize native host request usage |
+| `telemetry import <change> <file> [--format <format>]` | Import authoritative host usage |
+| `telemetry host-import <change> <result.json>` | Import a validated host execution result with attempts, actual model, and fallback |
+| `sandbox challenge <change>` | Create a short-lived challenge for signed unattended authority |
 
 ## Protocol versions
 

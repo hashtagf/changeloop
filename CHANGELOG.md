@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Pi host adapter. `cloop init --host pi` (or `install-pi.sh`) installs
+  the project-local `.pi/extensions/changeloop.ts` for Pi >=1.5.2. It registers
+  the canonical commands, loads the package-owned agent contract, and bridges
+  built-in tool secret/phase guards, lint feedback, session identity, and
+  `!`/`!!` shell execution. `/land <change>` grants Land for that change only
+  until reload or new user input. Guard coverage is partial: custom/MCP tools
+  and other extensions are outside the live boundary, session-digest import is
+  unavailable, and no OS sandbox attestation is issued.
 - Hotfix regression for its incident. A new hotfix draft must include a
   scenario whose `regressionOf` equals `bugfix.incident.link`, in a requirement
   with an executable capability; otherwise `change start` returns an agent

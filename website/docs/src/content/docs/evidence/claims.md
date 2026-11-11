@@ -1,6 +1,6 @@
 ---
 title: Claims and capabilities
-description: How an observable scenario becomes a stable claim, and which of the 25 capabilities can actually demonstrate it.
+description: How an observable scenario becomes a stable claim, and which of the 28 capabilities can actually demonstrate it.
 ---
 
 <!-- docs-audience: agents-integrators -->
@@ -52,6 +52,7 @@ Select only what the claim needs — never the full catalog by default.
 | `discovery` | Expected tests were found and the discovered count meets the floor |
 | `browser` | Rendered behavior in a real browser with the required input capability |
 | `mutation` | A deliberate behavioral fault is detected by the evidence suite |
+| `changed-quality` | Changed functions meet complexity, coverage, and CRAP-score policy without regressing from their baseline |
 | `state-identity` | State before, during, or after belongs to the intended actor and revision |
 | `integration` | Multiple components or external boundaries work together |
 | `compatibility` | Public or persisted contracts remain compatible across supported versions |
@@ -61,8 +62,10 @@ Select only what the claim needs — never the full catalog by default.
 | `cross-repo-contract` | Producer and consumer repositories agree on the same versioned contract |
 | `review` | Independent risk review covers the declared claims and unresolved findings |
 | `acceptance` | A named human accepts an explicitly subjective product or experience decision |
+| `semantic-acceptance` | A signed external oracle verdict covers every declared behavior partition without exposing hidden oracle content |
 | `static-analysis` | Compilation, type checking, linting, and static quality gates pass |
 | `data-migration` | Schema or data evolution is forward-safe, backward-compatible, rollback-aware |
+| `visual` | An agent reviewer compares screenshots of the real UI with the change's bound prototype |
 | `accessibility` | Rendered semantics, keyboard use, focus, contrast, assistive access meet policy |
 | `resilience` | Timeout, retry, partial-failure, recovery, degraded-dependency behavior is proven |
 | `observability` | Required logs, metrics, traces, and alerts expose success and failure safely |
@@ -74,7 +77,7 @@ Select only what the claim needs — never the full catalog by default.
 | `release-health` | Crash, error, and adoption signals stay healthy during rollout (post-release) |
 | `experiment-guardrail` | Guardrail metrics stay within bounds after release (post-release) |
 
-Twenty-five capabilities. Most changes use two or three. The last two are
+Twenty-eight capabilities. Most changes use two or three. The last two are
 post-release rollout gates: they are listed in the archived proposal and never
 block proof or Land. The work types that require the specialist capabilities
 (for example `ml` → `evaluation`, `infra` → `plan-check`) are listed in the

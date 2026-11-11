@@ -236,7 +236,7 @@ turns a review into a pass or a fail on its own.
 - Installing or upgrading adds a starter `REVIEW.md` only when you have none; it
   never overwrites yours. Edit it like any project file.
 
-Details: [project review rules in the evidence reference](https://github.com/Maximumsoft-Co-LTD/claude-foundation/blob/main/.claude/harness/EVIDENCE.md#project-review-rules).
+Details: [project review rules in the evidence reference](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#project-review-rules).
 
 ## Where decisions get recorded
 

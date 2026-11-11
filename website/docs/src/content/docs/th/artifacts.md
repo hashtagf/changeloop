@@ -14,7 +14,7 @@ Change Loop เพิ่มไฟล์เข้าไปใน repository ข�
 
 | กลุ่ม | ไฟล์ | สิ่งที่คุณทำ |
 |---|---|---|
-| **ของคุณ** (commit ไว้ และ upgrade ไม่ทับ) | `openspec/specs/`, `openspec/changes/`, `openspec/investigations/`, `foundation.json`, `openspec/config.yaml`, `openspec/repositories.yaml`, `quality/`, `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json` | ตรวจและตัดสินใจ ให้ agent แก้ข้อตกลงผ่าน workflow ที่รองรับ |
+| **ของคุณ** (commit ไว้ และ upgrade ไม่ทับ) | `openspec/specs/`, `openspec/changes/`, `openspec/investigations/`, `foundation.json`, `openspec/config.yaml`, `openspec/repositories.yaml`, `quality/`, `REVIEW.md`, `openspec/incidents/`, `openspec/lessons.md`, `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json` | ตรวจและตัดสินใจ ให้ agent แก้ข้อตกลงผ่าน workflow ที่รองรับ |
 | **Installer ดูแล** (ถูกแทนที่ตอน upgrade) | `.claude/orchestrator.md`, `.claude/commands`, `.claude/harness`, `.claude/skills`, `.claude/rules`, `.claude/hooks`, `openspec/schemas`, `WORKFLOW.md`, `.foundation/.gitignore`, `.foundation/README.md` | อ่านเป็นข้อมูลอ้างอิง ปรับผ่าน config ของโปรเจกต์ ไม่ใช่แก้ไฟล์เหล่านี้ |
 | **Harness สร้างขึ้น** (Git ignore) | `.foundation/runtime/`, `receipts/`, `evidence/`, `transactions/`, `logs/` | อ่านเพื่อวิเคราะห์ได้ แต่ห้ามแก้เพื่อเปลี่ยนผลตรวจ และอย่าถือว่าลบทิ้งได้ |
 | **ไฟล์ระหว่างทำงาน** | `.foundation/drafts/`, โค้ดใน `.foundation/sandboxes/` | Agent เป็นผู้เขียน คุณตรวจข้อตกลงที่ compile แล้วและ diff สุดท้าย |
@@ -25,6 +25,7 @@ Change Loop เพิ่มไฟล์เข้าไปใน repository ข�
 your-project/
 ├── foundation.json          ของคุณ     นโยบาย: budget, model, review, setup
 ├── CLAUDE.md, AGENTS.md     ของคุณ     คำแนะนำของโปรเจกต์
+├── REVIEW.md                ของคุณ     กฎแนะนำที่ส่งให้ AI reviewer
 ├── quality/                 ของคุณ     config ของ quality gate (ถ้าเปิดใช้)
 ├── WORKFLOW.md              MANAGED    เอกสารอ้างอิง lifecycle
 ├── .claude/                 MANAGED    harness, commands, skills, rules, hooks
@@ -101,6 +102,10 @@ openspec/
 `lessons.md` คือรายการบทเรียนถาวรของโปรเจกต์ แต่ละข้อลิงก์ไปยังบันทึก incident
 เมื่อมีไฟล์นี้ investigation และ change intake จะอ่านเป็นแหล่งข้อมูลอ้างอิง (grounding)
 ไฟล์นี้ไม่เกี่ยวกับคำสั่ง `claude-foundation lessons` ซึ่งรวบรวมรหัส blocker และ review ที่เกิดซ้ำ
+
+`REVIEW.md` ที่ root ของ repository เก็บกฎ review แบบแนะนำของโปรเจกต์ AI reviewer
+ได้รับไฟล์นี้เป็นแนวทาง แต่ไม่เปลี่ยนผลผ่านหรือไม่ผ่านของ review คัดลอกให้เฉพาะตอนที่ยังไม่มี
+และไม่ถูกเขียนทับ ถ้าแก้ไฟล์นี้ review ที่มีอยู่จะหมดอายุ และ Prove ครั้งถัดไปจะ review ใหม่
 
 `foundation.json` อยู่ที่ root ของ repository ไม่ได้อยู่ใน `openspec/`
 เพราะมันเก็บ *นโยบาย* ไม่ใช่เจตนา ได้แก่ budget การรัน เพดานขนาด packet

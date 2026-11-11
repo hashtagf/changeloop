@@ -41,7 +41,7 @@ and recoverable archive completion. The native host still owns model execution.
 
 The existing sandbox protects workspace and apply integrity. It does not by
 itself contain processes, network access, host secrets, or system commands; see
-the canonical [sandbox safety contract](../WORKFLOW.md#sandbox-safety).
+the canonical [sandbox safety contract](../WORKFLOW.md#sandbox-and-repository-safety).
 
 The repository also has a read-only dashboard projection and dashboard. A new
 Web UI is not a prerequisite for the core lifecycle.

@@ -58,6 +58,9 @@ compatible primitive ด้านล่างสำหรับ operator แล�
 | `models` | ดูนโยบาย model tier |
 | `providers` | ดูการต่อสายหลักฐานระหว่างนิยาม change contract |
 | `version` | พิมพ์เวอร์ชันแพ็กเกจที่ติดตั้งอยู่ |
+| `describe [command] [--json]` | อธิบาย slash command และคำสั่ง CLI ทุกคำสั่งตอบ `--help` ได้ด้วย |
+| `outcomes [--pretty]` | สรุป change ที่ archive แล้ว: จำนวนรอบ proof, ผ่านตั้งแต่ proof แรกไหม, การตัดสินใจของผู้ใช้, ค่าใช้จ่ายที่รู้ และ defect ที่หลุดตามที่แจ้งไว้ |
+| `lessons [--min-changes <n>] [--pretty]` | รวม code ของ blocker และ review ที่เกิดซ้ำในอย่างน้อย `n` change (ค่าเริ่มต้น 3) เป็นข้อเสนอ check ถาวรแบบแนะนำสำหรับ `/change` |
 
 ## Consumer quality
 
@@ -103,6 +106,8 @@ compatible primitive ด้านล่างสำหรับ operator แล�
 | `evidence init <change> [--write]` | ดูตัวอย่าง หรือเขียนการต่อสายที่มั่นใจสูงลงไปจริง |
 | `evidence doctor <change>` | อธิบายการต่อสายที่ตั้งไว้ ที่ตรวจพบได้ และที่ยังไม่ลงตัว |
 | `evidence verify-ci <change> <provider> <signed.json>` | ตรวจ provenance ของ CI ที่เซ็นและผูกกับ workspace ของ provider |
+| `hash <change> [provider]` | พิมพ์ workspace hash ที่ CI envelope แบบเซ็นต้องผูกไว้ |
+| `evidence upgrade <change>` | อัปเกรดการต่อสายหลักฐานแบบเก่าอย่าง explicit |
 
 ## อำนาจจากภายนอก
 
@@ -155,6 +160,9 @@ publish หรือแก้ product และสำเร็จได้เม
 | `change abandon <change> --reason <r> --decision-ref <ref>` | กัก change ที่พิสูจน์ไม่ได้ |
 | `change waive <change> --capability <c> --reason <r> --decision-ref <ref>` | ถอนการบังคับใช้ capability หนึ่งตัวหลัง provider ของมันรันแล้วล้มเหลว `--revoke` คืนข้อบังคับ |
 | `budget continue <change> --reason <r> --decision-ref <ref>` | ขยายหน้าต่างแบบ explicit (optional) เพราะ budget ที่หมดจะต่อให้อัตโนมัติ |
+| `authority reset-infra <change> --decision-ref <ref> [--reviewer <id>]` | เปิดให้ส่ง AI review ได้อีกครั้ง หลังใช้สิทธิ์ retry จากปัญหา infrastructure ของ reviewer หมดและ `doctor` ผ่านแล้ว |
+| `authority extend-review <change> --decision-ref <ref>` | อนุญาต AI review เพิ่มอีกหนึ่งรอบ หลังส่งครบทุกรอบที่กำหนดแล้ว |
+| `authority reset-base-move <change> --decision-ref <ref>` | คืนสิทธิ์ของ review ที่ผ่านแล้วแต่หมดอายุเพราะ base ของ sandbox ขยับ เพื่อให้ review ใหม่ที่บังคับรันไม่ใช้โควตาจนหมด |
 | `agents release <change> <task> --owner <id> [--lease-id <id>] [--force]` | ปล่อย lease โดย generation ที่ถูก takeover ต้องใช้ lease id ที่ acquire มา และ `--force` ใช้ยึดคืนจากเจ้าของที่ crash |
 
 คำสั่งที่ต้องใส่ `--decision-ref` ต้องการ **การตัดสินใจของผู้ใช้ที่ host บันทึกไว้อย่างชัดเจน** runtime จะไม่รับดุลพินิจของ agent มาแทน
@@ -163,10 +171,28 @@ publish หรือแก้ product และสำเร็จได้เม
 
 | คำสั่ง | ใช้ทำอะไร |
 |---|---|
-| `init [target-path] [--host claude\|cursor\|opencode\|codex] [--yes]` | ติดตั้งหรืออัปเกรด Change Loop ในโปรเจกต์ `--host` เพิ่ม adapter ของ host นั้น |
+| `init [target-path] [--host claude\|cursor\|opencode\|codex\|pi] [--yes]` | ติดตั้งหรืออัปเกรด Change Loop ในโปรเจกต์ `--host` เพิ่ม adapter ของ host นั้น |
 | `help [--all]` | คำสั่งหลัก `--all` รวม route ที่เก็บไว้เพื่อความเข้ากันได้ |
 | `dashboard [-up\|-status\|-down]` | จัดการ client แสดงสถานะทีม (ตัวเลือกเสริม) |
 | `migrate [legacy-id] [--apply]` | ย้ายบันทึก workflow เก่าที่ยืนยันได้ |
+| `update check [--refresh] [--json]` | แสดงประกาศรุ่น stable ล่าสุด ไม่อัปเดตให้เอง |
+| `dashboard snapshot --json` | พิมพ์ข้อมูล dashboard ของโปรเจกต์นี้แบบอ่านอย่างเดียว |
+
+## การเชื่อมกับ host
+
+ใช้โดย host adapter (Pi, OpenCode และอื่นๆ) และ Build แบบขนาน ผู้ใช้ไม่ต้องเรียกเอง
+
+| คำสั่ง | ใช้ทำอะไร |
+|---|---|
+| `host agent-contract [--protocol 1] [--format json]` | คืน agent contract ที่มากับแพ็กเกจ |
+| `host instruction <command> [--protocol 1] [--format json] [--arguments <text>]` | คืนคำสั่ง workflow หนึ่งตัวที่มากับแพ็กเกจ เช่น `/change` |
+| `agents plan <change> [--group <n>] [--full]` | วางแผนแจกงานที่ตรวจสอบแยกกันได้ให้ทำขนานกัน |
+| `agents dispatch <change>` | คืนงาน Build ถัดไปตาม graph และ lease โดยไม่เรียก model |
+| `agents acquire <change> <task> --owner <id>` | จอง lease ของ task |
+| `telemetry sync <change> [transcript.jsonl]` | ซิงก์ usage ของ request จาก host |
+| `telemetry import <change> <file> [--format <format>]` | นำเข้า usage ที่เชื่อถือได้จาก host |
+| `telemetry host-import <change> <result.json>` | นำเข้าผลการรันของ host ที่ตรวจแล้ว พร้อมจำนวนครั้ง, model ที่ใช้จริง และ fallback |
+| `sandbox challenge <change>` | สร้าง challenge อายุสั้นสำหรับอำนาจแบบ unattended ที่เซ็นแล้ว |
 
 ## เวอร์ชันของ protocol
 

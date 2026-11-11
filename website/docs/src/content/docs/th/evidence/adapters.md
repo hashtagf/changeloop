@@ -1,6 +1,6 @@
 ---
 title: Adapter และการต่อสาย
-description: adapter ที่รันได้จริงห้าตัว derived/custom wiring และ resource กันไม่ให้ provider ชนกันอย่างไร
+description: adapter ที่รันได้จริงหกตัว derived/custom wiring และ resource กันไม่ให้ provider ชนกันอย่างไร
 ---
 
 <!-- docs-audience: agents-integrators -->
@@ -33,7 +33,7 @@ readiness หรือ config เฉพาะ project การเปลี่�
 }
 ```
 
-## adapter ทั้งห้า
+## adapter ทั้งหก
 
 | Adapter | ใช้ทำอะไร |
 |---|---|
@@ -41,6 +41,7 @@ readiness หรือ config เฉพาะ project การเปลี่�
 | `test-discovery` | รันคำสั่งเทสครั้งเดียว แล้วออก receipt ทั้ง test และ discovery |
 | `playwright` | รันเทส Playwright ของโปรเจกต์ แล้วแมป claim annotation แบบมีโครงสร้าง |
 | `contract-digest` | hash artifact ที่ประกาศไว้ในสองรีโปขึ้นไป ผ่านก็ต่อเมื่อ byte ตรงกัน |
+| `benchmark` | จับเวลาคำสั่งเดียวกันบนโค้ดเดิมและบน change ผ่านก็ต่อเมื่อ change ไม่ช้าลงเกินเกณฑ์ที่กำหนด |
 | `external` | ต้องการ receipt จากระบบที่ Change Loop ไม่ได้เป็นคนรัน |
 
 ### command
@@ -144,6 +145,25 @@ Change Loop อนุมานนโยบายเรื่อง console error
 ```
 
 ต้องมีอย่างน้อยสองรีโป เพราะสัญญา "ที่ใช้ร่วมกัน" ที่มีผู้ร่วมคนเดียวไม่ได้พิสูจน์อะไรเรื่องการตกลงกัน และ provider แบบ `contract-digest` พาดหลายรีโป จึงประกาศ `repository` เดี่ยวไม่ได้
+
+### benchmark
+
+จับ performance ที่แย่ลง โดยเทียบกับโค้ดเดิม
+
+```json
+"performance": {
+  "adapter": "benchmark",
+  "command": ["npm", "run", "bench"],
+  "runs": 5,
+  "maxRegressionPercent": 10
+}
+```
+
+harness รันคำสั่งสลับกันระหว่าง base กับ change (ฝั่งละ `runs` ครั้ง อย่างน้อย 3
+ค่าเริ่มต้น 5) แล้วเทียบค่า median ผ่านเมื่อทุกรอบรันสำเร็จ และ change
+ช้าลงไม่เกิน `maxRegressionPercent` (ค่าเริ่มต้น 10) ถ้าเจอว่าช้าลง จะวัดซ้ำอีกหนึ่งรอบ
+ด้วยจำนวนครั้งเป็นสองเท่าก่อนนับผล รอบที่ผลแกว่งรอบเดียวจึงทำให้ change ไม่ผ่านไม่ได้
+ถ้า build หรือรัน base ไม่ได้ ผลจะบอกว่าเทียบไม่ได้ และตัดสินจากผลรันของ change เท่านั้น
 
 ### external
 
