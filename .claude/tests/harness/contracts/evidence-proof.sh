@@ -120,12 +120,9 @@ node .claude/harness/foundation.mjs resolve legacy-evidence \
 jq 'del(.providers) | .version = 1' \
   openspec/changes/legacy-evidence/evidence.yaml > "$TMP/legacy-evidence.json"
 cp "$TMP/legacy-evidence.json" openspec/changes/legacy-evidence/evidence.yaml
-assert_cmd_zero "evidence v1 remains valid" \
-  node .claude/harness/foundation.mjs validate legacy-evidence
-assert_cmd_zero "evidence v1 upgrades explicitly" \
-  node .claude/harness/foundation.mjs evidence-upgrade legacy-evidence
-assert_eq "evidence upgrade writes v2" "2" \
-  "$(jq -r '.version' openspec/changes/legacy-evidence/evidence.yaml)"
+assert_contains "evidence v1 from an older release is refused with a route" \
+  "$(node .claude/harness/foundation.mjs validate legacy-evidence 2>&1 || true)" \
+  "version 1 from an older release"
 
 fi
 
@@ -533,26 +530,24 @@ assert_file_exists "a schema upgrade instantiates design.md" \
 node .claude/harness/foundation.mjs new 'Domain compatibility fixture' >/dev/null
 node .claude/harness/foundation.mjs resolve domain-compatibility-fixture \
   --impact medium --coupling isolated --acceptance-not-required >/dev/null
-mkdir -p .foundation
-jq -n '{
-  why: "Keep project terms explicit.",
-  currentState: "The term is implicit.",
-  compatibility: "No public compatibility impact.",
-  domainLanguage: [{term:"Order", meaning:"A confirmed purchase request", avoid:"Transaction"}],
-  changes: ["Record the canonical term."],
-  nonGoals: ["No parallel glossary."],
-  decisions: [{choice:"Use Order", why:"Matches source", rejected:"Transaction"}],
-  risks: [{risk:"Term drift", mitigation:"Validate the design", owner:"test"}],
-  tasks: [{id:"T001", outcome:"Record language", kind:"contract", paths:["app.txt"], verify:"test -f app.txt"}],
-  claims: [{id:"domain-draft", scenario:"Draft language renders", impact:"low", capabilities:["test"]}],
-  specs: [{name:"domain-draft", operation:"added", requirement:"Render domain language", description:"The runtime SHALL render canonical terms.", scenarios:[{name:"Supplied term", when:"a draft carries a term", then:"the design records it"}]}]
-}' > .foundation/domain-language-draft.json
-node .claude/harness/foundation.mjs new 'Draft domain language' \
-  --draft .foundation/domain-language-draft.json >/dev/null
-jq 'del(.domainLanguage)' .foundation/domain-language-draft.json \
-  > .foundation/domain-language-default-draft.json
-node .claude/harness/foundation.mjs new 'Draft domain default' \
-  --draft .foundation/domain-language-default-draft.json >/dev/null
+mkdir -p .foundation/drafts
+jq -n '{version:4, id:"draft-domain-language", intent:"Draft domain language",
+  impact:"medium", coupling:"isolated", acceptance:{required:false},
+  scratch:{get:"Projects keep one canonical term", asIs:"The term is implicit",
+    toBe:"The design records Order", ifFail:"Reviewers see the alias"},
+  domainLanguage:[{term:"Order", meaning:"A confirmed purchase request", avoid:"Transaction"}],
+  requirements:[{key:"domain-draft", capability:"domain-draft", operation:"added",
+    scenarios:[{name:"Supplied term", when:"a draft carries a term",
+      then:"the design records it"}],
+    outcome:"Render canonical terms"}],
+  tasks:[{key:"record-language", outcome:"Record language", covers:["domain-draft"],
+    paths:["app.txt"], verify:"test -f app.txt"}]}' \
+  > .foundation/drafts/domain-language-draft.json
+node .claude/harness/foundation.mjs start .foundation/drafts/domain-language-draft.json >/dev/null
+jq 'del(.domainLanguage) | .id = "draft-domain-default" | .intent = "Draft domain default"' \
+  .foundation/drafts/domain-language-draft.json \
+  > .foundation/drafts/domain-language-default-draft.json
+node .claude/harness/foundation.mjs start .foundation/drafts/domain-language-default-draft.json >/dev/null
 # A draft with no project-specific term omits the section instead of
 # rendering a `none` placeholder row.
 assert_cmd_zero "[standard-domain-language-section] template, upgrade, and direct drafts enforce and render domain language" \
@@ -722,12 +717,6 @@ assert_contains "a blocked prove names the route out of each stale receipt" \
 sed -i.bak 's/"minimum":5/"minimum":4/' \
   openspec/changes/executable-evidence/evidence.yaml
 rm openspec/changes/executable-evidence/evidence.yaml.bak
-assert_cmd_zero "execution upgrade separates adapter wiring from claims" \
-  node .claude/harness/foundation.mjs evidence-upgrade executable-evidence
-assert_eq "behavioral contract no longer carries provider commands" "false" \
-  "$(jq 'has("providers")' openspec/changes/executable-evidence/evidence.yaml)"
-assert_eq "execution file receives migrated provider commands" "test-discovery" \
-  "$(jq -r '.providers.test.adapter' openspec/changes/executable-evidence/execution.yaml)"
 fi
 
 # A provider that declares no inputs binds the whole workspace *minus* the

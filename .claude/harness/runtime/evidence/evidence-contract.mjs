@@ -689,9 +689,11 @@ export function createEvidenceContract({
   }
 
   function validateEvidenceClaims(id, value) {
-    if (![1, 2].includes(value.version) || !Array.isArray(value.claims) || value.claims.length === 0)
+    if (value.version === 1)
+      die(`${id}/evidence.yaml is version 1 from an older release; finish this change with that release or abandon it`);
+    if (value.version !== 2 || !Array.isArray(value.claims) || value.claims.length === 0)
       die(`${id}/evidence.yaml must contain at least one claim`);
-    if (value.version === 2 && (value.providers === null ||
+    if ((value.providers === null ||
         typeof (value.providers || {}) !== "object" || Array.isArray(value.providers)))
       die(`${id}/evidence.yaml providers must be an object`);
     const ids = new Set();

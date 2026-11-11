@@ -312,10 +312,8 @@ more AI wave per decision reference), or pause.
 ### Gate waivers and advanced continuations
 
 Users never construct the Land grant or a decision-reference command.
-`land record` requires `--decision-ref` only as compatibility for an
-already-active legacy commit-oriented transaction. Other advanced
-continuations—`budget continue`, `change abandon`, `change waive`, and
-`agents release --force`—still record the decision that authorized them.
+Advanced continuations—`budget continue`, `change abandon`, `change waive`,
+and `agents release --force`—still record the decision that authorized them.
 
 `change waive` is the recorded exit for a gate that ran and failed: it
 withdraws one capability's enforcement on your explicit decision, travels as a

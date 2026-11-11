@@ -12,12 +12,12 @@ import {
 } from "./validation/dev-document.mjs";
 import { riskDerivationSummary } from "./validation/draft-risk.mjs";
 import {
-  FOLDER_DRAFT_VERSION, isFolderDraftVersion, isSemanticV4Plus, isSemanticVersion
+  FOLDER_DRAFT_VERSION, isFolderDraftVersion, isSemanticVersion
 } from "./validation/draft-version.mjs";
 import { OUTLINE } from "./validation/outline-contract.mjs";
 
 export {
-  SEMANTIC_DRAFT_VERSIONS, isSemanticV4Plus, isSemanticVersion
+  SEMANTIC_DRAFT_VERSIONS, isSemanticVersion
 } from "./validation/draft-version.mjs";
 
 const OPERATIONS = new Set(["added", "modified", "removed"]);
@@ -119,15 +119,13 @@ function lowerFirst(value) {
   return value.replace(/^([A-Z])(?=[a-z])/, (letter) => letter.toLowerCase());
 }
 
-// v3 keeps its historical stem. v4 never glues an English stem onto a whole
-// sentence: an explicit description wins, an outcome that already states
+// The statement never glues an English stem onto a whole sentence: an
+// explicit description wins, an outcome that already states
 // SHALL/MUST is used as written, an English result clause becomes "The system
 // SHALL ensure that <outcome>", an English verb phrase follows "The system
 // SHALL", and any other language must supply the statement itself.
-function requirementStatement(requirement, outcome, version, operation, label, issues) {
+function requirementStatement(requirement, outcome, operation, label, issues) {
   const description = text(requirement?.description);
-  if (!isSemanticV4Plus(version))
-    return description || (outcome ? `The system SHALL ${outcome.replace(/[.]$/, "")}.` : "");
   let statement = description;
   if (!statement && outcome) {
     if (/\b(?:SHALL|MUST)\b/.test(outcome)) statement = outcome;
@@ -359,7 +357,10 @@ function benchmarkProviderIssues(execution) {
 function semanticDraftIssues(source, { defaultTestEvidence = false, requireScratch = false, requireUndo = false } = {}) {
   const issues = [];
   if (!isSemanticVersion(source?.version))
-    issues.push("semantic draft version must be 3, 4, or 5");
+    issues.push([1, 2, 3].includes(source?.version)
+      ? `draft version ${source.version} is no longer supported; author a v5 draft folder ` +
+        "(claude-foundation change start --template) or a v4 JSON draft"
+      : "semantic draft version must be 4 or 5");
   if (!text(source?.intent)) issues.push("semantic draft requires non-empty 'intent'");
   if (!Array.isArray(source?.requirements) || source.requirements.length === 0)
     issues.push("semantic draft requires a non-empty 'requirements' array");
@@ -489,9 +490,9 @@ function normalizeRequirements(source, slugify, issues, {
       : semanticScenarios(requirement);
     if (!scenarios.length && operation !== "removed")
       issues.push(`${label}.scenario or .scenarios is required`);
-    if (isSemanticV4Plus(source.version)) readableScenarioIssues(requirement, operation, label, issues);
+    if (isSemanticVersion(source.version)) readableScenarioIssues(requirement, operation, label, issues);
     const statement = requirementStatement(
-      requirement, outcome, source.version, operation, label, issues);
+      requirement, outcome, operation, label, issues);
     const details = textList(requirement?.details);
     for (const [scenarioIndex, scenario] of scenarios.entries()) {
       for (const field of ["name", "when", "then"])
@@ -1620,7 +1621,7 @@ export function normalizeSemanticDraft(input, slugify, options = {}) {
       ? source.externalOperations : undefined,
     repositories: Array.isArray(source.repositories) ? source.repositories : undefined
   };
-  if (isSemanticV4Plus(source.version)) draft.discovery = normalizeDiscovery(source);
+  if (isSemanticVersion(source.version)) draft.discovery = normalizeDiscovery(source);
   return { draft, issues, warnings: unknownTaskFieldWarnings(source) };
 }
 

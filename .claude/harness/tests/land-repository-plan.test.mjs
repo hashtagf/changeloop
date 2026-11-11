@@ -6,7 +6,6 @@ import test from "node:test";
 
 import {
   ciRepositoryLandStatus,
-  configuredLandCiIssuers,
   createLandRuntime,
   landPreparationBindings,
   landPreparationRepositoryValue,
@@ -16,40 +15,6 @@ import {
 } from "../runtime/workflow/land-runtime.mjs";
 
 const fail = (message) => { throw new Error(message); };
-
-test("Land CI issuers are valid Ed25519 keys scoped to the attested repository", () => {
-  const firstKey = "-----BEGIN PUBLIC KEY-----\nfirst\n-----END PUBLIC KEY-----";
-  const secondKey = "-----BEGIN PUBLIC KEY-----\nsecond\n-----END PUBLIC KEY-----";
-  const repositories = [
-    {
-      id: "api",
-      ci: { issuers: {
-        valid: { algorithm: "ed25519", publicKey: firstKey },
-        wrongAlgorithm: { algorithm: "rsa", publicKey: firstKey },
-        missingKey: { algorithm: "ed25519" },
-        malformedKey: { algorithm: "ed25519", publicKey: "not a PEM key" },
-        empty: null
-      } }
-    },
-    {
-      id: "web",
-      ci: { issuers: {
-        valid: { algorithm: "ed25519", publicKey: secondKey },
-        web: { algorithm: "ed25519", publicKey: secondKey }
-      } }
-    },
-    { id: "docs" }
-  ];
-
-  assert.deepEqual(configuredLandCiIssuers(repositories, "api"), {
-    valid: { algorithm: "ed25519", publicKey: firstKey }
-  });
-  assert.deepEqual(configuredLandCiIssuers(repositories, "missing"), {});
-  assert.deepEqual(configuredLandCiIssuers(repositories), {
-    valid: { algorithm: "ed25519", publicKey: secondKey },
-    web: { algorithm: "ed25519", publicKey: secondKey }
-  });
-});
 
 test("read repository status covers isolation, dirt, drift, and readiness", () => {
   const repository = { baseHead: "base" };
@@ -235,28 +200,21 @@ test("prepared Land rejects missing and stale preparation identities", () => {
   }
 });
 
-test("Land resume refreshes child statuses and emits the resumable plan", () => {
+test("Land resume reports the current plan without changing state", () => {
   const state = {
     status: "archived",
     archivedAt: "2026-08-27T00:00:00.000Z",
     workspace: { path: "/workspace" },
     repositories: {
       root: { path: "/workspace" },
-      landed: { path: "/workspace/landed", land: { commit: "commit-a" } },
-      pending: { path: "/workspace/pending", land: { commit: "commit-b" } },
-      unrecorded: { path: "/workspace/unrecorded" },
       docs: { mode: "worktree", path: "/workspace/docs", baseHead: "head" }
     }
   };
   const repositories = [
-    { id: "landed", type: "repository", mode: "write", path: "/target/landed", workspacePath: "/target/landed" },
-    { id: "pending", type: "repository", mode: "write", path: "/target/pending", workspacePath: "/target/pending" },
-    { id: "unrecorded", type: "repository", mode: "write", path: "/target/unrecorded", workspacePath: "/target/unrecorded" },
     { id: "docs", type: "repository", mode: "read", path: "/target/docs", workspacePath: "/target/docs", baseHead: "head" },
     { id: "root", type: "repository", mode: "write", path: "/target", workspacePath: "/target" }
   ];
   const saved = [];
-  const written = [];
   const logs = [];
   const runtime = createLandRuntime({
     assertApproval: () => {},
@@ -266,31 +224,28 @@ test("Land resume refreshes child statuses and emits the resumable plan", () => 
     proofAudit: () => ({ valid: true }),
     selectedRepositories: () => repositories,
     gitHead: () => "head",
-    git: (args, path) => args[0] === "merge-base"
-      ? { status: path.endsWith("/landed") ? 0 : 1, stdout: "", stderr: "" }
-      : { status: 0, stdout: "", stderr: "" },
+    git: () => ({ status: 0, stdout: "", stderr: "" }),
     relevantHash: () => "workspace-hash",
     proofPath: () => "/missing-proof.json",
     readJson: () => null,
-    writeJson: (path, value) => written.push({ path, value }),
+    writeJson: () => {},
     now: () => "2026-08-27T01:00:00.000Z",
     fail
   });
   const originalLog = console.log;
   console.log = (message) => logs.push(String(message));
+  let plan;
   try {
-    runtime.resumeLand("change-a");
+    plan = runtime.resumeLand("change-a");
   } finally {
     console.log = originalLog;
   }
-  assert.equal(state.repositories.landed.land.status, "child-landed");
-  assert.equal(state.repositories.pending.land.status, "awaiting-explicit-branch-land");
-  assert.equal(state.repositories.unrecorded.land, undefined);
-  assert.equal(state.land.status, "children-inspected");
-  assert.equal(saved.length, 1);
-  assert.equal(written[0].path, "/transactions/change-a/multi-repo-land.json");
+  assert.equal(plan.strategy, "workspace-uncommitted");
+  assert.deepEqual(plan.repositories.map((row) => [row.id, row.status]),
+    [["docs", "read-only"], ["root", "pending-apply"]]);
+  assert.equal(saved.length, 0, "resume never rewrites runtime state");
   assert.ok(logs.some((message) => message.includes("ALREADY ARCHIVED change-a")));
-  assert.ok(logs.some((message) => message.includes('"strategy": "ordered-resumable-saga"')));
+  assert.ok(logs.some((message) => message.includes('"strategy": "workspace-uncommitted"')));
 });
 
 test("multi-repository archive readiness accepts settled plans and names blockers", () => {

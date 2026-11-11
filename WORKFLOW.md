@@ -196,7 +196,7 @@ selected one can bind the change's UI through `prototypeSelection`
 ([visual check](#prototype-bound-visual-check)).
 
 A `ready-for-change` result emits a digest-bound handoff. The agent copies it
-into semantic draft v4 as `investigation`; Change verifies the state and source
+into the semantic draft (v4 or later) as `investigation`; Change verifies the state and source
 digests before compiling and retains the conclusion in the agreement. V2 also
 binds retained intent and requires `investigationCoverage` linking each active
 material user requirement to an actual requirement/scenario, non-goal, or design
@@ -208,8 +208,8 @@ approval request; existing spec approval before Build remains unchanged.
 
 ### `/change <intent>`
 
-Change authors one semantic draft (draft v5 for new work; v4 and v3 remain
-compatible) with compact bookkeeping and enough
+Change authors one semantic draft (draft v5 for new work; v4 JSON remains
+accepted) with compact bookkeeping and enough
 behavioral detail to understand scope and acceptance without chat history.
 Reconcile the relevant available conversation, latest corrections, and retained
 decisions before drafting, then check their coverage in the compiled packet.
@@ -274,7 +274,7 @@ Decisions, Quality attributes, Threat model, Failure matrix, Observability and
 usage, Compatibility and rollout, Capacity and cost, Backup and recovery, Test
 strategy, Dependencies, Risks, then the derived File map and Test map. Only
 sections whose fields are present render. Every new typed field is also
-optional in draft v4 and v3 drafts. Field shapes and one example block per
+optional in draft v4. Field shapes and one example block per
 work type are in `change start --template` (`workTypeExamples`,
 `draftFolderV5`); the harness guide lists the field modules.
 
@@ -460,10 +460,9 @@ by the user. It validates decision dependencies and exposes only the current
 frontier; the agent interprets sources and authors requirements, while the user
 owns consequential choices. After compilation, the OpenSpec packet is the
 source of truth. The semantic draft is temporary and `.foundation/` is derived
-coordination state. Draft v1 remains compatible, draft v2 retains its
-unambiguous bookkeeping behavior, draft v3 remains readable, and draft v4
-compiles unchanged (new optional fields only add sections). A draft declaring
-any other version returns an EDIT naming the accepted versions 3, 4, and 5.
+coordination state. Draft v4 compiles unchanged (new optional fields only add
+sections). Drafts v1-v3 were retired in 3.7; a draft declaring any other
+version returns an EDIT naming the accepted versions 4 and 5.
 
 `change start <draft.json>` inspects before compilation (`--inspect` only
 inspects). Inspection returns one typed `EDIT`, `ASK_USER`, or `DONE` action
@@ -528,7 +527,7 @@ every `dataModel` entry, integration contract from documented `integrations`,
 timeout/retry/idempotency from integration concerns or a complete
 `jobContract`, and accessibility from `uiStates`. Without backing content the
 dimension stays missing; an authored row always wins, so a
-`needs-user-decision` row is still asked. Draft v3 is unchanged. Prose is never scanned for risk
+`needs-user-decision` row is still asked. Prose is never scanned for risk
 keywords, a modified requirement does not imply migration or rollback coverage,
 and a risk-derived `not-applicable` row needs only a rationale. Design and
 reader-guide warnings are advisory, and small rapid-lane drafts get no
@@ -2149,7 +2148,7 @@ Executable providers normally bind product inputs rather than the change
 packet, so a packet-only edit may re-finalize proof without rerunning them.
 Review, acceptance, and semantic acceptance bind the packet because those
 authorities read it. A provider may narrow executable inputs explicitly; the
-proof plan shows the binding. Complete rules live in the evidence reference.
+internal `proof-plan` diagnostic shows the binding. Complete rules live in the evidence reference.
 
 ## Preflight and telemetry
 
@@ -2258,17 +2257,6 @@ exact resume route. It never guesses future model demand.
 
 ## Compatibility and operator references
 
-`.workflow/` is legacy read-only state. Migration creates candidates rather
-than authoritative specs:
-
-```bash
-claude-foundation migrate
-claude-foundation migrate <legacy-id> --apply
-```
-
-Only statements corroborated by code, tests, or accepted contracts may be
-promoted.
-
 `claude-foundation` is the stable public control surface. It finds the project
 from the current directory or `--project <path>` and routes to the installed
 runtime so schemas and behavior stay aligned. Use `change start|amend` and
@@ -2277,7 +2265,7 @@ integration, host-instruction, and recovery protocols are documented in
 `.claude/harness/README.md`. Do not call `foundation.mjs` directly.
 
 Version pins: protocol `semanticDraftSchema` is 5 and the compiler accepts
-draft v3, v4, and v5. The runtime API is unchanged, so an installed CLI keeps working with this runtime.
+draft v4 and v5. The runtime API is unchanged, so an installed CLI keeps working with this runtime.
 
 The harness guide also owns requirements and the canonical table of
 `.foundation/` runtime records and working inputs. Generated records are

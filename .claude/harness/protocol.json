@@ -8,7 +8,7 @@
   "semanticAmendmentSchema": "1",
   "artifactDefaultsSchema": "2",
   "groundingSchema": ["1", "2", "3"],
-  "evidenceSchema": ["1", "2"],
+  "evidenceSchema": ["2"],
   "executionSchema": "1",
   "providerProtocol": "13",
   "adapterProtocol": "7",

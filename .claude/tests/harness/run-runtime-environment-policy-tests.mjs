@@ -134,10 +134,13 @@ test("policy defaults and legacy execution values normalize deterministically", 
   assert.throws(() => policy({ models: { routing: 1 } }), /models.routing/);
   assert.deepEqual(defaults.review.fallbackReviewers, []);
 
+  assert.throws(() => policy({ version: 1, execution: { packetBytes: 4096 } }),
+    /packetBytes must be an object/);
+
   const legacy = policy({
     version: 1,
     execution: {
-      packetBytes: 4096,
+      packetBytes: { task: 4096, review: 4096, repository: 4096, global: 4096 },
       tokenBudgets: { rapid: 20000 }, requestBudgets: { rapid: 20 }
     },
     review: {
@@ -146,7 +149,6 @@ test("policy defaults and legacy execution values normalize deterministically", 
       fallbackReviewers: ["main-session"]
     }
   });
-  assert.equal(legacy.execution.legacyNumericPacketBytes, 4096);
   assert.deepEqual(legacy.execution.packetBytes, {
     task: 4096, review: 4096, repository: 4096, global: 4096
   });

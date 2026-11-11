@@ -18,7 +18,7 @@ authority, and recoverable Land.
 
 For new work, the agent states semantics once in draft v5 (a folder: typed
 `change.json` plus authored `proposal.md`/`design.md` prose in outline order;
-v4 and v3 remain compatible) and `change start` compiles stable OpenSpec links,
+v4 JSON remains accepted) and `change start` compiles stable OpenSpec links,
 derived sections, and conditional artifacts. After Change, the
 normal model-facing runtime entrypoint is `advance --through
 build|proven|archived`; primitive commands remain compatibility/diagnostic

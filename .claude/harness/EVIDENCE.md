@@ -98,7 +98,7 @@ derives from the tasks' `verify` commands. Review covers it instead: the review
 policy gains a `covered-by-review:<capability>` trigger (review becomes required
 under either policy; `security-static`, `data-migration`, `compatibility`, and
 `cross-repo-contract` select the high tier, `resilience` at least medium), the
-provider leaves the required set, and readiness, `proof plan`, and the proof
+provider leaves the required set, and readiness, the internal `proof-plan` diagnostic, and the proof
 record it as an advisory with `status: "covered-by-review"` and `aliasOf`
 naming the repeated test provider. Prove continues without a user decision and
 completes only when that review passes. When review is waived or not required,
@@ -158,14 +158,9 @@ value the provider declares in `env` or `envFrom` still reaches it.
 }
 ```
 
-Evidence v1 and evidence v2 with embedded `providers` remain readable. Separate
-them explicitly:
-
-```bash
-claude-foundation evidence upgrade <change>
-```
-
-The upgrade moves known wiring into `execution.yaml`; it never guesses commands.
+Evidence v2 may embed derived `providers`; `execution.yaml` overrides them.
+Evidence v1 from releases before 3.7 is refused: finish that change with the
+release that started it, or abandon it.
 
 ## Bootstrap project-owned wiring
 
@@ -400,7 +395,7 @@ blocker alone. When a required provider has no adapter but the project owns a
 safe command for its capability, the recommended route is
 `evidence init --write`, not a request to a person. A capability the
 changed-surface policy inferred and nobody wired is not a required provider at
-all: it appears under `advisories` in readiness, `proof plan`, and the proof
+all: it appears under `advisories` in readiness, the internal `proof-plan` diagnostic, and the proof
 record, and does not block.
 
 When `quality/foundation-quality.json` is committed, evidence bootstrap can
@@ -506,7 +501,7 @@ provider may scope a pattern to a repository: `api:openapi.yaml`. Patterns are
 workspace-relative, reject `..`, and a passing receipt whose declared inputs
 matched no file is refused rather than bound to an empty set. `inputs` is a
 claim about what the command reads: name too little and a real code edit reuses
-evidence that never saw it. `proof plan` prints each provider's binding, and
+evidence that never saw it. The internal `proof-plan` diagnostic prints each provider's binding, and
 reuse is logged to `.foundation/logs/<change>/reuse.jsonl`.
 
 For an executable provider, every existing workspace-relative input file named

@@ -1,6 +1,5 @@
 import { existsSync } from "node:fs";
-import { join, resolve as resolvePath } from "node:path";
-import { validateSignedCiEnvelope } from "../evidence/signed-ci.mjs";
+import { join } from "node:path";
 import { validityRecovery } from "../evidence/receipt-validity.mjs";
 import { advisoryVisualLine, visualWaiverSummary } from "../evidence/visual-review.mjs";
 
@@ -83,7 +82,7 @@ export function landTransactionStarted(state) {
 }
 
 export async function advanceLandOperation({
-  loadRuntime, landCheck, archive, resumeLand, landPlanValue,
+  loadRuntime, landCheck, archive, landPlanValue,
   selectedRepositories, prepareExecution = null
 }, id) {
   const initial = loadRuntime(id);
@@ -94,8 +93,7 @@ export async function advanceLandOperation({
     return archived || { status: "ARCHIVED", archived: true };
   }
   const multiRepository = compositeRepositorySelection(selectedRepositories(id, initial));
-  const legacyTransaction = multiRepository && legacyRepositoryLandTransaction(initial);
-  if (prepareExecution && !legacyTransaction) await prepareExecution(id, { stage: "land" });
+  if (prepareExecution) await prepareExecution(id, { stage: "land" });
   const converge = async () => {
     try {
       return await archive(id);
@@ -109,49 +107,13 @@ export async function advanceLandOperation({
       return archive(id);
     }
   };
-  const state = initial;
   if (!multiRepository) {
     const archived = await converge();
     return archived || { status: "ARCHIVED", archived: true };
   }
-  const currentPlan = landPlanValue(id);
-  if (currentPlan.strategy === "workspace-uncommitted") {
-    const archived = await converge();
-    return archived || { status: "ARCHIVED", archived: true, plan: currentPlan };
-  }
-  const resumed = await resumeLand(id);
-  const refreshed = loadRuntime(id);
   const plan = landPlanValue(id);
-  if (plan.readyToArchive) {
-    const archived = await converge();
-    return archived || { status: "ARCHIVED", archived: true, plan };
-  }
-  if (refreshed.status === "building") return resumed || {
-    status: "PENDING",
-    reason: "repository delivery changed the composite workspace; Land will resume the transaction"
-  };
-  return {
-    status: plan.waitingExternal ? "WAITING_EXTERNAL" : "PENDING",
-    reason: plan.reason || "repository delivery is not ready to archive",
-    repositories: plan.repositories || [],
-    plan
-  };
-}
-
-export function legacyRepositoryLandTransaction(state) {
-  return Object.entries(state?.repositories || {}).some(([id, runtime]) =>
-    id !== "root" && Boolean(runtime?.land?.commit ||
-      ["child-landed", "awaiting-explicit-commit", "awaiting-explicit-branch-land",
-        "awaiting-root-pointer"].includes(runtime?.land?.status)));
-}
-
-// Only a change the retired commit-based flow already took into its saga may
-// keep recording child commits. A current change delivers uncommitted
-// workspaces; letting `land record` bind a commit would switch it into the
-// legacy saga, and Land never commits.
-export function legacyLandSagaStarted(state) {
-  return legacyRepositoryLandTransaction(state) ||
-    state?.land?.strategy === "ordered-resumable-saga";
+  const archived = await converge();
+  return archived || { status: "ARCHIVED", archived: true, plan };
 }
 
 // Layered policy rather than a pinned string: a wrong major cannot sync specs,
@@ -216,170 +178,6 @@ export function signedCiProvider(providers, receiptPath, readJson) {
     const receipt = readJson(receiptPath(provider), {});
     return String(receipt.provenance?.source || "").startsWith("signed-ci:");
   }) || null;
-}
-
-export function configuredLandCiIssuers(repositories, repositoryId = null) {
-  const issuers = {};
-  for (const repository of repositories) {
-    if (repositoryId && repository.id !== repositoryId) continue;
-    for (const [name, config] of Object.entries(repository.ci?.issuers || {}))
-      if (config?.algorithm === "ed25519" && String(config.publicKey || "").includes("PUBLIC KEY"))
-        issuers[name] = config;
-  }
-  return issuers;
-}
-
-export function eligibleRootPointerEntries(context, id, state) {
-  const {
-    orderedRepositories, repositoryCommitLanded, rootGitlink, root, fail
-  } = context;
-  return orderedRepositories(id, state)
-    .filter((repository) => repository.type === "submodule" && repository.mode === "write")
-    .map((repository) => {
-      const runtime = state.repositories[repository.id];
-      const commit = runtime?.land?.commit;
-      if (!commit || !repositoryCommitLanded(repository, commit))
-        fail(`repository '${repository.id}' commit has not landed`);
-      if (runtime.land.ciRequired && runtime.land.ci !== "pass")
-        fail(`repository '${repository.id}' required CI has not passed`);
-      const sandboxBefore = rootGitlink(state.workspace.path, repository);
-      const targetBefore = rootGitlink(root, repository);
-      if (![runtime.baseHead, commit].includes(sandboxBefore) ||
-          ![runtime.baseHead, commit].includes(targetBefore))
-        fail(`repository '${repository.id}' root pointer changed outside the Land plan`);
-      return { repository, commit, sandboxBefore, targetBefore };
-    });
-}
-
-export function pendingRootPointers(entries) {
-  return entries.filter((entry) =>
-    entry.sandboxBefore !== entry.commit || entry.targetBefore !== entry.commit);
-}
-
-export function rootPointerSignature(entries) {
-  return entries.map((entry) => `${entry.repository.id}:${entry.commit}`).sort().join(",");
-}
-
-export function updateRootPointerIndex(git, path, entry, commit = entry.commit) {
-  return git([
-    "update-index", "--cacheinfo",
-    `160000,${commit},${entry.repository.relativePath}`
-  ], path);
-}
-
-export function applyRootPointerUpdates({ git, root, workspacePath, entries, fail }) {
-  const applied = [];
-  try {
-    for (const entry of entries) {
-      const sandboxResult = updateRootPointerIndex(git, workspacePath, entry);
-      if (sandboxResult.status !== 0)
-        throw new Error(
-          `cannot update ${entry.repository.id} sandbox pointer: ${sandboxResult.stderr.trim()}`);
-      const targetResult = updateRootPointerIndex(git, root, entry);
-      if (targetResult.status !== 0) {
-        updateRootPointerIndex(git, workspacePath, entry, entry.sandboxBefore);
-        throw new Error(
-          `cannot update ${entry.repository.id} target pointer: ${targetResult.stderr.trim()}`);
-      }
-      applied.push(entry);
-    }
-  } catch (error) {
-    for (const entry of applied.reverse()) {
-      updateRootPointerIndex(git, workspacePath, entry, entry.sandboxBefore);
-      updateRootPointerIndex(git, root, entry, entry.targetBefore);
-    }
-    fail(`${error.message}; root pointers rolled back`);
-  }
-}
-
-export function rootPointerLandState(state, entries, signature, now) {
-  return {
-    ...(state.land || {}),
-    strategy: "ordered-resumable-saga",
-    status: "root-pointers-staged",
-    pointers: Object.fromEntries(entries.map((entry) =>
-      [entry.repository.id, entry.commit])),
-    pointerStagings: {
-      ...(state.land?.pointerStagings || {}),
-      [signature]: now()
-    },
-    pointersStagedAt: now()
-  };
-}
-
-export function controlHeadMovedStageDecision(state, currentHead, id = state.id) {
-  return {
-    kind: "control-head-moved",
-    summary: "The control repository moved to a different commit after this change's sandbox was created, so staging submodule pointers now could bind them to a base nobody proved.",
-    options: [
-      { id: "sync", outcome: `Replay every moved repository sandbox onto the current control commit and re-prove it: 'claude-foundation sandbox sync ${id}'.` },
-      { id: "inspect", outcome: "Compare the recorded base with the current control repository history before choosing." },
-      { id: "pause", outcome: "Stage nothing and leave both repositories as they are." }
-    ],
-    recommended: "sync",
-    // Same deterministic replay as the single-repository stop; a moved base
-    // never forces a recreated sandbox or a retired change.
-    automaticRecovery: "sync",
-    recordedBase: state.workspace?.baseHead || null,
-    currentHead
-  };
-}
-
-export function restagedRootPointersDecision(staged, pending) {
-  return {
-    kind: "root-pointers-restaged",
-    summary: "These submodule pointers were already staged once and have since been reset outside Foundation, so staging them again would restart the same Prove-and-Land cycle.",
-    options: [
-      { id: "inspect", outcome: "Find what reset the staged pointers — a checkout, reset, or stash in the control repository — before staging again." },
-      { id: "restage", outcome: "Clear the recorded staging attempt and stage the pointers once more after resolving the cause." },
-      { id: "abandon", outcome: "Retire this change instead of landing its pointers." },
-      { id: "pause", outcome: "Stage nothing and leave both repositories as they are." }
-    ],
-    recommended: "inspect",
-    stagedAt: staged,
-    pointers: Object.fromEntries(pending.map((entry) =>
-      [entry.repository.id, entry.commit]))
-  };
-}
-
-export function stageRootPointersOperation(context, id) {
-  const {
-    landCheck, requirePreparedLand, loadRuntime, root, gitHead, blockWithDecision,
-    selectedRepositories, orderedRepositories, git, clearSnapshotCache,
-    saveRuntime, now, log = console.log
-  } = context;
-  landCheck(id);
-  requirePreparedLand(id);
-  const state = loadRuntime(id);
-  if (!compositeRepositorySelection(selectedRepositories(id, state)))
-    context.fail(`change '${id}' is not multi-repository`);
-  const currentHead = gitHead(root);
-  if (currentHead !== state.workspace?.baseHead)
-    blockWithDecision(id, "control-head-moved",
-      controlHeadMovedStageDecision(state, currentHead, id));
-  const entries = eligibleRootPointerEntries(context, id, state);
-  if (!entries.length) {
-    log(`ROOT POINTERS ${id}: no submodule pointers required`);
-    return;
-  }
-  const pending = pendingRootPointers(entries);
-  if (!pending.length) {
-    log(`ROOT POINTERS ${id}: already staged\n  proof remains valid`);
-    return;
-  }
-  const signature = rootPointerSignature(pending);
-  const staged = state.land?.pointerStagings?.[signature];
-  if (staged)
-    blockWithDecision(id, "root-pointers-restaged",
-      restagedRootPointersDecision(staged, pending));
-  applyRootPointerUpdates({
-    git, root, workspacePath: state.workspace.path, entries: pending, fail: context.fail
-  });
-  state.land = rootPointerLandState(state, entries, signature, now);
-  transitionLifecycleState(state, "building", "root-pointers-staged-proof-invalidated");
-  clearSnapshotCache(id);
-  saveRuntime(state);
-  log(`ROOT POINTERS STAGED ${id}\n  proof is stale; run /prove ${id}`);
 }
 
 export function readRepositoryLandStatus(repository, runtime, targetHead, readDirty) {
@@ -520,10 +318,8 @@ export function createLandRuntime({
   telemetryReadiness = null,
   verifyAppliedProjection,
   selectedRepositories = () => [],
-  repositoryById,
   git,
   gitHead,
-  ciEvidenceProtocolVersion,
   stableHash = (value) => JSON.stringify(value),
   agentPlanValue = null,
   executionContract = null,
@@ -915,8 +711,7 @@ export function createLandRuntime({
   function landPlanValue(id, state = loadRuntime(id)) {
     const proof = existsSync(proofPath(id)) ? readJson(proofPath(id), {}) : null;
     const selected = orderedRepositories(id, state);
-    if (compositeRepositorySelection(selected) &&
-        !legacyRepositoryLandTransaction(state)) {
+    if (compositeRepositorySelection(selected)) {
       const repositories = selected.map((repository) => {
         const runtime = repository.id === "root"
           ? state.repositories?.root || state.workspace
@@ -1018,53 +813,6 @@ export function createLandRuntime({
     console.log(JSON.stringify(plan, null, 2));
   }
 
-  // Land's CI signal and the Ed25519-signed CI envelope existed as two paths
-  // that never met. This is the join: the same envelope format, bound to the
-  // child repository's landed commit instead of to a provider workspace.
-  function verifySignedCiAttestation(id, repositoryId, commit, envelopePath) {
-    const absolute = resolvePath(envelopePath);
-    if (!existsSync(absolute))
-      return { valid: false, reason: `attestation file not found: ${envelopePath}` };
-    // `readJson`'s null fallback means die-on-bad-JSON; the sentinel keeps the
-    // graceful refusal below reachable for a corrupt envelope file.
-    const envelope = readJson(absolute, false);
-    if (!envelope || typeof envelope !== "object")
-      return { valid: false, reason: "attestation is not readable JSON" };
-    const trusted = landCiIssuers(id, repositoryId);
-    const issuer = trusted[envelope?.payload?.issuer];
-    if (!issuer)
-      return {
-        valid: false,
-        reason: `issuer '${envelope?.payload?.issuer || "unknown"}' is not configured in ` +
-          `openspec/repositories.yaml for '${repositoryId}'`
-      };
-    const result = validateSignedCiEnvelope({
-      envelope,
-      protocolVersion: ciEvidenceProtocolVersion,
-      issuer: envelope.payload.issuer,
-      publicKey: issuer.publicKey,
-      changeId: id,
-      provider: `land:${repositoryId}`,
-      workspaceHash: commit,
-      head: commit
-    });
-    if (!result.valid) return result;
-    if (result.status !== "pass")
-      return { valid: false, reason: `signed CI reports '${result.status}'` };
-    return {
-      valid: true, status: "pass",
-      issuer: result.payload.issuer, runUrl: result.payload.runUrl
-    };
-  }
-
-  // Scoped to the repository being attested: pooling issuers across every
-  // selected repository let a signer trusted only for one repository attest CI
-  // for another, and two repositories declaring the same issuer name with
-  // different keys silently collided.
-  function landCiIssuers(id, repositoryId = null) {
-    return configuredLandCiIssuers(selectedRepositories(id), repositoryId);
-  }
-
   // Branch name of the checked-out target, or null for detached HEAD or any
   // error. Warnings only — every land guard stays commit-based, so a failed
   // branch read can never change what lands.
@@ -1079,150 +827,11 @@ export function createLandRuntime({
     }
   }
 
-  function defaultBranchWarning(label, branch) {
-    if (!branch || !["main", "master"].includes(branch)) return false;
-    console.error(`WARNING: ${label} is checked out on '${branch}'; this lands directly onto the default branch — branch-first policy suggests a feature branch`);
-    return true;
-  }
-
-  function repositoryLandRequest(id, flags) {
-    const repositoryId = flags.repo;
-    const commit = flags.commit;
-    if (!repositoryId || !commit)
-      fail("land record requires --repo <id> --commit <sha>");
-    const decisionRef = String(flags["decision-ref"] || "").trim();
-    if (!decisionRef)
-      fail("land record requires --decision-ref <host-user-decision>; ask the user to authorize binding this child commit before recording it");
-    landCheck(id);
-    const state = loadRuntime(id);
-    if (!legacyLandSagaStarted(state))
-      fail(`land record applies only to a change already in the legacy commit-based Land saga; ` +
-        `'${id}' delivers uncommitted workspaces and Land never commits. ` +
-        `Resume with 'claude-foundation advance ${id} --through archived'.`);
-    const repository = repositoryById(id, repositoryId, state);
-    if (repository.id === "root" || repository.mode !== "write")
-      fail(`repository '${repositoryId}' is not a writable child repository`);
-    const runtime = state.repositories?.[repositoryId];
-    if (!runtime?.path) fail(`repository '${repositoryId}' has no sandbox`);
-    return { repositoryId, commit, decisionRef, state, repository, runtime };
-  }
-
-  function resolvedRepositoryCommit(repositoryId, commit, runtime) {
-    const resolved = git(["rev-parse", `${commit}^{commit}`], runtime.path);
-    if (resolved.status !== 0)
-      fail(`commit '${commit}' is not available in repository '${repositoryId}'`);
-    const normalizedCommit = resolved.stdout.trim();
-    if (gitHead(runtime.path) !== normalizedCommit)
-      fail(`repository '${repositoryId}' sandbox HEAD must equal the recorded commit`);
-    const dirty = git(["status", "--porcelain"], runtime.path);
-    if (dirty.status !== 0 || dirty.stdout.trim())
-      fail(`repository '${repositoryId}' sandbox must be clean before recording Land`);
-    return normalizedCommit;
-  }
-
-  function repositoryCiEvidence(id, repositoryId, normalizedCommit, flags, state) {
-    const ci = flags.ci || null;
-    if (ci && !["pass", "fail", "pending"].includes(ci))
-      fail("land record --ci must be pass|fail|pending");
-    const envelopePath = String(flags["ci-attestation"] || "").trim();
-    let provenance = { kind: "self-reported", reference: null };
-    if (envelopePath) {
-      const verified = verifySignedCiAttestation(id, repositoryId, normalizedCommit, envelopePath);
-      if (!verified.valid) fail(`CI attestation rejected: ${verified.reason}`);
-      provenance = { kind: "signed-ci", issuer: verified.issuer, reference: verified.runUrl };
-      if (ci && ci !== verified.status)
-        fail(`--ci ${ci} contradicts the signed CI attestation (${verified.status})`);
-    }
-    const required = Boolean(flags["ci-required"]) ||
-      riskRequiresCi(state, reviewPolicy(id, state));
-    if (required && provenance.kind !== "signed-ci")
-      fail(`repository '${repositoryId}' requires CI evidence; pass --ci-attestation <signed.json>. ` +
-        "A self-reported --ci is not evidence when CI is required by flag or risk policy.");
-    return { ci, envelopePath, provenance, required };
-  }
-
-  function repositoryLandValue(repository, normalizedCommit, decisionRef, flags, ciEvidence) {
-    const { ci, envelopePath, provenance, required } = ciEvidence;
-    return {
-      commit: normalizedCommit,
-      ci: envelopePath ? "pass" : ci,
-      ciProvenance: provenance,
-      ciRequired: required,
-      ciRequirement: Boolean(flags["ci-required"]) ? "explicit" :
-        required ? "risk-policy" : "optional",
-      recordedAt: now(),
-      authority: { kind: "host-user-decision", reference: decisionRef },
-      binding: repository.type === "submodule" ? "root-gitlink" : "runtime-state-only"
-    };
-  }
-
-  function persistRepositoryLand(id, state) {
-    saveRuntime(state);
-    persistLandPreparation(id, state,
-      existsSync(proofPath(id)) ? readJson(proofPath(id), {}) : null,
-      agentPlanValue?.(id)?.graph || null,
-      relevantHash(id));
-  }
-
-  function reportRepositoryLand(id, repositoryId, repository, land) {
-    if (repository.type !== "submodule")
-      console.error(
-        `WARNING: '${repositoryId}' is a ${repository.type} repository, so nothing versioned in the ` +
-        "root records this commit; the binding lives only in gitignored runtime state");
-    console.log(`LAND RECORDED ${id}/${repositoryId}\n  commit: ${land.commit}\n  ci: ${
-      land.ci || "unknown"} (${land.ciProvenance.kind})`);
-  }
-
-  function recordRepositoryLand(id, flags) {
-    const {
-      repositoryId, commit, decisionRef, state, repository, runtime
-    } = repositoryLandRequest(id, flags);
-    const normalizedCommit = resolvedRepositoryCommit(repositoryId, commit, runtime);
-    defaultBranchWarning(`repository '${repositoryId}' target`,
-      targetBranch(runtime.targetPath));
-    const ciEvidence = repositoryCiEvidence(id, repositoryId, normalizedCommit, flags, state);
-    const land = repositoryLandValue(
-      repository, normalizedCommit, decisionRef, flags, ciEvidence);
-    state.repositories[repositoryId].land = land;
-    persistRepositoryLand(id, state);
-    reportRepositoryLand(id, repositoryId, repository, land);
-  }
-
-  const stageRootPointers = stageRootPointersOperation.bind(null, {
-    landCheck, requirePreparedLand, loadRuntime, root, gitHead, blockWithDecision,
-    selectedRepositories, orderedRepositories, repositoryCommitLanded, rootGitlink, git, fail,
-    clearSnapshotCache, saveRuntime, now
-  });
-
   function resumeLand(id) {
     landCheck(id);
-    const state = loadRuntime(id);
-    if (!legacyRepositoryLandTransaction(state)) {
-      const plan = landPlanValue(id, state);
-      console.log(JSON.stringify(plan, null, 2));
-      return plan;
-    }
-    for (const repository of orderedRepositories(id, state)) {
-      if (repository.id === "root" || repository.mode !== "write") continue;
-      const runtime = state.repositories?.[repository.id];
-      if (!runtime?.land?.commit) continue;
-      runtime.land.status = repositoryCommitLanded(repository, runtime.land.commit)
-        ? "child-landed" : "awaiting-explicit-branch-land";
-      runtime.land.checkedAt = now();
-    }
-    state.land = {
-      ...(state.land || {}),
-      strategy: "ordered-resumable-saga",
-      status: "children-inspected",
-      resumedAt: now()
-    };
-    saveRuntime(state);
-    const plan = landPlanValue(id);
-    if (plan.repositories.some((repository) => repository.status === "awaiting-root-pointer")) {
-      stageRootPointers(id);
-      return;
-    }
-    showLandPlan(id);
+    const plan = landPlanValue(id, loadRuntime(id));
+    console.log(JSON.stringify(plan, null, 2));
+    return plan;
   }
 
   function assertMultiRepositoryArchiveReady(id, state) {
@@ -1236,11 +845,7 @@ export function createLandRuntime({
           (repository) => `${repository.id}:${repository.status}`).join(", ")}`);
       return;
     }
-    const blocked = plan.repositories.filter((repository) =>
-      !["read-only", "child-landed", "control-plane-last"].includes(repository.status));
-    if (blocked.length)
-      fail(`multi-repository Land is incomplete: ${blocked.map((repository) =>
-        `${repository.id}:${repository.status}`).join(", ")}`);
+    fail(`multi-repository Land has an unexpected plan strategy '${plan.strategy}'`);
   }
 
   return {
@@ -1253,8 +858,6 @@ export function createLandRuntime({
     landPreparationValue,
     requirePreparedLand,
     showLandPlan,
-    recordRepositoryLand,
-    stageRootPointers,
     resumeLand,
     assertMultiRepositoryArchiveReady
   };

@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 const ALWAYS = [
   "runtime syntax",
@@ -206,7 +207,13 @@ export function changedFiles(root, base = null) {
   ])];
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] || "").href) {
+// Compare real paths: invoked through a symlinked directory (macOS /tmp),
+// argv[1] and import.meta.url name the same file differently.
+const invokedDirectly = (() => {
+  try { return realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1] || ""); }
+  catch { return false; }
+})();
+if (invokedDirectly) {
   const root = process.argv[2];
   const labels = String(process.env.FOUNDATION_SUITE_LABELS || "")
     .split("\n").filter(Boolean);

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import {
   blockingConflictRows, dependentClosure, scopeAllowsPath
@@ -464,43 +464,6 @@ export function topologyIssuesOperation({ evidence }, id) {
   ];
 }
 
-export function upgradeEvidenceOperation({
-  loadRuntime,
-  fail,
-  changePath,
-  proofPath,
-  readJson,
-  writeJson,
-  saveRuntime,
-  pathExists = existsSync,
-  remove = rmSync,
-  output = console
-}, id) {
-  const state = loadRuntime(id);
-  if (state.status === "archived") fail(`change '${id}' is already archived`);
-  const path = join(changePath(id), "evidence.yaml");
-  const value = readJson(path);
-  if (![1, 2].includes(value.version))
-    fail(`cannot upgrade unknown evidence version '${value.version}'`);
-  if (value.version === 1) value.version = 2;
-  const executionPath = join(changePath(id), "execution.yaml");
-  const currentExecution = pathExists(executionPath)
-    ? readJson(executionPath) : { version: 1, providers: {}, services: {} };
-  currentExecution.providers = {
-    ...(value.providers || {}),
-    ...(currentExecution.providers || {})
-  };
-  delete value.providers;
-  writeJson(path, value);
-  writeJson(executionPath, currentExecution);
-  state.version = 2;
-  state.revision = Number(state.revision || 0) + 1;
-  state.executionRevision = Number(state.executionRevision || 0) + 1;
-  if (pathExists(proofPath(id))) remove(proofPath(id));
-  saveRuntime(state);
-  output.log(`EVIDENCE ${id}: contract and execution wiring separated\n  configure execution.yaml before proof execute`);
-}
-
 export function readinessStatus({
   pending, issues, leases, repositoryConflicts,
   unavailable, repositoryIssues, unconfigured
@@ -730,10 +693,6 @@ export function createProofReadinessRuntime({
   activeChangeLeases,
   activeRepositoryConflicts,
   agentPlanValue = null,
-  changePath,
-  proofPath,
-  readJson,
-  writeJson,
   saveRuntime,
   authorityPreflight = () => ({ status: "READY", blockers: [], decision: null }),
   executionContract = null,
@@ -1182,15 +1141,6 @@ export function createProofReadinessRuntime({
     fail
   });
 
-  const upgradeEvidence = upgradeEvidenceOperation.bind(null, {
-    loadRuntime,
-    fail,
-    changePath,
-    proofPath,
-    readJson,
-    writeJson,
-    saveRuntime
-  });
 
   return {
     activeWorkRecovery,
@@ -1206,7 +1156,6 @@ export function createProofReadinessRuntime({
     readinessBudgetPolicy,
     topologyIssues,
     unavailableProviderRecovery,
-    workspaceIsolationIssues,
-    upgradeEvidence
+    workspaceIsolationIssues
   };
 }

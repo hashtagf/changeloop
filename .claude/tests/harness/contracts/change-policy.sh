@@ -231,25 +231,23 @@ node -e '
   fs.writeFileSync(path, JSON.stringify(draft, null, 2));'
 v4_new="$({ node .claude/harness/foundation.mjs new "Bypass intake" \
   --draft semantic-v4-new-draft.json; } 2>&1 || true)"
-assert_contains "legacy new --draft cannot bypass semantic v4 intake" "$v4_new" \
-  "semantic draft v4 must use 'change start <draft.json>'"
+assert_contains "new --draft cannot bypass semantic intake" "$v4_new" \
+  "must use 'change start <draft>'"
 
-# A structured draft materializes the agreement once without creating a
+# A semantic draft materializes the agreement once without creating a
 # second implementation ledger.
-printf '%s\n' \
-  '{"title":"Drafted change","why":"Reduce manual scaffolding.",' \
-  '"currentState":"The operator fills every template separately.",' \
-  '"compatibility":"No public compatibility impact.",' \
-  '"changes":["Materialize one validated draft."],"nonGoals":["No task mirror."],' \
-  '"decisions":[{"choice":"Use one JSON draft","why":"One source","rejected":"Repeated prompts"}],' \
-  '"risks":[{"risk":"Bad draft","mitigation":"Validate required fields","owner":"test"}],' \
-  '"tasks":[{"id":"T001","outcome":"Implement drafting","kind":"implementation","paths":["app.txt"],"verify":"test -f app.txt"}],' \
-  '"claims":[{"id":"draft-outcome","scenario":"Draft materializes","impact":"low","capabilities":["test"]}],' \
-  '"specs":[{"name":"drafting","operation":"added","requirement":"Materialize a draft","description":"The runtime SHALL materialize one draft.",' \
-  '"scenarios":[{"name":"Valid draft","when":"a valid draft is supplied","then":"all agreement artifacts are populated"}]}]}' \
-  > foundation-draft.json
+mkdir -p .foundation/drafts
+jq -n '{version:4, id:"drafted-change", intent:"Drafted change", impact:"low",
+  coupling:"isolated", acceptance:{required:false},
+  requirements:[{key:"draft-outcome", capability:"drafting", operation:"added",
+    scenarios:[{name:"Valid draft", when:"a valid draft is supplied",
+      then:"all agreement artifacts are populated"}],
+    outcome:"Materialize one draft"}],
+  tasks:[{key:"implement-drafting", outcome:"Implement drafting",
+    covers:["draft-outcome"], paths:["app.txt"], verify:"test -f app.txt"}]}' \
+  > .foundation/drafts/foundation-draft.json
 assert_cmd_zero "structured draft scaffolds a complete agreement" \
-  node .claude/harness/foundation.mjs new "Drafted change" --draft foundation-draft.json
+  node .claude/harness/foundation.mjs start .foundation/drafts/foundation-draft.json
 node .claude/harness/foundation.mjs resolve drafted-change \
   --impact low --coupling isolated --acceptance-not-required >/dev/null
 assert_cmd_zero "drafted agreement validates without a second ledger" \
@@ -270,22 +268,18 @@ assert_contains "validate names the phase that follows agreement" \
 # and `validate` persists the derived answer. That happened in silence, so the
 # flag looked broken and the only diagnosis was reading `resolvedAcceptance`.
 # The gate must name the claim holding it open, on every run — not once.
-printf '%s\n' \
-  '{"title":"Human gated change","why":"Prove acceptance origin is stated.",' \
-  '"currentState":"The gate does not say where it came from.",' \
-  '"compatibility":"No public compatibility impact.",' \
-  '"changes":["State the origin of a human gate."],"nonGoals":["No new state."],' \
-  '"decisions":[{"choice":"Name the claim","why":"Diagnosable","rejected":"Silent override"}],' \
-  '"risks":[{"risk":"Operator cannot clear the gate","mitigation":"Name its source","owner":"test"}],' \
-  '"tasks":[{"id":"T001","outcome":"Implement gating","kind":"implementation","paths":["app.txt"],"verify":"test -f app.txt"}],' \
-  '"claims":[{"id":"subjective-outcome","scenario":"A person judges the result","impact":"low","capabilities":["test","acceptance"]}],' \
-  '"specs":[{"name":"gating","requirement":"State gate origin","description":"The runtime SHALL name the claim that requires acceptance.",' \
-  '"scenario":"Declared capability","when":"a claim declares acceptance","then":"validate names that claim"}]}' \
-  > foundation-gated-draft.json
-legacy_draft_output="$(node .claude/harness/foundation.mjs new "Human gated change" \
-  --draft foundation-gated-draft.json 2>&1)"
-assert_contains "legacy draft operation remains compatible with an actionable warning" \
-  "$legacy_draft_output" "legacy draft specs without operation are treated as added"
+jq -n '{version:4, id:"human-gated-change", intent:"Human gated change",
+  impact:"low", coupling:"isolated", acceptance:{required:false},
+  requirements:[{key:"subjective-outcome", capability:"gating", operation:"added",
+    scenarios:[{name:"Declared capability", when:"a claim declares acceptance",
+      then:"validate names that claim"}],
+    outcome:"Name the claim that requires acceptance"}],
+  tasks:[{key:"implement-gating", outcome:"Implement gating",
+    covers:["subjective-outcome"], paths:["app.txt"], verify:"test -f app.txt"}],
+  evidence:{"subjective-outcome":{capabilities:["test","acceptance"]}}}' \
+  > .foundation/drafts/foundation-gated-draft.json
+node .claude/harness/foundation.mjs start .foundation/drafts/foundation-gated-draft.json \
+  >/dev/null 2>&1
 node .claude/harness/foundation.mjs resolve human-gated-change \
   --impact low --coupling isolated --acceptance-not-required >/dev/null
 gated_first="$({ node .claude/harness/foundation.mjs validate human-gated-change; } 2>&1)"

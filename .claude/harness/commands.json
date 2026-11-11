@@ -116,10 +116,10 @@
     {
       "name": "change new",
       "usage": "change new <intent> [--rapid]",
-      "audience": "agent",
+      "audience": "internal",
       "kind": "write",
       "idempotent": false,
-      "description": "Create a change agreement when atomic draft start does not apply."
+      "description": "Internal fixture primitive: scaffold an empty agreement from the schema templates. Agents start changes with change start <draft>."
     },
     {
       "name": "change start",
@@ -426,14 +426,6 @@
       "description": "Record externally observed evidence requested by readiness."
     },
     {
-      "name": "land record",
-      "usage": "land record <change> --repo <id> --commit <sha> --decision-ref <ref> [--ci pass|fail|pending] [--ci-attestation <signed.json>] [--ci-required]",
-      "audience": "internal",
-      "kind": "authority",
-      "idempotent": true,
-      "description": "Bind a child repository commit after an explicit host-recorded user decision, only for a Land transaction the legacy commit-based saga already started; current changes use advance --through archived."
-    },
-    {
       "name": "land resume",
       "usage": "land resume <change>",
       "audience": "internal",
@@ -562,14 +554,6 @@
       "description": "Render the latest non-silent quality debt inventory without widening change scope."
     },
     {
-      "name": "migrate",
-      "usage": "migrate [legacy-id] [--apply]",
-      "audience": "admin",
-      "kind": "authority",
-      "idempotent": true,
-      "description": "Migrate corroborated legacy workflow records."
-    },
-    {
       "name": "version",
       "usage": "version",
       "audience": "admin",
@@ -608,41 +592,6 @@
       "kind": "read",
       "idempotent": true,
       "description": "Inspect the versioned, read-only dashboard projection for this project."
-    },
-    {
-      "name": "evidence upgrade",
-      "usage": "evidence upgrade <change>",
-      "audience": "admin",
-      "kind": "write",
-      "idempotent": true,
-      "description": "Upgrade legacy evidence wiring explicitly."
-    },
-    {
-      "name": "runtime",
-      "usage": "runtime <internal-command>",
-      "audience": "internal",
-      "kind": "write",
-      "idempotent": false,
-      "deprecated": true,
-      "description": "Compatibility pass-through for installed workflow internals."
-    },
-    {
-      "name": "validate",
-      "usage": "validate <change>",
-      "audience": "internal",
-      "kind": "write",
-      "idempotent": true,
-      "deprecated": true,
-      "description": "Compatibility alias for change validate."
-    },
-    {
-      "name": "agents task",
-      "usage": "agents task <change> <task>",
-      "audience": "internal",
-      "kind": "read",
-      "idempotent": true,
-      "deprecated": true,
-      "description": "Compatibility alias for packet --task."
     },
     {
       "name": "host agent-contract",
@@ -733,24 +682,6 @@
       "description": "Apply a proven projection through the Land journal."
     },
     {
-      "name": "proof plan",
-      "usage": "proof plan <change>",
-      "audience": "internal",
-      "kind": "read",
-      "idempotent": true,
-      "deprecated": true,
-      "description": "Compatibility alias for proof readiness."
-    },
-    {
-      "name": "proof finish",
-      "usage": "proof finish <change>",
-      "audience": "internal",
-      "kind": "write",
-      "idempotent": true,
-      "deprecated": true,
-      "description": "Compatibility alias for proof run."
-    },
-    {
       "name": "proof preflight",
       "usage": "proof preflight <change>",
       "audience": "internal",
@@ -791,36 +722,36 @@
       "description": "Persist the multi-repository Land saga plan."
     },
     {
-      "name": "runtime hash",
-      "usage": "runtime hash <change> [provider]",
+      "name": "proof-plan",
+      "usage": "proof-plan <change>",
       "audience": "internal",
       "kind": "read",
       "idempotent": true,
-      "description": "Print the change's current relevant workspace hash."
+      "description": "Runtime diagnostic, not a CLI command: print each required provider receipt validity and binding."
     },
     {
-      "name": "runtime event",
-      "usage": "runtime event <change> [--request <id>] [--run <id>]",
+      "name": "agent-task",
+      "usage": "agent-task <change> <task>",
+      "audience": "internal",
+      "kind": "read",
+      "idempotent": true,
+      "description": "Runtime diagnostic, not a CLI command: print one task packet; the CLI form is packet <change> --task <task>."
+    },
+    {
+      "name": "event",
+      "usage": "event <change> [--request <id>] [--run <id>]",
       "audience": "internal",
       "kind": "write",
       "idempotent": false,
-      "description": "Record one host request event against the change's budget window."
+      "description": "Runtime internal, not a CLI command: record a context event."
     },
     {
-      "name": "runtime api-version",
-      "usage": "runtime api-version",
+      "name": "api-version",
+      "usage": "api-version",
       "audience": "internal",
       "kind": "read",
       "idempotent": true,
-      "description": "Print the installed runtime API version the CLI checks compatibility against."
-    },
-    {
-      "name": "land pointers",
-      "usage": "land pointers <change>",
-      "audience": "internal",
-      "kind": "authority",
-      "idempotent": true,
-      "description": "Stage proven submodule pointers."
+      "description": "Runtime internal, not a CLI command: print the runtime API version the CLI checks for compatibility."
     }
   ],
   "runtimeCommands": [
@@ -876,7 +807,6 @@
     "evidence-init",
     "evidence-doctor",
     "evidence-verify-ci",
-    "evidence-upgrade",
     "authority-request",
     "authority-dispatch",
     "authority-run",
@@ -897,8 +827,6 @@
     "land-advance",
     "land-recover",
     "land-plan",
-    "land-record",
-    "land-pointers",
     "land-resume",
     "delivery-advance",
     "sandbox",
@@ -908,7 +836,6 @@
     "telemetry-sync",
     "telemetry-import",
     "host-execution-import",
-    "migrate",
     "api-version",
     "version"
   ]

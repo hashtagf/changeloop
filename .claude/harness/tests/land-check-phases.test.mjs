@@ -11,58 +11,32 @@ import {
 
 const HASH = "workspacehash0000000000000000000000000000000000000000000000000000";
 
-test("land advance handles single repositories and multi-repository resume states", async () => {
+test("land advance archives single and multi-repository changes through one transaction", async () => {
   const calls = [];
   const dependencies = (states, plan = {}, selected = [{ id: "root" }]) => ({
     loadRuntime: () => states.shift(),
     selectedRepositories: () => selected,
     landCheck: (id) => calls.push(["check", id]),
-    archive: (id) => calls.push(["archive", id]),
-    resumeLand: (id) => calls.push(["resume", id]),
+    archive: (id) => { calls.push(["archive", id]); },
     landPlanValue: (id) => { calls.push(["plan", id]); return plan; }
   });
 
   await advanceLandOperation(dependencies([{ repositories: {} }]), "single");
   assert.deepEqual(calls.splice(0), [["archive", "single"]]);
 
-  await advanceLandOperation(dependencies([
-    { repositories: { root: {}, api: {} } }, { status: "building" }
-  ], {}, [{ id: "root" }, { id: "api" }]), "building");
-  assert.deepEqual(calls.splice(0), [
-    ["plan", "building"], ["resume", "building"], ["plan", "building"]
-  ]);
-
-  await advanceLandOperation(dependencies([
-    { repositories: { root: {}, api: {} } }, { status: "proven" }
-  ], { readyToArchive: false }, [{ id: "root" }, { id: "api" }]), "waiting");
-  assert.deepEqual(calls.splice(0), [
-    ["plan", "waiting"], ["resume", "waiting"], ["plan", "waiting"]
-  ]);
-
-  await advanceLandOperation(dependencies([
-    { repositories: { root: {}, api: {} } }, { status: "proven" }
-  ], { readyToArchive: true }, [{ id: "root" }, { id: "api" }]), "ready");
-  assert.deepEqual(calls.splice(0), [
-    ["plan", "ready"], ["resume", "ready"], ["plan", "ready"],
-    ["archive", "ready"]
-  ]);
-
-  await advanceLandOperation(dependencies([
-    { repositories: { api: {} } }, { status: "proven" }
-  ], { readyToArchive: true }, [{ id: "api" }]), "single-child");
-  assert.deepEqual(calls.slice(-4), [
-    ["plan", "single-child"], ["resume", "single-child"],
-    ["plan", "single-child"], ["archive", "single-child"]
-  ]);
-
-  await advanceLandOperation(dependencies([
+  const plan = { strategy: "workspace-uncommitted" };
+  const result = await advanceLandOperation(dependencies([
     { repositories: { root: {}, api: {} } }
-  ], { strategy: "workspace-uncommitted" }, [
-    { id: "root" }, { id: "api" }
-  ]), "local-saga");
-  assert.deepEqual(calls.slice(-2), [
-    ["plan", "local-saga"], ["archive", "local-saga"]
-  ]);
+  ], plan, [{ id: "root" }, { id: "api" }]), "composite");
+  assert.deepEqual(calls.splice(0), [["plan", "composite"], ["archive", "composite"]]);
+  assert.equal(result.plan, plan, "the multi-repository result carries the plan it landed");
+
+  // One selected child repository is still a repository transaction: the
+  // selection, not the count of runtime records, decides the path.
+  await advanceLandOperation(dependencies([
+    { repositories: { api: {} } }
+  ], plan, [{ id: "api" }]), "single-child");
+  assert.deepEqual(calls.splice(0), [["plan", "single-child"], ["archive", "single-child"]]);
 });
 
 test("land advance automatically re-enters an interrupted internal transaction", async () => {

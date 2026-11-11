@@ -87,8 +87,7 @@ const REGISTERED = new Set([
   "budget-continuation-rejected",
   "budget-continuation-spent",
   "control-head-moved",
-  "recovery-sync-required",
-  "root-pointers-restaged"
+  "recovery-sync-required"
 ]);
 
 function harnessSources(directory) {

@@ -23,8 +23,8 @@ framework.
 
 New changes use semantic draft v4: the harness owns risk-derived discovery
 coverage and decision-frontier validation, while the compiler owns stable
-cross-ledger links and creates optional artifacts only for real concerns. Draft
-v3 remains compatible. The normal host path
+cross-ledger links and creates optional artifacts only for real concerns. Drafts
+v4 and v5 are accepted. The normal host path
 after Change is `advance --through build|proven|archived`; low-level commands
 remain supported operator and integration primitives. OpenSpec stays canonical.
 
@@ -193,8 +193,6 @@ Repository-only development surfaces:
   authorized; there is no scheduled paid workflow.
 - `dashboard/`, `website/`, and `examples/` — observability UI, public docs, and
   sample consumers.
-- Consumer `.workflow/` directories are read-only legacy migration input; do
-  not extend that format.
 
 ## Shipping boundary
 

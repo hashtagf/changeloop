@@ -379,7 +379,14 @@ elif command -v jq >/dev/null 2>&1; then
     printf '✓ raised former default packet budgets to the current task/review/repository/global limits\n'
   elif jq -e '.execution.packetBytes | type == "number"' \
       "$TARGET_PATH/foundation.json" >/dev/null 2>&1; then
-    printf '⚠ preserving custom numeric execution.packetBytes; use scoped task/review/repository/global limits when ready\n' >&2
+    # A single custom limit applies to every scope; the runtime accepts only
+    # the scoped object.
+    tmp="$(mktemp)"
+    jq '.execution.packetBytes as $n | .execution.packetBytes =
+        { task: $n, review: $n, repository: $n, global: $n }' \
+      "$TARGET_PATH/foundation.json" > "$tmp"
+    mv "$tmp" "$TARGET_PATH/foundation.json"
+    printf '✓ converted custom numeric execution.packetBytes to the same task/review/repository/global limits\n'
   fi
   tmp="$(mktemp)"
   jq --slurpfile src "$SOURCE_PATH/foundation.json" '
@@ -406,7 +413,7 @@ elif command -v jq >/dev/null 2>&1; then
   mv "$tmp" "$TARGET_PATH/foundation.json"
   printf '✓ installed risk-tiered workflow and configured reviewer defaults; existing explicit review waivers were preserved\n'
 else
-  printf '⚠ jq unavailable; inspect legacy numeric execution.packetBytes manually\n' >&2
+  printf '⚠ jq unavailable; make sure execution.packetBytes in foundation.json is a { task, review, repository, global } object\n' >&2
 fi
 
 if command -v node >/dev/null 2>&1; then

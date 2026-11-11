@@ -1,10 +1,5 @@
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  writeFileSync
-} from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { nextCommand } from "./next-step.mjs";
 import { deriveChangeProjection } from "./state-projections.mjs";
 import { upgradeCompatibilityDiagnostics } from "./update-advisory.mjs";
@@ -104,7 +99,6 @@ export function createDiagnosticsRuntime({
   executionContract = null,
   evidenceDetection = null,
   parseFlags,
-  parseStrictCommandFlags,
   fail
 }) {
   // A forecast is a prediction about files that do not exist. It warns, names
@@ -287,11 +281,9 @@ export function createDiagnosticsRuntime({
       }
     }
     checks.push({
-      level: modelPolicy.execution.legacyNumericPacketBytes === undefined ? "ok" : "warn",
+      level: "ok",
       name: "packet-policy",
-      detail: modelPolicy.execution.legacyNumericPacketBytes === undefined
-        ? `task=${modelPolicy.execution.packetBytes.task}; review=${modelPolicy.execution.packetBytes.review}; repository=${modelPolicy.execution.packetBytes.repository}; global=${modelPolicy.execution.packetBytes.global}`
-        : `legacy numeric limit ${modelPolicy.execution.legacyNumericPacketBytes}; migrate to scoped task/repository/global limits`
+      detail: `task=${modelPolicy.execution.packetBytes.task}; review=${modelPolicy.execution.packetBytes.review}; repository=${modelPolicy.execution.packetBytes.repository}; global=${modelPolicy.execution.packetBytes.global}`
     });
     const upgradeDiagnostics = upgradeCompatibilityDiagnostics({
       currentVersion: version,
@@ -572,16 +564,6 @@ export function createDiagnosticsRuntime({
         detail: installed ? "installed" : "missing"
       });
     }
-    const legacyHookTests = ["run-hook-tests.sh", "run-artifact-lint-tests.sh"]
-      .filter((name) => existsSync(join(root, ".claude", "hooks", "tests", name)));
-    checks.push({
-      level: legacyHookTests.length ? "warn" : "ok",
-      name: "legacy-hook-tests",
-      detail: legacyHookTests.length
-        ? `stale packaged tests found (${legacyHookTests.join(", ")}); reinstall Foundation`
-        : "absent"
-    });
-
     const settings = readJson(join(root, ".claude", "settings.json"), {});
     const settingsText = JSON.stringify(settings);
     const directMainEnabled = settingsText.includes("no-direct-main-commit.sh");
@@ -602,39 +584,6 @@ export function createDiagnosticsRuntime({
     if (checks.some((check) => check.level === "error")) process.exitCode = 1;
   }
 
-  function migrate(values) {
-    // Strict, not parseFlags: `--apply` is boolean, and the greedy parser
-    // swallowed the following legacy id as its value — so `migrate --apply
-    // <id>` silently migrated *every* legacy run and reported success. It also
-    // accepted `--apply=false`, whose truthy string "false" still wrote.
-    const { flags, rest } = parseStrictCommandFlags(values, "migrate", {
-      boolean: ["apply"]
-    });
-    if (rest.length > 1) fail(`migrate accepts at most one legacy id: ${rest.join(", ")}`);
-    const legacyRoot = join(root, ".workflow");
-    const candidates = existsSync(legacyRoot)
-      ? readdirSync(legacyRoot, { withFileTypes: true })
-        .filter((entry) => entry.isDirectory() && !entry.name.startsWith("_"))
-        .filter((entry) => !rest[0] || entry.name === rest[0])
-      : [];
-    if (!candidates.length) {
-      console.log("No matching legacy runs.");
-      return;
-    }
-    console.log(`${flags.apply ? "MIGRATION CANDIDATES WRITTEN" : "MIGRATION DRY RUN"}:`);
-    for (const entry of candidates) {
-      console.log(`  ${entry.name} -> openspec/migration-candidates/${entry.name}.md`);
-      if (flags.apply) {
-        const target = join(root, "openspec", "migration-candidates", `${entry.name}.md`);
-        mkdirSync(dirname(target), { recursive: true });
-        writeFileSync(target,
-          `# Migration candidate: ${entry.name}\n\n` +
-          `Source: \`.workflow/${entry.name}/\` (preserved read-only)\n\n` +
-          "Only copy statements corroborated by code, tests, or an accepted contract.\n" +
-          "Classify remaining items as current spec, new change, stable context, obsolete, or speculative.\n");
-      }
-    }
-  }
 
   function usage() {
     console.log(`Change Loop ${version}
@@ -648,7 +597,7 @@ Commands:
   agent-task <change> <task> [--pretty]
   agent-acquire <change> <task> --owner <agent-id>
   agent-release <change> <task> --owner <agent-id> [--force] [--decision-ref <ref>]
-  new <intent> [--id <id>] [--rapid] [--draft <project-file.json>]
+  new <intent> [--id <id>] [--rapid]
   resolve <change> --impact <low|medium|high> --coupling <isolated|coupled>
   abandon <change> --reason <reason> --decision-ref <ref> [--applied keep|revert]
   changes
@@ -673,7 +622,6 @@ Commands:
   evidence-init <change> [--write]
   evidence-doctor <change>
   evidence-verify-ci <change> <provider> <signed.json>
-  evidence-upgrade <change>
   authority-request <change> --type review|acceptance
   authority-status <change> [--request <id>]
   authority-dispatch <change> --request <id> --scope full|delta --reviewer-type ai|human --reviewer-identity <id>
@@ -688,8 +636,6 @@ Commands:
   prove <change>
   land-check <change>
   land-plan <change>
-  land-record <change> --repo <id> --commit <sha> --decision-ref <ref> [--ci pass|fail|pending]
-  land-pointers <change>
   land-resume <change>
   sandbox challenge <change>
   sandbox inspect <change> [--json] [--unattended --attestation <file>]
@@ -698,9 +644,8 @@ Commands:
   archive <change>
   event <change> --request <id> [metrics...]
   telemetry-sync <change> [transcript.jsonl]
-  telemetry-import <change> <file> [--format generic|codex|cursor|otel|claude]
-  migrate [legacy-id] [--apply]`);
+  telemetry-import <change> <file> [--format generic|codex|cursor|otel|claude]`);
   }
 
-  return { doctor, migrate, showChanges, showCurrent, showProviders, usage };
+  return { doctor, showChanges, showCurrent, showProviders, usage };
 }

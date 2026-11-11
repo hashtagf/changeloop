@@ -5,7 +5,7 @@ import { QUALITY_FIELDS } from "./quality-fields.mjs";
 import { DELIVERY_FIELDS } from "./delivery-fields.mjs";
 import { WORK_TYPE_FIELDS } from "./work-type-fields.mjs";
 import { PROCESS_FIELDS } from "./process-fields.mjs";
-import { isSemanticV4Plus } from "./draft-version.mjs";
+import { isSemanticVersion } from "./draft-version.mjs";
 import { BEHAVIOR_NEUTRAL_WORK, LIGHT_WORK, WORK_TYPES } from "../../contracts/work-types.mjs";
 
 // Design blueprints: the typed design sections a declared work type needs
@@ -182,7 +182,7 @@ export function designBlueprintWarnings(draft) {
   const warnings = [];
   // A v4 draft's work type is inferred and its missing sections are dev
   // document repairs (dev-document.mjs); only v3 is prompted here.
-  const light = isSemanticV4Plus(draft?.version) || lightweightDraft(draft);
+  const light = isSemanticVersion(draft?.version) || lightweightDraft(draft);
   if (!light) for (const key of requiredBlueprints(draft))
     if (!present(draft[key]))
       warnings.push(`workType ${draftWorkTypes(draft).join(",")} expects '${key}'; add it or state why it does not apply`);

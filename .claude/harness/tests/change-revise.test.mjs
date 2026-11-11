@@ -20,7 +20,7 @@ function writeJson(path, value) {
 function requirement(key, outcome) {
   return {
     key, capability: "change", operation: "added",
-    scenario: `${key} is exercised`, outcome
+    scenarios: [{ name: `${key} works`, when: `${key} is exercised`, then: outcome }], outcome
   };
 }
 
@@ -30,7 +30,7 @@ const APPROVER_SCRATCH = {
   toBe: "Intake accepts 20 messages per second", ifFail: "Orders are rejected naming storage"
 };
 
-function semanticDraft({ requirements, id = undefined, version = 3 } = {}) {
+function semanticDraft({ requirements, id = undefined, version = 4 } = {}) {
   const rows = requirements || [
     requirement("throughput", "The service accepts 20 messages per second"),
     requirement("ack-path", "The webhook acknowledges after Temporal accepts")
@@ -394,7 +394,7 @@ test("revision keeps the change identity and rejects legacy or missing changes",
   const legacy = value.state();
   legacy.semanticDraftVersion = null;
   writeJson(join(value.runtime, "revisable-change.json"), legacy);
-  assert.throws(() => value.revise(revisedDraft()), /legacy agreement/);
+  assert.throws(() => value.revise(revisedDraft()), /is not one/);
 });
 
 test("a version-4 revision inspects in the same call and stops at an incomplete intake", (t) => {
@@ -403,7 +403,12 @@ test("a version-4 revision inspects in the same call and stops at an incomplete 
   const before = snapshot(value.root);
   // No separate --inspect: the bare revise inspects in place, prints the
   // action, and leaves the agreement untouched until the draft is repaired.
-  const result = value.revise({ ...revisedDraft(), version: 4 });
+  // A scenario without a title is an incomplete v4 intake.
+  const draft = revisedDraft();
+  draft.requirements = draft.requirements.map((row) => ({
+    ...row, scenarios: undefined, scenario: `${row.key} is exercised`
+  }));
+  const result = value.revise(draft);
   assert.equal(result.action, "EDIT");
   assert.match(result.resume, /change revise revisable-change .*draft\.json --inspect/);
   assert.deepEqual(JSON.parse(value.control.output.at(-1)), JSON.parse(JSON.stringify(result)));

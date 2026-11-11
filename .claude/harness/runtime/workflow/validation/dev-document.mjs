@@ -1,6 +1,6 @@
 import { leasePathIsAllowed } from "../lease-runtime.mjs";
 import { BEHAVIOR_NEUTRAL_WORK, LIGHT_WORK, OBJECT_FIELDS, draftWorkTypes } from "./design-blueprints.mjs";
-import { isSemanticV4Plus } from "./draft-version.mjs";
+import { isSemanticVersion } from "./draft-version.mjs";
 import { REQUIRED_ANSWERS } from "./work-type-fields.mjs";
 import { hasAuthoredProposalProse } from "../draft-folder.mjs";
 
@@ -365,7 +365,7 @@ export function derivedFailureMatrix(draft) {
 // evidence capabilities defaulted to the lane's plain check.
 export function derivedByHarness(draft, { standard = true } = {}) {
   const notes = [];
-  if (!isSemanticV4Plus(draft?.version) || !standard) return notes;
+  if (!isSemanticVersion(draft?.version) || !standard) return notes;
   const required = requiredDevSections(draft);
   if (!text(draft.summary) && !text(draft.why) &&
     !hasAuthoredProposalProse(draft, "summary") && !hasAuthoredProposalProse(draft, "why"))
@@ -399,7 +399,7 @@ function sectionValue(draft, key) {
 // never a user question and never a refusal of the edit itself.
 // `lane` names why the draft is standard when the harness derived it.
 export function devDocumentIssues(draft, { standard = true, lane = "" } = {}) {
-  if (!isSemanticV4Plus(draft?.version) || !standard) return [];
+  if (!isSemanticVersion(draft?.version) || !standard) return [];
   const issues = [];
   const types = inferWorkTypes(draft);
   const label = (workTypesInferred(draft)

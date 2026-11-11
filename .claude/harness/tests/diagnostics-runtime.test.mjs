@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createDiagnosticsRuntime } from "../runtime/core/diagnostics-runtime.mjs";
@@ -29,11 +29,9 @@ let catalogDrift = [{ path: "unregistered" }];
 let assurance = { summary: "assured" };
 let reviewer = { ok: false, detail: "unavailable" };
 let defaultReviewer = "reviewer";
-let legacyPacketBytes;
 let openspecStatus = { level: "error", detail: "missing" };
 let providerNames = ["none", "nonebad", "external", "externalbad", "command", "missing", "browser", "browserbad"];
 let runtimeState = { status: "change", impact: "high", workspace: { path: root }, declaredSurface: ["src/app.js"] };
-let strictCommand = { flags: {}, rest: [] };
 let output = "";
 let detectionCandidates = [];
 const priorLog = console.log;
@@ -68,7 +66,7 @@ const runtime = createDiagnosticsRuntime({
   repositoryCatalog: () => ({ drift: catalogDrift, repositories: [{ id: "root" }] }),
   foundationPolicy: () => ({
     models: { fast: { family: "f" }, standard: { family: "s" }, deep: { family: "d" } },
-    execution: { maxParallelAgents: 2, legacyNumericPacketBytes: legacyPacketBytes,
+    execution: { maxParallelAgents: 2,
       packetBytes: { task: 1, review: 2, repository: 3, global: 4 } },
     review: { defaultReviewer },
     quality: { changeGate: qualityMode }
@@ -102,7 +100,7 @@ const runtime = createDiagnosticsRuntime({
   unverifiedDrift: () => driftRows,
   unresolvedApplyTransactions: () => transactionRows,
   evidenceDetection: () => ({ candidates: detectionCandidates }),
-  parseFlags: () => ({}), parseStrictCommandFlags: () => strictCommand, fail
+  parseFlags: () => ({}), fail
 });
 
 try {
@@ -169,22 +167,17 @@ try {
   policyRows = [];
   policyTrigger = null;
   driftRows = [];
-  mkdirSync(join(root, ".claude", "hooks", "tests"), { recursive: true });
-  writeFileSync(join(root, ".claude", "hooks", "tests", "run-hook-tests.sh"), "#!/bin/sh\n");
   rmSync(join(root, ".claude", "hooks", "lint.sh"));
   output = "";
   runtime.doctor({ stage: "change", change: "c" });
   assert.match(output, /hook:lint.sh: missing/);
-  assert.match(output, /legacy-hook-tests/);
   assert.match(output, /no-direct-main: enabled/);
   catalogDrift = [];
   assurance = null;
   reviewer = { ok: true, detail: "ready" };
-  legacyPacketBytes = 1000;
   openspecStatus = { level: "ok", detail: "ready" };
   output = "";
   runtime.doctor({ stage: "prove" });
-  assert.match(output, /legacy numeric limit/);
   defaultReviewer = null;
   runtime.doctor({ stage: "prove" });
   output = "";
@@ -194,33 +187,6 @@ try {
   assert.match(output, /"checks"/);
   assert.match(output, /change:orphan/);
 
-  output = "";
-  runtime.migrate([]);
-  assert.match(output, /No matching legacy runs/);
-  mkdirSync(join(root, ".workflow", "one"), { recursive: true });
-  mkdirSync(join(root, ".workflow", "two"));
-  mkdirSync(join(root, ".workflow", "_private"));
-  writeFileSync(join(root, ".workflow", "note.txt"), "not a run\n");
-  output = "";
-  runtime.migrate([]);
-  assert.match(output, /MIGRATION DRY RUN/);
-  assert.match(output, /one ->/);
-  assert.match(output, /two ->/);
-  assert.doesNotMatch(output, /_private ->|note\.txt ->/);
-
-  strictCommand = { flags: {}, rest: ["missing"] };
-  output = "";
-  runtime.migrate([]);
-  assert.match(output, /No matching legacy runs/);
-  strictCommand = { flags: {}, rest: ["one", "two"] };
-  assert.throws(() => runtime.migrate([]), /at most one legacy id/);
-
-  strictCommand = { flags: { apply: true }, rest: ["one"] };
-  output = "";
-  runtime.migrate([]);
-  assert.match(output, /MIGRATION CANDIDATES WRITTEN/);
-  assert.match(readFileSync(join(root, "openspec", "migration-candidates", "one.md"), "utf8"),
-    /Source: `\.workflow\/one\/`/);
   console.log = priorLog;
   priorLog("diagnostics runtime tests: PASS");
 } finally {

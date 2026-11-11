@@ -1,6 +1,6 @@
 import { lifecycleOutcome } from "../../core/lifecycle-outcome.mjs";
 import { deriveDiscoveryCoverage, isDerivedCoverage } from "./derived-coverage.mjs";
-import { isSemanticV4Plus } from "./draft-version.mjs";
+import { isSemanticVersion } from "./draft-version.mjs";
 
 const STATUSES = new Set([
   "covered", "not-applicable", "needs-investigation", "needs-user-decision"
@@ -196,7 +196,7 @@ function decisionIssues(decisions = []) {
 // from those decisions, instead of handing the agent another draft edit.
 export function projectResolvedDecisions(source = {}) {
   const discovery = source?.discovery;
-  if (!isSemanticV4Plus(source?.version) || !discovery || !Array.isArray(discovery.coverage) ||
+  if (!isSemanticVersion(source?.version) || !discovery || !Array.isArray(discovery.coverage) ||
       !Array.isArray(discovery.decisions)) return source;
   const resolved = new Set(discovery.decisions
     .filter((row) => decisionStatus(row) === "resolved").map((row) => text(row?.key)));
@@ -250,7 +250,7 @@ function accessIssues(source) {
 }
 
 export function semanticIntakeIssues(input = {}) {
-  if (!isSemanticV4Plus(input.version)) return [];
+  if (!isSemanticVersion(input.version)) return [];
   const source = projectDiscovery(input);
   const issues = [];
   // Omitted discovery or coverage is an empty record; required dimensions
@@ -329,7 +329,7 @@ export function semanticIntakeAction(input = {}, {
   userQuestion = null
 } = {}) {
   const source = projectDiscovery(input);
-  if (!isSemanticV4Plus(source.version)) return lifecycleOutcome({
+  if (!isSemanticVersion(source.version)) return lifecycleOutcome({
     action: "DONE", owner: "harness", boundary: "semantic-intake",
     reached: "intake-ready", reason: "The compatible semantic draft can be compiled.",
     resume
@@ -427,7 +427,7 @@ export function semanticIntakeAction(input = {}, {
 }
 
 export function normalizeDiscovery(input = {}) {
-  if (!isSemanticV4Plus(input.version)) return undefined;
+  if (!isSemanticVersion(input.version)) return undefined;
   const source = projectDiscovery(input);
   return {
     coverage: (source.discovery?.coverage || []).map((row) => ({

@@ -230,10 +230,8 @@ assertions twice.
 A wrapper adds no assertions of its own. Add the assertion to the underlying
 suite, where a human reading `run-all.sh` output will also see it.
 
-Historical phase-orchestrator fixtures remain under `bench/`, `docs/`,
-`interview/`, `ledger/`, and `scenarios/` for research and migration analysis.
-They are not the acceptance suite for the OpenSpec-native runtime and must not
-be packaged as live hook self-tests.
+`interview/` holds the deterministic question-replay self-test and its live
+replay probe; `bench/` holds the OpenSpec-native benchmark (see its README).
 
 ## Add a regression
 

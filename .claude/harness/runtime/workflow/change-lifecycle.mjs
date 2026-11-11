@@ -21,7 +21,7 @@ import {
   MINIMAL_DRAFT_WRITING, minimalDraftFolderTemplate, normalizeSemanticDraft, renderRequirementMarkdown,
   renderSpecHeading, semanticDraftTemplate, unknownTaskFieldWarnings
 } from "./semantic-draft.mjs";
-import { isSemanticV4Plus, isSemanticVersion } from "./validation/draft-version.mjs";
+import { isSemanticVersion } from "./validation/draft-version.mjs";
 import { hotfixRegressionIssues } from "./validation/hotfix-regression.mjs";
 import { assembleReviewPolicy, collectReviewSignals } from "../evidence/evidence-contract.mjs";
 import { classifyReviewRisk } from "../evidence/review-routing.mjs";
@@ -185,10 +185,19 @@ export function apiContractErrorIssues(draft) {
   return issues;
 }
 
+// Only semantic drafts v4 (JSON) and v5 (folder) are accepted. Earlier
+// formats (v1-v3 and unversioned JSON) were retired in 3.7.
+export function retiredDraftIssue(version) {
+  return [1, 2, 3, undefined, null].includes(version)
+    ? `draft version ${version ?? "(none)"} is no longer supported; author a v5 draft folder ` +
+      "(claude-foundation change start --template) or a v4 JSON draft"
+    : "semantic draft version must be 4 or 5";
+}
+
 export function atomicStartPreflight(draft, { groundingRequired = false } = {}) {
   const issues = [];
-  if (![1, 2].includes(draft?.version) && !isSemanticVersion(draft?.version))
-    issues.push("start draft requires version 1, 2, 3, 4, or 5");
+  if (!isSemanticVersion(draft?.version))
+    issues.push(retiredDraftIssue(draft?.version));
   if (!String(draft?.intent || "").trim())
     issues.push("start draft requires non-empty 'intent'");
   const acceptance = draft?.acceptance;
@@ -1099,50 +1108,6 @@ export function materializeDraftSpecs({
   }
 }
 
-export function deriveDraftBookkeeping(input, slugify) {
-  const draft = structuredClone(input);
-  const claims = (draft.claims || []).map((claim, index) => ({
-    ...claim,
-    id: claim.id || slugify(claim.scenario || `claim-${index + 1}`)
-  }));
-  const claimIds = claims.map((claim) => claim.id);
-  draft.claims = claims;
-  draft.tasks = (draft.tasks || []).map((task, index) => ({
-    ...task,
-    id: task.id || `T${String(index + 1).padStart(3, "0")}`,
-    ...(!task.claims?.length && draft.tasks.length === 1 && claimIds.length
-      ? { claims: claimIds } : {})
-  }));
-  if (draft.acceptance?.required && !draft.acceptance.claimIds?.length &&
-      claimIds.length === 1)
-    draft.acceptance.claimIds = claimIds;
-  const providers = draft.execution?.providers || {};
-  if (draft.tasks.length === 1 && draft.tasks[0].verify) {
-    for (const provider of Object.values(providers))
-      if (["test-discovery", "command"].includes(provider.adapter) && !provider.command)
-        provider.command = ["sh", "-c", draft.tasks[0].verify];
-  }
-  if (draft.grounding?.claims?.length === claims.length)
-    draft.grounding.claims = draft.grounding.claims.map((claim, index) => ({
-      ...claim,
-      id: claim.id || claims[index].id
-    }));
-  if (draft.grounding?.criticalCases) {
-    draft.grounding.criticalCases = draft.grounding.criticalCases.map((row, index) => ({
-      ...row,
-      id: row.id || `CC-${String(index + 1).padStart(3, "0")}`,
-      ...(!row.claimIds?.length && claimIds.length === 1
-        ? { claimIds: claimIds } : {})
-    }));
-    const caseIds = draft.grounding.criticalCases.map((row) => row.id);
-    for (const provider of Object.values(draft.execution?.providers || {}))
-      if (["test-discovery", "playwright"].includes(provider.adapter) &&
-          !provider.criticalCases?.length)
-        provider.criticalCases = caseIds;
-  }
-  return draft;
-}
-
 // The approval page is a file the prototype skill writes, never the harness.
 // The line names it in the draft's language, or, with no page yet, gives the
 // summary as text so the user can still approve from the packet.
@@ -1558,15 +1523,11 @@ export function createChangeLifecycle({
 
   function loadDraft(draftPath, { deferPolicy = false, preparedSource = null } = {}) {
     const source = preparedSource || draftSource(draftPath);
-    // Version 1 is a compatibility contract: callers that supplied every
-    // ledger key receive the exact same object back. Version 2 delegates the
-    // mechanical IDs and unambiguous cross-ledger bindings to the harness.
+    if (!isSemanticVersion(source.version))
+      fail("semantic draft validation failed:\n  - " +
+        retiredDraftIssue(source.version));
     let draft = source;
-    if (source.version === 2) draft = deriveDraftBookkeeping(source, slugify);
-    // Versions above the current semantic schema are unknown, not legacy.
-    if (Number.isInteger(source.version) && source.version > 5)
-      fail("semantic draft validation failed:\n  - semantic draft version must be 3, 4, or 5");
-    if (isSemanticVersion(source.version)) {
+    {
       const normalized = normalizeSemanticDraft(source, slugify, {
         defaultRapidEvidence: true,
         requireScratch: true,
@@ -1753,8 +1714,7 @@ export function createChangeLifecycle({
     // A standard v4 change is built from its dev document, so design.md is
     // always written; v3 keeps writing it only for authored design content.
     if (state.schema === "foundation-standard" &&
-        (!isSemanticVersion(draft._semanticVersion) || isSemanticV4Plus(draft._semanticVersion) ||
-          draftNeedsDesign(draft)))
+        true)
       writeFileSync(join(basePath, "design.md"), renderDraftDesign(documented));
     const qualityGrounding = v5QualityGrounding(draft, { groundingRequired: state.groundingRequired });
     if (qualityGrounding) writeJson(join(basePath, "grounding.yaml"), qualityGrounding);
@@ -1838,11 +1798,9 @@ export function createChangeLifecycle({
     // refused rather than quietly adopted. Atomic start checks once before its
     // rollback boundary so cleanup can never delete a pre-existing change.
     if (!options.availabilityChecked) assertChangeAvailable(id);
-    const draft = preparedDraft !== undefined
-      ? preparedDraft
-      : flags.draft ? loadDraft(flags.draft) : null;
-    if (preparedDraft === undefined && flags.draft && isSemanticV4Plus(draft?._semanticVersion))
-      fail("semantic draft v4 must use 'change start <draft.json>' so repository intake is enforced");
+    if (preparedDraft === undefined && flags.draft)
+      fail("a semantic draft must use 'change start <draft>' so repository intake is enforced");
+    const draft = preparedDraft !== undefined ? preparedDraft : null;
     const schema = flags.rapid ? "foundation-rapid" : "foundation-standard";
     const source = templateDir(schema);
     const target = changePath(id);
@@ -1963,7 +1921,7 @@ export function createChangeLifecycle({
   // The compliance change record is off unless openspec/config.yaml enables
   // it; then the draft's compliance block routes one owned action (or none).
   function complianceGate(source) {
-    if (!source || !isSemanticV4Plus(source.version) || !complianceEnabled()) return null;
+    if (!source || !isSemanticVersion(source.version) || !complianceEnabled()) return null;
     return complianceAction(source.compliance, { enabled: true });
   }
 
@@ -2115,7 +2073,7 @@ export function createChangeLifecycle({
       ? { source: options.preparedSource, folderIssues: options.folderIssues || [] }
       : startDraftSource(draftPath);
     const { source, folderIssues } = prepared;
-    if (folderIssues.length && !isSemanticV4Plus(source?.version)) {
+    if (folderIssues.length && !isSemanticVersion(source?.version)) {
       const action = folderRepairAction(draftPath, folderIssues);
       if (!options.quiet) console.log(JSON.stringify(action, null, 2));
       return action;
@@ -2169,7 +2127,7 @@ export function createChangeLifecycle({
 
   function inspectAmendment(id, amendmentPath, options = {}) {
     const active = loadRuntime(id);
-    if (!isSemanticV4Plus(active.semanticDraftVersion))
+    if (!isSemanticVersion(active.semanticDraftVersion))
       fail(`change amend --inspect requires a semantic-draft v4 or v5 change; '${id}' is version ${
         active.semanticDraftVersion || "legacy"}`);
     const path = resolve(root, amendmentPath);
@@ -2627,7 +2585,7 @@ export function createChangeLifecycle({
   // missing or stale snapshot is re-inspected in place: DONE continues, and any
   // other action is returned under INCOMPLETE_INTAKE instead of failing.
   function completedDraftIntake(source, draftPath, { statePath, resume, inspect, reinspect = false }) {
-    if (!isSemanticV4Plus(source.version)) return null;
+    if (!isSemanticVersion(source.version)) return null;
     const inspectedIntake = () => {
       const inspected = inspect();
       if (inspected.action === "DONE") return inspected.effectiveness || null;
@@ -2910,7 +2868,7 @@ export function createChangeLifecycle({
     if (!existsSync(changePath(id)))
       fail(`change revise requires an existing active change; '${id}' was not found`);
     if (!isSemanticVersion(state.semanticDraftVersion))
-      fail(`change revise requires a semantic-draft v3 or v4 change; '${id}' is a legacy agreement`);
+      fail(`change revise requires a semantic-draft v4 or v5 change; '${id}' is not one`);
     const amend = `claude-foundation change amend ${id} <amendment.json> --inspect`;
     const receipts = join(root, ".foundation", "receipts", id);
     const built = (state.workspace && (state.workspace.mode !== "current" ||
@@ -3017,7 +2975,7 @@ export function createChangeLifecycle({
     assertRevisable(id);
     const merge = Boolean(options.merge);
     const source = options.preparedSource || revisionSource(id, draftPath, { merge });
-    if (!isSemanticV4Plus(source.version))
+    if (!isSemanticVersion(source.version))
       fail(`change revise --inspect requires a semantic-draft v4 or v5 draft; got version ${source.version}`);
     const { statePath, resume } = revisionIntakeOptions(id, draftPath, source, { merge });
     return inspectSemanticIntakeSource(source, {
@@ -3182,7 +3140,7 @@ export function createChangeLifecycle({
 
   function amendChangeUnlocked(id, amendmentPath, options, state, expectedRevision) {
     if (!isSemanticVersion(state.semanticDraftVersion))
-      fail(`change amend requires a semantic-draft v3 or v4 change; '${id}' is a legacy agreement`);
+      fail(`change amend requires a semantic-draft v4 or v5 change; '${id}' is not one`);
     if (["applied", "archived"].includes(state.status))
       fail(`change amend cannot rewrite an agreement in '${state.status}' status; start a successor change`);
     if (state.land?.status || state.workspace?.applied)
@@ -3201,7 +3159,7 @@ export function createChangeLifecycle({
     // intake to complete.
     // A sections-only amendment rewrites prose and no requirement either.
     const sectionsOnly = sectionsOnlyAmendment(amendment);
-    if (isSemanticV4Plus(state.semanticDraftVersion) && !taskContractOnlyAmendment(amendment) &&
+    if (isSemanticVersion(state.semanticDraftVersion) && !taskContractOnlyAmendment(amendment) &&
         !sectionsOnly) {
       const resume = `claude-foundation change amend ${id} ${amendmentPath} --inspect`;
       let intakeState = null;

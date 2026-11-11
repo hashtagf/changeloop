@@ -13,7 +13,7 @@ import {
   mergeSemanticDraft,
   MINIMAL_DRAFT_WRITING, minimalSemanticDraftTemplate, normalizeSemanticDraft,
   renderRequirementMarkdown, renderSpecHeading, semanticDraftTemplate,
-  SEMANTIC_DRAFT_VERSIONS, isSemanticV4Plus, isSemanticVersion,
+  SEMANTIC_DRAFT_VERSIONS, isSemanticVersion,
   TASK_FIELDS, unknownTaskFieldWarnings
 } from "../runtime/workflow/semantic-draft.mjs";
 import { requiredProvidersOperation } from "../runtime/workflow/change-validation.mjs";
@@ -50,9 +50,9 @@ const APPROVER_SCRATCH = {
   toBe: "A retry records at most one payment", ifFail: "The request stays retryable"
 };
 
-function semanticDraft(overrides = {}) {
+function baseSemanticDraft(overrides = {}) {
   return {
-    version: 3,
+    version: 4,
     intent: "Keep payment retries safe",
     impact: "medium",
     coupling: "coupled",
@@ -122,20 +122,35 @@ const DEV_DOCUMENT = {
   failureMatrix: [{ failure: "Retry times out", userSees: "A retryable error", recovery: "Retry later" }]
 };
 
-function semanticDraftV4(overrides = {}) {
-  const value = semanticDraft({ version: 4, ...DEV_DOCUMENT, ...overrides });
-  value.requirements = value.requirements.map(namedScenarios);
-  value.discovery = {
-    coverage: [
-      "current-behavior", "affected-actor", "desired-behavior", "success-path",
-      "failure-path", "input-boundary", "compatibility", "non-goals", "verification",
-      "security-privacy", "permission-rejection", "integration-contract",
-      "timeout-retry-idempotency", "operability", "recoverability"
-    ].map((dimension) => ({
-      dimension, status: "covered", covers: ["payment-retry"]
+const COVERED_DIMENSIONS = [
+  "current-behavior", "affected-actor", "desired-behavior", "success-path",
+  "failure-path", "input-boundary", "compatibility", "non-goals", "verification",
+  "security-privacy", "permission-rejection", "integration-contract",
+  "timeout-retry-idempotency", "operability", "recoverability"
+];
+
+function coveredDiscovery(key = "payment-retry") {
+  return {
+    coverage: COVERED_DIMENSIONS.map((dimension) => ({
+      dimension, status: "covered", covers: [key]
     })),
     decisions: []
   };
+}
+
+// The shared v4 fixture: shorthand scenarios get a title and discovery covers
+// every dimension unless the test supplies its own.
+function semanticDraft(overrides = {}) {
+  const value = baseSemanticDraft(overrides);
+  value.requirements = value.requirements.map(namedScenarios);
+  if (overrides.discovery === undefined)
+    value.discovery = coveredDiscovery(value.requirements[0]?.key);
+  return value;
+}
+
+function semanticDraftV4(overrides = {}) {
+  const value = semanticDraft({ ...DEV_DOCUMENT, ...overrides });
+  value.discovery = coveredDiscovery();
   return value;
 }
 
@@ -689,7 +704,7 @@ test("an amendment's added root task follows the submodule's tasks", () => {
     version: 1,
     reason: "The app must use clamp",
     addRequirements: [{ key: "app-total", capability: "app-total", operation: "added",
-      scenario: "The app totals clamped values", outcome: "The total is clamped" }],
+      scenarios: [{ name: "Totals clamp", when: "The app totals clamped values", then: "observed" }], outcome: "The total is clamped" }],
     addTasks,
     evidence: { "app-total": { capabilities: ["test"] } }
   });
@@ -732,7 +747,7 @@ test("an amendment reuses the provider that already serves a capability", () => 
     amendment: {
       version: 1, reason: "Reject a reused key",
       addRequirements: [{ key: "guard", capability: "guard", operation: "added",
-        scenario: "A reused key is rejected", outcome: "Rejected" }],
+        scenarios: [{ name: "Reused key", when: "A reused key is rejected", then: "observed" }], outcome: "Rejected" }],
       addTasks: [{ key: "t2", repository: "svc", outcome: "Guard", covers: ["guard"],
         paths: ["b.go"], verify: "go test ./..." }],
       evidence: { guard: { capabilities: ["test"] } }
@@ -780,7 +795,7 @@ test("semantic amendment preserves completed tasks and custom spec sections", ()
         key: "malformed-row",
         capability: "mutation-control",
         operation: "added",
-        scenario: "A malformed row exists",
+        scenarios: [{ name: "Malformed row", when: "A malformed row exists", then: "observed" }],
         outcome: "It is reported without blocking unrelated work"
       }],
       updateTasks: [{
@@ -1203,7 +1218,7 @@ test("an amendment withdraws unfinished tasks and never completed or depended-on
   // A withdrawn id is never reused by a later amendment.
   const added = compileSemanticAmendment({
     amendment: { version: 1, addRequirements: [{ key: "c", capability: "change",
-      scenario: "C runs", outcome: "C" }],
+      scenarios: [{ name: "Task C", when: "C runs", then: "observed" }], outcome: "C" }],
     addTasks: [{ key: "c-task", outcome: "Build C", covers: ["c"], verify: "npm test" }],
     evidence: { c: { capabilities: ["test"] } } },
     ...verifyFixture(ledger.slice(0, 2)), renderTask: (task) => `- [ ] **${task.id}** ${task.outcome}`,
@@ -2198,11 +2213,10 @@ test("capabilityOverviews accepts an object keyed by capability", () => {
   assert.equal(semanticDraftTemplate().capabilityOverviews, undefined);
 });
 
-test("v4 builds a grammatical SHALL statement; v3 keeps its historical stem", () => {
-  const statement = (outcome, version = 4) => {
+test("v4 builds a grammatical SHALL statement", () => {
+  const statement = (outcome) => {
     const value = readableDraft({ outcome,
       scenarios: [{ name: "One", when: "w", then: "t" }] });
-    value.version = version;
     return normalizeSemanticDraft(value, slugify).draft.specs[0].description;
   };
   assert.equal(statement("a board renders three columns"),
@@ -2213,8 +2227,6 @@ test("v4 builds a grammatical SHALL statement; v3 keeps its historical stem", ()
     "The system SHALL record at most one payment.");
   assert.equal(statement("The board SHALL keep three columns."),
     "The board SHALL keep three columns.");
-  assert.equal(statement("a board renders three columns", 3),
-    "The system SHALL a board renders three columns.");
 });
 
 test("non-Latin scenario titles get positional claim ids and usable trace labels", () => {
@@ -3221,7 +3233,7 @@ test("semantic amendments cannot orphan a retained investigation requirement", (
   const result = compileSemanticAmendment({
     amendment: { version: 1, reason: "Remove retry", removeRequirements: [{ key: "payment-retry", migration: "Retain records" }] },
     contract: { version: 2, claims: draft.claims, providers: {} }, tasksContent, slugify,
-    renderTask: renderDraftTask, semanticDraftVersion: 3, investigationSource: source
+    renderTask: renderDraftTask, semanticDraftVersion: 4, investigationSource: source
   });
   assert.match(result.issues.join("\n"), /invalid requirement target|invalid scenario target/);
 });
@@ -3277,7 +3289,7 @@ test("an amendment keeps the change's constraints for investigation coverage", (
   const compile = (amendment) => compileSemanticAmendment({
     amendment: { version: 1, reason: "Name the audit sink", ...amendment },
     contract: { version: 2, claims: draft.claims, providers: {} }, tasksContent, slugify,
-    renderTask: renderDraftTask, semanticDraftVersion: 3, investigationSource: source
+    renderTask: renderDraftTask, semanticDraftVersion: 4, investigationSource: source
   });
   assert.doesNotMatch(compile({}).issues.join("\n"), /constraint target/);
   assert.match(compile({ constraints: ["Move to new storage"] }).issues.join("\n"),
@@ -3420,13 +3432,12 @@ test("a draft without fixes leaves state and proposal without them", (t) => {
   assert.doesNotMatch(value.proposal(), /## Constraints/);
 });
 
-// T029 draft-versions: v5 is v4 semantics plus folder prose; 3, 4 and 5 are
-// the accepted versions and every version check goes through one helper.
-test("draft version helpers accept 3, 4 and 5 and treat 5 like 4", () => {
-  assert.deepEqual(SEMANTIC_DRAFT_VERSIONS, [3, 4, 5]);
+// v5 is v4 semantics plus folder prose; 4 and 5 are the accepted versions
+// (v1-v3 were retired in 3.7) and every version check goes through one helper.
+test("draft version helpers accept only 4 and 5", () => {
+  assert.deepEqual(SEMANTIC_DRAFT_VERSIONS, [4, 5]);
   assert.deepEqual([2, 3, 4, 5, 6, undefined].map(isSemanticVersion),
-    [false, true, true, true, false, false]);
-  assert.deepEqual([3, 4, 5, 6].map(isSemanticV4Plus), [false, true, true, false]);
+    [false, false, true, true, false, false]);
 });
 
 test("a v5 folder draft normalizes like v4 and records version 5", () => {
@@ -3455,7 +3466,7 @@ test("v3 and v4 fixtures still normalize without version issues", () => {
 
 test("an unknown draft version names the accepted versions", () => {
   const result = normalizeSemanticDraft(semanticDraftV4({ version: 6 }), slugify);
-  assert.ok(result.issues.includes("semantic draft version must be 3, 4, or 5"),
+  assert.ok(result.issues.includes("semantic draft version must be 4 or 5"),
     result.issues.join("\n"));
 });
 

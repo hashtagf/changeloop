@@ -939,7 +939,7 @@ function amendedTaskCycleIssues(taskLines, addTasks, resolveTaskId) {
 }
 
 export function compileSemanticAmendment({
-  amendment, contract, tasksContent, slugify, renderTask, semanticDraftVersion = 3,
+  amendment, contract, tasksContent, slugify, renderTask, semanticDraftVersion = 4,
   loadCanonicalSpec = null, provenClaimIds = [], retiredTaskIds = [],
   repositories = null, repositorySelection = null, investigationSource = null
 }) {
@@ -947,7 +947,7 @@ export function compileSemanticAmendment({
   const investigationAgreement = amendmentInvestigationSource(investigationSource, amendment);
   if (investigationAgreement) issues.push(...investigationCoverageIssues(investigationAgreement));
   if (!isSemanticVersion(semanticDraftVersion))
-    issues.push("semantic amendment requires semanticDraftVersion 3, 4, or 5");
+    issues.push("semantic amendment requires semanticDraftVersion 4 or 5");
   const existingClaims = contract.claims || [];
   const priorClaimById = new Map(existingClaims.map((claim) => [claim.id, claim]));
   const claimsByRequirement = new Map();

@@ -111,7 +111,7 @@ assert_cmd_zero "command registry has unique public names" \
   jq -e '([.commands[].name] | length) == ([.commands[].name] | unique | length)' \
   "$COMMANDS"
 assert_cmd_zero "authority continuations name their decision reference" \
-  jq -e '[.commands[] | select(.name == "budget continue" or .name == "land record" or
+  jq -e '[.commands[] | select(.name == "budget continue" or
     .name == "change abandon") |
     (.kind == "authority" and (.usage | contains("--decision-ref")))] | all' \
   "$COMMANDS"

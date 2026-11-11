@@ -171,7 +171,7 @@ test("Thai design headings come from the outline; parser markers stay English", 
 });
 
 const semanticBase = (overrides = {}) => ({
-  version: 3, intent: "Keep payment retries safe", impact: "medium", coupling: "coupled",
+  version: 4, intent: "Keep payment retries safe", impact: "medium", coupling: "coupled",
   requirements: [{ key: "payment-retry", capability: "payment-control", operation: "added",
     scenarios: [{ key: "success", kind: "success", name: "Retry succeeds", when: "a retry succeeds",
       then: "one payment is recorded" }], outcome: "record at most one payment" }],

@@ -277,9 +277,7 @@ contract fingerprint
 
 ### Gate waivers and advanced continuations
 
-User ไม่ต้องสร้าง grant หรือ decision-reference command เอง `land record` ต้องมี
-`--decision-ref` เฉพาะ compatibility ของ commit-oriented transaction แบบ legacy
-ที่ active อยู่ก่อนแล้ว ส่วน continuation ขั้นสูงอื่น เช่น `budget continue`,
+User ไม่ต้องสร้าง grant หรือ decision-reference command เอง ส่วน continuation ขั้นสูง เช่น `budget continue`,
 `change abandon`, `change waive` และ `agents release --force` ยังบันทึกการตัดสินใจ
 ที่ให้อำนาจตามเดิม
 

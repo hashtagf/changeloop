@@ -297,7 +297,7 @@ assert_cmd_zero "command registry has one unique entry per public name" \
 # read-only approval package; `preview` is the optional pre-Build run whose
 # receipts never count as evidence. `current` is the read-only lookup of the one
 # active change.
-assert_eq "agent command surface is bounded" "29" \
+assert_eq "agent command surface is bounded" "28" \
   "$(jq '[.commands[] | select(.audience == "agent")] | length' \
     "$TARGET/.claude/harness/commands.json")"
 # 26 includes the bounded proof controller, its internal execution commands,
@@ -311,8 +311,8 @@ assert_eq "conditional recovery surface is bounded" "26" \
 assert_cmd_zero "provider-running proof commands are not marked retry-safe" \
   jq -e '[.commands[] | select(.name == "proof collect" or .name == "proof run") |
     .idempotent] == [false, false]' "$TARGET/.claude/harness/commands.json"
-assert_cmd_zero "operator continuations and child Land records require decision references" \
-  jq -e '[.commands[] | select(.name == "budget continue" or .name == "land record") |
+assert_cmd_zero "operator continuations require decision references" \
+  jq -e '[.commands[] | select(.name == "budget continue") |
     (.kind == "authority" and (.usage | contains("--decision-ref")))] | all' \
     "$TARGET/.claude/harness/commands.json"
 assert_file_exists "harness operator guide installed" "$TARGET/.claude/harness/README.md"
@@ -609,22 +609,20 @@ printf '%s\n' '#!/usr/bin/env sh' \
   > "$TARGET/atomic-test.sh"
 chmod +x "$TARGET/atomic-test.sh"
 printf 'before\n' > "$TARGET/app.txt"
-printf '%s\n' \
-  '{"version":1,"id":"atomic-start","intent":"Atomic start",' \
-  '"why":"Reduce orchestration turns.","currentState":"The flow is manually scaffolded.",' \
-  '"compatibility":"No public compatibility impact.",' \
-  '"acceptance":{"required":false,"reason":null,"claimIds":[]},' \
-  '"changes":["Start one isolated rapid build."],"nonGoals":["No Land."],' \
-  '"decisions":[{"choice":"Use atomic start","why":"Fewer turns","rejected":"Manual scaffolding"}],' \
-  '"risks":[{"risk":"Invalid draft","mitigation":"Validate before Build","owner":"runtime"}],' \
-  '"tasks":[{"id":"T001","outcome":"Verify atomic flow","kind":"implementation","paths":["app.txt"],"verify":"sh atomic-test.sh"}],' \
-  '"claims":[{"id":"atomic-outcome","scenario":"Atomic flow passes","impact":"low","capabilities":["test"]}],' \
-  '"specs":[{"name":"atomic","requirement":"Atomic start","description":"The runtime SHALL start an isolated Build.",' \
-  '"scenario":"Valid draft","when":"a valid rapid draft is supplied","then":"an isolated Build packet is returned"}],' \
-  '"execution":{"version":1,"providers":{"test":{"adapter":"test-discovery","command":["sh","atomic-test.sh"],' \
-  '"report":"test-results/atomic.json","inputs":["atomic-test.sh"],"minimum":1,"timeoutMs":120000}},"services":{}}}' \
+jq -n '{version:4, id:"atomic-start", intent:"Atomic start", impact:"low",
+  coupling:"isolated", acceptance:{required:false},
+  requirements:[{key:"atomic-outcome", capability:"atomic", operation:"added",
+    scenarios:[{name:"Valid draft", when:"a valid rapid draft is supplied",
+      then:"an isolated Build packet is returned"}],
+    outcome:"Start an isolated Build"}],
+  tasks:[{key:"verify-atomic-flow", outcome:"Verify atomic flow",
+    covers:["atomic-outcome"], paths:["app.txt"], verify:"sh atomic-test.sh"}],
+  evidence:{"atomic-outcome":{capabilities:["test"]}},
+  execution:{version:1, providers:{test:{adapter:"test-discovery",
+    command:["sh","atomic-test.sh"], report:"test-results/atomic.json",
+    inputs:["atomic-test.sh"], minimum:1, timeoutMs:120000}}, services:{}}}' \
   > "$TARGET/.foundation/atomic-draft.json"
-jq '.id = "atomic-invalid" | .claims[0].capabilities = ["unknown-capability"]' \
+jq '.id = "atomic-invalid" | .evidence["atomic-outcome"].capabilities = ["unknown-capability"]' \
   "$TARGET/.foundation/atomic-draft.json" \
   > "$TARGET/.foundation/atomic-invalid-draft.json"
 if invalid_atomic="$(bash "$ROOT/cli.sh" --project "$TARGET" change start \
@@ -704,21 +702,26 @@ v4_ready="$(bash "$ROOT/cli.sh" --project "$TARGET" change start v4-cli-draft.js
 assert_contains "v4 CLI inspection reaches DONE without a source acknowledgement round-trip" "$v4_ready" \
   '"action": "DONE"'
 rm "$v4_draft"
-printf '%s\n' \
-  '{"version":1,"id":"atomic-migration","intent":"Payment ledger migration",' \
-  '"impact":"high","coupling":"coupled","size":"S","securityTriggers":["migration"],' \
-  '"why":"Preserve exact payment values.","currentState":"Amounts use decimal strings.",' \
-  '"compatibility":"Preserve the legacy amount field for mixed-version readers.",' \
-  '"acceptance":{"required":false,"reason":null,"claimIds":[]},' \
-  '"changes":["Add exact integer cents."],"nonGoals":["No destructive rewrite."],' \
-  '"decisions":[{"choice":"Add amountCents","why":"Exact arithmetic","rejected":"Floating point"}],' \
-  '"risks":[{"risk":"Incorrect money conversion","mitigation":"Migration tests and review","owner":"implementation"}],' \
-  '"tasks":[{"id":"T001","outcome":"Implement compatible migration","kind":"migration","paths":["app.txt"],"verify":"sh atomic-test.sh"}],' \
-  '"claims":[{"id":"migration-safe","scenario":"Migration preserves values","impact":"high","capabilities":["test","data-migration","compatibility","review"]}],' \
-  '"specs":[{"name":"payment-migration","requirement":"Exact compatible migration","description":"The system SHALL preserve payment values.",' \
-  '"scenario":"Mixed-version migration","when":"a decimal amount is migrated","then":"exact cents and the legacy amount remain"}],' \
-  '"execution":{"version":1,"providers":{"test":{"adapter":"test-discovery","command":["sh","atomic-test.sh"],' \
-  '"report":"test-results/atomic.json","inputs":["atomic-test.sh"],"minimum":1,"timeoutMs":120000}},"services":{}}}' \
+jq -n '{version:4, id:"atomic-migration", intent:"Payment ledger migration",
+  impact:"high", coupling:"coupled", size:"s", securityTriggers:["migration"],
+  why:"Preserve exact payment values.",
+  acceptance:{required:false},
+  scratch:{get:"Payments keep exact cents", asIs:"Amounts use decimal strings",
+    toBe:"Amounts use integer cents beside the legacy field", ifFail:"Migration stops before any rewrite", undo:"Drop the amountCents column; the legacy field is untouched"},
+  requirements:[{key:"migration-safe", capability:"payment-migration", operation:"added",
+    scenarios:[{name:"Mixed-version migration", when:"a decimal amount is migrated",
+      then:"exact cents and the legacy amount remain"}],
+    outcome:"Preserve payment values"}],
+  tasks:[{key:"implement-migration", outcome:"Implement compatible migration",
+    covers:["migration-safe"], paths:["app.txt"], verify:"sh atomic-test.sh"}],
+  evidence:{"migration-safe":{capabilities:["test","data-migration","compatibility","review"]}},
+  discovery:{coverage:(["current-behavior","affected-actor","desired-behavior","success-path","failure-path",
+    "input-boundary","compatibility","non-goals","verification","security-privacy","permission-rejection",
+    "integration-contract","timeout-retry-idempotency","operability","recoverability"]
+    | map({dimension:., status:"covered", covers:["migration-safe"]})), decisions:[]},
+  execution:{version:1, providers:{test:{adapter:"test-discovery",
+    command:["sh","atomic-test.sh"], report:"test-results/atomic.json",
+    inputs:["atomic-test.sh"], minimum:1, timeoutMs:120000}}, services:{}}}' \
   > "$TARGET/.foundation/atomic-migration-draft.json"
 standard_start="$(bash "$ROOT/cli.sh" --project "$TARGET" change start \
   .foundation/atomic-migration-draft.json)"
@@ -788,16 +791,25 @@ assert_cmd_zero "native evidence record routes receipt flags" \
   bash "$ROOT/cli.sh" --project "$TARGET" evidence record cli-proof-route \
   discovery pass --discovered 1 --minimum 1 --observed "1 test discovered" \
   --source installer-test --reference "fixture://installer-discovery"
-assert_cmd_zero "native proof plan routes to project runtime" \
-  bash "$ROOT/cli.sh" --project "$TARGET" proof plan cli-proof-route
+assert_cmd_zero "native proof readiness routes to project runtime" \
+  bash "$ROOT/cli.sh" --project "$TARGET" proof readiness cli-proof-route
+for retired in "proof plan" "proof finish" "agents task" "validate" "runtime hash"; do
+  # Retired compatibility aliases fail instead of silently routing.
+  # shellcheck disable=SC2086
+  if bash "$ROOT/cli.sh" --project "$TARGET" $retired cli-proof-route x >/dev/null 2>&1; then
+    fail "retired alias '$retired' is refused"
+  else
+    pass "retired alias '$retired' is refused"
+  fi
+done
 assert_cmd_zero "native proof collect routes pre-review evidence collection" \
   bash "$ROOT/cli.sh" --project "$TARGET" proof collect cli-proof-route
 assert_cmd_zero "native proof finalize creates proof" \
   bash "$ROOT/cli.sh" --project "$TARGET" proof finalize cli-proof-route
 assert_cmd_zero "native proof execute reuses complete external receipts" \
   bash "$ROOT/cli.sh" --project "$TARGET" proof execute cli-proof-route
-assert_cmd_zero "native proof finish routes the resumable proof path" \
-  bash "$ROOT/cli.sh" --project "$TARGET" proof finish cli-proof-route
+assert_cmd_zero "native proof run routes the resumable proof path" \
+  bash "$ROOT/cli.sh" --project "$TARGET" proof run cli-proof-route
 assert_cmd_zero "native land check accepts fresh proof" \
   bash "$ROOT/cli.sh" --project "$TARGET" land check cli-proof-route
 cp "$TMP/foundation-required.json" "$TARGET/foundation.json"

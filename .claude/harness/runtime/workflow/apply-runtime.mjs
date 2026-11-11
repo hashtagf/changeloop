@@ -19,7 +19,6 @@ import {
 import { deliveryTreeEntries, assertDeliveryEntries } from "./delivery-integrity.mjs";
 import { amendedAgreementMatches, approvalMatches } from "../core/user-decisions.mjs";
 import { emitSignal } from "../core/signals.mjs";
-import { legacyRepositoryLandTransaction } from "./land-runtime.mjs";
 import { DEPENDENCY_LOCKFILES, rejectedPaths, workspaceSetupPlan } from "./sandbox-runtime.mjs";
 
 // The root files whose change means the target's installed dependencies no
@@ -1269,27 +1268,25 @@ export function createApplyRuntime({
     if (state.status === "archived" || specSyncPending(id, state)) return;
     if (["worktree", "copy"].includes(state.workspace?.mode)) {
       if (compositeRepositorySelection(selectedRepositories(id, state))) {
-        if (!legacyRepositoryLandTransaction(state)) {
-          // The saga's typed error, reported through the command boundary so
-          // `land check` prints a refusal instead of an uncaught exception.
-          try { repositoryDelivery().preflight(id, { inspect }); }
-          catch (error) {
-            if (!(error instanceof RepositoryDeliveryError)) throw error;
-            // An earlier change's landed, uncommitted work is part of the
-            // target: the harness syncs this change's repository sandboxes onto
-            // it, proves again, and continues, as it does for the root.
-            if (error.details?.landedSync) {
-              const stop = landedChangeSyncStop({ changeId: id, landedBy: error.details.landedBy });
-              return blockWithDecision(id, stop.code, stop.decision);
-            }
-            if (error.details?.landedConflict) {
-              const stop = landedConflictStop({ changeId: id, repository: error.details.repository,
-                paths: error.details.conflicts, landedBy: error.details.landedBy || {} });
-              return blockWithDecision(id, stop.code, stop.decision);
-            }
-            fail(error.message, 1, { code: error.code, owner: error.owner,
-              boundary: error.boundary, ...(error.decision ? { decision: error.decision } : {}) });
+        // The saga's typed error, reported through the command boundary so
+        // `land check` prints a refusal instead of an uncaught exception.
+        try { repositoryDelivery().preflight(id, { inspect }); }
+        catch (error) {
+          if (!(error instanceof RepositoryDeliveryError)) throw error;
+          // An earlier change's landed, uncommitted work is part of the
+          // target: the harness syncs this change's repository sandboxes onto
+          // it, proves again, and continues, as it does for the root.
+          if (error.details?.landedSync) {
+            const stop = landedChangeSyncStop({ changeId: id, landedBy: error.details.landedBy });
+            return blockWithDecision(id, stop.code, stop.decision);
           }
+          if (error.details?.landedConflict) {
+            const stop = landedConflictStop({ changeId: id, repository: error.details.repository,
+              paths: error.details.conflicts, landedBy: error.details.landedBy || {} });
+            return blockWithDecision(id, stop.code, stop.decision);
+          }
+          fail(error.message, 1, { code: error.code, owner: error.owner,
+            boundary: error.boundary, ...(error.decision ? { decision: error.decision } : {}) });
         }
       } else if (!state.workspace.applied) {
         planApplyEntries(id, state, null, { inspect });
@@ -1496,8 +1493,7 @@ export function createApplyRuntime({
   // the root projection; it becomes a decision before any target write instead
   // of a silent drop.
   function assertRootPointersUnmoved(id, state) {
-    if (state.workspace?.mode !== "worktree" || !state.workspace.path ||
-        legacyRepositoryLandTransaction(state)) return;
+    if (state.workspace?.mode !== "worktree" || !state.workspace.path) return;
     const paths = nestedRepositoryPaths(id, state);
     if (!paths.length) return;
     const raw = git(["diff", "--cached", "--raw", "-z", "--no-abbrev", "--no-renames",
@@ -1535,11 +1531,7 @@ export function createApplyRuntime({
     const dependenciesBefore = installs ? dependencySnapshot(root, pathIdentity) : null;
     measure("land.apply", () => {
       if (composite) {
-        // Legacy repository Land records already name commits applied by the
-        // user. Their root gitlinks are staged by resumeLand; replaying the
-        // workspace-uncommitted delivery saga would misclassify those expected
-        // child HEADs as target drift.
-        if (!legacyRepositoryLandTransaction(readiness.state)) repositoryDelivery().apply(id);
+        repositoryDelivery().apply(id);
         if (typeof mergeTaskProgress === "function") syncChildOnlyPacket({
           repositories: selectedRepositories(id, readiness.state), mergeTaskProgress,
           rootPacketPath: changePath(id),

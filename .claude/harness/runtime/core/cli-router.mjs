@@ -72,7 +72,6 @@ export async function routeRuntimeCommand(command, values, api) {
     resetBaseMoveAuthority,
     showAuthorityStatus,
     recordAuthority,
-    upgradeEvidence,
     recordReceipt,
     runProvider,
     prove,
@@ -81,8 +80,6 @@ export async function routeRuntimeCommand(command, values, api) {
     advanceLand,
     recoverLand,
     showLandPlan,
-    recordRepositoryLand,
-    stageRootPointers,
     resumeLand,
     showDeliveryAdvance,
     createAttestationChallenge,
@@ -98,7 +95,6 @@ export async function routeRuntimeCommand(command, values, api) {
     syncClaudeTelemetry,
     importTelemetry,
     importHostExecution,
-    migrate,
     usage,
     describeCommand,
     runtimeApiVersion,
@@ -799,9 +795,6 @@ export async function routeRuntimeCommand(command, values, api) {
       if (rest.length !== 1) die("authority record requires exactly one change id");
       await recordAuthority(rest[0], flags);
     },
-    "evidence-upgrade": async () => {
-      upgradeEvidence(values[0]);
-    },
     "receipt": async () => {
       const [id, provider, status, ...tail] = values;
       const {
@@ -880,23 +873,6 @@ export async function routeRuntimeCommand(command, values, api) {
     },
     "land-plan": async () => {
       showLandPlan(values[0]);
-    },
-    "land-record": async () => {
-      // Strict, and --ci-required declared boolean: the lenient parser
-      // consumed the next positional as its value, so `--ci-required pass`
-      // stored the string "pass" and any falsy-looking token disabled the
-      // requirement it was meant to assert.
-      const {
-        flags,
-        rest
-      } = parseStrictCommandFlags(values, "land record", {
-        boolean: ["ci-required"],
-        value: ["repo", "commit", "ci", "ci-attestation", "decision-ref"]
-      });
-      recordRepositoryLand(rest[0], flags);
-    },
-    "land-pointers": async () => {
-      stageRootPointers(values[0]);
     },
     "land-resume": async () => {
       resumeLand(values[0]);
@@ -982,9 +958,6 @@ export async function routeRuntimeCommand(command, values, api) {
     "host-execution-import": async () => {
       if (values.length !== 2) die("telemetry host-import requires <change> <result.json>");
       importHostExecution(values[0], values[1]);
-    },
-    "migrate": async () => {
-      migrate(values);
     },
     "api-version": async () => {
       console.log(runtimeApiVersion);

@@ -693,7 +693,7 @@ test("new --draft gates a v5 folder like v4 and sends it to change start", (t) =
   const { root, changes, lifecycle } = project(t);
   const path = writeDraftFolder(root, v5Draft());
   assert.throws(() => captured(() => lifecycle.createChange("Add a refund API", { draft: path })),
-    /must use 'change start <draft\.json>' so repository intake is enforced/);
+    /must use 'change start <draft>' so repository intake is enforced/);
   assert.equal(existsSync(join(changes, "refund-api")), false);
 });
 

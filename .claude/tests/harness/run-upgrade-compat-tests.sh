@@ -88,16 +88,17 @@ mkdir -p "$custom"
 printf '%s\n' \
   '{"version":1,"execution":{"packetBytes":32768}}' \
   > "$custom/foundation.json"
-assert_cmd_zero "installer preserves custom numeric policy" \
+assert_cmd_zero "installer converts a custom numeric packet budget" \
   bash "$ROOT/install.sh" "$custom" --source "$ROOT" --yes
-assert_eq "custom numeric budget survives install" "32768" \
-  "$(jq -r '.execution.packetBytes' "$custom/foundation.json")"
+assert_eq "custom numeric budget keeps its value in every scope" \
+  '{"task":32768,"review":32768,"repository":32768,"global":32768}' \
+  "$(jq -c '.execution.packetBytes' "$custom/foundation.json")"
 # These compatibility probes inspect policy migration, not a host's reviewer
 # installation. Prove-stage doctor correctly requires the configured agent CLI,
 # which a clean CI runner intentionally does not carry.
 doctor="$(bash "$ROOT/cli.sh" --project "$custom" doctor --stage build)"
-assert_contains "doctor reports legacy numeric policy" "$doctor" \
-  "legacy numeric limit 32768"
+assert_contains "doctor reports the converted scoped packet policy" "$doctor" \
+  "task=32768; review=32768; repository=32768; global=32768"
 
 partial="$TMP/partial"
 mkdir -p "$partial/.claude/harness" "$partial/.claude/hooks" "$partial/openspec"

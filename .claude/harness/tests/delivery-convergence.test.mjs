@@ -60,11 +60,12 @@ test("consumer inspection preserves lifecycle files and resumes amended current 
     command("git", ["add", "."]);
     command("git", ["commit", "-qm", "fixture"]);
     const requirement = { key: "behavior", capability: "inspection", operation: "added",
-      scenario: "When the task runs", outcome: "The local output is verified." };
+      scenarios: [{ name: "Task runs", when: "the task runs", then: "the local output is verified" }],
+      outcome: "The local output is verified." };
     const task = { key: "implement", outcome: "Write verified local output.",
       covers: ["behavior"], paths: ["output.txt"], verify: "node -e 'process.exit(0)'" };
     writeFileSync(join(project, ".foundation/draft.json"), JSON.stringify({
-      version: 3, id: "inspect-resume", intent: "Verify inspection", why: "Regression fixture",
+      version: 4, id: "inspect-resume", intent: "Verify inspection", why: "Regression fixture",
       impact: "low", coupling: "isolated", size: "s", acceptance: { required: false },
       requirements: [requirement], tasks: [task],
       evidence: { behavior: { capabilities: ["test"] } },

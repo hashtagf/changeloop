@@ -91,7 +91,7 @@ on_signal() { cleanup; trap - EXIT; exit 130; }
 trap cleanup EXIT
 trap on_signal INT TERM
 
-sb="$SAND/run"; mkdir -p "$sb/.workflow"
+sb="$SAND/run"; mkdir -p "$sb"
 cp -R "$ROOT/.claude" "$sb/.claude"
 # Never ship the test tree into the sandbox: `.claude/tests/bench/tasks/*/
 # acceptance.txt` is an answer key, and `.claude/tests/interview/banks/` would
@@ -99,9 +99,6 @@ cp -R "$ROOT/.claude" "$sb/.claude"
 rm -rf "$sb/.claude/tests"
 [ -f "$ROOT/WORKFLOW.md" ] && cp "$ROOT/WORKFLOW.md" "$sb/"
 [ -f "$ROOT/CLAUDE.md" ]   && cp "$ROOT/CLAUDE.md"   "$sb/"
-cp -R "$ROOT/.workflow/_templates" "$sb/.workflow/_templates"
-if [ -f "$ROOT/.workflow/INDEX.md" ]; then cp "$ROOT/.workflow/INDEX.md" "$sb/.workflow/INDEX.md"
-else printf '# Index\n\n| ID | Type | Title | Status | Created | Updated |\n|----|------|-------|--------|---------|---------|\n' > "$sb/.workflow/INDEX.md"; fi
 printf '# sandbox\n' > "$sb/README.md"
 ( cd "$sb" && git init -q && git add -A && git -c user.email=r@replay -c user.name=replay commit -qm base >/dev/null 2>&1 )
 

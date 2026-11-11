@@ -50,9 +50,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reinstalling, and `run-all.sh --quick` skips only the slowest suites for the
   inner loop. Six test files that no runner named now run in the gate, and a
   registration check keeps new ones from going unrun.
+- `run-all.sh` clears every host-exported `FOUNDATION_*` variable and
+  `CLAUDE_FOUNDATION_PROJECT` before running suites, so a run started from an
+  agent session (Claude or Pi) tests its fixtures instead of the caller's
+  project and guardrail mode. The affected-suite selector also works when the
+  checkout sits under a symlinked directory such as macOS `/tmp`.
 
 ### Removed
 
+- **Breaking: state from releases before 3.7 is no longer read.** Finish or
+  abandon a change with the release that started it before upgrading.
+  - `migrate` and the `.workflow/` reader are gone.
+  - `evidence upgrade` and evidence schema 1 are gone (protocol pin
+    `evidenceSchema` is now `["2"]`); an evidence v1 packet is refused with
+    that route.
+  - The retired commit-based multi-repository Land saga is gone, with its
+    `land record` and `land pointers` commands. Land always delivers uncommitted
+    workspaces; `land resume` only reports the current plan.
+  - A single-number `execution.packetBytes` is refused at runtime; the
+    installer converts it to the same task/review/repository/global limits.
+- The historical phase-orchestrator benchmark runner, its baselines, the
+  `.workflow/` scenario fixtures, and the unregistered phase matrix were
+  removed from the repository (not shipped).
+- **Breaking: only semantic drafts v4 (JSON) and v5 (folder) are accepted.**
+  Drafts v1, v2, v3 and unversioned JSON drafts return an EDIT that names the
+  v5 template; `change new --draft` now always routes to `change start`.
+  `change new` remains as an internal fixture primitive and leaves the public
+  command list.
+- **Breaking:** the deprecated CLI aliases are gone. Use the canonical
+  commands instead: `validate` → `change validate`, `proof plan` →
+  `proof readiness`, `proof finish` → `proof run`, `agents task` →
+  `packet <change> --task <task>`, and the `runtime <command>` pass-through →
+  the matching public command (`runtime hash` → `hash`, `runtime new` →
+  `change new`). Each alias had printed a deprecation warning since it was
+  replaced; installed commands, skills, and hooks never call them.
 - Twelve unused internal runtime functions (old proposal renderers and
   helpers replaced in 3.7). No command, output, or file format changes.
 

@@ -147,7 +147,6 @@ for (const [command, method] of [["advance", "showAdvance"], ["land-advance", "a
     ["authority-reset-infra", ["change"], "resetInfrastructureAuthority"],
     ["authority-reset-base-move", ["change"], "resetBaseMoveAuthority"],
     ["authority-record", ["change"], "recordAuthority"],
-    ["evidence-upgrade", ["change"], "upgradeEvidence"],
     ["receipt", ["change", "provider", "pass"], "recordReceipt"],
     ["run-provider", ["change", "provider"], "runProvider"],
     ["prove", ["change"], "proofFinalize"],
@@ -159,15 +158,12 @@ for (const [command, method] of [["advance", "showAdvance"], ["land-advance", "a
     ["land-advance", ["change"], "advanceLand"],
     ["land-recover", ["change"], "recoverLand"],
     ["land-plan", ["change"], "showLandPlan"],
-    ["land-record", ["change"], "recordRepositoryLand"],
-    ["land-pointers", ["change"], "stageRootPointers"],
     ["land-resume", ["change"], "resumeLand"],
     ["archive", ["change"], "archive"],
     ["event", ["change"], "recordEvent"],
     ["telemetry-sync", ["change"], "syncClaudeTelemetry"],
     ["telemetry-import", ["change", "source"], "importTelemetry"],
-    ["host-execution-import", ["change", "result.json"], "importHostExecution"],
-    ["migrate", ["change"], "migrate"]
+    ["host-execution-import", ["change", "result.json"], "importHostExecution"]
   ];
   for (const [command, values, method] of cases) {
     const calls = [];

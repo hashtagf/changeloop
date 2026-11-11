@@ -310,14 +310,14 @@ git -C .foundation/repository-sandboxes/cross-repository-profile/api \
   -c user.name="Foundation Test" \
   -c user.email="foundation@example.invalid" \
   commit -qm "api profile"
-api_commit="$(git -C .foundation/repository-sandboxes/cross-repository-profile/api rev-parse HEAD)"
+
 git -C .foundation/repository-sandboxes/cross-repository-profile/app \
   add app.txt contract.json
 git -C .foundation/repository-sandboxes/cross-repository-profile/app \
   -c user.name="Foundation Test" \
   -c user.email="foundation@example.invalid" \
   commit -qm "app profile"
-app_commit="$(git -C .foundation/repository-sandboxes/cross-repository-profile/app rev-parse HEAD)"
+
 committed_review_packet="$(node .claude/harness/foundation.mjs packet \
   cross-repository-profile --phase review)"
 assert_contains "review packet retains committed API changes" \
@@ -422,66 +422,6 @@ review pass --observed "fixture review found no blockers" \
   --reference "fixture://review" >/dev/null
 assert_cmd_zero "committed multi-repo work proves" \
   node .claude/harness/foundation.mjs prove cross-repository-profile
-git -C api merge -q --ff-only "$api_commit"
-git -C app merge -q --ff-only "$app_commit"
-assert_cmd_fails_with "Land record stops for explicit user authority" \
-  "requires --decision-ref" \
-  node .claude/harness/foundation.mjs land-record cross-repository-profile \
-  --repo api --commit "$api_commit" --ci pass
-# A current change never enters the commit-based saga; this fixture exercises
-# that retired flow, so it marks the transaction the way the old flow did.
-assert_contains "a current change refuses the legacy commit-based saga" \
-  "$(node .claude/harness/foundation.mjs land-record cross-repository-profile \
-    --repo api --commit "$api_commit" --ci pass \
-    --decision-ref fixture://user/land-api 2>&1 || true)" \
-  "advance cross-repository-profile --through archived"
-node -e "
-  const fs=require('fs'); const p='.foundation/runtime/cross-repository-profile.json';
-  const s=JSON.parse(fs.readFileSync(p,'utf8'));
-  s.land={...(s.land||{}), strategy:'ordered-resumable-saga'};
-  fs.writeFileSync(p, JSON.stringify(s,null,2)+'\\n');"
-# Branch state is set explicitly so the default-branch warning is
-# deterministic regardless of the machine's init.defaultBranch.
-git -C api checkout -q -B main
-api_record="$({ node .claude/harness/foundation.mjs land-record cross-repository-profile \
-  --repo api --commit "$api_commit" --ci pass \
-  --decision-ref fixture://user/land-api; } 2>&1)" \
-  && pass "explicit API commit is bound to Land" \
-  || fail "explicit API commit is bound to Land"
-assert_contains "binding onto main warns without blocking" "$api_record" \
-  "repository 'api' target is checked out on 'main'"
-git -C app checkout -q -B feature-probe
-app_record="$({ node .claude/harness/foundation.mjs land-record cross-repository-profile \
-  --repo app --commit "$app_commit" --ci pass \
-  --decision-ref fixture://user/land-app; } 2>&1)" \
-  && pass "explicit app commit is bound to Land" \
-  || fail "explicit app commit is bound to Land"
-assert_not_contains "a feature branch stays silent at record" "$app_record" "WARNING"
-pointer_stage="$(node .claude/harness/foundation.mjs land-advance \
-  cross-repository-profile)"
-# Staging root pointers returns the change to Build; Land refuses it before any
-# archive step until the lifecycle route proves it again.
-assert_contains "staged root pointers stop Land until the change is proven again" \
-  "$pointer_stage" "lifecycle is 'building', not proven"
-assert_eq "the refused Land archives nothing" "0" \
-  "$(ls -d openspec/changes/archive/*-cross-repository-profile 2>/dev/null | wc -l | tr -d ' ')"
-assert_cmd_zero "the pointer-staged change proves again" \
-  node .claude/harness/foundation.mjs prove cross-repository-profile
-resume_stage="$(node .claude/harness/foundation.mjs advance \
-  cross-repository-profile --through archived)"
-assert_contains "Land advance completes the authorized repository transaction" \
-  "$resume_stage" '"reached":"archived"'
-assert_cmd_zero "archived repository transaction remains inspectable" \
-  node .claude/harness/foundation.mjs land-check cross-repository-profile
-# No root is selected, so no root projection carries the packet: the archived
-# ledger must still show every task Build checked in the sandbox.
-archived_ledger="$(ls -d openspec/changes/archive/*-cross-repository-profile)/tasks.md"
-assert_eq "child-only archive keeps Build's checked tasks" "0" \
-  "$(grep -c '^- \[ \]' "$archived_ledger")"
-assert_eq "child-only archive checks all four tasks" "4" \
-  "$(grep -c '^- \[x\]' "$archived_ledger")"
-assert_eq "root target gitlink matches recorded commit" "$api_commit" \
-  "$(git ls-files -s api | awk '{print $2}')"
 
 # Per-repository setup: a topology row's `setupCommand` runs inside that
 # repository's worktree, and `sandbox.setupCommand` still covers the root

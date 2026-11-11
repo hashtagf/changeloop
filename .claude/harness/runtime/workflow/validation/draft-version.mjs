@@ -1,14 +1,10 @@
 // Accepted semantic draft versions. v5 is v4 semantics plus authored folder
-// prose, so every v4 rule applies to it through isSemanticV4Plus. This leaf
-// module has no imports so validation modules can use it without a cycle.
-export const SEMANTIC_DRAFT_VERSIONS = Object.freeze([3, 4, 5]);
+// prose, so every v4 rule applies to it. Drafts v1-v3 were retired in 3.7.
+// This leaf module has no imports so validation modules can use it without a cycle.
+export const SEMANTIC_DRAFT_VERSIONS = Object.freeze([4, 5]);
 
 export function isSemanticVersion(version) {
   return SEMANTIC_DRAFT_VERSIONS.includes(version);
-}
-
-export function isSemanticV4Plus(version) {
-  return isSemanticVersion(version) && version >= 4;
 }
 
 // The v5 draft is a folder: change.json declares this version.

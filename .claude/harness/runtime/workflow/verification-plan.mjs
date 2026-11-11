@@ -46,8 +46,7 @@ function phasePlan(changeId, phase, pendingTaskCount) {
       "leases", "provider-availability"
     ],
     avoidBefore: [
-      `claude-foundation change validate ${changeId}`,
-      `claude-foundation proof plan ${changeId}`
+      `claude-foundation change validate ${changeId}`
     ]
   };
   if (phase === "prove") return {
@@ -59,7 +58,6 @@ function phasePlan(changeId, phase, pendingTaskCount) {
     ],
     avoidBefore: [
       `claude-foundation change validate ${changeId}`,
-      `claude-foundation proof plan ${changeId}`,
       `claude-foundation proof readiness ${changeId}`,
       `claude-foundation proof run ${changeId}`
     ]

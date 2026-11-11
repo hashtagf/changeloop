@@ -25,37 +25,24 @@ function writeJson(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+// The smallest complete v4 draft: one requirement, one task, low impact.
 function draft(overrides = {}) {
   return {
-    version: 1,
+    version: 4,
     id: "atomic-change",
     intent: "Create one atomic change",
-    why: "Avoid partial change state",
-    currentState: "Draft creation can fail after persistence",
-    compatibility: "No compatibility impact",
-    changes: ["Publish the agreement only after validation"],
-    nonGoals: ["No product implementation"],
-    decisions: [{ choice: "Use rollback", why: "Keep retries clean" }],
-    risks: [{ risk: "Partial state", mitigation: "Rollback", owner: "runtime" }],
-    tasks: [{ id: "T001", outcome: "Implement atomically", verify: "npm test" }],
-    claims: [{
-      id: "atomic-outcome", scenario: "Atomic start succeeds", impact: "low",
-      capabilities: ["test"]
-    }],
-    specs: [{
-      name: "atomic-change", operation: "added", requirement: "Atomic start",
-      description: "The runtime SHALL avoid partial state.",
-      scenarios: [{ name: "Rollback", when: "start fails", then: "state is removed" }]
-    }],
-    acceptance: { required: false, reason: null, claimIds: [] },
+    acceptance: { required: false },
     impact: "low",
     coupling: "isolated",
-    securityTriggers: [],
-    execution: {
-      version: 1,
-      providers: { test: { adapter: "test-discovery", command: ["npm", "test"] } },
-      services: {}
-    },
+    requirements: [{
+      key: "atomic-outcome", capability: "atomic-change", operation: "added",
+      scenarios: [{ name: "Atomic start", when: "start fails", then: "state is removed" }],
+      outcome: "The runtime avoids partial state"
+    }],
+    tasks: [{
+      key: "implement-atomic-start", outcome: "Implement atomically",
+      covers: ["atomic-outcome"], paths: ["src/**"], verify: "npm test"
+    }],
     ...overrides
   };
 }
@@ -427,15 +414,17 @@ test("a low-impact semantic draft with design content keeps the standard schema"
   assert.equal(semanticDraftKeepsDesign({ decisions: [{ choice: "x" }] }, true), false);
 });
 
-function rapidV3WithoutEvidence(overrides = {}) {
+function rapidWithoutEvidence(overrides = {}) {
   return {
-    version: 3,
+    version: 4,
     id: "derived-evidence",
     intent: "Return the derived result",
     acceptance: { required: false },
     requirements: [{
       key: "derived-result", capability: "derived-evidence", operation: "added",
-      scenario: "A derived input arrives", outcome: "The derived result is returned"
+      scenarios: [{ name: "Derived input", when: "a derived input arrives",
+        then: "the derived result is returned" }],
+      outcome: "The derived result is returned"
     }],
     tasks: [{
       key: "implement-derived-result", outcome: "Implement the derived result",
@@ -447,7 +436,7 @@ function rapidV3WithoutEvidence(overrides = {}) {
 
 test("a rapid draft without evidence capabilities starts with a derived test provider", (t) => {
   const value = fixture(t);
-  writeJson(value.draftPath, rapidV3WithoutEvidence());
+  writeJson(value.draftPath, rapidWithoutEvidence());
   value.lifecycle.startAtomic(value.draftPath);
   const runtime = JSON.parse(readFileSync(join(value.runtime, "derived-evidence.json"), "utf8"));
   assert.equal(runtime.schema, "foundation-rapid");
@@ -460,7 +449,7 @@ test("a rapid draft without evidence capabilities starts with a derived test pro
 
 test("a draft that lands on the standard lane defaults evidence capabilities like rapid", (t) => {
   const value = fixture(t);
-  writeJson(value.draftPath, rapidV3WithoutEvidence({
+  writeJson(value.draftPath, rapidWithoutEvidence({
     decisions: [{ key: "shape", choice: "Keep one module", reason: "Smallest change" }]
   }));
   value.lifecycle.startAtomic(value.draftPath);

@@ -641,7 +641,7 @@ test("an archived spec keeps the durable decision Rationale and omits non-durabl
   const slugify = (value) => String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
   const { draft } = normalizeSemanticDraft({
-    version: 3, intent: "Archive contract",
+    version: 4, intent: "Archive contract",
     requirements: [
       { key: "kept", requirement: "Archive contract",
         description: "The archive SHALL preserve the contract.",

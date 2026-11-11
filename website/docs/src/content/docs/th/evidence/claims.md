@@ -32,7 +32,7 @@ description: scenario ที่สังเกตได้กลายเป็�
 }
 ```
 
-Semantic draft v3 derive provider wiring ปกติจาก verify ของ task แล้วเก็บกับ
+Semantic draft derive provider wiring ปกติจาก verify ของ task แล้วเก็บกับ
 contract ใน `evidence.yaml` ส่วน custom command, report, service หรือ readiness
 override อยู่ใน [`execution.yaml`](/docs/th/evidence/adapters/) แบบ conditional
 การเปลี่ยน wiring จึงยังไม่เปลี่ยนสิ่งที่ซอฟต์แวร์สัญญาไว้

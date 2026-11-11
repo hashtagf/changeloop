@@ -126,7 +126,7 @@ claude-foundation change start .foundation/drafts/<id>   # folder ของ draf
 
 ## Folder ของ draft v5
 
-งานใหม่ใช้ draft v5 ส่วน draft v4 และ v3 ยังใช้ได้ Draft v5 เป็น folder ที่
+งานใหม่ใช้ draft v5 ส่วน draft v4 แบบ JSON ยังใช้ได้ Draft v5 เป็น folder ที่
 `change start <folder>` รับได้เหมือน draft แบบ JSON:
 
 ```text

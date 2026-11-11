@@ -199,7 +199,7 @@ not a transcript.
 
 ## Draft v5 folder
 
-New work uses draft v5; v4 and v3 drafts remain compatible. A v5 draft is a
+New work uses draft v5; v4 JSON drafts remain accepted. A v5 draft is a
 folder that `change start <folder>` accepts like a JSON draft:
 
 ```text

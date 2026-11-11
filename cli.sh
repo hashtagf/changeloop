@@ -89,10 +89,10 @@ run_runtime() {
   local phase=""
   case "${1:-}" in
     investigate) phase="investigate" ;;
-    new|start|resolve|amend|revise|validate|audit-change|abandon|waive|evidence-detect|evidence-init|evidence-doctor|evidence-upgrade|quality-discover|quality-init|quality-doctor|preview) phase="change" ;;
+    new|start|resolve|amend|revise|validate|audit-change|abandon|waive|evidence-detect|evidence-init|evidence-doctor|quality-discover|quality-init|quality-doctor|preview) phase="change" ;;
     sandbox|agent-plan|agent-dispatch|agent-acquire|agent-release) phase="build" ;;
     proof-plan|proof-readiness|proof-advance|proof-run|proof-collect|proof-preflight|proof-execute|proof-audit|prove|receipt|run-provider|evidence-verify-ci|authority-request|authority-dispatch|authority-run|authority-abort|authority-status|authority-record|authority-reset-infra|authority-reset-base-move|authority-extend-review|quality-run|quality-report|quality-baseline|quality-debt) phase="prove" ;;
-    handoff-list|handoff-status|handoff-packet|handoff-record|land-check|land-advance|land-recover|land-plan|land-record|land-pointers|land-resume|archive) phase="land" ;;
+    handoff-list|handoff-status|handoff-packet|handoff-record|land-check|land-advance|land-recover|land-plan|land-resume|archive) phase="land" ;;
     delivery-advance) phase="deliver" ;;
   esac
   telemetry=1
@@ -287,18 +287,13 @@ case "${1:-}" in
       dispatch)
         need_arg "agents dispatch" "${1:-}"
         run_runtime write agent-dispatch "$@" ;;
-      task)
-        [ "$#" -ge 2 ] || fail "agents task requires <change> <task>"
-        warn "'agents task' is deprecated; use 'packet <change> --task <task>'"
-        task_change="$1"; task_id="$2"; shift 2
-        run_runtime read packet "$task_change" --task "$task_id" "$@" ;;
       acquire)
         [ "$#" -ge 3 ] || fail "agents acquire requires <change> <task> --owner <agent-id>"
         run_runtime write agent-acquire "$@" ;;
       release)
         [ "$#" -ge 3 ] || fail "agents release requires <change> <task> --owner <agent-id>"
         run_runtime write agent-release "$@" ;;
-      *) fail "agents requires 'plan', 'dispatch', 'task', 'acquire', or 'release'" ;;
+      *) fail "agents requires 'plan', 'dispatch', 'acquire', or 'release'" ;;
     esac ;;
   doctor)
     shift
@@ -401,24 +396,14 @@ case "${1:-}" in
         run_runtime write waive "$@" ;;
       *) fail "change requires 'new', 'start', 'resolve', 'amend', 'revise', 'validate', 'audit', 'abandon', or 'waive'" ;;
     esac ;;
-  validate)
-    warn "'validate' is deprecated; use 'change validate'"
-    shift; need_arg "validate" "${1:-}"
-    run_runtime write validate "$@" ;;
   proof)
     shift
     sub="${1:-}"; [ "$#" -gt 0 ] && shift
-    need_arg "proof ${sub:-<plan|readiness|advance|run|finish|collect|preflight|execute|finalize|audit>}" "${1:-}"
+    need_arg "proof ${sub:-<readiness|advance|run|collect|preflight|execute|finalize|audit>}" "${1:-}"
     case "$sub" in
-      plan)
-        warn "'proof plan' is deprecated; use 'proof readiness'"
-        run_runtime read proof-readiness "$@" ;;
       readiness) run_runtime read proof-readiness "$@" ;;
       advance) run_runtime write proof-advance "$@" ;;
       run) run_runtime write proof-run "$@" ;;
-      finish)
-        warn "'proof finish' is deprecated; use 'proof run'"
-        run_runtime write proof-run "$@" ;;
       collect) run_runtime write proof-collect "$@" ;;
       # Deliberately `write` despite the read registry kind: preflight is a
       # gate, and the read path only warns on a mixed-revision runtime — a
@@ -427,7 +412,7 @@ case "${1:-}" in
       execute) run_runtime write proof-execute "$@" ;;
       finalize) run_runtime write prove "$@" ;;
       audit) run_runtime read proof-audit "$@" ;;
-      *) fail "proof requires 'plan', 'readiness', 'advance', 'run', 'finish', 'collect', 'preflight', 'execute', 'finalize', or 'audit'" ;;
+      *) fail "proof requires 'readiness', 'advance', 'run', 'collect', 'preflight', 'execute', 'finalize', or 'audit'" ;;
     esac ;;
   evidence)
     shift
@@ -451,10 +436,7 @@ case "${1:-}" in
       record)
         [ "$#" -ge 3 ] || fail "evidence record requires <change> <provider> <status>"
         run_runtime write receipt "$@" ;;
-      upgrade)
-        need_arg "evidence upgrade" "${1:-}"
-        run_runtime write evidence-upgrade "$@" ;;
-      *) fail "evidence requires 'detect', 'init', 'doctor', 'verify-ci', 'run', 'record', or 'upgrade'" ;;
+      *) fail "evidence requires 'detect', 'init', 'doctor', 'verify-ci', 'run', or 'record'" ;;
     esac ;;
   quality)
     shift
@@ -512,17 +494,15 @@ case "${1:-}" in
   land)
     shift
     sub="${1:-}"; [ "$#" -gt 0 ] && shift
-    need_arg "land ${sub:-<advance|check|recover|plan|record|pointers|resume|archive>}" "${1:-}"
+    need_arg "land ${sub:-<advance|check|recover|plan|resume|archive>}" "${1:-}"
     case "$sub" in
       advance) run_runtime write land-advance "$@" ;;
       check) run_runtime read land-check "$@" ;;
       recover) run_runtime write land-recover "$@" ;;
       plan) run_runtime write land-plan "$@" ;;
-      record) run_runtime write land-record "$@" ;;
-      pointers) run_runtime write land-pointers "$@" ;;
       resume) run_runtime write land-resume "$@" ;;
       archive) run_runtime write archive "$@" ;;
-      *) fail "land requires 'advance', 'check', 'recover', 'plan', 'record', 'pointers', 'resume', or 'archive'" ;;
+      *) fail "land requires 'advance', 'check', 'recover', 'plan', 'resume', or 'archive'" ;;
     esac ;;
   deliver)
     shift
@@ -536,17 +516,6 @@ case "${1:-}" in
     need_arg "deliver" "${1:-}"
     [ "$#" -eq 1 ] || fail "deliver requires exactly one change id"
     run_runtime write delivery-advance "$@" ;;
-  migrate)
-    shift
-    access=read
-    for arg in "$@"; do [ "$arg" != "--apply" ] || access=write; done
-    run_runtime "$access" migrate "$@" ;;
-  runtime)
-    shift
-    [ "$#" -gt 0 ] || fail "runtime requires an internal harness command"
-    warn "'runtime' is an internal compatibility namespace; use canonical public commands"
-    case "$1" in version|api-version|hash|doctor|packet|metrics|feedback|outcomes|lessons|package) access=read ;; *) access=write ;; esac
-    run_runtime "$access" "$@" ;;
   dashboard|dashboard-up|dashboard-down|dashboard-status)
     sub="$1"; shift
     client="$SCRIPT_DIR/dashboard/client.sh"

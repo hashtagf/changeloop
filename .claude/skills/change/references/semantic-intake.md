@@ -45,7 +45,6 @@ Prose is never scanned for risk keywords.
 
 Every settled answer must land in a requirement, scenario, non-goal, constraint,
 or qualifying typed decision before compilation. The compiled proposal retains
-the coverage table so no answer lives only in chat. Draft v3 stays readable;
-do not retrofit legacy changes merely to migrate.
+the coverage table so no answer lives only in chat.
 A v4/v5 Build-time amendment supplies a discovery delta for its added
 requirements; the harness revalidates it and appends it to the proposal.

@@ -23,10 +23,18 @@ if [ -d "$ROOT/node_modules/.bin" ]; then
   export PATH
 fi
 
-# The session-context hook exports the interactive Claude session's identity
-# into agent shells; node --test suites inherit it and the runtime then
-# prefers it over fixture ids. Deterministic suites must never see it.
-unset FOUNDATION_CLAUDE_SESSION_ID FOUNDATION_CLAUDE_TRANSCRIPT_PATH
+# Host adapters export the interactive session's identity, project, host,
+# and guardrail mode into agent shells (Claude's session hook, the Pi
+# extension). Suites inherit them, and the runtime and hooks then act on the
+# caller's project and policy instead of their fixtures. Deterministic suites
+# must never see them; only the runner's own controls survive.
+for _host_var in $(env | sed -n 's/^\(FOUNDATION_[A-Z0-9_]*\)=.*/\1/p'); do
+  case "$_host_var" in
+    FOUNDATION_TEST_JOBS|FOUNDATION_SUITE_TIMEOUT_SECONDS|FOUNDATION_CHANGED_FILES|FOUNDATION_TEST_BASE) ;;
+    *) unset "$_host_var" ;;
+  esac
+done
+unset CLAUDE_FOUNDATION_PROJECT CLAUDE_PROJECT_DIR _host_var
 
 selection_mode="full"
 list_mode=0
@@ -190,7 +198,6 @@ state runtime helpers|node --test "$ROOT/.claude/harness/tests/state-runtime-hel
 receipt runtime|node --test "$HERE/harness/run-receipt-runtime-tests.mjs"
 artifact store|node --test "$ROOT/.claude/harness/tests/artifact-store.test.mjs"
 apply inputs|node --test "$ROOT/.claude/harness/tests/apply-inputs.test.mjs"
-evidence upgrade|node --test "$ROOT/.claude/harness/tests/evidence-upgrade.test.mjs"
 evidence contract|node --test "$HERE/harness/run-evidence-contract-tests.mjs"
 evidence contract values|node --test "$ROOT/.claude/harness/tests/evidence-contract-values.test.mjs"
 environment descriptor|node --test "$ROOT/.claude/harness/tests/environment-descriptor.test.mjs"
@@ -235,7 +242,6 @@ change draft materialization|node --test "$ROOT/.claude/harness/tests/change-dra
 reference governance|node --test "$HERE/harness/reference-governance.test.mjs"
 atomic change start|node --test "$ROOT/.claude/harness/tests/change-atomic-start.test.mjs"
 pre-build change revision|node --test "$ROOT/.claude/harness/tests/change-revise.test.mjs"
-land root pointers|node --test "$ROOT/.claude/harness/tests/land-root-pointers.test.mjs"
 telemetry phase context|node --test "$ROOT/.claude/harness/tests/telemetry-phase-context.test.mjs"
 adapter runtime|node --test "$HERE/harness/run-adapter-runtime-tests.mjs"
 run provider|node --test "$ROOT/.claude/harness/tests/run-provider.test.mjs"
@@ -244,7 +250,6 @@ receipt validity|node "$ROOT/.claude/harness/tests/receipt-validity.test.mjs"
 attestation validity|node "$ROOT/.claude/harness/tests/attestation-validity.test.mjs"
 security boundary|node --test "$ROOT/.claude/harness/tests/security-boundary.test.mjs"
 abandon runtime|node "$ROOT/.claude/harness/tests/abandon-runtime.test.mjs"
-repository land record|node "$ROOT/.claude/harness/tests/repository-land-record.test.mjs"
 repository delivery saga|node --test "$ROOT/.claude/harness/tests/repository-delivery-saga.test.mjs"
 repository snapshot|node --test "$ROOT/.claude/harness/tests/repository-snapshot.test.mjs"
 task node proof|node "$ROOT/.claude/harness/tests/task-node-proof.test.mjs"

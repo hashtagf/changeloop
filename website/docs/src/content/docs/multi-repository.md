@@ -265,8 +265,8 @@ The harness prepares every writable target before the first write, then applies
 the explicitly authorized projections in dependency order with durable checkpoints. Each node
 finishes `applied-uncommitted`; Git HEAD and the index remain unchanged in every
 repository, and existing non-overlapping edits are preserved. A later `/land`
-resumes the same transaction and skips verified nodes. `land check`, legacy
-`land record`, and `land resume` remain diagnostic/compatibility primitives—not
+resumes the same transaction and skips verified nodes. `land check` and
+`land resume` remain diagnostic primitives—not
 steps the user must sequence. Commits, pushes, and pull requests stay outside
 Land under separate user authority.
 

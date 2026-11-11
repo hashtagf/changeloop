@@ -110,7 +110,7 @@ import { createReviewProtocol } from "./runtime/evidence/review-protocol.mjs";
 import { createArtifactStore } from "./runtime/evidence/artifact-store.mjs";
 import { createReviewAttemptStore } from "./runtime/evidence/review-attempt-store.mjs";
 import {
-  createProofReadinessRuntime, upgradeEvidenceOperation
+  createProofReadinessRuntime
 } from "./runtime/evidence/proof-readiness.mjs";
 import { createReceiptRuntime } from "./runtime/evidence/receipt-runtime.mjs";
 import { createReceiptValidity } from "./runtime/evidence/receipt-validity.mjs";
@@ -1324,8 +1324,7 @@ const {
   recoveryLines,
   topologyIssues,
   unavailableProviderRecovery,
-  workspaceIsolationIssues,
-  upgradeEvidence: upgradeTargetEvidence
+  workspaceIsolationIssues
 } = createProofReadinessRuntime({
   root: ROOT,
   targetEditIssues: (state) => targetEditsFor(state).issues,
@@ -1353,39 +1352,12 @@ const {
   activeChangeLeases,
   activeRepositoryConflicts,
   agentPlanValue,
-  changePath,
-  proofPath,
-  readJson,
-  writeJson,
   saveRuntime,
   authorityPreflight,
   executionContract,
   clearSnapshotCache,
   fail: die
 });
-// Evidence upgrade is wiring-only: it rewrites the target packet, mirrors the
-// same rewrite into an isolated packet (which Prove reads), and keeps spec
-// approval that was valid before it.
-function upgradeEvidence(id) {
-  preserveSpecApprovalAcross(ROOT, id, { loadRuntime, saveRuntime, now }, () => {
-    const workspace = loadRuntime(id).workspace?.path;
-    upgradeTargetEvidence(id);
-    if (!workspace || workspace === ROOT ||
-        !existsSync(join(workspace, "openspec", "changes", id))) return;
-    upgradeEvidenceOperation({
-      loadRuntime: () => ({ status: "active" }),
-      fail: die,
-      changePath: (change) => join(workspace, "openspec", "changes", change),
-      proofPath: () => null,
-      readJson,
-      writeJson,
-      saveRuntime: () => {},
-      pathExists: (path) => Boolean(path) && existsSync(path),
-      remove: () => {},
-      output: { log: () => {} }
-    }, id);
-  }, "evidence-upgrade");
-}
 const { continueBudget, checkpointBudget } = createBudgetContinuation({
   logs: LOGS,
   loadRuntime,
@@ -1651,7 +1623,6 @@ function unresolvedApplyTransactions(id) {
 }
 const {
   doctor,
-  migrate,
   showChanges,
   showCurrent,
   showProviders,
@@ -1717,7 +1688,6 @@ const {
   unverifiedDrift: (id) => modelDriftInspector.changeDrift(id).unverified,
   evidenceDetection: evidenceDetectionValue,
   parseFlags,
-  parseStrictCommandFlags,
   fail: die
 });
 const {
@@ -1925,8 +1895,6 @@ const {
   rootGitlink,
   landPlanValue,
   showLandPlan,
-  recordRepositoryLand,
-  stageRootPointers,
   resumeLand,
   assertMultiRepositoryArchiveReady
 } = createLandRuntime({
@@ -2081,7 +2049,7 @@ const pullRequestRuntime = createPullRequestRuntime({
 });
 const { showAdvance: showDeliveryAdvance } = pullRequestRuntime;
 const advanceLand = advanceLandOperation.bind(null, {
-  loadRuntime, landCheck, archive, resumeLand, landPlanValue,
+  loadRuntime, landCheck, archive, landPlanValue,
   selectedRepositories,
   prepareExecution: (id, options) => prepareExecution(id, options)
 });
@@ -2219,14 +2187,13 @@ const { advanceValue, advanceThrough, showAdvance } = createAdvanceRuntime({
     ? commandPhaseRecorder.measureAsync("advance.sandbox-sync",
       () => runAdvanceQuietly(() => sandboxRuntime.synchronizeAgreement(id, flags)))
     : false,
-  // Detected provider wiring is a write, not a question: upgrade a legacy
-  // packet, write the recommended providers, then sync the revised agreement
+  // Detected provider wiring is a write, not a question: write the
+  // recommended providers, then sync the revised agreement
   // into Build so Land never sees an edited-after-sync packet.
   wireEvidence: (id) => commandPhaseRecorder.measureAsync("advance.evidence-wiring",
     () => runAdvanceQuietly(async () => {
-      if (readJson(join(changePath(id), "evidence.yaml"), {}).version === 1) upgradeEvidence(id);
-      // Wiring-only, like `evidence upgrade`: an approval valid before the
-      // write stays valid; the agreement's behavior did not change.
+      // Wiring-only: an approval valid before the write stays valid; the
+      // agreement's behavior did not change.
       preserveSpecApprovalAcross(ROOT, id, { loadRuntime, saveRuntime, now },
         () => initializeEvidence(id, { write: true }), "evidence-wiring");
       if (loadRuntime(id).status === "building") prepareBuildSandbox(id);
@@ -2383,8 +2350,8 @@ const qualityChange = () => {
   return namedChange(index >= 0 ? values[index + 1] : process.env.FOUNDATION_CHANGE_ID);
 };
 operationChangeId = command === "sandbox" ? namedChange(values[1]) :
-  ["resolve", "validate", "audit-change", "hash", "packet", "agent-plan", "agent-dispatch", "agent-task", "agent-acquire", "agent-release", "metrics", "feedback", "advance", "budget-checkpoint", "budget-continue", "proof-plan", "proof-readiness", "proof-advance", "proof-run", "proof-collect", "proof-preflight", "proof-execute", "proof-audit", "evidence-upgrade", "evidence-verify-ci", "authority-request", "authority-dispatch", "authority-run", "authority-abort", "authority-status", "authority-record", "authority-reset-infra", "authority-extend-review", "authority-reset-base-move", "receipt", "run-provider", "prove",
-    "evidence-detect", "evidence-init", "evidence-doctor", "handoff-status", "handoff-packet", "handoff-record", "land-check", "land-advance", "land-plan", "land-record", "land-pointers", "land-resume", "archive", "delivery-advance", "event", "telemetry-sync", "telemetry-import"].includes(command) ? namedChange(values[0]) :
+  ["resolve", "validate", "audit-change", "hash", "packet", "agent-plan", "agent-dispatch", "agent-task", "agent-acquire", "agent-release", "metrics", "feedback", "advance", "budget-checkpoint", "budget-continue", "proof-plan", "proof-readiness", "proof-advance", "proof-run", "proof-collect", "proof-preflight", "proof-execute", "proof-audit", "evidence-verify-ci", "authority-request", "authority-dispatch", "authority-run", "authority-abort", "authority-status", "authority-record", "authority-reset-infra", "authority-extend-review", "authority-reset-base-move", "receipt", "run-provider", "prove",
+    "evidence-detect", "evidence-init", "evidence-doctor", "handoff-status", "handoff-packet", "handoff-record", "land-check", "land-advance", "land-plan", "land-resume", "archive", "delivery-advance", "event", "telemetry-sync", "telemetry-import"].includes(command) ? namedChange(values[0]) :
     command?.startsWith("quality-")
       ? qualityChange()
       : null;
@@ -2510,7 +2477,6 @@ await routeRuntimeCommand(command, values, {
   resetBaseMoveAuthority: guardedResetBaseMoveAuthority,
   showAuthorityStatus,
   recordAuthority: guardedRecordAuthority,
-  upgradeEvidence,
   recordReceipt: guardedRecordReceipt,
   runProvider: guardedRunProvider,
   prove,
@@ -2519,8 +2485,6 @@ await routeRuntimeCommand(command, values, {
   advanceLand,
   recoverLand,
   showLandPlan,
-  recordRepositoryLand,
-  stageRootPointers,
   resumeLand,
   showDeliveryAdvance,
   showHandoffStatus,
@@ -2536,7 +2500,6 @@ await routeRuntimeCommand(command, values, {
   syncClaudeTelemetry,
   importTelemetry,
   importHostExecution,
-  migrate,
   usage,
   describeCommand,
   runtimeApiVersion: RUNTIME_API_VERSION,

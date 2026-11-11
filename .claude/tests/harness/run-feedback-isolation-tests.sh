@@ -33,7 +33,7 @@ assert_cmd_zero "fixture is an initialized Git project" \
     git -C "$1" add . &&
     git -C "$1" commit -q -m initial' _ "$TARGET"
 assert_cmd_zero "fixture change is created" \
-  bash "$ROOT/cli.sh" --project "$TARGET" runtime new \
+  bash "$ROOT/cli.sh" --project "$TARGET" change new \
     "Feedback isolation contract" --rapid
 
 CHANGE="feedback-isolation-contract"
@@ -246,11 +246,11 @@ fi
 HOST_ROOT="$TMP/host-root"
 mkdir -p "$HOST_ROOT"
 assert_cmd_zero "signed fixture change is created" \
-  bash "$ROOT/cli.sh" --project "$TARGET" runtime new \
+  bash "$ROOT/cli.sh" --project "$TARGET" change new \
     "Signed unattended contract" --rapid
 SIGNED_CHANGE="signed-unattended-contract"
 assert_cmd_zero "signed fixture change is resolved before Build" \
-  bash "$ROOT/cli.sh" --project "$TARGET" runtime resolve "$SIGNED_CHANGE" \
+  bash "$ROOT/cli.sh" --project "$TARGET" change resolve "$SIGNED_CHANGE" \
     --impact low --coupling isolated
 assert_file_absent "signed fixture needs no empty grounding artifact" \
   "$TARGET/openspec/changes/$SIGNED_CHANGE/grounding.yaml"
@@ -299,7 +299,7 @@ fi
 # assertions above into a rubber stamp, so plant a writable control socket in
 # the fixture tree and require that the same signed flow is refused.
 assert_cmd_zero "hazard fixture change is created" \
-  bash "$ROOT/cli.sh" --project "$TARGET" runtime new \
+  bash "$ROOT/cli.sh" --project "$TARGET" change new \
     "Hazardous unattended contract" --rapid
 HAZARD_CHANGE="hazardous-unattended-contract"
 HAZARD_ROOT="$TMP/hazard-root"
@@ -379,7 +379,7 @@ assert_cmd_zero "copy fixture is an initialized Git project" \
     git -C "$1" add . &&
     git -C "$1" commit -q -m initial' _ "$COPY_TARGET"
 assert_cmd_zero "copy fixture change is created" \
-  bash "$ROOT/cli.sh" --project "$COPY_TARGET" runtime new \
+  bash "$ROOT/cli.sh" --project "$COPY_TARGET" change new \
     "Isolated copy contract" --rapid
 
 COPY_CHANGE="isolated-copy-contract"
@@ -412,18 +412,18 @@ assert_cmd_zero "the copy sandbox inherits no worktree registrations" \
 
 # The evidence for a frontend change is collected by building it. If the build
 # output counts as workspace surface, collecting the evidence expires it.
-hash_before="$(bash "$ROOT/cli.sh" --project "$COPY_TARGET" runtime hash "$COPY_CHANGE")"
+hash_before="$(bash "$ROOT/cli.sh" --project "$COPY_TARGET" hash "$COPY_CHANGE")"
 mkdir -p "$copy_path/.next/cache"
 printf 'built artifact\n' > "$copy_path/.next/cache/chunk.js"
 printf 'ignored noise\n' > "$copy_path/noise.log"
-hash_after="$(bash "$ROOT/cli.sh" --project "$COPY_TARGET" runtime hash "$COPY_CHANGE")"
+hash_after="$(bash "$ROOT/cli.sh" --project "$COPY_TARGET" hash "$COPY_CHANGE")"
 assert_eq "build output does not expire the evidence that produced it" \
   "$hash_before" "$hash_after"
 
 # Source edits must still move the hash, or the check above only proves the
 # hash stopped working.
 printf 'real source change\n' > "$copy_path/src-change.txt"
-hash_source="$(bash "$ROOT/cli.sh" --project "$COPY_TARGET" runtime hash "$COPY_CHANGE")"
+hash_source="$(bash "$ROOT/cli.sh" --project "$COPY_TARGET" hash "$COPY_CHANGE")"
 assert_not_eq "a real source edit still expires prior evidence" \
   "$hash_before" "$hash_source"
 

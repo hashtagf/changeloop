@@ -195,20 +195,13 @@ export function createRuntimeEnvironment({
   }
 
   function normalizeExecutionPolicy(policy) {
-    if (typeof policy.execution.packetBytes === "number") {
-      policy.execution.legacyNumericPacketBytes = policy.execution.packetBytes;
-      policy.execution.packetBytes = {
-        task: policy.execution.packetBytes,
-        review: policy.execution.packetBytes,
-        repository: policy.execution.packetBytes,
-        global: policy.execution.packetBytes
-      };
-    } else {
-      policy.execution.packetBytes = {
-        ...DEFAULT_POLICY.execution.packetBytes,
-        ...(policy.execution.packetBytes || {})
-      };
-    }
+    if (typeof policy.execution.packetBytes === "number")
+      fail("foundation.json execution.packetBytes must be an object " +
+        "{ task, review, repository, global }; a single number is no longer accepted");
+    policy.execution.packetBytes = {
+      ...DEFAULT_POLICY.execution.packetBytes,
+      ...(policy.execution.packetBytes || {})
+    };
     policy.execution.tokenBudgets = {
       ...DEFAULT_POLICY.execution.tokenBudgets,
       ...(policy.execution.tokenBudgets || {})

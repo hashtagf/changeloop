@@ -14,7 +14,7 @@ procedure lives only in its command (`commands/change.md`, `commands/build.md`,
 
 ## Resolve
 
-Compile one v4 draft; never hand-create cross-ledger IDs or empty artifacts.
+Compile one semantic draft (v5 folder); never hand-create cross-ledger IDs or empty artifacts.
 Persist ambiguity, impact, coupling, evidence, and size; size controls slicing,
 not assurance. Investigate ambiguity.
 

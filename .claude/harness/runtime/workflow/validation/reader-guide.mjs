@@ -1,7 +1,7 @@
 import { scopeAllowsPath } from "../../core/graph-execution.mjs";
 import { renderInvestigationContext } from "./investigation-coverage.mjs";
 import { lightweightDraft } from "./design-blueprints.mjs";
-import { isSemanticV4Plus } from "./draft-version.mjs";
+import { isSemanticVersion } from "./draft-version.mjs";
 import { hasAuthoredProposalProse } from "../draft-folder.mjs";
 
 // Reader guide: the parts of a compiled packet written for a human reviewer
@@ -87,7 +87,7 @@ export function readerGuideIssues(source, requirementKeys = new Set()) {
 // Guidance a reviewer needs before approving a standard change. Warnings let
 // the agent complete the packet without a user gate.
 export function readerGuideWarnings(draft) {
-  if (!isSemanticV4Plus(draft?.version)) return [];
+  if (!isSemanticVersion(draft?.version)) return [];
   const warnings = [];
   // A small rapid-lane change needs no reader scaffolding prompts.
   const light = lightweightDraft(draft);

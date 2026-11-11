@@ -35,7 +35,6 @@ export const PHASE_BY_COMMAND = {
   "evidence-detect": "change",
   "evidence-init": "change",
   "evidence-doctor": "change",
-  "evidence-upgrade": "change",
   "quality-discover": "change",
   "quality-init": "change",
   "quality-doctor": "change",
@@ -82,8 +81,6 @@ export const PHASE_BY_COMMAND = {
   "land-advance": "land",
   "land-recover": "land",
   "land-plan": "land",
-  "land-record": "land",
-  "land-pointers": "land",
   "land-resume": "land",
   archive: "land",
 

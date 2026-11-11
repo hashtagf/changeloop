@@ -162,7 +162,7 @@ the upstream repository uses those names for its own maintainer guidance.
 | Workflow | `runtime/workflow/authority.mjs` | External authority request persistence and response validation |
 | Workflow | `runtime/workflow/budget.mjs` | Run/lifetime usage windows and budget policy transitions |
 | Workflow | `runtime/workflow/change-lifecycle.mjs` | Change creation, draft materialization, resolution, and atomic start |
-| Workflow | `runtime/workflow/semantic-draft.mjs` | Semantic draft v3 compatibility plus v4/v5 discovery coverage, stable links, typed extensions, decision status and durable rationale, unknown task field warnings, and provider defaults |
+| Workflow | `runtime/workflow/semantic-draft.mjs` | Semantic draft v4/v5 discovery coverage, stable links, typed extensions, decision status and durable rationale, unknown task field warnings, and provider defaults |
 | Workflow | `runtime/workflow/draft-folder.mjs` | Draft v5 folder loader: splits authored `proposal.md`/`design.md` prose by outline heading, checks order, placeholders, and derived headings, and derives grounding NFR/observability from `change.json` |
 | Workflow | `runtime/workflow/validation/outline-contract.mjs` | The versioned outline: each packet section's document, order, heading (en/th), owner, feeding fields, and condition |
 | Workflow | `runtime/workflow/validation/architecture-fields.mjs` | Typed fields `boundaries`, `tenancy`, `domain` |
@@ -209,7 +209,7 @@ out-of-order, empty, or `TODO`/`TBD` sections in one EDIT. Every field module
 exports `validate<Field>(value, path)` (issues prefixed by the exact path, such
 as `boundaries[0].timeout is required`) and `render<Field>(value, {language})`
 (markdown without the heading, Thai labels for `th`); older field shapes stay
-valid. New fields are optional in v4 and v3 as well. The section order, work
+valid. New fields are optional in v4 as well. The section order, work
 types, and required sections are specified in [WORKFLOW.md](../../WORKFLOW.md#draft-v5-folder-and-outline).
 
 Agents write intent, requirements,
@@ -408,7 +408,6 @@ the envelope carries, and the budget no-progress cap are specified in
 | `evidence verify-ci <change> <provider> <signed.json>` | Verifies a signed, workspace-bound CI envelope | Importing trusted remote CI evidence |
 | `evidence record ...` | Records evidence produced by an external system | CI, human review, or remote systems |
 | `authority request\|status\|dispatch\|run\|abort\|record ...` | Routes configured AI review and bound human review/acceptance responses | Crossing a human or remote authority boundary |
-| `evidence upgrade <change>` | Upgrades evidence v1 to v2 without guessing commands | Migrating an older active change |
 | `sandbox create <change>` | Creates an isolated Git worktree | Advanced primitive behind `advance --through build` |
 | `sandbox challenge <change>` | Creates a short-lived nonce and permission contract | Before a host signs unattended authority |
 | `sandbox create <change> --unattended --attestation <file>` | Verifies and consumes one trusted host attestation | Unattended Build only |
@@ -418,13 +417,12 @@ the envelope carries, and the budget no-progress cap are specified in
 | `handoff list [--open] [--owner <team>] [--environment <env>] [--json]` | Lists operational obligations across active and archived changes | Finding post-Land work without knowing a change ID |
 | `handoff packet <change> [--id H00n]` | Emits one credential-free operator packet | Sending the exact operation to its named owner |
 | `handoff record <change> ...` | Records accepted/completed/rejected/cancelled/superseded outcomes with durable references | Updating operational state without reopening developer tasks |
-| `migrate [legacy-id] [--apply]` | Reads legacy `.workflow/` state and optionally creates migration candidates | Recovering an older installation without promoting unverified prose |
 | `host instruction <command> --protocol 1 --format json --arguments <text>` | Resolves the package-owned command instruction | Host integration without reading consumer command files |
 | `host agent-contract --protocol 1 --format json` | Resolves the portable package-owned agent contract | Installing or refreshing a host adapter |
 
 `/land <change>` is the only user-facing Land operation. The registered
-`land check`, `land advance`, `land recover`, `land archive`, `land record`,
-`land resume`, `land plan`, and `land pointers` routes are internal compatibility
+`land check`, `land advance`, `land recover`, `land archive`, `land resume`,
+and `land plan` routes are internal compatibility
 or diagnostic primitives. The Harness invokes them through the convergent Land
 transaction; agents must not ask users to compose or run them. `land check` runs
 Land's own pre-mutation preflight read-only, so it stops on the same code Land
@@ -832,7 +830,7 @@ dependency-impact analysis: executable providers still validate the new inputs.
 A sync that leaves evidence-bound content and contract inputs unchanged keeps
 the existing proof and lifecycle progress. Conflicts or changed inputs still
 invalidate the aggregate proof, while valid provider receipts remain reusable.
-`proof plan` explains whether review reuse is unavailable because its identity
+The internal `proof-plan` diagnostic explains whether review reuse is unavailable because its identity
 is missing, the contribution changed, or the review agreement changed.
 
 Use metrics to inspect the actual cost of a run:

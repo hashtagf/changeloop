@@ -257,8 +257,8 @@ Harness เตรียม writable target ทุกตัวก่อนเข�
 พิสูจน์แล้วตาม dependency พร้อม durable checkpoint แต่ละ node จบที่
 `applied-uncommitted`; Git HEAD กับ index ของทุก repository ไม่เปลี่ยน และงานเดิม
 ที่ไม่ overlap ยังคงอยู่ เรียก `/land` ซ้ำแล้วระบบ resume transaction เดิมโดยข้าม
-node ที่ตรวจแล้ว `land check`, `land record` แบบ legacy และ `land resume` ยังเป็น
-diagnostic/compatibility primitive ไม่ใช่ขั้นที่ user ต้องเรียงเอง ส่วน commit,
+node ที่ตรวจแล้ว `land check` และ `land resume` ยังเป็น
+diagnostic primitive ไม่ใช่ขั้นที่ user ต้องเรียงเอง ส่วน commit,
 push และ PR อยู่นอก Land และต้องมีอำนาจแยก
 
 saga นี้ใช้ด้วยเมื่อเลือก non-root child เพียงตัวเดียว runtime record ที่หายต้องไม่

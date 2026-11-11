@@ -32,7 +32,7 @@ Every observable acceptance scenario gets a stable claim ID. Each claim declares
 }
 ```
 
-Semantic draft v3 derives ordinary provider wiring from task verification and
+A semantic draft derives ordinary provider wiring from task verification and
 stores it with the contract in `evidence.yaml`. Custom commands, reports,
 services, or readiness overrides live separately in conditional
 [`execution.yaml`](/docs/evidence/adapters/). Rewiring still does not change

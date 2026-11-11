@@ -82,7 +82,6 @@ compatible primitive ด้านล่างสำหรับ operator แล�
 | คำสั่ง | ใช้ทำอะไร |
 |---|---|
 | `investigate --template \| <record.json>` | พิมพ์หรือตรวจ investigation record แล้วคืน typed action หนึ่งรายการ |
-| `change new <intent> [--rapid]` | Compatible primitive สำหรับเขียน agreement ด้วยมือ |
 | `change start --template \| <draft.json> [--inspect] [--consume-draft] [--approve-spec --decision-ref <ref> [--through <target>]]` | ตรวจและถ้าครบจะ compile และเริ่ม agreement จาก semantic draft (ไฟล์ JSON หรือ folder ของ draft v5) ในคำสั่งเดียว โดยพื้นที่แยกจะสร้างภายหลังใน Build; `--approve-spec` บันทึก approval ของผู้ใช้ในคำสั่งเดียวกัน |
 | `change amend --template \| <change> <amendment.json> [--inspect] [--consume-amendment] [--approve-spec --decision-ref <ref> [--through <target>]]` | Inspect intake และถ้าครบจะเพิ่ม แก้ หรือลบ semantic requirement หรือแก้ verify command ของ task ที่ยังไม่เสร็จ แบบ transaction และรักษางานที่เสร็จแล้ว ในคำสั่งเดียว |
 | `change amend <change> --task <task> --verify <command> [--reopen] [--reason <text>]` | แก้ verify command ของ task ที่ยังไม่เสร็จหนึ่งตัวโดยไม่ต้องเขียน amendment JSON claim, capability และ approval คงเดิม คำสั่งที่ผ่านเสมอจะถูกปฏิเสธ และ `--reopen` เอาเครื่องหมายเสร็จของ task ที่เสร็จแล้วออกเพื่อให้ต้องผ่านใหม่ |
@@ -107,7 +106,6 @@ compatible primitive ด้านล่างสำหรับ operator แล�
 | `evidence doctor <change>` | อธิบายการต่อสายที่ตั้งไว้ ที่ตรวจพบได้ และที่ยังไม่ลงตัว |
 | `evidence verify-ci <change> <provider> <signed.json>` | ตรวจ provenance ของ CI ที่เซ็นและผูกกับ workspace ของ provider |
 | `hash <change> [provider]` | พิมพ์ workspace hash ที่ CI envelope แบบเซ็นต้องผูกไว้ |
-| `evidence upgrade <change>` | อัปเกรดการต่อสายหลักฐานแบบเก่าอย่าง explicit |
 
 ## อำนาจจากภายนอก
 
@@ -133,7 +131,6 @@ compatible primitive ด้านล่างสำหรับ operator แล�
 | คำสั่ง | ใช้ทำอะไร |
 |---|---|
 | `land archive <change>` | Primitive ระดับล่างสำหรับ apply, ซิงก์, ตรวจ, archive และเก็บกวาด; agent ปกติใช้ `advance --through archived` |
-| `land record <change> --repo <id> --commit <sha> --decision-ref <ref>` | Compatibility สำหรับ transaction แบบ commit-oriented ที่ active อยู่ก่อนแล้ว |
 | `land resume <change>` | Primitive สำหรับวินิจฉัย; recovery ปกติเรียก `/land` ซ้ำ |
 
 ## การส่ง pull request แบบ optional
@@ -174,7 +171,6 @@ publish หรือแก้ product และสำเร็จได้เม
 | `init [target-path] [--host claude\|cursor\|opencode\|codex\|pi] [--yes]` | ติดตั้งหรืออัปเกรด Change Loop ในโปรเจกต์ `--host` เพิ่ม adapter ของ host นั้น |
 | `help [--all]` | คำสั่งหลัก `--all` รวม route ที่เก็บไว้เพื่อความเข้ากันได้ |
 | `dashboard [-up\|-status\|-down]` | จัดการ client แสดงสถานะทีม (ตัวเลือกเสริม) |
-| `migrate [legacy-id] [--apply]` | ย้ายบันทึก workflow เก่าที่ยืนยันได้ |
 | `update check [--refresh] [--json]` | แสดงประกาศรุ่น stable ล่าสุด ไม่อัปเดตให้เอง |
 | `dashboard snapshot --json` | พิมพ์ข้อมูล dashboard ของโปรเจกต์นี้แบบอ่านอย่างเดียว |
 
@@ -219,7 +215,7 @@ Feedback ตรวจ validity จาก runtime ปัจจุบัน ส่
 | grounding schema | 1, 2, 3 |
 | advance protocol | 6 |
 | provider protocol | 13 |
-| evidence schema | 1, 2 |
+| evidence schema | 2 |
 | packet schema | 12 |
 | proof protocol | 7 |
 | review protocol | 4 |

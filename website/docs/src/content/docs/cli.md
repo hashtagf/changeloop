@@ -83,7 +83,6 @@ language profiles, baselines, and rollout policy.
 | Command | Purpose |
 |---|---|
 | `investigate --template \| <record.json>` | Print or validate a versioned investigation record and return one typed action |
-| `change new <intent> [--rapid]` | Compatible primitive for manually authoring a change agreement |
 | `change start --template \| <draft.json> [--inspect] [--consume-draft] [--approve-spec --decision-ref <ref> [--through <target>]]` | Inspect and, when complete, compile and start an agreement from one semantic draft (a JSON file or a draft v5 folder) in one call; Build creates isolation later; `--approve-spec` records the user's approval in the same call |
 | `change amend --template \| <change> <amendment.json> [--inspect] [--consume-amendment] [--approve-spec --decision-ref <ref> [--through <target>]]` | Inspect intake and, when complete, add, revise, or remove semantic requirements, or fix an unfinished task's verify command, transactionally while preserving completed work, in one call |
 | `change amend <change> --task <task> --verify <command> [--reopen] [--reason <text>]` | Correct one unfinished task's verify command without amendment JSON; claims, capabilities, and approval stay, an always-passing command is refused, and `--reopen` unticks a completed task so it must pass again |
@@ -108,7 +107,6 @@ language profiles, baselines, and rollout policy.
 | `evidence doctor <change>` | Explain configured, detectable, and unresolved wiring |
 | `evidence verify-ci <change> <provider> <signed.json>` | Verify signed CI provenance bound to the provider workspace |
 | `hash <change> [provider]` | Print the workspace hash a signed CI envelope must bind |
-| `evidence upgrade <change>` | Explicitly upgrade legacy evidence wiring |
 
 ## External authority
 
@@ -134,7 +132,6 @@ these directly for diagnosis or an explicit integration.
 | Command | Purpose |
 |---|---|
 | `land archive <change>` | Low-level apply, synchronize, audit, archive, and cleanup primitive; normal agents use `advance --through archived` |
-| `land record <change> --repo <id> --commit <sha> --decision-ref <ref>` | Legacy compatibility for an active commit-oriented transaction |
 | `land resume <change>` | Diagnostic resume primitive; normal recovery repeats `/land` |
 
 ## Optional pull-request delivery
@@ -177,7 +174,6 @@ Commands marked as needing a `--decision-ref` require an **explicit host-recorde
 | `init [target-path] [--host claude\|cursor\|opencode\|codex\|pi] [--yes]` | Install or upgrade Change Loop in a project; `--host` adds that host's adapter |
 | `help [--all]` | Canonical commands; `--all` includes compatibility routes |
 | `dashboard [-up\|-status\|-down]` | Manage the optional team-presence client |
-| `migrate [legacy-id] [--apply]` | Migrate corroborated legacy workflow records |
 | `update check [--refresh] [--json]` | Show the latest stable release advisory; never applies an update |
 | `dashboard snapshot --json` | Print the read-only dashboard projection for this project |
 
@@ -222,7 +218,7 @@ Wire-visible contracts are pinned in `.claude/harness/protocol.json`. A mixed-re
 | grounding schema | 1, 2, 3 |
 | advance protocol | 6 |
 | provider protocol | 13 |
-| evidence schema | 1, 2 |
+| evidence schema | 2 |
 | packet schema | 12 |
 | proof protocol | 7 |
 | review protocol | 4 |

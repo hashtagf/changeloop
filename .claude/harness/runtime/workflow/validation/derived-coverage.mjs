@@ -1,4 +1,4 @@
-import { isSemanticV4Plus } from "./draft-version.mjs";
+import { isSemanticVersion } from "./draft-version.mjs";
 
 // Discovery coverage the draft already states. A risk-required dimension the
 // agent did not author is settled as `covered` when real draft content backs
@@ -146,7 +146,7 @@ const RULES = {
 };
 
 export function deriveDiscoveryCoverage(source, requiredDimensions = []) {
-  if (!isSemanticV4Plus(source?.version)) return source;
+  if (!isSemanticVersion(source?.version)) return source;
   const discovery = source.discovery === undefined ? {} : source.discovery;
   if (!discovery || typeof discovery !== "object" || Array.isArray(discovery)) return source;
   const coverage = discovery.coverage === undefined ? [] : discovery.coverage;
