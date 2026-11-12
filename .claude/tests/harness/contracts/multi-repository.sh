@@ -591,8 +591,12 @@ cp "$ROOT/.claude/harness/commands.json" "$TMP/sibling-project/.claude/harness/"
 cp -R "$ROOT/openspec/schemas" "$TMP/sibling-project/openspec/"
 cp "$ROOT/openspec/config.yaml" "$TMP/sibling-project/openspec/"
 cp "$ROOT/.foundation/.gitignore" "$TMP/sibling-project/.foundation/"
+# The shipped reviewers name host CLIs (claude, codex). Point them at an absent
+# executable so review routing is the same on every host: never a real model
+# call where the CLI is installed, always the main-session handoff.
 jq '.workflow.grounding = "optional" | .land.riskBasedCi = false |
-    .telemetry.requireUsage = false' \
+    .telemetry.requireUsage = false |
+    .review.reviewers[].executable = "foundation-fixture-absent-reviewer"' \
   "$ROOT/foundation.json" > "$TMP/sibling-project/foundation.json"
 cp -R "$TMP/sibling-sdk/src" "$TMP/sibling-sdk/test" "$TMP/sibling-sdk/package.json" \
   "$TMP/sibling-project/"
@@ -670,6 +674,18 @@ for _ in 1 2 3 4 5; do
 done
 assert_contains "Build completes tasks in root, submodule, and sibling" \
   "$sibling_build" '"reached":"build"'
+# Proof stops at the review handoff; the verdict is recorded through the
+# dispatched authority path, the only one that binds a review receipt.
+sibling_proven="$(node .claude/harness/foundation.mjs advance sibling-marker --through proven 2>&1)"
+assert_contains "Prove hands the sibling review to the reviewer" \
+  "$sibling_proven" '"legacyAction":"RUN_CONFIGURED_REVIEW"'
+assert_cmd_zero "the sibling review verdict records through dispatch" \
+  node "$ROOT/.claude/tests/lib/dispatched-review.mjs" sibling-marker pass \
+    --reviewer-type ai --reviewer-identity fixture-reviewer \
+    --reviewer-provider-family anthropic --reviewer-model-family claude \
+    --reviewer-model fixture-model --reviewer-session fixture-review-session \
+    --subject-actor implementation-agent --unresolved-blockers 0 \
+    --observed 'Deterministic fixture verdict' --reference fixture://sibling-review
 sibling_head="$(git -C "$TMP/sibling-sdk" rev-parse HEAD)"
 sibling_archived="$(node .claude/harness/foundation.mjs advance sibling-marker --through archived 2>&1)"
 case "$sibling_archived" in *'"reached":"archived"'*) ;; *) printf '%s\n' "$sibling_archived" >&2 ;; esac
