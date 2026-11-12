@@ -124,6 +124,7 @@ the upstream repository uses those names for its own maintainer guidance.
 | Core | `runtime/core/tool-preparation.mjs` | Project-local tool readiness, preparation identity, and setup boundaries |
 | Core | `runtime/core/tool-identity.mjs` | Content-keyed reuse of successful OpenSpec probes and strict lint (persisted in `.foundation/cache/`), and per-process Git index queries |
 | Core | `runtime/core/git-head.mjs` | HEAD and "not a repository" answered from repository files, falling back to Git for any layout it does not model |
+| Core | `runtime/core/git-read-memo.mjs` | Per-process memo for repeated `status`/`ls-files -s`/`rev-parse HEAD` listings, forgotten on any observed fs write, non-read-only child process, lock wait, or `clearSnapshotCache` |
 | Core | `runtime/core/lifecycle-reducer.mjs` | Typed lifecycle transitions and compatibility-preserving state mutation |
 | Core | `runtime/core/process-runtime.mjs` | Provider process execution, readiness checks, and managed services |
 | Core | `runtime/core/signals.mjs` | Process-scoped signals (drift restored, budget warning, already archived) that keep their stream line and ride on the advance envelope |

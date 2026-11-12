@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+// First: installs the mutation observer behind the Git read memo before any
+// other module can capture an unobserved fs or child_process function.
+import "./runtime/core/git-read-memo.mjs";
 import { assertSpecApproval, preserveSpecApprovalAcross } from "./runtime/core/user-decisions.mjs";
 
 import {

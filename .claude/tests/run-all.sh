@@ -308,6 +308,7 @@ sandbox cleanup|node --test "$ROOT/.claude/harness/tests/sandbox-cleanup.test.mj
 sandbox data-loss guards|node --test "$ROOT/.claude/harness/tests/sandbox-data-loss.test.mjs"
 root sandbox repository projection|node --test "$ROOT/.claude/harness/tests/submodule-root-projection.test.mjs"
 git-ignored surface|node --test "$ROOT/.claude/harness/tests/git-ignore.test.mjs"
+git read memo|node --test "$ROOT/.claude/harness/tests/git-read-memo.test.mjs"
 workspace inspection|node --test "$ROOT/.claude/harness/tests/workspace-inspection.test.mjs"
 sandbox create phases|node --test "$ROOT/.claude/harness/tests/sandbox-create-phases.test.mjs"
 change validation phases|node --test "$ROOT/.claude/harness/tests/change-validation-phases.test.mjs"

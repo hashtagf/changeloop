@@ -40,6 +40,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Each harness command asks Git less: repeated `git status`, `git ls-files
+  -s`, and `git rev-parse HEAD` listings of an unchanged workspace within one
+  process are answered from a per-process memo instead of a new spawn. The
+  memo is forgotten on any file write the process makes into that workspace
+  (or into a `.git` directory), on any child process other than a read-only
+  Git query, on a lock wait, and on every `clearSnapshotCache`. In one
+  build→prove→land→sync flow, `advance --through proven` went from 22 to 10
+  Git spawns, Land from 48 to 29, and the whole flow from 134 to 89.
 - Installation copies each managed directory's files in one batch instead of
   forking `dirname`, `mkdir`, and `cp` per file (about 1,450 processes down to
   about 320). A fresh install is roughly twice as fast; the installed tree is

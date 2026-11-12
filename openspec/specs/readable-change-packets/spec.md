@@ -1,7 +1,9 @@
 # readable-change-packets Specification
 
 ## Purpose
-เอกสาร change เรียงลำดับสำหรับคน ครบ และไม่ซ้ำ
+
+เอกสาร change (proposal, design, tasks และ spec delta) ที่คอมไพล์แล้วต้องเรียงลำดับให้คนอ่าน ครบทุกส่วนที่ผู้เขียนให้ไว้ และไม่มีเนื้อหาซ้ำ
+
 ## Requirements
 ### Requirement: Amendments update the investigation agreement in place
 

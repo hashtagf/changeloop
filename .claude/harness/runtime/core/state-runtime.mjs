@@ -10,6 +10,7 @@ import {
   surfaceAdditionEntries, surfaceAdditionPaths, trackedPathSet
 } from "./workspace-surface.mjs";
 import { gitRepositoryAbsent, resolveGitHead } from "./git-head.mjs";
+import { invalidateGitReads, memoizedGitRead } from "./git-read-memo.mjs";
 import { withoutGitIgnored } from "./git-ignore.mjs";
 import { taskBlocks, taskMetadata } from "../contracts/change-artifacts.mjs";
 import { normalizeLifecycleState } from "./lifecycle-reducer.mjs";
@@ -443,9 +444,11 @@ export function createStateRuntime({
     if (NO_REPOSITORY_QUERIES.has(args[0]) && gitRepositoryAbsent(cwd))
       return { status: 128, signal: null, stdout: "", stderr: "fatal: not a git repository\n",
         output: [null, "", "fatal: not a git repository\n"], pid: 0 };
-    return spawnSync("git", args, {
+    // Repeated listings of an unchanged workspace are answered from the
+    // per-process memo; see git-read-memo.mjs for what forgets them.
+    return memoizedGitRead(args, cwd, () => spawnSync("git", args, {
       cwd, encoding: "utf8", maxBuffer: 64 * 1024 * 1024
-    });
+    }));
   }
 
   // No encoding: `diff --binary` output is bytes, and decoding it through
@@ -667,6 +670,9 @@ export function createStateRuntime({
     for (const key of snapshotCache.keys())
       if (!id || key.startsWith(`${id}\0`)) snapshotCache.delete(key);
     for (const clear of policyCacheClearers) clear(id);
+    // A caller clearing a snapshot expects the next one to re-read the
+    // workspace, so the Git listings beneath it are forgotten too.
+    invalidateGitReads();
   }
 
   // Git-ignored output is regenerable, so it belongs in no baseline. Walking it
