@@ -8,6 +8,7 @@ import {
   declaredPathMatcher, mergeSurfaceAdditions, surfaceAdditionEntries
 } from "../core/workspace-surface.mjs";
 import { blockedOutcomeStop } from "../core/blocked-decision.mjs";
+import { requireDeps } from "../core/required-deps.mjs";
 import { visualWaiverSummary } from "./visual-review.mjs";
 
 const PREFLIGHT_SCAN_MAX_FILES = 20000;
@@ -582,7 +583,7 @@ export function proofReadinessValueOperation(context, id, stage = "prove", optio
         context, id, stage, repositoryIssues, error);
     throw error;
   }
-  const plan = context.agentPlanValue?.(id, options) || null;
+  const plan = context.agentPlanValue(id, options) || null;
   const authoredPending = context.pendingTasks(id);
   const pending = Array.isArray(plan?.tasks) ? plan.tasks : authoredPending;
   const externalOperations = context.handoffReadiness(id);
@@ -591,11 +592,9 @@ export function proofReadinessValueOperation(context, id, stage = "prove", optio
   // shared resource; separate workspaces do not contend over paths.
   const repositoryConflicts = blockingConflictRows(context.activeRepositoryConflicts(
     id, context.selectedRepositories(id), { executing: true }));
-  const authorityPreflight = context.authorityPreflight?.(id) || {
-    status: "READY", blockers: [], decision: null
-  };
+  const authorityPreflight = context.authorityPreflight(id);
   const executionContract = plan?.executionContract ||
-    context.executionContract?.(id) || null;
+    context.executionContract(id) || null;
   const status = authorityPreflight.status !== "READY" ? "NEEDS_USER_DECISION" : readinessStatus({
     pending, issues, leases, repositoryConflicts,
     unavailable, repositoryIssues, unconfigured
@@ -663,7 +662,7 @@ export function wiringChoiceOperation({ evidenceDetectionValue }, id, provider) 
 }
 
 export function createProofReadinessRuntime({
-  markBlocked = () => {},
+  markBlocked,
   evidence,
   loadRuntime,
   taskBlocks,
@@ -673,34 +672,33 @@ export function createProofReadinessRuntime({
   selectedRepositories,
   providerCapability,
   providerConfig,
-  providerRepositories = (id, provider, config = providerConfig(id, provider)) =>
-    config?.repository
-      ? selectedRepositories(id).filter((repository) => repository.id === config.repository)
-      : selectedRepositories(id),
-  requiredProviders = (id) => Object.keys(evidence(id).providers || {}),
-  git = () => ({ status: 0, stdout: "", stderr: "" }),
-  gitHead = () => null,
+  providerRepositories,
+  requiredProviders,
+  git,
+  gitHead,
   advisoryCapabilities,
   evidenceDetectionValue,
   validate,
   relevantHash,
   executionNodes,
   pendingTasks,
-  handoffReadiness = (id) => ({
-    version: 1, changeId: id, status: "COMPLETE",
-    operations: [], blocking: [], tracked: []
-  }),
+  handoffReadiness,
   activeChangeLeases,
   activeRepositoryConflicts,
-  agentPlanValue = null,
+  agentPlanValue,
   saveRuntime,
-  authorityPreflight = () => ({ status: "READY", blockers: [], decision: null }),
-  executionContract = null,
-  targetEditIssues = () => [],
-  clearSnapshotCache = () => {},
+  authorityPreflight,
+  executionContract,
+  targetEditIssues,
+  clearSnapshotCache,
+  // Enables the canonical repository-sandbox path checks.
   root = null,
   fail
 }) {
+  requireDeps("createProofReadinessRuntime", {
+    markBlocked, providerRepositories, requiredProviders, git, gitHead, handoffReadiness,
+    agentPlanValue, authorityPreflight, executionContract, targetEditIssues, clearSnapshotCache
+  });
   const repositoryInfrastructureIssues = repositoryInfrastructureIssuesOperation.bind(null, {
     loadRuntime,
     requiredProviders,

@@ -69,6 +69,7 @@ import {
 } from "./runtime/workflow/sandbox-runtime.mjs";
 import { createPreviewRuntime } from "./runtime/workflow/preview-runtime.mjs";
 import { createSandboxCleanup } from "./runtime/workflow/sandbox-cleanup.mjs";
+import { rollbackAtomicStart as rollbackAtomicStartOperation } from "./runtime/workflow/atomic-start-rollback.mjs";
 import { assertLandedProjection } from "./runtime/workflow/land-verification.mjs";
 import {
   createLandJournal, transactionJournals as readTransactionJournals
@@ -129,7 +130,7 @@ import {
 import { changeWorkTypes, taskChangeIssue } from "./runtime/workflow/task-change.mjs";
 import { lightKind } from "./runtime/workflow/validation/dev-document.mjs";
 import { repositoryBaseHead } from "./runtime/core/repository-binding.mjs";
-import { createConfiguredReviewerRuntime } from "./runtime/evidence/codex-reviewer.mjs";
+import { createConfiguredReviewerRuntime } from "./runtime/evidence/configured-reviewer.mjs";
 import { createBlockedDecision, createDetachedBlockScope } from "./runtime/core/blocked-decision.mjs";
 import { createLandGrantRuntime } from "./runtime/core/land-grant.mjs";
 import {
@@ -147,9 +148,7 @@ import {
   ADAPTERS, INPUT_MODES, PROVIDER_CONTRACTS, PROVIDERS, providerCapability
 } from "./runtime/evidence/provider-catalog.mjs";
 import { SECURITY_TERMS } from "./runtime/workflow/security-policy.mjs";
-import {
-  landAppliedOutput, otherLandedOutput, targetEditIssues as targetEditFindings
-} from "./runtime/workflow/target-edits.mjs";
+import { targetEditsForState } from "./runtime/workflow/target-edits.mjs";
 import {
   createSessionLeaseRuntime, isSessionOwner, runTaskCheck
 } from "./runtime/workflow/session-lease.mjs";
@@ -1296,23 +1295,12 @@ const {
   fail: die
 });
 
-// Issues and notices must judge the same edits: bytes a Land wrote (this
-// change's, or another change's landed but uncommitted diff) are not edits
-// made outside the sandbox. Both views read this one computation.
-function targetEditsFor(state) {
-  const landedElsewhere = Object.fromEntries(Object.entries(otherLandedOutput({
-    transactions: TRANSACTIONS, changeId: state.id, readJson
-  })).map(([path, row]) => [path, row.after]));
-  return targetEditFindings({
-    root: ROOT, state, dirtyNow: preexistingDirty(ROOT),
-    landOutput: { ...landedElsewhere,
-      ...landAppliedOutput(readTransactionJournals(TRANSACTIONS, state.id, readJson)) },
-    // Only the paths this change's Land would apply can stop it.
-    // An unresolvable surface throws (trapped) and the stop stays fail-closed.
-    projectionPaths: () => trapFailures(() => new Set(canonicalChangedSurface(state.id, state)
-      .filter((row) => (row.repositoryId || "root") === "root").map((row) => row.path)))
-  });
-}
+const targetEditsFor = targetEditsForState.bind(null, {
+  root: ROOT, transactions: TRANSACTIONS, readJson,
+  transactionJournals: (id) => readTransactionJournals(TRANSACTIONS, id, readJson),
+  preexistingDirty, trapFailures,
+  canonicalChangedSurface
+});
 
 const {
   activeWorkRecovery,
@@ -1439,75 +1427,11 @@ function projectRootRepositories(id) {
   sandboxRuntime.refreshChangedDependencies(id);
   return projected;
 }
-function rollbackAtomicStart(id) {
-  const issues = [];
-  const state = readJson(runtimePath(id), {
-    id,
-    workspace: { mode: "current", path: ROOT }
-  });
-  const repositories = cleanupRepositorySandboxes(id, state);
-  for (const [repositoryId, result] of Object.entries(repositories))
-    if (["failed", "refused"].includes(result.status))
-      issues.push(`repository sandbox '${repositoryId}': ${result.reason || result.status}`);
-  // Multi-repository setup can fail after worktrees were created but before
-  // their in-memory records were saved. Re-resolve the already-validated
-  // selection and clean only its fixed Foundation-owned paths.
-  let selected = [];
-  const repositorySandboxRoot = join(
-    ROOT, ".foundation", "repository-sandboxes", id);
-  if (existsSync(repositorySandboxRoot)) {
-    try {
-      trapFailures(() => { selected = selectedRepositories(id, state); });
-    } catch (error) {
-      issues.push(`repository sandbox discovery: ${error.message || error}`);
-    }
-  }
-  const unrecordedRepositories = {};
-  for (const repository of selected) {
-    if (repository.id === "root") continue;
-    const path = join(ROOT, ".foundation", "repository-sandboxes", id, repository.id);
-    if (!existsSync(path)) continue;
-    unrecordedRepositories[repository.id] = {
-      mode: "worktree", path, targetPath: repository.path
-    };
-  }
-  const unrecorded = cleanupRepositorySandboxes(id, {
-    repositories: unrecordedRepositories
-  });
-  for (const [repositoryId, result] of Object.entries(unrecorded))
-    if (["failed", "refused"].includes(result.status))
-      issues.push(`unrecorded repository sandbox '${repositoryId}': ${
-        result.reason || result.status}`);
-  const applied = cleanupAppliedSandbox(id, state);
-  if (["failed", "refused"].includes(applied.status))
-    issues.push(`sandbox: ${applied.reason || applied.status}`);
-
-  // A worktree/copy can exist before createSingle persists it in runtime state
-  // (for example when copying the packet into a new worktree fails). Clean the
-  // one fixed Foundation-owned path as a fallback; never infer a broad target.
-  const expectedSandbox = join(ROOT, ".foundation", "sandboxes", id);
-  if (existsSync(expectedSandbox) && state.workspace?.path !== expectedSandbox) {
-    const metadata = join(expectedSandbox, ".git");
-    let mode = "copy";
-    try {
-      if (existsSync(metadata) && lstatSync(metadata).isFile()) mode = "worktree";
-    } catch { /* cleanup as a bounded copy when metadata disappeared */ }
-    const fallback = cleanupAppliedSandbox(id, {
-      workspace: { mode, path: expectedSandbox }
-    });
-    if (["failed", "refused"].includes(fallback.status))
-      issues.push(`unrecorded sandbox: ${fallback.reason || fallback.status}`);
-  }
-
-  for (const path of [
-    changePath(id), runtimePath(id), join(RECEIPTS, id),
-    join(EVIDENCE_VAULT, id), join(HANDOFFS, id), snapshotPath(id)
-  ]) {
-    try { rmSync(path, { recursive: true, force: true }); }
-    catch (error) { issues.push(`${path}: ${error.message}`); }
-  }
-  return issues;
-}
+const rollbackAtomicStart = rollbackAtomicStartOperation.bind(null, {
+  root: ROOT, readJson, runtimePath, changePath, snapshotPath, trapFailures,
+  selectedRepositories, cleanupRepositorySandboxes, cleanupAppliedSandbox,
+  ownedPaths: (id) => [join(RECEIPTS, id), join(EVIDENCE_VAULT, id), join(HANDOFFS, id)]
+});
 const approvalPackage = createApprovalPackageRuntime({
   root: ROOT,
   runtimeDir: RUNTIME,
@@ -2173,7 +2097,6 @@ const { advanceValue, advanceThrough, showAdvance } = createAdvanceRuntime({
   },
   issueSessionLease: sessionLeases.issue,
   changePath,
-  projectRoot: ROOT,
   assertApproval: (id, state, options) => assertSpecApproval(ROOT, id, state, options),
   inspectSnapshots,
   capture: trapFailures,

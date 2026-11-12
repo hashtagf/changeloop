@@ -13,6 +13,7 @@ import { taskAuthorityShape } from "../runtime/core/task-execution-authority.mjs
 import {
   createSessionLeaseRuntime, runTaskCheck, sessionLeaseOwner, taskCheck, taskLineChecked, tickTaskLine
 } from "../runtime/workflow/session-lease.mjs";
+import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 const stableHash = (value) => JSON.stringify(value).length.toString(16).padStart(12, "0");
 
@@ -369,7 +370,7 @@ test("an explicit acquire takes over the harness-held lease without completing i
 
 test("advance settles the previous session task before dispatching the next", async () => {
   const order = [];
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building", workspace: { path: "/tmp/change" } }),
     settleSessionLeases: () => { order.push("settle"); },
     issueSessionLease: (id, value) => { order.push("issue"); return { ...value, issued: true }; },
@@ -380,7 +381,7 @@ test("advance settles the previous session task before dispatching the next", as
     relevantHash: () => "workspace-a", deliveredAiAttempts: () => [],
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash
-  });
+  }));
   const value = await runtime.advanceThrough("demo", "build");
   assert.equal(value.action, "EDIT");
   assert.equal(value.issued, true);
@@ -621,7 +622,7 @@ function chainAdvance(root) {
   });
   const pending = () => ["T002", "T001"].filter((id) =>
     !taskLineChecked(readFileSync(ledger, "utf8"), id));
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime, saveRuntime,
     settleSessionLeases: session.settle, issueSessionLease: session.issue,
     agentDispatchValue: () => pending().length
@@ -637,7 +638,7 @@ function chainAdvance(root) {
     relevantHash: () => "workspace-a", deliveredAiAttempts: () => [],
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash
-  });
+  }));
   return { runtime, state: () => state };
 }
 

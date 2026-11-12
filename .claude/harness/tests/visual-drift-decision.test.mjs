@@ -11,6 +11,7 @@ import { providerCapability } from "../runtime/evidence/provider-catalog.mjs";
 import {
   visualDriftDecision, visualProviderConfig, visualWaiverSummary
 } from "../runtime/evidence/visual-review.mjs";
+import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 const difference = { id: "V1", screen: "settings", difference: "Save sits in the header",
   severity: "major", claimIds: ["C-a"] };
@@ -42,7 +43,7 @@ function fixture() {
     }
   };
   return {
-    runtime: () => createAdvanceRuntime(options),
+    runtime: () => createAdvanceRuntime(advanceRuntimeDeps(options)),
     state: () => structuredClone(stored),
     queue: (result) => results.push(result)
   };

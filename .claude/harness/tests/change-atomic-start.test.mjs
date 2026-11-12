@@ -19,6 +19,7 @@ import {
   CORE_DISCOVERY_DIMENSIONS, riskSignalDimensions, semanticIntakeIssues
 } from "../runtime/workflow/validation/semantic-intake.mjs";
 import { assertSpecApproval } from "../runtime/core/user-decisions.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 function writeJson(path, value) {
   mkdirSync(dirname(path), { recursive: true });
@@ -77,7 +78,7 @@ function fixture(t, { validationFailure = null, sandboxFailure = null, catalog =
   const draftPath = join(root, "draft.json");
   writeJson(draftPath, draft());
   const fail = (message) => { throw new Error(message); };
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root,
     policy: () => ({ workflow: { grounding: "optional" }, land: {} }),
     securityTerms: ["authentication"],
@@ -117,7 +118,7 @@ function fixture(t, { validationFailure = null, sandboxFailure = null, catalog =
       return [];
     },
     ...(catalog ? { repositoryCatalog: () => catalog(root) } : {})
-  });
+  }));
   return { root, changes, runtime, draftPath, lifecycle, calls, dirtyTarget };
 }
 

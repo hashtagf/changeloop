@@ -33,8 +33,23 @@ let contract = {
 };
 let executionProviders = { test: { capability: "test", criticalCases: ["CASE-WIRE"] } };
 let evidenceProviders = {};
+// The smallest Grounding v2 ledger: base fields plus N/A optional sections.
 const valid = () => ({
-  version: 1,
+  version: 2,
+  risk: { tier: "medium", classes: ["logic"], rationale: "bounded behavior change" },
+  productionEntry: {
+    status: "applicable", sourceReason: "runtime entry",
+    paths: [{ repository: "root", path: "production.mjs" }]
+  },
+  realWire: { status: "not-applicable", sourceReason: "no wire contract", contracts: [] },
+  activationSemantics: {
+    status: "not-applicable", sourceReason: "nothing activated",
+    activatedPaths: [], failureSemanticChanges: []
+  },
+  serviceInteractions: { status: "not-applicable", sourceReason: "in-process", rows: [] },
+  observability: { status: "not-applicable", sourceReason: "in-process", rows: [] },
+  criticalCases: [{ id: "CASE-WIRE", claimIds: ["claim-a"], oracle: "real-wire" }],
+  mutants: [],
   decisionBatch: {
     status: "locked", source: "user-batch", reference: "decision:1",
     mode: "single-batch", lockedAt: "2026-08-13T00:00:00Z",
@@ -139,8 +154,9 @@ try {
     .value.semanticInvariants[0].id, "INV-STABLE");
   state.semanticInvariantsRequired = false;
 
-  const invalidV1 = [
-    [(value) => { value.version = 4; }, /requires version 1, 2, or 3/],
+  const invalidBase = [
+    [(value) => { value.version = 4; }, /requires version 2 or 3/],
+    [(value) => { value.version = 1; }, /requires version 2 or 3/],
     [(value) => { value.decisionBatch.status = "open"; }, /status must be locked/],
     [(value) => { value.decisionBatch.source = "guess"; }, /decisionBatch.source/],
     [(value) => { value.decisionBatch.reference = ""; }, /reference is required/],
@@ -176,7 +192,7 @@ try {
     [(value) => { value.derivedFacts = {}; }, /derivedFacts must be an array/],
     [(value) => { value.derivedFacts = [{ fact: "", command: "" }]; }, /requires fact and command/]
   ];
-  for (const [mutate, expected] of invalidV1) {
+  for (const [mutate, expected] of invalidBase) {
     const value = valid();
     mutate(value);
     expectFailure(value, expected);
@@ -213,7 +229,7 @@ try {
   delete implicitRoot.claims[0].failurePaths[0].repository;
   delete implicitRoot.readSet[1].repository;
   writeGrounding(implicitRoot);
-  assert.equal(runtime.groundingValue("change-a", state, packet).value.version, 1,
+  assert.equal(runtime.groundingValue("change-a", state, packet).value.version, 2,
     "omitted grounding repositories resolve to the selected root repository");
 
   const failureWithoutBaseline = valid();

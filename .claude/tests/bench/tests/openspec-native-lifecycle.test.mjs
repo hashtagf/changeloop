@@ -166,7 +166,7 @@ test("phase prompts name the change, the delivered file and the boundaries", () 
   assert.match(stacked, /do not modify, amend, abandon or Land it/);
   const route = describeLandRoute(JSON.stringify({ action: "REPAIR", errorCode: "REPOSITORY_DELIVERY_FAILED",
     reason: "Land would overwrite an uncommitted target edit in 'backend': server.mjs",
-    instruction: "apply the named fix", resumeCommand: "claude-foundation advance c2 --through archived", noise: 1 }));
+    instruction: "apply the named fix", resume: "claude-foundation advance c2 --through archived", noise: 1 }));
   assert.match(route, /error REPOSITORY_DELIVERY_FAILED; reason: Land would overwrite/);
   assert.doesNotMatch(route, /noise/);
   assert.equal(describeLandRoute("plain failure text"), "plain failure text");

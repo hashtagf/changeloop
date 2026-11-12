@@ -206,8 +206,8 @@ Feedback ตรวจ validity จาก runtime ปัจจุบัน ส่
 | semantic intake state schema | 2 |
 | semantic amendment schema | 1 |
 | artifact defaults schema | 2 |
-| grounding schema | 1, 2, 3 |
-| advance protocol | 6 |
+| grounding schema | 2, 3 |
+| advance protocol | 7 |
 | provider protocol | 13 |
 | evidence schema | 2 |
 | packet schema | 12 |

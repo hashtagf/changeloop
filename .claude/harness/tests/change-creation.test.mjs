@@ -15,6 +15,7 @@ import {
   initialChangeState,
   priorChangeResidue
 } from "../runtime/workflow/change-lifecycle.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 const root = mkdtempSync(join(tmpdir(), "foundation-change-creation-"));
 const changesRoot = join(root, "openspec", "changes");
@@ -34,7 +35,7 @@ let states = [];
 const operationIds = [];
 const bindings = [];
 const fail = (message) => { throw new Error(message); };
-const lifecycle = createChangeLifecycle({
+const lifecycle = createChangeLifecycle(changeLifecycleDeps({
   root,
   policy: () => ({
     workflow: { grounding: groundingRequired ? "required" : "optional" },
@@ -61,7 +62,7 @@ const lifecycle = createChangeLifecycle({
   validate: () => {},
   createSandbox: () => {},
   showPacket: () => {}
-});
+}));
 
 const priorLog = console.log;
 const logs = [];

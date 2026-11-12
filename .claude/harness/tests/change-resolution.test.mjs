@@ -8,6 +8,7 @@ import {
 import { SECURITY_TERMS } from "../runtime/workflow/security-policy.mjs";
 import { semanticRapidCandidate } from "../runtime/workflow/semantic-draft.mjs";
 import { repositoryIntelligenceRequired } from "../runtime/workflow/validation/repository-intelligence.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 const root = mkdtempSync(join(tmpdir(), "foundation-change-resolution-"));
 const changeDir = join(root, "openspec", "changes", "change-1");
@@ -38,7 +39,7 @@ const baseState = () => ({
   acceptance: { decision: "undecided", required: false },
   contractRevision: 0
 });
-const lifecycle = createChangeLifecycle({
+const lifecycle = createChangeLifecycle(changeLifecycleDeps({
   root,
   policy: () => ({ workflow: { grounding, reviewPolicy }, land: { riskBasedCi } }),
   securityTerms: ["access", "auth token", "a+b"], fail,
@@ -50,7 +51,7 @@ const lifecycle = createChangeLifecycle({
   setOperationChangeId: () => {}, initialBudget: () => ({}), gitHead: () => "head",
   preexistingDirty: () => [], now: () => "2026-08-26T00:00:00.000Z",
   bindClaudeSession: () => {}, validate: () => {}, createSandbox: () => {}, showPacket: () => {}
-});
+}));
 const run = (flags = {}, overrides = {}) => {
   state = { ...baseState(), ...overrides };
   saved = null;
@@ -196,7 +197,7 @@ try {
   assert.equal(atomicStartPreflight(billingDraft).rapid, true);
   assert.equal(semanticRapidCandidate(billingDraft), true);
   assert.equal(repositoryIntelligenceRequired(billingDraft), false);
-  const shipped = createChangeLifecycle({
+  const shipped = createChangeLifecycle(changeLifecycleDeps({
     root, policy: () => ({ workflow: { grounding }, land: { riskBasedCi } }),
     securityTerms: SECURITY_TERMS, fail, pathInside: () => true, readJson: () => ({}),
     writeJson: () => {}, slugify: (value) => String(value), changePath: () => changeDir,
@@ -204,7 +205,7 @@ try {
     setOperationChangeId: () => {}, initialBudget: () => ({}), gitHead: () => "head",
     preexistingDirty: () => [], now: () => "2026-08-26T00:00:00.000Z",
     bindClaudeSession: () => {}, validate: () => {}, createSandbox: () => {}, showPacket: () => {}
-  });
+  }));
   state = { ...baseState(), intent: billingDraft.intent, schema: "foundation-rapid", securityTriggers: [] };
   output = "";
   shipped.resolveChange("change-1", { impact: "low", coupling: "isolated", security: "" });

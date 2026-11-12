@@ -2,7 +2,7 @@
 // the provider scheduler distinguishes a cycle from a failed dependency.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, writeFileSync, mkdirSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -18,6 +18,7 @@ import {
   providerExecutionNode
 } from "../../harness/runtime/evidence/provider-scheduler.mjs";
 import { createAgentPlanner } from "../../harness/runtime/workflow/agent-planning.mjs";
+import { agentPlannerDeps } from "../../harness/tests/fixtures/runtime-deps.mjs";
 
 test("findCyclePath returns null for an acyclic diamond", () => {
   assert.equal(findCyclePath(new Map([
@@ -67,7 +68,8 @@ test("execution node helpers filter valid receipts and classify availability", (
     playwrightAvailability: (workspace) => ({
       packageOwned: workspace !== "unowned", binaryAvailable: workspace !== "unavailable"
     }),
-    adapterResources: (provider) => [`resource:${provider}`]
+    adapterResources: (provider) => [`resource:${provider}`],
+    advisoryProviders: () => []
   };
   assert.deepEqual(neededExecutionProviders(context, "c", "hash"), ["needed"]);
   assert.equal(providerAvailabilityIssue(context, "c", "p", {
@@ -122,7 +124,8 @@ test("executionNodesOperation binds discovery outputs to their producer", () => 
     playwrightAvailability: () => ({ packageOwned: true, binaryAvailable: false }),
     evidence: () => ({ providers: configs }),
     providerCapability: (_provider, config) => config.capability,
-    adapterResources: (provider) => [`resource:${provider}`]
+    adapterResources: (provider) => [`resource:${provider}`],
+    advisoryProviders: () => []
   };
   const producer = discoveryProducer(
     "discovery", configs.discovery, configs, context.providerCapability);
@@ -252,7 +255,7 @@ test("provider scheduler attributes a failed covered output to its producer", as
 function planner(tasks, recordScheduler = () => {}, overrides = {}) {
   const changePath = mkdtempSync(join(tmpdir(), "dag-cycle-"));
   writeFileSync(join(changePath, "tasks.md"), "# Tasks\n");
-  return createAgentPlanner({
+  return createAgentPlanner(agentPlannerDeps({
     root: changePath,
     plans: changePath,
     runtime: join(changePath, "absent-runtime"),
@@ -285,7 +288,7 @@ function planner(tasks, recordScheduler = () => {}, overrides = {}) {
     modelForTask: () => ({ tier: "fast", family: "haiku" }),
     fail: (message) => { throw new Error(message); },
     ...overrides
-  });
+  }));
 }
 
 function plannerTask(id, dependsOn = []) {
@@ -325,7 +328,11 @@ test("completed task with abandoned lease is reverified without rewriting its ch
   const task = { ...plannerTask("T001"), done: true };
   const instance = planner([task], () => {}, {
     root,
-    readJson: (path) => JSON.parse(readFileSync(path, "utf8"))
+    readJson: (path) => JSON.parse(readFileSync(path, "utf8")),
+    taskLease: (changeId, taskId) => {
+      const lease = join(root, ".foundation", "leases", "tasks", changeId, `${taskId}.json`);
+      return existsSync(lease) ? JSON.parse(readFileSync(lease, "utf8")) : null;
+    }
   });
   const plan = instance.planValue("c1");
   assert.equal(task.done, true, "the source ledger is unchanged");

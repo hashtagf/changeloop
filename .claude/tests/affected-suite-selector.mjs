@@ -55,7 +55,7 @@ const RULES = [
   [/^\.claude\/hooks\//, ["current hook contracts", "phase mutation guard"]],
   [/phase-guard-policy|shell-mutation-policy|exec-runtime|semantic-amendment|semantic-draft|semantic-intake|semantic-source-inventory|semantic-intake-intelligence|repository-intelligence|investigation-runtime|amendment-invalidation|selective-proof-plan|change-lifecycle/,
     ["lifecycle safety mutation"]],
-  [/configured-reviewer|codex-reviewer|review-protocol|review-attempt-store/,
+  [/configured-reviewer|review-protocol|review-attempt-store/,
     REVIEW],
   [/handoff-runtime|handoff-policy/, ["external operation handoff", ...LAND]],
   [/authority-runtime|proof-advance|review-repair-closure/,
@@ -69,7 +69,7 @@ const RULES = [
     "evidence binding mutation", "workspace surface", "git-ignored surface",
     "sandbox data-loss guards"
   ]],
-  [/runtime\/evidence\/(?!configured-reviewer|codex-reviewer|review-protocol|review-attempt-store)/, [
+  [/runtime\/evidence\/(?!configured-reviewer|review-protocol|review-attempt-store)/, [
     ...EVIDENCE, ...REVIEW, "land surface", "evidence binding mutation"
   ]],
   [/runtime\/workflow\/(?:land|apply|sandbox)/, [

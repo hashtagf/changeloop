@@ -54,7 +54,7 @@ dispatch has its own timeout. See [WORKFLOW.md](../../WORKFLOW.md) for the user 
 Every phase view is derived from one versioned execution contract. Semantic
 draft v5 (and v4) validates typed-risk discovery coverage (optional for ordinary changes) and decision prerequisites,
 then compiles meaningful keys into stable cross-ledger IDs and writes only
-the OpenSpec artifacts the change needs. After Change, protocol-v6 `advance`
+the OpenSpec artifacts the change needs. After Change, protocol-v7 `advance`
 is the normal model-facing entrypoint; primitive commands remain compatible
 operator and integration tools. It compiles
 risk, required providers, external authority, workspace mutation capability,
@@ -184,7 +184,7 @@ the upstream repository uses those names for its own maintainer guidance.
 | Workflow | `runtime/workflow/validation/amendment-invalidation.mjs` | Selective claim, task, provider, approval, and proof invalidation planning |
 | Workflow | `runtime/workflow/validation/selective-proof-plan.mjs` | Fail-closed receipt preservation and exact post-amendment proof recovery |
 | Workflow | `runtime/workflow/semantic-amendment.mjs` | Transactional Build-time agreement amendments that preserve canonical prose and completed work |
-| Workflow | `runtime/workflow/advance-runtime.mjs` | Protocol-v6 deterministic chaining, durable recovery decisions, owner outcomes, and safe user projection |
+| Workflow | `runtime/workflow/advance-runtime.mjs` | Protocol-v7 deterministic chaining, durable recovery decisions, owner outcomes, and safe user projection |
 | Workflow | `runtime/workflow/change-validation.mjs` | Traceability, change validation, and provider requirements |
 | Workflow | `runtime/workflow/land-journal.mjs` | Atomic apply identity, journal, rollback, verification, and cleanup |
 | Workflow | `runtime/workflow/land-runtime.mjs` | Multi-repository Land readiness, planning, pointers, and resume saga |

@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   looksMutatingShellCommand, mutatingShellOperations, normalizeHarnessCliInvocations,
   pinShellAnchor, shellMutationViolation
-} from "../../hooks/phase-guard-policy.mjs";
+} from "../../harness/runtime/core/shell-mutation-policy.mjs";
 
 const LAND_REFUSAL = "Land shell mutations require the runtime transaction marker; " +
   "Land writes the target itself, and Prove already ran the checks in the isolated workspace";

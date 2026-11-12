@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { nextCommand } from "./next-step.mjs";
 import { deriveChangeProjection } from "./state-projections.mjs";
+import { legacyLandSagaLine, legacyLandSagaMarkers } from "./legacy-land-saga.mjs";
 import { upgradeCompatibilityDiagnostics } from "./update-advisory.mjs";
 
 export function shouldReportOutOfBandDelivery(state, delivery) {
@@ -26,6 +27,10 @@ export function changeListingRow(id, {
       return `${id}\tinvalid-runtime-json\tunknown\tclaude-foundation change abandon ${id} --reason <reason> --decision-ref <ref>`;
   }
 
+  // A change stuck in the retired commit-based Land saga is never projected;
+  // its inspect route returns the recovery decision.
+  if (legacyLandSagaMarkers(state).length)
+    return `${id}\tlegacy-land-saga\t${state.schema || "unknown"}\tclaude-foundation advance ${id} --inspect`;
   const proof = pathExists(proofPath(id)) ? readJson(proofPath(id), {}) : null;
   let current = null;
   if (state.status !== "untracked") {
@@ -285,13 +290,22 @@ export function createDiagnosticsRuntime({
       name: "packet-policy",
       detail: `task=${modelPolicy.execution.packetBytes.task}; review=${modelPolicy.execution.packetBytes.review}; repository=${modelPolicy.execution.packetBytes.repository}; global=${modelPolicy.execution.packetBytes.global}`
     });
+    const activeStates = activeChanges()
+      .map((id) => readJsonOrNull(runtimePath(id)))
+      .filter(Boolean);
     const upgradeDiagnostics = upgradeCompatibilityDiagnostics({
       currentVersion: version,
       configuredPolicy: readJson(join(root, "foundation.json"), {}),
-      activeChanges: activeChanges()
-        .map((id) => readJsonOrNull(runtimePath(id)))
-        .filter(Boolean)
+      activeChanges: activeStates
     });
+    for (const state of activeStates) {
+      const markers = legacyLandSagaMarkers(state);
+      if (markers.length) checks.push({
+        level: flags.change === state.id ? "error" : "warn",
+        name: `legacy-land-saga:${state.id}`,
+        detail: legacyLandSagaLine(state.id, markers)
+      });
+    }
     for (const finding of upgradeDiagnostics.policyFindings) checks.push({
       level: "warn",
       name: `upgrade-policy:${finding.code}`,
@@ -339,6 +353,9 @@ export function createDiagnosticsRuntime({
         name: `change:${requestedChange}`,
         detail: `${requestedOrphan.reason}; restore openspec/changes/${requestedChange} or retire it with 'claude-foundation change abandon ${requestedChange} --reason <reason> --decision-ref <ref>', which quarantines the runtime state for you`
       });
+    } else if (requestedChange &&
+        legacyLandSagaMarkers(readJsonOrNull(runtimePath(requestedChange))).length) {
+      // Reported as an error above; its per-change checks assume current Land.
     } else if (requestedChange) {
       const state = loadRuntime(requestedChange);
       const compiled = executionContract?.(requestedChange) || null;

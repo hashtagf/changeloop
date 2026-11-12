@@ -357,7 +357,7 @@ test("the landed-conflict stop names the sandbox copies and the resolve route", 
     { repository: "backend", path: "server.mjs" }, { repository: "backend", path: "store.mjs" }]);
   assert.match(action.instruction, /sandbox sync --resolve/);
   assert.equal(action.resolveCommand, "claude-foundation sandbox sync demo --resolve server.mjs,store.mjs");
-  assert.equal(action.resumeCommand, "claude-foundation advance demo --through archived");
+  assert.equal(action.resume, "claude-foundation advance demo --through archived");
   const root = landedConflictStop({ changeId: "demo", paths: ["x.txt"] });
   assert.doesNotMatch(root.decision.summary, /repository/);
 });

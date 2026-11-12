@@ -20,6 +20,7 @@ import { intakeDecisions } from "../runtime/workflow/validation/reader-guide.mjs
 import { classifyReviewRisk } from "../runtime/evidence/review-routing.mjs";
 import { planSemanticIntakeDepth } from
   "../runtime/workflow/validation/semantic-intake-intelligence.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 function source(overrides = {}) {
   return {
@@ -608,7 +609,7 @@ function project(t, { config = null } = {}) {
     writeFileSync(join(templates, "spec.md"), "## ADDED Requirements\n");
   }
   if (config !== null) writeFileSync(join(root, "openspec", "config.yaml"), config);
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root,
     policy: () => ({ workflow: { grounding: "optional" }, land: {} }),
     securityTerms: [],
@@ -629,7 +630,7 @@ function project(t, { config = null } = {}) {
       rmSync(join(runtime, `${id}.json`), { force: true });
       return [];
     }
-  });
+  }));
   const packet = (name) => join(changes, "refund-api", name);
   return { root, changes, runtime, lifecycle, packet };
 }

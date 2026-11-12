@@ -360,6 +360,26 @@ export function otherLandedOutput({ transactions, changeId, readJson }) {
   return output;
 }
 
+// Issues and notices must judge the same edits: bytes a Land wrote (this
+// change's, or another change's landed but uncommitted diff) are not edits
+// made outside the sandbox. Both views read this one computation.
+export function targetEditsForState({
+  root, transactions, readJson, transactionJournals, preexistingDirty, trapFailures,
+  canonicalChangedSurface
+}, state) {
+  const landedElsewhere = Object.fromEntries(Object.entries(otherLandedOutput({
+    transactions, changeId: state.id, readJson
+  })).map(([path, row]) => [path, row.after]));
+  return targetEditIssues({
+    root, state, dirtyNow: preexistingDirty(root),
+    landOutput: { ...landedElsewhere, ...landAppliedOutput(transactionJournals(state.id)) },
+    // Only the paths this change's Land would apply can stop it.
+    // An unresolvable surface throws (trapped) and the stop stays fail-closed.
+    projectionPaths: () => trapFailures(() => new Set(canonicalChangedSurface(state.id, state)
+      .filter((row) => (row.repositoryId || "root") === "root").map((row) => row.path)))
+  });
+}
+
 // The subset of `paths` whose target bytes are still exactly what an earlier
 // change landed: path -> landing change id.
 export function landedTargetPaths({ root, paths, landed, identity }) {

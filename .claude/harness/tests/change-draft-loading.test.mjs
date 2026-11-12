@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import {
   atomicStartPreflight, createChangeLifecycle, synchronizeProposalClassification
 } from "../runtime/workflow/change-lifecycle.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 // Draft loading boundaries that remain once only semantic drafts v4/v5 are
 // accepted: path containment, retired versions, and the atomic-start
@@ -16,7 +17,7 @@ const writeDraft = (value) => {
   return "draft.json";
 };
 const fail = (message) => { throw new Error(message); };
-const lifecycle = createChangeLifecycle({
+const lifecycle = createChangeLifecycle(changeLifecycleDeps({
   root,
   policy: () => ({ workflow: { grounding: "optional" } }),
   securityTerms: [], fail,
@@ -31,7 +32,7 @@ const lifecycle = createChangeLifecycle({
   initialBudget: () => ({}), gitHead: () => "head", preexistingDirty: () => [],
   now: () => "2026-08-26T00:00:00.000Z", bindClaudeSession: () => {},
   validate: () => {}, createSandbox: () => {}, showPacket: () => {}
-});
+}));
 
 // The compiled shape atomicStartPreflight reads.
 const compiled = () => ({

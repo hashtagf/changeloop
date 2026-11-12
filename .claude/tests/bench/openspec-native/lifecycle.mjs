@@ -79,7 +79,7 @@ export function describeLandRoute(stdout) {
   if (!value || typeof value !== "object") return String(stdout || "").trim().slice(0, 600) || "no output";
   return [value.action && `action ${value.action}`, value.errorCode && `error ${value.errorCode}`,
     value.reason && `reason: ${value.reason}`, value.instruction && `instruction: ${value.instruction}`,
-    value.resumeCommand && `resume: ${value.resumeCommand}`].filter(Boolean).join("; ").slice(0, 1200);
+    value.resume && `resume: ${value.resume}`].filter(Boolean).join("; ").slice(0, 1200);
 }
 
 export function landPrompt(changeId, landedChangeId, landRoute) {

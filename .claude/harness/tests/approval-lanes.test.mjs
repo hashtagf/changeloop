@@ -8,6 +8,7 @@ import { createChangeLifecycle } from "../runtime/workflow/change-lifecycle.mjs"
 import { agreementIdentity, assertSpecApproval, missingApprovalLanes } from "../runtime/core/user-decisions.mjs";
 import { approvalPolicyIssue } from "../runtime/core/runtime-environment.mjs";
 import { routeForState } from "../runtime/workflow/approval-package.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 // The lifecycle records consent; assertSpecApproval is the gate every Build,
 // sandbox, and Land path calls, so a lane gap must stop it.
@@ -25,13 +26,13 @@ function fixture(t, { configured = ["tech-lead", "qa"], required = configured, s
   writeFileSync(statePath, JSON.stringify({ id, status: "change", contractRevision: 0,
     specApproval: { required: true }, ...state }));
   const loadRuntime = () => JSON.parse(readFileSync(statePath, "utf8"));
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root, policy: () => ({}), fail: (message) => { throw new Error(message); },
     loadRuntime, saveRuntime: (value) => writeFileSync(statePath, JSON.stringify(value)),
     validate: () => {}, now: () => "2026-10-18T00:00:00.000Z",
     changePath: () => packet, activeChangePath: () => packet,
     approvalLanes: () => ({ configured, required })
-  });
+  }));
   const approve = (flags) => {
     const log = console.log;
     console.log = () => {};

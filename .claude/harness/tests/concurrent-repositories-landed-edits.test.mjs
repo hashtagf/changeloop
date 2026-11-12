@@ -50,7 +50,7 @@ test("a merge that drops a landed edit outside the conflicting lines stops Land 
     assert.equal(stop.boundary, "conflict");
     assert.deepEqual(stop.details.conflicts.map((row) => [row.repository, row.path, row.landedBy]),
       [["backend", "shared.txt", w.ids.alpha]], "the stop names the repository, the path and the landed change");
-    assert.equal(stop.resumeCommand, `claude-foundation advance ${w.ids.bravo} --through archived`);
+    assert.equal(stop.resume, `claude-foundation advance ${w.ids.bravo} --through archived`);
     assert.equal(w.read("backend/shared.txt"), landed, "the landed bytes are untouched");
     assert.notEqual(status(w, "bravo"), "archived");
   } finally { cleanup(w); }

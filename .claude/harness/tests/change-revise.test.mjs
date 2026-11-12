@@ -11,6 +11,7 @@ import {
 } from "../runtime/workflow/change-lifecycle.mjs";
 import { acquireProcessLock } from "../runtime/core/process-lock.mjs";
 import { assertSpecApproval, missingApprovalLanes } from "../runtime/core/user-decisions.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 function writeJson(path, value) {
   mkdirSync(dirname(path), { recursive: true });
@@ -90,7 +91,7 @@ function fixture(t, { approvalLanes = undefined, decisionGateNotice = undefined 
     writeFileSync(join(templates, "spec.md"), "## ADDED Requirements\n");
   }
   const draftPath = join(root, "draft.json");
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root,
     ...(approvalLanes ? { approvalLanes } : {}),
     ...(decisionGateNotice ? { decisionGateNotice } : {}),
@@ -121,7 +122,7 @@ function fixture(t, { approvalLanes = undefined, decisionGateNotice = undefined 
     measureStage: (_stage, operation) => operation(),
     trapFailures: (operation) => operation(),
     rollbackStart: () => []
-  });
+  }));
   const start = (value = semanticDraft()) => {
     writeJson(draftPath, value);
     lifecycle.startAtomic(draftPath);

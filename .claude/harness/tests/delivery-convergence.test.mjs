@@ -19,6 +19,7 @@ import { archivedResumeSource, resumePacketValue } from "../runtime/workflow/res
 import { createPacketRuntime } from "../runtime/workflow/packet-runtime.mjs";
 import { createReceiptValidity } from "../runtime/evidence/receipt-validity.mjs";
 import { reviewEvidenceRecovery } from "../runtime/evidence/proof-readiness.mjs";
+import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 const stableHash = (value) => JSON.stringify(value);
 
@@ -248,7 +249,7 @@ function fixture({ status = "building", proofCursor = {}, runProof, runLand } = 
     workspace: { path: "/sandbox", mode: "worktree", baseHead: "base" },
     repositories: {}
   };
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state,
     agentDispatchValue: () => ({ action: "build-complete" }),
     relevantHash: () => "workspace-a",
@@ -264,7 +265,7 @@ function fixture({ status = "building", proofCursor = {}, runProof, runLand } = 
     runLand,
     capture: (operation) => operation(),
     captureAsync: (operation) => operation()
-  });
+  }));
   return { runtime, state };
 }
 
@@ -366,7 +367,7 @@ test("review preparation stays internal and preserves actual preflight decisions
   let runs = 0;
   const requests = [];
   const command = "claude-foundation authority run change-a --request review-1";
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => base.state,
     agentDispatchValue: () => base.dispatch,
     proofReadinessValue: () => preflight,
@@ -379,7 +380,7 @@ test("review preparation stays internal and preserves actual preflight decisions
       requests.push({ requestId: "review-1", type: "review", status: "requested" });
       return { status: "WAITING_EXTERNAL", requests, next: [{ requestId: "review-1", command }] };
     }
-  });
+  }));
   assert.equal((await runtime.advanceThrough("change-a", "build")).reached, "build");
   assert.equal(runs, 0, "partial Build target cannot begin proof or review");
   const prepared = await runtime.advanceThrough("change-a", "proven");
@@ -504,7 +505,7 @@ test("resume projects current revisions, dependency frontier and live ownership 
 
 test("inspection propagates to dispatch and readiness without running lifecycle work", async () => {
   let actions = 0;
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building" }),
     agentDispatchValue: (_id, options) => {
       assert.equal(options.inspect, true);
@@ -519,7 +520,7 @@ test("inspection propagates to dispatch and readiness without running lifecycle 
     proofAdvancePath: () => "/unused", stableHash, output: () => {},
     runProof: () => { actions++; }, runLand: () => { actions++; },
     prepareBuild: () => { actions++; }, recordPhase: () => { actions++; }
-  });
+  }));
   const result = await runtime.showAdvance("change-a", { inspect: true });
   assert.equal(result.action, "RUN_EXTERNAL");
   assert.equal(actions, 0);
@@ -659,7 +660,7 @@ test("Build preparation is re-entered after a setup repair boundary", async () =
     workspace: { path: "/sandbox", mode: "worktree", baseHead: "base" },
     repositories: {}
   };
-  const retrying = createAdvanceRuntime({
+  const retrying = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state,
     agentDispatchValue: () => ({ action: "run-in-session", tasks: ["T1"],
       allowedPaths: ["src/**"] }),
@@ -670,7 +671,7 @@ test("Build preparation is re-entered after a setup repair boundary", async () =
     prepareBuild: async () => { preparations += 1; },
     capture: (operation) => operation(),
     captureAsync: (operation) => operation()
-  });
+  }));
   await retrying.advanceThrough("change-a", "build");
   assert.equal(preparations, 1);
   // Keep the original fixture referenced so this test also exercises factory

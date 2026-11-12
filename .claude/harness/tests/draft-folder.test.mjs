@@ -10,6 +10,7 @@ import {
 } from "../runtime/workflow/change-lifecycle.mjs";
 import { groundingFromQuality } from "../runtime/workflow/validation/quality-fields.mjs";
 import { expandMinimalSemanticDraft, isMinimalSemanticDraft } from "../runtime/workflow/semantic-draft.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 function folder(files) {
   const dir = mkdtempSync(join(tmpdir(), "foundation-draft-folder-"));
@@ -108,7 +109,7 @@ test("Thai headings are accepted and unknown ones list Thai headings when langua
 });
 
 function lifecycleAt(root) {
-  return createChangeLifecycle({
+  return createChangeLifecycle(changeLifecycleDeps({
     root, policy: () => ({ workflow: {} }), securityTerms: [],
     fail: (message) => { throw new Error(message); },
     pathInside: (parent, candidate) => {
@@ -122,7 +123,7 @@ function lifecycleAt(root) {
     initialBudget: () => ({}), gitHead: () => "head", preexistingDirty: () => [],
     now: () => "2026-10-15T00:00:00.000Z", bindClaudeSession: () => {},
     validate: () => {}, createSandbox: () => {}, showPacket: () => {}
-  });
+  }));
 }
 
 test("draftSource accepts a directory and surfaces folder issues as draft validation", (t) => {
@@ -279,7 +280,7 @@ function startProject(t) {
     writeFileSync(join(templates, "design.md"), "# Design for <title>\n");
     writeFileSync(join(templates, "spec.md"), "## ADDED Requirements\n");
   }
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root,
     policy: () => ({ workflow: { grounding: "optional" }, land: {} }),
     securityTerms: [],
@@ -300,7 +301,7 @@ function startProject(t) {
       rmSync(join(runtime, `${id}.json`), { force: true });
       return [];
     }
-  });
+  }));
   return { root, changes, lifecycle };
 }
 

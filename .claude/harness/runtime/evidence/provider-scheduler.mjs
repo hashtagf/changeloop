@@ -9,7 +9,6 @@ const ADVISORY_CURRENT = new Set([
 ]);
 
 export function advisoryExecutionProviders(context, id, hash) {
-  if (!context.advisoryProviders) return [];
   try {
     const required = new Set(context.requiredProviders(id));
     return context.advisoryProviders(id).filter((provider) => !required.has(provider) &&
@@ -143,13 +142,13 @@ export function createProviderScheduler({
   logError = console.error,
   maxParallelProviders,
   recordScheduler,
-  timestamp,
-  // (id) => provider ids that run for their report only (an advisory
-  // prototype binding's visual provider). Defaults to the contract's own.
-  advisoryProviders = (id) => advisoryVisualProviders({
-    evidence, providerConfig, providerCapability, requiredProviders
-  }, id)
+  timestamp
 }) {
+  // Provider ids that run for their report only (an advisory prototype
+  // binding's visual provider).
+  const advisoryProviders = (id) => advisoryVisualProviders({
+    evidence, providerConfig, providerCapability, requiredProviders
+  }, id);
   const executionNodeContext = {
     requiredProviders, receiptValidity, providerConfig, commandExists,
     providerWorkspace, playwrightAvailability, evidence, providerCapability,

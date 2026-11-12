@@ -13,7 +13,7 @@ import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import {
   looksMutatingShellCommand, normalizeHarnessCliInvocations, pinShellAnchor,
   shellMutationViolation
-} from "./phase-guard-policy.mjs";
+} from "../harness/runtime/core/shell-mutation-policy.mjs";
 import { recordedPhaseContext } from "./phase-state.mjs";
 import { devPrompt } from "./dev-terminal-guard.mjs";
 import {

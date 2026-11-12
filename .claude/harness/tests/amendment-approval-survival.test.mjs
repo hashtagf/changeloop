@@ -8,6 +8,7 @@ import { createChangeLifecycle } from "../runtime/workflow/change-lifecycle.mjs"
 import {
   agreementIdentity, amendedAgreementMatches, assertSpecApproval, snapshotAmendedPacket
 } from "../runtime/core/user-decisions.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 const ROOT_TASKS = "## 1\n- [ ] T001 Verify [paths: go-deposit/**] — verify: `go test ./...`\n";
 const AMENDED_TASKS = "## 1\n- [ ] T001 Verify [paths: go-deposit/**] — verify: `cd go-deposit && go test ./...`\n";
@@ -44,14 +45,14 @@ function fixture(t, { bookkeepingBumps = 1 } = {}) {
   };
   writeFileSync(statePath, JSON.stringify(state));
   const loadRuntime = () => JSON.parse(readFileSync(statePath, "utf8"));
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root, policy: () => ({}), fail: (message) => { throw new Error(message); },
     loadRuntime, saveRuntime: (value) => writeFileSync(statePath, JSON.stringify(value)),
     validate: () => {}, now: () => "2026-10-28T00:00:00.000Z",
     changePath: () => join(root, "openspec", "changes", id),
     activeChangePath: () => sandboxPacket,
     approvalLanes: () => ({ configured: [], required: [] })
-  });
+  }));
   const approve = () => {
     const log = console.log;
     const error = console.error;

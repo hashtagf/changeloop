@@ -25,7 +25,7 @@ const PRIMITIVE_COMMAND =
   /claude-foundation\s+(proof|land|sandbox|evidence)\s+(?:run|advance|execute|collect|finalize|check|apply|recover|archive|sync|create|copy-path|init|upgrade)\b[^'"`\n;]*/g;
 
 function routeThrough(value) {
-  return String(value?.resume || value?.resumeCommand || "")
+  return String(value?.resume || "")
     .match(/--through (build|proven|archived)/)?.[1] || null;
 }
 

@@ -18,6 +18,7 @@ import {
   renderDraftTasks
 } from "../runtime/workflow/change-lifecycle.mjs";
 import { loadDraftFolder } from "../runtime/workflow/draft-folder.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 const draft = () => ({
   title: "Draft title", why: "Because", changes: ["One", "Two"],
@@ -104,14 +105,14 @@ function lifecycleFixture(t, schema) {
     writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
   };
   writeJson(join(root, "evidence.yaml"), { version: 1, claims: [] });
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root, policy: () => ({ workflow: {} }), securityTerms: [],
     fail: (message) => { throw new Error(message); },
     pathInside: () => true,
     readJson: (path) => JSON.parse(readFileSync(path, "utf8")), writeJson,
     slugify: (name) => name.toLowerCase().replaceAll(" ", "-"),
     changePath: () => root, loadRuntime: () => state
-  });
+  }));
   return { root, lifecycle };
 }
 
@@ -288,7 +289,7 @@ function completeProject(t) {
   }
   mkdirSync(join(root, "openspec", "specs", "refund-api"), { recursive: true });
   writeFileSync(join(root, "openspec", "specs", "refund-api", "spec.md"), MODIFIED_BASE_SPEC);
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root,
     policy: () => ({ workflow: { grounding: "optional" }, land: {} }),
     securityTerms: [],
@@ -309,7 +310,7 @@ function completeProject(t) {
       rmSync(join(runtime, `${id}.json`), { force: true });
       return [];
     }
-  });
+  }));
   return { root, changes, lifecycle };
 }
 

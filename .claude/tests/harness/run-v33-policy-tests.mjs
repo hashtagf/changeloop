@@ -14,12 +14,13 @@ import {
 } from "../../harness/runtime/evidence/adapter-runtime.mjs";
 import { providerEvidencePolicy, providerReceiptWriterConflicts } from
   "../../harness/runtime/evidence/evidence-contract.mjs";
-import { createCodexReviewerRuntime } from "../../harness/runtime/evidence/codex-reviewer.mjs";
+import { createConfiguredReviewerRuntime } from "../../harness/runtime/evidence/configured-reviewer.mjs";
 import { createRuntimeEnvironment } from "../../harness/runtime/core/runtime-environment.mjs";
 import { effectiveReviewAttemptLimit } from "../../harness/runtime/core/authority-policy.mjs";
 import { createChangeLifecycle } from "../../harness/runtime/workflow/change-lifecycle.mjs";
 import { taskBlocks, taskMetadata } from "../../harness/runtime/contracts/change-artifacts.mjs";
 import { emptyRootDiffPermitted } from "../../harness/runtime/workflow/apply-runtime.mjs";
+import { changeLifecycleDeps } from "../../harness/tests/fixtures/runtime-deps.mjs";
 
 function pass(label) { process.stdout.write(`PASS: ${label}\n`); }
 
@@ -118,7 +119,7 @@ let reopenState = {
   groundingDigest: "prior-grounding-digest", groundingLockedAt: "2026-08-14T00:00:00Z",
   acceptance: { decision: "not-required", required: false }
 };
-const lifecycle = createChangeLifecycle({
+const lifecycle = createChangeLifecycle(changeLifecycleDeps({
   root: tmpdir(), policy: () => ({ workflow: { grounding: "required" } }),
   securityTerms: [], fail: (message) => { throw new Error(message); },
   pathInside: () => true, readJson: () => ({}), writeJson: () => {},
@@ -128,7 +129,7 @@ const lifecycle = createChangeLifecycle({
   preexistingDirty: () => ({}), now: () => "2026-08-14T01:00:00Z",
   bindClaudeSession: () => {}, validate: () => {}, createSandbox: () => {},
   showPacket: () => {}
-});
+}));
 const originalLog = console.log;
 console.log = () => {};
 try {
@@ -301,7 +302,7 @@ process.stdout.write(JSON.stringify({ type: "thread.started", thread_id: "thread
       sandbox: "read-only", ephemeral: true, timeoutMs: 10_000
     } }
   } });
-  const runtime = createCodexReviewerRuntime({
+  const runtime = createConfiguredReviewerRuntime({
     root: fixture, foundationPolicy: policy,
     commandExists: (command) => existsSync(command),
     now: () => "2026-08-14T00:00:00.000Z",

@@ -48,9 +48,10 @@ export function createSourceCohortProvider({
   runtimeVersion,
   protocolBundle,
   directory,
-  scope = ".claude/harness",
   digest = runtimeSourceDigest
 }) {
+  // Telemetry names the shipped runtime tree the digest covers.
+  const scope = ".claude/harness";
   let cached;
   return () => {
     if (cached) return cached;

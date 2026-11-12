@@ -18,6 +18,7 @@ import {
   COPY_BASE_MAX_BYTES, captureCopyBase, captureCopyBaseSurface, copyBaseBytes, copyBaseStore,
   fileSource
 } from "../runtime/workflow/copy-base.mjs";
+import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 const digest = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
 const fail = (message) => { throw new Error(message); };
@@ -222,7 +223,7 @@ test("advance settles a copy conflict once the agent's merge is provable, never 
     const workspaceHash = () => digest(join(fixture.sandbox, "merge.txt"));
     let provenHash = workspaceHash();
     let proofs = 0;
-    const runtime = () => createAdvanceRuntime({
+    const runtime = () => createAdvanceRuntime(advanceRuntimeDeps({
       loadRuntime: () => structuredClone(stored),
       saveRuntime: (value) => { stored = structuredClone(value); },
       agentDispatchValue: () => ({ action: "build-complete" }), relevantHash: workspaceHash,
@@ -242,7 +243,7 @@ test("advance settles a copy conflict once the agent's merge is provable, never 
         stored = { ...stored, status: "archived" };
         return { archived: true };
       }
-    });
+    }));
     const conflicted = await runtime().advanceThrough("demo", "archived");
     assert.equal(conflicted.legacyAction, "REPAIR_SYNC_CONFLICT");
     // An edit that drops the target's change never settles.

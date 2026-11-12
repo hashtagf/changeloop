@@ -9,6 +9,7 @@ import { agreementDriftError, agreementIdentity, agreementRestoredNotice, assert
 import { advanceFailureAction, createAdvanceRuntime } from "../runtime/workflow/advance-runtime.mjs";
 import { drainSignals } from "../runtime/core/signals.mjs";
 import { workspaceCapabilityValue } from "../runtime/core/execution-contract.mjs";
+import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 // Provider wiring is evidence configuration: editing it reruns that provider,
 // but which providers exist and every claim still need consent.
@@ -150,7 +151,7 @@ test("waivers expire on changed product or agreement without rewriting findings"
 test("an old expired review window never stops advance or asks the user", () => {
   const state = { status: "building", reviewWindow: { deadline: "2026-09-09T00:30:00Z" },
     reviewWindowHistory: [{ deadline: "2026-09-09T00:00:00Z", decisionRef: "harness://auto-extend/review-window/1" }] };
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state,
     saveRuntime: assert.fail,
     nowMs: () => Date.parse("2026-09-10T00:00:00Z"),
@@ -158,7 +159,7 @@ test("an old expired review window never stops advance or asks the user", () => 
     authorityStatusValue: () => ({ requests: [{ type: "review", status: "requested" }] }),
     relevantHash: () => "w", deliveredAiAttempts: () => [],
     readJson: () => ({}), proofAdvancePath: () => "/missing", stableHash: (value) => JSON.stringify(value)
-  });
+  }));
   const action = runtime.advanceValue("demo");
   assert.notEqual(action.boundary, "review-time-exhausted");
   assert.notEqual(action.decision?.kind, "REVIEW_TIME_EXHAUSTED");

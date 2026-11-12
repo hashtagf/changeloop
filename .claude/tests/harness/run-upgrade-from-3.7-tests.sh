@@ -139,6 +139,16 @@ old_start "$A" archived "$(v4_draft archived low)"
 $OLDA advance archived --through "$TARGET_STAGE" >/dev/null
 
 old_start "$A" v3-building "$(v4_draft v3-building low | jq -c 'del(.discovery) | .version = 3')"
+# A change 3.7.0 left inside the retired commit-based Land saga. Its CLI can
+# only continue a saga an older release started, so the saga fields that
+# `land record` / `land pointers` wrote are added to a real 3.7.0 change.
+old_start "$A" saga-stuck "$(v4_draft saga-stuck low)"
+jq '.repositories.api = {mode:"worktree",baseHead:"api-base",
+      land:{commit:"a1b2c3",status:"child-landed",
+        authority:{kind:"host-user-decision",reference:"fixture://user/land-api"}}}
+    | .land = {strategy:"ordered-resumable-saga",status:"root-pointers-staged"}' \
+  "$A/.foundation/runtime/saga-stuck.json" > "$TMP/saga-stuck.json"
+cp "$TMP/saga-stuck.json" "$A/.foundation/runtime/saga-stuck.json"
 old_start "$A" v1-building "$(v1_draft v1-building)"
 
 # Unstarted drafts in every version 3.7.0 accepted.
@@ -161,9 +171,17 @@ assert_eq "3.7.0 started a change from a v3 draft" "3" \
   "$(jq -r .semanticDraftVersion "$A/.foundation/runtime/v3-building.json")"
 assert_eq "3.7.0 started a change from a v1 draft" "building" "$(status_of "$A" v1-building)"
 
+for shim in .claude/harness/runtime/evidence/codex-reviewer.mjs .claude/hooks/phase-guard-policy.mjs; do
+  assert_file_exists "3.7.0 shipped the pass-through module $shim" "$A/$shim"
+done
 upgrade="$(bash "$ROOT/install.sh" "$A" --source "$ROOT" --yes)"
 assert_contains "upgrade reports the in-flight 3.7.0 changes" "$upgrade" \
   "active-change-effects:review-pending"
+assert_contains "upgrade names the change stuck in the retired Land saga" "$upgrade" \
+  "active-change-effects:saga-stuck status=building changed=false; state-preserved,retired-commit-based-land-saga-refused"
+for shim in .claude/harness/runtime/evidence/codex-reviewer.mjs .claude/hooks/phase-guard-policy.mjs; do
+  assert_file_absent "upgrade removes the retired pass-through module $shim" "$A/$shim"
+done
 CLI="bash $ROOT/cli.sh --project $A"
 assert_contains "upgraded CLI reports the current version" "$($CLI version)" "$(cat "$ROOT/VERSION")"
 changes="$($CLI changes)"
@@ -171,6 +189,24 @@ for change in building proven reviewed review-pending v3-building v1-building; d
   assert_contains "changes lists the 3.7.0 change $change" "$changes" "$change"
 done
 assert_cmd_zero "doctor accepts the upgraded 3.7.0 project" $CLI doctor --stage build
+assert_contains "changes marks the retired-saga change" "$changes" \
+  "saga-stuck	legacy-land-saga	"
+
+# The retired Land saga is refused with the recovery, never replayed; the
+# abandon route it names retires the change.
+saga_state="$(shasum -a 256 < "$A/.foundation/runtime/saga-stuck.json")"
+refused="$($CLI advance saga-stuck --through archived)"
+assert_eq "advance asks the user about the retired-saga change" "ASK_USER" "$(action_of "$refused")"
+assert_eq "the refusal is the legacy-land-saga decision" "legacy-land-saga" \
+  "$(printf '%s' "$refused" | jq -r .decision.kind)"
+assert_contains "the refusal names the runtime file" "$refused" ".foundation/runtime/saga-stuck.json"
+assert_eq "the refused change keeps its state" "$saga_state" \
+  "$(shasum -a 256 < "$A/.foundation/runtime/saga-stuck.json")"
+assert_cmd_zero "the named abandon route retires the retired-saga change" \
+  $CLI change abandon saga-stuck --reason "finish-with-3.7.0-declined" \
+    --decision-ref fixture://user/abandon
+assert_file_absent "abandon moves the retired-saga runtime state" \
+  "$A/.foundation/runtime/saga-stuck.json"
 
 # Unstarted drafts: v4/v5 stay startable; a retired v1/v3 draft asks for a
 # repair with the exact recovery instead of reporting DONE and then refusing.
@@ -187,8 +223,10 @@ done
 
 # In-flight changes finish Build and Prove with the current runtime.
 for change in building v1-building; do
-  assert_eq "the 3.7.0 change $change finishes Build" "DONE" \
-    "$(action_of "$($CLI advance "$change" --through build)")"
+  built="$($CLI advance "$change" --through build)"
+  assert_eq "the 3.7.0 change $change finishes Build" "DONE" "$(action_of "$built")"
+  assert_eq "advance speaks protocol 7 with one resume route for $change" "7 false" \
+    "$(printf '%s' "$built" | jq -r '"\(.protocol) \(has("resumeCommand"))"')"
 done
 for change in proven reviewed; do
   assert_eq "the 3.7.0 proof of $change survives the upgrade" "DONE" \

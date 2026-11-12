@@ -14,6 +14,7 @@ import {
 } from "../runtime/workflow/advance-recovery.mjs";
 import { userDecisionError } from "../runtime/core/user-decisions.mjs";
 import { lifecycleOutcome } from "../runtime/core/lifecycle-outcome.mjs";
+import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 function fixture(overrides = {}) {
   let stored = { id: "demo", status: "building", contractRevision: 1 };
@@ -33,7 +34,7 @@ function fixture(overrides = {}) {
     ...overrides
   };
   return {
-    runtime: () => createAdvanceRuntime(options),
+    runtime: () => createAdvanceRuntime(advanceRuntimeDeps(options)),
     options,
     setContent: (value) => { content = value; },
     setCursor: (value) => { cursor = value; },
@@ -560,14 +561,16 @@ test("separate CLI host processes retain decisions, protect inspection, and resu
   const scriptPath = join(directory, "host.mjs");
   const moduleUrl = new URL("../runtime/workflow/advance-runtime.mjs", import.meta.url).href;
   const digestUrl = new URL("../runtime/core/convergent-gate.mjs", import.meta.url).href;
+  const depsUrl = new URL("./fixtures/runtime-deps.mjs", import.meta.url).href;
   try {
     writeFileSync(statePath, JSON.stringify({ version: 2, id: "demo", status: "building", contractRevision: 1 }));
     writeFileSync(scriptPath, `
       import { readFileSync, writeFileSync } from "node:fs";
       import { createAdvanceRuntime } from ${JSON.stringify(moduleUrl)};
       import { gateDigest } from ${JSON.stringify(digestUrl)};
+      import { advanceRuntimeDeps } from ${JSON.stringify(depsUrl)};
       const path = ${JSON.stringify(statePath)};
-      const runtime = createAdvanceRuntime({
+      const runtime = createAdvanceRuntime(advanceRuntimeDeps({
         loadRuntime: () => JSON.parse(readFileSync(path, "utf8")),
         saveRuntime: value => writeFileSync(path, JSON.stringify(value)),
         agentDispatchValue: () => ({ action: "build-complete" }),
@@ -577,7 +580,7 @@ test("separate CLI host processes retain decisions, protect inspection, and resu
         prepareBuild: async () => {
           throw Object.assign(new Error("fixture spend is unapproved"), { boundary: "spend" });
         }
-      });
+      }));
       await runtime.showAdvance("demo", JSON.parse(process.argv[2]));
     `);
     const run = (flags) => JSON.parse(execFileSync(process.execPath, [scriptPath, JSON.stringify(flags)], {

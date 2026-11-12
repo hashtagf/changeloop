@@ -13,6 +13,7 @@ import { leaseAuthorityIsStale, leaseContractChanged, sameLeaseRenewalAuthority 
   from "../runtime/workflow/lease-runtime.mjs";
 import { approvedDecisionRevision } from "../runtime/evidence/receipt-runtime.mjs";
 import { workspaceCapabilityValue } from "../runtime/core/execution-contract.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 function packet(root, id, files) {
   const dir = join(root, "openspec", "changes", id);
@@ -118,7 +119,7 @@ test("reopen-grounding carries an approval given on the same packet", (t) => {
     groundingDigest: "locked", groundingLockedAt: "then"
   }));
   const loadRuntime = () => JSON.parse(readFileSync(statePath, "utf8"));
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root, policy: () => ({ workflow: {}, land: {} }), fail: (message) => { throw new Error(message); },
     securityTerms: [], pathInside: () => true, readJson: () => ({}), writeJson: () => {},
     slugify: (value) => String(value).toLowerCase().replaceAll(" ", "-"),
@@ -128,7 +129,7 @@ test("reopen-grounding carries an approval given on the same packet", (t) => {
     showPacket: () => {}, validate: () => {}, now: () => "2026-10-28T00:00:00.000Z",
     changePath: () => dir, activeChangePath: () => dir,
     approvalLanes: () => ({ configured: [], required: [] })
-  });
+  }));
   const log = console.log;
   console.log = () => {};
   try {

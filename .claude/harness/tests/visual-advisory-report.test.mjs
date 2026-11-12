@@ -6,6 +6,7 @@ import { createProofExecutionRuntime } from "../runtime/evidence/proof-execution
 import { createAdvanceRuntime } from "../runtime/workflow/advance-runtime.mjs";
 import { landAdvisoryLines } from "../runtime/workflow/land-runtime.mjs";
 import { gateDigest } from "../runtime/core/convergent-gate.mjs";
+import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 const finding = { id: "V1", screen: "settings", difference: "Save sits in the header",
   severity: "major", claimIds: ["C-a"] };
@@ -94,7 +95,7 @@ test("advisory differences are shown in the Prove outcome and the Land report, n
   // The advance outcome when Prove finishes.
   let stored = { id: "change", status: "building", contractRevision: 1,
     advisoryEvidence: world.state().advisoryEvidence };
-  const advance = createAdvanceRuntime({
+  const advance = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => structuredClone(stored),
     saveRuntime: (next) => { stored = structuredClone(next); },
     agentDispatchValue: () => ({ action: "build-complete" }),
@@ -102,7 +103,7 @@ test("advisory differences are shown in the Prove outcome and the Land report, n
     deliveredAiAttempts: () => [], authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "unused", output: () => {},
     runProof: async () => { stored = { ...stored, status: "proven" }; return { status: "PASS" }; }
-  });
+  }));
   const outcome = await advance.advanceThrough("change", "proven");
   assert.equal(outcome.action, "DONE");
   assert.equal(outcome.reached, "proven");

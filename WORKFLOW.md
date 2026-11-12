@@ -1004,7 +1004,7 @@ claude-foundation advance <change> --through proven
 ```
 
 The coordinator validates the agreement, prepares or synchronizes isolation,
-compiles the task graph, and returns one bounded protocol-v6 action:
+compiles the task graph, and returns one bounded protocol-v7 action:
 `WORKING`, `EDIT`, `REPAIR`, `RUN_EXTERNAL`, `WAIT`, `ASK_USER`, or `DONE`.
 `WORKING` means harness work is still running (`PROOF_IN_PROGRESS`,
 `LAND_IN_PROGRESS`): wait for it instead of starting another run. `/build`
@@ -1593,6 +1593,14 @@ a repository the change does not select, selecting it widens scope, so the user
 gets the `repository-pointer-change` decision: land the pointer through that
 repository, restore the pointer and land the rest, or pause.
 
+A change that 3.7.0 or earlier left inside the retired commit-based Land saga
+(child commits bound by `land record`, pointers staged by `land pointers`) is
+not carried forward: `advance` returns the `legacy-land-saga` decision naming
+`.foundation/runtime/<change>.json` and its saga fields, `changes` lists it as
+`legacy-land-saga`, and `doctor` reports it. The user either finishes the
+change with 3.7.0 and then upgrades again, or retires it with `change abandon`;
+the state stays unchanged until then.
+
 Before a multi-repository change is archived, Land reads each writable selected
 repository's target checkout, not its own records: every path the repository
 sandbox changed since its base (committed, uncommitted, or untracked) must hold
@@ -2036,7 +2044,8 @@ end or infers authority. A moved target base is replayed, never answered with a
 recreated sandbox or a retired change. Retiring with `change abandon` is offered
 only where the work itself cannot continue.
 
-Advance protocol 6 retains the existing actions and command routes. Recovery
+Advance protocol 7 retains the existing actions and command routes; `resume`
+is the one resume route (the duplicate `resumeCommand` field is gone). Recovery
 observations and answers live in `advanceRecovery` on the existing runtime
 record. The ladder has three rungs: the first unchanged repair handoff is the
 owner's repair, the second returns one agent-owned `REPAIR`

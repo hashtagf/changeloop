@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
+import { requireDeps } from "../core/required-deps.mjs";
 // Shared with drift classification: the same kinds that force a deep tier here
 // are the ones a silent downgrade must block at Land.
 import { DRIFT_BLOCKING_TASK_KINDS } from "../contracts/model-policy.mjs";
@@ -557,15 +558,18 @@ export function createAgentPlanner({
   providerConfig = null,
   providerRepositories = null,
   resourcesConflict, relevantHash, contractFingerprint, stableHash, now,
-  authorityPreflight = () => ({ status: "READY", blockers: [] }),
-  executionContract = null,
-  taskResult = null,
-  taskLease = null,
-  taskPacketWasPrecompleted = null,
+  authorityPreflight,
+  executionContract,
+  taskResult,
+  taskLease,
+  taskPacketWasPrecompleted,
   readJson, writeJson, compactStrings, serializedJson, recordContextMetric,
   recordInstructionManifest, modelForTask, showPacket, fail,
   recordScheduler
 }) {
+  requireDeps("createAgentPlanner", {
+    authorityPreflight, executionContract, taskResult, taskLease, taskPacketWasPrecompleted
+  });
   // Lease release observes a whole repository diff, not per-process writes.
   // Disjoint declared paths cannot establish which concurrent worker wrote
   // a file. Serialize a shared workspace until writes have isolated provenance;
@@ -649,18 +653,10 @@ export function createAgentPlanner({
     // Reuse a current result or a structurally equivalent graph-v2
     // single-session plan; otherwise schedule deterministic verification under
     // the current graph without rewriting tasks.md.
-    const readTaskResult = taskResult || ((changeId, taskId) => {
-      const path = join(root, ".foundation", "leases", "results", changeId, `${taskId}.json`);
-      return existsSync(path) ? { path, value: readJson(path, null) } : null;
-    });
-    const readTaskLease = taskLease || ((changeId, taskId) => {
-      const path = join(root, ".foundation", "leases", "tasks", changeId, `${taskId}.json`);
-      return existsSync(path) ? readJson(path, null) : null;
-    });
     const recovered = recoverCompletedTasksForExecution({
       id, allTasks, graph, state, priorPlan, currentContractFingerprint,
-      taskResult: readTaskResult, taskLease: readTaskLease,
-      precompletedAtIsolation: Boolean(taskPacketWasPrecompleted?.(id))
+      taskResult, taskLease,
+      precompletedAtIsolation: Boolean(taskPacketWasPrecompleted(id))
     });
     const schedulableTasks = recovered.tasks;
     const { tasks, completed } = enrichAgentTasks({ modelForTask, fail },
@@ -679,7 +675,7 @@ export function createAgentPlanner({
       ...row,
       note: "another active change touches this scope; whichever lands later synchronizes with `sandbox sync`, resolves any double edit, and re-proves"
     }));
-    const compiledContract = executionContract?.(id) || null;
+    const compiledContract = executionContract(id) || null;
     const authority = compiledContract?.authority || authorityPreflight(id);
     const blockingReasons = agentPlanBlockingReasons(state, authority);
     const resourceWaits = agentPlanResourceWaits(conflicts);

@@ -6,7 +6,7 @@ argument-hint: <change>
 Build **$ARGUMENTS**. Shared rules: `.claude/harness/AGENT.md`.
 
 Run `claude-foundation advance <change> --through proven`. Execute each
-protocol-v6 action, then follow its exact `resume` route until `DONE` or a
+protocol-v7 action, then follow its exact `resume` route until `DONE` or a
 real boundary.
 
 - `EDIT`: implement the returned tasks inside `workspace` and allowed `paths`,

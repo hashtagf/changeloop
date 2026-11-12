@@ -20,6 +20,7 @@ import {
   recoveryLines,
   recoverySummaryLine
 } from "../../harness/runtime/evidence/proof-readiness.mjs";
+import { proofReadinessRuntimeDeps } from "../../harness/tests/fixtures/runtime-deps.mjs";
 
 // A packet directory real enough for the readiness scan: only tasks.md is read.
 const packet = mkdtempSync(join(tmpdir(), "proof-fixit-"));
@@ -27,7 +28,7 @@ mkdirSync(packet, { recursive: true });
 writeFileSync(join(packet, "tasks.md"), "- [ ] **T001** work [repo:api] [paths:api/src/**]\n");
 
 function runtimeWith({ changed, repositories = { root: {}, api: {} } }) {
-  return createProofReadinessRuntime({
+  return createProofReadinessRuntime(proofReadinessRuntimeDeps({
     evidence: () => ({ providers: {} }),
     loadRuntime: () => ({ repositories }),
     taskBlocks: () => [{ id: "T001" }],
@@ -51,7 +52,7 @@ function runtimeWith({ changed, repositories = { root: {}, api: {} } }) {
     writeJson: () => {},
     saveRuntime: () => {},
     fail: (message) => { throw new Error(message); }
-  });
+  }));
 }
 
 test("an undeclared path is recorded, not raised as an issue", () => {
@@ -72,7 +73,7 @@ test("an undeclared path is recorded, not raised as an issue", () => {
 
 test("a misplaced root sandbox still raises the issue and collects fix-it details", () => {
   const details = [];
-  const issues = createProofReadinessRuntime({
+  const issues = createProofReadinessRuntime(proofReadinessRuntimeDeps({
     evidence: () => ({ providers: {} }),
     loadRuntime: () => ({}),
     taskBlocks: () => [{ id: "T001" }],
@@ -82,7 +83,7 @@ test("a misplaced root sandbox still raises the issue and collects fix-it detail
     selectedRepositories: () => [{ id: "root", mode: "write" }, { id: "api", mode: "write" }],
     providerConfig: () => ({}),
     fail: (message) => { throw new Error(message); }
-  }).changedSurfaceIssues("fixit-change", details);
+  })).changedSurfaceIssues("fixit-change", details);
   assert.equal(issues.length, 1);
   assert.match(issues[0], /changed outside task paths: api\/test\/new\.spec\.js; all implementation tasks target 'api'/);
   assert.deepEqual(details, [{

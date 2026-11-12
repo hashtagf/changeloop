@@ -8,6 +8,7 @@ import {
   inspectRepositoryIntelligence, repositoryIntelligenceRequired, skippedRepositoryIntelligence
 } from "../runtime/workflow/validation/repository-intelligence.mjs";
 import { createChangeLifecycle } from "../runtime/workflow/change-lifecycle.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 async function fixture(t) {
   const root = await mkdtemp(join(tmpdir(), "repository-intelligence-"));
@@ -279,7 +280,7 @@ test("rapid draft inspection skips the repository scan; medium impact runs it", 
   mkdirSync(join(root, "openspec", "specs"), { recursive: true });
   writeFileSync(join(root, "README.md"), "readme\n");
   let scans = 0;
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root, policy: () => ({ workflow: { grounding: "optional" } }), securityTerms: [],
     fail: (message) => { throw new Error(message); },
     pathInside: () => true,
@@ -299,7 +300,7 @@ test("rapid draft inspection skips the repository scan; medium impact runs it", 
     initialBudget: () => ({}), gitHead: () => "head", preexistingDirty: () => [],
     now: () => "2026-09-30T00:00:00.000Z", bindClaudeSession: () => {},
     validate: () => {}, rollbackStart: () => []
-  });
+  }));
   const inspect = (impact) => {
     const draftPath = `draft-${impact}.json`;
     writeFileSync(join(root, draftPath), JSON.stringify({

@@ -12,6 +12,7 @@ import {
   readinessStatus,
   workspaceIsolationIssuesValue
 } from "../runtime/evidence/proof-readiness.mjs";
+import { proofReadinessRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 test("copy-mode critical-case scan is bounded to declared inputs", () => {
   const root = mkdtempSync(join(tmpdir(), "foundation-case-scan-"));
@@ -132,8 +133,10 @@ function operationContext(overrides = {}) {
     executionNodes: () => ({ unconfigured: [], unavailable: [] }),
     repositoryInfrastructureIssues: () => [],
     pendingTasks: () => [],
-    agentPlanValue: null,
+    agentPlanValue: () => null,
     handoffReadiness: () => ({ status: "COMPLETE" }),
+    authorityPreflight: () => ({ status: "READY", blockers: [], decision: null }),
+    executionContract: () => null,
     activeChangeLeases: () => [],
     activeRepositoryConflicts: () => [],
     selectedRepositories: () => [{ id: "root" }],
@@ -312,7 +315,7 @@ test("an edit outside task paths is recorded into the change surface, not refuse
     let surface = [];
     let cleared = 0;
     const saves = [];
-    const runtime = createProofReadinessRuntime({
+    const runtime = createProofReadinessRuntime(proofReadinessRuntimeDeps({
       evidence: () => ({ providers: {} }),
       loadRuntime: () => structuredClone(state),
       saveRuntime: (value) => { saves.push(value); state = value; },
@@ -324,7 +327,7 @@ test("an edit outside task paths is recorded into the change surface, not refuse
       selectedRepositories: () => [{ id: "root", mode: "write" }],
       providerConfig: () => ({}),
       fail: (message) => { throw new Error(message); }
-    });
+    }));
     surface = [
       { repositoryId: "root", path: "src/app.mjs" },
       { repositoryId: "root", path: "README.md" }
@@ -373,7 +376,7 @@ test("deletions and control-plane paths outside task paths are recorded with fla
     writeFileSync(join(root, "README.md"), "docs\n");
     let state = { id: "demo" };
     const saves = [];
-    const runtime = createProofReadinessRuntime({
+    const runtime = createProofReadinessRuntime(proofReadinessRuntimeDeps({
       evidence: () => ({ providers: {} }),
       loadRuntime: () => structuredClone(state),
       saveRuntime: (value) => { saves.push(value); state = value; },
@@ -386,7 +389,7 @@ test("deletions and control-plane paths outside task paths are recorded with fla
       selectedRepositories: () => [{ id: "root", mode: "write", workspacePath: root }],
       providerConfig: () => ({}),
       fail: (message) => { throw new Error(message); }
-    });
+    }));
     const paths = [
       ".claude/settings.json", ".env", ".env.example", "README.md", "fixtures/gone.json"
     ];
@@ -432,7 +435,7 @@ test("surface additions are recorded against the repository that changed", () =>
       { repository: "api", paths: ["src/**"] }, { repository: "web", paths: ["src/**"] }
     ];
     let index = 0;
-    const runtime = createProofReadinessRuntime({
+    const runtime = createProofReadinessRuntime(proofReadinessRuntimeDeps({
       evidence: () => ({ providers: {} }),
       loadRuntime: () => structuredClone(state),
       saveRuntime: (value) => { state = value; },
@@ -448,7 +451,7 @@ test("surface additions are recorded against the repository that changed", () =>
       ],
       providerConfig: () => ({}),
       fail: (message) => { throw new Error(message); }
-    });
+    }));
     const recorded = [];
     assert.deepEqual(runtime.changedSurfaceIssues("demo", [], recorded), []);
     assert.deepEqual(recorded, [{ repositoryId: "api", paths: ["docs/api.md"] }]);

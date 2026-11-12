@@ -48,6 +48,12 @@ surface). A v3.7.0 project upgrades in place.
 
 ### Changed
 
+- Internal: the advance, change-lifecycle, proof-readiness, and agent-planner
+  runtime factories now require the collaborators the composition root always
+  supplies and fail at construction naming a missing one; the null guards for
+  those impossible states are gone. Never-passed parameters became constants,
+  and target-edit and atomic-start rollback logic moved out of `foundation.mjs`
+  into their workflow modules. No output, CLI, or protocol change.
 - **Breaking (CLI surface):** primitives that `advance` already performs are
   now `internal`: `proof readiness`, `proof advance`, `proof run`,
   `proof collect`, `evidence detect`, `evidence init`, `evidence doctor`, and
@@ -134,7 +140,11 @@ surface). A v3.7.0 project upgrades in place.
     that route.
   - The retired commit-based multi-repository Land saga is gone, with its
     `land record` and `land pointers` commands. Land always delivers uncommitted
-    workspaces; `land resume` only reports the current plan.
+    workspaces; `land resume` only reports the current plan. A change 3.7.0 or
+    earlier left inside that saga is refused instead of replayed: `advance`
+    asks the `legacy-land-saga` decision (finish it with 3.7.0, then upgrade,
+    or `change abandon` it), naming `.foundation/runtime/<change>.json` and the
+    saga fields; `changes`, `doctor`, and the upgrade report name it too.
   - A single-number `execution.packetBytes` is refused at runtime; the
     installer converts it to the same task/review/repository/global limits.
 - The historical phase-orchestrator benchmark runner, its baselines, the
@@ -167,6 +177,18 @@ surface). A v3.7.0 project upgrades in place.
   next `advance`.
 - Twelve unused internal runtime functions (old proposal renderers and
   helpers replaced in 3.7). No command, output, or file format changes.
+- **Breaking (advance protocol 7):** `advance` output no longer carries
+  `resumeCommand`, the duplicate of `resume` kept for v2 host adapters. No
+  shipped adapter, hook, command, or skill read it; read `resume`. Deliver and
+  budget checkpoint outputs keep their own `resumeCommand`.
+- **Breaking (grounding schema `["2", "3"]`):** a `grounding.yaml` version 1
+  is refused with the accepted versions. No release wrote one: grounding
+  shipped at version 2 in 3.2.22, and 3.7.0 writes version 2 or 3. Version 2
+  stays; current templates and change creation still write it.
+- The pass-through modules `runtime/evidence/codex-reviewer.mjs` (and its
+  `createCodexReviewerRuntime` alias) and `hooks/phase-guard-policy.mjs`.
+  Import `runtime/evidence/configured-reviewer.mjs` and
+  `runtime/core/shell-mutation-policy.mjs`; upgrade removes the old files.
 
 ### Fixed
 

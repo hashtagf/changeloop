@@ -6,6 +6,7 @@ import {
   advanceFailureAction, coordinatorAction, createAdvanceRuntime, envelopeContextFiles,
   hasValidLandGrant, noProgressOutput, prepareAdvanceBuild, proofOperationAction, runAdvanceProof
 } from "../runtime/workflow/advance-runtime.mjs";
+import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 test("a running proof's WORKING action carries its progress to the caller", () => {
   const progress = { startedAt: "2026-10-16T00:00:00.000Z", wave: 2, running: ["test"],
@@ -102,7 +103,8 @@ test("advance returns bounded Build work without invoking a model", () => {
   assert.equal(value.action, "EDIT");
   assert.equal(value.legacyAction, "EXECUTE_TASK");
   assert.equal(value.boundary, "host-execution");
-  assert.equal(value.resumeCommand, "claude-foundation advance change-a");
+  assert.equal(value.resume, "claude-foundation advance change-a");
+  assert.equal("resumeCommand" in value, false, "advance protocol 7 names one resume route");
 });
 
 test("a single-task EDIT carries the whole recipe so the agent reads no Build doc", () => {
@@ -433,8 +435,16 @@ test("advance stops on proof preflight before starting expensive evidence", () =
   assert.equal(invalid.boundary, "contract");
 });
 
+test("advance fails at construction when the composition root omits a collaborator", () => {
+  const deps = advanceRuntimeDeps({ loadRuntime: () => ({ status: "building" }) });
+  delete deps.recordPhase;
+  delete deps.prepareBuild;
+  assert.throws(() => createAdvanceRuntime(deps),
+    /createAdvanceRuntime: missing required dependencies prepareBuild, recordPhase/);
+});
+
 test("advance uses proof readiness hash and does not hash failed infrastructure again", () => {
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building" }),
     agentDispatchValue: () => ({ action: "build-complete" }),
     proofReadinessValue: () => ({
@@ -450,7 +460,7 @@ test("advance uses proof readiness hash and does not hash failed infrastructure 
     relevantHash: assert.fail,
     deliveredAiAttempts: () => [], authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash
-  });
+  }));
   const value = runtime.advanceValue("change-a");
   assert.equal(value.action, "REPAIR");
   assert.equal(value.legacyAction, "REPAIR_PROVIDER_ENVIRONMENT");
@@ -460,28 +470,28 @@ test("advance uses proof readiness hash and does not hash failed infrastructure 
 
 test("a reached target reports the latest AI review's spec gaps without changing the outcome", async () => {
   const gaps = [{ scenario: "fractional count", reason: "not named" }];
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "archived" }), stableHash,
     deliveredAiAttempts: () => [{ specGaps: [{ scenario: "stale" }] }, { specGaps: gaps }]
-  });
+  }));
   const result = await runtime.advanceThrough("change-a", "archived");
   assert.equal(result.action, "DONE");
   assert.equal(result.reached, "archived");
   assert.deepEqual(result.reviewAdvisories, { specGaps: gaps });
-  const clean = await createAdvanceRuntime({
+  const clean = await createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "archived" }), stableHash, deliveredAiAttempts: () => [{}]
-  }).advanceThrough("change-a", "archived");
+  })).advanceThrough("change-a", "archived");
   assert.equal(clean.reviewAdvisories, undefined, "no gaps add no advisory field");
 });
 
 test("explicit archive continuation recovers the moved packet before active approval checks", async () => {
   const state = { status: "applied" };
   let recoveries = 0;
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state, stableHash,
     assertApproval: () => assert.fail("active packet is already archived"),
     recoverArchive: () => { recoveries += 1; state.status = "archived"; return true; }
-  });
+  }));
   const result = await runtime.advanceThrough("change-a", "archived");
   assert.equal(result.action, "DONE");
   assert.equal(result.reached, "archived");
@@ -492,10 +502,10 @@ test("archive recovery respects a user pause", async () => {
   const state = { status: "applied", advanceRecovery: {
     pending: { paused: true, through: "archived", decision: { summary: "pause" } }
   } };
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state, stableHash,
     recoverArchive: () => assert.fail("paused recovery must not run")
-  });
+  }));
   const result = await runtime.advanceThrough("change-a", "archived");
   assert.equal(result.action, "WAIT");
   assert.equal(result.boundary, "user-paused");
@@ -504,7 +514,7 @@ test("archive recovery respects a user pause", async () => {
 test("an archived checkpoint must finish its audit and cleanup before reporting completion", async () => {
   const state = { status: "archived" };
   let invalid = true, recoveries = 0;
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state, stableHash, relevantHash: () => "retained",
     readJson: () => ({}), proofAdvancePath: () => "/proof.json",
     recoverArchive: () => {
@@ -512,7 +522,7 @@ test("an archived checkpoint must finish its audit and cleanup before reporting 
       if (invalid) throw new Error("archived specs do not match the change delta");
       return true;
     }
-  });
+  }));
   const rejected = await runtime.advanceThrough("change-a", "archived");
   assert.notEqual(rejected.action, "DONE");
   invalid = false;
@@ -526,7 +536,7 @@ test("advance --through runs deterministic proof and Land until archived", async
   let proofRuns = 0;
   let landRuns = 0;
   let grants = 0;
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state,
     agentDispatchValue: () => ({ action: "build-complete" }),
     relevantHash: () => "workspace-a",
@@ -546,7 +556,7 @@ test("advance --through runs deterministic proof and Land until archived", async
       landRuns += 1;
       state.status = "archived";
     }
-  });
+  }));
   const value = await runtime.advanceThrough("change-a", "archived");
   assert.equal(value.action, "DONE");
   assert.equal(value.reached, "archived");
@@ -563,7 +573,7 @@ test("a Land grant over a change returned to Build re-proves before Land in the 
   let proofRuns = 0;
   let landRuns = 0;
   let saves = 0;
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => structuredClone(state),
     saveRuntime: (next) => { saves += 1; Object.assign(state, next); },
     agentDispatchValue: () => ({ action: "build-complete" }),
@@ -587,7 +597,7 @@ test("a Land grant over a change returned to Build re-proves before Land in the 
       landRuns += 1;
       state.status = "archived";
     }
-  });
+  }));
   const value = await runtime.advanceThrough("change-a", "archived");
   assert.equal(value.action, "DONE");
   assert.equal(value.reached, "archived");
@@ -598,7 +608,7 @@ test("a Land grant over a change returned to Build re-proves before Land in the 
 });
 
 test("advance --through build stops before proof and preserves one resume route", async () => {
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building", workspace: { path: "/tmp/change" } }),
     agentDispatchValue: () => ({ action: "build-complete" }),
     relevantHash: () => "workspace-a",
@@ -607,7 +617,7 @@ test("advance --through build stops before proof and preserves one resume route"
     readJson: () => ({}),
     proofAdvancePath: () => "/proof.json",
     stableHash
-  });
+  }));
   const value = await runtime.advanceThrough("change-a", "build");
   assert.equal(value.action, "DONE");
   assert.equal(value.reached, "build");
@@ -618,7 +628,7 @@ test("advance --through build stops before proof and preserves one resume route"
 test("advance records the furthest requested target once, never lowering it", async () => {
   const state = { status: "building", workspace: { path: "/tmp/change" } };
   let saves = 0;
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state,
     saveRuntime: (value) => { saves += 1; Object.assign(state, value); },
     agentDispatchValue: () => ({ action: "build-complete" }),
@@ -627,7 +637,7 @@ test("advance records the furthest requested target once, never lowering it", as
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash,
     output: () => {}
-  });
+  }));
   await runtime.advanceThrough("change-a", "build");
   assert.equal(state.requestedThrough, "build");
   await runtime.advanceThrough("change-a", "proven");
@@ -641,7 +651,7 @@ test("advance records the furthest requested target once, never lowering it", as
 test("advance --through records each phase once", async () => {
   const state = { status: "change", workspace: { path: "/tmp/change" } };
   const phases = [];
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state,
     prepareBuild: async () => { state.status = "building"; },
     agentDispatchValue: () => ({ action: "build-complete" }),
@@ -651,14 +661,14 @@ test("advance --through records each phase once", async () => {
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash,
     recordPhase: (_id, phase) => phases.push(phase),
     output: () => {}
-  });
+  }));
   await runtime.showAdvance("change-a", { through: "build" });
   assert.deepEqual(phases, ["build"]);
 });
 
 test("plain advance prepares the amended agreement before choosing work", async () => {
   let prepared = false;
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building", workspace: { path: "/tmp/change" } }),
     prepareBuild: async () => { prepared = true; },
     agentDispatchValue: () => {
@@ -671,7 +681,7 @@ test("plain advance prepares the amended agreement before choosing work", async 
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash,
     output: () => {}
-  });
+  }));
   const value = await runtime.advanceThrough("change-a", null);
   assert.equal(value.action, "EDIT", JSON.stringify(value));
 });
@@ -680,7 +690,7 @@ test("one coordinator read plans the task graph once for dispatch and Build", ()
   const plan = { tasks: [{ id: "T001", text: "Implement", repository: "root", paths: ["src/**"] }] };
   let plans = 0;
   const handed = [];
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building", workspace: { path: "/tmp/change" } }),
     agentPlanValue: () => { plans += 1; return plan; },
     agentDispatchValue: (_id, _options, planned) => {
@@ -690,7 +700,7 @@ test("one coordinator read plans the task graph once for dispatch and Build", ()
     relevantHash: () => "workspace-a", deliveredAiAttempts: () => [],
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash
-  });
+  }));
   const value = runtime.advanceValue("change-a");
   assert.equal(value.action, "EDIT", JSON.stringify(value));
   assert.equal(plans, 1);
@@ -702,7 +712,7 @@ test("one coordinator read plans the task graph once for dispatch and Build", ()
 
 test("a planning failure still reaches dispatch, which reports it", () => {
   const handed = [];
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building" }),
     agentPlanValue: () => { throw new Error("task dependency cycle: T001 -> T001"); },
     agentDispatchValue: (_id, _options, planned) => {
@@ -712,7 +722,7 @@ test("a planning failure still reaches dispatch, which reports it", () => {
     relevantHash: () => "workspace-a", deliveredAiAttempts: () => [],
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash
-  });
+  }));
   const value = runtime.advanceValue("change-a");
   assert.deepEqual(handed, [null]);
   assert.match(value.reason, /task dependency cycle/);
@@ -720,14 +730,14 @@ test("a planning failure still reaches dispatch, which reports it", () => {
 
 test("advance preserves exact runtime failures in a repair envelope", () => {
   const reason = "isolated runtime state is missing repository 'api'; repair it with 'claude-foundation sandbox create change-a --all'";
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building" }),
     agentDispatchValue: () => { throw new Error(reason); },
     relevantHash: () => "workspace-a",
     deliveredAiAttempts: () => [],
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash
-  });
+  }));
   const value = runtime.advanceValue("change-a");
   assert.equal(value.action, "REPAIR");
   assert.equal(value.legacyAction, "REPAIR_BUILD_RUNTIME");
@@ -740,14 +750,14 @@ test("advance preserves exact runtime failures in a repair envelope", () => {
 
 test("advance --through converts prepare and Land failures without rejecting", async () => {
   const preparing = { status: "change" };
-  const prepareRuntime = createAdvanceRuntime({
+  const prepareRuntime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => preparing,
     prepareBuild: async () => { throw new Error("root sandbox unavailable"); },
     agentDispatchValue: () => ({ action: "build-complete" }),
     relevantHash: () => "workspace-a", deliveredAiAttempts: () => [],
     authorityStatusValue: () => ({ requests: [] }), readJson: () => ({}),
     proofAdvancePath: () => "/proof.json", stableHash
-  });
+  }));
   const prepare = await prepareRuntime.advanceThrough("change-a", "archived");
   assert.equal(prepare.action, "REPAIR");
   assert.equal(prepare.legacyAction, "REPAIR_BUILD_RUNTIME");
@@ -756,7 +766,7 @@ test("advance --through converts prepare and Land failures without rejecting", a
     "claude-foundation advance change-a --through archived");
 
   const landing = { status: "proven" };
-  const landRuntime = createAdvanceRuntime({
+  const landRuntime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => landing,
     agentDispatchValue: () => ({ action: "build-complete" }),
     relevantHash: () => "workspace-a", deliveredAiAttempts: () => [],
@@ -765,7 +775,7 @@ test("advance --through converts prepare and Land failures without rejecting", a
     proofAdvancePath: () => "/proof.json", stableHash,
     hasLandGrant: () => true,
     runLand: async () => { throw new Error("land conflict route"); }
-  });
+  }));
   const land = await landRuntime.advanceThrough("change-a", "archived");
   assert.equal(land.action, "REPAIR");
   assert.equal(land.legacyAction, "REPAIR_LAND_RUNTIME");
@@ -778,7 +788,7 @@ test("advance --through converts prepare and Land failures without rejecting", a
 test("advance convergence follows semantic progress beyond 32 proof runs", async () => {
   const state = { status: "building", revision: 0 };
   let proofRuns = 0;
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state,
     agentDispatchValue: () => ({ action: "build-complete" }),
     relevantHash: () => `workspace-${state.revision}`,
@@ -791,7 +801,7 @@ test("advance convergence follows semantic progress beyond 32 proof runs", async
       if (proofRuns === 40) state.status = "proven";
       return { progressed: true, completed: proofRuns === 40 };
     }
-  });
+  }));
   const value = await runtime.advanceThrough("change-a", "proven");
   assert.equal(value.action, "DONE");
   assert.equal(value.reached, "proven");
@@ -801,7 +811,7 @@ test("advance convergence follows semantic progress beyond 32 proof runs", async
 test("advance convergence stops only after repeated unchanged automation", async () => {
   const state = { status: "building", revision: 1 };
   let proofRuns = 0;
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state,
     agentDispatchValue: () => ({ action: "build-complete" }),
     relevantHash: () => "workspace-a", deliveredAiAttempts: () => [],
@@ -812,7 +822,7 @@ test("advance convergence stops only after repeated unchanged automation", async
       return { progressed: false, issues: ["provider 'test' has no command in execution.yaml"],
         next: [{ reason: "wire the test provider", command: "claude-foundation evidence init change-a --write" }] };
     }
-  });
+  }));
   const value = await runtime.advanceThrough("change-a", "proven");
   // Unchanged automation hands the stuck step to the agent with what it
   // returned; repeated rounds stay agent repair (the ladder changes strategy).
@@ -841,7 +851,7 @@ test("a weak host can finish by reading one action and calling its resume", asyn
   const state = { status: "building", workspace: { path: "/tmp/change" } };
   let edited = false;
   let landGranted = false;
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state,
     agentDispatchValue: () => edited
       ? { action: "build-complete" }
@@ -862,7 +872,7 @@ test("a weak host can finish by reading one action and calling its resume", asyn
     authorizeLand: async () => { landGranted = true; },
     runProof: async () => { state.status = "proven"; return { progressed: true }; },
     runLand: async () => { state.status = "archived"; }
-  });
+  }));
   const first = await runtime.advanceThrough("change-a", "archived");
   assert.equal(first.action, "EDIT");
   assert.deepEqual(first.allowedPaths, ["src/**"]);
@@ -989,7 +999,7 @@ test("feedback keeps legacy blocker cause explicitly unavailable", () => {
 function selfDrivingRuntime(overrides = {}) {
   const state = { status: "building", workspace: { path: "/tmp/change" } };
   const calls = [];
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state,
     agentDispatchValue: () => ({ action: "build-complete" }),
     relevantHash: () => "workspace-a",
@@ -1000,7 +1010,7 @@ function selfDrivingRuntime(overrides = {}) {
     stableHash,
     runProof: async () => { calls.push("proof"); state.status = "proven"; return { completed: true }; },
     ...overrides(state, calls)
-  });
+  }));
   return { state, calls, runtime };
 }
 
@@ -1123,7 +1133,7 @@ test("a rapid two-task EDIT names the files to open: packet, existing task paths
   writeFileSync(join(packet, "proposal.md"), "# Proposal\n");
   writeFileSync(join(packet, "tasks.md"), "- [ ] **T001** a\n- [ ] **T002** b\n");
   writeFileSync(join(workspace, "src", "a.js"), "");
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building", workspace: { path: workspace } }),
     changePath: () => packet,
     agentDispatchValue: () => ({ action: "run-in-session", reason: "one repository" }),
@@ -1135,7 +1145,7 @@ test("a rapid two-task EDIT names the files to open: packet, existing task paths
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash,
     output: () => {}
-  });
+  }));
   const value = await runtime.advanceThrough("change-a", "build");
   assert.equal(value.action, "EDIT", JSON.stringify(value));
   assert.deepEqual(value.tasks.map((task) => task.id), ["T001", "T002"]);
@@ -1168,7 +1178,7 @@ test("an EDIT names the live ledger and the completed dependency's workspace", a
   writeFileSync(join(packet, "proposal.md"), "# Proposal\n");
   writeFileSync(join(packet, "tasks.md"), "- [ ] **T001** lib\n- [ ] **T002** app\n");
   writeFileSync(join(ledger, "tasks.md"), "- [x] **T001** lib\n- [ ] **T002** app\n");
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building", workspace: { mode: "copy", path: box },
       repositories: { lib: { path: libBox } } }),
     changePath: () => packet,
@@ -1186,7 +1196,7 @@ test("an EDIT names the live ledger and the completed dependency's workspace", a
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash,
     output: () => {}
-  });
+  }));
   const value = await runtime.advanceThrough("change-a", "build");
   assert.equal(value.action, "EDIT", JSON.stringify(value));
   assert.deepEqual(value.workspaces, { root: box });
@@ -1303,7 +1313,7 @@ async function skillEdit(t, {
     mkdirSync(join(root, ".claude", "skills", name), { recursive: true });
     writeFileSync(join(root, ".claude", "skills", name, "SKILL.md"), `# ${name}\n`);
   }
-  const runtime = createAdvanceRuntime({
+  const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building", workspace: { path: join(root, "box") }, riskSignals }),
     changePath: () => packet,
     ...(withRoot ? { projectRoot: root } : {}),
@@ -1316,7 +1326,7 @@ async function skillEdit(t, {
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash,
     output: () => {}
-  });
+  }));
   return runtime.advanceThrough("change-a", "build");
 }
 
@@ -1396,7 +1406,7 @@ test("spec approval carries authority gates the change already needs", async () 
     decision: { kind: "spec-approval-required", summary: "approve",
       options: [{ id: "approve", outcome: "Approve" }], recommended: "approve" }
   });
-  const fixture = (pendingApprovalDecisions) => createAdvanceRuntime({
+  const fixture = (pendingApprovalDecisions) => createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => state,
     prepareBuild: async () => { throw approval; },
     agentDispatchValue: () => ({ action: "build-complete" }),
@@ -1404,7 +1414,7 @@ test("spec approval carries authority gates the change already needs", async () 
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash,
     pendingApprovalDecisions, output: () => {}
-  });
+  }));
   const ci = { code: "SIGNED_CI_CONFIGURATION_REQUIRED", summary: "needs CI", next: "configure" };
   const asked = await fixture(() => [ci]).advanceThrough("change-a", "build");
   assert.equal(asked.action, "ASK_USER", JSON.stringify(asked));

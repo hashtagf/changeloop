@@ -1137,8 +1137,8 @@ export function createChangeValidationRuntime({
     } catch {
       fail(`${id}/grounding.yaml must be JSON-compatible YAML`);
     }
-    if (![1, 2, 3].includes(value.version))
-      fail(`${id}/grounding.yaml requires version 1, 2, or 3`);
+    if (![2, 3].includes(value.version))
+      fail(`${id}/grounding.yaml requires version 2 or 3`);
     if (Number(state.groundingVersion || 1) >= 2 &&
         value.version !== Number(state.groundingVersion))
       fail(`${id}/grounding.yaml requires version ${state.groundingVersion} for this change`);

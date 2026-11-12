@@ -6,6 +6,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { acquireProcessLock } from "./process-lock.mjs";
+import { legacyLandSagaLine, legacyLandSagaMarkers } from "./legacy-land-saga.mjs";
 
 export const UPDATE_CACHE_VERSION = 1;
 export const UPDATE_NOTIFICATION_STATE_VERSION = 1;
@@ -367,17 +368,26 @@ export function upgradeCompatibilityDiagnostics({
   });
   const activeChangeEffects = activeChanges
     .filter((change) => change?.id && change.status !== "archived")
-    .map((change) => ({
-      changeId: change.id,
-      status: change.status || "unknown",
-      changed: false,
-      effects: [
-        "state-and-agreement-preserved",
-        "receipts-revalidated-against-current-protocols"
-      ],
-      recovery: "claude-foundation change validate " + change.id + " && " +
-        "claude-foundation advance " + change.id + " --inspect"
-    }));
+    .map((change) => {
+      const markers = legacyLandSagaMarkers(change);
+      return markers.length ? {
+        changeId: change.id,
+        status: change.status || "unknown",
+        changed: false,
+        effects: ["state-preserved", "retired-commit-based-land-saga-refused"],
+        recovery: legacyLandSagaLine(change.id, markers)
+      } : {
+        changeId: change.id,
+        status: change.status || "unknown",
+        changed: false,
+        effects: [
+          "state-and-agreement-preserved",
+          "receipts-revalidated-against-current-protocols"
+        ],
+        recovery: "claude-foundation change validate " + change.id + " && " +
+          "claude-foundation advance " + change.id + " --inspect"
+      };
+    });
   return {
     version: 1,
     previousVersion: stableVersion(previousVersion) || previousVersion || null,

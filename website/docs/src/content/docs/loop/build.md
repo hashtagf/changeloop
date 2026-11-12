@@ -29,7 +29,7 @@ claude-foundation advance <change> --through proven
 
 The coordinator validates the agreement, creates or synchronizes the isolated
 workspace, compiles task dependencies, accounts for active leases, and returns
-one protocol-v6 action. After doing that action, the agent calls the exact
+one protocol-v7 action. After doing that action, the agent calls the exact
 `resume` route. It never reconstructs a `sandbox → packet → plan → dispatch`
 chain. Proof starts in the same call only once Build is complete, so `/build`
 needs no separate Build `DONE` round trip; it stops at `proven` and never

@@ -20,6 +20,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import { createProofReadinessRuntime } from "../../harness/runtime/evidence/proof-readiness.mjs";
+import { proofReadinessRuntimeDeps } from "../../harness/tests/fixtures/runtime-deps.mjs";
 
 const packet = mkdtempSync(join(tmpdir(), "critical-case-"));
 mkdirSync(packet, { recursive: true });
@@ -47,7 +48,7 @@ function runtimeWith({ providers, grep = {}, repositories = ["root"] }) {
   const calls = [];
   return {
     calls,
-    runtime: createProofReadinessRuntime({
+    runtime: createProofReadinessRuntime(proofReadinessRuntimeDeps({
       evidence: () => ({ providers }),
       loadRuntime: () => ({}),
       taskBlocks: () => [{ id: "T001" }],
@@ -78,7 +79,7 @@ function runtimeWith({ providers, grep = {}, repositories = ["root"] }) {
       writeJson: () => {},
       saveRuntime: () => {},
       fail: (message) => { throw new Error(message); }
-    })
+    }))
   };
 }
 

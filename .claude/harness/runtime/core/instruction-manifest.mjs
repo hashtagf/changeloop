@@ -66,8 +66,7 @@ export function createInstructionManifest({
   orchestratorPath = ".claude/orchestrator.md",
   rulePaths = [],
   skills = [],
-  requestedModel = null,
-  actualModel = null
+  requestedModel = null
 }) {
   if (!root) throw new Error("instruction manifest requires root");
   if (!command || !commandPath)
@@ -92,7 +91,8 @@ export function createInstructionManifest({
   const execution = {
     skills: normalizedSkills,
     requestedModel: requestedModel || null,
-    actualModel: actualModel || null
+    // Schema-required; no caller observes the executing model at dispatch.
+    actualModel: null
   };
   const manifest = {
     schemaVersion: INSTRUCTION_MANIFEST_SCHEMA_VERSION,

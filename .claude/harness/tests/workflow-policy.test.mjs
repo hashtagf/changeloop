@@ -22,6 +22,7 @@ import {
   mainSessionProvenanceValue
 } from "../runtime/workflow/authority-runtime.mjs";
 import { reviewAssurancePosture } from "../runtime/core/runtime-environment.mjs";
+import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 const root = fileURLToPath(new URL("../../..", import.meta.url));
 const canonical = (value) => Array.isArray(value)
@@ -681,7 +682,7 @@ try {
       ...entry.value, configuredController: { ...entry.value.configuredController, pid: 2147483647 }
     });
     let proofs = 0;
-    const advance = createAdvanceRuntime({
+    const advance = createAdvanceRuntime(advanceRuntimeDeps({
       loadRuntime: () => state, saveRuntime: (value) => { state = value; },
       agentDispatchValue: () => ({ action: "build-complete" }),
       relevantHash: () => workspaceHash, stableHash, deliveredAiAttempts: () => [],
@@ -689,7 +690,7 @@ try {
       readJson: () => ({}), proofAdvancePath: () => "unused",
       runProof: () => { proofs++; state.status = "proven"; return { status: "PASS" }; },
       nowMs: () => Date.parse(now())
-    });
+    }));
     const next = await advance.advanceThrough(id, "proven");
     assert.equal(next.action, "RUN_EXTERNAL");
     assert.equal(next.command, `claude-foundation authority run ${id} --request ${request.requestId} --subject-actor human-implementer`);
@@ -1244,7 +1245,7 @@ try {
   quiet(() => authority.runAuthorityReviewer(recoveryId, {
     request: recoveryRequest.requestId, "subject-actor": "human-implementer"
   }));
-  const advanceRecovery = createAdvanceRuntime({
+  const advanceRecovery = createAdvanceRuntime(advanceRuntimeDeps({
     nowMs: () => Date.parse(now()),
     loadRuntime: () => state, agentDispatchValue: () => ({ action: "build-complete" }),
     relevantHash: () => workspaceHash, deliveredAiAttempts: () => [],
@@ -1255,7 +1256,7 @@ try {
     })),
     readJson: () => ({}), proofAdvancePath: () => "/unused-proof.json", stableHash,
     recoverReviewBindings: authority.recoverReviewBindings
-  });
+  }));
   assert.equal((await advanceRecovery.advanceThrough(recoveryId, "proven")).action, "REPAIR");
   assert.equal(configuredReviewCalls, beforeRecoveryCalls + 1,
     "unchanged invalid bindings do not spend another review");

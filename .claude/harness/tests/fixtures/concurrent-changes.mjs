@@ -149,7 +149,7 @@ export function assertAgentConflict(stop, w, label) {
   assert.ok(["REPAIR", "EDIT"].includes(stop.action), JSON.stringify(stop));
   assert.equal(stop.actor, "agent");
   assert.equal(stop.boundary, "conflict");
-  assert.equal(stop.resumeCommand,
+  assert.equal(stop.resume,
     `claude-foundation advance ${w.ids[label]} --through archived`);
 }
 

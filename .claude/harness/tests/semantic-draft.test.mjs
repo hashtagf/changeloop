@@ -40,6 +40,7 @@ import {
   devDocumentIssues, devDocumentShapeIssues, requiredDevSections
 } from "../runtime/workflow/validation/dev-document.mjs";
 import { splitProse } from "../runtime/workflow/draft-folder.mjs";
+import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 const slugify = (value) => String(value).toLowerCase()
   .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -369,7 +370,7 @@ test("draft inspection persists source freshness and blocks stale compilation", 
   const saveDraft = () => writeFileSync(draftPath, `${JSON.stringify(source, null, 2)}\n`);
   saveDraft();
   const fail = (message) => { throw new Error(message); };
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root, policy: () => ({ workflow: { grounding: "optional" } }), securityTerms: [], fail,
     pathInside: (parent, candidate) => {
       const rel = relative(parent, candidate);
@@ -391,7 +392,7 @@ test("draft inspection persists source freshness and blocks stale compilation", 
     initialBudget: () => ({}), gitHead: () => "head", preexistingDirty: () => [],
     now: () => "2026-09-15T00:00:00.000Z", bindClaudeSession: () => {},
     validate: () => {}, rollbackStart: () => []
-  });
+  }));
   const priorLog = console.log;
   console.log = () => {};
   try {
@@ -512,7 +513,7 @@ test("semantic draft validates local integration documentation references", (t) 
   const draft = semanticDraft({ scratch: APPROVER_SCRATCH });
   draft.integrations[0].documentation.source = "docs/provider.md";
   writeFileSync(join(root, "draft.json"), `${JSON.stringify(draft, null, 2)}\n`);
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root, policy: () => ({ workflow: { grounding: "optional" } }), securityTerms: [],
     fail: (message) => { throw new Error(message); },
     pathInside: (parent, candidate) => {
@@ -521,7 +522,7 @@ test("semantic draft validates local integration documentation references", (t) 
     },
     readJson: (path) => JSON.parse(readFileSync(path, "utf8")),
     slugify, changePath: () => root, loadRuntime: () => ({})
-  });
+  }));
   assert.equal(lifecycle.loadDraft("draft.json").integrations[0]
     .documentation.source, "docs/provider.md");
   draft.integrations[0].documentation.source = "docs/missing.md";
@@ -617,12 +618,12 @@ test("semantic materialization omits virtual-default files and writes typed exte
     writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
   };
   writeJson(join(root, "evidence.yaml"), { version: 1, claims: [] });
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root, policy: () => ({ workflow: { grounding: "optional" } }), securityTerms: [],
     fail: (message) => { throw new Error(message); }, pathInside: () => true,
     readJson: (path) => JSON.parse(readFileSync(path, "utf8")), writeJson,
     slugify, changePath: () => root, loadRuntime: () => state
-  });
+  }));
   const mapping = "## Affected folders\n\n```text\nsrc/payment/ — retry policy\n```\n\n" +
     "| Path | Responsibility | Requirement | Task | Verification |\n" +
     "|---|---|---|---|---|\n| src/payment | Retry safely | payment-retry | implement-retry | npm test |";
@@ -1372,7 +1373,7 @@ test(`change amend from ${initialStatus} installs atomically and restores files 
     provider: "lint", status: "pass", contractFingerprint: contractFingerprint()
   }, null, 2)}\n`);
   const initialLintReceipt = JSON.parse(readFileSync(join(receipts, "lint.json"), "utf8"));
-  lifecycle = createChangeLifecycle({
+  lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root,
     policy: () => ({ workflow: { grounding: "optional" } }),
     securityTerms: [],
@@ -1425,7 +1426,7 @@ test(`change amend from ${initialStatus} installs atomically and restores files 
     providerWorkspaceHash: () => "workspace",
     providerInputIdentity: () => ({ mode: "declared", fingerprint: "inputs" }),
     stableHash
-  });
+  }));
   const priorLog = console.log;
   console.log = () => {};
   try {
@@ -1599,7 +1600,7 @@ function amendVerifyOnlySameContract(t, lintFingerprint) {
   writeFileSync(join(receipts, "lint.json"), lintReceipt);
   writeFileSync(join(receipts, "test.json"), `${JSON.stringify({ provider: "test",
     status: "fail", contractFingerprint: contractFingerprint() })}\n`);
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root,
     policy: () => ({ workflow: { grounding: "optional" } }),
     securityTerms: [],
@@ -1632,7 +1633,7 @@ function amendVerifyOnlySameContract(t, lintFingerprint) {
     providerWorkspaceHash: () => "workspace",
     providerInputIdentity: () => ({ mode: "declared", fingerprint: "inputs" }),
     stableHash
-  });
+  }));
   writeFileSync(join(root, "amendment.json"), JSON.stringify({
     version: 1, reason: "Correct the verify command",
     updateTasks: [{ key: "impl", verify: "npm test" }]
@@ -1702,7 +1703,7 @@ test("a verify-only change amend reruns that task's evidence and keeps the rest"
     `${JSON.stringify({ provider, status, contractFingerprint: contractFingerprint() })}\n`);
   writeReceipt("test", "fail");
   writeReceipt("lint", "pass");
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root,
     policy: () => ({ workflow: { grounding: "optional" } }),
     securityTerms: [],
@@ -1735,7 +1736,7 @@ test("a verify-only change amend reruns that task's evidence and keeps the rest"
     providerWorkspaceHash: () => "workspace",
     providerInputIdentity: () => ({ mode: "declared", fingerprint: "inputs" }),
     stableHash
-  });
+  }));
   const amend = (verify) => {
     writeFileSync(join(root, "amendment.json"), JSON.stringify({
       version: 1, reason: "Correct the verify command",
@@ -3363,7 +3364,7 @@ function startFixture(t) {
   }
   mkdirSync(join(changes, "archive", "2026-09-01-fix-rounding"), { recursive: true });
   const draftPath = join(root, "draft.json");
-  const lifecycle = createChangeLifecycle({
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
     root, policy: () => ({ workflow: { grounding: "optional" }, land: {} }), securityTerms: [],
     fail: (message) => { throw new Error(message); }, pathInside: () => true,
     readJson: (path) => JSON.parse(readFileSync(path, "utf8")), writeJson, slugify,
@@ -3380,7 +3381,7 @@ function startFixture(t) {
       rmSync(join(runtime, `${id}.json`), { force: true });
       return [];
     }
-  });
+  }));
   const start = (overrides = {}) => {
     writeJson(draftPath, {
       version: 4, id: "fix-change", intent: "Return the bounded result",

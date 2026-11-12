@@ -9,7 +9,7 @@ Run `claude-foundation advance <change> --through proven`: no-op `DONE`
 when proof is current (Build runs it). Else the coordinator reuses fresh receipts
 and refreshes stale proof.
 
-Execute each protocol-v6 action, then its exact `resume`; apply a `REPAIR` or
+Execute each protocol-v7 action, then its exact `resume`; apply a `REPAIR` or
 `EDIT` set whole. Stay in-session while a review runs: ending the reply kills
 it. Never fabricate evidence or invent a checker.
 

@@ -1,4 +1,5 @@
 import { currentWaivers } from "../core/user-decisions.mjs";
+import { requireDeps } from "../core/required-deps.mjs";
 import { grantVisualRepair, repairActionForWorkspace } from "../evidence/repair-runtime.mjs";
 import { recordVisualDriftWaiver } from "./change-validation.mjs";
 import { advisoryVisualLine } from "../evidence/visual-review.mjs";
@@ -13,6 +14,7 @@ import { readPrototypeBinding } from "./prototype-binding.mjs";
 import {
   lifecycleOutcome, lifecycleUserProjection, lifecycleUserState
 } from "../core/lifecycle-outcome.mjs";
+import { legacyLandSagaDecision, legacyLandSagaMarkers } from "../core/legacy-land-saga.mjs";
 import {
   actionableGuidance, automaticEvidenceWiring, automaticRecoveryAction,
   automaticReviewRun, createAdvanceRecovery, errorCodes, userEnvironmentAction,
@@ -22,7 +24,7 @@ import {
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { basename, isAbsolute, join, resolve } from "node:path";
 
-export const ADVANCE_PROTOCOL_VERSION = 6;
+export const ADVANCE_PROTOCOL_VERSION = 7;
 
 const command = (value) => `claude-foundation ${value}`;
 
@@ -50,15 +52,27 @@ function envelope(id, action, values = {}) {
       alternatives,
       statePreserved: true
     } : null,
-    resume: resumeCommand,
-    // Kept for v2 host adapters during the protocol migration.
-    resumeCommand
+    resume: resumeCommand
   }));
   return {
     ...value,
     userState: lifecycleUserState(value),
     user: lifecycleUserProjection(value)
   };
+}
+
+// A change left mid-way through the retired commit-based Land saga is
+// refused on every route with the user's choice of recovery; nothing runs.
+function legacyLandSagaAction(id, state, through = null) {
+  const markers = legacyLandSagaMarkers(state);
+  if (!markers.length) return null;
+  const decision = legacyLandSagaDecision(id, markers);
+  return envelope(id, "ASK_USER", {
+    legacyAction: "LEGACY_LAND_SAGA", actor: "user", boundary: "user-authority",
+    reason: decision.summary, decision, files: decision.files, recoveryType: "ASK_USER",
+    alternatives: decision.options.map((option) => option.outcome),
+    resumeCommand: resume(id, through)
+  });
 }
 
 // What an unchanged automated step reported, as one bounded line the agent can
@@ -1034,39 +1048,46 @@ export function coordinatorAction({
 }
 
 export function createAdvanceRuntime({
-  inspectSnapshots = (operation) => operation(),
+  inspectSnapshots,
   loadRuntime, agentDispatchValue, relevantHash, deliveredAiAttempts,
   authorityStatusValue, authorityNext, readJson, proofAdvancePath, stableHash,
-  proofReadinessValue = null, agentPlanValue = null,
+  proofReadinessValue, agentPlanValue,
   nowMs = Date.now,
-  assertApproval = null,
-  prepareBuild = null, runProof = null, runLand = null,
-  recoverReviewBindings = null,
-  recoverWorkspace = null,
-  recoverArchive = null,
-  recoverSandbox = null, recoverApply = null, saveRuntime = () => {}, proofIsCurrent = null,
-  settleSessionLeases = null, issueSessionLease = null, reverifyCompletedTasks = null,
+  assertApproval,
+  prepareBuild,
+  // Harness-run operations. Without one, advance hands the agent the action
+  // instead (inspection-only callers and focused tests).
+  runProof = null, runLand = null,
+  recoverReviewBindings,
+  recoverWorkspace,
+  recoverArchive,
+  recoverSandbox = null, recoverApply = null, saveRuntime, proofIsCurrent = null,
+  settleSessionLeases, issueSessionLease, reverifyCompletedTasks,
   // Resolves a change's packet directory; enables `contextFiles` on EDIT/REPAIR.
   changePath = null,
-  // Project root whose `.claude/skills/<name>/SKILL.md` enables `skills` on a
-  // Build EDIT.
-  projectRoot = null,
   // Harness-owned operations advance performs itself instead of handing the
   // agent a primitive: detected provider wiring and a configured reviewer.
-  wireEvidence = null, runReview = null, synchronizeAgreement = null,
-  authorizeLand = null,
-  hasLandGrant = () => false,
-  recordPhase = null, output = console.log,
-  capture = (operation) => operation(),
-  captureAsync = async (operation) => operation(),
-  markBlocked = () => {},
+  wireEvidence = null, runReview = null, synchronizeAgreement,
+  authorizeLand,
+  hasLandGrant,
+  recordPhase, output = console.log,
+  capture,
+  captureAsync,
+  markBlocked,
   // Authority the change already needs (signed CI, ...); asked with spec
   // approval so it never first surfaces at Build dispatch.
-  pendingApprovalDecisions = () => [],
+  pendingApprovalDecisions,
   // Writes the approval package and returns { path } or { error }; a failure
   // never changes the approval question.
-  approvalPackageLink = () => null
+  approvalPackageLink
 }) {
+  requireDeps("createAdvanceRuntime", {
+    inspectSnapshots, authorityNext, proofReadinessValue, agentPlanValue, assertApproval,
+    prepareBuild, recoverReviewBindings, recoverWorkspace, recoverArchive, saveRuntime,
+    settleSessionLeases, issueSessionLease, reverifyCompletedTasks, synchronizeAgreement,
+    authorizeLand, hasLandGrant, recordPhase, capture, captureAsync, markBlocked,
+    pendingApprovalDecisions, approvalPackageLink
+  });
   // Spec approval is the one Change-time question; known authority gates ride
   // along with it instead of stopping Build later.
   function failureAction(id, error, options) {
@@ -1149,7 +1170,9 @@ export function createAdvanceRuntime({
     try {
       return capture(() => {
         const state = loadRuntime(id);
-        assertApproval?.(id, state);
+        const legacy = legacyLandSagaAction(id, state);
+        if (legacy) return legacy;
+        assertApproval(id, state);
         if (state.status === "archived") return coordinatorAction({
           id, state, dispatch: { action: "build-complete" }, workspaceHash: null,
           stableHash
@@ -1160,19 +1183,17 @@ export function createAdvanceRuntime({
         // compiled graph. A planning failure leaves dispatch to plan (and
         // report) exactly as before.
         let readPlan = null;
-        if (agentPlanValue) {
-          try { readPlan = agentPlanValue(id, options); }
-          catch { readPlan = null; }
-        }
+        try { readPlan = agentPlanValue(id, options); }
+        catch { readPlan = null; }
         const dispatch = agentDispatchValue(id, options, readPlan);
         let proofPreflight = null;
         if (dispatch.action === "build-complete") {
           stage = "prove";
-          if (proofReadinessValue) proofPreflight = proofReadinessValue(id, "prove", options);
+          proofPreflight = proofReadinessValue(id, "prove", options);
         }
         const openRequests = authority.requests || [];
         let plan = null;
-        if (agentPlanValue && ["run-in-session", "run-leased-in-session", "spawn-group"]
+        if (["run-in-session", "run-leased-in-session", "spawn-group"]
           .includes(dispatch.action)) {
           try { plan = readPlan || agentPlanValue(id, options); }
           catch { /* dispatch still carries an exact compatibility route */ }
@@ -1196,8 +1217,7 @@ export function createAdvanceRuntime({
           plan,
           proofIsCurrent: proofIsCurrent && state.status === "proven"
             ? proofIsCurrent(id) : null,
-          authorityActions: authorityNext
-            ? authorityNext(id, openRequests[0]?.type || "review", openRequests) : null,
+          authorityActions: authorityNext(id, openRequests[0]?.type || "review", openRequests),
           stableHash,
           automation
         });
@@ -1433,11 +1453,11 @@ export function createAdvanceRuntime({
   async function advanceThrough(id, through, internal = { applyRecovered: [], notices: [] }) {
     let stage = "build";
     const finish = async (value) => {
-      if (issueSessionLease && value?.action === "EDIT") {
+      if (value?.action === "EDIT") {
         try { value = capture(() => issueSessionLease(id, value)); }
         catch (error) { value = failureAction(id, error, { stage, through }); }
       }
-      value = projected({ ...withContext(id, value), resume: resume(id, through), resumeCommand: resume(id, through) });
+      value = projected({ ...withContext(id, value), resume: resume(id, through) });
       try { value = projected(recovery.observe(id, value)); }
       catch (error) {
         // Recovery bookkeeping must not hide the original failure or turn a
@@ -1476,7 +1496,7 @@ export function createAdvanceRuntime({
     };
     let recordedPhase = null;
     const recordActivePhase = (phase) => {
-      if (phase && phase !== recordedPhase && recordPhase) {
+      if (phase && phase !== recordedPhase) {
         recordPhase(id, phase);
         recordedPhase = phase;
       }
@@ -1486,6 +1506,8 @@ export function createAdvanceRuntime({
         if (through && !["build", "proven", "archived"].includes(through))
           throw new Error("advance --through must be build|proven|archived");
         let initial = loadRuntime(id);
+        const legacy = legacyLandSagaAction(id, initial, through);
+        if (legacy) return legacy;
         // Remember the furthest target asked for, so a route printed later
         // (next:, resume hints) continues toward it instead of repeating a
         // shorter one. Monotonic; Land authority is still its own grant.
@@ -1494,14 +1516,14 @@ export function createAdvanceRuntime({
           initial.requestedThrough = through;
           saveRuntime(initial);
         }
-        if (through === "archived" && recoverArchive) {
+        if (through === "archived") {
           if (["proven", "applied", "archived"].includes(initial.status)) stage = "land";
           if (initial.advanceRecovery?.pending?.paused)
             return pendingAction(id, through, initial.advanceRecovery.pending);
           if (await recoverArchive(id)) return done(id, "archived", through);
         }
         if (initial.status === "archived") return done(id, "archived", through);
-        if (initial.workspace?.amendmentReplay && recoverWorkspace) {
+        if (initial.workspace?.amendmentReplay) {
           if (initial.advanceRecovery?.pending?.paused)
             return pendingAction(id, through, initial.advanceRecovery.pending);
           // Approval belongs to the packet retained in replay staging. Restore
@@ -1510,7 +1532,7 @@ export function createAdvanceRuntime({
           initial = loadRuntime(id);
         }
         const explicitLand = through === "archived" && landableGrant(id);
-        if (!explicitLand) assertApproval?.(id, initial, { workspace: false });
+        if (!explicitLand) assertApproval(id, initial, { workspace: false });
         const pending = recovery.pending(id);
         if (pending && (pending.paused || pending.decision.kind !== "external-dependency"))
           return pendingAction(id, through, pending);
@@ -1523,8 +1545,7 @@ export function createAdvanceRuntime({
           const routed = visualDriftAnswer(id, answer, through);
           if (routed) return finish(withContext(id, routed));
         }
-        if (answer?.kind === "amended-agreement-conflict" && answer.choice !== "pause" &&
-            synchronizeAgreement)
+        if (answer?.kind === "amended-agreement-conflict" && answer.choice !== "pause")
           await synchronizeAgreement(id, { resolve: `openspec/changes/${id}` });
         // An answer to a no-progress decision other than pause resumes the
         // gate as a first observation, so it returns repair work, not the
@@ -1536,29 +1557,28 @@ export function createAdvanceRuntime({
         // Preparation is identity-reused and also owns recovery of failed
         // sandbox setup. Re-enter it while Build is active so a prior setup
         // failure cannot be bypassed by the next coordinator invocation.
-        if (!explicitLand && ["change", "building"].includes(initial.status) && prepareBuild) {
+        if (!explicitLand && ["change", "building"].includes(initial.status)) {
           recordActivePhase("build");
           await prepareBuild(id);
         }
         // Resuming after a session task is its completion signal: release the
         // harness-issued lease and record the task before dispatching again.
-        if (!explicitLand && settleSessionLeases && loadRuntime(id).status === "building")
+        if (!explicitLand && loadRuntime(id).status === "building")
           capture(() => settleSessionLeases(id));
         // Implemented tasks whose execution record went stale are re-verified
         // by the harness, never handed back as work to redo or diffs to split.
-        if (!explicitLand && reverifyCompletedTasks && loadRuntime(id).status === "building")
+        if (!explicitLand && loadRuntime(id).status === "building")
           capture(() => reverifyCompletedTasks(id));
         // Build preparation already synchronizes a revised agreement. After
         // proof, the same safe sync replaces an operator `sandbox sync`: it
         // invalidates only evidence the revision touched, and Land would
         // otherwise refuse the edited packet.
-        if (synchronizeAgreement && loadRuntime(id).status === "proven")
+        if (loadRuntime(id).status === "proven")
           await synchronizeAgreement(id);
         if (!through) return finish(readAdvanceValue(id));
         const targetResume = (value) => ({
           ...value,
-          resume: resume(id, through),
-          resumeCommand: resume(id, through)
+          resume: resume(id, through)
         });
         let unchangedAutomations = 0;
         const automation = { wiringAttempted: false };
@@ -1569,8 +1589,7 @@ export function createAdvanceRuntime({
             ? { action: "WORKING", legacyAction: "LAND_READY", actor: "harness",
               reason: "explicit Land authority accepts the current assurance" }
             : readAdvanceValue(id, {}, automation);
-          if (through !== "build" && value.legacyAction === "REPAIR_REVIEW_INFRASTRUCTURE" &&
-              recoverReviewBindings) {
+          if (through !== "build" && value.legacyAction === "REPAIR_REVIEW_INFRASTRUCTURE") {
             stage = "prove";
             recordActivePhase("prove");
             if (await recoverReviewBindings(id)) value = readAdvanceValue(id, {}, automation);
@@ -1610,7 +1629,7 @@ export function createAdvanceRuntime({
           } else if (value.legacyAction === "LAND_READY" && through === "archived") {
             // The explicit archived target authorizes Land only once the exact
             // proof is ready. Earlier phases and inspection grant nothing.
-            if (!explicitLand && !hasLandGrant(id) && authorizeLand) await authorizeLand(id);
+            if (!explicitLand && !hasLandGrant(id)) await authorizeLand(id);
             if (!explicitLand && !hasLandGrant(id)) return finish(targetResume(value));
             if (!runLand) return finish(targetResume(value));
             stage = "land";
@@ -1674,7 +1693,7 @@ export function createAdvanceRuntime({
     if (!flags.through && !flags.inspect &&
         process.env.FOUNDATION_READ_ONLY_INSPECTION !== "1") {
       const phase = phaseForAction(value);
-      if (phase && recordPhase) recordPhase(id, phase);
+      if (phase) recordPhase(id, phase);
     }
     output(JSON.stringify(value, null, flags.pretty ? 2 : 0));
     return value;

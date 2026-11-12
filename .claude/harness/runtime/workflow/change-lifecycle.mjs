@@ -10,6 +10,7 @@ import {
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { acquireProcessLock } from "../core/process-lock.mjs";
+import { requireDeps } from "../core/required-deps.mjs";
 import { DRAFT_FOLDER_VERSION, loadDraftFolder } from "./draft-folder.mjs";
 import { transitionLifecycleState } from "../core/lifecycle-reducer.mjs";
 import { foundationChangeStores, retiredChangeStores } from "./retired-change-stores.mjs";
@@ -1161,13 +1162,13 @@ export function pathRiskNoteLine(draft) {
 export function createChangeLifecycle({
   root,
   policy,
-  approvalPackageLink = () => null,
+  approvalPackageLink,
   // Records the approval page's digest and the facts digest at start, revise,
   // and amend; advisory, so a failure here never changes the command's result.
-  recordPrototypeSync = () => null,
+  recordPrototypeSync,
   // { configured, required }: roles from approval.roles and the lanes this
   // change needs (configured roles the scratch router selects).
-  approvalLanes = () => ({ configured: [], required: [] }),
+  approvalLanes,
   securityTerms,
   fail,
   pathInside,
@@ -1175,12 +1176,12 @@ export function createChangeLifecycle({
   writeJson,
   slugify,
   changePath,
-  activeChangePath = changePath,
+  activeChangePath,
   loadRuntime,
   saveRuntime,
   setOperationChangeId,
   initialBudget,
-  git = null,
+  git,
   gitHead,
   preexistingDirty,
   now,
@@ -1188,26 +1189,31 @@ export function createChangeLifecycle({
   validate,
   showPacket,
   measureStage,
-  receiptPath = null,
-  receiptValidity = null,
-  contractFingerprint = null,
-  requiredProviders = null,
-  providerConfig = null,
-  claimsForProvider = null,
-  providerWorkspaceHash = null,
-  providerInputIdentity = null,
-  relevantHash = null,
-  stableHash = null,
-  trapFailures = (operation) => operation(),
-  rollbackStart = () => [],
-  repositoryCatalog = null,
-  decisionGateNotice = () => null
+  receiptPath,
+  receiptValidity,
+  contractFingerprint,
+  requiredProviders,
+  providerConfig,
+  claimsForProvider,
+  providerWorkspaceHash,
+  providerInputIdentity,
+  relevantHash,
+  stableHash,
+  trapFailures,
+  rollbackStart,
+  repositoryCatalog,
+  decisionGateNotice
 }) {
+  requireDeps("createChangeLifecycle", {
+    approvalPackageLink, recordPrototypeSync, approvalLanes, activeChangePath, git,
+    receiptPath, receiptValidity, contractFingerprint, requiredProviders, providerConfig,
+    claimsForProvider, providerWorkspaceHash, providerInputIdentity, relevantHash, stableHash,
+    trapFailures, rollbackStart, repositoryCatalog, decisionGateNotice
+  });
   // Declared repositories other than the control root (submodules and
   // registered siblings). An unreadable catalog is reported by the commands
   // that use it; here it only means no repository-binding checks apply.
   function declaredRepositories() {
-    if (!repositoryCatalog) return [];
     try {
       const rows = trapFailures(() => repositoryCatalog())?.repositories;
       return Array.isArray(rows) ? rows.filter((row) => row?.id && row.id !== "root") : [];
@@ -1268,8 +1274,6 @@ export function createChangeLifecycle({
   }
 
   function selectiveBinding(id, provider, contractRevision, receipt = null) {
-    if (!receiptValidity || !providerConfig || !claimsForProvider || !providerWorkspaceHash ||
-        !providerInputIdentity || !relevantHash || !stableHash) return null;
     const config = providerConfig(id, provider);
     const claims = claimsForProvider(id, provider).map((claim) => claim.id).sort();
     const workspaceHash = providerWorkspaceHash(id, provider, relevantHash(id));
@@ -1381,7 +1385,6 @@ export function createChangeLifecycle({
   }
 
   function repositoryGitPaths() {
-    if (typeof git !== "function") return { includedPaths: null, trackedPaths: [] };
     const tracked = git(["ls-files", "-z"], root);
     const included = git([
       "ls-files", "-z", "--cached", "--others", "--exclude-standard"
@@ -3119,8 +3122,6 @@ export function createChangeLifecycle({
   // Claims whose command evidence already passed and is still valid: the task
   // verify commands those receipts ran are finished work, not open drafts.
   function provenCommandClaimIds(id) {
-    if (!receiptPath || !receiptValidity || !requiredProviders || !providerConfig ||
-        !claimsForProvider) return [];
     return [...new Set(requiredProviders(id).flatMap((provider) => {
       if (!["command", "test-discovery"].includes(providerConfig(id, provider)?.adapter)) return [];
       const path = receiptPath(id, provider);
@@ -3229,11 +3230,11 @@ export function createChangeLifecycle({
     // the agreement already had.
     ...(compiled.addedTaskClaimIds?.length
       ? [{ dimension: "task-addition", claimIds: compiled.addedTaskClaimIds }] : [])];
-    const configuredProviderNames = requiredProviders ? requiredProviders(id) : [];
+    const configuredProviderNames = requiredProviders(id);
     const providerEntries = new Map(Object.entries(compiled.providers || {}));
     for (const name of configuredProviderNames) {
       if (providerEntries.has(name)) continue;
-      const config = providerConfig ? providerConfig(id, name) : null;
+      const config = providerConfig(id, name);
       if (config) providerEntries.set(name, config);
     }
     const providers = Object.fromEntries([...providerEntries].map(([name, config]) => [name, {
@@ -3261,13 +3262,13 @@ export function createChangeLifecycle({
     compiled.invalidation = invalidation;
 
     const priorContractRevision = Number(state.contractRevision || 0);
-    const priorContractFingerprint = contractFingerprint ? contractFingerprint(id) : null;
+    const priorContractFingerprint = contractFingerprint(id);
     const proofAdvancePath = join(root, ".foundation", "evidence", id, "proof-advance.json");
     const priorProofAdvance = existsSync(proofAdvancePath)
       ? readFileSync(proofAdvancePath, "utf8") : null;
     const receiptBackups = new Map();
     const receiptBindings = [];
-    if (receiptPath && existsSync(dirname(receiptPath(id, "__provider__")))) {
+    if (existsSync(dirname(receiptPath(id, "__provider__")))) {
       for (const provider of invalidation.proof.preserveReceipts) {
         const path = receiptPath(id, provider);
         if (!existsSync(path)) continue;
@@ -3303,7 +3304,7 @@ export function createChangeLifecycle({
       validate(id, "active");
       assertAmendmentRevision(id, expectedRevision);
       const currentContractRevision = priorContractRevision + 1;
-      const currentRequiredProviders = requiredProviders ? requiredProviders(id) : [];
+      const currentRequiredProviders = requiredProviders(id);
       const currentBindings = invalidation.proof.preserveReceipts
         .map((provider) => selectiveBinding(id, provider, currentContractRevision))
         .filter(Boolean);
@@ -3317,7 +3318,7 @@ export function createChangeLifecycle({
         currentContractRevision
       });
       compiled.invalidation.proofRecovery = proofRecovery;
-      if (proofRecovery.status === "READY" && receiptPath && contractFingerprint) {
+      if (proofRecovery.status === "READY") {
         const nextFingerprint = contractFingerprint(id);
         for (const provider of proofRecovery.providers.preserved) {
           const priorReceipt = receiptBackups.get(provider);
@@ -3448,9 +3449,8 @@ export function createChangeLifecycle({
       if (installed && existsSync(basePath))
         rmSync(basePath, { recursive: true, force: true });
       if (existsSync(priorPath)) renameSync(priorPath, basePath);
-      if (receiptPath)
-        for (const [provider, receipt] of receiptBackups)
-          writeJson(receiptPath(id, provider), receipt);
+      for (const [provider, receipt] of receiptBackups)
+        writeJson(receiptPath(id, provider), receipt);
       for (const path of rebindAuditPaths) rmSync(path, { force: true });
       if (priorProofAdvance !== null) {
         mkdirSync(dirname(proofAdvancePath), { recursive: true });
