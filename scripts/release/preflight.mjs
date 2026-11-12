@@ -89,6 +89,8 @@ export function structuralReleaseChecks({ version, protocol, foundationSource,
     workflow.includes("rehearsal-evidence.mjs verify") && workflow.includes("actions: read") &&
     workflow.includes('.head_branch == "main"'),
   "release workflow verifies source-bound rehearsal evidence before reuse");
+  add("workflow-release-gate", workflow.includes("sh .claude/tests/run-all.sh --release"),
+    "release workflow runs the deterministic gate with the release-only sentinel");
   add("workflow-node-supported", /node-version: "24"/.test(workflow) &&
     /^>=20\.19\.0$/.test(packageJson.engines?.node || ""),
   "CI Node and minimum supported Node are declared");

@@ -76,12 +76,20 @@ function fixture(capability = "test", configPatch = {}, overrides = {}) {
     reviewReceiptBinding: () => ({}),
     recordRepairClosureAttempt: () => ({ digest: "closure" }),
     deliveredAiAttempts: () => [],
-    foundationPolicy: () => ({ workflow: { reviewCircuit: "legacy" } }),
     die: fail,
     ...overrides
   });
   const recorded = (provider = "provider") => receipts.get(receiptPath("change", provider));
   return { runtime, config, recorded };
+}
+
+// Every review records against a dispatched authority attempt.
+const fullDispatch = {
+  digest: "attempt", attempt: 1, requestId: "request", packetDigest: "packet",
+  scope: { mode: "full", baseAttemptDigest: null, digest: "scope" }
+};
+function reviewFixture(overrides = {}) {
+  return fixture("review", {}, { reviewAttemptByDigest: () => fullDispatch, ...overrides });
 }
 
 const externalEvidence = {
@@ -365,7 +373,7 @@ test("records structured acceptance and review receipts", () => {
   assert.equal(acceptance.recorded().acceptance.actor.identity, "product-owner");
   assert.equal(acceptance.recorded().provenance.source, "human:product-owner");
 
-  const review = fixture("review");
+  const review = reviewFixture();
   review.runtime.recordReceipt("change", "provider", "pass", {
     ...externalEvidence,
     "reviewer-type": "human", "reviewer-identity": "independent-reviewer",
@@ -383,7 +391,7 @@ test("copy review gets reuse identity without broadening human acceptance", () =
     criterion: ["criterion-a"], reference: ["fixture://acceptance"]
   });
   assert.equal(acceptance.recorded().rebind, undefined);
-  const review = fixture("review", {}, { loadRuntime });
+  const review = reviewFixture({ loadRuntime });
   review.runtime.recordReceipt("change", "provider", "pass", {
     ...externalEvidence, "reviewer-type": "human",
     "reviewer-identity": "independent-reviewer", "unresolved-blockers": 0,
@@ -432,54 +440,54 @@ const aiReview = {
 };
 
 test("review identity and provenance validation fail closed", () => {
-  assert.throws(() => fixture("review").runtime.recordReceipt(
+  assert.throws(() => reviewFixture().runtime.recordReceipt(
     "change", "provider", "pass", { ...externalEvidence, "unresolved-blockers": 0 }
   ), /reviewer-type/);
-  assert.throws(() => fixture("review").runtime.recordReceipt(
+  assert.throws(() => reviewFixture().runtime.recordReceipt(
     "change", "provider", "pass", { ...humanReview, "reviewer-identity": "" }
   ), /reviewer-identity/);
-  assert.throws(() => fixture("review").runtime.recordReceipt(
+  assert.throws(() => reviewFixture().runtime.recordReceipt(
     "change", "provider", "pass", {
       ...aiReview, "reviewer-provider-family": "", "reviewer-session": ""
     }
   ), /provider\/model family/);
-  assert.throws(() => fixture("review").runtime.recordReceipt(
+  assert.throws(() => reviewFixture().runtime.recordReceipt(
     "change", "provider", "pass", { ...aiReview, "reviewer-session": "" }
   ), /actual reviewer session/);
-  assert.throws(() => fixture("review", {}, { subjectProvenance: () => [] }).runtime
+  assert.throws(() => reviewFixture({ subjectProvenance: () => [] }).runtime
     .recordReceipt("change", "provider", "pass", humanReview), /implementation provenance/);
-  assert.throws(() => fixture("review", {}, {
+  assert.throws(() => reviewFixture({
     reviewProvenanceResult: () => ({ complete: false })
   }).runtime.recordReceipt("change", "provider", "pass", humanReview), /complete structured/);
-  assert.throws(() => fixture("review", {}, {
+  assert.throws(() => reviewFixture({
     reviewProvenanceResult: () => ({ complete: true, independent: false, diverse: true })
   }).runtime.recordReceipt("change", "provider", "pass", humanReview), /must use an identity/);
-  assert.throws(() => fixture("review", {}, {
+  assert.throws(() => reviewFixture({
     reviewProvenanceResult: () => ({ complete: true, independent: true, diverse: false })
   }).runtime.recordReceipt("change", "provider", "pass", humanReview), /different provider/);
 });
 
 test("review findings, dispatch scope, and attempt binding are validated", () => {
-  assert.throws(() => fixture("review").runtime.recordReceipt(
+  assert.throws(() => reviewFixture().runtime.recordReceipt(
     "change", "provider", "pass", { ...humanReview, "unresolved-blockers": undefined }
   ), /requires --unresolved-blockers/);
-  assert.throws(() => fixture("review").runtime.recordReceipt(
+  assert.throws(() => reviewFixture().runtime.recordReceipt(
     "change", "provider", "fail", { ...humanReview, "unresolved-blockers": -1 }
   ), /non-negative integers/);
-  assert.throws(() => fixture("review").runtime.recordReceipt(
+  assert.throws(() => reviewFixture().runtime.recordReceipt(
     "change", "provider", "pass", { ...humanReview, "unresolved-blockers": 1 }
   ), /cannot contain unresolved blockers/);
-  assert.throws(() => fixture("review").runtime.recordReceipt(
+  assert.throws(() => reviewFixture().runtime.recordReceipt(
     "change", "provider", "fail", {
       ...humanReview, findings: [{ id: "bad", severity: "note", message: "bad" }]
     }
   ), /unique IDs/);
-  assert.throws(() => fixture("review").runtime.recordReceipt(
+  assert.throws(() => reviewFixture().runtime.recordReceipt(
     "change", "provider", "fail", {
       ...humanReview, findings: [{ id: "major-1", severity: "major", message: "fix" }]
     }
   ), /counts must equal/);
-  const failedWithFinding = fixture("review");
+  const failedWithFinding = reviewFixture();
   failedWithFinding.runtime.recordReceipt("change", "provider", "fail", {
     ...humanReview, "unresolved-blockers": 1,
     findings: [{
@@ -491,27 +499,26 @@ test("review findings, dispatch scope, and attempt binding are validated", () =>
   assert.deepEqual(failedWithFinding.recorded().review.findings.unresolvedIds, ["major-1"]);
   assert.deepEqual(failedWithFinding.recorded().review.findings.items[0].claimIds, ["claim-1"]);
   assert.throws(() => fixture("review").runtime.recordReceipt(
-    "change", "provider", "pass", humanReview, { reviewCircuit: "full-delta" }
+    "change", "provider", "pass", humanReview
   ), /authority dispatch attempt/);
 
   const dispatched = {
     digest: "dispatch-attempt", attempt: 2, requestId: "request", packetDigest: "packet",
     scope: { mode: "delta", baseAttemptDigest: "base", digest: "scope" }
   };
-  assert.throws(() => fixture("review", {}, {
+  assert.throws(() => reviewFixture({
     reviewAttemptByDigest: () => dispatched
-  }).runtime.recordReceipt("change", "provider", "pass", aiReview, {
-    reviewCircuit: "full-delta"
-  }), /requires at least one scope-path/);
+  }).runtime.recordReceipt("change", "provider", "pass", aiReview),
+  /requires at least one scope-path/);
 
-  const valid = fixture("review", {}, { reviewAttemptByDigest: () => dispatched });
+  const valid = reviewFixture({ reviewAttemptByDigest: () => dispatched });
   valid.runtime.recordReceipt("change", "provider", "pass", {
     ...aiReview, "scope-path": ["src/a.mjs"]
-  }, { reviewCircuit: "full-delta" });
+  });
   assert.equal(valid.recorded().review.scope.mode, "delta");
   assert.equal(valid.recorded().review.requestId, "request");
 
-  assert.throws(() => fixture("review", {}, { reviewAttemptIsValid: () => false }).runtime
+  assert.throws(() => reviewFixture({ reviewAttemptIsValid: () => false }).runtime
     .recordReceipt("change", "provider", "pass", humanReview), /does not match/);
 });
 

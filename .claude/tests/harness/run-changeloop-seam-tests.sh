@@ -576,6 +576,15 @@ $F sandbox create "$C" > /dev/null
 sed -i.bak 's/- \[ \]/- [x]/g' "openspec/changes/$C/tasks.md" && rm -f "openspec/changes/$C/tasks.md.bak"
 $F sandbox sync "$C" > /dev/null
 $F authority-request "$C" --type review > "$LOGS/request.json" 2>&1
+# Review evidence binds to a dispatched attempt: the request is handed to the
+# reviewer before its response can record.
+dispatch_request_id="$(node -e '
+  const fs = require("fs");
+  const raw = fs.readFileSync(process.argv[1], "utf8");
+  process.stdout.write(JSON.parse(raw.slice(raw.indexOf("{"))).requestId);
+' "$LOGS/request.json")"
+$F authority-dispatch "$C" --request "$dispatch_request_id" --scope full \
+  --reviewer-type human --reviewer-identity a-human-reviewer > "$LOGS/dispatch.txt" 2>&1
 $F authority-status "$C" --template > "$LOGS/template.json" 2>&1
 
 assert_file_contains "the review template names the reviewer type" \

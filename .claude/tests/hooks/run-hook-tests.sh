@@ -80,7 +80,26 @@ if command -v jq >/dev/null 2>&1; then
   strict="$(secret_event Read "{\"file_path\":\"$SECRET_DIR/.env\"}" | FOUNDATION_SECRETS_GUARD=block bash "$SECRETS")"
   assert_contains "strict secrets mode still refuses" "$strict" '"decision": "block"'
   assert_not_contains "strict refusal does not recommend disabling itself" "$strict" "temporarily disable the hook"
-  rm -rf "$SECRET_DIR"
+
+  # A project reached through a symlinked path (macOS /tmp, a symlinked home)
+  # hands Node a logical argv[1] while import.meta.url is the physical path;
+  # a main-module check that compared them unresolved left every hook entry
+  # point silently inert, so the secrets guard refused instead of redacting.
+  LINK_DIR="$(mktemp -d)"
+  ln -s "$ROOT" "$LINK_DIR/project"
+  linked_hooks="$LINK_DIR/project/.claude/hooks"
+  linked="$(secret_event Read "{\"file_path\":\"$SECRET_DIR/.env\"}" | bash "$linked_hooks/protect-secrets.sh")"
+  assert_contains "secret hook redacts through a symlinked project path" "$linked" 'claude-foundation-redacted'
+  assert_not_contains "secret hook never refuses through a symlinked project path" "$linked" '"decision"'
+  detached='{"tool_name":"Bash","tool_input":{"command":"claude-foundation authority run demo &"}}'
+  for hook in no-detached-authority.mjs shell-route-guard.mjs; do
+    assert_eq "$hook runs as an entry point through a symlinked project path" \
+      "$(printf '%s' "$detached" | node "$ROOT/.claude/hooks/$hook")" \
+      "$(printf '%s' "$detached" | node "$linked_hooks/$hook")"
+  done
+  assert_contains "a detached authority run is rewritten through a symlinked project path" \
+    "$(printf '%s' "$detached" | node "$linked_hooks/no-detached-authority.mjs")" 'updatedInput'
+  rm -rf "$SECRET_DIR" "$LINK_DIR"
 
   assert_cmd_zero "detached authority run is rewritten to run attached" \
     node --test "$ROOT/.claude/tests/hooks/no-detached-authority.test.mjs"

@@ -128,7 +128,8 @@ jobs:
           export PATH="$PWD/node_modules/.bin:$PATH"
           # The authoritative suite already contains all six semantic mutation
           # lanes, so do not execute the same mutations a second time here.
-          sh .claude/tests/run-all.sh
+          # --release adds the zero-cost benchmark sentinel the default gate skips.
+          sh .claude/tests/run-all.sh --release
           npm run test:mutation:dashboard
           npm run quality:mutation:coverage:dashboard
           npm run quality:mutation:normalize:dashboard

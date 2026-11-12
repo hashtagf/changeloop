@@ -1560,7 +1560,7 @@ test("a rapid proposal carries header, scope, acceptance table, definition of do
   assert.match(proposal, /^- \*\*In scope \(`single-shot-change`\):\*\* The bounded result is returned$/m);
   assert.match(proposal, /^- \*\*Out of scope:\*\* edits outside `src\/result\.js`, `test\/result\.test\.js`$/m);
   assert.match(proposal, /\| bounded-result \| Bounded input \| success \| T001 \| test: `test\/result\.test\.js` \| — \|/);
-  assert.match(proposal, /^- Review: not required \(legacy review policy: no AI review runs\)\.$/m);
+  assert.match(proposal, /^- Review: not required \(rapid lane, low tier: deterministic evidence only\)\.$/m);
   assert.match(proposal, /^- Changed tests fail on the original code\.$/m);
   assert.match(proposal, /^- Success: acceptance scenarios above pass\.$/m);
   // Each fact has one home: no plan table, change list, or folder tree here.

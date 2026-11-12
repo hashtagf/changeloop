@@ -398,6 +398,25 @@ assert_file_absent "a rolled-back install removes the REVIEW.md it seeded" \
 assert_file_contains "a rolled-back install restores the project's foundation.json" \
   "$review_failed/foundation.json" "{ not json"
 
+# Review routing is retired from consumer choice: the runtime refuses the old
+# "legacy" values, so install/upgrade must rewrite them to the shipped
+# risk-tiered/full-delta policy while preserving neighbouring project keys.
+review_routing="$TMP/review-routing"
+mkdir -p "$review_routing"
+printf '%s\n' \
+  '{"version":1,"workflow":{"grounding":"optional","reviewPolicy":"legacy","reviewCircuit":"legacy"}}' \
+  > "$review_routing/foundation.json"
+assert_cmd_zero "upgrade over legacy review routing applies" \
+  bash "$ROOT/install.sh" "$review_routing" --source "$ROOT" --yes
+assert_eq "upgrade rewrites legacy reviewPolicy to the shipped value" "risk-tiered" \
+  "$(jq -r '.workflow.reviewPolicy' "$review_routing/foundation.json")"
+assert_eq "upgrade rewrites legacy reviewCircuit to the shipped value" "full-delta" \
+  "$(jq -r '.workflow.reviewCircuit' "$review_routing/foundation.json")"
+assert_eq "review routing rewrite preserves project grounding" "optional" \
+  "$(jq -r '.workflow.grounding' "$review_routing/foundation.json")"
+assert_cmd_zero "rewritten review routing is accepted by the installed runtime" \
+  bash "$ROOT/cli.sh" --project "$review_routing" changes
+
 # Incident and lesson records: project-owned like REVIEW.md, seeded per file
 # only when absent, staged only when this run created them, rolled back.
 RECORD_TEMPLATES="$ROOT/.claude/harness/templates"
@@ -584,12 +603,11 @@ CLI="bash $ROOT/cli.sh"
 providers="$(bash "$ROOT/cli.sh" --project "$TARGET" providers)"
 assert_contains "native CLI exposes installed providers" "$providers" "dependency-supply-chain"
 # These two drafts predate Grounding v2 and exercise only atomic lifecycle
-# compatibility. Run them under the explicit legacy-optional policy, then
-# restore the installed required policy before later installer assertions.
+# compatibility. Run them under optional grounding (review routing is always
+# risk-tiered), then restore the installed required policy before later
+# installer assertions.
 cp "$TARGET/foundation.json" "$TMP/foundation-required.json"
-jq '.workflow.grounding = "optional" |
-    .workflow.reviewPolicy = "legacy" |
-    .workflow.reviewCircuit = "legacy"' "$TARGET/foundation.json" \
+jq '.workflow.grounding = "optional"' "$TARGET/foundation.json" \
   > "$TMP/foundation-atomic.json"
 cp "$TMP/foundation-atomic.json" "$TARGET/foundation.json"
 start_template="$(bash "$ROOT/cli.sh" --project "$TARGET" change start --template)"

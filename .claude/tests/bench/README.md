@@ -12,8 +12,9 @@ consumer lab, runner, oracles, scorecards, and the zero-cost release sentinel.
 | `tests/` | Deterministic tests for the above; registered in `run-all.sh` |
 | `rationale.md` | Historical record of measured and rejected cost optimizations |
 
-Deterministic checks run in the normal gate (`openspec native benchmark` and
-`openspec native sentinel`). Paid scenario runs are a separate, explicitly
+Deterministic checks run in the normal gate (`openspec native benchmark`); the
+release-only `openspec native sentinel` runs under `run-all.sh --release` and
+when `--affected` selects it for benchmark edits. Paid scenario runs are a separate, explicitly
 authorized release activity; see [RELEASING.md](../../../RELEASING.md).
 
 The earlier phase-orchestrator runner (`run-bench.sh` and its grading

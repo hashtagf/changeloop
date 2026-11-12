@@ -150,3 +150,14 @@ test("workload and benchmark fixture edits select the sentinel that runs the wor
     assert.ok(selected.includes("openspec native sentinel"), file);
   }
 });
+
+test("a cross-cutting edit selects the full gate, not the release-only sentinel", () => {
+  const known = [...labels, "openspec native sentinel"];
+  const releaseOnly = ["openspec native sentinel"];
+  const crossCutting = selectAffectedSuites([".claude/harness/foundation.mjs"], known, "",
+    { releaseOnly }).selected;
+  assert.deepEqual(crossCutting.sort(), [...labels].sort());
+  const benchmark = selectAffectedSuites([".claude/tests/bench/openspec-native/sentinel.mjs"],
+    known, "", { releaseOnly }).selected;
+  assert.ok(benchmark.includes("openspec native sentinel"));
+});

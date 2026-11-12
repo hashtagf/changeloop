@@ -7,7 +7,7 @@
 // A matching Bash allow rule, bypassPermissions, or an unparseable command
 // passes through.
 
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -178,7 +178,7 @@ export function projectContext(event, projectRoot) {
   };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const mode = (process.env.FOUNDATION_GUARDRAIL_MODE || "auto").toLowerCase();
   let raw = "";
   for await (const chunk of process.stdin) raw += chunk;

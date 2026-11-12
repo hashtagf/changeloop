@@ -362,7 +362,6 @@ function receiptFixture() {
     reviewAttemptByDigest: () => null, reviewAttemptIsValid: () => true,
     reviewReceiptBinding: () => ({}), recordRepairClosureAttempt: () => ({}),
     deliveredAiAttempts: () => [], groundingForReview: () => null,
-    foundationPolicy: () => ({ workflow: { reviewCircuit: "legacy" } }),
     die: (message) => { throw new Error(message); }
   });
   return { runtime, receipt: () => written.get("/receipts/change-a/perf.json") };

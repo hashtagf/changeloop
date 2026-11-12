@@ -1,7 +1,8 @@
 name: workflow-tests
 
-# Runs the deterministic workflow test harness (.claude/tests/run-all.sh) on any
-# change to the workflow product. Live e2e / benchmark suites are token-costed and
+# Runs the deterministic workflow test harness (.claude/tests/run-all.sh
+# --release: the full gate plus the release-only zero-cost benchmark sentinel)
+# on any change to the workflow product. Live e2e / benchmark suites are token-costed and
 # stay off in CI (run-all.sh skips them unless CLAUDE_E2E=1).
 on:
   pull_request:
@@ -121,7 +122,7 @@ jobs:
       - name: Ensure jq (harness dependency)
         run: command -v jq >/dev/null || { sudo apt-get update && sudo apt-get install -y jq; }
       - name: Run workflow test harness
-        run: sh .claude/tests/run-all.sh
+        run: sh .claude/tests/run-all.sh --release
       - name: Report paid agent evals owed (informational, never runs them)
         # Paid evals spend money and need a maintainer's authorization, so CI
         # only says when an instruction-surface change owes them.

@@ -452,7 +452,6 @@ const {
   reviewAttemptByDigest,
   reviewHistoryChainValid,
   assertReviewDispatchAllowed,
-  reserveReviewAttempt,
   dispatchReviewAttempt,
   completeReviewAttempt,
   recordRepairClosureAttempt,
@@ -951,10 +950,8 @@ const receiptRuntime = createReceiptRuntime({
   readJson,
   flagValues,
   reviewHistoryState,
-  reserveReviewAttempt,
   reviewAttemptByDigest,
   reviewAttemptIsValid,
-  reviewReceiptBinding,
   recordRepairClosureAttempt,
   deliveredAiAttempts,
   groundingForReview: (id) => {

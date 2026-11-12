@@ -185,8 +185,9 @@ afterward, the acceptance goes invalid rather than silently carrying over.
 Review asks whether the implementation is sound. The reviewer may be a human
 **or** a different AI — what matters is independence, not species.
 
-With `workflow.reviewPolicy: "risk-tiered"`, every change is reviewed and risk
-controls the bounded route. The exception is a low-tier rapid change that no
+Review always routes by risk tier (`workflow.reviewPolicy: "risk-tiered"`; the
+retired `legacy` value is refused): every change is reviewed and risk controls
+the bounded route. The exception is a low-tier rapid change that no
 security keyword, risk signal, or `--review` flags: the project's own tests
 prove it and no AI review runs.
 

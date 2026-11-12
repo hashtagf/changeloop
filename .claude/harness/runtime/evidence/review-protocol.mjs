@@ -170,13 +170,25 @@ export function createReviewProtocol({ stableHash, fail }) {
     return valid ? { findings, scope, scopePaths, reviewer } : null;
   }
 
+  // The receipt's finding counts are derived from the attempt's bound rows
+  // when it is recorded; a count that no longer matches them was edited after
+  // the fact, so the verdict is not the one the attempt delivered.
+  function findingCountsMatchAttempt(attempt, findings) {
+    const verifiedIds = attempt.verifiedFindingIds || [];
+    const rows = Array.isArray(attempt.findings) ? attempt.findings : [];
+    const blocking = rows.filter((row) => ["blocker", "major"].includes(row?.severity)).length;
+    return Number(findings.verified) === verifiedIds.length &&
+      (rows.length === 0 || Number(findings.unresolvedBlockers) === blocking);
+  }
+
   function version23FindingsMatch(attempt, findings) {
     if (attempt.version === 2) return true;
     return [
       digestValuesEqual(attempt.findings, findings.items),
       digestValuesEqual(
         [...(attempt.verifiedFindingIds || [])].sort(),
-        [...(findings.verifiedIds || [])].sort())
+        [...(findings.verifiedIds || [])].sort()),
+      findingCountsMatchAttempt(attempt, findings)
     ].every(Boolean);
   }
 
@@ -230,7 +242,8 @@ export function createReviewProtocol({ stableHash, fail }) {
       attempt.packetDigest === receipt.review?.packetDigest,
       attempt.sourceAttemptDigest === closure.sourceAttemptDigest,
       digestValuesEqual(attempt.evidenceBindings, closure.evidenceBindings),
-      digestValuesEqual(attempt.verifiedFindingIds, context.findings.verifiedIds)
+      digestValuesEqual(attempt.verifiedFindingIds, context.findings.verifiedIds),
+      findingCountsMatchAttempt(attempt, context.findings)
     ].every(Boolean);
   }
 

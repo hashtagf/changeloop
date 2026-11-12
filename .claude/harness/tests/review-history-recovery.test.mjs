@@ -265,3 +265,24 @@ test("a dispatched record left above the head by a crash is not treated as lower
   assert.equal(w.state().reviewHistory.recoveries, undefined);
   assert.equal(w.store.reviewHistoryChainValid(id, w.state().reviewHistory), true);
 });
+
+// After an undeterminable rebuild the head is a harness placeholder with no
+// response behind it. It must not count as a delivered AI response that still
+// owes a receipt: that check refused every later dispatch, a human review
+// included ("a completed AI response has no matching recorded receipt").
+test("a rebuilt placeholder never blocks a later human review as an unrecorded response", async (t) => {
+  const { attemptAwaitsRecordedReceipt } = await import("../runtime/workflow/authority-runtime.mjs");
+  const id = "change-human-after-rebuild";
+  const w = world(t, id);
+  w.reserve("fail");
+  const headName = w.file(1);
+  const original = readJson(join(w.attemptsDir, headName));
+  writeJson(join(w.attemptsDir, headName), { ...original, status: "pass" });
+  const history = w.store.assertReviewDispatchAllowed(id, "human");
+  const latest = w.store.deliveredAiAttempts(id, history).at(-1);
+  assert.ok(latest?.recovered, "the rebuilt head is a harness placeholder");
+  assert.equal(attemptAwaitsRecordedReceipt(latest), false);
+  assert.equal(attemptAwaitsRecordedReceipt({ ...latest, recovered: undefined, migrated: undefined }),
+    true, "a real delivered response still owes its receipt");
+  assert.equal(attemptAwaitsRecordedReceipt(null), false);
+});

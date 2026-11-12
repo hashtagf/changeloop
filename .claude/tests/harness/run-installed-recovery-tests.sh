@@ -18,7 +18,7 @@ done
 bash "$ROOT/install.sh" "$TMP/control" --source "$ROOT" --yes >/dev/null
 cd "$TMP/control"
 printf '.foundation/\n' > .gitignore
-printf '%s\n' '{"workflow":{"grounding":"optional","reviewPolicy":"legacy","reviewCircuit":"legacy"},"land":{"riskBasedCi":false},"telemetry":{"requireUsage":false}}' > foundation.json
+printf '%s\n' '{"workflow":{"grounding":"optional"},"land":{"riskBasedCi":false},"telemetry":{"requireUsage":false}}' > foundation.json
 printf '%s\n' '{"version":1,"repositories":[{"id":"api","path":"../api","allowOutsideRoot":true},{"id":"app","path":"../app","allowOutsideRoot":true},{"id":"reference","path":"../reference","mode":"read","allowOutsideRoot":true}]}' > openspec/repositories.yaml
 # Fault injection changes only the installed fixture's existing checkpoint.
 # The upstream runtime and its proof/state records are never patched.
@@ -69,7 +69,8 @@ for task_id in T001 T002; do
   rm "$tasks_path.bak"
 done
 node .claude/harness/foundation.mjs proof-collect installed-repository-recovery >/dev/null
-node .claude/harness/foundation.mjs receipt installed-repository-recovery review pass --observed 'Deterministic fixture reviewer approves both changes' --reviewer harness-test --subject-actor implementation-agent --unresolved-blockers 0 --reference fixture://review >/dev/null
+# Review always runs through a dispatched authority attempt.
+node "$ROOT/.claude/tests/lib/dispatched-review.mjs" installed-repository-recovery pass --observed 'Deterministic fixture reviewer approves both changes' --reviewer harness-test --subject-actor implementation-agent --unresolved-blockers 0 --reference fixture://review >/dev/null
 node .claude/harness/foundation.mjs prove installed-repository-recovery >/dev/null
 for repo in control api app reference; do
   git -C "$TMP/$repo" rev-parse HEAD > "$TMP/$repo.head"

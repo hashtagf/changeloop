@@ -934,11 +934,11 @@ export function renderDraftDesign(draft) {
 }
 
 // The review route a change will take, in words that cannot be misread.
-// Under risk-tiered policy every change but a quiet low-tier rapid change gets
-// an AI review, so the tier and the model class of its first pass are named
-// instead. Legacy policy keeps its required/not-required meaning.
+// Review routes by risk tier: every change but a quiet low-tier rapid change
+// gets an AI review, so the tier and the model class of its first pass are
+// named instead.
 export function reviewRouteLabel({
-  reviewPolicy = "legacy", lowRiskModel = "fast", modelByTier = undefined,
+  lowRiskModel = "fast", modelByTier = undefined,
   state = {}, claims = [], grounding = null
 } = {}) {
   const rows = (Array.isArray(claims) ? claims : []).filter((claim) =>
@@ -946,28 +946,21 @@ export function reviewRouteLabel({
   let signals;
   try { signals = collectReviewSignals(state, { claims: rows }, [], grounding); }
   catch { signals = null; }
-  if (reviewPolicy === "risk-tiered") {
-    if (!signals) return "risk-tiered AI review (tier set at validation)";
-    const riskRoute = classifyReviewRisk({
-      state, claims: rows, capabilities: signals.capabilities, grounding,
-      requiredTriggers: signals.requiredTriggers
-    });
-    const { tier } = riskRoute;
-    const assembled = assembleReviewPolicy({
-      state, signals, riskRoute, policy: {}, riskTiered: true
-    });
-    if (!assembled.required)
-      return "not required (rapid lane, low tier: deterministic evidence only)";
-    const model = reviewModelClass({
-      tier, triggers: assembled.triggers,
-      declaredReview: Boolean(state.reviewRequired) && !state.reviewKeywordOnly,
-      settings: { lowRiskModel, modelByTier }
-    });
-    return `risk-tiered AI review (${tier} tier, ${model} model)`;
-  }
-  const required = Boolean(state.reviewRequired) ||
-    Boolean(signals && (signals.requiredTriggers.length || signals.capabilities.has("review")));
-  return required ? "required" : "not required (legacy review policy: no AI review runs)";
+  if (!signals) return "risk-tiered AI review (tier set at validation)";
+  const riskRoute = classifyReviewRisk({
+    state, claims: rows, capabilities: signals.capabilities, grounding,
+    requiredTriggers: signals.requiredTriggers
+  });
+  const { tier } = riskRoute;
+  const assembled = assembleReviewPolicy({ state, signals, riskRoute, policy: {} });
+  if (!assembled.required)
+    return "not required (rapid lane, low tier: deterministic evidence only)";
+  const model = reviewModelClass({
+    tier, triggers: assembled.triggers,
+    declaredReview: Boolean(state.reviewRequired) && !state.reviewKeywordOnly,
+    settings: { lowRiskModel, modelByTier }
+  });
+  return `risk-tiered AI review (${tier} tier, ${model} model)`;
 }
 
 // Legacy v1/v2 drafts always declare decisions and keep their rapid lane; a
@@ -1690,7 +1683,7 @@ export function createChangeLifecycle({
     return {
       unselectedRepositories: declared.filter((repository) => !used.has(repository)),
       reviewLabel: reviewRouteLabel({
-        reviewPolicy: policy.workflow?.reviewPolicy, lowRiskModel: policy.review?.lowRiskModel,
+        lowRiskModel: policy.review?.lowRiskModel, modelByTier: policy.review?.modelByTier,
         state: { ...state, impact: draft.impact, coupling: draft.coupling,
           securityTriggers: draft.securityTriggers || [], reviewRequired: Boolean(draft.reviewRequired) },
         claims: draft.claims || []
@@ -2343,7 +2336,6 @@ export function createChangeLifecycle({
     };
     const claims = parse("evidence.yaml")?.claims;
     return reviewRouteLabel({
-      reviewPolicy: workflowPolicy().workflow?.reviewPolicy,
       lowRiskModel: workflowPolicy().review?.lowRiskModel,
       modelByTier: workflowPolicy().review?.modelByTier,
       state,

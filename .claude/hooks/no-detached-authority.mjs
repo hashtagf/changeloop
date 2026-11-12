@@ -5,6 +5,7 @@
 // kills the reviewer with the session, and leaves a false-success envelope,
 // so a detached spelling is rewritten to run attached.
 
+import { realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 export function detachedAuthorityCommand(command) {
@@ -27,7 +28,7 @@ export function attachedAuthorityCommand(command) {
     .trim();
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   let raw = "";
   for await (const chunk of process.stdin) raw += chunk;
   let event = {};

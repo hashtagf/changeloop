@@ -331,6 +331,16 @@ export function reviewSubjectResponseEvidence() {
   };
 }
 
+// Whether the latest delivered AI attempt is a real response that still owes a
+// recorded receipt. A migrated attempt was synthesized from its receipt, and a
+// placeholder the harness wrote while rebuilding a corrupt chain carries no
+// response at all, so neither can be "recorded"; treating them as unrecorded
+// locked every later dispatch, including a human review, out of the change.
+export function attemptAwaitsRecordedReceipt(attempt) {
+  if (!attempt) return false;
+  return !attempt.migrated && !attempt.recovered;
+}
+
 export function reviewFindingResponseEvidence(request) {
   // The count matches the prefilled first-round IDs, so a delta response
   // recorded as given passes the count check.
@@ -415,8 +425,7 @@ export function authorityResponseTemplate(context, request) {
   // shapes failing before a review template is projected.
   const acceptanceEvidence = acceptanceResponseEvidence(context, request);
   // A full-delta review is recorded only after dispatch; say so up front.
-  const dispatchFirst = request.type === "review" && request.reviewCircuit === "full-delta" &&
-    request.status !== "dispatched"
+  const dispatchFirst = request.type === "review" && request.status !== "dispatched"
     ? `claude-foundation authority dispatch ${request.changeId} --request ${request.requestId} ` +
       "--scope full|delta --reviewer-type human|ai --reviewer-identity <id>"
     : null;
@@ -715,10 +724,7 @@ export function createAuthorityRuntime({
   // still waiting for its receipt, with nothing recorded after it?
   function unrecordedDeliveredAiResponse(id, history, provider) {
     const latest = deliveredAiAttempts(id, history).at(-1);
-    if (!latest) return null;
-    // A migrated attempt was synthesized from the receipt itself, so it is
-    // recorded by construction.
-    if (latest.migrated) return null;
+    if (!attemptAwaitsRecordedReceipt(latest)) return null;
     const path = receiptPath(id, provider);
     const receipt = existsSync(path) ? readJson(path, {}) : {};
     const recordedDigest = receipt.review?.attemptDigest || null;
@@ -769,7 +775,7 @@ export function createAuthorityRuntime({
     if (request.type !== "review")
       fail("authority dispatch currently reserves review authority only");
     if (request.reviewCircuit !== "full-delta")
-      fail(`authority request '${requestId}' predates the full-delta circuit; record or cancel it without dispatch`);
+      fail(`authority request '${requestId}' predates the full-delta circuit; cancel it and request review again`);
     if (request.status !== "requested")
       fail(`authority request '${requestId}' is ${request.status}`);
     if (request.workspaceHash !== authorityWorkspaceHash(id, request.provider))
@@ -1989,8 +1995,7 @@ export function createAuthorityRuntime({
     }
     if (!authorityStore.isOpen(request.status))
       fail(`authority request '${requestId}' is ${request.status}`);
-    const undispatched = request.type === "review" && request.reviewCircuit === "full-delta" &&
-      request.status !== "dispatched";
+    const undispatched = request.type === "review" && request.status !== "dispatched";
     if (!existsSync(responsePath)) fail(`authority response not found: ${flags.response}`);
     return { requestId, responsePath, entry, request, undispatched };
   }
@@ -2121,7 +2126,7 @@ export function createAuthorityRuntime({
       "review-attempt": request.dispatch?.attemptDigest,
       source: evidenceFlags.source || `authority-request:${requestId}`,
       "recorded-by": evidenceFlags["recorded-by"] || `authority-bridge:${requestId}`
-    }, { reviewCircuit: request.reviewCircuit || "legacy" });
+    });
     const validity = receiptValidity(id, request.provider, request.workspaceHash);
     if (response.status === "pass" && validity.validity !== "valid") {
       if (prior) writeFileSync(priorPath, prior); else if (existsSync(priorPath)) rmSync(priorPath);

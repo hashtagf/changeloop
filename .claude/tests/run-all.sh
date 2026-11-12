@@ -36,12 +36,16 @@ for _host_var in $(env | sed -n 's/^\(FOUNDATION_[A-Z0-9_]*\)=.*/\1/p'); do
 done
 unset CLAUDE_FOUNDATION_PROJECT CLAUDE_PROJECT_DIR _host_var
 
+# Selection: no flag runs the full gate (every row except RELEASE_ONLY);
+# `--release` adds the RELEASE_ONLY rows; `--quick` also drops LONG_FIRST and
+# exclusive rows; `--affected` runs what the selector picks for changed files.
 selection_mode="full"
 list_mode=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --affected) selection_mode="affected"; shift ;;
     --quick) selection_mode="quick"; shift ;;
+    --release) selection_mode="release"; shift ;;
     --list) list_mode=1; shift ;;
     *) break ;;
   esac
@@ -50,8 +54,8 @@ done
 # The slowest suites (each minutes long on a loaded machine), slowest first.
 # The pool starts them first so none stretches the tail of a full run, and
 # `--quick` leaves them out: it is the fast inner-loop gate, not the final one.
-LONG_FIRST='openspec native sentinel
-harness contracts (topology planning)
+LONG_FIRST='harness contracts (topology planning)
+harness contracts (topology siblings)
 concurrent repositories seam
 installer smoke
 apply conflict
@@ -72,6 +76,13 @@ harness contracts (change policy)
 rapid fast path seam
 harness contracts (sandbox land)
 command registry'
+
+# Release-only suites: the default full gate leaves them out and `--release`
+# adds them. The sentinel reruns the whole frozen workload suite alone after the
+# pool (about six minutes), and only benchmark edits can change its result, so
+# `--affected` still selects it for those edits and the release workflow and CI
+# run `--release`.
+RELEASE_ONLY='openspec native sentinel'
 
 # label|command — `!` prefixes a label that must run with the repository to
 # itself. Commands are expanded by the child with $HERE and $ROOT in scope.
@@ -106,7 +117,9 @@ Pi host adapter|FOUNDATION_UPDATE_CHECK=0 node --test "$ROOT/.claude/harness/tes
 update advisory contract|sh "$HERE/harness/run-update-advisory-tests.sh"
 harness contracts (sandbox land)|sh "$HERE/harness/run-harness-tests.sh" sandbox-land
 harness contracts (change policy)|sh "$HERE/harness/run-harness-tests.sh" change-policy
-harness contracts (topology planning)|sh "$HERE/harness/run-harness-tests.sh" multi-repository planning-diagnostics
+harness contracts (topology planning)|sh "$HERE/harness/run-harness-tests.sh" multi-repository-profile planning-diagnostics
+harness contracts (topology setup)|sh "$HERE/harness/run-harness-tests.sh" multi-repository-setup multi-repository-copy
+harness contracts (topology siblings)|sh "$HERE/harness/run-harness-tests.sh" multi-repository-sibling
 feedback isolation|sh "$HERE/harness/run-feedback-isolation-tests.sh"
 spec sync land gate|sh "$HERE/harness/run-specsync-gate-tests.sh"
 apply conflict|node --test "$HERE/harness/run-apply-conflict-tests.mjs"
@@ -207,7 +220,7 @@ rapid fast path seam|node --test "$ROOT/.claude/harness/tests/rapid-fast-path-se
 review overlap seam|node --test "$ROOT/.claude/harness/tests/review-overlap-seam.test.mjs"
 concurrent changes seam|node --test "$ROOT/.claude/harness/tests/concurrent-different-files.test.mjs" "$ROOT/.claude/harness/tests/concurrent-same-file.test.mjs" "$ROOT/.claude/harness/tests/concurrent-same-lines.test.mjs" "$ROOT/.claude/harness/tests/concurrent-user-edit.test.mjs"
 landed carry sync seam|node --test "$ROOT/.claude/harness/tests/landed-carry-sync.test.mjs"
-concurrent repositories seam|node --test "$ROOT/.claude/harness/tests/concurrent-repositories.test.mjs"
+concurrent repositories seam|node --test "$ROOT/.claude/harness/tests/concurrent-repositories.test.mjs" "$ROOT/.claude/harness/tests/concurrent-repositories-landed-edits.test.mjs" "$ROOT/.claude/harness/tests/concurrent-repositories-stops.test.mjs" "$ROOT/.claude/harness/tests/concurrent-repositories-resolution.test.mjs" "$ROOT/.claude/harness/tests/concurrent-repositories-no-replay.test.mjs"
 harness time primitives|node --test "$ROOT/.claude/harness/tests/harness-time-primitives.test.mjs"
 harness time seam|node --test "$ROOT/.claude/harness/tests/harness-time-seam.test.mjs"
 traceability|node --test "$ROOT/.claude/harness/tests/traceability.test.mjs"
@@ -352,6 +365,20 @@ TABLE
 nth() { suites | sed -n "${1}p"; }
 label_of() { _l="${1%%|*}"; printf '%s' "${_l#!}"; }
 exclusive() { case "$1" in !*) return 0 ;; *) return 1 ;; esac; }
+named_in() { printf '%s\n' "$1" | grep -qFx -- "$2"; }
+
+# Whether a table line runs in a fixed (non-affected) selection mode: `quick`
+# drops exclusive and LONG_FIRST suites, `full` drops RELEASE_ONLY suites, and
+# `release` runs every row.
+in_mode() {
+  _mode_label="$(label_of "$2")"
+  case "$1" in
+    quick) ! exclusive "$2" && ! named_in "$LONG_FIRST" "$_mode_label" &&
+      ! named_in "$RELEASE_ONLY" "$_mode_label" ;;
+    full) ! named_in "$RELEASE_ONLY" "$_mode_label" ;;
+    *) return 0 ;;
+  esac
+}
 
 if [ "$list_mode" -eq 1 ]; then
   suite_registry="$(suites)"
@@ -359,14 +386,12 @@ if [ "$list_mode" -eq 1 ]; then
     suite_labels="$(printf '%s\n' "$suite_registry" | while IFS='|' read -r label _command; do label_of "$label"; printf '\n'; done)"
     FOUNDATION_SUITE_LABELS="$suite_labels" \
       FOUNDATION_SUITE_REGISTRY="$suite_registry" \
+      FOUNDATION_RELEASE_ONLY_SUITES="$RELEASE_ONLY" \
       node "$HERE/affected-suite-selector.mjs" "$ROOT"
   else
-    printf '%s\n' "$suite_registry" | while IFS='|' read -r label _command; do
-      if [ "$selection_mode" = "quick" ]; then
-        case "$label" in '!'*) continue ;; esac
-        printf '%s\n' "$LONG_FIRST" | grep -qFx -- "$label" && continue
-      fi
-      label_of "$label"
+    printf '%s\n' "$suite_registry" | while IFS= read -r line; do
+      in_mode "$selection_mode" "$line" || continue
+      label_of "$line"
       printf '\n'
     done
   fi
@@ -398,7 +423,8 @@ suite_timeout_seconds() {
     # 163 assertions in 600s before being killed in two release gates.
     'harness contracts (topology planning)')
       echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-1200}" ;;
-    'pull request delivery'|'proof loop end to end'|'apply conflict'|'concurrent repositories seam'|'installer smoke')
+    # The sibling topology fixture walks a real change to archived on its own.
+    'pull request delivery'|'proof loop end to end'|'apply conflict'|'concurrent repositories seam'|'installer smoke'|'harness contracts (topology siblings)')
       echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-600}" ;;
     *) echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-300}" ;;
   esac
@@ -558,6 +584,7 @@ if [ "$selection_mode" = "affected" ]; then
   suite_labels="$(printf '%s\n' "$suite_registry" | while IFS='|' read -r label _command; do label_of "$label"; printf '\n'; done)"
   selected_labels="$(FOUNDATION_SUITE_LABELS="$suite_labels" \
     FOUNDATION_SUITE_REGISTRY="$suite_registry" \
+    FOUNDATION_RELEASE_ONLY_SUITES="$RELEASE_ONLY" \
     node "$HERE/affected-suite-selector.mjs" "$ROOT")"
 fi
 
@@ -573,8 +600,7 @@ while [ "$index" -le "$TOTAL" ]; do
     index=$((index + 1))
     continue
   fi
-  if [ "$selection_mode" = "quick" ] && {
-       exclusive "$line" || printf '%s\n' "$LONG_FIRST" | grep -qFx -- "$label"; }; then
+  if [ "$selection_mode" != "affected" ] && ! in_mode "$selection_mode" "$line"; then
     index=$((index + 1))
     continue
   fi
@@ -599,7 +625,7 @@ done
 # Full runs already schedule both detector baselines in this same gate. The
 # private mutation fixture cannot affect them, so the mutation row may avoid
 # repeating their work; a standalone mutation invocation still proves both.
-if [ "$selection_mode" = "full" ]; then
+if [ "$selection_mode" = "full" ] || [ "$selection_mode" = "release" ]; then
   FOUNDATION_PREPROVEN_SUITES="feedback-review land-surface"
   export FOUNDATION_PREPROVEN_SUITES
 fi

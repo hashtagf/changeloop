@@ -392,8 +392,8 @@ elif command -v jq >/dev/null 2>&1; then
   jq --slurpfile src "$SOURCE_PATH/foundation.json" '
     .workflow //= $src[0].workflow |
     .workflow.grounding //= $src[0].workflow.grounding |
-    .workflow.reviewCircuit //= $src[0].workflow.reviewCircuit |
-    .workflow.reviewPolicy //= $src[0].workflow.reviewPolicy |
+    .workflow.reviewCircuit = $src[0].workflow.reviewCircuit |
+    .workflow.reviewPolicy = $src[0].workflow.reviewPolicy |
     .review //= {} |
     .review.defaultReviewer //= $src[0].review.defaultReviewer |
     .review.fallbackReviewers //= (

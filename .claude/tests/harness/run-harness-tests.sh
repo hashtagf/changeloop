@@ -99,11 +99,13 @@ assert_contains "test wiring names the structured report field" "$providers" \
 # arguments runs all five — the original aggregate contract. The only
 # cross-slice state is `cross-repository-profile`, created by multi-repository
 # and read by planning-diagnostics: a run selecting planning-diagnostics must
-# select multi-repository before it, and `run-all.sh` schedules them together.
+# select multi-repository (or its `multi-repository-profile` shard) before it,
+# and `run-all.sh` schedules them together. The other multi-repository shards
+# build their own fixtures and run as separate rows.
 slices="${*:-change-policy evidence-proof sandbox-land multi-repository planning-diagnostics}"
 for slice in $slices; do
   case "$slice" in
-    change-policy|evidence-proof|evidence-proof-a|evidence-proof-a1|evidence-proof-a1-ci|evidence-proof-a1-core|evidence-proof-a2|evidence-proof-a2-review|evidence-proof-a2-recovery|evidence-proof-a2-cache|evidence-proof-b|evidence-proof-b-binding|evidence-proof-b-execution|evidence-proof-b-service|evidence-proof-c|evidence-proof-c-browser|evidence-proof-c-telemetry|evidence-proof-c-waive|sandbox-land|multi-repository|planning-diagnostics) ;;
+    change-policy|evidence-proof|evidence-proof-a|evidence-proof-a1|evidence-proof-a1-ci|evidence-proof-a1-core|evidence-proof-a2|evidence-proof-a2-review|evidence-proof-a2-recovery|evidence-proof-a2-cache|evidence-proof-b|evidence-proof-b-binding|evidence-proof-b-execution|evidence-proof-b-service|evidence-proof-c|evidence-proof-c-browser|evidence-proof-c-telemetry|evidence-proof-c-waive|sandbox-land|multi-repository|multi-repository-profile|multi-repository-setup|multi-repository-copy|multi-repository-sibling|planning-diagnostics) ;;
     *) echo "unknown contract slice: $slice" >&2; exit 2 ;;
   esac
 done
@@ -114,6 +116,12 @@ for slice in $slices; do
       export FOUNDATION_EVIDENCE_PROOF_SHARD
       . "$HERE/contracts/evidence-proof.sh"
       unset FOUNDATION_EVIDENCE_PROOF_SHARD
+      ;;
+    multi-repository-profile|multi-repository-setup|multi-repository-copy|multi-repository-sibling)
+      FOUNDATION_MULTI_REPOSITORY_SHARD="${slice#multi-repository-}"
+      export FOUNDATION_MULTI_REPOSITORY_SHARD
+      . "$HERE/contracts/multi-repository.sh"
+      unset FOUNDATION_MULTI_REPOSITORY_SHARD
       ;;
     *) . "$HERE/contracts/$slice.sh" ;;
   esac

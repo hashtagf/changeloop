@@ -102,41 +102,48 @@ test("Thai intents raise the same review semantics as English", () => {
   }
 });
 
-test("legacy review policy preserves its compact default shape", () => {
+test("low-tier review policy carries the route shape", () => {
   const result = assembleReviewPolicy({
     state: {},
     signals: {
       capabilities: new Set(), requiredTriggers: [], diversityTriggers: []
     },
     riskRoute: lowRoute,
-    policy: {},
-    riskTiered: false
+    policy: {}
   });
   assert.deepEqual(result, {
-    required: false,
+    required: true,
+    tier: "low",
+    route: ["ai-full"],
+    maxAiAttempts: 1,
+    requiresHumanFinal: false,
     independence: "required",
     diversity: "preferred",
     triggers: []
   });
 });
 
-test("legacy review can be required by state, trigger, or capability", () => {
+test("a low-tier rapid change keeps review when state, trigger, or capability asks", () => {
+  const rapid = { schema: "foundation-rapid" };
+  const none = { capabilities: new Set(), requiredTriggers: [], diversityTriggers: [] };
+  assert.equal(assembleReviewPolicy({
+    state: rapid, signals: none, riskRoute: lowRoute, policy: {}
+  }).required, false);
   for (const signals of [
     { capabilities: new Set(), requiredTriggers: ["risk-semantics"], diversityTriggers: [] },
     { capabilities: new Set(["review"]), requiredTriggers: [], diversityTriggers: [] }
   ]) {
     assert.equal(assembleReviewPolicy({
-      state: {}, signals, riskRoute: lowRoute, policy: {}, riskTiered: false
+      state: rapid, signals, riskRoute: lowRoute, policy: {}
     }).required, true);
   }
   assert.equal(assembleReviewPolicy({
-    state: { reviewRequired: true },
-    signals: { capabilities: new Set(), requiredTriggers: [], diversityTriggers: [] },
-    riskRoute: lowRoute, policy: {}, riskTiered: false
+    state: { ...rapid, reviewRequired: true }, signals: none,
+    riskRoute: lowRoute, policy: {}
   }).required, true);
 });
 
-test("critical legacy policy requires diversity without a waiver", () => {
+test("a critical trigger requires diversity without a waiver", () => {
   const result = assembleReviewPolicy({
     state: {},
     signals: {
@@ -144,8 +151,7 @@ test("critical legacy policy requires diversity without a waiver", () => {
       diversityTriggers: ["critical-capability"]
     },
     riskRoute: lowRoute,
-    policy: {},
-    riskTiered: false
+    policy: {}
   });
   assert.equal(result.diversity, "required");
   assert.deepEqual(result.triggers, ["critical-capability"]);
@@ -159,11 +165,14 @@ test("single-model and self-review waivers remain explicit", () => {
       diversityTriggers: ["critical-capability"]
     },
     riskRoute: lowRoute,
-    policy: { diversity: "single-model", independence: "self" },
-    riskTiered: false
+    policy: { diversity: "single-model", independence: "self" }
   });
   assert.deepEqual(result, {
     required: true,
+    tier: "low",
+    route: ["ai-full"],
+    maxAiAttempts: 1,
+    requiresHumanFinal: false,
     independence: "self",
     diversity: "preferred",
     diversityWaived: true,
@@ -188,8 +197,7 @@ test("risk-tiered policy carries route identity and deduplicated triggers", () =
       diversityTriggers: ["critical-capability"]
     },
     riskRoute,
-    policy: {},
-    riskTiered: true
+    policy: {}
   });
   assert.deepEqual(result, {
     required: true,
@@ -210,15 +218,14 @@ test("single-model does not claim a waiver when diversity is unnecessary", () =>
       capabilities: new Set(), requiredTriggers: [], diversityTriggers: []
     },
     riskRoute: lowRoute,
-    policy: { diversity: "single-model" },
-    riskTiered: false
+    policy: { diversity: "single-model" }
   });
   assert.equal(result.diversityWaived, undefined);
   assert.equal(result.diversity, "preferred");
 });
 
 test("evidence contract review policy composes grounding, routing, and project policy", () => {
-  let projectPolicy = { review: {}, workflow: { reviewPolicy: "legacy" } };
+  let projectPolicy = { review: {}, workflow: { reviewPolicy: "risk-tiered" } };
   const contract = createEvidenceContract({
     activeChangePath: () => "/change",
     readJson: () => ({ risk: { tier: "medium" } }),
@@ -227,10 +234,10 @@ test("evidence contract review policy composes grounding, routing, and project p
     loadRuntime: () => ({})
   });
   const claims = [{ impact: "high", capabilities: ["review"] }];
-  const legacy = contract.reviewPolicy("change", { intent: "payment" }, { claims });
-  assert.equal(legacy.required, true);
-  assert.equal(legacy.tier, undefined);
-  assert.ok(legacy.triggers.includes("risk-capability"));
+  const routed = contract.reviewPolicy("change", { intent: "payment" }, { claims });
+  assert.equal(routed.required, true);
+  assert.equal(routed.tier, "high");
+  assert.ok(routed.triggers.includes("risk-capability"));
 
   projectPolicy = {
     review: { diversity: "single-model", independence: "self" },
@@ -241,9 +248,10 @@ test("evidence contract review policy composes grounding, routing, and project p
   assert.equal(tiered.diversityWaived, true);
   assert.equal(tiered.independenceWaived, true);
 
-  projectPolicy = { review: null, workflow: { reviewPolicy: "legacy" } };
+  projectPolicy = { review: null, workflow: { reviewPolicy: "risk-tiered" } };
   const defaultState = contract.reviewPolicy("change", undefined, { claims: [] });
-  assert.equal(defaultState.required, false);
+  assert.equal(defaultState.required, true, "the standard lane always reviews");
+  assert.equal(defaultState.tier, "high", "the compatibility capability sets the tier");
 });
 
 test("a capability covered by review requires review at its tier", () => {
@@ -270,10 +278,10 @@ test("a capability covered by review requires review at its tier", () => {
   const resilience = route("resilience");
   assert.deepEqual(resilience.signals.requiredTriggers, ["covered-by-review:resilience"]);
   assert.equal(resilience.route.tier, "medium");
-  // Legacy policy requires review for it too.
+  // Even a rapid-lane change keeps review for it.
   assert.equal(assembleReviewPolicy({
-    state: {}, signals: resilience.signals, riskRoute: resilience.route,
-    policy: {}, riskTiered: false
+    state: { schema: "foundation-rapid" }, signals: resilience.signals,
+    riskRoute: resilience.route, policy: {}
   }).required, true);
   // A real command observes the capability itself: no review trigger.
   const wired = contractFor("resilience");
@@ -336,7 +344,7 @@ test("high risk signals require review named by the declared signal", () => {
   assert.deepEqual(triggers(["input-domain"]), []);
 });
 
-test("an access-control risk signal requires review under both policies", () => {
+test("an access-control risk signal requires review even in the rapid lane", () => {
   const state = { intent: "show the order total", impact: "low", coupling: "isolated",
     securityTriggers: [], riskSignals: ["access-control"] };
   const contract = { claims: [{ id: "c", impact: "low", capabilities: ["test"] }] };
@@ -347,17 +355,17 @@ test("an access-control risk signal requires review under both policies", () => 
     grounding: null, requiredTriggers: signals.requiredTriggers
   });
   assert.equal(riskRoute.tier, "high");
-  for (const riskTiered of [false, true]) {
-    const policy = assembleReviewPolicy({ state, signals, riskRoute, policy: {}, riskTiered });
-    assert.equal(policy.required, true, `riskTiered=${riskTiered}`);
+  for (const schema of ["foundation-standard", "foundation-rapid"]) {
+    const policy = assembleReviewPolicy({ state: { ...state, schema }, signals, riskRoute, policy: {} });
+    assert.equal(policy.required, true, schema);
     assert.ok(policy.triggers.includes("access-control"));
   }
-  // input-domain only moves the tier; it does not require legacy review.
-  const input = { ...state, riskSignals: ["input-domain"] };
+  // input-domain only moves the tier; it is not a required-review trigger.
+  const input = { ...state, schema: "foundation-rapid", riskSignals: ["input-domain"] };
   const inputSignals = collectReviewSignals(input, contract);
   assert.deepEqual(inputSignals.requiredTriggers, []);
   assert.equal(assembleReviewPolicy({
-    state: input, signals: inputSignals, riskRoute: lowRoute, policy: {}, riskTiered: false
+    state: input, signals: inputSignals, riskRoute: lowRoute, policy: {}
   }).required, false);
 });
 
@@ -370,7 +378,7 @@ test("risk-tiered review skips only a quiet low-tier rapid change", () => {
       state, claims: shaped.claims, capabilities: signals.capabilities,
       grounding: null, requiredTriggers: signals.requiredTriggers
     });
-    return assembleReviewPolicy({ state, signals, riskRoute, policy: {}, riskTiered: true });
+    return assembleReviewPolicy({ state, signals, riskRoute, policy: {} });
   };
   const rapid = { intent: "show the order total", schema: "foundation-rapid",
     impact: "low", coupling: "isolated", securityTriggers: [] };
@@ -392,8 +400,4 @@ test("risk-tiered review skips only a quiet low-tier rapid change", () => {
   assert.equal(policyFor(rapid, { claims: [{ id: "c", impact: "low",
     capabilities: ["test", "security-static"] }] }).required, true,
   "a security capability (declared or inferred from the diff) keeps it");
-  // Legacy policy is unchanged by the lane.
-  const signals = collectReviewSignals(rapid, contract);
-  assert.equal(assembleReviewPolicy({ state: rapid, signals, riskRoute: lowRoute,
-    policy: {}, riskTiered: false }).required, false);
 });

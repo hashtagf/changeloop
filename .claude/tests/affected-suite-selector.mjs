@@ -138,8 +138,12 @@ export function suiteRunnerLabels(registry = "") {
   return result;
 }
 
-export function selectAffectedSuites(files, suiteLabels, registry = "") {
+// `releaseOnly` names suites the full gate leaves out (run-all.sh RELEASE_ONLY).
+// A cross-cutting edit selects the full gate, so it does not add them; a rule or
+// runner that names one still does.
+export function selectAffectedSuites(files, suiteLabels, registry = "", { releaseOnly = [] } = {}) {
   const known = new Set(suiteLabels);
+  const releaseOnlyLabels = new Set(releaseOnly);
   const selected = new Set();
   const reasons = new Map();
   const runnerLabels = suiteRunnerLabels(registry);
@@ -156,6 +160,7 @@ export function selectAffectedSuites(files, suiteLabels, registry = "") {
     }
     if (CROSS_CUTTING.test(file)) {
       for (const label of known) {
+        if (releaseOnlyLabels.has(label)) continue;
         selected.add(label);
         const rows = reasons.get(label) || [];
         rows.push(`${file} is cross-cutting`);
@@ -221,7 +226,10 @@ if (invokedDirectly) {
     ? process.env.FOUNDATION_CHANGED_FILES.split("\n").filter(Boolean)
     : changedFiles(root, process.env.FOUNDATION_TEST_BASE || null);
   const result = selectAffectedSuites(files, labels,
-    process.env.FOUNDATION_SUITE_REGISTRY || "");
+    process.env.FOUNDATION_SUITE_REGISTRY || "", {
+      releaseOnly: String(process.env.FOUNDATION_RELEASE_ONLY_SUITES || "")
+        .split("\n").filter(Boolean)
+    });
   if (!files.length) console.error("affected tests: no changed files");
   else console.error(`affected tests: ${files.length} changed file(s) selected ${result.selected.length}/${labels.length} suite(s)`);
   for (const label of result.selected) console.log(label);

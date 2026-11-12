@@ -18,7 +18,8 @@ We follow [Semantic Versioning](https://semver.org/) and [Keep a Changelog](http
 ## Required scenario checkpoint before every new version
 
 Before dispatching a publishing release or manually creating a tag, run the
-candidate's deterministic gates and the zero-cost benchmark sentinel, then
+candidate's deterministic gates and the zero-cost benchmark sentinel
+(`run-all.sh --release` runs both; the release workflow uses the same form), then
 complete a budget-authorized smoke of **all paid scenarios** (currently ten) in the
 [scenario test plan](docs/reports/user-scenario-test-plan.md). The default smoke
 is one independent disposable consumer per scenario. Record the exact clean

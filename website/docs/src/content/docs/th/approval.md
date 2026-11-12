@@ -168,7 +168,8 @@ receipt ของ acceptance ที่ผ่านต้องมีชื่อ
 Review ถามว่าการ implement นี้ดีพอไหม ผู้รีวิวเป็นคน **หรือ** AI ตัวอื่นก็ได้
 สิ่งที่สำคัญคือความเป็นอิสระ ไม่ใช่ว่าเป็นคนหรือเครื่อง
 
-เมื่อใช้ `workflow.reviewPolicy: "risk-tiered"` ทุก change ได้รับ review และระดับ
+Review route ตาม risk tier เสมอ (`workflow.reviewPolicy: "risk-tiered"` ค่า
+`legacy` ที่ยกเลิกแล้วจะถูกปฏิเสธ) ทุก change ได้รับ review และระดับ
 ความเสี่ยงกำหนดเส้นทางที่มีขอบเขต ยกเว้น rapid change ระดับ low ที่ไม่มี security
 keyword, risk signal หรือ `--review` ซึ่งพิสูจน์ด้วย test ของโปรเจกต์เองและไม่มี AI review
 

@@ -535,9 +535,9 @@ export function createReceiptRuntime({
   relevantSnapshot = () => null, changeDiffIdentity = () => null,
   adapterFingerprint, environmentDescriptor, reviewPolicy, subjectProvenance,
   reviewProvenanceResult, readJson, flagValues, reviewHistoryState,
-  reserveReviewAttempt, reviewAttemptByDigest, reviewAttemptIsValid,
-  reviewReceiptBinding, recordRepairClosureAttempt, deliveredAiAttempts,
-  groundingForReview = () => null, foundationPolicy, die
+  reviewAttemptByDigest, reviewAttemptIsValid,
+  recordRepairClosureAttempt, deliveredAiAttempts,
+  groundingForReview = () => null, die
 }) {
   // What a provider is bound to decides what re-running proof will cost, and
   // the plan is where that is cheap to learn. `stale` alone told an operator to
@@ -854,7 +854,6 @@ export function createReceiptRuntime({
   }
 
   function reviewIdentity(id, status, flags, options) {
-    const reviewCircuit = options.reviewCircuit || foundationPolicy().workflow.reviewCircuit;
     const policy = reviewPolicy(id);
     const reviewer = normalizedReviewer(flags);
     const reviewerType = reviewer.type;
@@ -866,7 +865,7 @@ export function createReceiptRuntime({
     const subjects = subjectProvenance(flags);
     const provenance = validateReviewProvenance(status, reviewer, subjects, policy);
     return {
-      reviewCircuit, policy, reviewerType, deterministicClosure, reviewer, subjects,
+      policy, reviewerType, deterministicClosure, reviewer, subjects,
       independent: provenance.independent, diverse: provenance.diverse
     };
   }
@@ -897,9 +896,10 @@ export function createReceiptRuntime({
 
   function dispatchedReviewScope(id, flags, identity) {
     const history = reviewHistoryState(id);
-    const dispatched = identity.reviewCircuit === "full-delta"
-      ? reviewAttemptByDigest(id, String(flags["review-attempt"] || "")) : null;
-    if (identity.reviewCircuit === "full-delta" && !dispatched)
+    // Every review runs the full-delta circuit: evidence binds to a
+    // dispatched (or deterministic repair-closure) attempt.
+    const dispatched = reviewAttemptByDigest(id, String(flags["review-attempt"] || ""));
+    if (!dispatched)
       die("review evidence requires an authority dispatch attempt; run 'authority dispatch' before recording it");
     return { history, dispatched };
   }
@@ -975,9 +975,7 @@ export function createReceiptRuntime({
     };
     if (identity.deterministicClosure)
       receipt.review.repairClosure = identity.deterministicClosure;
-    const attempt = scope.dispatched || reserveReviewAttempt(id, identity.reviewerType, {
-      workspaceHash: receipt.workspaceHash, status, reviewBinding: reviewReceiptBinding(receipt)
-    });
+    const attempt = scope.dispatched;
     receipt.review.attemptDigest = attempt.digest;
     if (!reviewAttemptIsValid(receipt, attempt))
       die("review evidence does not match its dispatched reviewer, workspace, request, or scope");

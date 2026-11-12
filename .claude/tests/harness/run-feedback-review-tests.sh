@@ -16,6 +16,12 @@ assert_cmd_fails_with() {
   fi
 }
 
+# Review evidence binds to a dispatched attempt (request → dispatch → record);
+# negative checks that fail before that binding still use `receipt` directly.
+dispatched_review() {
+  node "$ROOT/.claude/tests/lib/dispatched-review.mjs" "$@"
+}
+
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 mkdir -p "$TMP/project/.claude/harness" "$TMP/project/openspec"
@@ -292,12 +298,22 @@ review_packet="$(node .claude/harness/foundation.mjs packet \
 review_readiness="$(node .claude/harness/foundation.mjs proof-readiness irreversible-payment-migration || true)"
 assert_contains "readiness routes review through bounded packet" \
   "$review_readiness" "packet irreversible-payment-migration --phase review"
+# Eighty long claims must not scale the packet: they compact to a count,
+# an eight-row preview, and a digest. The bound is half the default review
+# packet budget (execution.packetBytes.review = 20480). It was 8 KiB before
+# risk-tier routing; routing adds ~230 claim-independent bytes (tier, route,
+# cap, and route triggers in reviewPolicy), and the fixture's absolute temp
+# paths alone vary by platform, so 8 KiB no longer left real headroom.
 review_bytes="$(printf '%s' "$review_packet" | wc -c | tr -d ' ')"
-if [ "$review_bytes" -le 8192 ]; then
-  pass "review packet stays within 8 KiB ($review_bytes bytes)"
+if [ "$review_bytes" -le 10240 ]; then
+  pass "review packet stays within half the review budget ($review_bytes bytes)"
 else
-  fail "review packet exceeds 8 KiB ($review_bytes bytes)"
+  fail "review packet exceeds half the review budget ($review_bytes bytes)"
 fi
+assert_eq "eighty seeded claims compact to a count and an eight-row preview" "80/8" \
+  "$(printf '%s' "$review_packet" | jq -r '"\(.claims.count)/\(.claims.preview | length)"')"
+assert_eq "review packet carries risk-tier routing, not an overflow summary" "high/2" \
+  "$(printf '%s' "$review_packet" | jq -r '"\(.reviewPolicy.tier)/\(.reviewPolicy.maxAiAttempts)"')"
 assert_contains "review packet declares required diversity" \
   "$review_packet" '"diversity":"required"'
 assert_contains "review packet retains failed evidence diagnostics" \
@@ -372,7 +388,7 @@ assert_cmd_fails_with "structured provenance rejects one correlated subject" \
     --reference fixture://structured-correlated
 
 assert_cmd_zero "diverse AI review passes critical policy" \
-  node .claude/harness/foundation.mjs receipt irreversible-payment-migration review pass \
+  dispatched_review irreversible-payment-migration pass \
     --reviewer-type ai --reviewer-identity reviewer-ai \
     --reviewer-provider-family anthropic --reviewer-model-family claude \
     --reviewer-model claude-opus --reviewer-session review-session \
@@ -389,7 +405,9 @@ jq '.review.reviewer.modelId = "tampered-model"' "$TMP/bound-review.json" \
 critical_plan="$(node .claude/harness/foundation.mjs proof-plan irreversible-payment-migration)"
 assert_contains "review history binds reviewer and model" \
   "$critical_plan" "review: review-attempt-history-invalid"
-jq '.review.findings.verified = 99' "$TMP/bound-review.json" \
+# A dispatched attempt binds the finding rows and verified IDs it completed.
+jq '.review.findings.items += [{"id":"F-TAMPERED","severity":"minor","path":"app.txt","message":"added after review"}]' \
+  "$TMP/bound-review.json" \
   > .foundation/receipts/irreversible-payment-migration/review.json
 critical_plan="$(node .claude/harness/foundation.mjs proof-plan irreversible-payment-migration)"
 assert_contains "review history binds findings" \
@@ -416,8 +434,8 @@ assert_contains "removing the new REVIEW.md restores the verdict" \
   "$critical_plan" "review: valid"
 
 printf 'reviewed fix one\n' >> app.txt
-assert_cmd_zero "scoped second AI review is allowed" \
-  node .claude/harness/foundation.mjs receipt irreversible-payment-migration review pass \
+assert_cmd_zero "delta second AI review is allowed after a correction" \
+  dispatched_review irreversible-payment-migration pass --base-first-ai \
     --reviewer-type ai --reviewer-identity reviewer-ai \
     --reviewer-provider-family anthropic --reviewer-model-family claude \
     --reviewer-model claude-opus --reviewer-session review-session-two \
@@ -427,6 +445,9 @@ assert_cmd_zero "scoped second AI review is allowed" \
     --observed 'Scoped fix has no blockers' --reference fixture://diverse-review-two
 assert_eq "second AI review records round two" "2" \
   "$(jq -r '.review.round' .foundation/receipts/irreversible-payment-migration/review.json)"
+assert_eq "second AI review covers only the corrected delta" "delta root/app.txt" \
+  "$(jq -r '"\(.review.scope.mode) \(.review.scope.paths | join(","))"' \
+    .foundation/receipts/irreversible-payment-migration/review.json)"
 
 cp openspec/changes/irreversible-payment-migration/execution.yaml \
   "$TMP/original-review-execution.json"
@@ -437,7 +458,7 @@ cp "$TMP/renamed-review-provider.json" \
   openspec/changes/irreversible-payment-migration/execution.yaml
 assert_cmd_fails_with "provider rename cannot reset the AI review cap" \
   "REVIEW_ROUTE_COMPLETE" \
-  node .claude/harness/foundation.mjs receipt irreversible-payment-migration peer-review pass \
+  dispatched_review irreversible-payment-migration pass \
     --reviewer-type ai --reviewer-identity reviewer-ai \
     --reviewer-provider-family anthropic --reviewer-model-family claude \
     --reviewer-model claude-opus --reviewer-session renamed-provider-session \
@@ -449,8 +470,11 @@ cp "$TMP/original-review-execution.json" \
   openspec/changes/irreversible-payment-migration/execution.yaml
 
 attempt_dir=.foundation/evidence/irreversible-payment-migration/review-attempts
-attempt_file="$(ls "$attempt_dir" | sort | tail -1)"
 review_runtime=.foundation/runtime/irreversible-payment-migration.json
+# A dispatched round leaves its dispatch record beside the completed record;
+# corrupt the recorded chain head, not whichever file sorts last.
+chain_head="$(jq -r '.reviewHistory.chainHead' "$review_runtime" | cut -c1-12)"
+attempt_file="$(ls "$attempt_dir" | grep -F -- "-$chain_head.json")"
 recorded_attempts="$(jq -r '.reviewHistory.totalAttempts' "$review_runtime")"
 
 # A corrupt attempt chain is harness bookkeeping: the harness quarantines it,
@@ -459,7 +483,7 @@ recorded_attempts="$(jq -r '.reviewHistory.totalAttempts' "$review_runtime")"
 # copy of the state so the cap assertions below see the intact chain.
 corrupt_chain_case() {
   label="$1"
-  corrupt_output="$({ node .claude/harness/foundation.mjs receipt irreversible-payment-migration review pass \
+  corrupt_output="$({ dispatched_review irreversible-payment-migration pass \
     --reviewer-type human --reviewer-identity security-owner \
     --subject-actor implementer-ai --unresolved-blockers 0 \
     --observed 'History was rebuilt' --reference "fixture://history-$label"; } 2>&1 || true)"
@@ -476,7 +500,7 @@ corrupt_chain_case() {
     fail "$label history never lowers the attempt count ($rebuilt_attempts < $recorded_attempts)"
   assert_cmd_fails_with "$label history cannot reopen the AI review cap" \
     "REVIEW_ROUTE_COMPLETE" \
-    node .claude/harness/foundation.mjs receipt irreversible-payment-migration review pass \
+    dispatched_review irreversible-payment-migration pass \
       --reviewer-type ai --reviewer-identity reviewer-ai \
       --reviewer-provider-family anthropic --reviewer-model-family claude \
       --reviewer-model claude-opus --reviewer-session "recovered-$label-session" \
@@ -506,7 +530,7 @@ cp .foundation/receipts/irreversible-payment-migration/review.json "$TMP/round-t
 rm .foundation/receipts/irreversible-payment-migration/review.json
 assert_cmd_fails_with "receipt deletion cannot reset the AI review cap" \
   "REVIEW_ROUTE_COMPLETE" \
-  node .claude/harness/foundation.mjs receipt irreversible-payment-migration review pass \
+  dispatched_review irreversible-payment-migration pass \
     --reviewer-type ai --reviewer-identity reviewer-ai \
     --reviewer-provider-family anthropic --reviewer-model-family claude \
     --reviewer-model claude-opus --reviewer-session review-session-three \
@@ -518,8 +542,8 @@ assert_cmd_fails_with "receipt deletion cannot reset the AI review cap" \
 # The cap refuses another open review without reopening the generic interview.
 # Its three typed routes tell the agent whether to repair, amend the contract,
 # or wait for external authority.
-exhausted_output="$({ node .claude/harness/foundation.mjs receipt \
-  irreversible-payment-migration review pass \
+exhausted_output="$({ dispatched_review \
+  irreversible-payment-migration pass \
     --reviewer-type ai --reviewer-identity reviewer-ai \
     --reviewer-provider-family anthropic --reviewer-model-family claude \
     --reviewer-model claude-opus --reviewer-session review-session-four \
@@ -543,16 +567,19 @@ assert_not_contains "exhausted AI review does not ask the generic pause choice" 
 cp "$TMP/round-two-review.json" \
   .foundation/receipts/irreversible-payment-migration/review.json
 
+# A dispatched verdict counts blockers from its finding rows; after a delivered
+# AI round a blocking row names its path, claims, and verification cases.
 assert_cmd_zero "round-three human can record a blocker" \
-  node .claude/harness/foundation.mjs receipt irreversible-payment-migration review fail \
+  dispatched_review irreversible-payment-migration fail \
     --reviewer-type human --reviewer-identity security-owner \
     --subject-actor implementer-ai --subject-session implementation-session \
     --subject-provider-family openai --subject-model-family gpt-5 \
-    --subject-model gpt-5.3 --unresolved-blockers 1 --verified-findings 1 \
+    --subject-model gpt-5.3 --unresolved-blockers 1 \
+    --findings '[{"id":"H-1","severity":"blocker","path":"app.txt","line":null,"message":"Human found a blocker","claimIds":["review-claim-0"],"verificationCaseIds":["review-claim-0"]}]' \
     --observed 'Human found a blocker' --reference fixture://human-review-blocker
 printf 'human-requested fix\n' >> app.txt
 assert_cmd_zero "human re-review can pass after escalation fix" \
-  node .claude/harness/foundation.mjs receipt irreversible-payment-migration review pass \
+  dispatched_review irreversible-payment-migration pass \
     --reviewer-type human --reviewer-identity security-owner \
     --subject-actor implementer-ai --subject-session implementation-session \
     --subject-provider-family openai --subject-model-family gpt-5 \
@@ -684,7 +711,7 @@ assert_cmd_fails_with "single-model policy never waives reviewer independence" \
     --observed 'No blockers' --reference fixture://single-model-same-session
 
 assert_cmd_zero "single-model policy accepts a same-family independent reviewer" \
-  node .claude/harness/foundation.mjs receipt single-model-payment-migration review pass \
+  dispatched_review single-model-payment-migration pass \
     --reviewer-type ai --reviewer-identity reviewer-ai \
     --reviewer-provider-family anthropic --reviewer-model-family claude \
     --reviewer-model claude-opus --reviewer-session review-session \
@@ -703,9 +730,11 @@ rm -f foundation.json
 # session has no second session to hand the packet to, so review.independence in
 # the committed policy is what keeps a self-review on the record instead of
 # pushing the maintainer to understate impact or write the receipt by hand.
+# Medium tier keeps diversity preferred, isolating the independence axis; the
+# high tier always requires diversity (covered by the critical case below).
 node .claude/harness/foundation.mjs new 'Solo session self review' >/dev/null
 node .claude/harness/foundation.mjs resolve solo-session-self-review \
-  --impact high --coupling coupled --acceptance-not-required >/dev/null
+  --impact medium --coupling coupled --acceptance-not-required >/dev/null
 sed 's/- \[ \]/- [x]/g' openspec/changes/solo-session-self-review/tasks.md \
   > "$TMP/solo-session-tasks.md"
 cp "$TMP/solo-session-tasks.md" openspec/changes/solo-session-self-review/tasks.md
@@ -745,7 +774,7 @@ assert_cmd_fails_with "a waived self-review still cannot pass with a blocker ope
     --observed 'One blocker open' --reference fixture://self-review-blocker
 
 assert_cmd_zero "self policy accepts a reviewer sharing the implementer identity and session" \
-  node .claude/harness/foundation.mjs receipt solo-session-self-review review pass \
+  dispatched_review solo-session-self-review pass \
     --reviewer-type ai --reviewer-identity solo-ai \
     --reviewer-provider-family anthropic --reviewer-model-family claude \
     --reviewer-model claude-opus --reviewer-session shared-session \
@@ -812,7 +841,7 @@ assert_cmd_fails_with "the independence waiver does not waive diversity" \
 printf '{"version":1,"review":{"diversity":"single-model","independence":"self"}}\n' \
   > foundation.json
 assert_cmd_zero "both waivers together let a solo session review critical work" \
-  node .claude/harness/foundation.mjs receipt critical-solo-self-review review pass \
+  dispatched_review critical-solo-self-review pass \
     --reviewer-type ai --reviewer-identity solo-ai \
     --reviewer-provider-family anthropic --reviewer-model-family claude \
     --reviewer-model claude-opus --reviewer-session shared-session \

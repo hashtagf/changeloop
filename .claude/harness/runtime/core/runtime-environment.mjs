@@ -43,8 +43,8 @@ const DEFAULT_POLICY = {
   sandbox: { setupCommand: null, setupTimeoutMs: 600000 },
   workflow: {
     grounding: "optional",
-    reviewCircuit: "legacy",
-    reviewPolicy: "legacy",
+    reviewCircuit: "full-delta",
+    reviewPolicy: "risk-tiered",
     handoffDefaultOwner: "devops-team"
   }
 };
@@ -276,10 +276,16 @@ export function createRuntimeEnvironment({
       fail("foundation.json sandbox.setupTimeoutMs must be 1000..3600000");
     if (!["required", "optional"].includes(policy.workflow.grounding))
       fail("foundation.json workflow.grounding must be required|optional");
-    if (!["legacy", "full-delta"].includes(policy.workflow.reviewCircuit))
-      fail("foundation.json workflow.reviewCircuit must be legacy|full-delta");
-    if (!["legacy", "risk-tiered"].includes(policy.workflow.reviewPolicy))
-      fail("foundation.json workflow.reviewPolicy must be legacy|risk-tiered");
+    // The legacy review routing was retired: review always routes by risk
+    // tier through a dispatched full-delta circuit.
+    if (policy.workflow.reviewCircuit === "legacy")
+      fail("foundation.json workflow.reviewCircuit \"legacy\" was retired; rerun `claude-foundation init` to upgrade it to \"full-delta\"");
+    if (policy.workflow.reviewCircuit !== "full-delta")
+      fail("foundation.json workflow.reviewCircuit must be full-delta");
+    if (policy.workflow.reviewPolicy === "legacy")
+      fail("foundation.json workflow.reviewPolicy \"legacy\" was retired; rerun `claude-foundation init` to upgrade it to \"risk-tiered\"");
+    if (policy.workflow.reviewPolicy !== "risk-tiered")
+      fail("foundation.json workflow.reviewPolicy must be risk-tiered");
     if (typeof policy.workflow.handoffDefaultOwner !== "string" ||
         !policy.workflow.handoffDefaultOwner.trim())
       fail("foundation.json workflow.handoffDefaultOwner must be a non-empty team name");

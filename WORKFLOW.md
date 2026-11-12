@@ -1881,7 +1881,8 @@ deleting, or creating `REVIEW.md` after a review expires that review
 (`review-rules-changed`); receipts recorded before this binding existed are not
 expired by it. Details: [project review rules](.claude/harness/EVIDENCE.md#project-review-rules).
 
-Under `workflow.reviewPolicy: "risk-tiered"` every change receives review, with
+Review always routes by risk tier (`workflow.reviewPolicy: "risk-tiered"`, the
+only accepted value): every change receives review, with
 the correction circuit bounded by risk; `RESOLVED` prints the route, such as
 `review: risk-tiered AI review (low tier, fast model)`. The one exception is a
 `foundation-rapid` change at the low tier that nothing asks to review (no
@@ -1890,9 +1891,10 @@ capability, or required/diversity trigger): it is proven by the project's
 deterministic evidence alone, no reviewer runs, and `RESOLVED` prints
 `review: not required (rapid lane, low tier: deterministic evidence only)`. The
 tier is recomputed from the built diff at every Prove, so an inferred security
-or contract capability restores review.
-Under legacy policy it prints `required` or
-`not required (legacy review policy: no AI review runs)`. The review reads the change's diff and
+or contract capability restores review. Every review is recorded against an
+`authority dispatch` attempt (`workflow.reviewCircuit: "full-delta"`). The
+retired `legacy` value of either key is refused; rerun `claude-foundation init`
+to upgrade it. The review reads the change's diff and
 the agreement's requirements, not whole files. Low risk runs one diff-only
 review on the fast model tier at medium effort (`review.lowRiskModel:
 "configured"` or a reviewer `fastModelId` overrides it). The first medium round

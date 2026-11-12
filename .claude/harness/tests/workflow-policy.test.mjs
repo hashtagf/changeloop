@@ -1417,8 +1417,9 @@ try {
   workspaceHash = "workspace-record-validation";
   recordRejected({ status: "completed" }, /is completed/);
   recordRejected({}, /dispatch the request first: claude-foundation authority dispatch/);
-  recordRejected({ reviewCircuit: "legacy" }, /response not found/,
-    join(fixture, "missing-record-response.json"));
+  // A request persisted by the retired legacy circuit is not exempt from dispatch.
+  recordRejected({ reviewCircuit: "legacy" },
+    /dispatch the request first: claude-foundation authority dispatch/);
 
   quiet(() => authority.dispatchAuthority("change-record-validation", {
     request: recordRequest.requestId, scope: "full", "reviewer-type": "ai",
@@ -1527,9 +1528,10 @@ try {
       "reviewer-type": "human", "subject-actor": "human"
     }
   });
-  quiet(() => authority.recordAuthority("change-record-legacy", {
+  assert.throws(() => quiet(() => authority.recordAuthority("change-record-legacy", {
     request: legacyRequest.requestId, response: recordResponsePath
-  }));
+  })), /dispatch the request first/,
+  "a legacy-circuit review cannot be recorded without a dispatch");
 
   state = { version: 2, changeId: "change-record-receipt", reviewHistory: null };
   workspaceHash = "workspace-record-receipt";

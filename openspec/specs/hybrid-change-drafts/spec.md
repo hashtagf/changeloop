@@ -94,9 +94,9 @@ draft v5 ที่ส่วน typed เป็น JSON และ prose เป็
 - **WHEN** amend ที่อ้างหัวข้อที่ outline ไม่มี
 - **THEN** amend ถูกปฏิเสธและ packet ไม่เปลี่ยน
 
-### Requirement: Draft v3, v4, and v5 coexist under agreed pins
+### Requirement: Draft v4 and v5 coexist under agreed pins
 
-ระบบ SHALL คอมไพล์ draft v3, v4 และ v5 และประกาศ semanticDraftSchema 5 โดยคง runtime API เดิม
+ระบบ SHALL คอมไพล์ draft v4 และ v5 และประกาศ semanticDraftSchema 5 โดยคง runtime API เดิม draft v1–v3 เลิกใช้ตั้งแต่ 3.7
 
 - check version ที่ฝังในโค้ดทุกจุดรองรับ 5
 - proof receipt บันทึก semanticDraftSchema ของ change
@@ -108,11 +108,11 @@ draft v5 ที่ส่วน typed เป็น JSON และ prose เป็
 - **WHEN** change start
 - **THEN** คอมไพล์และ validate ผ่าน
 
-#### Scenario: v3 ยังอ่านได้
+#### Scenario: draft v3 ถูกปฏิเสธพร้อมทางไปต่อ
 
 - **GIVEN** draft v3
 - **WHEN** change start
-- **THEN** คอมไพล์ผ่าน
+- **THEN** ได้ EDIT ที่บอกว่า draft version 3 เลิกใช้แล้ว และชี้ไปที่ template v5
 
 #### Scenario: CLI เดิมใช้ต่อได้
 
@@ -124,7 +124,7 @@ draft v5 ที่ส่วน typed เป็น JSON และ prose เป็
 
 - **GIVEN** draft version 6
 - **WHEN** change start
-- **THEN** ได้ EDIT ที่ระบุ version ที่รับคือ 3, 4 และ 5
+- **THEN** ได้ EDIT ที่ระบุ version ที่รับคือ 4 และ 5
 
 ### Requirement: Drafts warn about unknown task fields
 

@@ -378,7 +378,7 @@ test("out of scope is derived from enforced boundaries and is never empty or inv
 test("the definition of done states only what the policy enforces, per lane", () => {
   const compiled = rapidCompiled();
   const label = (state) => reviewRouteLabel({
-    reviewPolicy: "risk-tiered", lowRiskModel: "fast",
+    lowRiskModel: "fast",
     state: { ...RAPID, impact: "low", coupling: "isolated", ...state }, claims: compiled.claims
   });
   const quiet = label({});

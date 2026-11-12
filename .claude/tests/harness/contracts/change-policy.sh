@@ -361,7 +361,9 @@ for phrase in "Rotate the auth token on sign-in" \
   boundary_output="$(node .claude/harness/foundation.mjs resolve "$slug" \
     --impact low --coupling isolated)"
   assert_contains "trust boundary still triggers review: $phrase" \
-    "$boundary_output" "review: required"
+    "$boundary_output" "review: risk-tiered AI review ("
+  assert_not_contains "trust boundary review is not skipped: $phrase" \
+    "$boundary_output" "review: not required"
 done
 
 # Coupling reports that a change spans components, which earns the standard
@@ -369,8 +371,11 @@ done
 node .claude/harness/foundation.mjs new 'Share a helper across two modules' --rapid >/dev/null
 coupled_output="$(node .claude/harness/foundation.mjs resolve share-a-helper-across-two-modules \
   --impact low --coupling coupled --acceptance-not-required)"
-assert_contains "low-impact coupling does not require review" \
-  "$coupled_output" "review: not required"
+# The standard lane still gets its routed review, and coupling routes it at the
+# medium tier, but coupling alone does not mark review as requested, so the
+# first round keeps the cheaper standard model rather than the configured one.
+assert_contains "low-impact coupling routes review without requesting it" \
+  "$coupled_output" "review: risk-tiered AI review (medium tier, standard model)"
 assert_cmd_zero "low-impact coupling still upgrades to the standard schema" \
   jq -e '.schema == "foundation-standard" and .reviewRequired == false' \
   .foundation/runtime/share-a-helper-across-two-modules.json
@@ -378,7 +383,13 @@ node .claude/harness/foundation.mjs new 'Retune two coupled components' --rapid 
 coupled_medium_output="$(node .claude/harness/foundation.mjs resolve retune-two-coupled-components \
   --impact medium --coupling coupled --acceptance-not-required)"
 assert_contains "coupling above low impact still requires review" \
-  "$coupled_medium_output" "review: required"
+  "$coupled_medium_output" "review: risk-tiered AI review ("
+assert_not_contains "coupling above low impact is not routed at the low tier" \
+  "$coupled_medium_output" "(low tier"
+assert_contains "coupling above low impact requests the configured reviewer model" \
+  "$coupled_medium_output" "(medium tier, configured model)"
+assert_cmd_zero "coupling above low impact marks review as requested" \
+  jq -e '.reviewRequired == true' .foundation/runtime/retune-two-coupled-components.json
 
 jq '.budget = {targetRequests:80,targetTokens:800000,usedRequests:81,usedTokens:900000,measurement:"legacy"}' \
   .foundation/runtime/no-security-trigger.json > "$TMP/legacy-budget.json"

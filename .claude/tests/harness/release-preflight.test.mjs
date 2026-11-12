@@ -57,6 +57,7 @@ git ls-remote --heads origin refs/heads/main
 "$REMOTE_MAIN" = "$GITHUB_SHA"
 .head_branch == "main"
 rehearsal-evidence.mjs verify
+sh .claude/tests/run-all.sh --release
 node-version: "24"`,
     packageJson: { engines: { node: ">=20.19.0" } }
   });
@@ -96,6 +97,8 @@ test("release workflow fails fast and does not repeat semantic mutation", () => 
   assert.ok(validation >= 0 && validation < expensive);
   assert.doesNotMatch(workflow, /npm run test:mutation:semantic/);
   assert.match(workflow, /authoritative suite already contains all six semantic mutation/);
+  // The default gate leaves the zero-cost benchmark sentinel out; a release must not.
+  assert.match(workflow, /sh \.claude\/tests\/run-all\.sh --release/);
 });
 
 test("release workflow builds the rewritten public documentation before publication", () => {

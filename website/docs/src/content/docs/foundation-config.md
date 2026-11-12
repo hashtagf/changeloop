@@ -345,11 +345,11 @@ them in that order in the [multi-repository workflow](/docs/multi-repository/).
 ```
 
 - `grounding` accepts `required` or `optional`;
-- `reviewCircuit` accepts `full-delta` or compatibility value `legacy`;
-- `reviewPolicy` accepts `risk-tiered` or compatibility value `legacy`.
+- `reviewCircuit` accepts only `full-delta` (the default);
+- `reviewPolicy` accepts only `risk-tiered` (the default).
 
-Use the shipped values for new work. The legacy values exist to read older
-projects; they are not the recommended way to weaken review.
+The `legacy` value of either key was retired and is refused at runtime. Rerun
+`claude-foundation init`; the upgrade rewrites both keys to the shipped values.
 `optional` means the semantic compiler creates `grounding.yaml` only when a
 material non-derived decision exists. Set `required` when project policy truly
 requires a decision ledger for every change; it does not make empty grounding

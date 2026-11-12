@@ -184,6 +184,13 @@ assert_cmd_zero "test provider receipt" node .claude/harness/foundation.mjs rece
   --observed "fixture test evidence" --source harness-test --artifact app.txt
 assert_cmd_zero "discovery provider receipt" node .claude/harness/foundation.mjs receipt profile-owner-update discovery pass \
   --discovered 3 --minimum 1 --observed "3 tests discovered" --source harness-test --artifact app.txt
+# A standard change is always routed to review (low tier at minimum), and a
+# review is recorded only against a dispatched authority attempt.
+assert_cmd_zero "dispatched review receipt" \
+  node "$ROOT/.claude/tests/lib/dispatched-review.mjs" profile-owner-update pass \
+  --observed "fixture review found no blockers" \
+  --reviewer harness-test --subject-actor implementation-agent \
+  --unresolved-blockers 0 --reference "fixture://profile-review"
 assert_cmd_zero "complete evidence proves" node .claude/harness/foundation.mjs prove profile-owner-update
 assert_cmd_zero "fresh proof is land-ready" node .claude/harness/foundation.mjs land-check profile-owner-update
 
@@ -219,6 +226,10 @@ node .claude/harness/foundation.mjs receipt profile-owner-update test pass \
 node .claude/harness/foundation.mjs receipt profile-owner-update discovery pass \
   --discovered 3 --minimum 1 --observed "3 tests discovered" \
   --source harness-test --artifact app.txt >/dev/null
+node "$ROOT/.claude/tests/lib/dispatched-review.mjs" profile-owner-update pass \
+  --observed "fixture review found no blockers" \
+  --reviewer harness-test --subject-actor implementation-agent \
+  --unresolved-blockers 0 --reference "fixture://profile-review" >/dev/null
 node .claude/harness/foundation.mjs prove profile-owner-update >/dev/null
 
 printf 'changed\n' > app.txt
@@ -246,6 +257,13 @@ for provider in static-analysis data-migration accessibility resilience observab
   node .claude/harness/foundation.mjs receipt production-provider-coverage "$provider" pass \
     --observed "fixture evidence for $provider" --source harness-test --artifact app.txt >/dev/null
 done
+# Deployment and data-migration capabilities route this rapid change to the
+# high review tier; its review is recorded against a dispatched attempt.
+assert_cmd_zero "high-tier capabilities record a dispatched review" \
+  node "$ROOT/.claude/tests/lib/dispatched-review.mjs" production-provider-coverage pass \
+  --observed "fixture review found no blockers" \
+  --reviewer harness-test --subject-actor implementation-agent \
+  --unresolved-blockers 0 --reference "fixture://production-review"
 assert_cmd_zero "new provider receipts produce a complete proof" \
   node .claude/harness/foundation.mjs prove production-provider-coverage
 
@@ -443,8 +461,10 @@ assert_cmd_fails_with "free text cannot pass as a reference" \
     --reviewer harness-test --subject-actor implementation-agent \
     --unresolved-blockers 0 \
     --reference "trust me bro"
-node .claude/harness/foundation.mjs receipt collect-before-review \
-  review pass --observed "fixture review found no blockers" \
+# Free text is refused before the dispatch binding is checked; a successful
+# review is recorded only through a dispatched authority attempt.
+node "$ROOT/.claude/tests/lib/dispatched-review.mjs" collect-before-review \
+  pass --observed "fixture review found no blockers" \
   --reviewer harness-test --subject-actor implementation-agent \
   --unresolved-blockers 0 \
   --reference "fixture://collect-review" >/dev/null
@@ -514,7 +534,9 @@ passkey_keyword="$(node .claude/harness/foundation.mjs resolve \
 # An intent keyword alone only requires review; the change stays rapid.
 assert_contains "an intent keyword is reported as a review-only trigger" \
   "$passkey_keyword" "passkey (intent keyword: review only)"
-assert_contains "an intent keyword requires review" "$passkey_keyword" "review: required"
+assert_contains "an intent keyword requires review" "$passkey_keyword" "review: risk-tiered AI review ("
+assert_not_contains "an intent keyword keeps review on the rapid lane" \
+  "$passkey_keyword" "review: not required"
 assert_contains "an intent keyword keeps the rapid schema" \
   "$passkey_keyword" "schema: foundation-rapid"
 passkey_resolved="$(node .claude/harness/foundation.mjs resolve \
@@ -868,6 +890,12 @@ printf '%s\n' \
   '}' > openspec/changes/parallel-evidence/evidence.yaml
 sed -i.bak 's/- \[ \]/- [x]/g' openspec/changes/parallel-evidence/tasks.md
 rm openspec/changes/parallel-evidence/tasks.md.bak
+# security-static routes this change to review; record it through a dispatched
+# attempt so preflight reaches the providers under test.
+node "$ROOT/.claude/tests/lib/dispatched-review.mjs" parallel-evidence pass \
+  --observed "fixture review found no blockers" \
+  --reviewer harness-test --subject-actor implementation-agent \
+  --unresolved-blockers 0 --reference "fixture://parallel-review" >/dev/null
 assert_cmd_zero "independent providers execute concurrently" \
   node .claude/harness/foundation.mjs proof-execute parallel-evidence
 

@@ -11,7 +11,7 @@
 // call untouched and the tool reports the ordinary error.
 
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -62,7 +62,7 @@ export function redactedCopy(path, cwd = process.cwd()) {
   return copy;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try {
     const copy = redactedCopy(process.argv[2] || "", process.argv[3] || process.cwd());
     if (copy) process.stdout.write(copy);

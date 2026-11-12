@@ -115,17 +115,36 @@ grep -q 'openspec native benchmark' "$WORK/missing-dependencies-list.out" || {
 # slowest ones and the exclusive benchmark, which the full run still owns.
 sh "$HERE/../run-all.sh" --quick --list > "$WORK/quick-list.out"
 sh "$HERE/../run-all.sh" --list > "$WORK/full-list.out"
+sh "$HERE/../run-all.sh" --release --list > "$WORK/release-list.out"
 for label in 'runtime syntax' 'run-all process control'; do
   grep -qFx "$label" "$WORK/quick-list.out" || {
     echo "FAIL: --quick dropped ordinary suite: $label"; exit 1; }
 done
-for label in 'installer smoke' 'openspec native sentinel' 'openspec native benchmark'; do
+for label in 'installer smoke' 'openspec native benchmark'; do
   grep -qFx "$label" "$WORK/full-list.out" || {
     echo "FAIL: full list is missing: $label"; exit 1; }
   if grep -qFx "$label" "$WORK/quick-list.out"; then
     echo "FAIL: --quick kept slow suite: $label"; exit 1
   fi
 done
+
+# The sentinel reruns the whole workload suite: `--release` owns it, the full
+# and quick gates leave it out, and a benchmark edit still selects it.
+for list in full quick; do
+  if grep -qFx 'openspec native sentinel' "$WORK/$list-list.out"; then
+    echo "FAIL: the $list gate kept the release-only sentinel"; exit 1
+  fi
+done
+grep -qFx 'openspec native sentinel' "$WORK/release-list.out" || {
+  echo "FAIL: --release dropped the sentinel"; exit 1; }
+if grep -vFx 'openspec native sentinel' "$WORK/release-list.out" |
+  cmp -s - "$WORK/full-list.out"; then :; else
+  echo "FAIL: --release is not the full gate plus the sentinel"; exit 1
+fi
+bench_affected="$(FOUNDATION_CHANGED_FILES='.claude/tests/bench/openspec-native/sentinel.mjs' \
+  sh "$RUN_ALL" --affected --list)"
+printf '%s\n' "$bench_affected" | grep -qFx 'openspec native sentinel' || {
+  echo "FAIL: --affected did not select the sentinel for a benchmark edit"; exit 1; }
 
 # The watchdog's limits and its timeout reporting are checked as structured
 # node:test cases, which is also the report Prove reads from this script.

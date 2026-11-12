@@ -60,6 +60,10 @@ rtk proxy env PATH="$PWD/node_modules/.bin:$PATH" bash .claude/tests/run-all.sh
 rtk git diff --check
 ```
 
+The full gate leaves out the release-only `openspec native sentinel`, which
+reruns the whole frozen workload suite. `--affected` still selects it when you
+change benchmark files; `run-all.sh --release` adds it for a release candidate.
+
 Current-source tests and historical upgrade fixtures exercise different inputs;
 do not commit or stash unfinished work just to run a test. See the
 [test guide](.claude/tests/README.md) for suite ownership, branch-base selection,
@@ -129,8 +133,9 @@ Use your real name and a reachable email address.
   `git log` (`fix(validation): …`, `docs(changelog): …`).
 - One logical change per pull request. Small PRs are reviewed quickly; large
   mixed PRs are usually sent back for splitting.
-- CI must be green. The workflow suite (`workflow-tests`) runs the same
-  `run-all.sh` you run locally.
+- CI must be green. The workflow suite (`workflow-tests`) runs
+  `run-all.sh --release`: the full gate you run locally plus the release-only
+  sentinel.
 
 ## Reporting bugs and requesting features
 

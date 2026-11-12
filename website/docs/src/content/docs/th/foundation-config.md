@@ -335,11 +335,11 @@ frozen-lockfile ของ pnpm, yarn, bun) ตั้ง `"installDependencies": 
 ```
 
 - `grounding` รับ `required` หรือ `optional`;
-- `reviewCircuit` รับ `full-delta` หรือค่า compatibility `legacy`;
-- `reviewPolicy` รับ `risk-tiered` หรือค่า compatibility `legacy`
+- `reviewCircuit` รับเฉพาะ `full-delta` (ค่า default);
+- `reviewPolicy` รับเฉพาะ `risk-tiered` (ค่า default)
 
-งานใหม่ควรใช้ค่าที่ ship มา ค่า legacy มีไว้สำหรับอ่านโปรเจกต์เก่า ไม่ใช่วิธีที่
-แนะนำสำหรับลดความเข้มของ review
+ค่า `legacy` ของทั้งสอง key ถูกยกเลิกแล้วและ runtime จะปฏิเสธ ให้รัน
+`claude-foundation init` อีกครั้ง การ upgrade จะเขียนทั้งสอง key เป็นค่าที่ ship มา
 `optional` แปลว่า semantic compiler สร้าง `grounding.yaml` เฉพาะเมื่อมี material
 non-derived decision จริง ตั้งเป็น `required` เมื่อ policy ของ project ต้องมี
 decision ledger ทุก change เท่านั้น เพราะ grounding ว่างไม่ได้เพิ่มคุณภาพ

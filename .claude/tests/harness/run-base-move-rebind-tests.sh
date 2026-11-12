@@ -218,8 +218,15 @@ $F sandbox create "$C" > /dev/null
 assert_eq "dirty target selects copy isolation" "copy" "$(runtime_json "$C" .workspace.mode)"
 printf 'export function add(a,b){return a+b;}\nexport const added = true;\n' \
   > ".foundation/sandboxes/$C/src/calc.js"
+# Review evidence binds to a dispatched authority attempt, so the verdict is
+# recorded through request → dispatch → record rather than a direct receipt.
+# A review request requires completed tasks, so they are ticked first; the
+# rebind below is then driven by target movement alone.
+sed 's/- \[ \]/- [x]/g' "openspec/changes/$C/tasks.md" > "$TMP/copy-tasks-done.md"
+cp "$TMP/copy-tasks-done.md" "openspec/changes/$C/tasks.md"
+cp "$TMP/copy-tasks-done.md" ".foundation/sandboxes/$C/openspec/changes/$C/tasks.md"
 assert_cmd_zero "copy review fixture records a bound AI verdict" \
-  node .claude/harness/foundation.mjs receipt "$C" review pass \
+  node "$ROOT/.claude/tests/lib/dispatched-review.mjs" "$C" pass \
     --reviewer-type ai --reviewer-identity fixture-reviewer \
     --reviewer-provider-family anthropic --reviewer-model-family claude \
     --reviewer-model fixture-model --reviewer-session fixture-review-session \
@@ -236,9 +243,6 @@ plan="$($F proof-plan "$C")"
 assert_contains "uncommitted target movement reuses copy review" "$plan" "review: reusable-diff"
 assert_eq "copy sync preserves target HEAD" "$before_head" "$(git rev-parse HEAD)"
 assert_eq "copy identity and sync preserve target index" "$before_index" "$(git ls-files --stage | git hash-object --stdin)"
-sed 's/- \[ \]/- [x]/g' "openspec/changes/$C/tasks.md" > "$TMP/copy-tasks-done.md"
-cp "$TMP/copy-tasks-done.md" "openspec/changes/$C/tasks.md"
-cp "$TMP/copy-tasks-done.md" ".foundation/sandboxes/$C/openspec/changes/$C/tasks.md"
 copy_advance="$($F proof-advance "$C" 2>&1 || true)"
 plan="$($F proof-plan "$C")"
 assert_contains "copy verdict durably rebinds through proof advance" "$plan

@@ -55,6 +55,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   agent session (Claude or Pi) tests its fixtures instead of the caller's
   project and guardrail mode. The affected-suite selector also works when the
   checkout sits under a symlinked directory such as macOS `/tmp`.
+- The default `run-all.sh` gate no longer runs the release-only `openspec
+  native sentinel`, which reran the whole workload suite alone after the pool
+  (about six minutes). `run-all.sh --release` runs it with the full gate; the
+  release workflow, CI, and `--affected` for benchmark edits still run it, and
+  `npm run release:preflight` checks that the release workflow uses
+  `--release`. The multi-repository topology contracts and the concurrent
+  repositories seam are split into parallel rows and files with every
+  assertion kept, so neither holds the tail of the gate.
 
 ### Removed
 
@@ -84,11 +92,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the matching public command (`runtime hash` → `hash`, `runtime new` →
   `change new`). Each alias had printed a deprecation warning since it was
   replaced; installed commands, skills, and hooks never call them.
+- **Breaking: the legacy review routing is gone; review always routes by risk
+  tier.** `workflow.reviewPolicy` accepts only `risk-tiered` and
+  `workflow.reviewCircuit` only `full-delta`, which are now also the runtime
+  defaults. A `legacy` value is refused with the route to rerun
+  `claude-foundation init`, and install/upgrade rewrites both keys to the
+  shipped values. Every review receipt now binds to an `authority dispatch`
+  attempt, and `RESOLVED` no longer prints `review: required`; it names the
+  tier and model class.
 - Twelve unused internal runtime functions (old proposal renderers and
   helpers replaced in 3.7). No command, output, or file format changes.
 
 ### Fixed
 
+- A review receipt whose finding counts were edited after it was recorded
+  (for example `review.findings.verified` raised to 99) no longer reads valid:
+  the counts must match the finding rows and verified IDs the dispatched
+  attempt binds, as they always do when the harness records the receipt.
+- After the harness rebuilt a corrupt review attempt chain, every later
+  review dispatch, a human review included, failed with "a completed AI
+  response has no matching recorded receipt". The rebuilt placeholders carry
+  no response, so they no longer count as one that owes a receipt.
+- Hooks now work for a project reached through a symlinked path (macOS
+  `/tmp`, a symlinked home directory). Node entry points compared the
+  logical script path against their resolved module URL, so the secrets guard
+  refused secret reads instead of showing a redacted copy, and the
+  detached-authority, shell-route, and dev-terminal hooks silently did nothing.
 - An AI review whose cheaper first round (fast or standard model) was
   interrupted while its receipt was recorded now recovers instead of failing
   "configured review result integrity or reviewer provenance does not match";

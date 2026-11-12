@@ -248,7 +248,7 @@ export function fingerprintedReviewPolicy(policy) {
 }
 
 export function assembleReviewPolicy({
-  state, signals, riskRoute, policy, riskTiered
+  state, signals, riskRoute, policy
 }) {
   const { capabilities, requiredTriggers, diversityTriggers } = signals;
   const triggers = [...new Set([...requiredTriggers, ...diversityTriggers])].sort();
@@ -273,7 +273,7 @@ export function assembleReviewPolicy({
   // asked to re-earn. Hence each key appears only when its waiver is in force.
   const singleModel = policy.diversity === "single-model";
   const diversityRequired = diversityTriggers.length > 0 ||
-    (riskTiered && riskRoute.tier === "high");
+    riskRoute.tier === "high";
   const waived = singleModel && diversityRequired;
   if (waived) triggers.push("diversity-waived-single-model");
   const selfReview = policy.independence === "self";
@@ -281,22 +281,16 @@ export function assembleReviewPolicy({
   const signalled = Boolean(state.reviewRequired || requiredTriggers.length ||
     capabilities.has("review"));
   return {
-    required: riskTiered
-      ? !rapidEvidenceOnly({ state, signals, riskRoute, signalled })
-      : signalled,
-    ...(riskTiered ? {
-      tier: riskRoute.tier,
-      route: riskRoute.route,
-      maxAiAttempts: riskRoute.maxAiAttempts,
-      requiresHumanFinal: riskRoute.requiresHumanFinal
-    } : {}),
+    required: !rapidEvidenceOnly({ state, signals, riskRoute, signalled }),
+    tier: riskRoute.tier,
+    route: riskRoute.route,
+    maxAiAttempts: riskRoute.maxAiAttempts,
+    requiresHumanFinal: riskRoute.requiresHumanFinal,
     independence: selfReview ? "self" : "required",
     diversity: diversityRequired && !singleModel ? "required" : "preferred",
     ...(waived ? { diversityWaived: true } : {}),
     ...(selfReview ? { independenceWaived: true } : {}),
-    triggers: [...new Set(riskTiered
-      ? [...triggers, ...riskRoute.triggers]
-      : triggers)].sort()
+    triggers: [...new Set([...triggers, ...riskRoute.triggers])].sort()
   };
 }
 
@@ -1273,8 +1267,7 @@ export function createEvidenceContract({
       requiredTriggers: signals.requiredTriggers
     });
     const policy = foundationPolicy().review || {};
-    const riskTiered = foundationPolicy().workflow.reviewPolicy === "risk-tiered";
-    const assembled = assembleReviewPolicy({ state, signals, riskRoute, policy, riskTiered });
+    const assembled = assembleReviewPolicy({ state, signals, riskRoute, policy });
     const grants = state.reviewHistory?.extraAiWaves || [];
     const result = grants.length ? { ...assembled, grantedAiWaveCap:
       Math.max(...grants.map((row) => Number(row.delivered || 0) + 1)) } : assembled;

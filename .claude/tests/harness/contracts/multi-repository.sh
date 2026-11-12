@@ -6,6 +6,17 @@
   echo "contract fragment: run it through .claude/tests/harness/run-harness-tests.sh" >&2
   exit 2
 }
+# The four fixtures below share nothing but the installed harness, so
+# run-harness-tests.sh can select one as a `multi-repository-<shard>` slice and
+# run-all.sh can run them as parallel rows. `multi-repository` runs them all,
+# in this order. planning-diagnostics reads `cross-repository-profile`, so it
+# must follow the `profile` shard.
+multi_repository_shard="${FOUNDATION_MULTI_REPOSITORY_SHARD:-all}"
+multi_repository_shard_selected() {
+  [ "$multi_repository_shard" = all ] || [ "$multi_repository_shard" = "$1" ]
+}
+
+if multi_repository_shard_selected profile; then
 # A superproject fixture proves that topology discovery, worktree fan-out,
 # repository packets, model routing, and receipt invalidation share one
 # composite control-plane identity without invalidating unrelated repo proof.
@@ -28,12 +39,10 @@ cp -R "$ROOT/openspec/schemas" "$TMP/multi-project/openspec/"
 cp "$ROOT/openspec/config.yaml" "$TMP/multi-project/openspec/"
 cp "$ROOT/openspec/repositories.yaml" "$TMP/multi-project/openspec/"
 cp "$ROOT/foundation.json" "$TMP/multi-project/"
-# This fixture exercises the pre-v3.3 multi-repository contract. New
-# risk-tiered/grounding behavior has dedicated tests and must not make this
-# compatibility case fabricate a Decision Sheet.
+# This fixture exercises the pre-v3.3 multi-repository contract. Grounding
+# behavior has dedicated tests and must not make this compatibility case
+# fabricate a Decision Sheet. Review routing is always risk-tiered.
 jq '.workflow.grounding = "optional" |
-    .workflow.reviewPolicy = "legacy" |
-    .workflow.reviewCircuit = "legacy" |
     .land.riskBasedCi = false |
     .models.routing = true |
     .telemetry.requireUsage = false' \
@@ -415,14 +424,16 @@ node .claude/harness/foundation.mjs receipt cross-repository-profile \
 node .claude/harness/foundation.mjs receipt cross-repository-profile \
   compatibility pass --observed "contract change is backward compatible" \
   --source harness-test --reference https://example.invalid/compat-review >/dev/null
-node .claude/harness/foundation.mjs receipt cross-repository-profile \
-review pass --observed "fixture review found no blockers" \
+node "$ROOT/.claude/tests/lib/dispatched-review.mjs" cross-repository-profile \
+  pass --observed "fixture review found no blockers" \
   --reviewer harness-test --subject-actor implementation-agent \
   --unresolved-blockers 0 \
   --reference "fixture://review" >/dev/null
 assert_cmd_zero "committed multi-repo work proves" \
   node .claude/harness/foundation.mjs prove cross-repository-profile
+fi
 
+if multi_repository_shard_selected setup; then
 # Per-repository setup: a topology row's `setupCommand` runs inside that
 # repository's worktree, and `sandbox.setupCommand` still covers the root
 # worktree. A separate superproject keeps the marker files out of the
@@ -485,7 +496,9 @@ printf '%s\n' \
 assert_cmd_fails_with "invalid repository setupCommand is rejected" \
   "setupCommand must be a non-empty string" \
   node .claude/harness/foundation.mjs repos
+fi
 
+if multi_repository_shard_selected copy; then
 # A dirty control tree selects copy mode, but child repository worktrees still
 # have to refresh when a read dependency moves.
 mkdir -p "$TMP/copy-read-child"
@@ -504,9 +517,7 @@ cp -R "$ROOT/openspec/schemas" "$TMP/copy-read/openspec/"
 cp "$ROOT/openspec/config.yaml" "$TMP/copy-read/openspec/"
 cp "$ROOT/.foundation/.gitignore" "$TMP/copy-read/.foundation/"
 cp "$ROOT/foundation.json" "$TMP/copy-read/"
-jq '.workflow.grounding = "optional" |
-    .workflow.reviewPolicy = "legacy" |
-    .workflow.reviewCircuit = "legacy"' \
+jq '.workflow.grounding = "optional"' \
   "$TMP/copy-read/foundation.json" > "$TMP/copy-read-foundation.json"
 mv "$TMP/copy-read-foundation.json" "$TMP/copy-read/foundation.json"
 printf '%s\n' \
@@ -550,7 +561,9 @@ fi
 assert_contains "copy-root child worktree reaches the new dependency commit" \
   "$(cat .foundation/repository-sandboxes/copy-root-read-refresh/dependency/dependency.txt)" \
   "dependency-after"
+fi
 
+if multi_repository_shard_selected sibling; then
 # A writable sibling checkout (`../sdk`, allowOutsideRoot) is a declared
 # repository like a submodule: a draft binds tasks to it, Build isolates it,
 # and Land writes its proven bytes into the sibling target uncommitted. Both
@@ -578,8 +591,7 @@ cp "$ROOT/.claude/harness/commands.json" "$TMP/sibling-project/.claude/harness/"
 cp -R "$ROOT/openspec/schemas" "$TMP/sibling-project/openspec/"
 cp "$ROOT/openspec/config.yaml" "$TMP/sibling-project/openspec/"
 cp "$ROOT/.foundation/.gitignore" "$TMP/sibling-project/.foundation/"
-jq '.workflow.grounding = "optional" | .workflow.reviewPolicy = "legacy" |
-    .workflow.reviewCircuit = "legacy" | .land.riskBasedCi = false |
+jq '.workflow.grounding = "optional" | .land.riskBasedCi = false |
     .telemetry.requireUsage = false' \
   "$ROOT/foundation.json" > "$TMP/sibling-project/foundation.json"
 cp -R "$TMP/sibling-sdk/src" "$TMP/sibling-sdk/test" "$TMP/sibling-sdk/package.json" \
@@ -669,4 +681,6 @@ assert_eq "the sibling target stays uncommitted" "$sibling_head" \
 assert_eq "the sibling target index is untouched" "" \
   "$(git -C "$TMP/sibling-sdk" diff --cached --name-only)"
 assert_file_absent "the read sibling receives nothing" "$TMP/sibling-ref/src/marker.js"
-cd "$TMP/multi-project"
+fi
+
+if [ -d "$TMP/multi-project" ]; then cd "$TMP/multi-project"; fi

@@ -33,24 +33,17 @@ change is archived with no model usage ever imported.
 The system SHALL surface — without blocking — when landed work targets a
 repository whose checked-out branch is `main` or `master`.
 
-#### Scenario: land record warns on a default branch
-
-- **WHEN** `land record` binds a commit and the target repository is checked
-  out on `main` or `master`
-- **THEN** the command succeeds and prints a warning naming the repository
-  and the branch
-
-#### Scenario: a feature branch stays silent
-
-- **WHEN** the target repository is checked out on any other branch or a
-  detached HEAD
-- **THEN** no branch warning is printed
-
 #### Scenario: land check reports the root target branch
 
 - **WHEN** `land check` reaches `LAND READY` and the root target is checked
   out on `main` or `master`
 - **THEN** the output includes a `branch:` line naming it
+
+#### Scenario: a feature branch stays silent
+
+- **WHEN** the root target is checked out on any other branch or a detached
+  HEAD
+- **THEN** no branch line is printed
 
 ### Requirement: Doctor escalates the unwired branch guard
 
@@ -122,14 +115,14 @@ The coordinator MAY perform or prescribe reversible local sandbox reconciliation
 
 ### Requirement: Declared non-root scope always uses composite Land
 
-Foundation SHALL choose root-only Apply/archive or multi-repository saga behavior
+Foundation SHALL choose root-only Apply/archive or the multi-repository transaction
 from the declared repository selection, not from the number of runtime records
 that happen to survive.
 
 #### Scenario: exactly one child is selected
 
 - **WHEN** a change selects one non-root repository with or without selecting `root`
-- **THEN** Apply refuses the single local transaction and Land uses the ordered resumable repository saga
+- **THEN** Apply refuses the single local transaction and Land uses the multi-repository workspace transaction, leaving every repository's diff uncommitted
 
 #### Scenario: selected child record is missing at Land
 

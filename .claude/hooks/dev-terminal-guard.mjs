@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import {
-  appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync
+  appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -301,5 +301,5 @@ async function main() {
   }));
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href)
   await main();

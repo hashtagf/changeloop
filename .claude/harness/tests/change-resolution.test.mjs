@@ -21,7 +21,7 @@ let state;
 let saved;
 let grounding = "optional";
 let riskBasedCi = false;
-let reviewPolicy = "legacy";
+const reviewPolicy = "risk-tiered";
 let output = "";
 const priorLog = console.log;
 console.log = (message) => { output += `${message}\n`; };
@@ -169,7 +169,8 @@ try {
   assert.equal(keywordOnly.reviewKeywordOnly, true,
     "keyword-only review is marked so verification risk follows its tier");
   assert.match(output, /security: auth token \(intent keyword: review only\)/);
-  assert.match(output, /review: required/);
+  assert.match(output, /review: risk-tiered AI review \(low tier, fast model\)\n/,
+    "a keyword-only review still reviews the rapid change");
   assert.match(output, /schema: foundation-rapid\n/);
   assert.equal(existsSync(join(changeDir, "design.md")), false);
   // A declared trigger keeps upgrading the lane exactly as before.
@@ -285,7 +286,6 @@ try {
   // Under risk-tiered policy every reviewed change names its route ("not
   // required" was false there, benchmark v3.5.29). A quiet low-tier rapid
   // change is proven by deterministic evidence alone and says so.
-  reviewPolicy = "risk-tiered";
   run({}, { intent: "Create kanban board", schema: "foundation-rapid", securityTriggers: [] });
   assert.match(output, /review: not required \(rapid lane, low tier: deterministic evidence only\)\n/);
   run({}, { intent: "Create kanban board", schema: "foundation-standard", securityTriggers: [] });
@@ -296,39 +296,38 @@ try {
     "a requested review keeps review on the rapid lane");
   run({ impact: "high" }, { intent: "Create kanban board", securityTriggers: [] });
   assert.match(output, /review: risk-tiered AI review \(high tier, configured model\)\n/);
-  reviewPolicy = "legacy";
-  run({}, { intent: "Create kanban board", schema: "foundation-rapid", securityTriggers: [] });
-  assert.match(output, /review: not required \(legacy review policy: no AI review runs\)\n/);
   // The label follows the same signals validation uses.
-  assert.equal(reviewRouteLabel({ reviewPolicy: "legacy", state: { reviewRequired: true } }), "required");
   assert.equal(reviewRouteLabel({
-    reviewPolicy: "legacy", state: { reviewRequired: false },
+    state: { schema: "foundation-rapid", impact: "low", securityTriggers: [], reviewRequired: true }
+  }), "risk-tiered AI review (low tier, fast model)");
+  assert.equal(reviewRouteLabel({
+    state: { schema: "foundation-rapid", impact: "low", securityTriggers: [], reviewRequired: false },
     claims: [{ id: "c", impact: "low", capabilities: ["test", "review"] }]
-  }), "required");
+  }), "risk-tiered AI review (low tier, fast model)");
   // Medium tier runs the faster standard model class by default; a security or
   // required-review trigger, a declared review, or a team pin keeps configured.
   const mediumState = { impact: "medium", securityTriggers: [] };
   const mediumClaims = [{ id: "c", impact: "low", capabilities: ["test"] }];
   assert.equal(reviewRouteLabel({
-    reviewPolicy: "risk-tiered", state: mediumState, claims: mediumClaims
+    state: mediumState, claims: mediumClaims
   }), "risk-tiered AI review (medium tier, standard model)");
   assert.equal(reviewRouteLabel({
-    reviewPolicy: "risk-tiered", modelByTier: { medium: "configured" },
+    modelByTier: { medium: "configured" },
     state: mediumState, claims: mediumClaims
   }), "risk-tiered AI review (medium tier, configured model)");
   assert.equal(reviewRouteLabel({
-    reviewPolicy: "risk-tiered", state: { ...mediumState, reviewRequired: true },
+    state: { ...mediumState, reviewRequired: true },
     claims: mediumClaims
   }), "risk-tiered AI review (medium tier, configured model)");
   assert.equal(reviewRouteLabel({
-    reviewPolicy: "risk-tiered", state: { ...mediumState, reviewRequired: true, reviewKeywordOnly: true },
+    state: { ...mediumState, reviewRequired: true, reviewKeywordOnly: true },
     claims: mediumClaims
   }), "risk-tiered AI review (medium tier, standard model)");
   assert.equal(reviewRouteLabel({
-    reviewPolicy: "risk-tiered", state: mediumState,
+    state: mediumState,
     claims: [{ id: "c", impact: "medium", capabilities: ["test", "security-static"] }]
   }), "risk-tiered AI review (high tier, configured model)");
-  assert.equal(reviewRouteLabel({ reviewPolicy: "risk-tiered", lowRiskModel: "configured",
+  assert.equal(reviewRouteLabel({ lowRiskModel: "configured",
     state: { impact: "low", securityTriggers: [] } }), "risk-tiered AI review (low tier, configured model)");
 
   // Open questions are read from the packet the approval covers: the

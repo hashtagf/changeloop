@@ -124,6 +124,8 @@ test("policy defaults and legacy execution values normalize deterministically", 
     .execution.packetBytes.task, 8192, "a configured budget overrides the default");
   assert.equal(defaults.execution.maxContinuationWindows, 3);
   assert.equal(defaults.quality.changeGate, "off");
+  assert.equal(defaults.workflow.reviewPolicy, "risk-tiered");
+  assert.equal(defaults.workflow.reviewCircuit, "full-delta");
   assert.equal(defaults.execution.budgetWatchdog, false);
   assert.equal(defaults.models.routing, false);
   const optedIn = policy({ execution: { budgetWatchdog: true }, models: { routing: true } });
@@ -202,6 +204,11 @@ test("workflow, sandbox and boolean controls fail closed", () => {
     [{ workflow: { grounding: "sometimes" } }, /workflow.grounding/],
     [{ workflow: { reviewCircuit: "partial" } }, /reviewCircuit/],
     [{ workflow: { reviewPolicy: "unknown" } }, /reviewPolicy/],
+    // The retired legacy routing is refused with the upgrade route, not ignored.
+    [{ workflow: { reviewCircuit: "legacy" } },
+      /reviewCircuit "legacy" was retired; rerun `claude-foundation init`/],
+    [{ workflow: { reviewPolicy: "legacy" } },
+      /reviewPolicy "legacy" was retired; rerun `claude-foundation init`/],
     [{ workflow: { handoffDefaultOwner: "" } }, /handoffDefaultOwner/],
     [{ telemetry: { requireUsage: "yes" } }, /requireUsage/],
     [{ land: { riskBasedCi: "yes" } }, /riskBasedCi/]

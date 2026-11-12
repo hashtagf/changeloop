@@ -204,3 +204,40 @@ test("review attempt protocol rejects version-specific identity and evidence dri
   assert.equal(protocol.attemptIsValid(noClosure, noClosureAttempt), true,
     "an empty repair closure remains compatible with empty optional bindings");
 });
+
+// A completed attempt binds the finding rows and verified IDs; the receipt's
+// counts are derived from them. Editing a count afterwards (for example
+// `verified` 1 -> 99) must invalidate the receipt instead of reading valid.
+test("an edited finding count no longer matches the attempt it claims", () => {
+  const { receipt, common, paths } = fixture();
+  const completed = {
+    ...common, version: 3, status: "completed", resultStatus: "pass",
+    findings: [{ id: "finding-1", severity: "minor" }], verifiedFindingIds: ["finding-1"],
+    scope: { mode: "full", paths, baseAttemptDigest: null, digest: "dispatch" }
+  };
+  receipt.review.findings.items = [{ id: "finding-1", severity: "minor" }];
+  assert.equal(protocol.attemptIsValid(receipt, completed), true);
+  receipt.review.findings.verified = 99;
+  assert.equal(protocol.attemptIsValid(receipt, completed), false, "verified count");
+  receipt.review.findings.verified = 1;
+
+  const failed = { ...completed, resultStatus: "fail",
+    findings: [{ id: "finding-1", severity: "blocker" }] };
+  const failing = structuredClone(receipt);
+  failing.status = "fail";
+  failing.review.findings.items = [{ id: "finding-1", severity: "blocker" }];
+  failing.review.findings.unresolvedBlockers = 1;
+  assert.equal(protocol.attemptIsValid(failing, failed), true);
+  failing.review.findings.unresolvedBlockers = 0;
+  assert.equal(protocol.attemptIsValid(failing, failed), false, "blocker count");
+
+  const closure = {
+    ...common, version: 4, status: "completed", resultStatus: "pass",
+    sourceAttemptDigest: "source-attempt",
+    evidenceBindings: [{ id: "binding-1" }], verifiedFindingIds: ["finding-1"],
+    scope: { mode: "repair-closure", paths, baseAttemptDigest: null, digest: "dispatch" }
+  };
+  assert.equal(protocol.attemptIsValid(receipt, closure), true);
+  receipt.review.findings.verified = 2;
+  assert.equal(protocol.attemptIsValid(receipt, closure), false, "repair-closure verified count");
+});
