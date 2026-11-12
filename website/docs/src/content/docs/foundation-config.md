@@ -394,7 +394,7 @@ Where and how the pull request is opened:
 | Field | Default | Meaning |
 |---|---|---|
 | `execution.budgetWatchdog` | `false` | Boolean. When `false`, usage is still recorded but packets carry no spend directives or limits; when `true`, a `budget-warning` signal appears at 70% of spend |
-| `review.fallbackReviewers` | `["codex-sol", "main-session"]` in the shipped file | Reviewers tried in order only after an infrastructure error; a delivered `fail` or `inconclusive` never triggers fallback. Names must exist, must not repeat `defaultReviewer`, and `main-session` requires `independence: "self"` |
+| `review.fallbackReviewers` | `["codex-sol", "main-session"]` in the shipped file | Reviewers tried in order only after an infrastructure error; a delivered `fail` or `inconclusive` never triggers fallback. With no `defaultReviewer` or other named reviewer, `["main-session"]` makes the main session the first reviewer. Names must exist, must not repeat `defaultReviewer`, and `main-session` requires `independence: "self"` |
 | `review.infraFailureThreshold` | `2` in the shipped file | Integer `1..5` |
 | `review.lowRiskModel` | `"fast"` | `fast` or `configured`. Low-risk changes get one diff-only review on the fast model; `configured` uses the reviewer's configured model instead |
 | `review.modelByTier` | unset | Map `low` and/or `medium` to `fast`, `standard`, or `configured` to pick the review model per risk tier; `high` always uses the configured model and cannot be set |

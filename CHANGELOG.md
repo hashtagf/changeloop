@@ -139,6 +139,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A review policy with no named reviewer and `fallbackReviewers:
+  ["main-session"]` (the fix the missing-CLI error recommends) now reviews in
+  the main session. Before, validation accepted it but `advance` repeated a
+  "without a recorded configured reviewer failure" repair forever. A named,
+  installed reviewer still runs first; the main session is reached only after
+  its recorded failure.
 - Blocker or major findings from a human review now must be closed. The next
   review, human or AI, full or delta, carries them as `closureFindings` and
   must list them in `verifiedFindingIds` (or fail with a blocker or major

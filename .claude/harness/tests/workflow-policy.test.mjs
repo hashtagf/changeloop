@@ -1108,6 +1108,66 @@ try {
   reviewSettings = fallbackSettings;
   installedReviewers = null;
 
+  // No named reviewer at all: the main session is the configured reviewer.
+  // There is no failure to record first, so it is reachable immediately.
+  reviewSettings = { independence: "self", diversity: "single-model",
+    fallbackReviewers: ["main-session"] };
+  state = { version: 2, changeId: "change-main-session-only", reviewHistory: null };
+  const callsBeforeMainOnly = configuredReviewCalls;
+  for (const key of hostProvenanceKeys) delete process.env[key];
+  const mainOnlyRequest = quiet(() => authority.requestAuthority(
+    "change-main-session-only", { type: "review" }));
+  const mainOnlyBlocked = quiet(() => authority.runAuthorityReviewer(
+    "change-main-session-only", {
+      request: mainOnlyRequest.requestId, "subject-actor": "human"
+    }));
+  assert.equal(mainOnlyBlocked.status, "main-session-provenance-unavailable",
+    "missing host provenance blocks on provenance, not a configured-failure repair");
+  assert.equal(mainOnlyBlocked.failedReviewer, null);
+  assert.match(mainOnlyBlocked.reason, /no named reviewer is configured/);
+  process.env.CODEX_THREAD_ID = "main-only-session";
+  const mainOnlyHandback = quiet(() => authority.runAuthorityReviewer(
+    "change-main-session-only", {
+      request: mainOnlyRequest.requestId, "subject-actor": "human",
+      "main-session-identity": "main-only-reviewer",
+      "main-session-provider-family": "openai",
+      "main-session-model-family": "gpt-5.6",
+      "main-session-model": "gpt-5.6-sol"
+    }));
+  restoreHostProvenance();
+  assert.equal(mainOnlyHandback.status, "needs-main-session-review");
+  assert.equal(mainOnlyHandback.failedReviewer, null);
+  assert.equal(mainOnlyHandback.infrastructureError, null);
+  assert.equal(mainOnlyHandback.reviewer.identity, "main-only-reviewer");
+  assert.equal(configuredReviewCalls, callsBeforeMainOnly,
+    "no configured reviewer is spawned");
+  const mainOnlyAuthority = authorityStore.list("change-main-session-only")
+    .find((row) => row.value.requestId === mainOnlyRequest.requestId).value;
+  assert.deepEqual(mainOnlyAuthority.fallbackAttempts || [], [],
+    "no infrastructure failure is fabricated");
+  assert.equal(mainOnlyAuthority.mainSessionFallback.status, "awaiting-response");
+  assert.deepEqual(attemptStore.reviewAttempts("change-main-session-only",
+    state.reviewHistory).filter((attempt) => attempt.status === "completed"), [],
+  "the main-session dispatch consumes no failed attempt");
+  assert.throws(() => quiet(() => authority.runAuthorityReviewer(
+    "change-main-session-only", {
+      request: mainOnlyRequest.requestId, "subject-actor": "human"
+    })), /^(?!.*already failed).*complete the reserved main-session fallback/s);
+
+  // An installed named reviewer still runs first: the main session is reached
+  // only after its recorded failure, never by asking for it directly.
+  reviewSettings = { defaultReviewer: "codex-sol", independence: "self",
+    diversity: "single-model", fallbackReviewers: ["main-session"] };
+  state = { version: 2, changeId: "change-main-session-skip", reviewHistory: null };
+  const skipRequest = quiet(() => authority.requestAuthority(
+    "change-main-session-skip", { type: "review" }));
+  assert.throws(() => quiet(() => authority.runAuthorityReviewer(
+    "change-main-session-skip", {
+      request: skipRequest.requestId, "subject-actor": "human",
+      reviewer: "main-session"
+    })), /without a recorded configured reviewer failure/);
+  reviewSettings = fallbackSettings;
+
   state = { version: 2, changeId: "change-verdict", reviewHistory: null };
   configuredReviewResults = {
     "codex-sol": {

@@ -383,7 +383,7 @@ placeholder ที่ใช้ได้คือ `{changeId}`, `{title}`, `{comm
 | Field | ค่าเริ่มต้น | ความหมาย |
 |---|---|---|
 | `execution.budgetWatchdog` | `false` | Boolean ถ้า `false` ยังบันทึก usage แต่ packet ไม่มี spend directive หรือขีดจำกัด; ถ้า `true` จะมี signal `budget-warning` เมื่อใช้ถึง 70% |
-| `review.fallbackReviewers` | `["codex-sol", "main-session"]` ในไฟล์ที่ติดตั้ง | reviewer ที่ลองตามลำดับเฉพาะเมื่อเกิด infrastructure error; verdict `fail` หรือ `inconclusive` ไม่ trigger fallback ชื่อต้องมีอยู่จริง ห้ามซ้ำ `defaultReviewer` และ `main-session` ต้องใช้คู่กับ `independence: "self"` |
+| `review.fallbackReviewers` | `["codex-sol", "main-session"]` ในไฟล์ที่ติดตั้ง | reviewer ที่ลองตามลำดับเฉพาะเมื่อเกิด infrastructure error; verdict `fail` หรือ `inconclusive` ไม่ trigger fallback ถ้าไม่มี `defaultReviewer` หรือ reviewer ที่ตั้งชื่ออื่น `["main-session"]` จะให้ main session เป็น reviewer ตัวแรก ชื่อต้องมีอยู่จริง ห้ามซ้ำ `defaultReviewer` และ `main-session` ต้องใช้คู่กับ `independence: "self"` |
 | `review.infraFailureThreshold` | `2` ในไฟล์ที่ติดตั้ง | จำนวนเต็ม `1..5` |
 | `review.lowRiskModel` | `"fast"` | `fast` หรือ `configured` change ความเสี่ยงต่ำได้ review เฉพาะ diff หนึ่งรอบด้วย model ระดับ fast ส่วน `configured` ใช้ model ที่ตั้งไว้ให้ reviewer แทน |
 | `review.modelByTier` | ไม่ได้ตั้ง | map `low` และ/หรือ `medium` ไปที่ `fast`, `standard` หรือ `configured` เพื่อเลือก model ที่ใช้ review ตามระดับความเสี่ยง ส่วน `high` ใช้ model ที่ตั้งไว้เสมอและตั้งไม่ได้ |

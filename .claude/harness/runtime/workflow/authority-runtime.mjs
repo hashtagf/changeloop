@@ -1127,6 +1127,9 @@ export function createAuthorityRuntime({
     }, telemetry);
   }
 
+  const NO_CONFIGURED_REVIEWER =
+    "no named reviewer is configured; review.fallbackReviewers routes the review to the main session";
+
   function mainSessionHandback(id, requestId, configuredIdentity,
     infrastructureError, mainSession, mainDispatched, subject) {
     const template = responseTemplate(mainDispatched);
@@ -1148,6 +1151,7 @@ export function createAuthorityRuntime({
       requestId,
       failedReviewer: configuredIdentity,
       infrastructureError,
+      ...(configuredIdentity ? {} : { reason: NO_CONFIGURED_REVIEWER }),
       reviewer: mainSession,
       packet: mainDispatched.packet,
       responseTemplate: template,
@@ -1162,11 +1166,8 @@ export function createAuthorityRuntime({
     if (explicitReviewer) return explicitReviewer;
     if (automaticReviewer) return automaticReviewer;
     const threshold = Number(settings.infraFailureThreshold || 1);
-    const fallbacks = Array.isArray(settings.fallbackReviewers)
-      ? settings.fallbackReviewers
-      : settings.fallbackReviewer ? [settings.fallbackReviewer] : [];
-    const configured = [settings.defaultReviewer,
-      ...fallbacks.filter((name) => name !== "main-session")].filter(Boolean);
+    const fallbacks = reviewFallbacks(settings);
+    const configured = configuredReviewerNames(settings);
     const attempts = request.fallbackAttempts || [];
     for (const reviewer of configured) {
       if (!reviewerInstalled(reviewer)) continue;
@@ -1177,16 +1178,25 @@ export function createAuthorityRuntime({
     return fallbacks.includes("main-session") ? "main-session" : null;
   }
 
+  function reviewFallbacks(settings) {
+    return Array.isArray(settings.fallbackReviewers)
+      ? settings.fallbackReviewers
+      : settings.fallbackReviewer ? [settings.fallbackReviewer] : [];
+  }
+
+  // Named reviewers routing may try before the main session, in order.
+  function configuredReviewerNames(settings) {
+    return [settings.defaultReviewer,
+      ...reviewFallbacks(settings).filter((name) => name !== "main-session")]
+      .filter(Boolean);
+  }
+
   // Configured reviewers whose CLI is absent on this host. They are skipped by
   // routing, so without a recorded failure the main-session fallback would be
   // unreachable on a host that has no reviewer CLI at all.
   function uninstalledConfiguredReviewers(settings) {
-    const fallbacks = Array.isArray(settings.fallbackReviewers)
-      ? settings.fallbackReviewers
-      : settings.fallbackReviewer ? [settings.fallbackReviewer] : [];
-    return [settings.defaultReviewer,
-      ...fallbacks.filter((name) => name !== "main-session")]
-      .filter((name) => name && !reviewerInstalled(name));
+    return configuredReviewerNames(settings)
+      .filter((name) => !reviewerInstalled(name));
   }
 
   function recoverReviewBindingsUnlocked(id, requestId = null) {
@@ -1363,6 +1373,13 @@ export function createAuthorityRuntime({
       failWithNext("configured reviewer infrastructure retries are exhausted; configure review.fallbackReviewers or record a verdict",
         authorityStatusCommand(id, requestId));
     }
+    // With no named reviewer configured there is nothing to try first: the
+    // main session is the configured reviewer, not a fallback after a failure.
+    if (reviewerName === "main-session" && !requestEntry.value.mainSessionFallback &&
+        !configuredReviewerNames(reviewSettings).length)
+      return { reviewSettings, requestEntry, reviewerName,
+        configured: authorityReviewerConfiguration(reviewerName, requestEntry.value),
+        noConfiguredReviewer: true };
     if (reviewerName === "main-session" && !requestEntry.value.mainSessionFallback &&
         uninstalled.length) {
       // Record the missing CLI as the configured reviewer's infrastructure
@@ -1429,7 +1446,8 @@ export function createAuthorityRuntime({
         return { handled: false, value: null };
       const fallback = requestEntry.value.mainSessionFallback;
       if (fallback.status !== "provenance-unavailable")
-        fail(`configured reviewer already failed; complete the reserved main-session fallback with authority status/record instead of rerunning authority run`);
+        fail(`${fallback.failedAttemptDigest === null ? "" : "configured reviewer already failed; "}complete the reserved main-session fallback with authority status/record instead of rerunning authority run`);
+      const direct = fallback.failedAttemptDigest === null;
       const storedSubject = fallback.subject || {};
       const mainSession = mainSessionProvenance(id, flags, storedSubject);
       if (mainSession.missing.length) {
@@ -1437,12 +1455,14 @@ export function createAuthorityRuntime({
           status: "main-session-provenance-unavailable",
           changeId: id,
           requestId,
-          failedReviewer: requestEntry.value.fallbackAttempts?.at(-1)?.reviewer ||
-            configured.identity,
-          infrastructureError: requestEntry.value.fallbackAttempts?.at(-1)?.summary ||
+          failedReviewer: direct ? null :
+            requestEntry.value.fallbackAttempts?.at(-1)?.reviewer || configured.identity,
+          infrastructureError: direct ? null :
+            requestEntry.value.fallbackAttempts?.at(-1)?.summary ||
             "configured reviewer infrastructure failed",
+          ...(direct ? { reason: NO_CONFIGURED_REVIEWER } : {}),
           missing: mainSession.missing,
-          action: "Expose the calling host session/model provenance and rerun authority run with --main-session-* fields; the failed reviewer will not run again.",
+          action: `Expose the calling host session/model provenance and rerun authority run with --main-session-* fields${direct ? "" : "; the failed reviewer will not run again"}.`,
           next: nextRunCommand(id, requestId)
         };
         console.log(JSON.stringify(blocked, null, 2));
@@ -1478,8 +1498,9 @@ export function createAuthorityRuntime({
         }
       });
       const handback = mainSessionHandback(id, requestId,
-        requestEntry.value.fallbackAttempts?.at(-1)?.reviewer || configured.identity,
-        requestEntry.value.fallbackAttempts?.at(-1)?.summary ||
+        direct ? null :
+          requestEntry.value.fallbackAttempts?.at(-1)?.reviewer || configured.identity,
+        direct ? null : requestEntry.value.fallbackAttempts?.at(-1)?.summary ||
           "configured reviewer infrastructure failed",
         mainSession, resumed, storedSubject);
       console.log(JSON.stringify(handback, null, 2));
@@ -1553,6 +1574,93 @@ export function createAuthorityRuntime({
       fail("a completed AI response has no matching recorded receipt; repair that authority record or pause instead of starting another configured reviewer");
     const scope = recoveredReport ? requestEntry.value.dispatch.scope.mode
       : deliveredAi.length === 0 ? "full" : "delta";
+    // Starts (or blocks on provenance for) the main-session review. `failure`
+    // is the configured reviewer's recorded infrastructure failure, or null
+    // when no named reviewer is configured and the main session reviews first.
+    function startMainSessionReview(failure) {
+      const mainSession = mainSessionProvenance(id, flags, aiSubject ? {
+        identity: subjectActor,
+        sessionId: subjectSession,
+        providerFamily: subjectProvider,
+        modelFamily: subjectFamily,
+        modelId: subjectModel
+      } : {});
+      const refreshedEntry = authorityStore.list(id)
+        .find((row) => row.value.requestId === requestId);
+      authorityStore.replace(refreshedEntry, {
+        ...refreshedEntry.value,
+        mainSessionFallback: {
+          status: mainSession.missing.length
+            ? "provenance-unavailable" : "dispatching",
+          failedAttemptDigest: failure ? failure.attemptDigest : null,
+          scope,
+          baseAttemptDigest: scope === "delta" ? deliveredAi.at(-1).digest : null,
+          subject: {
+            identity: subjectActor,
+            sessionId: subjectSession,
+            providerFamily: subjectProvider,
+            modelFamily: subjectFamily,
+            modelId: subjectModel
+          },
+          reviewer: mainSession.missing.length ? null : {
+            identity: mainSession.identity,
+            providerFamily: mainSession.providerFamily,
+            modelFamily: mainSession.modelFamily,
+            modelId: mainSession.modelId,
+            sessionId: mainSession.sessionId
+          },
+          missingProvenance: mainSession.missing
+        }
+      });
+      if (mainSession.missing.length) {
+        const blocked = {
+          status: "main-session-provenance-unavailable",
+          changeId: id,
+          requestId,
+          failedReviewer: failure ? failure.reviewer : null,
+          infrastructureError: failure ? failure.summary : null,
+          ...(failure ? {} : { reason: NO_CONFIGURED_REVIEWER }),
+          missing: mainSession.missing,
+          action: `Expose the calling host session/model provenance and rerun authority run with --main-session-* fields${failure ? "; the failed reviewer will not run again" : ""}.`,
+          next: nextRunCommand(id, requestId)
+        };
+        console.log(JSON.stringify(blocked, null, 2));
+        return { handled: true, value: blocked };
+      }
+      const mainDispatched = dispatchAuthorityUnlocked(id, {
+        request: requestId,
+        scope,
+        ...(scope === "delta" ? {
+          "base-attempt": deliveredAi.at(-1).digest
+        } : {}),
+        "reviewer-type": "ai",
+        "reviewer-identity": mainSession.identity,
+        "reviewer-provider-family": mainSession.providerFamily,
+        "reviewer-model-family": mainSession.modelFamily,
+        "reviewer-model": mainSession.modelId,
+        "reviewer-session": mainSession.sessionId
+      });
+      const mainEntry = authorityStore.list(id)
+        .find((row) => row.value.requestId === requestId);
+      authorityStore.replace(mainEntry, {
+        ...mainEntry.value,
+        mainSessionFallback: {
+          ...mainEntry.value.mainSessionFallback,
+          status: "awaiting-response"
+        }
+      });
+      const handback = mainSessionHandback(id, requestId, failure ? failure.reviewer : null,
+        failure ? failure.summary : null, mainSession, mainDispatched, {
+          identity: subjectActor,
+          sessionId: subjectSession,
+          providerFamily: subjectProvider,
+          modelFamily: subjectFamily,
+          modelId: subjectModel
+        });
+      console.log(JSON.stringify(handback, null, 2));
+      return { handled: true, value: handback };
+    }
+    if (reviewer.noConfiguredReviewer) return startMainSessionReview(null).value;
     const workspace = loadRuntime(id).workspace?.path || root;
     const dispatched = dispatchAuthorityUnlocked(id, {
       request: requestId,
@@ -1721,86 +1829,9 @@ export function createAuthorityRuntime({
         console.log(JSON.stringify(exhausted, null, 2));
         return { handled: true, value: exhausted };
       }
-      const mainSession = mainSessionProvenance(id, flags, aiSubject ? {
-        identity: subjectActor,
-        sessionId: subjectSession,
-        providerFamily: subjectProvider,
-        modelFamily: subjectFamily,
-        modelId: subjectModel
-      } : {});
-      const refreshedEntry = authorityStore.list(id)
-        .find((row) => row.value.requestId === requestId);
-      authorityStore.replace(refreshedEntry, {
-        ...refreshedEntry.value,
-        mainSessionFallback: {
-          status: mainSession.missing.length
-            ? "provenance-unavailable" : "dispatching",
-          failedAttemptDigest: failed.digest,
-          scope,
-          baseAttemptDigest: scope === "delta" ? deliveredAi.at(-1).digest : null,
-          subject: {
-            identity: subjectActor,
-            sessionId: subjectSession,
-            providerFamily: subjectProvider,
-            modelFamily: subjectFamily,
-            modelId: subjectModel
-          },
-          reviewer: mainSession.missing.length ? null : {
-            identity: mainSession.identity,
-            providerFamily: mainSession.providerFamily,
-            modelFamily: mainSession.modelFamily,
-            modelId: mainSession.modelId,
-            sessionId: mainSession.sessionId
-          },
-          missingProvenance: mainSession.missing
-        }
+      return startMainSessionReview({
+        attemptDigest: failed.digest, reviewer: configured.identity, summary: report.summary
       });
-      if (mainSession.missing.length) {
-        const blocked = {
-          status: "main-session-provenance-unavailable",
-          changeId: id,
-          requestId,
-          failedReviewer: configured.identity,
-          infrastructureError: report.summary,
-          missing: mainSession.missing,
-          action: "Expose the calling host session/model provenance and rerun authority run with --main-session-* fields; the failed reviewer will not run again.",
-          next: nextRunCommand(id, requestId)
-        };
-        console.log(JSON.stringify(blocked, null, 2));
-        return { handled: true, value: blocked };
-      }
-      const mainDispatched = dispatchAuthorityUnlocked(id, {
-        request: requestId,
-        scope,
-        ...(scope === "delta" ? {
-          "base-attempt": deliveredAi.at(-1).digest
-        } : {}),
-        "reviewer-type": "ai",
-        "reviewer-identity": mainSession.identity,
-        "reviewer-provider-family": mainSession.providerFamily,
-        "reviewer-model-family": mainSession.modelFamily,
-        "reviewer-model": mainSession.modelId,
-        "reviewer-session": mainSession.sessionId
-      });
-      const mainEntry = authorityStore.list(id)
-        .find((row) => row.value.requestId === requestId);
-      authorityStore.replace(mainEntry, {
-        ...mainEntry.value,
-        mainSessionFallback: {
-          ...mainEntry.value.mainSessionFallback,
-          status: "awaiting-response"
-        }
-      });
-      const handback = mainSessionHandback(id, requestId, configured.identity,
-        report.summary, mainSession, mainDispatched, {
-          identity: subjectActor,
-          sessionId: subjectSession,
-          providerFamily: subjectProvider,
-          modelFamily: subjectFamily,
-          modelId: subjectModel
-        });
-      console.log(JSON.stringify(handback, null, 2));
-      return { handled: true, value: handback };
     }
     const infrastructureResult = handleConfiguredInfrastructureError();
     if (infrastructureResult.retryFlags)
