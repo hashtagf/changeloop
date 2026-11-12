@@ -1,7 +1,7 @@
 # Description optimization
 
-Use [skill-evaluation](../../skill-evaluation/SKILL.md) for observed trigger
-comparisons. A description states the task, realistic triggers, exclusions,
+For observed trigger comparisons use matched runs (deeper reading, if
+installed: [skill-evaluation](../../skill-evaluation/SKILL.md)). A description states the task, realistic triggers, exclusions,
 and neighboring owner. Avoid broad keyword capture or instructions granting
 permissions. A realistic user request should select one primary owner.
 
@@ -33,6 +33,7 @@ held-out results and then present those same results as independent confirmation
 Repeat matched cases enough to report uncertainty; record missed and false
 triggers plus actual behavior. Unknown timing, usage, and costs stay unknown.
 
-Apply the supported candidate to the active Build workspace, check the full
-body and references for consistency, and resume the harness. If live experiments
+Apply the supported candidate to the skill (with Change Loop: the active Build
+workspace, then resume the harness) and check the full body and references
+for consistency. If live experiments
 were not run, report the revision as structurally checked, not empirically better.

@@ -1,6 +1,6 @@
 ---
 name: delivery-engineering
-description: "Use when building or fixing CI/CD, builds, containers, deploys, rollouts, or rollbacks. Skip application code and Git operations (use git-workflow)."
+description: "Use when changing or repairing CI/CD: failing CI to fix, pipelines, build scripts, Dockerfiles/containers, deploys, rollouts, rollbacks, release artifacts. Skip application code, Git operations (git-workflow), and read-only status questions (changes)."
 ---
 
 # Delivery engineering
@@ -26,13 +26,13 @@ expectations to get there.
 
 ## Harness
 
-Record delivery, rollout, rollback, and required providers in the active
-OpenSpec design/evidence contract. Project tools produce evidence; Change Loop
-owns proof and Land; production effects need explicit authority.
+With OpenSpec/Change Loop: record delivery, rollout, rollback, and required providers in the design/evidence contract; Change Loop owns proof and Land.
+Otherwise: record them in the design doc or runbook; pipeline runs are proof.
+Production effects and deploys need explicit user authority.
 
 ## References
 
 - `references/pipeline-and-deploy.md` — pipeline stages, caching, artifact
   promotion, configuration, deploy strategies, flags, delivery metrics.
 - `references/ci-and-review-repair.md` — repairing failed CI or review findings.
-- Use `git-workflow` for branch/commit/PR operations.
+- `git-workflow` (if available) — branch/commit/PR operations.

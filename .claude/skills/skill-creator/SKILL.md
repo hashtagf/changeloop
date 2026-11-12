@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: "Use when explicitly asked to create or edit a skill. Skip unrequested skill changes; use skill-evaluation to compare behavior."
+description: "Use when explicitly asked to create, edit, restructure, or optimize the description of a skill (SKILL.md, references). Skip unrequested skill changes, live behavior comparisons (skill-evaluation), and catalog-wide audits (skill-suite-auditor)."
 ---
 
 # Skill creator

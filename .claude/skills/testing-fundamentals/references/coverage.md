@@ -1,6 +1,6 @@
 # Coverage — Flashlight, Not Goal
 
-Full detail of the coverage rule in `SKILL.md`: use coverage to find untested code instead of chasing a percentage.
+Full detail of the coverage rule in [SKILL.md](../SKILL.md): use coverage to find untested code instead of chasing a percentage.
 
 ## Coverage is a flashlight, not a goal
 
@@ -12,7 +12,7 @@ Full detail of the coverage rule in `SKILL.md`: use coverage to find untested co
 - Read the coverage *report*, not the coverage *number*. Look at which branches in important code are red, and write tests for the ones that matter.
 - Prioritize uncovered branches on critical and error paths over chasing a percentage across trivial code.
 - Prefer branch/condition coverage to line coverage for finding the real gaps.
-- If you set a CI threshold, treat it as a ratchet that catches *drops* on changed code, not a bar that justifies testing trivia to clear it — the point is *don't ship changed logic nothing exercises*, not *pad the number*. (`/dev` applies exactly this as advisory per-level diff-coverage floors on the changed code; the floor numbers and escalation are `/dev` policy in `WORKFLOW.md`.) Read the report for the dark branches, then decide.
+- If you set a CI threshold, treat it as a ratchet that catches *drops* on changed code, not a bar that justifies testing trivia to clear it — the point is *don't ship changed logic nothing exercises*, not *pad the number*. (With Change Loop, `/dev` applies this as advisory per-level diff-coverage floors on changed code; its policy sets the numbers.) Read the report for the dark branches, then decide.
 - 70% coverage of the hard logic beats 100% coverage that skips it.
 
 **Example:**

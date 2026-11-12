@@ -27,11 +27,12 @@ Use one `#` title and these nine `##` sections; avoid deeper headings:
    lost instructions or invented facts.
 
 Name environment variables but never values. State an honest unknown instead of
-filler. Do not copy Foundation runtime state, active task progress, receipts, or
-ephemeral context into this always-loaded file.
+filler. Do not copy harness runtime state (with Change Loop: `.foundation/`), active
+task progress, receipts, or ephemeral context into this always-loaded file.
 
-Use `init-project-docs` when the user needs the detailed `docs/` suite; this
-skill should link that suite rather than duplicate it.
+When the user needs the detailed `docs/` suite, link it rather than duplicate it
+(`init-project-docs` builds one, if available).
 
-Prose style: [writing](../../init-project-docs/references/writing.md).
+Prose style: plain, direct sentences; no filler or marketing tone. Deeper
+reading, if installed: [writing](../../init-project-docs/references/writing.md).
 

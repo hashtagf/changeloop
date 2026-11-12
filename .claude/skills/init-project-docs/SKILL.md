@@ -1,6 +1,6 @@
 ---
 name: init-project-docs
-description: "Use when asked to create or refresh human-facing onboarding docs for an existing codebase. Skip CLAUDE.md-only requests (use claude-md)."
+description: "Use when asked to document an existing codebase for humans: onboarding, architecture, data model, API, business-rule docs under docs/, or refreshing them after code changes (ทำเอกสาร). Skip CLAUDE.md-only requests (claude-md)."
 ---
 
 # Project documentation for an existing codebase
@@ -23,8 +23,8 @@ or a shipped status.
 
 ## Harness
 
-Within Change Loop, edit only scoped documentation and keep agreement and
-status in their existing owners. A readable document is not a proof receipt.
+With Change Loop: edit only scoped documentation; agreement and status keep their owners.
+Otherwise: edit only the docs suite. A readable document is not proof.
 
 ## References
 
@@ -32,4 +32,4 @@ status in their existing owners. A readable document is not a proof receipt.
   It routes to the per-document templates and the quality bar (Mermaid
   validity, self-review) when you reach the writing step.
 - `references/writing.md` — document mode, plain style, protected text.
-- Use `claude-md` for the agent-facing CLAUDE.md.
+- Optional, if available: `claude-md` for the agent-facing CLAUDE.md.

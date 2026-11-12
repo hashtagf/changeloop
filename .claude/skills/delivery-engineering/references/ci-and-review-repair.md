@@ -26,6 +26,6 @@ delivery completion.
 
 Read-only PR inspection can inform the batch. Commenting, resolving threads,
 pushing fixes, rebasing, merging, or publishing requires the corresponding user
-authority; Land does not grant it. Use [Git workflow](../../git-workflow/SKILL.md)
-for authorized Git actions. When Change Loop is active, its coordinator owns
+authority; with Change Loop, Land does not grant it. [Git workflow](../../git-workflow/SKILL.md),
+if available, covers authorized Git actions. When Change Loop is active, its coordinator owns
 proof routing and recovery, and delivery still ends at `archived`.

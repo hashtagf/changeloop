@@ -47,8 +47,9 @@ Anti-patterns: "it's a flake, just retry"; adding retries before knowing why it
 failed; reading one service's logs when the bug sits on the boundary; trusting
 "the API returned 200" instead of checking the side effect.
 
-The fix usually belongs to another skill: queue delivery, ordering and retries →
-`queue-fundamentals`; races and partial failures → `database-fundamentals`;
-adapter-level serialization, retries and timeouts → `hexagonal-backend`.
-Instrumentation added during the hunt stays until the regression test passes;
-the harness receipts, not the log lines, are the proof.
+The fix often sits in another area (deeper reading, if available): queue
+delivery, ordering and retries → `queue-fundamentals`; races and partial
+failures → `database-fundamentals`; adapter-level serialization, retries and
+timeouts → `hexagonal-backend`. Instrumentation added during the hunt stays
+until the regression test passes; the passing regression test (harness
+receipts under Change Loop), not the log lines, is the proof.

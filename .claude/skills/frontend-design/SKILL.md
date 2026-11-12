@@ -1,6 +1,6 @@
 ---
 name: frontend-design
-description: "Use when implementing or polishing web UI — layout, typography, motion, responsive states — after UX direction is settled. Skip unresolved interaction decisions (use ux-ui-principles)."
+description: "Use when building or polishing web UI — pages, components, layout, typography, color, motion, responsive states — once UX direction is settled (ทำหน้าเว็บให้สวย). Skip unresolved interaction decisions (ux-ui-principles) and shared token systems (tailwind-design-system)."
 license: Complete terms in LICENSE.txt
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: programming-fundamentals
-description: "Use for nontrivial local logic: types, state, data structures, error paths, module boundaries inside one process. Skip trivial or generated code and cross-runtime design."
+description: "Use for nontrivial logic inside one process: modeling types and state, data structures, error paths, module boundaries, abstraction depth ('design this module', 'ออกแบบโมดูล'). Skip trivial or generated code, cross-service design (architecture-fundamentals), and behavior-preserving restructuring (refactoring-fundamentals)."
 ---
 
 # Programming fundamentals
@@ -26,9 +26,9 @@ and effects at the edge.
 
 ## Harness
 
-Record only durable behavior or module-boundary decisions in OpenSpec; keep
-implementation detail in code and tests, proven by project providers through the
-harness. No parallel design or completion ledger; Build never stages or commits.
+With OpenSpec/Change Loop: record only durable behavior or module-boundary decisions in the change; providers prove it; Build never stages or commits.
+Otherwise: keep detail in code and tests; CI or test output is proof.
+No parallel design ledger; this grants no commit authority.
 
 ## References
 
@@ -37,4 +37,4 @@ harness. No parallel design or completion ledger; Build never stages or commits.
 - `references/error-handling.md` — the three error buckets and where to handle each
 - `references/complexity.md` — accidentally quadratic patterns, when to optimize
 - `references/naming.md` — naming by meaning and effect
-- `../testing-fundamentals/references/test-design.md` — what to test and how
+- `../testing-fundamentals/references/test-design.md` — optional, if installed: what to test and how

@@ -1,17 +1,18 @@
 # Pull requests
 
 Use this for an explicitly authorized PR operation or a local description
-draft. Land and /dev do not commit, push, open a PR, post comments, or merge.
-The optional /deliver route owns its scoped post-Land transaction; installed
-WORKFLOW.md is canonical for its authority and recovery.
+draft; act only on a direct user instruction for that operation. With Change
+Loop, Land and /dev do not commit, push, open a PR, post comments, or merge; the
+optional /deliver route owns its scoped post-Land transaction (installed
+WORKFLOW.md is canonical for its authority and recovery).
 
 ## Prepare the description
 
-Read the compiled OpenSpec agreement, actual delivered diff, and current
-evidence. Explain the concrete problem and resulting behavior, why the change
+Read the agreement (with OpenSpec, the compiled change), the actual delivered
+diff, and current evidence. Explain the concrete problem and resulting behavior, why the change
 is needed, and what was actually checked. Scale detail to the change and use
 the repository template. UI/API examples help when they show the decisive
-behavior. Screenshots do not substitute for executable proof. Prose style:
+behavior. Screenshots do not substitute for executable proof. Prose style, if available:
 [writing](../../init-project-docs/references/writing.md).
 
 A test plan may list reproducible checks, but distinguish executed, failed,
@@ -35,8 +36,8 @@ description accurately states remaining limits.
 For authorized stacked PRs, choose a base that shows only the intended diff
 and verify dependency order. Do not assume a hosting platform will retarget
 every stack. Read the actual platform/repository policy before changing bases.
-Change Loop task dependencies remain in the compiled agreement; PR stacking
-does not replace harness scheduling or isolation.
+With Change Loop, task dependencies remain in the compiled agreement; PR
+stacking does not replace harness scheduling or isolation.
 
 ## Review feedback
 
@@ -49,8 +50,9 @@ separate external/Git operations. Existing read-only review access grants none
 of them. Follow repository etiquette once authorized. Describe disagreements
 with source evidence; reviewer consensus alone is not a defect or proof.
 
-Use configured Change Loop review for harness proof. A PR review or AI comment
-does not automatically satisfy its required independence or provider policy.
+With Change Loop, use its configured review for harness proof. A PR review or
+AI comment does not automatically satisfy its required independence or provider
+policy.
 Required hosting approvals are a separate repository policy, not a universal
 claim about human versus model capability.
 

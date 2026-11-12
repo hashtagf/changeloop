@@ -1,6 +1,6 @@
 ---
 name: debug-fundamentals
-description: "Use when workType is bugfix and the cause is unknown: reproduce, localize, fix, prove. Skip obvious corrections, new features, and slowness (use performance-investigation)."
+description: "Use when workType is bugfix and the cause is unknown: บั๊ก, crash, wrong output, flaky test, regression. Reproduce, localize, fix, prove. Skip obvious one-line corrections, new features, and slowness or memory growth (performance-investigation)."
 ---
 
 # Debug fundamentals
@@ -28,14 +28,13 @@ Demonstrate the cause before fixing it; a symptom patch is not a fix.
 
 ## Harness
 
-Proof is tied to the exact Build workspace through harness receipts; the
-harness owns task status and Build never stages or commits. The owning
-construction skill decides the fix shape.
+With OpenSpec/Change Loop: harness receipts bind proof to the Build workspace; Build never stages or commits.
+Otherwise: the regression test run is proof; follow-ups go to the issue tracker.
+Grants no commit or deploy authority.
 
 ## References
 
 - `references/reproduction.md` — flaky and production-only failures.
 - `references/root-cause.md` — two-failed-fixes stop rule, guard legitimacy.
 - `references/bisection.md` — narrowing by commit, code, input, or flag.
-- `references/tools.md` — lightest diagnostic tool that answers; multi-hop
-  incident shapes.
+- `references/tools.md` — lightest diagnostic tool; multi-hop incidents.

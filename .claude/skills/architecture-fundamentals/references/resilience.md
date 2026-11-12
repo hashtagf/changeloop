@@ -82,7 +82,7 @@ store. Every cache has an invalidation story (TTL or explicit; read-through,
 write-through, or aside; stampede protection). Every cross-component call
 crosses a trust boundary. Know rough throughput per component and the next
 bottleneck. Every component has a deploy story, a rollback story, and a
-runbook with its top failure modes. Telemetry and SLOs are
+runbook with its top failure modes. Telemetry and SLOs: deeper reading, if installed,
 [observability-fundamentals](../../observability-fundamentals/references/logs-metrics-traces.md).
 
 ## Chaos testing

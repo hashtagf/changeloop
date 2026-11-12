@@ -12,8 +12,8 @@ enforces — the behavioural counterpart to DATAMODEL's constraints — pulled f
 validators, domain services, conditional logic, and named constants, not how
 the domain "should" work. `DESIGN.md` is produced only for a project with a
 user-facing UI and grounded in frontend code; for a headless service, pure API,
-or library, drop it. Forward-looking UI decisions belong in the active OpenSpec
-change.
+or library, drop it. Forward-looking UI decisions belong in the active change
+agreement (OpenSpec under Change Loop) or design notes, not these docs.
 
 ## Workflow
 
@@ -38,16 +38,17 @@ docs are an input you read and reconcile, not output you overwrite blind.
    call from entry point to effects; BUSINESSRULE from validators, guards,
    conditionals, enums, and constants, each cited to its function or constant;
    DESIGN from the theme/token file, CSS config or `:root` properties, the
-   component directory, and the router ([[ui-ux-pro-max]] names the patterns,
-   [[tailwind-design-system]] the token mechanics). When the code does not tell
+   component directory, and the router (deeper reading, if installed:
+   `ui-ux-pro-max` names the patterns, `tailwind-design-system` the token
+   mechanics). When the code does not tell
    you, say so — "auth mechanism not found in the reviewed files" is honest; an
    invented answer is a trap. Cite real anchors (paths, route strings, table
    names) so a reader can verify.
    **Update mode:** sort every existing claim into keep (accurate, including
    human prose), fix (drifted), add (in code, not the doc), remove (gone from
-   code). That four-bucket diff is the edit plan. Read
-   [[refactoring-fundamentals]]'s current-state mapping mindset for a large or
-   tangled codebase.
+   code). That four-bucket diff is the edit plan. For a large or tangled
+   codebase, map the current state (modules, callers, data flow) before
+   editing; deeper reading, if installed: `refactoring-fundamentals`.
 3. **Write or update the Markdown.** Fresh: write each file into `docs/` using
    the section skeleton and mermaid example per file in
    [doc-templates](doc-templates.md), leading with tables, bullets, and
@@ -64,7 +65,8 @@ docs are an input you read and reconcile, not output you overwrite blind.
    the script handles escaping, ordering, and mermaid wiring:
 
    ```bash
-   python3 .claude/skills/init-project-docs/scripts/build_doc_viewer.py --docs-dir docs --title "<Project Name>"
+   # run from the project root; <skill-dir> is this skill's directory
+   python3 <skill-dir>/scripts/build_doc_viewer.py --docs-dir docs --title "<Project Name>"
    ```
 
    It embeds the current Markdown into one file (marked.js + mermaid.js from
@@ -97,8 +99,7 @@ ids alphanumeric. Compare each block against the examples in
 - **Faithful delta (update):** stale fixed, new reflected, removed dropped,
   accurate human edits preserved — and you can name what changed.
 - **Viewer built last:** `document.html` regenerated from the final `.md` set.
-- **No secrets:** name the variable, never the value (mirrors
-  `protect-secrets.sh`).
+- **No secrets:** name the variable, never the value.
 
 ## Anti-patterns
 

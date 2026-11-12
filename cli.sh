@@ -17,6 +17,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 EXPECTED_RUNTIME_API=42
 PROJECT_START="${CLAUDE_FOUNDATION_PROJECT:-$PWD}"
+PROJECT_EXPLICIT=""
 
 fail() { printf 'claude-foundation: %s\n' "$*" >&2; exit 1; }
 warn() { printf 'claude-foundation: warning: %s\n' "$*" >&2; }
@@ -70,11 +71,28 @@ find_project_root() {
   fail "not inside a Foundation project; run 'claude-foundation init <path>' first"
 }
 
+# CLAUDE_FOUNDATION_PROJECT is a host-session export, so it reaches commands
+# run inside other Foundation projects (test fixtures, sibling checkouts). A
+# pin never redirects a command away from the project the caller stands in.
+refuse_foreign_pin() {
+  local root="$1" tree here local_root
+  [ -n "${CLAUDE_FOUNDATION_PROJECT:-}" ] && [ -z "$PROJECT_EXPLICIT" ] || return 0
+  tree="${root%%/.foundation/sandboxes/*}"
+  tree="$(cd "${tree%%/.foundation/repository-sandboxes/*}" && pwd -P)"
+  here="$(pwd -P)"
+  case "$here/" in "$tree"/*) return 0 ;; esac
+  local_root="$(CLAUDE_FOUNDATION_PROJECT='' PROJECT_START="$here" find_project_root 2>/dev/null)" || return 0
+  fail "CLAUDE_FOUNDATION_PROJECT pins $root, but this command runs in Foundation project $local_root; refusing to change a different project. Unset CLAUDE_FOUNDATION_PROJECT or run the command from the pinned project"
+}
+
 run_runtime() {
   local access="$1"; shift
   local root runtime actual_api telemetry caller_cwd
   caller_cwd="$PWD"
   root="$(find_project_root)"
+  refuse_foreign_pin "$root"
+  # The runtime re-resolves its root; hand it the one resolved here.
+  [ -z "${CLAUDE_FOUNDATION_PROJECT:-}" ] || export CLAUDE_FOUNDATION_PROJECT="$root"
   runtime="$root/.claude/harness/foundation.mjs"
   command -v node >/dev/null 2>&1 || fail "Node.js is required to run the project harness"
   cd "$root"
@@ -177,6 +195,7 @@ case "${1:-}" in
   --project|-C)
     [ "$#" -ge 2 ] || fail "$1 needs a path"
     PROJECT_START="$2"
+    PROJECT_EXPLICIT=1
     shift 2 ;;
 esac
 

@@ -1,6 +1,6 @@
 ---
 name: change
-description: "Compile or amend settled intent into a grounded OpenSpec agreement and evidence contract through Change Loop. Use for change intake or new observable behavior during Build. Preserve approval boundaries; do not implement product code during Change."
+description: "Use when settled intent must become or amend an OpenSpec agreement through Change Loop: /change, a new behavior request, or new observable behavior found during Build. Preserve approval boundaries; write no product code. Skip open options (brainstorming) and pre-Change research (investigate)."
 ---
 
 Treat the text after `$change` as the command arguments. Follow

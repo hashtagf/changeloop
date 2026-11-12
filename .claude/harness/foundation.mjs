@@ -252,7 +252,10 @@ const {
 } = createBootstrap({
   start: process.cwd(),
   pinned: process.env.CLAUDE_FOUNDATION_PROJECT,
+  harness: dirname(fileURLToPath(import.meta.url)),
   fail: die,
+  // Root discovery runs before operation telemetry exists, so `die` cannot.
+  failRoot: (message) => { console.error(`BLOCKED: ${message}`); process.exit(1); },
   warn: console.error
 });
 

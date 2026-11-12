@@ -1,6 +1,6 @@
 ---
 name: testing-fundamentals
-description: "Use when a task's requirement has scenarios to prove: write a failing-first test per scenario and pick level and doubles. Skip docs, renames, and work with no behavior to prove."
+description: "Use when a requirement or scenario needs tests: write failing-first tests, pick unit/integration/e2e level and mocks, fix flaky or hollow tests, read coverage. Skip docs, renames, and unknown-cause bugs (debug-fundamentals)."
 ---
 
 # Testing fundamentals
@@ -28,13 +28,13 @@ the real user path.
 
 ## Harness
 
-The OpenSpec claim defines what must be true; the harness runs providers and
-binds harness receipts, which establish proof. No parallel test plan or manual
-completion claim; Build never stages or commits.
+With OpenSpec/Change Loop: claims define what must be true; harness receipts are proof; no parallel test plan; Build never stages or commits.
+Otherwise: acceptance criteria define claims; the test run or CI output is proof.
+Never claim completion by hand.
 
 ## References
 
-- `references/test-design.md` — cases, assertions, the two-edit test, hollow assertions.
+- `references/test-design.md` — cases, assertions, two-edit test.
 - `references/test-doubles-and-levels.md` — choosing level and seam.
 - `references/coverage.md` — reading coverage.
 - `references/verification-drivers.md` — executable surface checks.

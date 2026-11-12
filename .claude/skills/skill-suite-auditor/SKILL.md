@@ -1,6 +1,6 @@
 ---
 name: skill-suite-auditor
-description: "Use when auditing the skill catalog for metadata, overlap, broken references, or ownership conflicts. Skip behavioral evaluation (skill-evaluation)."
+description: "Use when auditing a skills directory as a whole: frontmatter, overlapping or competing triggers, broken references, missing owners, or conflicting instructions. Skip live model comparisons (skill-evaluation) and writing a skill (skill-creator)."
 ---
 
 # Skill suite auditor
@@ -11,7 +11,7 @@ An empty static report does not establish behavioral correctness.
 
 1. Pin the catalog, version, and audit scope. Preserve dirty work and custom
    consumer skills. Inventory entry points and dependencies.
-2. Run `node .claude/skills/skill-suite-auditor/scripts/audit.mjs .claude/skills`;
+2. Run `node scripts/audit.mjs <skills-dir>` (path relative to this skill);
    its JSON reports static metadata and reference coverage only.
 3. Read descriptions and bodies for competing triggers, missing task owners,
    undeclared tools, and instructions that conflict with lifecycle, workspace,
@@ -22,10 +22,10 @@ An empty static report does not establish behavioral correctness.
 
 ## Harness
 
-Store durable implementation choices in OpenSpec, not another ledger. Do not
-import routing hooks, fabricate receipts, or grant external authority.
+With OpenSpec: store durable implementation choices there, not another ledger. Otherwise: the issue tracker.
+Do not import routing hooks, fabricate receipts, or grant external authority.
 
 ## References
 
 - `references/pstack-adoption.md` — disposition of pstack-derived procedures.
-- Use `skill-evaluation` for live comparisons and `skill-creator` for approved edits.
+- Optional, if available: `skill-evaluation` for live comparisons, `skill-creator` for approved edits.

@@ -1,6 +1,6 @@
 ---
 name: performance-investigation
-description: "Use when something is measured slow, growing in memory, or a speedup must be proven. Skip unmeasured bugs (debug-fundamentals) and telemetry design (observability-fundamentals)."
+description: "Use when something is slow (ช้า), latency or throughput regressed, memory grows or leaks toward OOM, or a speedup or benchmark claim must be proven. Skip functional bugs (debug-fundamentals) and telemetry design (observability-fundamentals)."
 ---
 
 # Performance investigation
@@ -26,9 +26,8 @@ Measure before you believe; a number without its limiter is not a result.
 
 ## Harness
 
-Diagnosis uses `investigate`; approved repair stays inside the returned Build
-workspace. Project providers and harness receipts establish proof; the harness
-owns task status and Build never stages or commits.
+With Change Loop: diagnose via `investigate`; approved repair stays in the returned Build workspace; harness receipts are proof; Build never stages or commits.
+Otherwise: diagnose read-only first; the project's benchmark or profiler output, with raw runs, is proof.
 
 ## References
 

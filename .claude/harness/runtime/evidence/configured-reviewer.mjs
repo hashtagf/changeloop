@@ -421,6 +421,18 @@ export function scenarioCoverageFindings(review, packet, coverage) {
     });
 }
 
+// Over-building is a reviewable defect, calibrated so it reports without blocking a
+// legitimate root-cause fix or a behavior-preserving preparatory refactor.
+const SCOPE_DISCIPLINE_INSTRUCTIONS =
+  "Check scope discipline in the changed hunks: unrequested abstraction or indirection, " +
+  "dead or unused code, speculative options or configuration, a guard, retry, or catch " +
+  "that hides a symptom instead of fixing its cause, and lines that do not trace to the " +
+  "agreement or are unrelated edits. Report these as minor, except as major when they " +
+  "leave a scoped claim false or unproven (for example a guard that masks the defect a " +
+  "claim says is fixed). Do not flag a root-cause fix that spans more than the line where " +
+  "the symptom surfaced, a behavior-preserving preparatory refactor the change uses, or " +
+  "safety, error handling, accessibility, tests, or anything else the agreement requires. ";
+
 export function configuredReviewPrompt(packet) {
   const payload = JSON.stringify(reviewPromptPayload(packet));
   const depth = packet?.reviewDepth === "diff-only" ? DIFF_ONLY_INSTRUCTIONS
@@ -440,6 +452,7 @@ export function configuredReviewPrompt(packet) {
     "For UI claims check the required output is rendered and reachable; for persisted " +
     "or wire data challenge supported older representations. Passing counts, test " +
     "tags, and calculated-but-unused values do not establish those outcomes. " +
+    SCOPE_DISCIPLINE_INSTRUCTIONS +
     "For a delta packet, review only reviewScope.paths. Whenever the packet carries " +
     "closureFindings (a delta, or a review after a human review reported blockers), list in " +
     "verifiedFindingIds only the closureFindings.ids the repair closed: all of them when it " +

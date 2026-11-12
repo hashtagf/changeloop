@@ -182,6 +182,20 @@ bench_affected="$(FOUNDATION_CHANGED_FILES='.claude/tests/bench/openspec-native/
 printf '%s\n' "$bench_affected" | grep -qFx 'openspec native sentinel' || {
   echo "FAIL: --affected did not select the sentinel for a benchmark edit"; exit 1; }
 
+# A suite run alone from an agent shell must not inherit the host session's
+# project, identity, or guardrail mode; the shared assertion library drops
+# them and keeps runner controls.
+host_env="$(CLAUDE_PROJECT_DIR=/host CLAUDE_FOUNDATION_PROJECT=/host \
+  FOUNDATION_HOST=pi FOUNDATION_SESSION_ID=host FOUNDATION_GUARDRAIL_MODE=block \
+  FOUNDATION_MAIN_IDENTITY=pi-main-session FOUNDATION_HOST_COMMAND=build \
+  FOUNDATION_MULTI_REPOSITORY_SHARD=profile \
+  sh -c '. "$1"; env' sh "$HERE/../lib/assert.sh")"
+if printf '%s\n' "$host_env" | grep -E '^(CLAUDE_PROJECT_DIR|CLAUDE_FOUNDATION_PROJECT|FOUNDATION_(HOST|SESSION_ID|GUARDRAIL_MODE|MAIN_IDENTITY|HOST_COMMAND))='; then
+  echo "FAIL: the shared test library kept host session variables"; exit 1
+fi
+printf '%s\n' "$host_env" | grep -qx 'FOUNDATION_MULTI_REPOSITORY_SHARD=profile' || {
+  echo "FAIL: the shared test library dropped a runner control"; exit 1; }
+
 # The watchdog's limits and its timeout reporting are checked as structured
 # node:test cases, which is also the report Prove reads from this script.
 node --test "$HERE/../../harness/tests/run-all-timeout.test.mjs"

@@ -12,6 +12,23 @@ Second reviewed source, 2026-10-15: Cursor's upstream `cursor/plugins` at commit
 directory `pstack/` (MIT, credits Lauren Tan). Its ideas map to the same owners
 below; the table rows are unchanged.
 
+Third review, 2026-11-12: `cursor/plugins` at commit
+[c742dd61706fbacc1b95f1a20b7b988cf096ce6c](https://github.com/cursor/plugins/tree/c742dd61706fbacc1b95f1a20b7b988cf096ce6c/pstack)
+(pstack 0.15.36). Rows marked *removed upstream* (`deslop`, `fix-ci`,
+`babysit`, `fix-merge-conflicts`, `get-pr-comments`, `make-pr-easy-to-review`,
+`thermo-nuclear-code-quality-review`, `what-did-i-get-done`) record the earlier
+pinned source only. Upstream skills without a row are listed, not adopted:
+`in-your-own-words`, `sharpen`, `ketchup`, `ketchup-video`, `make-bot-ui`,
+`statechart`, `create-formal-verification-skill`,
+`maintain-formal-verification-skill`.
+
+Adopted into `coding-discipline` from this review, independently rewritten in
+its [details](../../coding-discipline/references/details.md): treating the request's premise as a hypothesis;
+root-cause tracing to the first wrong state, legitimacy judgment, and a
+regression pin; a behavior-preserving preparatory refactor as its own slice;
+durable follow-up routing for unrelated findings; and verification on the real
+artifact, one unit at a time, without weakening a gate.
+
 ## Disposition
 
 All 58 source skills have a destination below. Destinations select the owner of
@@ -26,19 +43,19 @@ existing Change Loop command names and aliases.
 | `architect` | `architecture-fundamentals / programming-fundamentals` |
 | `arena` | `brainstorming / investigation comparison` |
 | `swarm` | `build dispatch policy` |
-| `deslop` | `coding-discipline` |
+| `deslop` | `coding-discipline` *(removed upstream)* |
 | `no-comments` | `coding-discipline` |
 | `tdd` | `testing-fundamentals` |
 | `create-verification-skill` | `testing-fundamentals` |
 | `maintain-verification-skill` | `testing-fundamentals` |
 | `benchmark-checklist` | `performance-investigation` |
 | `interrogate` | `prove configured review` |
-| `thermo-nuclear-code-quality-review` | `prove configured review` |
-| `fix-ci` | `delivery-engineering / git-workflow` |
-| `babysit` | `delivery-engineering / git-workflow` |
-| `fix-merge-conflicts` | `delivery-engineering / git-workflow` |
-| `get-pr-comments` | `delivery-engineering / git-workflow` |
-| `make-pr-easy-to-review` | `delivery-engineering / git-workflow` |
+| `thermo-nuclear-code-quality-review` | `prove configured review` *(removed upstream)* |
+| `fix-ci` | `delivery-engineering / git-workflow` *(removed upstream)* |
+| `babysit` | `delivery-engineering / git-workflow` *(removed upstream)* |
+| `fix-merge-conflicts` | `delivery-engineering / git-workflow` *(removed upstream)* |
+| `get-pr-comments` | `delivery-engineering / git-workflow` *(removed upstream)* |
+| `make-pr-easy-to-review` | `delivery-engineering / git-workflow` *(removed upstream)* |
 | `automate-me` | `skill-creator / skill-evaluation / skill-suite-auditor` |
 | `reflect` | `skill-creator / skill-evaluation / skill-suite-auditor` |
 | `correct` | `skill-creator / skill-evaluation / skill-suite-auditor` |
@@ -47,7 +64,7 @@ existing Change Loop command names and aliases.
 | `unslop` | `init-project-docs / claude-md` |
 | `bro` | `init-project-docs / claude-md` |
 | `show-me-your-work` | `changes / harness-html-report` |
-| `what-did-i-get-done` | `changes / harness-html-report` |
+| `what-did-i-get-done` | `changes / harness-html-report` *(removed upstream)* |
 | `poteto-mode` | `existing lifecycle entry points` |
 | `poteto-help` | `existing lifecycle entry points` |
 | `setup-pstack` | `existing lifecycle entry points` |

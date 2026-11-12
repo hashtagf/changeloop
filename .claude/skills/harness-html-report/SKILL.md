@@ -1,6 +1,6 @@
 ---
 name: harness-html-report
-description: "Use when asked for an HTML report of Change Loop state, tasks, gates, or evidence. Read-only; skip anything that changes runtime state."
+description: "Use when asked for an HTML report or dashboard of a Change Loop project's changes, tasks, gates, budgets, or evidence (สรุปงานเป็น HTML). Requires .foundation/ and openspec/. Skip status checks (changes) and anything changing state."
 ---
 
 # Harness HTML report
@@ -20,6 +20,7 @@ state or create a parallel status store.
 
 ## Harness
 
+Requires a Change Loop project; without `.foundation/` and `openspec/`, say so and stop.
 The report explains state; it is not proof and grants no completion,
 publication, or Land authority. Never edit receipts, proof, or journals.
 

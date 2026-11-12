@@ -1,6 +1,6 @@
 ---
 name: concurrency-fundamentals
-description: "Use when threads, async tasks, locks, shared mutable state, cancellation, or races affect correctness inside one process. Skip cross-process queues (queue-fundamentals) and database isolation (database-fundamentals)."
+description: "Use when threads, async tasks, goroutines, locks, shared mutable state, cancellation, or races affect correctness inside one process: deadlock, flaky race, 'runs twice', unbounded Promise.all. Skip cross-process queues (queue-fundamentals) and database isolation (database-fundamentals)."
 ---
 
 # Concurrency fundamentals
@@ -25,14 +25,13 @@ timing.
    then prove with deterministic interleaving tests, stress tests, or a race
    detector — never sleeps.
 
-Harness scheduling is not application concurrency; a PID alone cannot prove a
-stale lock.
+A PID alone cannot prove a lock stale.
 
 ## Harness
 
-Record material invariants and failure expectations in the active OpenSpec
-change; project test/race-detector providers produce the proof through the
-harness. No parallel ledger; Build never stages or commits.
+With OpenSpec/Change Loop: record material invariants and failure expectations in the change; test/race-detector providers prove them; harness scheduling is not application concurrency; Build never stages or commits.
+Otherwise: note invariants in code or the PR; race-detector and stress-test output is proof.
+No parallel ledger; this skill grants no commit authority.
 
 ## References
 

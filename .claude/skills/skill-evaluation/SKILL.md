@@ -1,6 +1,6 @@
 ---
 name: skill-evaluation
-description: "Use when comparing a changed skill or description against its old version on real runs. Skip static catalog checks (skill-suite-auditor)."
+description: "Use when testing whether a new or changed skill, description, or trigger actually performs better than its baseline on real model runs (A/B, with/without skill). Skip static catalog checks (skill-suite-auditor) and authoring (skill-creator)."
 ---
 
 # Skill evaluation
@@ -25,10 +25,10 @@ vote counts are not proof.
 ## Harness
 
 Static checks are not model evaluations. Keep results outside shipped files.
-Shipped edits follow Change Loop; only its providers can establish proof.
+With Change Loop, shipped edits follow it; only its providers can establish proof. Otherwise, CI and review gate them.
 
 ## References
 
 - `references/procedure.md` — design, execution, and promotion safeguards.
 - `references/evaluation-cases.json` — catalog example cases.
-- Use `skill-creator` to author accepted changes.
+- Optional, if available: `skill-creator` to author accepted changes.

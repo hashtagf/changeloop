@@ -1,6 +1,6 @@
 ---
 name: change-impact-analysis
-description: "Use before changing an API, schema, config, or shared behavior when you do not know who depends on it. Skip isolated code with known consumers."
+description: "Use before changing an API, schema, config, event, or shared behavior when consumers are unknown: who breaks, blast radius, is it safe to change. Skip isolated code with known consumers, sequencing (plan-writing), and choosing between options (brainstorming)."
 ---
 
 # Change impact analysis
@@ -21,15 +21,15 @@ safety fact was proven.
    inferred, unproven, and cleared findings separately.
 4. Map confirmed risks to consumer, failure, compatibility, migration/rollback,
    and evidence owner. Preserve public contracts unless the change names them.
-5. Submit agreement findings through Change intake, revision, or amendment;
-   keep in-contract findings with the returned repair; never hand-edit an
+5. Route findings that change what was agreed back to the owner of the
+   agreement; keep in-contract findings with the repair; never hand-edit an
    approved agreement to match the implementation.
 
 ## Harness
 
-Findings are analysis, not receipts; durable decisions go to OpenSpec. Follow
-the harness workspace and resume routes; do not schedule workers or grant
-Land/Git authority. Use `investigate` for read-only research, `plan-writing` for sequencing.
+Findings are analysis, not receipts. With OpenSpec/Change Loop: durable decisions go via Change intake/revision/amendment; follow harness workspace and resume routes.
+Otherwise: record decisions and follow-ups in the design doc or issue; tests or CI are proof.
+Analysis grants no Land, Git, or external-mutation authority.
 
 ## References
 

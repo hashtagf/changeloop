@@ -10,13 +10,13 @@
    body concise; put depth behind explicit, selectively loaded references.
 4. Bundle repeated helpers only when evidence shows a recurring need and the
    helper fits installation, isolation, and tool boundaries.
-5. Check metadata/references and use
-   [skill-evaluation](../../skill-evaluation/SKILL.md) for matched observations
+5. Check metadata/references and use matched observations (with
+   [skill-evaluation](../../skill-evaluation/SKILL.md) if installed)
    against a pinned baseline. Retain old results and record not-run gaps.
 6. Apply the next revision in the active sandbox, rerun invalidated checks,
-   and resume the harness. Iterate while progress changes within the agreed
+   and, with Change Loop, resume the harness. Iterate while progress changes within the agreed
    experiment resources. A model experiment budget does not limit product repair.
 
 Use optional blind comparison only with real independent grading. Empty
 feedback, a missing transcript, or author confidence is not approval or success.
-Publishing and Land remain separately governed by Change Loop authority.
+Publishing (and, with Change Loop, Land) needs separate explicit authority.

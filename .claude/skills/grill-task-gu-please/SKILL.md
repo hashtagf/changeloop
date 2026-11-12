@@ -1,6 +1,6 @@
 ---
 name: grill-task-gu-please
-description: "Alias for grill-task-gu; use only when the old name is invoked."
+description: "Use when the user invokes the legacy name grill-task-gu-please, e.g. /grill-task-gu-please <PRD>; alias for grill-task-gu. Otherwise skip it (grill-task-gu)."
 ---
 
 # Compatibility redirect
@@ -10,7 +10,8 @@ interview.
 
 ## Steps
 
-1. Load and follow `../grill-task-gu/SKILL.md` completely.
+1. Load and follow [grill-task-gu](../grill-task-gu/SKILL.md) completely. If it
+   is not installed, apply steps 2–3 directly to the PRD.
 2. Keep its contract: full discovery → one Decision Sheet → backlog + coverage
    → handoff.
 3. Never ask one question per turn, reopen a locked decision at a phase gate,

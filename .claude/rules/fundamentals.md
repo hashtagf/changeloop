@@ -31,8 +31,8 @@ procedure; do not preload them.
   owns artifact selection, stable IDs, cross-links, defaults, and validation;
   after Change, use `advance` instead of composing lifecycle primitives.
 
-Load `coding-discipline` only when scope, assumptions, or diff shape remain
-unclear after this digest.
+Load `coding-discipline` for a bug fix or Build edit whose scope,
+assumptions, or diff size this digest does not settle.
 
 ## Process skills
 

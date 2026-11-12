@@ -14,6 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # allow direct runs, not only `python -m scripts.<name>`
 from scripts.utils import parse_skill_md
 
 

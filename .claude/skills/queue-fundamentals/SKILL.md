@@ -1,6 +1,6 @@
 ---
 name: queue-fundamentals
-description: "Use when work crosses processes through a broker, stream, job queue, or worker: delivery semantics, idempotency, retries, ordering, backpressure. Skip in-process async (concurrency-fundamentals)."
+description: "Use when work crosses processes through a broker, stream, job queue, or worker (Kafka, SQS, RabbitMQ, BullMQ, cron jobs): delivery semantics, idempotency, retries, DLQ, ordering, outbox, backpressure, duplicate messages. Skip in-process async (concurrency-fundamentals)."
 ---
 
 # Queue fundamentals
@@ -25,15 +25,13 @@ proves otherwise; verify effect-plus-ack across crash and replay.
 6. Bound producers and consumers, expose lag/age/saturation, and apply
    backpressure before overload becomes unbounded storage.
 
-Broker retry limits do not cap product repair. Use `database-fundamentals` for
-outbox/dedup schema, `api-design-fundamentals` for message contracts, and
-`observability-fundamentals` when failure visibility changes.
+Deeper reading, if installed: `database-fundamentals` (outbox/dedup schema),
+`api-design-fundamentals` (message contracts), `observability-fundamentals`.
 
 ## Harness
 
-Capture purpose, schema owner/version, delivery semantics, idempotency key, ack
-point, retry/DLQ/replay policy, ordering key, capacity limit, and SLI in the active
-OpenSpec design; the harness runs the evidence. No separate checklist; Build never stages or commits.
+With OpenSpec/Change Loop: capture purpose, schema owner/version, delivery semantics, idempotency key, ack point, retry/DLQ/replay, ordering key, capacity, and SLI in the change design; broker retry limits do not cap product repair; Build never stages or commits.
+Otherwise: capture the same in the design doc or PR; crash/replay test output is proof.
 
 ## References
 

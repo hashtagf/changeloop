@@ -1,11 +1,11 @@
-# Change Loop UX/UI working contract
+# UX/UI working contract and handoffs
 
 Choose a design from the user's task and constraints. Preserve working product
 conventions; do not impose a house aesthetic or claim usability from taste.
 Read [experience workflow](experience-workflow.md) for research,
 design, audit, improvement, and evidence limits. Read only the relevant topic
 guides it names. [Upstream provenance](upstream.md) pins the imported
-bundle and records the Change Loop adaptation.
+bundle and records local adaptations.
 
 ## Working contract
 
@@ -30,16 +30,18 @@ bundle and records the Change Loop adaptation.
 
 ## Handoffs
 
-Record consequential choices and scenarios in the active compiled OpenSpec
-agreement. Stay inside returned workspaces and allowed paths. Project providers
-and the harness execute evidence, bind receipts, mark tasks, and own recovery
-and lifecycle completion; a UX report is not proof or a second task ledger.
+With Change Loop, record consequential choices and scenarios in the active
+compiled OpenSpec agreement and stay inside returned workspaces and allowed
+paths; project providers and the harness execute evidence, bind receipts, mark
+tasks, and own recovery and lifecycle completion. Otherwise, record them in the
+project's issue or design document. A UX report is not proof or a second task ledger.
 
-Use `frontend-design` for agreed visual implementation, `tailwind-design-system`
+When available, use `frontend-design` for agreed visual implementation, `tailwind-design-system`
 for shared token/component mechanics, and `ui-ux-pro-max` only when searchable
 product/style/palette intelligence is needed. Use available design tools only
 within the authorized deliverable. Do not assume Figma or another imported skill.
 
-Follow the current harness action and exact resume route. This skill does not
+Under a harness such as Change Loop, follow the current action and exact resume
+route. This skill does not
 grant Land, Git, publication, deployment, external messaging, or paid-research
 authority. Report unverified checks as unknown rather than success.

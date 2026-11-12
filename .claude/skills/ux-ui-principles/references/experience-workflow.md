@@ -87,12 +87,13 @@ Do not preload the whole set for an incidental UI change.
 
 Deliver actionable decisions with rationale and a way to verify them, cover
 relevant failure and recovery states, and disclose untested behavior. Answer in
-conversation unless the user names an output location. Coordinate with
-`tailwind-design-system` for tokens and components; this skill supplies UX
+conversation unless the user names an output location. When available,
+coordinate with `tailwind-design-system` for tokens and components; this skill supplies UX
 reasoning, not a rendering tool or a whole-product redesign.
 
-Within Change Loop, record consequential choices and scenarios in the compiled
-OpenSpec agreement; project providers and the harness own evidence execution
-and lifecycle state. Do not create a parallel ledger or treat a UX checklist as
+With OpenSpec/Change Loop, record consequential choices and scenarios in the
+compiled agreement; project providers and the harness own evidence execution
+and lifecycle state. Otherwise, record them in the issue or design document;
+test or CI output is proof. Do not create a parallel ledger or treat a UX checklist as
 proof. A design decision or preview grants no authority to publish, deploy,
 commit, or Land. See [change-loop-handoff](change-loop-handoff.md).

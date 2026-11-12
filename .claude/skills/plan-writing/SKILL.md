@@ -1,11 +1,11 @@
 ---
 name: plan-writing
-description: "Use when a settled change needs design input — dependencies, compatibility, migration, rollback — before compiling. Skip obvious rapid work."
+description: "Use when an agreed change needs a design or task breakdown — ordering, dependencies, compatibility, migration, rollback, parallel slices — before coding. Skip open choices (brainstorming), impact discovery (change-impact-analysis), and obvious small work."
 ---
 
 # Plan writing
 
-Prepare compiler inputs for the agreement; never a second plan or schedule.
+Prepare design and task inputs for the agreement; never a second plan or schedule.
 
 ## Steps
 
@@ -19,14 +19,15 @@ Prepare compiler inputs for the agreement; never a second plan or schedule.
    eligibility only when changed files, symbols, and checks are independent.
 4. Check that every scenario has an implementation owner and an evidence claim.
    Add only necessary repository, path, provider, or resource constraints.
-5. Before Build use Change intake/revision; after it starts use amendment for
+5. Change the agreement through its owner, not by editing the plan. With
+   Change Loop: Before Build use Change intake/revision; after it starts use amendment for
    agreement changes. In-contract findings need repair, not a new plan.
 
 ## Harness
 
-Never hand-edit compiled design, tasks, claim IDs, provider contracts, or
-checkboxes; the compiler owns stable links and the harness marks verified tasks.
-No native task per checkbox, second ledger, or status document; planning grants no Git or Land authority.
+With OpenSpec/Change Loop: never hand-edit compiled design, tasks, claim IDs, or checkboxes; the compiler owns links and the harness marks
+verified tasks. Otherwise: write the design doc and task list in the issue or tracker; tests or CI prove each slice.
+No second ledger or status document; planning grants no Git or Land authority.
 
 ## References
 

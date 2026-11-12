@@ -41,14 +41,16 @@ call path. A fixture is not evidence of production composition without parity.
   reaches production entry, real wire, contract parsing, or a failure path.
 - Mutation claims name semantic mutants and the critical case that must kill
   each one; compile errors and non-applying mutants are not kills.
-- Keep implementation in `tasks.md`. Declare every permission-bound operation
-  in `handoffs.yaml` with owner, environment, required authority, timing,
+- Keep implementation in the task list (`tasks.md` with OpenSpec). Declare
+  every permission-bound operation (with Change Loop, in `handoffs.yaml`) with owner, environment, required authority, timing,
   activation safety, evidence, runbook, rollback, and related task/claim IDs.
-- For external-operation timing and activation-proof requirements, follow
-  [Review, acceptance, and external authority](../../../../WORKFLOW.md#review-acceptance-and-external-authority).
-  A proven safe-before-activation post-Land obligation needs no acknowledgement
+- With Change Loop, external-operation timing and activation proof follow the
+  installed `WORKFLOW.md` section "Review, acceptance, and external authority":
+  a proven safe-before-activation post-Land obligation needs no acknowledgement
   or accepted tracking reference before Land. Unresolved pre-Land or
-  activation-coupled operations still block Land.
+  activation-coupled operations still block Land. Otherwise state each
+  operation's required timing in the backlog and mark which must finish before
+  release.
 
 ## Backlog task fields
 

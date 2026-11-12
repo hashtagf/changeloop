@@ -13,10 +13,11 @@ CLI, browser, independent-worker, or model-runner availability.
   and supported; place its output within the authorized artifact scope and
   validate it before presentation. Packaging is not installation or publication.
 - Preserve existing directory names and metadata identifiers unless their change
-  is explicitly in scope. In Change Loop revise only the returned sandbox,
+  is explicitly in scope. With Change Loop, revise only the returned sandbox,
   never stage changes elsewhere and copy them into a live managed directory.
 
-[skill-evaluation](../../skill-evaluation/SKILL.md) owns experimental boundaries.
-Resume Change Loop after shipped changes; its Land leaves an uncommitted diff.
+Experimental boundaries: [skill-evaluation](../../skill-evaluation/SKILL.md),
+if installed. With Change Loop, resume it after shipped changes; its Land
+leaves an uncommitted diff.
 Git, installation into another catalog, upload, paid runs, and publication need
 their corresponding authority.

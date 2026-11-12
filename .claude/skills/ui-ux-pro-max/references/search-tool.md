@@ -29,6 +29,10 @@ winget install Python.Python.3.12
 
 ## Workflow
 
+`<skill-dir>` is this skill's directory; run from the project root so
+`--persist` writes `design-system/` there. The script reads `data/` relative to
+itself.
+
 Follow this workflow:
 
 ### Step 1: Analyze User Requirements
@@ -44,12 +48,12 @@ Extract key information from user request:
 **Always start with `--design-system`** to get comprehensive recommendations with reasoning:
 
 ```bash
-python3 skills/ui-ux-pro-max/scripts/search.py "<product_type> <industry> <keywords>" --design-system [-p "Project Name"]
+python3 <skill-dir>/scripts/search.py "<product_type> <industry> <keywords>" --design-system [-p "Project Name"]
 ```
 
 **Example:**
 ```bash
-python3 skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness service" --design-system -p "Serenity Spa"
+python3 <skill-dir>/scripts/search.py "beauty spa wellness service" --design-system -p "Serenity Spa"
 ```
 
 ### Step 2b: Persist Design System (Master + Overrides Pattern)
@@ -57,7 +61,7 @@ python3 skills/ui-ux-pro-max/scripts/search.py "beauty spa wellness service" --d
 To save the design system for **hierarchical retrieval across sessions**, add `--persist`:
 
 ```bash
-python3 skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system --persist -p "Project Name"
+python3 <skill-dir>/scripts/search.py "<query>" --design-system --persist -p "Project Name"
 ```
 
 This creates:
@@ -66,7 +70,7 @@ This creates:
 
 **With page-specific override:**
 ```bash
-python3 skills/ui-ux-pro-max/scripts/search.py "<query>" --design-system --persist -p "Project Name" --page "dashboard"
+python3 <skill-dir>/scripts/search.py "<query>" --design-system --persist -p "Project Name" --page "dashboard"
 ```
 
 This also creates:
@@ -86,7 +90,7 @@ Now, generate the code...
 After getting the design system, use domain searches to get additional details:
 
 ```bash
-python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>" --domain <domain> [-n <max_results>]
+python3 <skill-dir>/scripts/search.py "<keyword>" --domain <domain> [-n <max_results>]
 ```
 
 **When to use detailed searches:**
@@ -111,7 +115,7 @@ python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>" --domain <domain> [-n
 Get React Native implementation-specific best practices:
 
 ```bash
-python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>" --stack react-native
+python3 <skill-dir>/scripts/search.py "<keyword>" --stack react-native
 ```
 
 ---
@@ -148,12 +152,12 @@ python3 skills/ui-ux-pro-max/scripts/search.py "<keyword>" --stack react-native
 
 ```bash
 # Step 2: design system
-python3 skills/ui-ux-pro-max/scripts/search.py "AI search tool modern minimal" --design-system -p "AI Search"
+python3 <skill-dir>/scripts/search.py "AI search tool modern minimal" --design-system -p "AI Search"
 # Step 3: domain supplements
-python3 skills/ui-ux-pro-max/scripts/search.py "minimalism dark mode" --domain style
-python3 skills/ui-ux-pro-max/scripts/search.py "search loading animation" --domain ux
+python3 <skill-dir>/scripts/search.py "minimalism dark mode" --domain style
+python3 <skill-dir>/scripts/search.py "search loading animation" --domain ux
 # Step 4: stack
-python3 skills/ui-ux-pro-max/scripts/search.py "list performance navigation" --stack react-native
+python3 <skill-dir>/scripts/search.py "list performance navigation" --stack react-native
 ```
 
 Synthesize results and implement.
@@ -164,10 +168,10 @@ Synthesize results and implement.
 
 ```bash
 # ASCII box (default) - best for terminal display
-python3 skills/ui-ux-pro-max/scripts/search.py "fintech crypto" --design-system
+python3 <skill-dir>/scripts/search.py "fintech crypto" --design-system
 
 # Markdown - best for documentation
-python3 skills/ui-ux-pro-max/scripts/search.py "fintech crypto" --design-system -f markdown
+python3 <skill-dir>/scripts/search.py "fintech crypto" --design-system -f markdown
 ```
 
 ---

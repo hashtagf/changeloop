@@ -26,9 +26,8 @@ output is a trusted typed value the rest of the code never re-checks.
 - Reject with `400` (malformed) or `422` (well-formed but breaks a rule) and a
   field-level error body.
 - Validate against the schema (`zod`, `pydantic`, JSON Schema), not by hand.
-- Safe canonicalization and allow-lists live in
-  [security-fundamentals](../../security-fundamentals/references/input-and-output.md);
-  this rule says do it here.
+- Canonicalize, then validate against an allow-list here (deeper reading, if
+  installed: [security-fundamentals](../../security-fundamentals/references/input-and-output.md)).
 
 ## Wire model ≠ domain model
 
@@ -72,8 +71,8 @@ Use one shape for every endpoint, including framework-default 404/500s. RFC
 
 ## Authenticate, authorize, rate-limit at the edge
 
-The endpoint is the trust boundary; token mechanics and the threat model are in
-[security-fundamentals](../../security-fundamentals/references/authn-authz.md).
+The endpoint is the trust boundary; token mechanics and the threat model:
+deeper reading, if installed, [security-fundamentals](../../security-fundamentals/references/authn-authz.md).
 
 - Standard scheme (`Authorization: Bearer`, API keys for services); `401`
   when the credential is missing or expired.

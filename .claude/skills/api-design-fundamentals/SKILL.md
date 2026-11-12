@@ -1,6 +1,6 @@
 ---
 name: api-design-fundamentals
-description: "Use when workType includes api or library, or a requirement defines a request, response, status code, error body, pagination, or version other code consumes. Skip private module interfaces (use programming-fundamentals)."
+description: "Use when workType includes api or library, or a requirement defines a request, response, status code, error body, pagination, webhook, or version other code consumes: 'design an endpoint', REST/GraphQL/gRPC, breaking change. Skip private module interfaces (use programming-fundamentals)."
 ---
 
 # API design fundamentals
@@ -26,13 +26,13 @@ and serialized bytes before changing it.
 6. Evolve additively. A breaking change needs a version, migration path,
    deprecation window, and observability so old and new clients overlap.
 
-Use `change-impact-analysis` for unverified consumer assumptions.
+If consumers are unknown, find them (access logs, clients, SDKs) before
+changing; deeper, if installed: `change-impact-analysis`.
 
 ## Harness
 
-Record the public contract, compatibility window, and failure cases in the
-active OpenSpec change; project contract/integration providers prove it through
-the harness. No parallel API document; Build never stages or commits.
+With OpenSpec/Change Loop: record the public contract, compatibility window, and failure cases in the change; contract/integration providers prove it; Build never stages or commits.
+Otherwise: keep them in the schema (OpenAPI/proto) and PR; contract-test output is proof.
 
 ## References
 

@@ -18,10 +18,10 @@ verify repaired behavior and at least the important negative path. A driver
 that always exits successfully, checks only startup, or accepts a timeout as
 success cannot establish the claim.
 
-Register the invocation with the project's existing test/provider contract.
-Let the harness collect and bind evidence; never manufacture or edit its proof
-JSON. A helper's local pass does not replace a required provider or override
-its gate policy. Reuse existing driver infrastructure before adding a new skill
+Register the invocation with the project's existing test runner or CI job
+(with Change Loop, its provider contract, and let the harness collect and bind
+evidence). Never manufacture or edit proof output. A helper's local pass does
+not replace a required check or override its gate policy. Reuse existing driver infrastructure before adding a new helper
 or a parallel test framework.
 
 When the surface changes, inspect actual behavior and fixture assumptions before

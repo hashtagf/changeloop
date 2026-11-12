@@ -9,7 +9,40 @@ function insideSandboxCopy(path) {
     ["sandboxes", "repository-sandboxes"].includes(segments[index + 1]));
 }
 
-function findRoot({ start, pinned, fail, warn }) {
+// The project that owns a path: a sandbox copy belongs to the project whose
+// .foundation/ holds it.
+function owningTree(path) {
+  const segments = path.split(sep);
+  const index = segments.findIndex((segment, at) => segment === ".foundation" &&
+    ["sandboxes", "repository-sandboxes"].includes(segments[at + 1]));
+  return index === -1 ? path : segments.slice(0, index).join(sep) || sep;
+}
+
+function inside(parent, candidate) {
+  const rel = relative(parent, candidate);
+  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+}
+
+// CLAUDE_FOUNDATION_PROJECT is a host-session export (the Pi adapter sets it
+// for every agent shell), so it leaks into commands run in other projects such
+// as test fixtures. Honor it only when the caller's cwd or this runtime lives
+// in the pinned project's tree; otherwise refuse rather than change another
+// repository than the one the command runs in.
+function findRoot({ start, pinned, harness, fail, warn }) {
+  if (pinned) {
+    const root = walkRoot({ start, pinned, fail, warn });
+    const tree = owningTree(canonicalPath(root));
+    const anchors = [start, harness].filter(Boolean).map(canonicalPath);
+    if (anchors.some((anchor) => inside(tree, anchor))) return root;
+    fail(`CLAUDE_FOUNDATION_PROJECT pins ${root}, but this command runs in ` +
+      `${canonicalPath(start)}${harness ? ` with the runtime at ${canonicalPath(harness)}` : ""}; ` +
+      `refusing to change a different project. Unset CLAUDE_FOUNDATION_PROJECT ` +
+      `or run the command from the pinned project`);
+  }
+  return walkRoot({ start, pinned, fail, warn });
+}
+
+function walkRoot({ start, pinned, fail, warn }) {
   let cursor = resolve(pinned || start);
   for (;;) {
     if (existsSync(join(cursor, "openspec", "config.yaml")) &&
@@ -29,8 +62,8 @@ function canonicalPath(path) {
   return existsSync(absolute) ? realpathSync(absolute) : absolute;
 }
 
-export function createBootstrap({ start, pinned, fail, warn = console.error }) {
-  const root = canonicalPath(findRoot({ start, pinned, fail, warn }));
+export function createBootstrap({ start, pinned, harness = null, fail, failRoot = fail, warn = console.error }) {
+  const root = canonicalPath(findRoot({ start, pinned, harness, fail: failRoot, warn }));
   const paths = {
     runtime: join(root, ".foundation", "runtime"),
     receipts: join(root, ".foundation", "receipts"),

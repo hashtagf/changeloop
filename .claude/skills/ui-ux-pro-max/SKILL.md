@@ -1,6 +1,6 @@
 ---
 name: ui-ux-pro-max
-description: "Use when you need to look up product, style, palette, typography, or chart guidance from the bundled design data. Skip experience reasoning (ux-ui-principles) and final visuals (frontend-design)."
+description: "Use when looking up style, color palette, font pairing, product-type, landing, chart, or per-stack UI guidance from the bundled searchable design data. Skip flow or usability decisions (ux-ui-principles) and implementing visuals (frontend-design)."
 ---
 
 # UI/UX design intelligence

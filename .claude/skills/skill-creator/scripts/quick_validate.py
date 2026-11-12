@@ -6,7 +6,10 @@ Quick validation script for skills - minimal version
 import sys
 import os
 import re
-import yaml
+try:
+    import yaml
+except ImportError:
+    sys.exit("quick_validate requires PyYAML; install it with: python3 -m pip install pyyaml")
 from pathlib import Path
 
 def validate_skill(skill_path):

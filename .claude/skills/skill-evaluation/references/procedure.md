@@ -43,7 +43,7 @@ and cost remain null. Keep outputs in a scratch evaluation workspace, never
 managed skills, and do not copy secrets into transcripts or reports.
 
 Recommendation and publication are separate. Shipped changes still need the
-normal Change Loop proof and explicit Land. Run catalog audits for structural
-regressions. Existing `skill-creator` resources provide formats and a viewer
+project's normal proof and approval (with Change Loop: its proof and explicit
+Land). Run catalog audits for structural regressions. Existing `skill-creator` resources provide formats and a viewer
 when available; do not claim to have run a viewer, grader, or model comparison
 that was not executed.

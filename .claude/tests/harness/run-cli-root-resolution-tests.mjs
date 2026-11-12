@@ -23,10 +23,11 @@ function project(dir) {
     `else console.log("root=" + process.cwd());\n`);
 }
 
-function run(cwd) {
+function run(cwd, pinned = null, args = ["changes"]) {
   const env = { ...process.env, FOUNDATION_UPDATE_CHECK: "0" };
   delete env.CLAUDE_FOUNDATION_PROJECT;
-  return spawnSync("bash", [CLI, "changes"], { cwd, env, encoding: "utf8" });
+  if (pinned) env.CLAUDE_FOUNDATION_PROJECT = pinned;
+  return spawnSync("bash", [CLI, ...args], { cwd, env, encoding: "utf8" });
 }
 
 const tmp = realpathSync(mkdtempSync(join(tmpdir(), "cli-root-")));
@@ -67,4 +68,24 @@ test("a resolved root that does not own the copy still warns", () => {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout.trim(), `root=${outer}`);
   assert.match(result.stderr, /ignoring sandbox copy at .*change-c; resolved project root .* is not its owner/);
+});
+
+// A host session pins CLAUDE_FOUNDATION_PROJECT for every shell it spawns; a
+// command run inside a different Foundation project must not reach the pin.
+test("a host pin never redirects a command run inside another project", () => {
+  const host = join(tmp, "pin-host");
+  const fixture = join(tmp, "pin-fixture");
+  project(host);
+  project(fixture);
+  const refused = run(fixture, host);
+  assert.equal(refused.status, 1);
+  assert.equal(refused.stdout, "");
+  assert.match(refused.stderr, /CLAUDE_FOUNDATION_PROJECT pins .*pin-host, but this command runs in Foundation project .*pin-fixture; refusing/);
+  assert.equal(run(fixture, host, ["-C", fixture, "changes"]).stdout.trim(), `root=${fixture}`);
+  const outside = join(tmp, "pin-outside");
+  mkdirSync(outside, { recursive: true });
+  assert.equal(run(outside, host).stdout.trim(), `root=${host}`);
+  const copy = join(host, ".foundation", "sandboxes", "change-d");
+  project(copy);
+  assert.equal(run(copy, host).stdout.trim(), `root=${host}`);
 });

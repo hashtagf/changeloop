@@ -1,55 +1,121 @@
-# Coding Discipline — full rationale (pre-diet)
+# Coding discipline — rationale and procedures
 
-Verbatim/uncondensed text cut from `SKILL.md` when it was diet'd to fit the word budget. Nothing here is new; it's the fuller version of what the body now states compactly.
+`SKILL.md` states each rule once. This file gives each rule's reason and the
+minimum procedure to apply it alone, plus two procedures: encoding a recurring
+correction and building a lever. Skills named at the end are optional.
 
 ## Why this exists
 
-Adapted from [Andrej Karpathy's observations on LLM coding pitfalls](https://x.com/karpathy/status/2015883857489522876) (via the MIT-licensed [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)) and the [ponytail](https://github.com/DietrichGebert/ponytail) stance. The failure modes are **conduct** gaps, not knowledge gaps — the model already knows better but: makes silent wrong assumptions without checking, overcomplicates and bloats abstractions (1000 lines where 100 would do), and changes/removes code it doesn't understand as a side effect. This skill governs *how you show up to a code task*; the domain-fundamentals skills govern *what you build*. Run this as the stance check, then the layer-appropriate fundamental.
+The failure modes are conduct gaps, not knowledge gaps: the model assumes
+silently, over-builds, patches the symptom, and edits code it does not
+understand as a side effect. Sources, independently rewritten:
+[Andrej Karpathy's observations on LLM coding pitfalls](https://x.com/karpathy/status/2015883857489522876)
+(via the MIT-licensed [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)),
+the [ponytail](https://github.com/DietrichGebert/ponytail) stance, and pstack's
+skills (Lauren Tan, `cursor/plugins`, MIT).
 
-## 1. Think Before Coding — full rationale
+## 1. Think before coding
 
-**Why:** The most expensive LLM failure is picking one interpretation silently and running 200 lines down the wrong road. A 20-second clarification beats a 20-minute rewrite.
+**Why:** choosing one interpretation silently and building 200 lines on it is
+the most expensive failure.
 
-## 2. Simplicity First — full ladder text
+"Make this faster" assumes the slow part is where the asker thinks; "add a
+retry" assumes the failure is transient. Check the premise against something
+observable (a profile, a log line, a reproduced failure); if evidence rules out
+the requested change, show it instead of building. A question you can settle by
+running something is not the user's to answer. Candor over agreement: say when
+an addition does not earn its place.
 
-**Why:** "Flexibility"/"configurability" nobody asked for is the most common self-inflicted complexity — a guess about a future that rarely arrives, and a tax on every reader until then.
+## 2. Simplicity first
 
-Walk the **decision ladder** before writing — stop at the first rung that solves the *stated* problem, descend only when the rung above genuinely doesn't:
-1. **Does it need to exist?** — if the stated problem doesn't require it, don't build it (principle 1's YAGNI, at code granularity).
-2. **Does the standard library / language built-in solve it?** — reach for it before hand-rolling.
-3. **Is there a native platform feature?** — the runtime, framework, or database may already do it.
-4. **Does an already-installed dependency solve it?** — use what's in the lockfile before writing the code yourself. (Adding a *new* dependency is **not** a free rung — a dependency is its own complexity and trust boundary; [[security-fundamentals]] owns that call.)
-5. **Can it be one line?** — the smallest correct expression wins.
-6. **Only then** — write the minimum code that solves it.
+**Why:** unrequested flexibility is a guess about a future that rarely arrives,
+and a tax on every reader until then.
 
-**Lazy, not negligent:** the ladder trims *solution bloat*, never the trust-boundary validation, error/data-loss handling, authorization, or accessibility the task needs — those are required behaviour, not speculative extras. "One line" never means "skip the unhappy path." Mark a deliberate shortcut (stub, deferred generalisation, narrower-than-ideal impl) inline with a `ponytail: <upgrade path>` comment so the deferral is visible and harvestable, never silently lost.
+Cover the whole requirement, including unhappy paths; between options that both
+cover it, choose the smaller diff. Stop at the first rung that solves it:
 
-Then, whatever rung you land on:
-- No features, options, or config beyond what was asked. No error handling for impossible scenarios.
-- No abstraction for a single call site. Inline first; extract only on the second real use.
-- The test: *would a senior engineer call this overcomplicated?* If 200 lines could be 50, rewrite it.
+1. **Does it need to exist?**
+2. **Standard library or a language built-in?**
+3. **A native platform feature** of the runtime, framework, or database?
+4. **An already-installed dependency?** A new dependency is not a free rung: it
+   adds supply-chain risk and a trust boundary. If unavoidable, choose a
+   maintained, widely used package, pin it, and validate its inputs.
+5. **Can it be one line?**
+6. **Only then** write the minimum code.
 
-**Defer to:** *write-time intent*. [[programming-fundamentals]] owns deeper code mechanics (complexity/Big-O, illegal states, pure core); `/simplify` owns the *post-hoc* cleanup pass on a diff. Don't pre-run the simplify catalog — just don't build the complexity.
+**Lazy, not negligent:** never trim trust-boundary validation, error and
+data-loss handling, authorization, or accessibility. Mark a deliberate shortcut
+with `ponytail: <upgrade path>`. No unrequested features or config, no handling
+for impossible states, no abstraction for a single call site (extract on the
+second real use). Validate at the trust boundary and trust parsed types inside;
+make each decision once. Add a layer only when it removes more reader load than
+it adds. If 200 lines could be 50, rewrite it.
 
-## 3. Surgical Changes — full rationale
+## 3. Fix the root cause
 
-**Why:** Orthogonal edits — reformatting, "improving" a comment, refactoring code that wasn't broken — bloat the diff, bury the real change, and risk breaking code you didn't fully understand. Every changed line should trace to the request.
+**Why:** a symptom fix hides the evidence and leaves the fault free to surface
+elsewhere.
 
-## 4. Goal-Driven Execution
+1. **Reproduce** with the smallest reliable trigger before editing.
+2. **Trace back** from where the wrong state surfaced to the first place the
+   system did something it should not, or mishandled a state it must accept.
+3. **Judge legitimacy:** handle a legitimate state where the code broke; fix
+   the producer of one that should never exist.
+4. **Pin it** with a regression test that fails before the fix.
+5. **After two failed fixes** on the same check, write down the shared premise
+   and test it before editing again.
 
-**Why:** "Make it work" is unverifiable — you can't tell when you're done and the user becomes the test harness. A concrete criterion lets you iterate independently and *know* you've finished.
+Fix other instances inside the change's scope; report the rest as follow-ups.
+A workaround that needs a paragraph to justify it signals wrong code.
 
-For multi-step work, write a brief plan where each step names its own verification:
-```
-1. [step] → verify: [check]
-2. [step] → verify: [check]
-```
+**Fallback versus masking:** a fallback is legitimate when the spec, data
+contract, or existing behavior defines it (for example, an unknown time zone
+falls back to UTC with a warning). It is masking when it turns a state that must
+never occur into silent success. Remove neither kind without proof.
 
-**Defer to:** the *stance* lives here, the *machinery* elsewhere. In `/dev`, `qa` authors/runs tests and maps them to acceptance criteria. For a bug, [[debug-fundamentals]] owns "reproduce first, fix the cause, pin it with a regression test." Adopt the goal-driven framing; route actual verification to them.
+**Order of effects:** validate and resolve every input a handler needs before
+its first external or irreversible effect (sending, charging, writing, or
+publishing). A failure after one effect has happened leaves partial work that
+no retry can undo, such as an email that was sent without its SMS.
+
+## 4. Surgical changes
+
+**Why:** reformatting or refactoring unbroken code buries the real change and
+risks breaking code you do not understand.
+
+A preparatory refactor is in scope only when this change needs it, it preserves
+behavior, it lands as its own slice before the behavior change, and tests
+(existing or a new characterization test) pass before and after. Then integrate
+the requirement as if it had been a design assumption from the start.
+
+Unrelated findings need a durable route, since chat is lost. Report each with
+location and evidence; do not fix it in this diff or create work items as a
+side effect. Under Change Loop, the active Change's follow-up gate routes it: an
+independent fix becomes a proposed successor Change once the user decides; a
+blocker of the approved outcome is in-contract repair or a semantic amendment.
+Elsewhere, propose an issue or TODO entry.
+
+## 5. Goal-driven execution
+
+**Why:** "make it work" is unverifiable; the user becomes the test harness.
+
+For multi-step work, give each step its check: `[step] → verify: [check]`.
+
+- **Check the real artifact:** run the feature, read the value, inspect the
+  diff. A compile, cached result, or self-report is not proof. When a check
+  fails unexpectedly, suspect the observation first.
+- **Test first:** a failing test per requirement scenario, then the project's
+  own test, lint, and type commands.
+- **Verify each unit before the next;** a break found after a batch is buried.
+- **Never weaken a gate:** skipping a test, overwriting a snapshot, widening a
+  timeout, or adding a suppression is a user decision, not a repair.
+
+Proof is CI or test output, or harness receipts under Change Loop; a checklist
+is not proof.
 
 ## Encode a recurring correction
 
-**Trigger:** you are writing the same instruction a second time, or `lessons` reports a recurring code across changes. Prose that repeats is the symptom; nothing fails when the next agent skips it.
+**Trigger:** you are writing the same instruction a second time, or a lessons review (Change Loop: `lessons`) reports a recurring code across changes. Prose that repeats is the symptom; nothing fails when the next agent skips it.
 
 Choose the strongest workable enforcement, in this order:
 1. **Architecture** — one owner per piece of state and one supported path per task, so the wrong route does not exist.
@@ -58,7 +124,7 @@ Choose the strongest workable enforcement, in this order:
 4. **A test** — it fails when the behavior breaks and survives internal edits.
 5. **Documentation last** — only for judgment calls no check can encode; add the failure example beside the rule.
 
-**A new check must fail on a real past occurrence.** Point it at the base tree that contained the mistake, the same base-tree discrimination the harness applies to [tests that fail without the change](../../../harness/EVIDENCE.md#tests-that-fail-without-the-change); a check that passes on the known-bad tree proves nothing. Adopt it through an ordinary `/change` with its own agreement and evidence, never as a side edit to unrelated work. Removing an older guard the check supersedes still follows "Prove guards unnecessary before removal" and [cleanup.md](cleanup.md).
+**A new check must fail on a real past occurrence.** Point it at the base tree that contained the mistake (Change Loop's "tests that fail without the change"); a check that passes on the known-bad tree proves nothing. Adopt it through an ordinary `/change` (or the project's normal change process) with its own agreement and evidence, never as a side edit to unrelated work. Removing an older guard the check supersedes still follows "Prove a guard unnecessary before removing it" and [cleanup.md](cleanup.md).
 
 ## Build the lever
 
@@ -71,12 +137,11 @@ Choose the strongest workable enforcement, in this order:
 
 Skip the lever for a couple of obvious edits visible at a glance. Keep the tool inside the change's declared scope; it does not widen the request.
 
-## Relation to other skills
+## Deeper reading, if available
 
-A thin **behavioral wrapper** that routes work to the skills owning each concern — it does not replace or re-teach them:
-
-- [[brainstorming]] — the full ambiguity/scope conversation (principle 1 is its micro-version; escalate when design is genuinely open).
-- [[programming-fundamentals]] — code mechanics (principle 2's intent → its concrete rules: illegal states, pure core, complexity).
-- `/simplify` — post-hoc cleanup of a written diff (principle 2 prevents the mess; `/simplify` removes what slipped through).
-- [[git-workflow]] — commits/branches/PRs (principle 3's surgical diffs make atomic commits possible).
-- [[debug-fundamentals]] + `qa` agent — verification (principle 4 sets the stance; they author the tests).
+Not required: [[brainstorming]] (open outcomes), [[programming-fundamentals]]
+(code mechanics, reader load), [[security-fundamentals]] (dependencies, trust
+boundaries), [[debug-fundamentals]] (root cause), [[refactoring-fundamentals]]
+(restructuring), [[testing-fundamentals]] (test design), [[git-workflow]]
+(commits, only when separately authorized). [cleanup.md](cleanup.md) removes
+residue after a change.

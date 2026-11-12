@@ -1,8 +1,9 @@
 # Running and evaluating skill cases
 
-[skill-evaluation](../../skill-evaluation/SKILL.md) and its
-[procedure](../../skill-evaluation/references/procedure.md) own experiments.
-Use these resources for formats and presentation, not another execution loop.
+When installed, [skill-evaluation](../../skill-evaluation/SKILL.md) and its
+[procedure](../../skill-evaluation/references/procedure.md) own experiments;
+the rules below still apply without it. Use these resources for formats and
+presentation, not another execution loop.
 
 ## Prepare
 
@@ -11,8 +12,8 @@ Select discriminating cases, including near-misses and authority failures.
 Define expected actions/artifacts independently of the candidate. Keep variant
 labels and grading instructions out of candidate inputs.
 
-Use an approved scratch directory inside the returned workspace or a
-host-provided evaluation scope. Keep runs outside the managed skill catalog.
+Use an approved scratch directory inside the returned workspace (with Change
+Loop) or a host-provided evaluation scope. Keep runs outside the managed skill catalog.
 Read-only baseline snapshots do not authorize writes to installed skills.
 Retain completed artifacts; never reset another writer's outputs.
 
@@ -48,5 +49,5 @@ No viewer is required to finish static validation.
 
 Read feedback from the user or the exact selected artifact; do not scan private
 Downloads for a guessed file. Empty or absent feedback is not approval.
-Summarize per-case pass/fail/not-run and uncertainty, then resume the active
-Change Loop action. Evaluation output alone does not establish harness proof.
+Summarize per-case pass/fail/not-run and uncertainty; with Change Loop, then
+resume the active action. Evaluation output alone does not establish proof.

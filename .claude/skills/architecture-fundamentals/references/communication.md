@@ -81,5 +81,5 @@ after every consumer confirms and the replay window has aged out.
 
 Versioning schemes, the deprecation lifecycle (announce → mark →
 instrument per consumer → remove at zero, not "low"), and idempotency-key
-mechanics are in
+mechanics: deeper reading, if installed,
 [api-design evolution](../../api-design-fundamentals/references/evolution.md).

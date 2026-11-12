@@ -91,6 +91,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--release`. The multi-repository topology contracts and the concurrent
   repositories seam are split into parallel rows and files with every
   assertion kept, so neither holds the tail of the gate.
+- The AI reviewer now checks scope discipline in the changed hunks:
+  unrequested abstraction, dead or unused code, speculative options, guards or
+  retries that hide a symptom, and untraceable or unrelated edits. These are
+  minor findings, major only when they leave a scoped claim false or unproven;
+  root-cause fixes and behavior-preserving preparatory refactors are not
+  flagged. Packet schema, receipts, and protocol pins are unchanged.
 
 ### Removed
 
@@ -159,6 +165,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   recovery compares against the reviewer the request was dispatched to.
   `authority abort` now refuses a request whose AI result completed without a
   receipt, which previously blocked every later review of the change.
+- A harness command run inside one project no longer changes another project
+  pinned by the host session's `CLAUDE_FOUNDATION_PROJECT` (the Pi adapter
+  exports it to every shell). The runtime and CLI refuse with a clear message
+  unless the cwd or the runtime belongs to the pinned project or its sandbox;
+  `--project` still selects a project. Shell suites run alone also drop the
+  host session's project, identity, and guardrail variables.
 
 ## [3.7.0] - 2026-11-10
 

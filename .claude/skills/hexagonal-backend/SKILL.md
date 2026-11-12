@@ -1,6 +1,6 @@
 ---
 name: hexagonal-backend
-description: "Use when one backend service needs domain logic isolated from framework and storage through ports and adapters. Skip trivial CRUD and cross-service design (architecture-fundamentals)."
+description: "Use when one backend service needs domain logic isolated from framework and storage through ports and adapters: clean architecture, layering, 'where should this logic live', testable use cases with fake repositories. Skip trivial CRUD and cross-service design (architecture-fundamentals)."
 ---
 
 # Hexagonal backend
@@ -33,9 +33,8 @@ driving adapter → use case → domain
 
 ## Harness
 
-Record only consequential dependency or transaction-boundary decisions in the
-active OpenSpec design; seam tests run through the harness are the evidence.
-No parallel architecture document; Build never stages or commits.
+With OpenSpec/Change Loop: record only consequential dependency or transaction-boundary decisions in the change design; seam tests run through the harness are evidence; Build never stages or commits.
+Otherwise: note them in the PR or an ADR; domain, fake-port, and adapter test output is proof.
 
 ## References
 

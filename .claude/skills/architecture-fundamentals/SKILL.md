@@ -1,6 +1,6 @@
 ---
 name: architecture-fundamentals
-description: "Use when deciding how services, runtimes, or deployables split, talk, fail, or scale. Skip single-process module design (programming-fundamentals) and domain meaning (ddd-strategic)."
+description: "Use when deciding how services, runtimes, or deployables split, talk, fail, or scale: monolith vs microservices, sync vs async, timeouts and retries, 'แยก service'. Skip single-process module design (programming-fundamentals) and domain meaning (ddd-strategic)."
 ---
 
 # Architecture fundamentals
@@ -11,7 +11,7 @@ uncertainty is consequential.
 ## Steps
 
 1. Split by cohesive ownership and rate of change, not technology or org chart.
-   Settle business meaning first (`ddd-strategic`).
+   Settle business meaning first.
 2. Give every durable fact exactly one write owner; others read through its
    contract, event stream, or projection.
 3. Choose sync or async per interaction: synchronous only when the caller needs
@@ -25,19 +25,18 @@ uncertainty is consequential.
 6. For each changed boundary record owner, callers, sync/async rationale,
    failure and consistency expectations, compatibility window, and rollback.
 
-Then use `queue-fundamentals` for the async boundary,
-`api-design-fundamentals` for the published contract, and `hexagonal-backend`
-inside one service.
+Deeper reading, if installed: `ddd-strategic` for meaning, `queue-fundamentals`
+for async, `api-design-fundamentals` for contracts, `hexagonal-backend` inside
+one service.
 
 ## Harness
 
-Record boundary decisions in the active OpenSpec design; project providers
-prove behavior through the harness. No parallel architecture plan or status
-ledger; Build never stages or commits.
+With OpenSpec/Change Loop: record boundary decisions in the change design; providers prove behavior; Build never stages or commits.
+Otherwise: record them in an ADR or the PR; integration and load-test output is proof.
 
 ## References
 
 - `references/boundaries.md` — split, merge, extraction, anti-corruption layers
 - `references/communication.md` — sync/async matrix, consistency, contract evolution
 - `references/resilience.md` — timeouts, retries, breakers, load shedding, health checks
-- `../observability-fundamentals/references/logs-metrics-traces.md` — telemetry, SLOs, alerting
+- `../observability-fundamentals/references/logs-metrics-traces.md` — optional, if installed: telemetry, SLOs, alerting

@@ -5,7 +5,7 @@ dangerous. Every message handler must produce the same observable effect
 whether called once or N times with the same message.
 
 Before choosing a layer, answer the three rerun questions (twice, crashed
-halfway, overlapping runs) in [concurrency Principle 5](../../concurrency-fundamentals/references/shared-state-and-async.md#principle-5-from-skillmd-make-operations-idempotent-and-cancellable).
+halfway, overlapping runs); detail, if installed: [concurrency Principle 5](../../concurrency-fundamentals/references/shared-state-and-async.md#principle-5-from-skillmd-make-operations-idempotent-and-cancellable).
 
 ## Three layers, in order
 
@@ -69,7 +69,7 @@ The same idea at the HTTP boundary: the client sends a UUID; the server
 stores `(key, request_fingerprint, status, body)` for at least 24 h, replays
 the cached response on a duplicate, and returns `422` when the fingerprint
 differs. When your service is both an endpoint and a consumer, propagate the
-HTTP key as the message key end to end. Request-side mechanics are in
+HTTP key as the message key end to end. Request-side mechanics: deeper reading, if installed:
 [api-design-fundamentals](../../api-design-fundamentals/references/evolution.md).
 
 ## Common mistakes

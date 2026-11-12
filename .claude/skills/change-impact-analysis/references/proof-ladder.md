@@ -28,9 +28,11 @@ cataloguing unlikely risks.
 5. **Reproduced in the running application.** The failure case was driven
    through the real surface and did not occur.
 
-Execution at levels 4 and 5 counts as evidence only through a harness provider
-and its receipt. A pasted transcript or "I ran it" is level 1. Add the check to
-the agreement's evidence contract so Prove executes it.
+With Change Loop, execution at levels 4 and 5 counts as evidence only through a harness provider
+and its receipt; otherwise only through a recorded test or CI run anyone can
+repeat. A pasted transcript or "I ran it" is level 1. Add the check to the
+agreement's evidence contract (or the project's test suite) so verification
+runs it again.
 
 ## Say where it stopped
 

@@ -55,5 +55,6 @@ State faster, slower, no measurable difference, or inconclusive with scope,
 run count, spread, limiter, correctness results, artifact paths, and missing
 coverage. Raw files remain outside managed skills; reference them from the
 existing agreement/evidence where needed. If measurement setup is wrong,
-repair the instrument before the product. Follow the harness's named repair
-and resume routes; this report neither creates a receipt nor grants Land.
+repair the instrument before the product. With Change Loop, follow the
+harness's named repair and resume routes; this report neither creates a receipt
+nor grants Land.

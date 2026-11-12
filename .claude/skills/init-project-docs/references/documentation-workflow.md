@@ -23,8 +23,8 @@ the generated viewer by hand.
 - **Fresh:** no canonical suite exists; create the applicable files.
 - **Update:** reconcile existing claims as keep/fix/add/remove and preserve
   accurate human context.
-- **Diff-scoped:** when the harness supplies an active change diff, open and
-  update only docs affected by that surface.
+- **Diff-scoped:** when a change diff is supplied (by the user, a PR, or a
+  harness such as Change Loop), open and update only docs affected by that surface.
 
 Stamp each grounded file with `last-verified: <date-or-short-sha>`; in
 diff-scoped mode stamp only edited files.
@@ -36,14 +36,15 @@ diff-scoped mode stamp only edited files.
    domains rather than inventing content.
 3. Apply templates from `doc-templates.md`; prioritize structure,
    anchors, and 3–6 important flows over exhaustive prose.
-4. Run `python3 .claude/skills/init-project-docs/scripts/build_doc_viewer.py
-   --docs-dir docs --title "<Project Name>"` after Markdown changes.
+4. From the project root, run this skill's `scripts/build_doc_viewer.py`
+   with `--docs-dir docs --title "<Project Name>"` after Markdown changes.
 5. Validate Mermaid, links, commands, viewer output, and changed claims. Report
    the docs delta and unresolved unknowns.
 
-Documentation is product output, not Foundation lifecycle state. Do not copy
-`tasks.md`, runtime status, receipts, or temporary investigation context into
-the suite. Use `claude-md` afterward for the lean per-session index.
+Documentation is product output, not lifecycle state. Do not copy task lists
+(Change Loop `tasks.md`), runtime status, receipts, or temporary investigation
+context into the suite. Optionally use `claude-md` afterward for the lean
+per-session index.
 
 References: read `doc-templates.md` when writing files and
 `workflow-and-quality.md` for file-level quality, Mermaid rules, and review.

@@ -1,6 +1,6 @@
 ---
 name: tailwind-design-system
-description: "Use when maintaining shared Tailwind v4 tokens, variants, themes, or a v3 migration. Skip one-off styling (use frontend-design)."
+description: "Use when creating or maintaining shared Tailwind CSS v4 tokens (@theme), component variants, themes or dark mode, or migrating Tailwind v3 to v4. Skip one-off page styling (frontend-design)."
 ---
 
 # Tailwind design system (v4)

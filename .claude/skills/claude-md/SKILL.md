@@ -1,6 +1,6 @@
 ---
 name: claude-md
-description: "Use when asked to create or update a repository's CLAUDE.md. Skip human onboarding docs (use init-project-docs)."
+description: "Use when asked to create, update, slim down, or audit a repository's CLAUDE.md (or AGENTS.md-style agent guide). Skip human onboarding docs under docs/ (init-project-docs)."
 ---
 
 # Revise CLAUDE.md
@@ -22,11 +22,11 @@ docs instead of copying them.
 
 ## Harness
 
-This guide is product documentation, not a task ledger or proof store. Within an
-active change, edit only returned paths and resume the harness action.
+The guide is product documentation, not a task ledger or proof store.
+With Change Loop: edit only returned paths and resume the harness action. Otherwise: edit only the guide.
 
 ## References
 
 - `references/guide-workflow.md` — section shape and preservation rules; read
   before editing.
-- Use `init-project-docs` for deep human-facing onboarding docs.
+- Optional, if available: `init-project-docs` for deep human-facing onboarding docs.

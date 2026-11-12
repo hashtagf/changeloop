@@ -25,8 +25,9 @@ symptom suppression.
 - **Guard legitimacy.** A guard is a fix only when the state it handles is
   legitimate input the system must accept. A guard against state that should
   never exist hides the producer of that state; fix the producer. Removing an
-  existing guard still requires the invariant proof in
-  [cleanup](../../coding-discipline/references/cleanup.md).
+  existing guard still requires proof that every producer upholds the
+  invariant (deeper reading, if installed:
+  [cleanup](../../coding-discipline/references/cleanup.md)).
 - **Persisted state after a restart.** When a failure survives a restart or
   reappears after one, suspect persisted state first: files, caches, database
   rows, queues, and generated artifacts outlive the process.

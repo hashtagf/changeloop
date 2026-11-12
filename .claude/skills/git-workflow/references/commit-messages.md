@@ -104,13 +104,14 @@ the log for `BREAKING` and find it.
 
 ## Change Loop provenance
 
-/dev delivers through Change, Build, Prove, and authorized Land. It produces
+Applies only when Change Loop is installed. /dev delivers through Change,
+Build, Prove, and authorized Land. It produces
 an uncommitted target diff, not a commit. For separately authorized Git or
 /deliver work, choose the commit type from actual behavior and the repository
 convention; do not invent a spec Type field or a legacy workflow directory.
 
 Reference the archived OpenSpec change and actual evidence when useful.
 Never create plan/review/retro artifacts just to fill a commit message.
-See installed WORKFLOW.md for Deliver authority and retained provenance.
+Installed WORKFLOW.md defines Deliver authority and retained provenance.
 
-Prose style: [writing](../../init-project-docs/references/writing.md).
+Prose style, if available: [writing](../../init-project-docs/references/writing.md).

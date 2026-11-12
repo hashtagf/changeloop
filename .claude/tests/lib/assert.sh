@@ -11,6 +11,18 @@
 asserts=0
 failures=0
 
+# Claude's session hook and the Pi adapter export the session's project,
+# identity, phase, and guardrail mode into agent shells. A suite run alone
+# (run-all.sh clears these too) would otherwise point fixture runtime and hook
+# calls at the caller's project and policy. Suites that need one set it inline
+# on the command under test; runner controls (FOUNDATION_TEST_*, shards) stay.
+unset CLAUDE_PROJECT_DIR CLAUDE_FOUNDATION_PROJECT \
+  FOUNDATION_HOST FOUNDATION_HOST_COMMAND FOUNDATION_HOST_ARGUMENTS \
+  FOUNDATION_SESSION_ID FOUNDATION_MAIN_IDENTITY FOUNDATION_GUARDRAIL_MODE \
+  FOUNDATION_MODEL_ID FOUNDATION_MAIN_PROVIDER_FAMILY \
+  FOUNDATION_CLAUDE_SESSION_ID FOUNDATION_CLAUDE_TRANSCRIPT_PATH \
+  FOUNDATION_ACTIVE_PHASE FOUNDATION_WORKSPACE_ROOT FOUNDATION_ALLOWED_PATHS_JSON
+
 pass() { asserts=$((asserts + 1)); echo "PASS: $1"; }
 fail() { asserts=$((asserts + 1)); failures=$((failures + 1)); echo "FAIL: $1" >&2; }
 

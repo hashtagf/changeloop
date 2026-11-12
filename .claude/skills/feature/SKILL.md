@@ -1,6 +1,6 @@
 ---
 name: feature
-description: "Implement and prove a selected PRD or backlog group through discovery, one Decision Sheet, compiled Change approval, and isolated Build. Use for feature intake or resume. Proven is not delivery; intake approval grants no Land authority."
+description: "Use when /feature is invoked or a selected PRD or backlog group must be implemented and proven through discovery, one Decision Sheet, compiled Change approval, and isolated Build. Proven is not delivery; intake approval grants no Land. Skip PRD grooming alone (grill-task-gu)."
 ---
 
 Treat the text after `$feature` as the command arguments. Read

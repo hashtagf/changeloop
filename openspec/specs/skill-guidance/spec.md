@@ -224,50 +224,58 @@
 
 ### Requirement: trigger-descriptions
 
-ระบบ SHALL ให้ description ของ skill ที่ไม่ใช่ lifecycle ทั้ง 32 ตัวเป็นประโยค trigger สั้นที่บอกว่าใช้ทำอะไร ใช้เมื่อไร และข้ามเมื่อไร ตามข้อความที่กำหนดด้านล่าง
+ระบบ SHALL ให้ description ของ skill ทั้ง 40 ตัว (ที่ไม่ใช่ lifecycle 32 ตัวและ lifecycle 8 ตัว) เป็นประโยค trigger สั้นที่บอกว่าใช้ทำอะไร ใช้เมื่อไร (สถานการณ์และคำที่ผู้ใช้พิมพ์จริง ทั้งไทยและอังกฤษ) และข้ามเมื่อไรโดยชี้ไปที่ skill ข้างเคียงจริง ตามข้อความที่กำหนดด้านล่าง
 
-- lifecycle skill 8 ตัว (change, build, prove, land, investigate, dev, feature, changes) ไม่ถูกแก้
-- description ≤ 40 คำ ขึ้นต้นด้วย Use when ... และมีส่วนข้าม (Skip ... หรือ use <skill> for ...)
+- lifecycle skill 8 ตัว (change, build, prove, land, investigate, dev, feature, changes) แก้ได้เฉพาะ description; body ไม่ถูกแก้ และ description ของ land ยังมี standalone Git requests to git-workflow
+- description ของ skill ที่ไม่ใช่ lifecycle ≤ 40 คำ ของ lifecycle ≤ 80 คำ ขึ้นต้นด้วย Use ... และมีส่วนข้าม (Skip ... หรือ use <skill> for ...)
 - description ของ testing-fundamentals, database-fundamentals, api-design-fundamentals, security-fundamentals, debug-fundamentals ยังมีคำ workType, riskSignals, requirement หรือ scenario และคำว่า Skip
 - ไม่มีคำว่า Must always apply, any prose surface, Use any MCP tool
-- brainstorming: Use when the product outcome or approach is still open and the user must pick between real alternatives before /change. Skip settled work and how/why questions (use investigate).
-- change-impact-analysis: Use before changing an API, schema, config, or shared behavior when you do not know who depends on it. Skip isolated code with known consumers.
-- coding-discipline: Use when scope, assumptions, or the right size of a fix is unclear and you might over-build. Skip routine settled work.
-- debug-fundamentals: Use when workType is bugfix and the cause is unknown: reproduce, localize, fix, prove. Skip obvious corrections, new features, and slowness (use performance-investigation).
-- performance-investigation: Use when something is measured slow, growing in memory, or a speedup must be proven. Skip unmeasured bugs (debug-fundamentals) and telemetry design (observability-fundamentals).
-- plan-writing: Use when a settled change needs design input — dependencies, compatibility, migration, rollback — before compiling. Skip obvious rapid work.
-- refactoring-fundamentals: Use when restructuring code without changing behavior: extract, move, rename, split, deduplicate, simplify. Skip bug fixes and new features.
-- testing-fundamentals: Use when a task's requirement has scenarios to prove: write a failing-first test per scenario and pick level and doubles. Skip docs, renames, and work with no behavior to prove.
-- api-design-fundamentals: Use when workType includes api or library, or a requirement defines a request, response, status code, error body, pagination, or version other code consumes. Skip private module interfaces (use programming-fundamentals).
-- architecture-fundamentals: Use when deciding how services, runtimes, or deployables split, talk, fail, or scale. Skip single-process module design (programming-fundamentals) and domain meaning (ddd-strategic).
-- concurrency-fundamentals: Use when threads, async tasks, locks, shared mutable state, cancellation, or races affect correctness inside one process. Skip cross-process queues (queue-fundamentals) and database isolation (database-fundamentals).
-- database-fundamentals: Use when workType includes data or migration, or a requirement touches a schema, query, index, transaction, or persisted file. Skip read-only analysis and measured slowness (use performance-investigation).
-- ddd-strategic: Use when business terms, bounded contexts, aggregates, or who owns a model are unclear. Skip generic CRUD and settled single-context code.
-- hexagonal-backend: Use when one backend service needs domain logic isolated from framework and storage through ports and adapters. Skip trivial CRUD and cross-service design (architecture-fundamentals).
-- observability-fundamentals: Use when adding or reviewing logs, metrics, traces, SLOs, or alerts for a runtime failure surface. Skip offline code; use performance-investigation to explain measurements.
-- programming-fundamentals: Use for nontrivial local logic: types, state, data structures, error paths, module boundaries inside one process. Skip trivial or generated code and cross-runtime design.
-- queue-fundamentals: Use when work crosses processes through a broker, stream, job queue, or worker: delivery semantics, idempotency, retries, ordering, backpressure. Skip in-process async (concurrency-fundamentals).
-- security-fundamentals: Use when riskSignals include access-control, authorization, secrets, or external-integration, or a scenario must reject forged, replayed, oversized, or unauthorized input. Load with the owning construction skill. Skip work without a trust boundary.
-- claude-md: Use when asked to create or update a repository's CLAUDE.md. Skip human onboarding docs (use init-project-docs).
-- delivery-engineering: Use when building or fixing CI/CD, builds, containers, deploys, rollouts, or rollbacks. Skip application code and Git operations (use git-workflow).
-- frontend-design: Use when implementing or polishing web UI — layout, typography, motion, responsive states — after UX direction is settled. Skip unresolved interaction decisions (use ux-ui-principles).
-- git-workflow: Use when asked to branch, commit, rebase, merge, push, clean up, or open a PR. Skip read-only inspection; Land never grants Git authority.
-- grill-task-gu: Use when grooming an approved PRD into a grounded decision sheet and ordered backlog. Skip implementation and compiled-spec approval.
-- grill-task-gu-please: Alias for grill-task-gu; use only when the old name is invoked.
-- harness-html-report: Use when asked for an HTML report of Change Loop state, tasks, gates, or evidence. Read-only; skip anything that changes runtime state.
-- init-project-docs: Use when asked to create or refresh human-facing onboarding docs for an existing codebase. Skip CLAUDE.md-only requests (use claude-md).
-- skill-creator: Use when explicitly asked to create or edit a skill. Skip unrequested skill changes; use skill-evaluation to compare behavior.
-- skill-evaluation: Use when comparing a changed skill or description against its old version on real runs. Skip static catalog checks (skill-suite-auditor).
-- skill-suite-auditor: Use when auditing the skill catalog for metadata, overlap, broken references, or ownership conflicts. Skip behavioral evaluation (skill-evaluation).
-- tailwind-design-system: Use when maintaining shared Tailwind v4 tokens, variants, themes, or a v3 migration. Skip one-off styling (use frontend-design).
-- ui-ux-pro-max: Use when you need to look up product, style, palette, typography, or chart guidance from the bundled design data. Skip experience reasoning (ux-ui-principles) and final visuals (frontend-design).
-- ux-ui-principles: Use when deciding or reviewing user flows, hierarchy, forms, navigation, accessibility, or responsive layout. Skip settled visuals (frontend-design) and token systems (tailwind-design-system).
+- brainstorming: Use when the outcome or approach is still open and the user must choose between real alternatives before building: 'what should we build', 'which approach', 'ควรทำ A หรือ B', compare options' trade-offs. Skip settled work and how/why questions (investigate).
+- change-impact-analysis: Use before changing an API, schema, config, event, or shared behavior when consumers are unknown: who breaks, blast radius, is it safe to change. Skip isolated code with known consumers, sequencing (plan-writing), and choosing between options (brainstorming).
+- coding-discipline: Use before coding a fix or feature whose scope, assumptions, or size is unclear: keep the diff minimal, avoid over-building or bundled cleanup, fix causes not symptoms, verify done. Skip unknown-cause bugs (debug-fundamentals) and behavior-preserving restructuring (refactoring-fundamentals).
+- debug-fundamentals: Use when workType is bugfix and the cause is unknown: บั๊ก, crash, wrong output, flaky test, regression. Reproduce, localize, fix, prove. Skip obvious one-line corrections, new features, and slowness or memory growth (performance-investigation).
+- performance-investigation: Use when something is slow (ช้า), latency or throughput regressed, memory grows or leaks toward OOM, or a speedup or benchmark claim must be proven. Skip functional bugs (debug-fundamentals) and telemetry design (observability-fundamentals).
+- plan-writing: Use when an agreed change needs a design or task breakdown — ordering, dependencies, compatibility, migration, rollback, parallel slices — before coding. Skip open choices (brainstorming), impact discovery (change-impact-analysis), and obvious small work.
+- refactoring-fundamentals: Use when restructuring code without changing behavior: extract, move, rename, split, deduplicate, simplify, untangle legacy code, รีแฟกเตอร์. Skip bug fixes (debug-fundamentals) and new features (programming-fundamentals).
+- testing-fundamentals: Use when a requirement or scenario needs tests: write failing-first tests, pick unit/integration/e2e level and mocks, fix flaky or hollow tests, read coverage. Skip docs, renames, and unknown-cause bugs (debug-fundamentals).
+- api-design-fundamentals: Use when workType includes api or library, or a requirement defines a request, response, status code, error body, pagination, webhook, or version other code consumes: 'design an endpoint', REST/GraphQL/gRPC, breaking change. Skip private module interfaces (use programming-fundamentals).
+- architecture-fundamentals: Use when deciding how services, runtimes, or deployables split, talk, fail, or scale: monolith vs microservices, sync vs async, timeouts and retries, 'แยก service'. Skip single-process module design (programming-fundamentals) and domain meaning (ddd-strategic).
+- concurrency-fundamentals: Use when threads, async tasks, goroutines, locks, shared mutable state, cancellation, or races affect correctness inside one process: deadlock, flaky race, 'runs twice', unbounded Promise.all. Skip cross-process queues (queue-fundamentals) and database isolation (database-fundamentals).
+- database-fundamentals: Use when workType includes data or migration, or a requirement touches a schema, query, index, transaction, or persisted file: 'add a column', N+1, lost update, 'ย้าย schema'. Skip read-only analysis and measured slowness (use performance-investigation).
+- ddd-strategic: Use when business terms, bounded contexts, aggregates, or who owns a model are unclear: one word means two things, event storming, splitting a domain, aggregate too big. Skip generic CRUD, settled single-context code, and runtime splits (architecture-fundamentals).
+- hexagonal-backend: Use when one backend service needs domain logic isolated from framework and storage through ports and adapters: clean architecture, layering, 'where should this logic live', testable use cases with fake repositories. Skip trivial CRUD and cross-service design (architecture-fundamentals).
+- observability-fundamentals: Use when adding or reviewing logs, metrics, traces, dashboards, SLOs, or alerts for a runtime failure surface: 'add logging', 'we can't see this error in prod', noisy alerts. Skip offline code and bug root-causing (debug-fundamentals); use performance-investigation to explain measurements.
+- programming-fundamentals: Use for nontrivial logic inside one process: modeling types and state, data structures, error paths, module boundaries, abstraction depth ('design this module', 'ออกแบบโมดูล'). Skip trivial or generated code, cross-service design (architecture-fundamentals), and behavior-preserving restructuring (refactoring-fundamentals).
+- queue-fundamentals: Use when work crosses processes through a broker, stream, job queue, or worker (Kafka, SQS, RabbitMQ, BullMQ, cron jobs): delivery semantics, idempotency, retries, DLQ, ordering, outbox, backpressure, duplicate messages. Skip in-process async (concurrency-fundamentals).
+- security-fundamentals: Use when riskSignals include access-control, authorization, secrets, or external-integration, or a scenario must reject forged, replayed, oversized, or unauthorized input: login, tokens, permissions, uploads, webhooks, 'ช่องโหว่'. Skip work without a trust boundary; endpoint shape alone is api-design-fundamentals.
+- claude-md: Use when asked to create, update, slim down, or audit a repository's CLAUDE.md (or AGENTS.md-style agent guide). Skip human onboarding docs under docs/ (init-project-docs).
+- delivery-engineering: Use when changing or repairing CI/CD: failing CI to fix, pipelines, build scripts, Dockerfiles/containers, deploys, rollouts, rollbacks, release artifacts. Skip application code, Git operations (git-workflow), and read-only status questions (changes).
+- frontend-design: Use when building or polishing web UI — pages, components, layout, typography, color, motion, responsive states — once UX direction is settled (ทำหน้าเว็บให้สวย). Skip unresolved interaction decisions (ux-ui-principles) and shared token systems (tailwind-design-system).
+- git-workflow: Use when asked to branch, commit, write a commit message, rebase, merge, push, recover lost work, or open a PR. Skip read-only inspection and CI/deploy (delivery-engineering); Land never grants Git authority.
+- grill-task-gu: Use when grooming an approved PRD into one source-grounded Decision Sheet and an ordered task backlog with coverage (แตก task จาก PRD). Skip open product ideas (brainstorming), implementation, and compiled-spec approval.
+- grill-task-gu-please: Use when the user invokes the legacy name grill-task-gu-please, e.g. /grill-task-gu-please <PRD>; alias for grill-task-gu. Otherwise skip it (grill-task-gu).
+- harness-html-report: Use when asked for an HTML report or dashboard of a Change Loop project's changes, tasks, gates, budgets, or evidence (สรุปงานเป็น HTML). Requires .foundation/ and openspec/. Skip status checks (changes) and anything changing state.
+- init-project-docs: Use when asked to document an existing codebase for humans: onboarding, architecture, data model, API, business-rule docs under docs/, or refreshing them after code changes (ทำเอกสาร). Skip CLAUDE.md-only requests (claude-md).
+- skill-creator: Use when explicitly asked to create, edit, restructure, or optimize the description of a skill (SKILL.md, references). Skip unrequested skill changes, live behavior comparisons (skill-evaluation), and catalog-wide audits (skill-suite-auditor).
+- skill-evaluation: Use when testing whether a new or changed skill, description, or trigger actually performs better than its baseline on real model runs (A/B, with/without skill). Skip static catalog checks (skill-suite-auditor) and authoring (skill-creator).
+- skill-suite-auditor: Use when auditing a skills directory as a whole: frontmatter, overlapping or competing triggers, broken references, missing owners, or conflicting instructions. Skip live model comparisons (skill-evaluation) and writing a skill (skill-creator).
+- tailwind-design-system: Use when creating or maintaining shared Tailwind CSS v4 tokens (@theme), component variants, themes or dark mode, or migrating Tailwind v3 to v4. Skip one-off page styling (frontend-design).
+- ui-ux-pro-max: Use when looking up style, color palette, font pairing, product-type, landing, chart, or per-stack UI guidance from the bundled searchable design data. Skip flow or usability decisions (ux-ui-principles) and implementing visuals (frontend-design).
+- ux-ui-principles: Use when designing or reviewing user flows, hierarchy, forms, navigation, UI states, accessibility, or responsive layout, or when users find a screen confusing (ใช้งานยาก, UX). Skip visual styling (frontend-design), tokens (tailwind-design-system), style/palette search (ui-ux-pro-max).
+- change: Use when settled intent must become or amend an OpenSpec agreement through Change Loop: /change, a new behavior request, or new observable behavior found during Build. Preserve approval boundaries; write no product code. Skip open options (brainstorming) and pre-Change research (investigate).
+- build: Use when an approved Change Loop change must be implemented or repaired in its isolated workspace: /build, returned EDIT/REPAIR tasks, or continue approved work. Follow harness task ownership and resume routes; never Land or mutate Git history. Skip agreement edits (change) and evidence refresh (prove).
+- prove: Use when an existing Change Loop change needs evidence produced or refreshed: /prove, providers, review, acceptance, stale receipts, or proof repair. Proven is not delivered and never grants Land. Skip product implementation (build) and read-only status (changes).
+- land: Use when the user explicitly says to land, apply, or archive a proven Change Loop change (/land). Applies through advance, preserves target HEAD/index, and recovers the same transaction. Route standalone Git requests to git-workflow and deployment or publication to delivery-engineering.
+- investigate: Use before Change to research feasibility, requirements, a bug's mechanics, how or why code works, or recorded rationale without product edits: /investigate, explain this flow, ดูว่าทำงานยังไง. Ask only unresolved material questions. Skip choosing among open product options (brainstorming).
+- dev: Use when /dev is invoked: the legacy Change Loop composition from concrete intent through Change, isolated Build, and Prove, landing only with explicit authority. Skip targeted phase work; use change, build, prove, or land directly.
+- feature: Use when /feature is invoked or a selected PRD or backlog group must be implemented and proven through discovery, one Decision Sheet, compiled Change approval, and isolated Build. Proven is not delivery; intake approval grants no Land. Skip PRD grooming alone (grill-task-gu).
+- changes: Use when asked to read or explain current status without editing: /changes, active or blocked changes, readiness, CI or evidence state, next actions (ติดอะไร, ทำอะไรต่อ). Read-only; never start implementation, grant authority, or infer delivery from proven. Skip HTML reports (harness-html-report).
 
 #### Scenario: description ตรงตามข้อความที่กำหนด
 
-- **GIVEN** SKILL.md ของ skill ที่อยู่ในขอบเขต 32 ตัว
+- **GIVEN** SKILL.md ของ skill ทั้ง 40 ตัว
 - **WHEN** อ่าน frontmatter description
-- **THEN** ทุกตัวตรงกับข้อความใน details (ต่างได้เฉพาะเครื่องหมายวรรคตอน) ≤ 40 คำ และมีส่วนที่บอกว่าเมื่อไรไม่ควรใช้
+- **THEN** ทุกตัวตรงกับข้อความใน details (ต่างได้เฉพาะเครื่องหมายวรรคตอน) อยู่ในจำนวนคำที่กำหนด และมีส่วนที่บอกว่าเมื่อไรไม่ควรใช้
 
 #### Scenario: spec-vocabulary ยังอยู่
 
@@ -275,11 +283,11 @@
 - **WHEN** รัน .claude/harness/tests/skill-routing.test.mjs
 - **THEN** ผ่านทุก assertion
 
-#### Scenario: lifecycle skill ไม่ถูกแตะ
+#### Scenario: body ของ lifecycle skill ไม่ถูกแตะ
 
 - **GIVEN** SKILL.md ของ lifecycle skill 8 ตัว
-- **WHEN** เทียบกับ HEAD 281caac1b
-- **THEN** เนื้อหาเหมือนเดิมทุกไบต์
+- **WHEN** เทียบเนื้อหาหลัง frontmatter กับ HEAD 281caac1b
+- **THEN** เหมือนเดิมทุกไบต์ ต่างได้เฉพาะ description
 
 #### Scenario: description ยาวเกิน
 
@@ -293,7 +301,8 @@
 - โครงเดิม: วรรคเปิด + ## Rules 7 ข้อ + ## Check before finishing 4-6 ข้อ + วรรค handoff + วรรค References (40-80 บรรทัด, 300-450 คำ)
 - โครงใหม่: # ชื่อ / จุดยืน 1 บรรทัด / ## Steps (≤ 6 ข้อ ทำตามได้ทันที) / ## Harness (≤ 3 บรรทัด) / ## References (read only when needed) bullet: ชื่อไฟล์ — เมื่อไรควรอ่าน
 - SKILL.md แต่ละไฟล์ในขอบเขต ≤ 250 คำ (ไม่รวม frontmatter) และรวมทุก SKILL.md ≤ 9,500 คำตาม budget เดิม
-- วรรค Harness ยังระบุว่า harness เป็นเจ้าของ lifecycle, receipts, task status และ Build ไม่ stage/commit
+- skill ใช้งานได้เมื่อโหลดตัวเดียว (standalone): Steps มีขั้นตอนขั้นต่ำที่ทำได้เองโดยไม่บังคับโหลด skill อื่น การอ้าง skill อื่นเป็นเพียงการอ่านเพิ่มเมื่อมีติดตั้ง และไม่บังคับพึ่งไฟล์ของ harness หรือไฟล์ที่มีเฉพาะใน repo นี้ (tests, docs, release)
+- วรรค Harness เป็นแบบมีเงื่อนไข: With OpenSpec/Change Loop ระบุว่า harness เป็นเจ้าของ lifecycle, receipts, task status และ Build ไม่ stage/commit; Otherwise ระบุที่บันทึกการตัดสินใจหรือ follow-up และสิ่งที่ใช้เป็น proof (CI หรือผลเทสต์); ยกเว้น harness-html-report ที่ต้องมี project Change Loop และ skill ที่ vendor มา (frontend-design, skill-creator, ui-ux-pro-max, tailwind-design-system) ที่แก้เฉพาะ description
 - ข้อความที่ test เดิม pin (เช่น Design deep, cohesive modules; Never ask what you can find; not receipts; never hand-edit; approves intake choices, not a compiled OpenSpec packet) ยังอยู่หรือถูกแทนด้วยถ้อยคำใหม่ที่ test อัปเดตให้ตรงกันในงานเดียวกัน
 
 #### Scenario: ทุก body อยู่ใน budget และใช้โครงเดียวกัน

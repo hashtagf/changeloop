@@ -1,6 +1,6 @@
 ---
 name: build
-description: "Implement or repair an approved Change Loop change through advance in its declared isolated workspace. Use for build or continuing returned EDIT/REPAIR tasks. Follow harness task ownership and resume routes; never Land or mutate Git history."
+description: "Use when an approved Change Loop change must be implemented or repaired in its isolated workspace: /build, returned EDIT/REPAIR tasks, or continue approved work. Follow harness task ownership and resume routes; never Land or mutate Git history. Skip agreement edits (change) and evidence refresh (prove)."
 ---
 
 Treat the text after `$build` as the command arguments. Read

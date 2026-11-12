@@ -1,6 +1,6 @@
 ---
 name: ddd-strategic
-description: "Use when business terms, bounded contexts, aggregates, or who owns a model are unclear. Skip generic CRUD and settled single-context code."
+description: "Use when business terms, bounded contexts, aggregates, or who owns a model are unclear: one word means two things, event storming, splitting a domain, aggregate too big. Skip generic CRUD, settled single-context code, and runtime splits (architecture-fundamentals)."
 ---
 
 # Strategic DDD
@@ -26,14 +26,13 @@ runtimes.
 
 Capture only what resolves the active decision: changed terms, the changed
 context map, the invariant behind each aggregate boundary, and event ownership.
-Then use `programming-fundamentals` for value objects, `hexagonal-backend`
-inside one context, and `architecture-fundamentals` for runtime boundaries.
+Deeper reading, if installed: `programming-fundamentals` (value objects),
+`hexagonal-backend` (inside one context), `architecture-fundamentals` (runtimes).
 
 ## Harness
 
-Changed vocabulary and boundary decisions go in the active OpenSpec design, not
-a standalone glossary or ADR store. Project providers prove behavior through
-the harness; Build never stages or commits.
+With OpenSpec/Change Loop: changed vocabulary and boundary decisions go in the change design, not a standalone glossary or ADR store; providers prove behavior; Build never stages or commits.
+Otherwise: use the project's glossary or ADR; tests are proof.
 
 ## References
 

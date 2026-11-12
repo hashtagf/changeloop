@@ -1,11 +1,11 @@
 ---
 name: git-workflow
-description: "Use when asked to branch, commit, rebase, merge, push, clean up, or open a PR. Skip read-only inspection; Land never grants Git authority."
+description: "Use when asked to branch, commit, write a commit message, rebase, merge, push, recover lost work, or open a PR. Skip read-only inspection and CI/deploy (delivery-engineering); Land never grants Git authority."
 ---
 
 # Git workflow
 
-Git mechanics after authorization; user authority and Land guards take
+Git mechanics after authorization; user authority and workflow guards take
 precedence over convenience.
 
 ## Steps
@@ -26,9 +26,9 @@ precedence over convenience.
 
 ## Harness
 
-Change Loop Land preserves HEAD/index and creates no commit; Land and /dev grant
-no commit, push, or PR authority. Commit, push, or open a PR only via `/deliver`
-or a direct user instruction; bypass hooks only with explicit approval of that risk.
+With Change Loop: Land preserves HEAD/index and creates no commit; Land and /dev grant no commit, push, or PR authority; use `/deliver` or a direct user instruction.
+Otherwise: commit, push, or open a PR only on a direct user instruction for that operation.
+Bypass hooks only with explicit approval of that risk.
 
 ## References
 

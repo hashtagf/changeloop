@@ -592,6 +592,18 @@ attempt, and reported as `reviewAdvisories.specGaps` on a reached `proven` or
 `archived` target; they never become findings, change the verdict, or block.
 Closing one is a semantic amendment the user decides.
 
+Every configured review prompt, at any depth, also checks scope discipline in
+the changed hunks: unrequested abstraction, dead or unused code, speculative
+options or configuration, a guard, retry, or catch that hides a symptom, and
+lines that do not trace to the agreement. Such findings are minor, and major
+(binding claims and cases like any other) only when they leave a scoped claim
+false or unproven. A root-cause fix wider than the symptom's line, a
+behavior-preserving preparatory refactor the change uses, and anything the
+agreement requires are not flagged. A deterministic unused-code tool the
+project already owns (for example `knip` or `vulture`) is wired like any lint
+command, as a `static-analysis` `command` provider; the harness installs no
+such tool.
+
 <a id="project-review-rules"></a>Review packet schema 7 adds `reviewRules`:
 the project-owned `REVIEW.md` at the control project root, read when the AI
 reviewer packet is assembled. A present file yields `{ path: "REVIEW.md", hash,

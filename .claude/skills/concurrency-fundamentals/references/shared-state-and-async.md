@@ -13,8 +13,8 @@
 
 Recipes for the SKILL.md steps. Steps 1–4 and 6 (do not share; make access
 atomic; prevent deadlock by design; async/await is concurrency too; bound
-concurrency) are expanded in sections 1–5 below. Step 5 keeps its full rule
-here because repair tooling depends on its exact wording.
+concurrency; test races) are expanded in sections 1–6 below. Step 5 keeps its
+full rule here because other guidance links to its exact wording.
 
 ## Principle 5 (from SKILL.md): Make operations idempotent and cancellable
 

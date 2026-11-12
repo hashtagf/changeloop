@@ -70,6 +70,6 @@ the remaining gap.
 ## Prove the final claim
 
 The final improvement claim compares the original baseline with the kept state
-through the harness: the `benchmark` provider or the project's own measurement
-tool, never the attempt record alone. Paid or production workloads require
+through the frozen measuring harness: the project's own measurement tool (with
+Change Loop, the `benchmark` provider), never the attempt record alone. Paid or production workloads require
 explicit authority.

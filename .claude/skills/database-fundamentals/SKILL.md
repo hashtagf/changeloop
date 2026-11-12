@@ -1,6 +1,6 @@
 ---
 name: database-fundamentals
-description: "Use when workType includes data or migration, or a requirement touches a schema, query, index, transaction, or persisted file. Skip read-only analysis and measured slowness (use performance-investigation)."
+description: "Use when workType includes data or migration, or a requirement touches a schema, query, index, transaction, or persisted file: 'add a column', N+1, lost update, 'ย้าย schema'. Skip read-only analysis and measured slowness (use performance-investigation)."
 ---
 
 # Database fundamentals
@@ -21,14 +21,15 @@ Keep data correct, migrations rerunnable, and old records readable.
 5. Migrate compatibly: expand → backfill in bounded batches → switch → verify →
    contract. State lock, write-amplification, and rollback risk; old and new
    application versions must overlap during rollout.
-6. Before deleting a field, use `change-impact-analysis`; local callers alone
-   do not establish external compatibility.
+6. Before deleting or renaming a field, find every reader (other services,
+   reports, exports, old app versions); local callers alone do not establish
+   external compatibility (deeper, if installed: `change-impact-analysis`).
 
 ## Harness
 
-Record compatibility, backfill, lock/load risk, rollback, and the provider that
-proves each data claim in the active OpenSpec change. A migration is never an
-implicit deployment or a manual proof step; Build never stages or commits.
+With OpenSpec/Change Loop: record compatibility, backfill, lock/load risk, rollback, and the provider proving each data claim in the change; Build never stages or commits.
+Otherwise: put them in the migration PR; test runs are proof.
+A migration is never an implicit deployment or a manual proof step.
 
 ## References
 

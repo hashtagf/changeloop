@@ -1,6 +1,6 @@
 ---
 name: land
-description: "Apply and archive a proven Change Loop change with explicit Land authority through advance. Preserve target HEAD/index and recover the same transaction. Route standalone Git requests to git-workflow and deployment or publication to delivery-engineering."
+description: "Use when the user explicitly says to land, apply, or archive a proven Change Loop change (/land). Applies through advance, preserves target HEAD/index, and recovers the same transaction. Route standalone Git requests to git-workflow and deployment or publication to delivery-engineering."
 ---
 
 Treat the text after `$land` as the command arguments. Read

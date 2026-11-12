@@ -46,14 +46,17 @@ surface, not a license to add unrelated functionality.
 ## Harness workflow
 
 Planning records the equivalence claim, current-state anchors, affected
-consumers, baseline check, and ordered slices in Change inputs. Revise before
-Build or amend after it starts; never edit the compiled packet directly.
-Implementation and local checks stay in returned Build paths. Golden files
+consumers, baseline check, and ordered slices where the team keeps its plan
+(with Change Loop: Change inputs; revise before Build or amend after it starts;
+never edit the compiled packet directly).
+Implementation and local checks stay in the allowed scope (with Change Loop,
+returned Build paths). Golden files
 are reviewed source changes, not instructions to commit.
 
-The harness verifies tasks and binds provider receipts to the actual workspace.
-A before/after comparison is supporting evidence; it cannot write proof or
-replace a missing required provider. No lead/engineer/qa/retro role dispatch,
+With a harness, it verifies tasks and binds provider receipts to the actual
+workspace; otherwise the project's test run is the record. A before/after
+comparison is supporting evidence; it cannot write proof or replace a missing
+required check. No lead/engineer/qa/retro role dispatch,
 plan.md, tests.md, or secondary baseline ledger is created by this skill.
 
 Read [catalog](catalog.md) for safe moves and

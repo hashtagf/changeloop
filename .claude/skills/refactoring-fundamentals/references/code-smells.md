@@ -48,5 +48,6 @@ extraction.
   correctness. Default to incremental sequencing ([large-scale](large-scale.md)).
 
 A smell that signals a missing concept (Data Clumps, Primitive Obsession) is a
-data-modeling fix; `programming-fundamentals` says what the better shape is.
-Harness receipts, not a tidier diff, prove behavior stayed the same.
+data-modeling fix (deeper reading, if available: `programming-fundamentals`).
+Passing tests (harness receipts under Change Loop), not a tidier diff, prove
+behavior stayed the same.

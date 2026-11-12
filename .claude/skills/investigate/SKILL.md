@@ -1,6 +1,6 @@
 ---
 name: investigate
-description: "Investigate feature feasibility, requirements, bugs, code mechanics, or competing options before Change. Retain user intent and corrections, ask only unresolved material questions, and continue independent research without product edits. Follow harness source binding and resume routes."
+description: "Use before Change to research feasibility, requirements, a bug's mechanics, how or why code works, or recorded rationale without product edits: /investigate, explain this flow, ดูว่าทำงานยังไง. Ask only unresolved material questions. Skip choosing among open product options (brainstorming)."
 ---
 
 Treat the text after `$investigate` as the command arguments. Read

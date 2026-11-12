@@ -97,4 +97,4 @@ A flaky test — passes and fails without a code change — trains the team to i
 
 ## Running the suite in one command
 
-The run that *decides* pass/fail is always the full suite in a single process — not a loop of one invocation per file. Most runners auto-discover everything in one command (`pytest`, `go test ./...`, `cargo test`, `npm test`/`vitest`); monorepos have an aggregator (`pnpm -r test`, `turbo run test`, `nx run-many -t test`). Targeting one file is fine while iterating on a failure; the status-deciding run is the whole suite, once. The harness provider runs that command and binds the receipt.
+The run that *decides* pass/fail is always the full suite in a single process — not a loop of one invocation per file. Most runners auto-discover everything in one command (`pytest`, `go test ./...`, `cargo test`, `npm test`/`vitest`); monorepos have an aggregator (`pnpm -r test`, `turbo run test`, `nx run-many -t test`). Targeting one file is fine while iterating on a failure; the status-deciding run is the whole suite, once. CI runs that command; with Change Loop, the harness provider runs it and binds the receipt.

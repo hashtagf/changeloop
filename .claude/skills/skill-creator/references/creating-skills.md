@@ -1,6 +1,6 @@
 # Creating a skill
 
-Companion to the "Creating a skill" phase of [[skill-creator]]: interview →
+Companion to the "Creating a skill" phase of this skill: interview →
 draft → anatomy → writing style → test cases.
 
 ## Capture intent
@@ -18,8 +18,8 @@ skill type and let the user decide.
 
 Probe edge cases, formats, example files, success criteria, and dependencies
 before drafting test prompts. Research through available authorized tools when
-it reduces the user's burden; host policy and harness dispatch own worker
-execution.
+it reduces the user's burden; host policy (with Change Loop, also harness
+dispatch) owns worker execution.
 
 ## Write the SKILL.md
 
@@ -69,11 +69,12 @@ input → output pairs when that is clearer than prose.
 ## Test cases
 
 Draft realistic positive, negative, and ambiguous cases, reusing settled
-examples and asking only about unresolved consequential behavior. Use
-skill-evaluation before any model runs.
+examples and asking only about unresolved consequential behavior. Before any
+model runs, pin a baseline and define grading (skill-evaluation, if installed).
 
 Save proposed cases in the approved scratch evaluation scope, outside the
-managed catalog, and state observable expectations before running. Read
+managed catalog, and state observable expectations before running. Deeper
+reading, if installed:
 [evaluation procedure](../../skill-evaluation/references/procedure.md) for
 baseline, runner, budget, and grading boundaries.
 

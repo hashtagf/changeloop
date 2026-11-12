@@ -18,6 +18,6 @@ slice, then run the checks invalidated by that slice. Use the repository's real
 formatter and lint configuration; avoid unrelated formatting or cosmetic churn.
 
 Review the resulting behavior and diff size against the request. Record any
-intentional behavior change in the active agreement through its normal revision
-route. Cleanup does not authorize a redesign, blanket comment deletion, history
+intentional behavior change through its normal revision route: the active
+agreement (with OpenSpec/Change Loop) or the issue or PR description. Cleanup does not authorize a redesign, blanket comment deletion, history
 rewriting, or a separate cleanup commit.

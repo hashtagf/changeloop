@@ -1,6 +1,6 @@
 ---
 name: observability-fundamentals
-description: "Use when adding or reviewing logs, metrics, traces, SLOs, or alerts for a runtime failure surface. Skip offline code; use performance-investigation to explain measurements."
+description: "Use when adding or reviewing logs, metrics, traces, dashboards, SLOs, or alerts for a runtime failure surface: 'add logging', 'we can't see this error in prod', noisy alerts. Skip offline code and bug root-causing (debug-fundamentals); use performance-investigation to explain measurements."
 ---
 
 # Observability fundamentals
@@ -25,14 +25,14 @@ signal that answers it. A missing counter is unavailable, never zero.
 6. Bound label cardinality, log volume, sampling, retention, and cost. User
    IDs, request IDs, URLs, and error text are not metric labels.
 
-Load this alongside one primary construction skill only when the change adds
-or materially alters runtime failure behavior.
+Apply this only when the change adds or materially alters runtime failure
+behavior.
 
 ## Harness
 
-Record the changed failure surface, SLI, ownership, and required telemetry
-evidence in OpenSpec; providers verify emitted signals through the harness.
-Configuration presence alone proves nothing; Build never stages or commits.
+With OpenSpec/Change Loop: record the changed failure surface, SLI, ownership, and required telemetry evidence in the change; providers verify emitted signals; Build never stages or commits.
+Otherwise: put them in the PR or runbook; a test asserting the emitted signal is proof.
+Configuration presence alone proves nothing.
 
 ## References
 

@@ -954,6 +954,15 @@ try {
   assert.doesNotMatch(highPrompt, /DIFF-ONLY/);
   assert.match(highPrompt, /Read adjacent code only/);
   assert.match(highPrompt, /Read the full referenced requirements/);
+  // Scope discipline (over-building) is a reviewed criterion at every depth,
+  // minor unless it leaves a claim false, and never against a root-cause fix.
+  for (const prompt of [lowPrompt, highPrompt]) {
+    assert.match(prompt, /Check scope discipline in the changed hunks/);
+    assert.match(prompt, /unrequested abstraction.*dead or unused code.*speculative options/);
+    assert.match(prompt, /guard, retry, or catch that hides a symptom/);
+    assert.match(prompt, /Report these as minor, except as major when they leave a scoped claim false/);
+    assert.match(prompt, /Do not flag a root-cause fix.*preparatory refactor/);
+  }
 
   // Advisory project review rules ride every depth, including diff-only.
   assert.doesNotMatch(highPrompt, /REVIEW\.md/, "no rules, no rules section");

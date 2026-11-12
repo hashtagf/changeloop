@@ -1,13 +1,14 @@
 # UI/UX design-intelligence workflow
 
 Use this when the task needs a searchable product/style/palette direction.
-Use `ux-ui-principles` for the underlying experience decision or usability review;
+Use `ux-ui-principles` (if installed) for the underlying experience decision or usability review;
 do not load the catalog merely because a task touches a user interface.
 
 Catalog rules are design candidates and dated guidance, not universal standards.
 Preserve product constraints and recheck primary sources before consequential
-numeric or conformance claims. Use the reasoning and evidence limits of
-`ux-ui-principles` to assess suggestions that affect the task.
+numeric or conformance claims. Assess suggestions that affect the task against
+observed behavior and cited sources, not catalog authority (deeper reading, if
+installed: `ux-ui-principles`).
 
 ## Workflow
 
@@ -42,7 +43,8 @@ Use `quick-reference.md` for the full rule catalog. Use
 or comparing design-system directions. Use `app-ui-rules.md` for
 native/mobile sign-off.
 
-Record consequential UX decisions and acceptance scenarios in OpenSpec. Hand
-settled visual implementation to `frontend-design`; let browser/accessibility
-providers prove the rendered behavior.
+Record consequential UX decisions and acceptance scenarios in the agreement
+(with OpenSpec: the active change; otherwise: the issue or design doc). Settled
+visual implementation follows (`frontend-design`, if installed); browser and
+accessibility checks or CI output prove the rendered behavior.
 

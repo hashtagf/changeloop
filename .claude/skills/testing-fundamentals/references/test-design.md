@@ -38,7 +38,7 @@ result. Breaking idempotency must make that test fail.
 
 ## Where bugs live
 
-Spend test effort on the contract a caller depends on, the edges of every input range, the failure paths, and any bug that has shipped once. Skip getters, DTOs, generated code, and thin wrappers around well-tested libraries. For a fix, the regression test comes *first* and must fail on the old code (see [reproduction](../../debug-fundamentals/references/reproduction.md)). For a reachable input the requirement never defines, do not invent the assertion — surface it as a gap.
+Spend test effort on the contract a caller depends on, the edges of every input range, the failure paths, and any bug that has shipped once. Skip getters, DTOs, generated code, and thin wrappers around well-tested libraries. For a fix, the regression test comes *first* and must fail on the old code, triggered by the smallest reliable repro (deeper reading, if installed: [reproduction](../../debug-fundamentals/references/reproduction.md)). For a reachable input the requirement never defines, do not invent the assertion — surface it as a gap.
 
 ```py
 def test_orders_over_100_get_discount():        # contract

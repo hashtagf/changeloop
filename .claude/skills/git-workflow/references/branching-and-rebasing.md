@@ -21,8 +21,8 @@ Two viable styles: **trunk-based** (everything lands on the default branch or a
 branch that integrates within a day) needs strong CI and feature-flag
 discipline but keeps integration debt near zero; **feature branches** add a
 review gate and isolated CI at the cost of rot and large diffs. Short-lived
-feature branches are the conservative default, and Change Loop produces one
-short-lived branch per run.
+feature branches are the conservative default (with Change Loop, one
+short-lived branch per run).
 
 ## Interactive rebase
 
@@ -62,8 +62,8 @@ Rebase gives a linear log and clean bisection but rewrites SHAs (so publishing
 needs `--force-with-lease`) and resolves conflicts commit by commit. Merge
 preserves literal history and resolves once, at the cost of a noisy log and a
 graph bisection must navigate. Pick one per branch and never mix the two —
-mixing produces a graph nobody can read. Change Loop rebases onto the
-integration branch during a branch's life and leaves the final integration
+mixing produces a graph nobody can read. A safe default: rebase onto the
+integration branch during a branch's life and leave the final integration
 strategy to the platform policy.
 
 ## `--force-with-lease`

@@ -3,9 +3,9 @@
 Named moves have a tested sequence of micro-steps that never leaves the code
 red. Prefer a named move over a freehand edit, and the IDE/LSP automated version
 when one exists. Run the focused check after every move; if it fails, undo only
-that move and keep the rest. All edits stay in returned Build paths; the harness
-owns verified task status and proof, and this catalog grants no staging,
-commits, branches, or Land.
+that move and keep the rest. This catalog grants no staging, commits,
+branches, or Land; with Change Loop, edits stay in returned Build paths and the
+harness owns verified task status and proof.
 
 | Move | Use when | Mechanics / safety check |
 |---|---|---|

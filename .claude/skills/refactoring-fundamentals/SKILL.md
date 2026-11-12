@@ -1,6 +1,6 @@
 ---
 name: refactoring-fundamentals
-description: "Use when restructuring code without changing behavior: extract, move, rename, split, deduplicate, simplify. Skip bug fixes and new features."
+description: "Use when restructuring code without changing behavior: extract, move, rename, split, deduplicate, simplify, untangle legacy code, รีแฟกเตอร์. Skip bug fixes (debug-fundamentals) and new features (programming-fundamentals)."
 ---
 
 # Refactoring fundamentals
@@ -22,13 +22,13 @@ Change structure, never behavior; one reversible move at a time.
    expand-migrate-contract sequencing. Avoid flag-day rewrites and deleting an
    API before its consumers are compatible.
 6. Stop when the stated obstacle is gone. Leave unrelated cleanup for another
-   change, then hand the target shape to the owning construction skill.
+   change.
 
 ## Harness
 
-Record the equivalence claim, baseline check, ordered slices, and rollback point
-through Change revision/amendment; harness receipts prove the same behavior on the
-exact workspace. No second ledger; Build never stages or commits; only the harness marks tasks complete.
+With OpenSpec/Change Loop: record the claim, baseline, slices, and rollback point via Change revision/amendment; harness receipts prove equivalence; only the harness marks tasks complete; Build never stages or commits.
+Otherwise: record them in the PR description or issue; the green baseline and post-move test run are proof.
+Refactoring grants no authority to commit or branch.
 
 ## References
 

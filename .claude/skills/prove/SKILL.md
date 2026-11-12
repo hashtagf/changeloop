@@ -1,6 +1,6 @@
 ---
 name: prove
-description: "Produce or refresh content-bound evidence for an existing Change Loop change through advance. Use for providers, review, acceptance, stale receipts, or proof repair. Preserve batched repair and selective reruns; proven is not delivered and never grants Land."
+description: "Use when an existing Change Loop change needs evidence produced or refreshed: /prove, providers, review, acceptance, stale receipts, or proof repair. Proven is not delivered and never grants Land. Skip product implementation (build) and read-only status (changes)."
 ---
 
 Treat the text after `$prove` as the command arguments. Read
