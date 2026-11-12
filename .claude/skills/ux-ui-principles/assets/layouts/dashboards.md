@@ -119,3 +119,29 @@ Aligned comparison table/chart | Notes and sources
 
 **Customize:** Substitute real content, labels and permission rules; apply existing
 tokens and the actual data model. Record why this structure serves the user task.
+
+
+
+## D06: Matrix / heatmap (people × skills, risk grid, coverage)
+
+**Task:** See where coverage is thin across two dimensions and act on the exceptions.
+
+**Wide layout:**
+
+```text
+Insight strip (clickable filters): single-point risks | gaps vs target | pending | stale
+Filter bar: search · role · category chips · "highlight gaps" · Grid/List
+Legend (levels + at most one status marker)
+Row header (name, role, row-level flags) | value cells grouped by category | row total
+Column summary row (e.g. people at level ≥3, risk marker)
+```
+
+**Compact behavior:** Switch to a list per row entity (person or skill) showing exceptions first; the grid stays available but is not the default.
+
+**Applicable states:** No data for an entity; filtered empty; pending changes; stale rows; loading; permission-limited columns.
+
+**Avoid / adapt:** Avoid more than two signals per cell, opacity as state, text color flipping across the ramp, and filled "none" cells ([data-visualization.md](../../references/data-visualization.md) heatmap rules).
+
+**Acceptance example:** A team lead identifies, within a minute, which skills depend on one person and who is below their role target, then opens that person's detail from the cell.
+
+**Customize:** Replace the two axes and the level scale with real definitions; set targets from roles; decide which facts belong on headers rather than cells.

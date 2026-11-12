@@ -42,7 +42,8 @@ assumptions, or diff size this digest does not settle.
 | Measured slow, memory growing, or a speedup to prove | `performance-investigation` |
 | Changing an API, schema, config, or shared behavior without knowing who depends on it | `change-impact-analysis` |
 | Refactor: extract, move, rename, split, deduplicate, simplify without changing behavior | `refactoring-fundamentals` first |
-| Scenarios to prove: failing-first tests, test level, doubles | `testing-fundamentals` |
+| Test code: failing-first, level, doubles | `testing-fundamentals` |
+| QA cases/plans, UAT, go/no-go | `test-design` |
 
 ## Construction skills
 

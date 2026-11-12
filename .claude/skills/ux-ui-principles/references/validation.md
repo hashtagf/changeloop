@@ -53,7 +53,8 @@ not stop at a favorable fluctuation or treat correlation as causation.
 
 ## Prioritize findings
 
-Use this skill's operational severity scale:
+Use this skill's operational severity scale (review-loop words map onto it:
+blocker → Critical/High, major → Medium; see [review loop](review-loop.md) §2):
 - **Critical:** Blocks a critical task or can cause serious irreversible harm.
 - **High:** Causes substantial failure or excludes users from a key workflow.
 - **Medium:** Adds avoidable effort/confusion with a workable recovery path.

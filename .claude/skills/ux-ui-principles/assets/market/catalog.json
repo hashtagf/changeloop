@@ -1,0 +1,45 @@
+{
+  "_doc": "Market studies per kind of business: what the category looks like, what design-led sites do differently, the gaps a new page can own, and checked facts of that market. Screenshots live in img/<kind>-<slug>-1.jpg (first screen) and -2.jpg (y=900), git-ignored because they are other businesses' pages; rebuild with `node scripts/market_fetch.js --kind <kind>`. Notes and summaries here are ours. Never reuse a studied site's name, copy or imagery in client work. Facts carry a source and the date checked; re-check anything older than a year before putting it on a page.",
+  "kinds": {
+    "clinic": {
+      "synonyms": ["clinic", "dental", "dentist", "dentistry", "medical", "health", "healthcare", "ทันตกรรม", "คลินิก", "หมอฟัน", "ทำฟัน"],
+      "studied": "2026-11-06",
+      "category_look": "Thai clinics converge: white ground, clinical blue or cyan, a generic Thai sans, promo banners with prices, certificate and award badges in the hero, a stock or doctor cut-out photo, and a floating LINE / Messenger / phone rail. 'Booking' usually means 'contact us', not choosing a slot. Selling points are trust signals (years, branches, JCI, ISO), rarely the visit itself.",
+      "designed_moves": "Design-led sites abroad use a warm or off-white ground (or a dark one), an editorial serif or a calm grotesk, one dark or brand CTA, a real interior or object instead of a smiling stock model, few badges, and copy about the experience ('judgment-free'). Children's practices go loud on purpose (illustration, waves) and still keep one action.",
+      "gaps": [
+        "A warm, calm look (light warm ground, one non-blue accent, the real rooms) instead of clinical blue: no Thai competitor in the sample does it.",
+        "Real slot booking built for families: who is coming, a time with room for everyone, a review step, confirmation on LINE. Competitors stop at a LINE button or 'enquire'.",
+        "Show the first visit step by step and the prices of the common jobs (checkup, scaling, filling), plus social-security coverage; only one Thai site mentions coverage, and it is buried."
+      ],
+      "facts": [
+        {"fact": "Insured persons under Social Security sections 33 and 39 can use up to 900 baht a year for dental care (scaling, filling, extraction, wisdom tooth surgery); no upfront payment at clinics that show the scheme's sticker, otherwise pay and claim. Eligibility: contributions for at least 3 of the 15 months before the visit. The allowance is per calendar year.",
+         "source": "https://www.infoquest.co.th/?p=373092 ; https://www.thaipost.net/one-newspaper/276451/ (news 2022-2023; confirm on sso.go.th)", "checked": "2026-11-06",
+         "use": "State it with the condition 'at participating clinics' and mark the clinic's participation as a placeholder until confirmed."},
+        {"fact": "Dentists' licences can be checked on the Thai Dental Council site (dentalcouncil.or.th); the council recommends clinics display each dentist's name, photo and licence number.",
+         "source": "https://www.dailynews.co.th/news/5127599/ ; https://dentalcouncil.or.th/", "checked": "2026-11-06",
+         "use": "Dentist cards show the licence number (ท. ...) and link to the council site."},
+        {"fact": "Primary upper teeth erupt at about: central incisor 8-12 months, lateral incisor 9-13, first molar 13-19, canine 16-22, second molar 25-33. Lower teeth usually come slightly earlier (lower second molar 23-31).",
+         "source": "American Dental Association, Primary Tooth Development chart (2012), https://www.mouthhealthy.org/all-topics-a-z/eruption-charts", "checked": "2026-11-06",
+         "use": "Eruption infographic; label the ages 'approximate' and credit the ADA."},
+        {"fact": "The American Academy of Pediatric Dentistry asks parents to establish a dental home (regular dentist) for every child no later than 12 months of age; physicians may refer as early as 6 months. Its periodicity guideline places the first examination at the eruption of the first tooth (that guideline not re-read here).",
+         "source": "AAPD Policy on the Dental Home, https://www.aapd.org/media/policies_guidelines/p_dentalhome.pdf (quote: 'establish a dental home no later than 12 months of age'); periodicity guideline https://www.aapd.org/assets/1/7/G_Periodicity.pdf", "checked": "2026-11-06 (dental home policy text read; periodicity guideline not re-read)",
+         "use": "Kids section copy."}
+      ],
+      "sites": [
+        {"slug": "thantakit", "url": "https://www.thantakit.com/", "region": "TH", "verdict": "category", "note": "Lobby photo, all-caps geometric sans, green/gold, LINE and WhatsApp side tab; heritage headline ('since 1945')."},
+        {"slug": "smilesig", "url": "https://www.smilesignature.com/", "region": "TH", "verdict": "category", "note": "Promo carousel with a tooth mascot and the price in the hero, cyan button 'จองคิวทำฟัน', Messenger/phone rail. The category look in one screen."},
+        {"slug": "bidc", "url": "https://www.bangkokdentalcenter.com/", "region": "TH", "verdict": "category", "note": "Building photo plus a wall of seven award logos above the fold; Enquiry button and chat bubble."},
+        {"slug": "smileseasons", "url": "https://www.smileseasons.com/", "region": "TH", "verdict": "category", "note": "Doctor cut-out over a blurred blue clinic, round-number stat strip (10+, 100,000+); the one Thai site that mentions social-security cover."},
+        {"slug": "pacific", "url": "https://www.pacificdentalbangkok.com/", "region": "TH", "verdict": "category", "note": "Stock chair photo, teal/lime, LINE ID in the top bar; targets Japanese patients."},
+        {"slug": "bkkhosp", "url": "https://www.bangkokhospital.com/", "region": "TH", "verdict": "category", "note": "Hospital paediatric dentistry page: navy/red system, stock child-in-chair photo, appointment tab and hotline."},
+        {"slug": "dentologie", "url": "https://www.dentologie.com/", "region": "intl", "verdict": "designed", "note": "Warm grey ground, serif headline with one italic word, 'Book Online' beside 'Call to Book' with the number, then the real interior in a rounded frame."},
+        {"slug": "studiodental", "url": "https://www.studiodental.com/", "region": "intl", "verdict": "designed", "note": "Silence: a full-bleed wooden interior, a small serif wordmark and one black Book Now; no headline."},
+        {"slug": "seattle", "url": "https://www.seattledentalco.com/", "region": "intl", "verdict": "designed", "note": "A still life of toothbrushes instead of a face; light sans, tracked caps, phone-only booking."},
+        {"slug": "alley", "url": "https://www.alleydentaloffice.com.tw/", "region": "intl", "verdict": "designed", "note": "Dusty blue field with a curved mask over a real reception photo; vertical CJK wordmark; calm and local."},
+        {"slug": "toothbar", "url": "https://www.toothbar.com/", "region": "intl", "verdict": "designed", "note": "Dark ground and mint accent in a category of white pages; type-only hero."},
+        {"slug": "superdentists", "url": "https://www.thesuperdentists.com/", "region": "intl", "verdict": "designed", "note": "Children's practice: saturated blue, condensed display, sunburst illustration, a 'is this right for you' quiz bar and a real booking widget."},
+        {"slug": "bitesize", "url": "https://www.bitesizepediatricdentistry.com/", "region": "intl", "verdict": "designed", "note": "Children's practice: teal with wave and blob shapes, a real photo and a video on the first screen."}
+      ]
+    }
+  }
+}

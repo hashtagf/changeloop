@@ -211,6 +211,8 @@
 
 ระบบ SHALL คง SKILL.md ทุกไฟล์ไม่เกิน 700 คำและรวมไม่เกิน 9500 คำ โดย change นี้เพิ่มรวมไม่เกิน 12 คำ
 
+- skill ที่ vendor มาทั้งชุดตาม Requirement vendored-skills อยู่นอก budget รายไฟล์และยอดรวมนี้
+
 #### Scenario: budget ผ่าน
 
 - **WHEN** รัน run-context-budget-tests.sh
@@ -224,7 +226,7 @@
 
 ### Requirement: trigger-descriptions
 
-ระบบ SHALL ให้ description ของ skill ทั้ง 40 ตัว (ที่ไม่ใช่ lifecycle 32 ตัวและ lifecycle 8 ตัว) เป็นประโยค trigger สั้นที่บอกว่าใช้ทำอะไร ใช้เมื่อไร (สถานการณ์และคำที่ผู้ใช้พิมพ์จริง ทั้งไทยและอังกฤษ) และข้ามเมื่อไรโดยชี้ไปที่ skill ข้างเคียงจริง ตามข้อความที่กำหนดด้านล่าง
+ระบบ SHALL ให้ description ของ skill ทั้ง 39 ตัว (ที่ไม่ใช่ lifecycle 31 ตัวและ lifecycle 8 ตัว ไม่นับ skill ที่ vendor มาทั้งชุดตาม Requirement vendored-skills) เป็นประโยค trigger สั้นที่บอกว่าใช้ทำอะไร ใช้เมื่อไร (สถานการณ์และคำที่ผู้ใช้พิมพ์จริง ทั้งไทยและอังกฤษ) และข้ามเมื่อไรโดยชี้ไปที่ skill ข้างเคียงจริง ตามข้อความที่กำหนดด้านล่าง
 
 - lifecycle skill 8 ตัว (change, build, prove, land, investigate, dev, feature, changes) แก้ได้เฉพาะ description; body ไม่ถูกแก้ และ description ของ land ยังมี standalone Git requests to git-workflow
 - description ของ skill ที่ไม่ใช่ lifecycle ≤ 40 คำ ของ lifecycle ≤ 80 คำ ขึ้นต้นด้วย Use ... และมีส่วนข้าม (Skip ... หรือ use <skill> for ...)
@@ -261,7 +263,6 @@
 - skill-suite-auditor: Use when auditing a skills directory as a whole: frontmatter, overlapping or competing triggers, broken references, missing owners, or conflicting instructions. Skip live model comparisons (skill-evaluation) and writing a skill (skill-creator).
 - tailwind-design-system: Use when creating or maintaining shared Tailwind CSS v4 tokens (@theme), component variants, themes or dark mode, or migrating Tailwind v3 to v4. Skip one-off page styling (frontend-design).
 - ui-ux-pro-max: Use when looking up style, color palette, font pairing, product-type, landing, chart, or per-stack UI guidance from the bundled searchable design data. Skip flow or usability decisions (ux-ui-principles) and implementing visuals (frontend-design).
-- ux-ui-principles: Use when designing or reviewing user flows, hierarchy, forms, navigation, UI states, accessibility, or responsive layout, or when users find a screen confusing (ใช้งานยาก, UX). Skip visual styling (frontend-design), tokens (tailwind-design-system), style/palette search (ui-ux-pro-max).
 - change: Use when settled intent must become or amend an OpenSpec agreement through Change Loop: /change, a new behavior request, or new observable behavior found during Build. Preserve approval boundaries; write no product code. Skip open options (brainstorming) and pre-Change research (investigate).
 - build: Use when an approved Change Loop change must be implemented or repaired in its isolated workspace: /build, returned EDIT/REPAIR tasks, or continue approved work. Follow harness task ownership and resume routes; never Land or mutate Git history. Skip agreement edits (change) and evidence refresh (prove).
 - prove: Use when an existing Change Loop change needs evidence produced or refreshed: /prove, providers, review, acceptance, stale receipts, or proof repair. Proven is not delivered and never grants Land. Skip product implementation (build) and read-only status (changes).
@@ -273,7 +274,7 @@
 
 #### Scenario: description ตรงตามข้อความที่กำหนด
 
-- **GIVEN** SKILL.md ของ skill ทั้ง 40 ตัว
+- **GIVEN** SKILL.md ของ skill ทั้ง 39 ตัว
 - **WHEN** อ่าน frontmatter description
 - **THEN** ทุกตัวตรงกับข้อความใน details (ต่างได้เฉพาะเครื่องหมายวรรคตอน) อยู่ในจำนวนคำที่กำหนด และมีส่วนที่บอกว่าเมื่อไรไม่ควรใช้
 
@@ -291,7 +292,7 @@
 
 #### Scenario: description ยาวเกิน
 
-- **WHEN** description ใดเกิน 80 คำ
+- **WHEN** description ของ skill ที่ไม่ได้ vendor มาทั้งชุดเกิน 80 คำ
 - **THEN** skill-catalog.test.mjs fail ระบุชื่อ skill
 
 ### Requirement: minimal-skill-bodies
@@ -302,12 +303,12 @@
 - โครงใหม่: # ชื่อ / จุดยืน 1 บรรทัด / ## Steps (≤ 6 ข้อ ทำตามได้ทันที) / ## Harness (≤ 3 บรรทัด) / ## References (read only when needed) bullet: ชื่อไฟล์ — เมื่อไรควรอ่าน
 - SKILL.md แต่ละไฟล์ในขอบเขต ≤ 250 คำ (ไม่รวม frontmatter) และรวมทุก SKILL.md ≤ 9,500 คำตาม budget เดิม
 - skill ใช้งานได้เมื่อโหลดตัวเดียว (standalone): Steps มีขั้นตอนขั้นต่ำที่ทำได้เองโดยไม่บังคับโหลด skill อื่น การอ้าง skill อื่นเป็นเพียงการอ่านเพิ่มเมื่อมีติดตั้ง และไม่บังคับพึ่งไฟล์ของ harness หรือไฟล์ที่มีเฉพาะใน repo นี้ (tests, docs, release)
-- วรรค Harness เป็นแบบมีเงื่อนไข: With OpenSpec/Change Loop ระบุว่า harness เป็นเจ้าของ lifecycle, receipts, task status และ Build ไม่ stage/commit; Otherwise ระบุที่บันทึกการตัดสินใจหรือ follow-up และสิ่งที่ใช้เป็น proof (CI หรือผลเทสต์); ยกเว้น harness-html-report ที่ต้องมี project Change Loop และ skill ที่ vendor มา (frontend-design, skill-creator, ui-ux-pro-max, tailwind-design-system) ที่แก้เฉพาะ description
+- วรรค Harness เป็นแบบมีเงื่อนไข: With OpenSpec/Change Loop ระบุว่า harness เป็นเจ้าของ lifecycle, receipts, task status และ Build ไม่ stage/commit; Otherwise ระบุที่บันทึกการตัดสินใจหรือ follow-up และสิ่งที่ใช้เป็น proof (CI หรือผลเทสต์); ยกเว้น harness-html-report ที่ต้องมี project Change Loop และ skill ที่ vendor มา (frontend-design, skill-creator, ui-ux-pro-max, tailwind-design-system) ที่แก้เฉพาะ description; skill ที่ vendor มาทั้งชุดตาม Requirement vendored-skills อยู่นอกขอบเขตนี้
 - ข้อความที่ test เดิม pin (เช่น Design deep, cohesive modules; Never ask what you can find; not receipts; never hand-edit; approves intake choices, not a compiled OpenSpec packet) ยังอยู่หรือถูกแทนด้วยถ้อยคำใหม่ที่ test อัปเดตให้ตรงกันในงานเดียวกัน
 
 #### Scenario: ทุก body อยู่ใน budget และใช้โครงเดียวกัน
 
-- **GIVEN** SKILL.md 32 ไฟล์ในขอบเขต
+- **GIVEN** SKILL.md 31 ไฟล์ในขอบเขต
 - **WHEN** นับคำหลัง frontmatter และอ่านหัวข้อ
 - **THEN** ทุกไฟล์ ≤ 250 คำ มีหัวข้อ Steps, Harness, References และ run-context-budget-tests.sh ผ่าน
 
@@ -329,7 +330,7 @@
 
 - references รวมทุก skill ≤ 8,500 บรรทัด (จาก 14,048)
 - วรรค Principle N (from SKILL.md) ที่คัดลอก body ของ SKILL.md มาซ้ำถูกตัดออกทุก bundle
-- reference-governance.mjs ผ่าน: ทุกไฟล์ reachable, ลิงก์และ anchor resolve, ไม่มี block ซ้ำหรือใกล้เคียง (Jaccard ≥ 0.92); ไฟล์เกิน 300 บรรทัดยังมี ## Contents
+- reference-governance.mjs ผ่าน: ทุกไฟล์ reachable, ลิงก์และ anchor resolve, ไม่มี block ซ้ำหรือใกล้เคียง (Jaccard ≥ 0.92); ไฟล์เกิน 300 บรรทัดยังมี ## Contents ยกเว้นใน skill ที่ vendor มาทั้งชุด
 - ไฟล์ที่ถูกลบหรือรวมต้องไม่มีลิงก์เข้าจากไฟล์ที่ shipped
 - debug-fundamentals (332): keep reproduction/root-cause/bisection (pinned); merge instrumentation + distributed-debugging → tools.md ~80
 - performance-investigation (134): keep hillclimb, measurement (pinned)
@@ -348,7 +349,7 @@
 - security-fundamentals (504): authn-authz → ~150; input-and-output → ~140; trust-and-hardening → ~70
 - observability-fundamentals (514): logs-metrics-traces ตัด Principle 1-7 ซ้ำ body เหลือ conventions/recipes/worked example → ~330
 - tailwind-design-system (835): setup-and-migration → ~100; component-patterns → ~150; layout-motion-theming → ~150; utilities-and-advanced → ~80
-- ux-ui-principles (863, 13 ไฟล์ → 10): merge visual + visual-composition → ~90; merge accessibility + accessibility-verification → ~90; merge patterns + experience-patterns → ~110; experience-workflow → ~90; sources → ~40; keep interaction, validation, do-and-dont, change-loop-handoff, upstream (pinned)
+- ux-ui-principles (863, 13 ไฟล์ → 10): merge visual + visual-composition → ~90; merge accessibility + accessibility-verification → ~90; merge patterns + experience-patterns → ~110; experience-workflow → ~90; sources → ~40; keep interaction, validation, do-and-dont, change-loop-handoff, upstream (pinned); แผนนี้เป็นประวัติ: bundle นี้ถูกแทนด้วยสำเนา vendor ตาม Requirement vendored-skills ซึ่งอยู่นอกแผนและยอดบรรทัดนี้
 - ui-ux-pro-max (563): keep search-tool (เอกสารเครื่องมือ), experience-workflow; quick-reference → ~150; app-ui-rules → ~70
 - git-workflow (594): keep pull-requests (pinned); commit-messages → ~120 (คง provenance และ writing link ที่ pin); recovery → ~120; branching-and-rebasing → ~100
 - delivery-engineering (537): keep ci-and-review-repair; pipeline-and-deploy → ~280 (7 principles ย่อเหลือ ~100)
@@ -392,6 +393,34 @@
 - **GIVEN** ตาราง Process/Construction/Delivery ใน fundamentals.md
 - **WHEN** เทียบคำ trigger ของแต่ละแถวกับ description ของ skill ปลายทาง
 - **THEN** ทุกแถวมีคำหลักร่วมกับ description อย่างน้อยหนึ่งคำ และ budget 700 คำผ่าน
+
+#### Scenario: แยกงานทดสอบสองแบบ
+
+- **GIVEN** ตาราง Process skills ใน fundamentals.md
+- **WHEN** อ่านแถวงานทดสอบ
+- **THEN** โค้ดเทสต์อัตโนมัติ (failing-first, level, doubles) ชี้ไป testing-fundamentals และเอกสาร QA (test case/plan, UAT, go/no-go) ชี้ไป test-design
+
+### Requirement: vendored-skills
+
+ระบบ SHALL ส่ง ux-ui-principles และ test-design เป็นสำเนาไม่แก้จาก hashtagf/skills release 0.16.0 (commit 0a295d4e2b2c131f8dc4ee548353952990c3fb2a) โดย SKILL.md, description และ references เป็นของต้นทาง
+
+- คัดลอกเฉพาะไฟล์ที่ Git track ที่ commit นั้น; แต่ละ skill มี VENDORED.md ที่ระบุ release, commit และ path ที่ไม่ส่ง
+- ไม่ส่ง evals/ เพราะไม่มีเส้นทางใน SKILL.md, references หรือ scripts ที่ใช้ตอนรัน; ส่ง assets/ ของ ux-ui-principles เพราะ router และ scripts อ่านตอนรัน
+- ยกเว้นจากเพดานคำและรูปแบบของ description, โครง body (Steps/Harness/References และ 250 คำ), budget 700/9500 คำ, กฎ ## Contents และ missing-reference ที่อยู่ใน assets/ เท่านั้น
+- ยังอยู่ใต้ test คำต้องห้าม, reference-governance.mjs, ลิงก์จาก SKILL.md/references/scripts ที่ต้อง resolve และ evaluation case หนึ่งตัวต่อ skill
+- testing-fundamentals ไม่ถูกแก้
+
+#### Scenario: รายชื่อ vendored ถูกล็อก
+
+- **GIVEN** catalog ที่ส่งมอบ
+- **WHEN** รัน skill-catalog.test.mjs
+- **THEN** มีเฉพาะ ux-ui-principles และ test-design ที่มี VENDORED.md ทั้งคู่ระบุ commit ต้นทาง และไม่มี evals/
+
+#### Scenario: upgrade ลบไฟล์เก่าของฉบับดัดแปลง
+
+- **GIVEN** consumer ที่ manifest บันทึก ux-ui-principles/references/upstream.md หรือ change-loop-handoff.md
+- **WHEN** รัน install.sh ทับ
+- **THEN** ไฟล์เหล่านั้นหายไป และ test-design กับ testing-fundamentals ถูกติดตั้งทั้งคู่
 
 ### Requirement: trigger-evaluation-report
 

@@ -90,6 +90,17 @@ do
   printf '%s\n' ".claude/skills/gridgeist/$retired_grid_file" >> \
     "$TARGET/.foundation/install-manifest.txt"
 done
+# The adapted ux-ui-principles bundle was replaced by a vendored upstream copy;
+# files only the adapted bundle shipped must go on upgrade.
+mkdir -p "$TARGET/.claude/skills/ux-ui-principles/references"
+for retired_ux_file in references/upstream.md references/change-loop-handoff.md \
+  references/experience-workflow.md references/visual.md
+do
+  printf 'previously shipped adapted UX file\n' > \
+    "$TARGET/.claude/skills/ux-ui-principles/$retired_ux_file"
+  printf '%s\n' ".claude/skills/ux-ui-principles/$retired_ux_file" >> \
+    "$TARGET/.foundation/install-manifest.txt"
+done
 printf 'consumer note\n' > "$TARGET/.claude/skills/gridgeist/custom-note.md"
 printf '# Custom consumer UX skill\n' > "$TARGET/.claude/skills/custom-ux/SKILL.md"
 printf '# User project\n' > "$TARGET/CLAUDE.md"
@@ -104,7 +115,30 @@ assert_cmd_zero "installer applies non-interactively" \
   bash "$ROOT/install.sh" "$TARGET" --source "$ROOT" --yes
 assert_file_exists "UX principles skill installed" "$TARGET/.claude/skills/ux-ui-principles/SKILL.md"
 assert_file_exists "UX layout library installed" "$TARGET/.claude/skills/ux-ui-principles/assets/layouts/index.md"
-assert_file_exists "UX source provenance installed" "$TARGET/.claude/skills/ux-ui-principles/references/upstream.md"
+assert_file_contains "UX source provenance installed" \
+  "$TARGET/.claude/skills/ux-ui-principles/VENDORED.md" "0a295d4e2b2c131f8dc4ee548353952990c3fb2a"
+assert_file_exists "UX router script installed" "$TARGET/.claude/skills/ux-ui-principles/scripts/look.py"
+assert_file_absent "UX upstream evals are not shipped" "$TARGET/.claude/skills/ux-ui-principles/evals"
+for retired_ux_file in references/upstream.md references/change-loop-handoff.md \
+  references/experience-workflow.md references/visual.md
+do
+  assert_file_absent "retired adapted UX file removed: $retired_ux_file" \
+    "$TARGET/.claude/skills/ux-ui-principles/$retired_ux_file"
+done
+assert_file_contains "test design skill installed with provenance" \
+  "$TARGET/.claude/skills/test-design/VENDORED.md" "0a295d4e2b2c131f8dc4ee548353952990c3fb2a"
+for vendored_file in ux-ui-principles/SKILL.md test-design/SKILL.md \
+  test-design/scripts/scaffold.py ux-ui-principles/assets/LIBRARY.md
+do
+  assert_cmd_zero "vendored skill file matches the source: $vendored_file" \
+    cmp -s "$ROOT/.claude/skills/$vendored_file" "$TARGET/.claude/skills/$vendored_file"
+done
+assert_cmd_zero "vendored skills install file-for-file with no stale leftovers" \
+  diff -r "$ROOT/.claude/skills/ux-ui-principles" "$TARGET/.claude/skills/ux-ui-principles"
+assert_cmd_zero "test design skill installs file-for-file" \
+  diff -r "$ROOT/.claude/skills/test-design" "$TARGET/.claude/skills/test-design"
+assert_file_exists "testing fundamentals stays installed beside test design" \
+  "$TARGET/.claude/skills/testing-fundamentals/SKILL.md"
 for retired_grid_file in SKILL.md assets/gridgeist.svg assets/gridgeist-small.svg \
   assets/gridgeist.png references/visual-workflow.md references/design-language.md \
   references/review-checklist.md

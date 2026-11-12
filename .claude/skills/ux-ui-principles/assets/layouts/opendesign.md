@@ -2,7 +2,7 @@
 
 Reviewed **2026-10-09**. Two independent projects use the name OpenDesign.
 This catalogue contains **16 site references + 8 template references**, separate
-from the skill's 40 original layout blueprints. Task mappings and adaptation
+from the skill's 43 original layout blueprints. Task mappings and adaptation
 notes below are this skill's proposals, not claims made by the referenced brands.
 
 ## Sources and evidence

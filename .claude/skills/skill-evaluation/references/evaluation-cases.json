@@ -320,6 +320,15 @@
       "status": "not-run"
     },
     {
+      "id": "test-design",
+      "positive": "เขียน test case checklist และแผน UAT ให้ QA สำหรับฟีเจอร์คืนเงิน พร้อมเกณฑ์ go/no-go",
+      "negative": "Write a failing-first Vitest regression for this refund rounding bug.",
+      "expectedSkill": "test-design",
+      "expectedNegativeSkill": "testing-fundamentals",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
       "id": "ui-ux-pro-max",
       "positive": "Search the bundled product, style, palette and typography catalog to compare dashboard design directions.",
       "negative": "Review the user's checkout decisions and error recovery without searching for a visual style.",

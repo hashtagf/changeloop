@@ -17,6 +17,11 @@ Benefits grouped by task | How it works
 Pricing or next step | FAQ | Footer
 ```
 
+**Visual anchors:** Hero = composed product scene; benefits = bento with one
+large working fragment and icon tiles; how it works = SVG process diagram with
+icon nodes; next step = interactive estimate or pricing fragment; FAQ and form
+may be text-led. See [visual-assets](../../references/visual-assets.md) §4.
+
 **Compact behavior:** Stack promise/action before media; keep evidence readable.
 
 **Applicable states:** Loading media; unavailable offer; form error; submission result.
@@ -73,6 +78,11 @@ Limits, fees and renewal | FAQ
 
 **Customize:** Substitute real content, labels and permission rules; apply existing
 tokens and the actual data model. Record why this structure serves the user task.
+
+### M03 additions (from the OpenDesign template study)
+- Tier shape: 3 tiers by default; 2 for individual vs business; 4 only for "scale / enterprise plus". Mark the recommended tier once (accent border or small badge), nowhere else.
+- Comparison table groups rows into 2 to 3 sections (core, collaboration, support, security), sticky header, stacks or scrolls below 768px; every row is something the product really offers.
+- FAQ: 4 to 6 items with `<details><summary>`, no script needed. Prices are plausible for the product, never "$X / month".
 
 ## M04: Campaign landing
 

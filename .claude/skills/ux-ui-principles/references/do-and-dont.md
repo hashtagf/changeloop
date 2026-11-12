@@ -3,8 +3,30 @@
 These are project recommendations synthesized from the existing interaction,
 patterns, visual, accessibility and validation references. They are examples,
 not user-study findings or tested layouts. Consult those references and the
-source register for standards and research claims. Component implementation
-contracts belong in tailwind-design-system, if installed, when that work is requested.
+source register for standards and research claims. Component usage and state
+contracts are in components-usage.md and component-states.md.
+
+## Core pairs (UX decisions)
+
+Apply the relevant pairs; do not turn recommendations into universal layout rules.
+Use them when producing design guidance or reviewing misuse: give each relevant
+pair with its reason and an observable check, and scale the detail to the request
+rather than attaching the whole list to every answer.
+
+| Do | Don't |
+|---|---|
+| Start with the user's task, context and consequence of failure. | Choose a layout solely for its appearance or invent research to justify it. |
+| Connect observed evidence to a concrete behavior and verification step. | List UX laws without showing how they apply to this screen. |
+| Specify relevant loading, empty, error, success and recovery behavior. | Deliver only the happy path or represent an unknown operation outcome as success. |
+| Preserve entered work where appropriate and explain how to recover. | Clear valid inputs on a recoverable error or invite duplicate submission while the outcome is unknown. |
+| Expose important costs, scope and consequences before the user commits. | Hide required fees, ambiguous bulk-action scope or cancellation behind misleading choices. |
+| Adapt templates to real content, permissions, devices and existing conventions. | Copy a public landing page as evidence of a private app's workflow or treat a blueprint as a validated screen. |
+| Verify the critical journey with appropriate keyboard, zoom and language checks. | Infer interactive usability or accessibility conformance from screenshots alone. |
+| Separate observed results, assumptions and proposed research. | Claim conversion lift or usability success without suitable measurements. |
+| Order each page by the role's reason for arriving; one focal point per view. | Give operators, managers and auditors one identical layout, or give every element equal weight. |
+| Match friction to consequence: undo for small actions, check-and-confirm for money, permissions and deletion. | Confirm every click, or let an irreversible payout go through on one unlabeled "OK". |
+| Write real copy with one glossary of object and status names. | Ship lorem ipsum, "Submit" buttons or different names for the same status. |
+| Name a success metric and guardrail for Standard and Critical work. | Decide after launch which metric proves the design worked. |
 
 ## How to use a pair
 

@@ -158,6 +158,24 @@ assert_eq "post-upgrade runtime keeps grounding optional" "null" \
   "$(jq -r '.groundingVersion' \
     "$previous_target/.foundation/runtime/grounded-after-upgrade.json")"
 
+# v3.7.0 shipped the adapted ux-ui-principles bundle. Upgrading from it must
+# leave exactly the vendored copies: no adapted-only file survives, and the new
+# test-design skill arrives beside testing-fundamentals.
+skills_source="$TMP/foundation-3.7.0"
+skills_target="$TMP/skills-upgrade-project"
+mkdir -p "$skills_source" "$skills_target"
+git -C "$ROOT" archive v3.7.0 | tar -x -C "$skills_source"
+assert_cmd_zero "v3.7.0 installs the adapted UX skill" \
+  bash "$skills_source/install.sh" "$skills_target" --source "$skills_source" --yes
+assert_file_exists "v3.7.0 shipped the adapted UX provenance file" \
+  "$skills_target/.claude/skills/ux-ui-principles/references/upstream.md"
+assert_cmd_zero "current release upgrades the v3.7.0 consumer" \
+  bash "$ROOT/install.sh" "$skills_target" --source "$ROOT" --yes
+for skill in ux-ui-principles test-design testing-fundamentals; do
+  assert_cmd_zero "upgraded $skill matches the source with no stale files" \
+    diff -r "$ROOT/.claude/skills/$skill" "$skills_target/.claude/skills/$skill"
+done
+
 # Graph v2 allowed every task in one repository to run in the host session.
 # Graph v3 requires leases once more than one task is ready. An in-flight
 # v3.5.13 change therefore has no per-task lease results to invent on upgrade;

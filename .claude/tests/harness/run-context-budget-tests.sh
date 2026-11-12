@@ -436,7 +436,15 @@ for skill in programming-fundamentals database-fundamentals hexagonal-backend \
     "$ROOT/.claude/skills/$skill/SKILL.md"
 done
 
-all_skill_words="$(wc -w "$ROOT"/.claude/skills/*/SKILL.md | tail -1 | awk '{print $1}')"
+# Vendored skills (a VENDORED.md beside SKILL.md, listed and pinned by
+# skill-catalog.test.mjs) are upstream copies, unchanged by user decision; they
+# load lazily and sit outside the authored inventory and per-skill budgets.
+authored_skills=""
+for skill in "$ROOT"/.claude/skills/*/SKILL.md; do
+  [ -e "$(dirname "$skill")/VENDORED.md" ] || authored_skills="$authored_skills $skill"
+done
+# shellcheck disable=SC2086
+all_skill_words="$(cat $authored_skills | wc -w | tr -d ' ')"
 # Foundation lifecycle bridges and the one-batch intake skill are discovered
 # lazily by Codex; they are not loaded together. Keep every individual skill at
 # 700 words and every representative hot context bounded, while allowing the
@@ -447,7 +455,7 @@ else
   fail_context_budget "complete shipped lazy skill inventory" \
     "$all_skill_words" 9500 words "all shipped SKILL.md bodies"
 fi
-for skill in "$ROOT"/.claude/skills/*/SKILL.md; do
+for skill in $authored_skills; do
   assert_words_at_most "lazy skill budget: $(basename "$(dirname "$skill")")" 700 "$skill"
 done
 

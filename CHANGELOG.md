@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   before this release stay valid. A missing or empty `REVIEW.md` keeps the
   previous behavior. Install and upgrade seed a starter `REVIEW.md` only when
   the project has none, and never overwrite one.
+- `test-design` skill, vendored unchanged from `hashtagf/skills` 0.16.0. It
+  designs and documents what to verify: test cases, test plans, UAT, coverage
+  audits, bug reports, and release go/no-go. `testing-fundamentals` still owns
+  writing automated tests; the router splits the two.
 
 ### Changed
 
@@ -97,6 +101,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   minor findings, major only when they leave a scoped claim false or unproven;
   root-cause fixes and behavior-preserving preparatory refactors are not
   flagged. Packet schema, receipts, and protocol pins are unchanged.
+- `ux-ui-principles` is now the unchanged upstream `hashtagf/skills` 0.16.0
+  copy instead of the adapted bundle, including its runtime `assets/` (about
+  13 MB) and `scripts/`; upstream `evals/` is not shipped. Upgrade removes the
+  adapted bundle's files, including `references/upstream.md` and
+  `references/change-loop-handoff.md`. Each vendored skill records its source
+  in `VENDORED.md`.
 
 ### Removed
 

@@ -1,0 +1,957 @@
+{
+  "_doc": "Seventeen back-office looks. Differences: nav (side | rail | top), tbl (zebra | lines | cards | plain), chip (pill | square | dot), edge (tone | line | strong), density (rowH, fs, pad), radius, font, colour. Used by scripts/backoffice_preview.js. Shape fields: cr (card radius), br (button radius, 999 = pill), fr (field and search radius), nr (nav item radius), av (avatar radius), cb (checkbox radius). Status tones: ok, warn, bad, info (waiting on someone, in progress) and neutral (draft, archived, n/a), each [text, tint] at ≥4.5:1; pending is info, not warn — warn is reserved for needs-attention. compact: the operator density (rowH, fs, pad) shown with backoffice_preview.js --density compact.",
+  "styles": [
+    {
+      "id": "calm",
+      "name": "Calm",
+      "note": "Comfortable density, tone steps instead of lines, one blue-green accent. Default for mixed-skill teams.",
+      "dark": false,
+      "ground": "#f4f6f5",
+      "surface": "#ffffff",
+      "side": "#ffffff",
+      "ink": "#14201c",
+      "muted": "#58655f",
+      "line": "#e2e8e5",
+      "accent": "#0e7a66",
+      "accentInk": "#ffffff",
+      "accentSoft": "#d8efe8",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#58655f",
+        "#efefef"
+      ],
+      "font": "Instrument Sans",
+      "radius": 10,
+      "rowH": 52,
+      "fs": 15,
+      "pad": 32,
+      "edge": "tone",
+      "sideDark": false,
+      "nav": "side",
+      "tbl": "zebra",
+      "chip": "pill",
+      "cr": 16,
+      "br": 12,
+      "fr": 12,
+      "nr": 12,
+      "av": "50%",
+      "cb": 5,
+      "compact": {
+        "rowH": 40,
+        "fs": 14,
+        "pad": 24
+      }
+    },
+    {
+      "id": "dense",
+      "name": "Dense",
+      "note": "Compact rows, 1px lines, small radius; for operators who scan hundreds of rows a day.",
+      "dark": false,
+      "ground": "#f3f4f6",
+      "surface": "#ffffff",
+      "side": "#1c2230",
+      "ink": "#161a23",
+      "muted": "#5a6272",
+      "line": "#d9dde5",
+      "accent": "#2f5fd0",
+      "accentInk": "#ffffff",
+      "accentSoft": "#dfe7fb",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#5a6272",
+        "#efeff0"
+      ],
+      "font": "Inter",
+      "radius": 4,
+      "rowH": 36,
+      "fs": 13,
+      "pad": 20,
+      "edge": "line",
+      "sideDark": true,
+      "nav": "side",
+      "tbl": "lines",
+      "chip": "square",
+      "cr": 4,
+      "br": 4,
+      "fr": 4,
+      "nr": 4,
+      "av": "6px",
+      "cb": 3,
+      "compact": {
+        "rowH": 32,
+        "fs": 13,
+        "pad": 16
+      }
+    },
+    {
+      "id": "night",
+      "name": "Night",
+      "note": "Dark graphite in three steps, amber for what needs a person; for monitoring rooms and long shifts.",
+      "dark": true,
+      "ground": "#14171d",
+      "surface": "#1c2028",
+      "side": "#101318",
+      "ink": "#e8ecf3",
+      "muted": "#97a1b3",
+      "line": "#2b313c",
+      "accent": "#f0a830",
+      "accentInk": "#14171d",
+      "accentSoft": "#3a2f17",
+      "ok": [
+        "#7fd99b",
+        "#173226"
+      ],
+      "warn": [
+        "#f0c36a",
+        "#3a2f17"
+      ],
+      "bad": [
+        "#ff9a93",
+        "#3c1d1b"
+      ],
+      "info": [
+        "#9ec0ff",
+        "#27344c"
+      ],
+      "neutral": [
+        "#97a1b3",
+        "#30343c"
+      ],
+      "font": "Host Grotesk",
+      "radius": 8,
+      "rowH": 44,
+      "fs": 14,
+      "pad": 28,
+      "edge": "tone",
+      "sideDark": true,
+      "nav": "side",
+      "tbl": "zebra",
+      "chip": "pill",
+      "cr": 12,
+      "br": 8,
+      "fr": 8,
+      "nr": 8,
+      "av": "50%",
+      "cb": 4,
+      "compact": {
+        "rowH": 32,
+        "fs": 13,
+        "pad": 20
+      }
+    },
+    {
+      "id": "contrast",
+      "name": "High contrast",
+      "note": "Strong borders, large targets, text on every status; for accessibility-first and shared-screen environments.",
+      "dark": false,
+      "ground": "#ffffff",
+      "surface": "#ffffff",
+      "side": "#ffffff",
+      "ink": "#0a0a0a",
+      "muted": "#3a3a3a",
+      "line": "#0a0a0a",
+      "accent": "#0a3fd1",
+      "accentInk": "#ffffff",
+      "accentSoft": "#dfe7ff",
+      "ok": [
+        "#0b5a2c",
+        "#d9f2e1"
+      ],
+      "warn": [
+        "#6b3f00",
+        "#ffe9b8"
+      ],
+      "bad": [
+        "#8a0f0a",
+        "#ffd9d6"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#3a3a3a",
+        "#eeeeee"
+      ],
+      "font": "Atkinson Hyperlegible",
+      "radius": 2,
+      "rowH": 56,
+      "fs": 16,
+      "pad": 32,
+      "edge": "strong",
+      "sideDark": false,
+      "nav": "side",
+      "tbl": "lines",
+      "chip": "pill",
+      "cr": 2,
+      "br": 2,
+      "fr": 2,
+      "nr": 2,
+      "av": "2px",
+      "cb": 2,
+      "compact": {
+        "rowH": 44,
+        "fs": 15,
+        "pad": 24
+      }
+    },
+    {
+      "id": "ledger",
+      "name": "Ledger",
+      "note": "Warm paper, serif headings, zebra rows and a top bar; reads like an accounting book.",
+      "dark": false,
+      "ground": "#f3eee2",
+      "surface": "#fbf8ef",
+      "side": "#fbf8ef",
+      "ink": "#231b12",
+      "muted": "#6a5d4b",
+      "line": "#ddd3bd",
+      "accent": "#7a3b1d",
+      "accentInk": "#fff8ee",
+      "accentSoft": "#ecd9c4",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#6a5d4b",
+        "#ece9e0"
+      ],
+      "font": "Newsreader",
+      "radius": 3,
+      "rowH": 44,
+      "fs": 15,
+      "pad": 32,
+      "edge": "line",
+      "sideDark": false,
+      "nav": "top",
+      "tbl": "zebra",
+      "chip": "square",
+      "cr": 4,
+      "br": 2,
+      "fr": 2,
+      "nr": 2,
+      "av": "4px",
+      "cb": 2,
+      "compact": {
+        "rowH": 32,
+        "fs": 14,
+        "pad": 24
+      }
+    },
+    {
+      "id": "slate",
+      "name": "Slate",
+      "note": "Cool blue-grey SaaS with a slim icon rail and indigo accent.",
+      "dark": false,
+      "ground": "#eef1f6",
+      "surface": "#ffffff",
+      "side": "#ffffff",
+      "ink": "#141a2b",
+      "muted": "#586079",
+      "line": "#dde2ec",
+      "accent": "#4457d6",
+      "accentInk": "#ffffff",
+      "accentSoft": "#e1e5fb",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#586079",
+        "#efeff0"
+      ],
+      "font": "Plus Jakarta Sans",
+      "radius": 9,
+      "rowH": 48,
+      "fs": 14,
+      "pad": 28,
+      "edge": "tone",
+      "sideDark": false,
+      "nav": "rail",
+      "tbl": "plain",
+      "chip": "pill",
+      "cr": 14,
+      "br": 999,
+      "fr": 10,
+      "nr": 12,
+      "av": "50%",
+      "cb": 5,
+      "compact": {
+        "rowH": 36,
+        "fs": 13,
+        "pad": 20
+      }
+    },
+    {
+      "id": "forest",
+      "name": "Forest",
+      "note": "Deep green sidebar on cream, amber for the thing to do next.",
+      "dark": false,
+      "ground": "#f6f2e6",
+      "surface": "#fffdf6",
+      "side": "#16382a",
+      "ink": "#1a2a21",
+      "muted": "#59685e",
+      "line": "#e1dccb",
+      "accent": "#d98a14",
+      "accentInk": "#1a1206",
+      "accentSoft": "#f6e2b8",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#59685e",
+        "#efeee7"
+      ],
+      "font": "Hanken Grotesk",
+      "radius": 8,
+      "rowH": 48,
+      "fs": 15,
+      "pad": 32,
+      "edge": "tone",
+      "sideDark": true,
+      "nav": "side",
+      "tbl": "zebra",
+      "chip": "pill",
+      "cr": 14,
+      "br": 10,
+      "fr": 10,
+      "nr": 14,
+      "av": "50%",
+      "cb": 5,
+      "compact": {
+        "rowH": 36,
+        "fs": 14,
+        "pad": 24
+      }
+    },
+    {
+      "id": "harbor",
+      "name": "Harbor",
+      "note": "Navy top bar over white content, teal accent and square status tags.",
+      "dark": false,
+      "ground": "#f4f7fa",
+      "surface": "#ffffff",
+      "side": "#10264a",
+      "ink": "#0f1d33",
+      "muted": "#4e5d75",
+      "line": "#dbe3ec",
+      "accent": "#0f8f8a",
+      "accentInk": "#ffffff",
+      "accentSoft": "#d7efee",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#4e5d75",
+        "#eeeff1"
+      ],
+      "font": "IBM Plex Sans",
+      "radius": 3,
+      "rowH": 44,
+      "fs": 14,
+      "pad": 28,
+      "edge": "line",
+      "sideDark": true,
+      "nav": "top",
+      "tbl": "lines",
+      "chip": "square",
+      "cr": 3,
+      "br": 3,
+      "fr": 3,
+      "nr": 3,
+      "av": "4px",
+      "cb": 3,
+      "compact": {
+        "rowH": 32,
+        "fs": 13,
+        "pad": 20
+      }
+    },
+    {
+      "id": "paper",
+      "name": "Paper",
+      "note": "Newsprint tones, hairlines, mono figures and a terracotta accent; quiet and exact.",
+      "dark": false,
+      "ground": "#ede8dc",
+      "surface": "#f7f3e8",
+      "side": "#f7f3e8",
+      "ink": "#1b1712",
+      "muted": "#5f564a",
+      "line": "#d3cab6",
+      "accent": "#b4472a",
+      "accentInk": "#fff6ee",
+      "accentSoft": "#efd8cd",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#5f564a",
+        "#e8e4d9"
+      ],
+      "font": "Instrument Sans",
+      "radius": 0,
+      "rowH": 40,
+      "fs": 14,
+      "pad": 28,
+      "edge": "line",
+      "sideDark": false,
+      "nav": "top",
+      "tbl": "lines",
+      "chip": "dot",
+      "cr": 0,
+      "br": 0,
+      "fr": 0,
+      "nr": 0,
+      "av": "0",
+      "cb": 0,
+      "compact": {
+        "rowH": 32,
+        "fs": 13,
+        "pad": 20
+      }
+    },
+    {
+      "id": "mint",
+      "name": "Mint",
+      "note": "Soft mint, generous radius and pill tags; friendly for customer-facing staff.",
+      "dark": false,
+      "ground": "#eef7f3",
+      "surface": "#ffffff",
+      "side": "#ffffff",
+      "ink": "#10231d",
+      "muted": "#53695f",
+      "line": "#d9ebe3",
+      "accent": "#12a37a",
+      "accentInk": "#ffffff",
+      "accentSoft": "#d3f0e6",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#53695f",
+        "#eef0ef"
+      ],
+      "font": "Figtree",
+      "radius": 16,
+      "rowH": 52,
+      "fs": 15,
+      "pad": 32,
+      "edge": "tone",
+      "sideDark": false,
+      "nav": "rail",
+      "tbl": "cards",
+      "chip": "pill",
+      "cr": 26,
+      "br": 999,
+      "fr": 18,
+      "nr": 999,
+      "av": "50%",
+      "cb": 7,
+      "compact": {
+        "rowH": 40,
+        "fs": 14,
+        "pad": 24
+      }
+    },
+    {
+      "id": "graphite",
+      "name": "Graphite",
+      "note": "Dark neutral, sharp corners, mono data and one lime signal; for operations.",
+      "dark": true,
+      "ground": "#121416",
+      "surface": "#1a1d20",
+      "side": "#0d0f10",
+      "ink": "#e6e9ec",
+      "muted": "#8f979f",
+      "line": "#2a2e33",
+      "accent": "#b6f23a",
+      "accentInk": "#101304",
+      "accentSoft": "#2a3414",
+      "ok": [
+        "#7fd99b",
+        "#173226"
+      ],
+      "warn": [
+        "#f0c36a",
+        "#3a2f17"
+      ],
+      "bad": [
+        "#ff9a93",
+        "#3c1d1b"
+      ],
+      "info": [
+        "#9ec0ff",
+        "#263145"
+      ],
+      "neutral": [
+        "#989fa7",
+        "#2e3134"
+      ],
+      "font": "Geist",
+      "radius": 2,
+      "rowH": 40,
+      "fs": 13,
+      "pad": 24,
+      "edge": "line",
+      "sideDark": true,
+      "nav": "rail",
+      "tbl": "lines",
+      "chip": "square",
+      "cr": 2,
+      "br": 2,
+      "fr": 2,
+      "nr": 2,
+      "av": "2px",
+      "cb": 2,
+      "compact": {
+        "rowH": 32,
+        "fs": 13,
+        "pad": 16
+      }
+    },
+    {
+      "id": "sunrise",
+      "name": "Sunrise",
+      "note": "Warm light, peach and orange accent, rounded cards and card rows.",
+      "dark": false,
+      "ground": "#fbf1e8",
+      "surface": "#fffaf5",
+      "side": "#fffaf5",
+      "ink": "#2a1a10",
+      "muted": "#6f5848",
+      "line": "#f0dccb",
+      "accent": "#e0561b",
+      "accentInk": "#ffffff",
+      "accentSoft": "#fbdcc8",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#6f5848",
+        "#f0eae5"
+      ],
+      "font": "Bricolage Grotesque",
+      "radius": 12,
+      "rowH": 52,
+      "fs": 15,
+      "pad": 32,
+      "edge": "tone",
+      "sideDark": false,
+      "nav": "side",
+      "tbl": "cards",
+      "chip": "pill",
+      "cr": 22,
+      "br": 999,
+      "fr": 16,
+      "nr": 16,
+      "av": "50%",
+      "cb": 6,
+      "compact": {
+        "rowH": 40,
+        "fs": 14,
+        "pad": 24
+      }
+    },
+    {
+      "id": "mono",
+      "name": "Mono",
+      "note": "Black on white, no colour accent, typographic and exact; colour only where status needs it.",
+      "dark": false,
+      "ground": "#ffffff",
+      "surface": "#ffffff",
+      "side": "#ffffff",
+      "ink": "#0b0b0b",
+      "muted": "#555555",
+      "line": "#d9d9d9",
+      "accent": "#0b0b0b",
+      "accentInk": "#ffffff",
+      "accentSoft": "#ececec",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#555555",
+        "#eeeeee"
+      ],
+      "font": "Libre Franklin",
+      "radius": 0,
+      "rowH": 40,
+      "fs": 14,
+      "pad": 28,
+      "edge": "line",
+      "sideDark": false,
+      "nav": "top",
+      "tbl": "lines",
+      "chip": "dot",
+      "cr": 0,
+      "br": 0,
+      "fr": 0,
+      "nr": 0,
+      "av": "0",
+      "cb": 0,
+      "compact": {
+        "rowH": 32,
+        "fs": 13,
+        "pad": 20
+      }
+    },
+    {
+      "id": "plum",
+      "name": "Plum",
+      "note": "Deep purple sidebar on lavender with a magenta accent.",
+      "dark": false,
+      "ground": "#f2eff8",
+      "surface": "#ffffff",
+      "side": "#2a1740",
+      "ink": "#1d1530",
+      "muted": "#5d5275",
+      "line": "#e1dbee",
+      "accent": "#c2358f",
+      "accentInk": "#ffffff",
+      "accentSoft": "#f4d6e8",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#5d5275",
+        "#efeff1"
+      ],
+      "font": "Outfit",
+      "radius": 12,
+      "rowH": 48,
+      "fs": 15,
+      "pad": 30,
+      "edge": "tone",
+      "sideDark": true,
+      "nav": "side",
+      "tbl": "plain",
+      "chip": "pill",
+      "cr": 18,
+      "br": 999,
+      "fr": 12,
+      "nr": 14,
+      "av": "50%",
+      "cb": 5,
+      "compact": {
+        "rowH": 36,
+        "fs": 14,
+        "pad": 22
+      }
+    },
+    {
+      "id": "enterprise",
+      "name": "Enterprise",
+      "note": "Classic banded header, lined tables and a restrained blue; familiar to large organisations.",
+      "dark": false,
+      "ground": "#f0f2f5",
+      "surface": "#ffffff",
+      "side": "#e7ebf0",
+      "ink": "#1b2330",
+      "muted": "#556070",
+      "line": "#cfd6df",
+      "accent": "#1f5fbf",
+      "accentInk": "#ffffff",
+      "accentSoft": "#dce7f8",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#556070",
+        "#eff0f1"
+      ],
+      "font": "Public Sans",
+      "radius": 4,
+      "rowH": 40,
+      "fs": 14,
+      "pad": 24,
+      "edge": "line",
+      "sideDark": false,
+      "nav": "side",
+      "tbl": "lines",
+      "chip": "square",
+      "cr": 4,
+      "br": 4,
+      "fr": 4,
+      "nr": 4,
+      "av": "4px",
+      "cb": 3,
+      "compact": {
+        "rowH": 32,
+        "fs": 13,
+        "pad": 16
+      }
+    },
+    {
+      "id": "sand",
+      "name": "Sand",
+      "note": "Sand ground, charcoal sidebar and a copper accent; warm but professional.",
+      "dark": false,
+      "ground": "#f1ebe0",
+      "surface": "#fbf8f1",
+      "side": "#2b2724",
+      "ink": "#231f1a",
+      "muted": "#66604f",
+      "line": "#ddd4c3",
+      "accent": "#b8651e",
+      "accentInk": "#ffffff",
+      "accentSoft": "#f1dcc6",
+      "ok": [
+        "#17653b",
+        "#dff3e6"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#8c1d18",
+        "#f9dcda"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#66604f",
+        "#ece9e2"
+      ],
+      "font": "Albert Sans",
+      "radius": 6,
+      "rowH": 46,
+      "fs": 15,
+      "pad": 30,
+      "edge": "tone",
+      "sideDark": true,
+      "nav": "side",
+      "tbl": "zebra",
+      "chip": "pill",
+      "cr": 10,
+      "br": 8,
+      "fr": 8,
+      "nr": 8,
+      "av": "10px",
+      "cb": 4,
+      "compact": {
+        "rowH": 34,
+        "fs": 14,
+        "pad": 22
+      }
+    },
+    {
+      "id": "canopy",
+      "name": "Canopy",
+      "note": "Deep forest-green primary on warm off-white, light sidebar with pale-green active item; Manrope display over DM Sans. From the Canopy MongoDB-MCP dashboard.",
+      "dark": false,
+      "ground": "#f8f9f6",
+      "surface": "#ffffff",
+      "side": "#ffffff",
+      "ink": "#253a33",
+      "muted": "#5a6660",
+      "line": "#e5e9e2",
+      "accent": "#214f3e",
+      "accentInk": "#ffffff",
+      "accentSoft": "#edf3e9",
+      "ok": [
+        "#14663a",
+        "#dcf2e4"
+      ],
+      "warn": [
+        "#7a4b00",
+        "#fbecc8"
+      ],
+      "bad": [
+        "#a12a22",
+        "#fbe0de"
+      ],
+      "info": [
+        "#1d4f91",
+        "#e2ecf9"
+      ],
+      "neutral": [
+        "#5a6660",
+        "#f0f1f1"
+      ],
+      "font": "DM Sans",
+      "radius": 8,
+      "rowH": 44,
+      "fs": 13,
+      "pad": 24,
+      "edge": "line",
+      "sideDark": false,
+      "nav": "side",
+      "tbl": "lines",
+      "chip": "pill",
+      "cr": 12,
+      "br": 8,
+      "fr": 8,
+      "nr": 10,
+      "av": "50%",
+      "cb": 4,
+      "compact": {
+        "rowH": 32,
+        "fs": 13,
+        "pad": 16
+      }
+    }
+  ]
+}

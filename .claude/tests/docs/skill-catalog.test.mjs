@@ -11,14 +11,29 @@ import { auditCatalog } from "../../skills/skill-suite-auditor/scripts/audit.mjs
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const catalog = join(root, ".claude/skills");
 const helper = join(catalog, "skill-suite-auditor/scripts/audit.mjs");
+// Skills copied unchanged from an upstream release. Their bodies, descriptions,
+// and reference layout are upstream's; only the guards that protect Change Loop
+// authority (forbidden instructions, audit outside assets/) still bind them.
+const VENDORED = new Set(["ux-ui-principles", "test-design"]);
+const VENDORED_SOURCE = "0a295d4e2b2c131f8dc4ee548353952990c3fb2a";
+
+test("vendored skills record their upstream release and nothing else claims to be vendored", () => {
+  const marked = readdirSync(catalog).filter(name => existsSync(join(catalog, name, "VENDORED.md"))).sort();
+  assert.deepEqual(marked, [...VENDORED].sort());
+  for (const name of VENDORED) {
+    const note = readFileSync(join(catalog, name, "VENDORED.md"), "utf8");
+    assert.match(note, new RegExp(VENDORED_SOURCE), name);
+    assert.match(note, /release 0\.16\.0/, name);
+    assert.equal(existsSync(join(catalog, name, "evals")), false, `${name}: upstream evals are not shipped`);
+  }
+});
 
 test("UX skill adoption ships portable resources and retires the grid style skill", () => {
   assert.ok(existsSync(join(catalog, "ux-ui-principles/SKILL.md")));
   assert.equal(existsSync(join(catalog, "gridgeist")), false);
-  const entry = readFileSync(join(catalog, "ux-ui-principles/SKILL.md"), "utf8");
-  assert.ok(entry.split(/\s+/).length <= 700, "entry must fit the lazy skill budget");
-  const upstream = readFileSync(join(catalog, "ux-ui-principles/references/upstream.md"), "utf8");
-  assert.match(upstream, /c2a7b6dffe6ac795886f81ce936a9c536aadd5b3/);
+  for (const runtime of ["scripts/look.py", "scripts/_library.py", "assets/LIBRARY.md",
+    "assets/page-spec.md", "assets/layouts/index.md", "assets/directions/directions.json"])
+    assert.ok(existsSync(join(catalog, "ux-ui-principles", runtime)), runtime);
   const layouts = JSON.parse(readFileSync(join(catalog,
     "ux-ui-principles/assets/layouts/opendesign-catalog.json"), "utf8"));
   assert.ok(layouts && typeof layouts === "object");
@@ -34,7 +49,7 @@ test("long skill references provide linked contents for selective reading", () =
     file.endsWith(".md") && file.split(/[\\/]/).includes("references"));
   for (const file of files) {
     const body = readFileSync(join(catalog, file), "utf8");
-    if (body.split(/\r?\n/).length <= 300) continue;
+    if (VENDORED.has(file.split(/[\\/]/)[0]) || body.split(/\r?\n/).length <= 300) continue;
     const contents = body.match(/^## (?:Contents|Table of contents)\r?\n([\s\S]*?)(?=^## |$(?![\s\S]))/m);
     assert.ok(contents, `${file}: references over 300 lines need contents`);
     assert.match(contents[1], /^- \[[^\]]+\]\(#[^)]+\)/m,
@@ -184,7 +199,12 @@ test("audit CLI works outside the source checkout and fails honestly on unavaila
 
 test("shipped catalog and proposed routing cases cover the same skills without claiming model runs", () => {
   const result = auditCatalog(catalog);
-  assert.deepEqual(result.findings, []);
+  // Upstream assets use skill-root-relative and site-absolute links; every
+  // route from SKILL.md, references/, and scripts/ must still resolve.
+  assert.deepEqual(result.findings.filter(f => {
+    const [skill, area] = String(f.path).split(/[\\/]/);
+    return !(VENDORED.has(skill) && area === "assets" && f.code === "missing-reference");
+  }), []);
   const cases = JSON.parse(readFileSync(join(catalog, "skill-evaluation/references/evaluation-cases.json"), "utf8"));
   assert.equal(cases.execution, "not-run");
   const names = result.skills.map(skill => skill.name).sort();
@@ -199,8 +219,9 @@ test("shipped catalog and proposed routing cases cover the same skills without c
   }
   for (const { name, description } of result.skills) {
     const words = description.split(/\s+/).length;
-    assert.ok(words <= 80, `${name}: description is ${words} words; it must stay selection metadata (≤ 80)`);
     assert.doesNotMatch(description, /Must always apply|any prose surface|Use any MCP tool/i, name);
+    if (VENDORED.has(name)) continue;
+    assert.ok(words <= 80, `${name}: description is ${words} words; it must stay selection metadata (≤ 80)`);
   }
   const map = readFileSync(join(catalog, "skill-suite-auditor/references/pstack-adoption.md"), "utf8");
   const sources = [...map.matchAll(/^\| `([a-z-]+)` \|/gm)].map(match => match[1]);
@@ -441,7 +462,8 @@ test("no skill or reference reintroduces per-step commit or unapproved-action in
 test("simplified skill bodies keep one shape and stay short", () => {
   for (const [file, body] of skillMarkdown()) {
     const parts = file.split(/[\\/]/);
-    if (parts.length !== 2 || parts[1] !== "SKILL.md" || LIFECYCLE_SKILLS.has(parts[0])) continue;
+    if (parts.length !== 2 || parts[1] !== "SKILL.md" || LIFECYCLE_SKILLS.has(parts[0]) ||
+      VENDORED.has(parts[0])) continue;
     const skill = parts[0];
     const content = body.replace(/^---[\s\S]*?\n---\n/, "");
     const words = content.split(/\s+/).filter(Boolean).length;
