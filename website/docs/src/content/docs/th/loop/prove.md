@@ -61,6 +61,7 @@ review prose แทนผล behavior ที่หาย Prototype artifact ใ�
 ของ integration อาจบังคับ security, compatibility, resilience และ signed external
 evidence ตาม agreement
 
-`proof readiness`, `proof advance`, provider, receipt และ authority command ยังใช้
-ได้ในฐานะ advanced surface ใต้ `help --all` Agent ปกติไม่ประกอบเอง `DONE` ที่
+`proof readiness` และ `proof advance` เป็น primitive ภายในที่ `advance` รันให้ ส่วน
+provider, receipt และ authority command ยังเป็น advanced surface ใต้ `help --all`
+Agent ปกติไม่ประกอบเอง `DONE` ที่
 `proven` ไม่ได้ให้อำนาจ Land

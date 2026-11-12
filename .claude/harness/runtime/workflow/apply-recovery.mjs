@@ -46,7 +46,7 @@ export function targetHeadMovedDecision({
       {
         id: "sync",
         outcome: `Replay ${multiRepository ? "every moved repository sandbox" : "the sandbox"} onto the current commit and re-prove it: 'claude-foundation sandbox sync ${
-          changeId}', then 'claude-foundation proof run ${changeId}'.`
+          changeId}', then 'claude-foundation advance ${changeId} --through proven'.`
       },
       {
         id: "inspect",

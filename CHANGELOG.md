@@ -40,6 +40,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking (CLI surface):** primitives that `advance` already performs are
+  now `internal`: `proof readiness`, `proof advance`, `proof run`,
+  `proof collect`, `evidence detect`, `evidence init`, `evidence doctor`, and
+  `budget checkpoint`. They are hidden from `help`, the default `describe`
+  listing, and the public CLI tables, but still dispatch (and answer
+  `--help`/`describe <name>`), so existing scripts keep working. Every runtime
+  next/resume/recovery route that named one (receipt validity recovery,
+  readiness `verify`/retry choices, wiring actions, waiver output, Build
+  completion, verification plans, update advisories, budget and blocker
+  recovery, the moved-target Land option) now names
+  `advance <change> --through proven|archived` or `advance <change> --inspect`.
+  The public command golden fixture drops from 76 to 68 commands.
 - Each harness command asks Git less: repeated `git status`, `git ls-files
   -s`, and `git rev-parse HEAD` listings of an unchanged workspace within one
   process are answered from a per-process memo instead of a new spawn. The
@@ -113,6 +125,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Blocker or major findings from a human review now must be closed. The next
+  review, human or AI, full or delta, carries them as `closureFindings` and
+  must list them in `verifiedFindingIds` (or fail with a blocker or major
+  finding for what remains). Before, closure was owed only to AI findings, so
+  a later review could pass without checking the human blocker, and a
+  deterministic repair closure could pass over it. AI-only review chains are
+  unchanged.
 - A review receipt whose finding counts were edited after it was recorded
   (for example `review.findings.verified` raised to 99) no longer reads valid:
   the counts must match the finding rows and verified IDs the dispatched

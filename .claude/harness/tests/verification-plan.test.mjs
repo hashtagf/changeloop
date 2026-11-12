@@ -50,10 +50,10 @@ test("risk routing preserves high assurance across security and multi-repo shape
 
 test("prove uses one boundary command and names the probes it replaces", () => {
   const plan = verificationPlanValue(packet(), "prove", (value) => `digest:${value.phase}`);
-  assert.equal(plan.execution.command, "claude-foundation proof advance change");
+  assert.equal(plan.execution.command, "claude-foundation advance change --through proven");
   assert.ok(plan.execution.includes.includes("receipt-reuse"));
   assert.ok(plan.execution.avoidBefore.includes(
-    "claude-foundation proof readiness change"));
+    "claude-foundation advance change --inspect"));
   assert.equal(plan.evidence.measurement, "provider-validity");
   assert.deepEqual(plan.evidence.reusable, ["test"]);
   assert.deepEqual(plan.evidence.required, ["static"]);
@@ -84,10 +84,10 @@ test("build defers its single readiness check until tasks are complete", () => {
   const pending = verificationPlanValue(packet({ pendingTaskCount: 2 }), "build");
   assert.equal(pending.execution.command, null);
   assert.equal(pending.execution.deferredCommand,
-    "claude-foundation proof readiness change");
+    "claude-foundation advance change --inspect");
   const complete = verificationPlanValue(packet({ pendingTaskCount: 0 }), "build");
   assert.equal(complete.execution.command,
-    "claude-foundation proof readiness change");
+    "claude-foundation advance change --inspect");
   assert.equal(complete.execution.deferredCommand, null);
 });
 

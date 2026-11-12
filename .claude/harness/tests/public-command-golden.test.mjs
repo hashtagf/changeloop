@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
@@ -39,11 +39,42 @@ test("golden fixture freezes every public host and CLI command contract", () => 
 
 test("the frozen public surface includes the read-only cross-change rollups", () => {
   const rows = publicCliRows();
-  assert.equal(rows.length, 76);
+  assert.equal(rows.length, 68);
   for (const name of ["outcomes", "lessons", "package"])
     assert.deepEqual(rows.filter((row) => row.name === name).map(({ kind, idempotent }) =>
       ({ kind, idempotent })), [{ kind: "read", idempotent: true }], name);
   assert.deepEqual(rows.filter((row) => row.name === "preview").map(({ kind }) => kind), ["write"]);
+});
+
+test("runtime routes never name an internal primitive that advance performs", () => {
+  // `sandbox inspect` (preserved-sandbox inspection) and `proof audit` (an
+  // archived change's retained evidence) are read-only diagnostics with no
+  // `advance` equivalent; every other internal command is reached through
+  // `advance`, so no emitted route may name it.
+  const diagnostic = new Set(["sandbox inspect", "proof audit"]);
+  const internal = registry.commands.filter((row) => row.audience === "internal" &&
+    !diagnostic.has(row.name)).map((row) => row.name);
+  assert.ok(internal.includes("proof run") && internal.includes("evidence init"));
+  const walk = (directory) => readdirSync(directory, { withFileTypes: true }).flatMap((entry) =>
+    entry.isDirectory() ? walk(resolve(directory, entry.name))
+      : entry.name.endsWith(".mjs") ? [resolve(directory, entry.name)] : []);
+  const offenders = [];
+  for (const file of walk(resolve(root, ".claude/harness/runtime"))) {
+    const source = readFileSync(file, "utf8");
+    for (const name of internal)
+      if (new RegExp(`claude-foundation ${name}\\b`).test(source))
+        offenders.push(`${file.slice(root.length + 1)}: ${name}`);
+  }
+  assert.deepEqual(offenders, []);
+});
+
+test("describe lists only public commands but still describes an internal one by name", () => {
+  const run = (...args) => execFileSync("bash", ["./cli.sh", "describe", ...args], {
+    cwd: root, encoding: "utf8", env: { ...process.env, CLAUDE_FOUNDATION_PROJECT: root }
+  });
+  const listed = JSON.parse(run("--json")).filter((row) => !row.surface).map((row) => row.name);
+  assert.deepEqual(listed.sort(), publicCliRows().map((row) => row.name).sort());
+  assert.equal(JSON.parse(run("proof run", "--json")).audience, "internal");
 });
 
 test("every frozen public command retains a successful non-mutating help route", () => {

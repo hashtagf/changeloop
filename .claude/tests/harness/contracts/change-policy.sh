@@ -19,7 +19,11 @@ assert_not_contains "--help is not treated as a change id" \
 describe_one="$(node .claude/harness/foundation.mjs describe packet --json 2>&1)"
 assert_contains "describe emits the registry entry as JSON" "$describe_one" '"name": "packet"'
 describe_all="$(node .claude/harness/foundation.mjs describe 2>&1)"
-assert_contains "describe lists the whole surface" "$describe_all" 'proof readiness'
+assert_contains "describe lists the public surface" "$describe_all" 'handoff status'
+assert_not_contains "describe hides internal primitives advance performs" \
+  "$describe_all" 'proof readiness'
+assert_contains "an internal primitive still describes itself by name" \
+  "$(node .claude/harness/foundation.mjs describe 'proof readiness' 2>&1)" 'audience:  internal'
 assert_contains "describe points at the schema files rather than the source" \
   "$describe_all" 'openspec/schemas/<schema>/schema.yaml'
 assert_file_exists "the schema path describe names exists" \

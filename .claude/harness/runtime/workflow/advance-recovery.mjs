@@ -680,6 +680,6 @@ export function automaticEvidenceWiring(id, preflight) {
   return {
     kind: "evidence-wiring",
     providers,
-    command: `claude-foundation evidence init ${id} --write`
+    command: `claude-foundation advance ${id} --through proven`
   };
 }

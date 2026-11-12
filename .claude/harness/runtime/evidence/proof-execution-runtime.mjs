@@ -205,7 +205,7 @@ export function assertProofCollectionOutcomes(outcomes) {
       .map((observation) => `${observation.id}=${observation.status}`));
     const recovery = critical.length
       ? `; critical cases non-passing: ${critical.join(", ")}; ` +
-        "tag each covering test title with its literal [case-id] and rerun proof advance"
+        "tag each covering test title with its literal [case-id] and resume advance --through proven"
       : "";
     throw new Error(`evidence collection failed: ${summary}${recovery}`);
   }

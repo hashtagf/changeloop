@@ -170,7 +170,7 @@ test("blocked command telemetry carries bounded cause and recovery without raw e
   assert.equal(row.blocker.reason, "budget exceeded while reading token <redacted> at <path>");
   assert.equal(row.blocker.code, "budget-exhausted");
   assert.equal(row.blocker.classification, "budget");
-  assert.match(row.blocker.recovery, /budget checkpoint change-a/);
+  assert.match(row.blocker.recovery, /advance change-a --inspect/);
   assert.equal(JSON.stringify(row).includes("SECRET-123"), false);
   assert.equal(JSON.stringify(row).includes("/private/path"), false);
   assert.equal(blockerTelemetryValue("budget stopped for OTHER-SECRET", {

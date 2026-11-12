@@ -735,7 +735,7 @@ stale_prove="$(node .claude/harness/foundation.mjs prove executable-evidence 2>&
 assert_contains "a stale receipt blocks prove" \
   "$stale_prove" "provider-fingerprint-stale"
 assert_contains "a blocked prove names the route out of each stale receipt" \
-  "$stale_prove" "claude-foundation proof run executable-evidence"
+  "$stale_prove" "claude-foundation advance executable-evidence --through proven"
 sed -i.bak 's/"minimum":5/"minimum":4/' \
   openspec/changes/executable-evidence/evidence.yaml
 rm openspec/changes/executable-evidence/evidence.yaml.bak
@@ -802,7 +802,7 @@ legacy_protocol_prove="$(node .claude/harness/foundation.mjs prove packet-edit-r
 assert_contains "the refusal names the protocol as the cause" \
   "$legacy_protocol_prove" "predates the current protocol"
 assert_contains "the refusal names the route out" \
-  "$legacy_protocol_prove" "claude-foundation proof run packet-edit-reuse"
+  "$legacy_protocol_prove" "claude-foundation advance packet-edit-reuse --through proven"
 cp "$TMP/current-protocol-receipt.json" .foundation/receipts/packet-edit-reuse/test.json
 
 fi

@@ -232,7 +232,7 @@ change ไว้ใน read workspace readiness จะ fail closed
 claude-foundation advance <change> --through proven
 ```
 
-`proof readiness` และ `proof run` ยังเป็น primitive สำหรับวินิจฉัย Prove รัน branch อิสระขนานกันได้และรักษา branch ที่เสร็จแล้วเมื่ออีก branch ล้ม
+`proof readiness` และ `proof run` เป็น primitive ภายในที่ `advance` ทำให้ Prove รัน branch อิสระขนานกันได้และรักษา branch ที่เสร็จแล้วเมื่ออีก branch ล้ม
 แต่ aggregate proof ยังต้องตรงกับ repository และ provider scope ปัจจุบันทั้งหมด
 read dependency ที่ขยับต้อง sync และ prove ใหม่ Change Loop จะไม่รับรอง commit เก่า
 ใต้ repository manifest ใหม่

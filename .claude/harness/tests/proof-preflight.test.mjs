@@ -43,9 +43,9 @@ test("preflight failure renders recovery and full-detail route", () => {
     "    claude-foundation authority request change --type review"
   ]), "proof preflight failed: review required\n\nhow to clear this (NEEDS_USER_DECISION):\n" +
     "    claude-foundation authority request change --type review\n\n" +
-    "full detail: claude-foundation proof readiness change");
+    "full detail: claude-foundation advance change --inspect");
   assert.equal(proofPreflightFailure("change", value, ["review required"], []),
-    "proof preflight failed: review required\n\nfull detail: claude-foundation proof readiness change");
+    "proof preflight failed: review required\n\nfull detail: claude-foundation advance change --inspect");
 });
 
 test("preflight operation rejects blockers with rendered recovery", () => {

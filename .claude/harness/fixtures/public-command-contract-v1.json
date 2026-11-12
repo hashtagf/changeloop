@@ -6,8 +6,8 @@
     "sha256": "bd980b24cee658d464811eba97b8215f5b3b4c0e78b19e17c8c2e2aa4a18e743"
   },
   "cliCommands": {
-    "count": 76,
-    "sha256": "0b875453a73233456c78a97a7ba25081474812edcfb02c300ddbfe3df4b8fd4e"
+    "count": 68,
+    "sha256": "481327bc4faaeed7ef5652f507eec4ad701ec2087d2410261cb812a0b1549c11"
   },
   "observableOutcomeCoverage": {
     "invalidFlags": ".claude/tests/harness/contracts/change-policy.sh",

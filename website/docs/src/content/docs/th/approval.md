@@ -186,6 +186,9 @@ state ที่ย้อนกลับยาก, เงิน, concurrency, rep
 :::note[วงจรตามความเสี่ยง]
 ระบบบังคับเพดานก่อน dispatch: low ได้ full หนึ่งรอบ และถ้าแก้จะเลื่อนเข้าเส้นทาง full/delta แบบเดียวกับ medium/high infrastructure retry หนึ่งครั้งแยกจาก delivered wave หลัง AI สองรอบจะไม่เปิด review แบบเปิดใหม่ defect ใน contract ปิดผ่าน claim และ critical-case receipt ปัจจุบัน หรือถ้าไม่มี binding จะมี closure review หนึ่งรอบสำหรับ delta ที่แก้แล้ว ส่วน contract ขัดแย้งจริงจึงเปิด Decision Sheet แบบ batch และถ้าขาดสิทธิ์จะเป็น external handoff ประวัติเป็น SHA-256 hash chain ถ้าโซ่ขาด harness จะกักไว้และสร้างใหม่เอง โดยไม่ลดจำนวนรอบและไม่นำผลที่ตรวจสอบไม่ผ่านกลับมาใช้
 
+finding ระดับ blocker หรือ major จาก human reviewer ผูกกับ review รอบถัดไปแบบเดียวกัน:
+review รอบนั้น ไม่ว่าคนหรือ AI ต้องยืนยันว่าปิดแล้ว หรือ fail พร้อมรายงานสิ่งที่ยังเหลือ
+
 เพดานนี้จำกัดการ dispatch reviewer เพื่อให้ workflow เร็ว ไม่ได้จำกัดจำนวนครั้งที่แก้
 Agent แก้ finding ที่รวมเป็นชุดและตรวจ evidence ที่ invalidated ซ้ำได้ตราบใดที่งานยังคืบหน้า
 :::

@@ -118,7 +118,7 @@ function checkpointRoute(id, readiness, budget) {
     windowId: budget.window.id,
     sequence: Number(budget.window.sequence || 0),
     extensionNumber: Number(budget.window.extensionNumber || 0),
-    inspectCommand: `claude-foundation budget checkpoint ${id}`,
+    inspectCommand: `claude-foundation advance ${id} --inspect`,
     resumeCommand: checkpointNextCommand(id, readiness)
   };
 }

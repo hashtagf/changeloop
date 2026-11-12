@@ -188,7 +188,7 @@
     {
       "name": "proof readiness",
       "usage": "proof readiness <change>",
-      "audience": "agent",
+      "audience": "internal",
       "kind": "read",
       "idempotent": true,
       "description": "Return typed blockers and canonical next commands."
@@ -196,7 +196,7 @@
     {
       "name": "proof collect",
       "usage": "proof collect <change>",
-      "audience": "conditional",
+      "audience": "internal",
       "kind": "write",
       "idempotent": false,
       "description": "Collect executable evidence before an external boundary."
@@ -204,7 +204,7 @@
     {
       "name": "proof advance",
       "usage": "proof advance <change> [--retry-indeterminate --decision-ref <ref>]",
-      "audience": "agent",
+      "audience": "internal",
       "kind": "write",
       "idempotent": true,
       "description": "Advance executable evidence, review, acceptance, and proof once; unchanged external waits resume without rerunning work."
@@ -212,7 +212,7 @@
     {
       "name": "proof run",
       "usage": "proof run <change>",
-      "audience": "conditional",
+      "audience": "internal",
       "kind": "write",
       "idempotent": false,
       "description": "Run readiness, providers, finalization, and audit atomically."
@@ -308,7 +308,7 @@
     {
       "name": "evidence detect",
       "usage": "evidence detect <change>",
-      "audience": "conditional",
+      "audience": "internal",
       "kind": "read",
       "idempotent": true,
       "description": "Detect safe project-owned provider candidates without executing them."
@@ -316,7 +316,7 @@
     {
       "name": "evidence init",
       "usage": "evidence init <change> [--write]",
-      "audience": "conditional",
+      "audience": "internal",
       "kind": "write",
       "idempotent": true,
       "description": "Preview or explicitly write high-confidence provider wiring."
@@ -324,7 +324,7 @@
     {
       "name": "evidence doctor",
       "usage": "evidence doctor <change>",
-      "audience": "conditional",
+      "audience": "internal",
       "kind": "read",
       "idempotent": true,
       "description": "Explain configured, detectable, and unresolved evidence wiring."
@@ -436,7 +436,7 @@
     {
       "name": "budget checkpoint",
       "usage": "budget checkpoint <change>",
-      "audience": "agent",
+      "audience": "internal",
       "kind": "read",
       "idempotent": true,
       "description": "Show measured remaining allowance, unfinished work, the user decision boundary, and the exact resume route."

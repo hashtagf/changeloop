@@ -74,6 +74,6 @@ artifacts are rejected as proof. Integration claims can require security,
 compatibility, resilience, and signed external evidence as declared by the
 agreement.
 
-`proof readiness`, `proof advance`, provider, receipt, and authority commands
-remain compatible advanced surfaces under `help --all`; normal agents do not
-compose them manually. `DONE` at `proven` does not supply Land authority.
+`proof readiness` and `proof advance` are internal primitives that `advance`
+runs; provider, receipt, and authority commands remain advanced surfaces under
+`help --all`; normal agents do not compose them manually. `DONE` at `proven` does not supply Land authority.

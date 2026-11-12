@@ -158,9 +158,10 @@ export function deltaClosureIssue({ expected, verified, status, findings }) {
     " (a result that is not a pass may verify fewer only by also reporting a blocker or major finding)";
 }
 
+// A delta packet, or any packet after a human review with open blocker/major
+// findings, carries closureFindings the response must verify.
 function deltaFindingIssue(review, packet) {
-  if (packet?.reviewScope?.mode !== "delta" ||
-      !Array.isArray(packet?.closureFindings?.ids)) return null;
+  if (!Array.isArray(packet?.closureFindings?.ids)) return null;
   return deltaClosureIssue({
     expected: packet.closureFindings.ids, verified: review?.verifiedFindingIds,
     status: review?.status, findings: review?.findings
@@ -439,7 +440,8 @@ export function configuredReviewPrompt(packet) {
     "For UI claims check the required output is rendered and reachable; for persisted " +
     "or wire data challenge supported older representations. Passing counts, test " +
     "tags, and calculated-but-unused values do not establish those outcomes. " +
-    "For a delta packet, review only reviewScope.paths and list in " +
+    "For a delta packet, review only reviewScope.paths. Whenever the packet carries " +
+    "closureFindings (a delta, or a review after a human review reported blockers), list in " +
     "verifiedFindingIds only the closureFindings.ids the repair closed: all of them when it " +
     "closed every one (status pass or fail), and when a problem remains leave out the IDs it " +
     "did not close, set status fail, and report what remains as a blocker or major finding " +

@@ -31,8 +31,8 @@ surface is:
 | `changes` | Read active state and the next useful route |
 | `doctor …` | Diagnose a route only when the coordinator asks for it |
 
-`claude-foundation help` shows this small surface. `help --all` exposes the
-compatible primitives below for operators and host integrations.
+`claude-foundation help` shows this small surface. `help --all` adds the
+recovery, administration, and host-integration commands below.
 
 ## Read-only
 
@@ -47,11 +47,8 @@ its own read-only HTML file.
 | `packet <change> [--phase <phase>] [--repo <id>] [--task <id>]` | Read the bounded machine handoff for the current operation |
 | `metrics <change>` | Inspect measured usage, semantic-intake effectiveness, active budget, cost, and execution timing |
 | `package <change> [--pretty]` | Print the change's approval data as JSON (risk level with reasons, technical domains, artifacts by approver role with proof/preview/none labels, the summary lines, the surfaces the approval page must show and which the prototype covers, whether the page was edited or its facts are stale, suggested previews for High/Critical); writes no file and never changes lifecycle state. The approval page itself is written by hand by the agent or the user; no skill ships for it |
-| `budget checkpoint <change>` | Show measured remaining allowance, unfinished work, and the exact resume route |
 | `feedback <change>` | Explain reviewer, evidenced repair, human-wait, and unattributed timing; show reuse and the next action |
 | `change audit <change>` | Audit scenario, claim, task, and provider traceability |
-| `proof readiness <change>` | Typed blockers and canonical next commands |
-| `land check <change>` | Run the checks Land runs before it writes, read-only, and report current assurance; refuses unproven work like Land |
 | `handoff status <change>` | Inspect permission-bound operations and their Land disposition |
 | `handoff list [--open] [--owner <team>] [--environment <env>] [--json]` | List operational obligations across active and archived changes |
 | `handoff packet <change> [--id <H00n>]` | Read the credential-free packet for a named DevOps/SRE owner |
@@ -93,18 +90,12 @@ language profiles, baselines, and rollout policy.
 | `sandbox create <change> [--all]` | Create the isolated Build workspace |
 | `sandbox sync <change>` | Synchronize an intentional contract revision into Build |
 | `advance <change> [--through build\|proven\|archived] [--host-result <result.json>]` | Normal model-facing coordinator; run safe deterministic steps and return one bounded action |
-| `proof advance <change>` | Compatible Prove primitive used internally and by explicit integrations |
-| `proof collect <change>` | Low-level collection for diagnosis or an explicit integration |
-| `proof run <change>` | Low-level atomic run when no resumable external handoff is needed |
 | `handoff record <change> --id <H00n> …` | Record accepted/completed/rejected/cancelled/superseded operational outcomes and durable references |
 
 ## Evidence wiring
 
 | Command | Purpose |
 |---|---|
-| `evidence detect <change>` | Detect safe project-owned provider candidates without executing them |
-| `evidence init <change> [--write]` | Preview, or explicitly write, high-confidence provider wiring |
-| `evidence doctor <change>` | Explain configured, detectable, and unresolved wiring |
 | `evidence verify-ci <change> <provider> <signed.json>` | Verify signed CI provenance bound to the provider workspace |
 | `hash <change> [provider]` | Print the workspace hash a signed CI envelope must bind |
 
@@ -127,12 +118,15 @@ these directly for diagnosis or an explicit integration.
 `evidence record` is a low-level integration path, **not** the normal interactive recovery flow. It refuses a passing receipt for any provider the harness executes.
 :::
 
-## Landing
+## Internal primitives
 
-| Command | Purpose |
-|---|---|
-| `land archive <change>` | Low-level apply, synchronize, audit, archive, and cleanup primitive; normal agents use `advance --through archived` |
-| `land resume <change>` | Diagnostic resume primitive; normal recovery repeats `/land` |
+`advance` performs Prove readiness and execution (`proof readiness|advance|run|collect`),
+evidence wiring (`evidence detect|init|doctor`), budget checkpoints, and every
+Land step (`land check|advance|archive|recover|resume|plan`, `sandbox apply`).
+Those primitives are internal: hidden from `help` and `describe`, still
+dispatchable for harness internals and tests, and never a route the runtime
+hands an agent. Use `advance <change> --through proven|archived` to run them
+and `advance <change> --inspect` to read the next action.
 
 ## Optional pull-request delivery
 

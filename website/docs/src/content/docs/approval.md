@@ -212,6 +212,10 @@ missing authority becomes an external handoff. The attempt history is a
 SHA-256 hash chain; a broken chain is quarantined and rebuilt by the harness,
 never lowering the attempt count or reusing a verdict that no longer verifies.
 
+Blocker or major findings from a human reviewer bind the next review the same
+way: that review, human or AI, must verify them closed or fail with what
+remains.
+
 The review-dispatch limit keeps the workflow fast; it does not cap repair
 attempts. The agent may keep fixing grouped findings and rechecking invalidated
 evidence while the work is making progress.

@@ -238,7 +238,7 @@ provider leaves a tracked change in a read workspace, readiness fails closed.
 claude-foundation advance <change> --through proven
 ```
 
-`proof readiness` and `proof run` remain diagnostic primitives. Prove may run independent branches concurrently and preserve completed branches
+`proof readiness` and `proof run` are internal primitives behind `advance`. Prove may run independent branches concurrently and preserve completed branches
 after a failure. Aggregate proof still requires every selected repository and
 provider scope to match the current graph. A moved read dependency requires
 sync and fresh proof; Change Loop never certifies the old commit under the new

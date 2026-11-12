@@ -349,7 +349,7 @@ test("single-agent and completed plans preserve the cheap path", () => {
   })).dispatchValue("dispatch-change");
   assert.equal(complete.action, "build-complete");
   assert.equal(complete.nextCommand,
-    "claude-foundation proof readiness dispatch-change");
+    "claude-foundation advance dispatch-change --through proven");
 });
 
 test("a non-dispatchable plan returns its existing blockers", () => {

@@ -2040,6 +2040,77 @@ try {
     }));
   assert.deepEqual(highHumanClosure.packet.closureFindings.ids, ["F-HIGH"]);
 
+  // A human blocker owes closure to the next review, whoever runs it.
+  riskTier = "medium";
+  const humanReviewRound = (changeId, hash, extra = {}) => {
+    workspaceHash = hash;
+    const request = quiet(() => authority.requestAuthority(changeId, { type: "review" }));
+    const dispatched = quiet(() => authority.dispatchAuthority(changeId, {
+      request: request.requestId, scope: "full", "reviewer-type": "human",
+      "reviewer-identity": "security-owner", ...extra
+    }));
+    const template = JSON.parse(captureLog(() => authority.showAuthorityStatus(
+      changeId, { request: request.requestId, template: true })).rows[0]);
+    writeJson(join(fixture, "human-blocker-report.json"), { status: "cited" });
+    const record = (status, evidence) => {
+      const responsePath = join(fixture, `${changeId}-human-response.json`);
+      writeJson(responsePath, { ...template, status, evidence: {
+        ...template.evidence, observed: `human review ${status}`,
+        reference: ["human-blocker-report.json"], "subject-actor": "human", ...evidence
+      } });
+      return quiet(() => authority.recordAuthority(changeId, {
+        request: request.requestId, response: responsePath
+      }));
+    };
+    return { request, dispatched, record };
+  };
+  const humanBlocker = {
+    "unresolved-blockers": 1, "verified-findings": 0, verifiedFindingIds: [],
+    findings: [{ id: "H-1", severity: "blocker", path: "app.txt",
+      message: "human-found defect" }]
+  };
+  state = { version: 2, changeId: "change-human-blocker", reviewHistory: null };
+  const humanFirst = humanReviewRound("change-human-blocker", "workspace-human-1");
+  assert.equal(humanFirst.dispatched.packet.closureFindings, undefined);
+  humanFirst.record("fail", humanBlocker);
+  const humanSecond = humanReviewRound("change-human-blocker", "workspace-human-2");
+  assert.deepEqual(humanSecond.dispatched.packet.closureFindings.ids, ["H-1"],
+    "the next human review carries the prior human blocker as closure");
+  assert.throws(() => humanSecond.record("pass", {
+    "unresolved-blockers": 0, "verified-findings": 0, verifiedFindingIds: [], findings: []
+  }), /closureFindings/, "a pass that never verifies the human blocker is refused");
+  humanSecond.record("pass", {
+    "unresolved-blockers": 0, "verified-findings": 1, verifiedFindingIds: ["H-1"], findings: []
+  });
+  workspaceHash = "workspace-human-3";
+  const afterClosedHuman = quiet(() => authority.requestAuthority(
+    "change-human-blocker", { type: "review" }));
+  const afterClosedHumanAi = quiet(() => authority.dispatchAuthority("change-human-blocker", {
+    request: afterClosedHuman.requestId, scope: "full", "reviewer-type": "ai",
+    "reviewer-identity": "after-human-ai", "reviewer-provider-family": "openai",
+    "reviewer-model-family": "gpt", "reviewer-model": "gpt-5.6",
+    "reviewer-session": "after-human-ai-session"
+  }));
+  assert.equal(afterClosedHumanAi.packet.closureFindings, undefined,
+    "a verified human blocker leaves the AI route unchanged");
+
+  state = { version: 2, changeId: "change-human-blocker-ai", reviewHistory: null };
+  humanReviewRound("change-human-blocker-ai", "workspace-human-ai-1")
+    .record("fail", humanBlocker);
+  workspaceHash = "workspace-human-ai-2";
+  const aiAfterHumanRequest = quiet(() => authority.requestAuthority(
+    "change-human-blocker-ai", { type: "review" }));
+  const aiAfterHuman = quiet(() => authority.dispatchAuthority("change-human-blocker-ai", {
+    request: aiAfterHumanRequest.requestId, scope: "full", "reviewer-type": "ai",
+    "reviewer-identity": "ai-after-human", "reviewer-provider-family": "openai",
+    "reviewer-model-family": "gpt", "reviewer-model": "gpt-5.6",
+    "reviewer-session": "ai-after-human-session"
+  }));
+  assert.deepEqual(aiAfterHuman.packet.closureFindings.ids, ["H-1"],
+    "an AI review after a failed human review must close the human blocker");
+  workspaceHash = "workspace-a";
+  riskTier = "high";
+
   state = { version: 2, changeId: "change-review-error", reviewHistory: null };
   const failedAttempt = attemptStore.dispatchReviewAttempt("change-review-error", {
     reviewerType: "ai", reviewerIdentity: "codex-sol",

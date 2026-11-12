@@ -107,7 +107,7 @@ export function createAgentDispatchRuntime({
       ...base,
       action: "build-complete",
       reason: plan.executionReason,
-      nextCommand: command(`proof readiness ${id}`)
+      nextCommand: command(`advance ${id} --through proven`)
     };
 
     if (plan.recommendedExecution === "single-agent") return {

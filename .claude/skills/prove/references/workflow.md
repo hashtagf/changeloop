@@ -33,8 +33,8 @@ The waiver binds the current workspace and agreement; it never creates a pass.
 Reopen one Decision Sheet only for changed behavior, compatibility, security,
 data, or rollout.
 
-`advance` wires a missing or stale adapter itself (`evidence init --write` or
-upgrade). Identity may be shared only with committed
+`advance` wires a missing or stale adapter itself (detected project-owned
+command or upgrade). Identity may be shared only with committed
 `review.independence: "self"`. Codex-only or Claude-Code-only review uses
 `review.diversity: "single-model"`; it requires a fresh identity/session.
 Never substitute self-review for a required reviewer. A missing capability returns

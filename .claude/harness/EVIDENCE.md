@@ -164,13 +164,15 @@ release that started it, or abandon it.
 
 ## Bootstrap project-owned wiring
 
-Use the bootstrap commands when a change declares claims but `execution.yaml`
-has no executable providers yet:
+When a change declares claims but `execution.yaml` has no executable providers
+yet, `advance <change> --through proven` runs the internal bootstrap
+primitives (`evidence detect`, `evidence init --write`) itself;
+`doctor --stage prove --change <change>` explains what stays unresolved. The
+primitives remain dispatchable for diagnosis:
 
 ```bash
 claude-foundation evidence detect <change>
 claude-foundation evidence init <change>
-claude-foundation evidence init <change> --write
 claude-foundation evidence doctor <change>
 ```
 
@@ -385,15 +387,15 @@ other adapter produces a discovered count.
 Configured commands run from the active workspace. The normal path is:
 
 ```bash
-claude-foundation proof readiness <change>
-claude-foundation proof run <change>
+claude-foundation advance <change> --through proven
 ```
 
-`proof readiness` reports a `next` array whenever it is not `READY`, and every
+`advance <change> --inspect` reads the next action without running anything.
+The internal `proof readiness` primitive behind it reports a `next` array whenever it is not `READY`, and every
 command that stops on a readiness result prints that recovery rather than the
 blocker alone. When a required provider has no adapter but the project owns a
-safe command for its capability, the recommended route is
-`evidence init --write`, not a request to a person. A capability the
+safe command for its capability, `advance` writes the
+wiring itself, not a request to a person. A capability the
 changed-surface policy inferred and nobody wired is not a required provider at
 all: it appears under `advisories` in readiness, the internal `proof-plan` diagnostic, and the proof
 record, and does not block.
@@ -517,7 +519,7 @@ A receipt records how it was produced. Receipts the harness executed carry
 and at least one `--artifact` or `--reference`. That floor does not depend on
 `--adapter`, which the caller supplies: naming an executing adapter by hand is
 refused, and a provider configured for one cannot be given a passing receipt at
-all — run `proof run` so the declared command is what executes. A `--reference`
+all — run `advance <change> --through proven` so the declared command is what executes. A `--reference`
 must be a URI or a path that exists; free text is not a reference.
 
 Review receipts additionally identify reviewer type/identity, the actual model
@@ -671,7 +673,11 @@ normally. A result that is not a pass may list fewer when it also reports a
 blocker or major finding for what remains; that is a delivered `fail` verdict,
 and the IDs it leaves out stay open. A pass must list every first-round ID, an
 ID outside the first round is always refused, and a shortfall with no blocker or
-major finding to explain it is a closure binding error. When the repaired final finding has no
+major finding to explain it is a closure binding error. Closure is owed to
+whoever reported the finding: when the newest delivered verdict is a human
+review with blocker/major findings, the next review of either reviewer type and
+scope carries those IDs as `closureFindings` under the same rule, and
+deterministic repair closure is refused until a review verifies them. When the repaired final finding has no
 declared critical case to bind (for example a rapid change) and current
 non-review proof passes, Prove requests one closure review of the repaired
 workspace, comparing the review provider's current subject hash with the failed
@@ -1000,7 +1006,7 @@ receipt and artifact digests even after sandbox cleanup or archival.
 A provider that ran and exited non-zero blocks proof with validity `fail`. It
 has exactly three honest exits, and the blocker output prints all three:
 
-- fix the cause and `proof run` again — right when the gate caught a defect;
+- fix the cause and `advance <change> --through proven` again — right when the gate caught a defect;
 - rewire the provider in `execution.yaml` — right when the gate is wrong;
 - withdraw the gate on record — right when the user decides to land without it:
 
@@ -1096,8 +1102,8 @@ never blocks. Each verdict is cached under
 `.foundation/logs/<change>/test-discrimination/` by the digest of the base
 commit, the command, its effective environment digest, and every overlaid file, so an unchanged
 rerun runs nothing; cost is at most one extra test command per affected
-repository per distinct test content. Low-level `proof run` and `proof
-finalize` remain operator primitives and do not run this check.
+repository per distinct test content. The internal `proof run` and `proof
+finalize` primitives and do not run this check.
 
 The same rule applies in Build. When a behavior task's `verify` passes but
 nothing changed in its declared `[paths:]` — the check passed on the original

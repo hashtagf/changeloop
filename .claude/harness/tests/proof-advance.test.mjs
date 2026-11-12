@@ -299,7 +299,7 @@ assert.throws(() => assertProofCollectionOutcomes([{
     { kind: "critical-case", id: "CC001", status: "missing" },
     { kind: "critical-case", id: "CC002", status: "pass" }
   ]
-}]), /critical cases non-passing: CC001=missing; tag each covering test title with its literal \[case-id\] and rerun proof advance/);
+}]), /critical cases non-passing: CC001=missing; tag each covering test title with its literal \[case-id\] and resume advance --through proven/);
 }
 
 {

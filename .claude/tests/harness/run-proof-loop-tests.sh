@@ -166,7 +166,7 @@ assert_not_contains "an excluded report path draws no warning" \
 implement report-excluded
 premature="$({ node .claude/harness/foundation.mjs prove report-excluded; } 2>&1 || true)"
 assert_contains "finalizing before execution names the operation that executes" \
-  "$premature" "claude-foundation proof run report-excluded"
+  "$premature" "claude-foundation advance report-excluded --through proven"
 
 # --- The same loop, completed. ----------------------------------------------
 assert_cmd_zero "readiness clears once the implementation is complete" \

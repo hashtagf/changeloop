@@ -100,7 +100,7 @@ test("a misplaced root sandbox recovers with a concrete move, not a bare doctor"
   assert.equal(move.kind, "move-to-repository-sandbox");
   assert.deepEqual(move.paths, ["api/test/new.spec.js"]);
   assert.match(move.instruction, /'api' at \/w\/api/);
-  assert.equal(move.command, "claude-foundation proof readiness fixit-change");
+  assert.equal(move.command, "claude-foundation advance fixit-change --inspect");
   assert.ok(!rest.some((row) => row.kind === "declare-surface"),
     "the agent is never told to edit the approved tasks.md");
 });

@@ -36,7 +36,7 @@ assert_file_contains "Prove contract rejects fabricated evidence" "$ROOT/.claude
 # asserted: the fabrication ban, and the waiver that keeps it from being a trap.
 assert_file_contains "Prove contract names the independence waiver" "$ROOT/.claude/skills/prove/references/workflow.md" 'review.independence: "self"'
 assert_file_contains "Prove keeps blocker routes with the agent" "$ROOT/.claude/skills/prove/references/workflow.md" "Keep recovery and resume routes as agent-only"
-assert_file_contains "Prove contract wires a missing adapter before asking a person" "$ROOT/.claude/skills/prove/references/workflow.md" 'evidence init --write'
+assert_file_contains "Prove contract wires a missing adapter before asking a person" "$ROOT/.claude/skills/prove/references/workflow.md" 'wires a missing or stale adapter itself (detected project-owned'
 assert_file_contains "Change contract asks only the dependency-ready frontier" \
   "$ROOT/.claude/skills/change/references/semantic-intake.md" "current frontier"
 assert_file_contains "Change contract assigns deterministic intake to the harness" \

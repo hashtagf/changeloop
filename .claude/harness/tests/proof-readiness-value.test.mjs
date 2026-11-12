@@ -353,7 +353,7 @@ test("an edit outside task paths is recorded into the change surface, not refuse
     assert.equal(repair.kind, "ignore-generated-output");
     assert.deepEqual(repair.patterns, ["/build/"]);
     assert.equal(repair.command, "printf '%s\\n' '/build/' >> '.gitignore'");
-    assert.equal(repair.verify, "claude-foundation proof readiness demo");
+    assert.equal(repair.verify, "claude-foundation advance demo --inspect");
     assert.equal(repair.agentCommand, "/change demo");
   } finally {
     rmSync(root, { recursive: true, force: true });

@@ -7,6 +7,7 @@ import {
   createRepairClosureAttempt,
   matchingRepairClosure,
   normalizeReviewCompletionFindings,
+  openHumanReviewClosure,
   recordRepairClosureAttemptOperation,
   repairClosureSource,
   repairClosureVerifiedFindingIds,
@@ -356,4 +357,35 @@ test("repair closure operation preserves idempotency and fails closed", () => {
   assert.throws(() => recordRepairClosureAttemptOperation(
     missing.context, "change", { ...details, evidenceBindings: [] }),
   /current evidence bindings/);
+});
+
+test("a newer human blocker owns closure until a later verdict", () => {
+  const human = (resultStatus, findings) => ({
+    reviewerType: "human", status: "completed", resultStatus, findings
+  });
+  const blocker = [{ id: "H-1", severity: "blocker" }];
+  const failedHuman = human("fail", blocker);
+  assert.equal(openHumanReviewClosure([source, failedHuman]), failedHuman);
+  assert.equal(openHumanReviewClosure([failedHuman,
+    { reviewerType: "ai", status: "completed", resultStatus: "error", findings: [] }]),
+  failedHuman, "an infrastructure error never discharges a human blocker");
+  assert.equal(openHumanReviewClosure([failedHuman,
+    { reviewerType: "ai", status: "dispatched" }]), failedHuman);
+  assert.equal(openHumanReviewClosure([failedHuman,
+    { reviewerType: "ai", status: "completed", resultStatus: "pass", findings: [] }]), null);
+  assert.equal(openHumanReviewClosure([human("fail",
+    [{ id: "H-2", severity: "minor" }])]), null);
+  assert.equal(openHumanReviewClosure([{ ...source, reviewerType: "ai",
+    status: "completed" }]), null, "AI-only chains keep their existing closure");
+  assert.equal(openHumanReviewClosure(undefined), null);
+});
+
+test("repair closure refuses to close a later human blocker", () => {
+  const fixture = operationFixture();
+  fixture.context.reviewAttempts = () => [{ reviewerType: "human",
+    status: "completed", resultStatus: "fail",
+    findings: [{ id: "H-1", severity: "major" }] }];
+  assert.throws(() => recordRepairClosureAttemptOperation(
+    fixture.context, "change", details), /later human review/);
+  assert.equal(fixture.writes.length, 0);
 });

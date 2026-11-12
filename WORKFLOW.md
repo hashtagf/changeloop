@@ -1349,9 +1349,10 @@ bookkeeping that moves the revision without changing the agreement carries
 them; original failed receipts remain available and proof names the accepted
 exceptions.
 
-When executable wiring is absent, `evidence detect` reads project manifests
-without executing scripts, `evidence init` previews additions and writes only
-with `--write`, and `evidence doctor` reports ambiguity or external authority.
+When executable wiring is absent, `advance` detects project-owned candidates
+from manifests without executing scripts and writes only high-confidence
+wiring; ambiguity or external authority stays a typed blocker. The
+`evidence detect|init|doctor` primitives behind it are internal.
 Detection never installs tools, creates receipts, overwrites configured
 providers, or weakens claims.
 
@@ -1379,8 +1380,9 @@ dependencies are captured in the same action envelope with their original
 reason and exact recovery route. User decisions
 ([blocking policy](#blocking-policy)), external waits, resource waits,
 conflicts, and repeated no-progress preserve state.
-`proof readiness`, `proof advance`, `proof run`, and direct authority commands
-remain diagnostic or integration primitives behind `advance`.
+`proof readiness`, `proof advance`, `proof run`, and `proof collect` are
+internal primitives behind `advance`; `advance <change> --inspect` reads the
+next action. Direct authority commands remain integration surfaces.
 
 ### `/land <change>`
 
@@ -1818,7 +1820,7 @@ gate and has its own policy.
 The change's work types add capabilities that paths cannot reveal (for example
 `ml` → `evaluation`, `migration` → `parity`, `infra` → `plan-check` and
 `deployment`). Wiring a missing provider for one is agent work (a project-owned
-command in `execution.yaml`; `evidence init <change> --write` detects one), never
+command in `execution.yaml`; `advance` wires a detected one), never
 a user question. Post-release capabilities (`release-health`,
 `experiment-guardrail`) are deferred rollout gates listed in the archived
 proposal; they never block proof or Land. The mapping and adapters are in
@@ -1970,7 +1972,9 @@ Packet inspection and finding/closure binding errors stop the current automatic
 retry chain rather than dispatching the unchanged validation failure to another
 model. A closure round that closes only some first-round findings is such an
 error unless it is not a pass and reports a blocker or major finding for what
-remains; then it is a delivered `fail` verdict and the unclosed IDs stay open. The backend owns this routing through the existing commands.
+remains; then it is a delivered `fail` verdict and the unclosed IDs stay open.
+Blocker/major findings from a human review bind the next review, human or AI,
+the same way. The backend owns this routing through the existing commands.
 The existing `advance --through` route reopens a binding failure only after the
 retained packet/result validates again and the reviewer is ready, preserving
 scope, attempt history, and infrastructure retry accounting.
@@ -2254,8 +2258,9 @@ Budget actions are:
 `budget continue` remains an optional, audited explicit widening; it never
 deletes usage or lowers assurance.
 
-`budget checkpoint` reports the measured remaining window, unfinished work, and
-exact resume route. It never guesses future model demand.
+The internal `budget checkpoint` read reports the measured remaining window,
+unfinished work, and exact resume route; `metrics` and `advance --inspect` are
+the public reads. It never guesses future model demand.
 
 ## Compatibility and operator references
 

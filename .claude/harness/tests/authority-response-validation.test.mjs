@@ -24,7 +24,7 @@ test("authority record preflight reports every response problem together", () =>
   });
   for (const pattern of [/authority dispatch c --request r-1/, /notes\/review\.md/, /subject-actor/,
     /subject-session/, /verified-findings \(0\) must equal the 1 verifiedFindingIds/,
-    /close exactly the first-round findings: F1, F2/])
+    /close exactly the closureFindings \(first-round or prior human review\): F1, F2/])
     assert.ok(issues.some((issue) => pattern.test(issue)), `${pattern}: ${issues.join(" | ")}`);
   assert.equal(issues.some((issue) => /example\.test/.test(issue)), false, "a URI reference is fine");
   // A failing response may close fewer first-round findings when it reports a
@@ -33,7 +33,7 @@ test("authority record preflight reports every response problem together", () =>
     request: { ...delta, status: "dispatched" }, referenceExists: () => true,
     response: { ...response, evidence: { reference: ["tasks.md"], "subject-actor": "claude",
       "subject-session": "s-1", "subject-model": "m", ...response.evidence } }
-  }).filter((issue) => /close exactly the first-round findings/.test(issue));
+  }).filter((issue) => /close exactly the closureFindings/.test(issue));
   assert.deepEqual(closureIssue({ status: "fail", evidence: {
     findings: [{ id: "D1", severity: "major", path: "a.mjs" }], "verified-findings": 1,
     verifiedFindingIds: ["F1"] } }), []);

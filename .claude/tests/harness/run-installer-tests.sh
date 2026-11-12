@@ -289,23 +289,23 @@ assert_file_exists "command registry installed" "$TARGET/.claude/harness/command
 assert_cmd_zero "command registry has one unique entry per public name" \
   jq -e '([.commands[].name] | length) == ([.commands[].name] | unique | length)' \
   "$TARGET/.claude/harness/commands.json"
-# The additional read-only surfaces are the resumable budget checkpoint and
-# aggregate handoff list; neither grants authority or widens continuation.
+# The additional read-only surface is the aggregate handoff list; it grants no
+# authority. Prove readiness, evidence wiring, and the budget checkpoint are
+# internal primitives `advance` performs, so they are not counted here.
 # `change revise` is the pre-Build sibling of `change amend`. `advance` is the
 # agent's lifecycle driver (it performs wiring, sync, and configured review).
 # `outcomes` and `lessons` are read-only cross-change rollups. `package` is the
 # read-only approval package; `preview` is the optional pre-Build run whose
 # receipts never count as evidence. `current` is the read-only lookup of the one
 # active change.
-assert_eq "agent command surface is bounded" "28" \
+assert_eq "agent command surface is bounded" "25" \
   "$(jq '[.commands[] | select(.audience == "agent")] | length' \
     "$TARGET/.claude/harness/commands.json")"
-# 26 includes the bounded proof controller, its internal execution commands,
-# explicit authority dispatch/abort/configured-reviewer/reset routes, the
+# 21 includes explicit authority dispatch/abort/configured-reviewer/reset routes, the
 # user-granted extra AI review wave, consumer-quality reporting, and the
 # operator-owned handoff record. Keep this count intentional so a newly exposed
 # recovery command cannot appear silently.
-assert_eq "conditional recovery surface is bounded" "26" \
+assert_eq "conditional recovery surface is bounded" "21" \
   "$(jq '[.commands[] | select(.audience == "conditional")] | length' \
     "$TARGET/.claude/harness/commands.json")"
 assert_cmd_zero "provider-running proof commands are not marked retry-safe" \

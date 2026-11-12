@@ -30,8 +30,8 @@ agent ของคุณเป็นคนรันคำสั่งเหล�
 | `changes` | อ่าน active state และ route ถัดไป |
 | `doctor …` | วิเคราะห์เฉพาะเมื่อ coordinator ขอ |
 
-`claude-foundation help` แสดง surface ขนาดเล็กนี้ ส่วน `help --all` แสดง
-compatible primitive ด้านล่างสำหรับ operator และ host integration
+`claude-foundation help` แสดง surface ขนาดเล็กนี้ ส่วน `help --all` เพิ่มคำสั่ง
+recovery, administration และ host integration ด้านล่าง
 
 ## อ่านอย่างเดียว
 
@@ -46,11 +46,8 @@ compatible primitive ด้านล่างสำหรับ operator แล�
 | `packet <change> [--phase <phase>] [--repo <id>] [--task <id>]` | อ่าน handoff ของ operation ปัจจุบัน |
 | `metrics <change>` | ดูการใช้งาน ประสิทธิผล semantic intake งบ ต้นทุน และเวลาการรันที่วัดได้ |
 | `package <change> [--pretty]` | พิมพ์ข้อมูลอนุมัติของ change เป็น JSON (ระดับความเสี่ยงพร้อมเหตุผล technical domain, artifact แยกตามบทบาทผู้อนุมัติพร้อมป้าย proof/preview/none, บรรทัดสรุป, สิ่งที่หน้าอนุมัติต้องแสดงและ prototype ครอบคลุมข้อไหน, หน้าถูกแก้หรือข้อเท็จจริงล้าสมัยหรือไม่ และ suggested preview สำหรับ High/Critical) ไม่เขียนไฟล์และไม่เปลี่ยนสถานะ lifecycle ตัวหน้าอนุมัติ agent หรือผู้ใช้เขียนเอง ไม่มี skill ส่งมาให้ |
-| `budget checkpoint <change>` | แสดงงบที่เหลือที่วัดได้ งานที่ยังไม่เสร็จ และ resume route ที่แน่นอน |
 | `feedback <change>` | อธิบายเวลา reviewer, repair ที่มีหลักฐาน, human wait และเวลาที่ยังระบุไม่ได้ พร้อม reuse และ action ถัดไป |
 | `change audit <change>` | ตรวจความเชื่อมโยงของ scenario claim task และ provider |
-| `proof readiness <change>` | blocker แบบมีชนิด พร้อมคำสั่งถัดไปที่ถูกต้อง |
-| `land check <change>` | รันการตรวจชุดเดียวกับที่ Land ทำก่อนเขียนไฟล์ แบบไม่แก้ไขอะไร และรายงาน assurance ปัจจุบัน ปฏิเสธงานที่ยังไม่ prove เหมือน Land |
 | `handoff status <change>` | ดู operation ที่ต้องสิทธิ์ภายนอกและผลต่อ Land |
 | `handoff list [--open] [--owner <team>] [--environment <env>] [--json]` | ดู operational obligation ข้าม active และ archived change |
 | `handoff packet <change> [--id <H00n>]` | อ่าน packet ที่ไม่มี credential สำหรับ DevOps/SRE owner |
@@ -92,18 +89,12 @@ compatible primitive ด้านล่างสำหรับ operator แล�
 | `sandbox create <change> [--all]` | สร้างพื้นที่ Build ที่แยกออกมา |
 | `sandbox sync <change>` | ซิงก์การแก้ข้อตกลงที่ตั้งใจเข้าไปใน Build |
 | `advance <change> [--through build\|proven\|archived] [--host-result <result.json>]` | Coordinator ปกติของ model รัน deterministic step ที่ปลอดภัยแล้วคืน bounded action หนึ่งตัว |
-| `proof advance <change>` | Compatible Prove primitive ที่ coordinator และ integration ใช้ภายใน |
-| `proof collect <change>` | การเก็บระดับล่างสำหรับวิเคราะห์หรือ integration ที่ตั้งใจไว้ |
-| `proof run <change>` | atomic run ระดับล่างเมื่อไม่ต้องมี external handoff ที่ทำต่อได้ |
 | `handoff record <change> --id <H00n> …` | บันทึก accepted/completed/rejected/cancelled/superseded พร้อม durable reference |
 
 ## การต่อสายหลักฐาน
 
 | คำสั่ง | ใช้ทำอะไร |
 |---|---|
-| `evidence detect <change>` | ตรวจหา provider ของโปรเจกต์ที่ปลอดภัย โดยไม่รันมัน |
-| `evidence init <change> [--write]` | ดูตัวอย่าง หรือเขียนการต่อสายที่มั่นใจสูงลงไปจริง |
-| `evidence doctor <change>` | อธิบายการต่อสายที่ตั้งไว้ ที่ตรวจพบได้ และที่ยังไม่ลงตัว |
 | `evidence verify-ci <change> <provider> <signed.json>` | ตรวจ provenance ของ CI ที่เซ็นและผูกกับ workspace ของ provider |
 | `hash <change> [provider]` | พิมพ์ workspace hash ที่ CI envelope แบบเซ็นต้องผูกไว้ |
 
@@ -126,12 +117,15 @@ compatible primitive ด้านล่างสำหรับ operator แล�
 `evidence record` เป็นทางเชื่อมระดับล่าง **ไม่ใช่** ขั้นตอนกู้คืนแบบโต้ตอบตามปกติ มันปฏิเสธ receipt ที่ผ่านของ provider ทุกตัวที่ harness เป็นคนรัน
 :::
 
-## การ land
+## Primitive ภายใน
 
-| คำสั่ง | ใช้ทำอะไร |
-|---|---|
-| `land archive <change>` | Primitive ระดับล่างสำหรับ apply, ซิงก์, ตรวจ, archive และเก็บกวาด; agent ปกติใช้ `advance --through archived` |
-| `land resume <change>` | Primitive สำหรับวินิจฉัย; recovery ปกติเรียก `/land` ซ้ำ |
+`advance` ทำ readiness และการรัน Prove (`proof readiness|advance|run|collect`),
+การต่อสายหลักฐาน (`evidence detect|init|doctor`), budget checkpoint และทุกขั้นของ
+Land (`land check|advance|archive|recover|resume|plan`, `sandbox apply`) เอง
+primitive เหล่านี้เป็นของภายใน: ซ่อนจาก `help` และ `describe` ยัง dispatch ได้สำหรับ
+harness และเทส และ runtime จะไม่ส่งเป็น route ให้ agent ใช้
+`advance <change> --through proven|archived` เพื่อรัน และ `advance <change> --inspect`
+เพื่ออ่าน action ถัดไป
 
 ## การส่ง pull request แบบ optional
 

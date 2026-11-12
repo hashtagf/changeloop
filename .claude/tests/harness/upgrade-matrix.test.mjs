@@ -88,7 +88,7 @@ test("upgrade diagnostics preserve historical defaults and explain active-change
     "receipts-revalidated-against-current-protocols"
   ]);
   assert.match(diagnostics.activeChangeEffects[0].recovery,
-    /change validate in-flight.*proof readiness in-flight/);
+    /change validate in-flight.*advance in-flight --inspect/);
 });
 
 test("upgrade diagnostics honor signed CI and intentional policy acknowledgements", () => {

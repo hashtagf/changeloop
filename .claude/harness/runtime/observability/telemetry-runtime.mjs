@@ -34,7 +34,7 @@ const BLOCKER_KINDS = Object.freeze([
     code: "budget-exhausted", classification: "budget",
     pattern: /\bbudget\b|request limit|allowance/i,
     summary: "A measured execution budget checkpoint stopped the operation",
-    recovery: (id) => `claude-foundation budget checkpoint ${id}`
+    recovery: (id) => `claude-foundation advance ${id} --inspect`
   },
   {
     code: "authority-required", classification: "authority",

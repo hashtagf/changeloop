@@ -384,7 +384,7 @@ the envelope carries, and the budget no-progress cap are specified in
 | `advance <change> --through archived --restore-target <path,path>` / `--recover-apply settle\|keep-current\|restore-backup` / `advance <change> --undo-land`, each with `--decision-ref <ref>` where the user decides | Restores conflicting target paths inside Land, settles an interrupted apply, or undoes an archived Land whose diff is still uncommitted; see [WORKFLOW.md § `/land`](../../WORKFLOW.md#land-change) | Land conflict, interrupted apply, or the user's undo |
 | `doctor` | Checks runtime and project readiness | After install or when diagnosing setup |
 | `changes` | Lists active changes and readiness | Finding work to resume or land |
-| `current` | Prints the one active change with readiness and next command; with none or several it lists candidates and exits non-zero. While exactly one change is active, `advance`, `packet`, `metrics`, `feedback`, `package`, `change audit`, `authority status`, `handoff status`, and `evidence detect\|doctor` may omit `<change>`; `advance` with `--through archived`, `--approve-spec`, `--restore-target`, `--recover-apply`, or `--undo-land` always needs the explicit id | Lost the change id |
+| `current` | Prints the one active change with readiness and next command; with none or several it lists candidates and exits non-zero. While exactly one change is active, `advance`, `packet`, `metrics`, `feedback`, `package`, `change audit`, `authority status`, and `handoff status` may omit `<change>`; `advance` with `--through archived`, `--approve-spec`, `--restore-target`, `--recover-apply`, or `--undo-land` always needs the explicit id | Lost the change id |
 | `packet <change> --phase <phase>` | Prints a compact diagnostic handoff; review packets are ≤20 KiB; `--task` for a completed task prints its read-only packet (`executionAuthority.status: "completed"`) | Operator/debug inspection |
 | `packet <change> --repo <id> [--task <id>] [--pretty]` | Prints a bounded repository or task packet | Starting a native subagent |
 | `metrics <change>` | Reports measured phase/provider cost, emitted context bytes, and blocked operations by code, phase, and operation with the latest local reason | Finding latency, orchestration overhead, or where a change keeps stopping |
@@ -393,19 +393,11 @@ the envelope carries, and the budget no-progress cap are specified in
 | `lessons [--min-changes <n>] [--pretty]` | Read-only grouping of blocker codes and review finding codes that recur in at least `n` distinct changes (default 3, minimum 2), each with a suggested permanent check and the `/change` route; untyped blockers and uncoded findings are counted separately; never creates checks or exports free-text reasons | Turning recurring problems into checks |
 | `package <change> [--pretty]` | Prints the change's approval data as JSON and writes no file: risk level with reasons, technical domains, artifacts by approver role with proof/preview/none labels, the `scratch` lines with undo and who, scope counts (`null` when unknown), failure cases, required-section status, approval and missing lanes, optional suggested previews, the surfaces the approval page must show (`prototype.checklist`, with which the prototype's `covers` declares), and the page's `drift` and `factsStale` status with the `factsDigest`; never changes lifecycle state. The approval page itself is `.foundation/previews/<change>/prototype.html`, written by hand by the agent or the user (no skill ships for it); `change start`, `revise`, `amend`, and the `advance` approval question only read it and record its digest, and a missing page falls back to the summary as text ([WORKFLOW.md](../../WORKFLOW.md#approval-package-preview-and-role-lanes)) | Giving whoever writes the page the facts and the owed surfaces, and seeing what is still missing |
 | `preview <change> --provider <name> [--decision-ref <ref>] [--pretty]` | Optional, before Build only: runs one declared provider in `.foundation/previews/<change>/workspace` and records a `kind: "preview"` receipt bound to the contract revision. A provider marked `external: true` runs only with the user's `--decision-ref`; preview receipts never satisfy Prove or Land ([WORKFLOW.md](../../WORKFLOW.md#approval-package-preview-and-role-lanes)) | Trying a plan, dry run, mock, or screenshot before approval |
-| `budget checkpoint <change>` | Reports measured remaining allowance, unfinished work, and the exact resume route | Checking remaining allowance and the resume route |
 | `exec <change> [--phase <phase>] [--repo <id>] [--task <id>] -- <command…>` | Derives the phase, runs Build and Prove commands in the change's sandbox under the shared mutation policy, passes the exit code through, and records duration. A multi-repository change picks the sandbox from `--repo`/`--task`, else the caller's directory (a repository sandbox, the shared mirror, or the checkout's copy maps to the same relative path in that repository's sandbox), else the pending tasks when they share one repository, else the shared sandbox; never the main checkout. An unknown repository or task refuses with the known names | Long build-phase commands (container builds, installs, full test runs) and a submodule task's checks |
 | `telemetry host-import <change> <result.json>` | Imports a validated host execution result without prompt or tool payloads | Recording actual model attempts, fallback, usage, and instruction provenance |
 | `budget continue <change> --reason <reason>` | Opens one policy-gated audited window without deleting usage | Optional explicit widening; exhaustion auto-continues |
 | `change validate <change>` | Validates change artifacts | After creating or revising an agreement |
 | `change audit <change> [--json]` | Audits scenario → claim → task → provider traceability | Before Build or after contract edits |
-| `proof readiness <change>` | Returns READY or a typed blocker with exact next commands | At the end of Build and start of Prove |
-| `proof advance <change>` | Converges missing/invalidated evidence through aggregate repair batches | Advanced primitive used by `advance --through proven` |
-| `proof run <change>` | Executes, finalizes, and audits proof as one operation | Low-level diagnostic/integration path |
-| `proof collect <change>` | Runs available project-owned evidence without finalizing proof | Low-level preparation for an explicit integration |
-| `evidence detect <change>` | Finds safe project-owned provider candidates without executing them | When derived or custom wiring is incomplete |
-| `evidence init <change> [--write]` | Previews or explicitly writes high-confidence provider wiring | Before manually wiring detected test/static/browser tools |
-| `evidence doctor <change>` | Explains configured, detectable, and unresolved capabilities | Diagnosing why Prove lacks a provider |
 | `evidence verify-ci <change> <provider> <signed.json>` | Verifies a signed, workspace-bound CI envelope | Importing trusted remote CI evidence |
 | `evidence record ...` | Records evidence produced by an external system | CI, human review, or remote systems |
 | `authority request\|status\|dispatch\|run\|abort\|record ...` | Routes configured AI review and bound human review/acceptance responses | Crossing a human or remote authority boundary |
@@ -424,7 +416,12 @@ the envelope carries, and the budget no-progress cap are specified in
 `/land <change>` is the only user-facing Land operation. The registered
 `land check`, `land advance`, `land recover`, `land archive`, `land resume`,
 and `land plan` routes are internal compatibility
-or diagnostic primitives. The Harness invokes them through the convergent Land
+or diagnostic primitives. So are `proof readiness|advance|run|collect`,
+`evidence detect|init|doctor`, and `budget checkpoint`: `advance` performs
+them, `help` and `describe` hide them, and every runtime route that used to
+name one now names `advance <change> --through proven|archived` or
+`advance <change> --inspect`. They still dispatch for harness internals and
+tests. The Harness invokes them through the convergent Land
 transaction; agents must not ask users to compose or run them. `land check` runs
 Land's own pre-mutation preflight read-only, so it stops on the same code Land
 would, and refuses unproven work instead of reporting it ready. `land advance`
@@ -520,7 +517,7 @@ When the packaged CLI is not on `PATH`, use the source checkout's public router:
 
 ```bash
 bash /path/to/claude-foundation/cli.sh --project "$PWD" \
-  proof readiness <change>
+  advance <change> --inspect
 ```
 
 The router preserves public nested command grammar. Do not invoke
@@ -806,7 +803,7 @@ the workspace snapshot, environment descriptor, and protocol versions.
 Review and acceptance receipts additionally carry the change's diff identity
 and the packet review hash. When a sandbox sync replays the change onto a
 moved base without altering either — the common shape of "another change
-landed first" — `proof run` / `proof advance` rebind the verdict to the new
+landed first" — `advance --through proven` rebinds the verdict to the new
 workspace hash instead of expiring it, and no review wave is consumed. This
 holds for a human verdict exactly as for an AI one, so no new request opens.
 A replay that does alter the diff expires the verdict and opens a new review
@@ -895,8 +892,9 @@ never asks the user; the runtime never silently drops acceptance criteria or
 moves unfinished work out of the contract. `budget continue` is an optional,
 audited explicit widening up to the configured ceiling; counters and
 requirements are never deleted or silently reset.
-`budget checkpoint` reports measured capacity and remaining tasks/provider
-blockers without pretending to forecast unknown model demand.
+The internal `budget checkpoint` read reports measured capacity and remaining
+tasks/provider blockers without pretending to forecast unknown model demand;
+`metrics` and `advance --inspect` are its public reads.
 
 A control-target HEAD move remains `control-head-moved` unless target bytes
 match the change projection or an explicit external delivery reference exists.
@@ -1036,7 +1034,7 @@ Change Loop-owned files, preserves project files and managed blocks in
 - **Evidence is `inconclusive`** — inspect the receipt and provider log; common
   causes are missing discovered-test counts, missing Playwright claim
   annotations, or absent required artifacts.
-- **A configured provider is unavailable** — run `proof readiness <change>`.
+- **A configured provider is unavailable** — run `advance <change> --inspect`.
   `INFRASTRUCTURE_ERROR` returns structured `next` choices to diagnose the
   environment, retry, record verifiable external evidence, or reconfigure an
   available project-owned command that proves the same claims. It never
@@ -1050,7 +1048,7 @@ Change Loop-owned files, preserves project files and managed blocks in
   active OpenSpec directory does not. Restore that directory, or move the JSON
   state into `.foundation/recovery/orphaned-runtime/` for recoverable
   quarantine. `doctor --change <id>` fails explicitly until reconciled.
-- **A receipt became stale** — run `proof readiness`; a bound input, agreement
+- **A receipt became stale** — run `advance <change> --inspect`; a bound input, agreement
   revision, environment, or artifact changed.
 - **Readiness is rejected** — add `expectBody` or `expectHeader` that identifies
   the intended application, not merely an HTTP status.

@@ -258,6 +258,13 @@ assert.deepEqual(reviewFindingIssues({
   reviewScope: { ...scopedPacket.reviewScope, mode: "delta" },
   closureFindings: { ids: ["F-BASE"] }
 }), []);
+// A full review after a human blocker carries closureFindings and must verify them.
+assert.match(reviewFindingIssues({
+  status: "pass", findings: [], verifiedFindingIds: []
+}, { ...scopedPacket, closureFindings: { ids: ["H-1"] } })[0],
+/delta closure must verify exactly: H-1/);
+assert.deepEqual(reviewFindingIssues({ findings: [], verifiedFindingIds: [] },
+  scopedPacket), [], "a full packet without closureFindings is unchanged");
 // A closure round may close only some of the first-round findings when it
 // fails with a blocker or major finding for what remains; the unverified IDs
 // stay open. Anything that would let a review pass or hide an ID is refused.

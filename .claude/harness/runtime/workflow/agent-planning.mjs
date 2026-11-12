@@ -134,7 +134,7 @@ export function agentPlanNext(output, id) {
       `claude-foundation advance ${id} resumes once the shared resource is released`;
   if (!output.dispatchable) return "resolve blockingReasons before dispatch";
   if (output.recommendedExecution === "proof-ready")
-    return `claude-foundation proof readiness ${id}`;
+    return `claude-foundation advance ${id} --through proven`;
   if (output.recommendedExecution === "single-agent")
     return `claude-foundation packet ${id} --task ${output.groups?.[0]?.[0] || output.tasks[0].id}`;
   return `claude-foundation agents plan ${id} --group 1`;

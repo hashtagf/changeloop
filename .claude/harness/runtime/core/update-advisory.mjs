@@ -376,7 +376,7 @@ export function upgradeCompatibilityDiagnostics({
         "receipts-revalidated-against-current-protocols"
       ],
       recovery: "claude-foundation change validate " + change.id + " && " +
-        "claude-foundation proof readiness " + change.id
+        "claude-foundation advance " + change.id + " --inspect"
     }));
   return {
     version: 1,

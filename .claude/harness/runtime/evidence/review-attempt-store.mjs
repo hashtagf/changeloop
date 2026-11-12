@@ -3,6 +3,29 @@ import { basename, join } from "node:path";
 
 import { emitSignal } from "../core/signals.mjs";
 
+const DELIVERED_VERDICTS = ["pass", "fail", "inconclusive"];
+
+export function blockingReviewFindings(attempt) {
+  return (Array.isArray(attempt?.findings) ? attempt.findings : [])
+    .filter((finding) => ["blocker", "major"].includes(finding?.severity));
+}
+
+function deliveredReviewVerdict(attempt) {
+  return attempt?.status === "completed" && DELIVERED_VERDICTS.includes(attempt.resultStatus) ||
+    attempt?.version === 1 && DELIVERED_VERDICTS.includes(attempt.status);
+}
+
+// Closure is owed to the reviewer who reported the finding, not only to an AI.
+// When the newest delivered verdict of any reviewer is a human review with
+// blocker/major findings, the next review must close those IDs. Infrastructure
+// errors are not verdicts, so they never discharge the debt.
+export function openHumanReviewClosure(attempts) {
+  const latest = (Array.isArray(attempts) ? attempts : [])
+    .filter(deliveredReviewVerdict).at(-1);
+  return latest?.reviewerType === "human" && blockingReviewFindings(latest).length
+    ? latest : null;
+}
+
 export function matchingRepairClosure(current, details, stableHash) {
   if (current?.reviewerType !== "deterministic") return null;
   if (current.sourceAttemptDigest !== details.sourceAttemptDigest ||
@@ -73,6 +96,8 @@ export function recordRepairClosureAttemptOperation(context, id, details) {
   const current = context.reviewAttempts(id, history).at(-1);
   const duplicate = matchingRepairClosure(current, details, context.stableHash);
   if (duplicate) return duplicate;
+  if (openHumanReviewClosure(context.reviewAttempts(id, history)))
+    context.fail("deterministic repair closure cannot close blocker/major findings from a later human review; the next review must verify them");
   const source = repairClosureSource(
     context.deliveredAiAttempts(id, history), details, context.fail);
   const verified = repairClosureVerifiedFindingIds(source, details, context.fail);
@@ -94,7 +119,7 @@ export function recordRepairClosureAttemptOperation(context, id, details) {
 export function assertBaseMoveResetAllowed(history, move, reference, fail) {
   if (!move) fail("no sandbox sync base move is recorded for this change");
   if (move.preDiffIdentity && move.preDiffIdentity === move.postDiffIdentity)
-    fail("the last base move left the change's diff unchanged; the review receipt rebinds on 'claude-foundation proof run' and no reset is needed");
+    fail("the last base move left the change's diff unchanged; the review receipt rebinds on 'claude-foundation advance <change> --through proven' and no reset is needed");
   if ((history.baseMoveResets || []).some((row) =>
     row.movementKey === move.movementKey))
     fail("this base move already released a review attempt");

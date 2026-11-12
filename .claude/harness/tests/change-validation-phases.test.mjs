@@ -227,7 +227,7 @@ test("an infra change without a plan-check provider gets an agent-owned setup ad
   assert.equal(row.action, "EDIT");
   assert.equal(row.reason, "work-type-provider-missing");
   assert.equal(row.trigger, "work-type:infra");
-  assert.equal(row.command, "claude-foundation evidence init change-a --write");
+  assert.equal(row.command, "claude-foundation advance change-a --through proven");
   assert.equal(row.resume, "claude-foundation advance change-a --through proven");
   assert.match(row.next, /Resume: claude-foundation advance change-a --through proven/);
   assert.doesNotMatch(JSON.stringify(row), /ASK_USER|"owner":"user"/);
@@ -403,7 +403,8 @@ test("declared surface forecast reports wiring actions and review consequence", 
     new Set(), () => ({ capabilities: ["test", "review"] }),
     (message) => warnings.push(message));
   assert.equal(warnings.length, 5);
-  assert.match(warnings[1], /evidence init change-a --write/);
+  assert.match(warnings[1], /claude-foundation advance change-a --through proven/);
+  assert.doesNotMatch(warnings.join("\n"), /evidence (init|doctor)/);
   assert.match(warnings[3], /fresh reviewer/);
 });
 
@@ -512,7 +513,7 @@ test("evidence initialization previews and mirrors durable provider wiring", () 
   assert.ok(messages.some((message) => message.includes("CANDIDATE test")));
   assert.ok(messages.some((message) => message.includes("BLOCKED  review")));
   assert.ok(messages.some((message) => message.includes("BLOCKED  broken")));
-  assert.ok(messages.some((message) => message.includes("evidence init change-a --write")));
+  assert.ok(messages.some((message) => message.includes("advance change-a --through proven")));
 });
 
 test("evidence doctor reports a test alias covered only while review covers it", () => {

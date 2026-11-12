@@ -129,7 +129,7 @@ export function proofPreflightBlockers(value) {
 export function proofPreflightFailure(id, value, blockers, recovery) {
   return `proof preflight failed: ${blockers.join("; ")}${
     recovery.length ? `\n\nhow to clear this (${value.status}):\n${recovery.join("\n")}` : ""
-  }\n\nfull detail: claude-foundation proof readiness ${id}`;
+  }\n\nfull detail: claude-foundation advance ${id} --inspect`;
 }
 
 export function proofPreflightAdvisory(advisory) {
@@ -654,11 +654,11 @@ export function wiringChoiceOperation({ evidenceDetectionValue }, id, provider) 
   if (!candidate) return null;
   return {
     kind: "configure-provider",
-    command: `claude-foundation evidence init ${id} --write`,
+    command: `claude-foundation advance ${id} --through proven`,
     source: candidate.source,
     instruction: `Wire provider '${provider}' from the project-owned command detected at ${
       candidate.source}, then re-run proof.`,
-    verify: `claude-foundation proof readiness ${id}`
+    verify: `claude-foundation advance ${id} --inspect`
   };
 }
 
@@ -927,7 +927,7 @@ export function createProofReadinessRuntime({
         },
         {
           kind: "retry",
-          command: `claude-foundation proof run ${id}`
+          command: `claude-foundation advance ${id} --through proven`
         },
         {
           kind: "external-evidence",
@@ -937,7 +937,7 @@ export function createProofReadinessRuntime({
           kind: "reconfigure",
           file: `openspec/changes/${id}/execution.yaml`,
           instruction: `Configure provider '${provider}' with an available project-owned command that proves the same declared claims.`,
-          verify: `claude-foundation proof readiness ${id}`
+          verify: `claude-foundation advance ${id} --inspect`
         }
       ]
     };
@@ -953,7 +953,7 @@ export function createProofReadinessRuntime({
   }
 
   function surfaceRepair(id, fixit) {
-    const verify = `claude-foundation proof readiness ${id}`;
+    const verify = `claude-foundation advance ${id} --inspect`;
     if (fixit.reason === "misplaced-sandbox") {
       const targets = fixit.targets || [];
       const destination = targets.length
@@ -1052,7 +1052,7 @@ export function createProofReadinessRuntime({
         command: `claude-foundation agents release ${id} ${lease.taskId} --owner ${lease.owner} --force`,
         note: "A lease that has not expired also requires --decision-ref, because the worker holding it may still be running."
       })),
-      verify: `claude-foundation proof readiness ${id}`
+      verify: `claude-foundation advance ${id} --inspect`
     }];
   }
 

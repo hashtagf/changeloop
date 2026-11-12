@@ -205,8 +205,10 @@ export function createCommandRegistry({ path, readJson, fail }) {
     if (!name) {
       // Loop entries carry `surface`; CLI entries keep the exact shape they
       // always had, so a consumer reading this array is not re-broken to gain
-      // the new rows.
-      describeAllCommands(entries, loop, options);
+      // the new rows. Internal primitives stay describable by name but are not
+      // listed: `advance` performs them, so they are not a model-facing route.
+      describeAllCommands(entries.filter((entry) => entry.audience !== "internal"),
+        loop, options);
       return;
     }
     const selection = commandDescriptionSelection(entries, loop, name);

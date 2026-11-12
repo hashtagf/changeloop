@@ -9,7 +9,9 @@ import {
   deltaClosureIssue, reviewFindingIssues, reviewPacketIssues, validReview
 } from "../evidence/configured-reviewer.mjs";
 import { checkpointReviewResult, recoverReviewResult } from "../evidence/review-result-recovery.mjs";
-import { normalizeReviewCompletionFindings } from "../evidence/review-attempt-store.mjs";
+import {
+  blockingReviewFindings, normalizeReviewCompletionFindings, openHumanReviewClosure
+} from "../evidence/review-attempt-store.mjs";
 import {
   reviewAgreementValue, reviewDepthForTier, reviewDiffValue, reviewModelClass,
   reviewScenarioChecklist
@@ -413,7 +415,7 @@ export function authorityResponsePreflightIssues({ request, response, undispatch
     const supplied = [...new Set(verifiedIds.map((value) => String(value).trim()).filter(Boolean))].sort();
     if (deltaClosureIssue({ expected, verified: supplied, status: response?.status,
       findings: Array.isArray(evidence.findings) ? evidence.findings : [] }))
-      issues.push(`verifiedFindingIds must close exactly the first-round findings: ${[...expected].sort().join(", ")}` +
+      issues.push(`verifiedFindingIds must close exactly the closureFindings (first-round or prior human review): ${[...expected].sort().join(", ")}` +
         " (a failing response may close fewer only by also reporting a blocker or major finding)");
   }
   return issues;
@@ -849,10 +851,12 @@ export function createAuthorityRuntime({
         promotionReason: "post-review-correction"
       };
     }
-    return { routing, deliveredAi, maxAiAttempts, maxInfrastructureRetries };
+    const humanClosure = openHumanReviewClosure(reviewAttempts(id, history));
+    return { routing, deliveredAi, maxAiAttempts, maxInfrastructureRetries,
+      humanClosure };
     }
     const { routing, deliveredAi, maxAiAttempts,
-      maxInfrastructureRetries } = dispatchRouting();
+      maxInfrastructureRetries, humanClosure } = dispatchRouting();
     function dispatchReviewer() {
     const reviewerIdentity = String(flags["reviewer-identity"] || "").trim();
     if (!reviewerIdentity)
@@ -955,17 +959,17 @@ export function createAuthorityRuntime({
       paths: scopePaths,
       digest: scopeDigest
     };
-    function applyHighRiskHumanClosure() {
-    if (routing.tier === "high" && reviewerType === "human" && deliveredAi.length) {
-      const baseAttempt = deliveredAi.at(-1);
-      const closureFindings = (baseAttempt.findings || []).filter((finding) =>
-        ["blocker", "major"].includes(finding.severity));
-      packet.closureFindings = {
-        baseAttemptDigest: baseAttempt.digest,
+    function closureFindingsValue(source) {
+      const closureFindings = blockingReviewFindings(source);
+      return {
+        baseAttemptDigest: source.digest,
         ids: closureFindings.map((finding) => finding.id).sort(),
         findings: closureFindings
       };
     }
+    function applyHighRiskHumanClosure() {
+    if (routing.tier === "high" && reviewerType === "human" && deliveredAi.length)
+      packet.closureFindings = closureFindingsValue(deliveredAi.at(-1));
     }
     applyHighRiskHumanClosure();
     function applyDeltaPacket() {
@@ -982,13 +986,7 @@ export function createAuthorityRuntime({
           workspaceHash: baseWorkspaceHash
         }
       };
-      const closureFindings = (baseAttempt.findings || []).filter((finding) =>
-        ["blocker", "major"].includes(finding.severity));
-      packet.closureFindings = {
-        baseAttemptDigest,
-        ids: closureFindings.map((finding) => finding.id).sort(),
-        findings: closureFindings
-      };
+      packet.closureFindings = closureFindingsValue(baseAttempt);
       function applyDeltaContractProjection() {
       const changedContractNames = new Set(scopeRows
         .filter((row) => row.kind === "contract-artifact")
@@ -1025,6 +1023,10 @@ export function createAuthorityRuntime({
     }
     }
     applyDeltaPacket();
+    // A newer human verdict with blocker/major findings owns closure for the
+    // next review of either reviewer type and scope; AI-only chains keep the
+    // closure chosen above.
+    if (humanClosure) packet.closureFindings = closureFindingsValue(humanClosure);
     if (reviewerType === "ai") {
       // Diff-scoped by default: changed hunks plus the agreement, bound by
       // the packet digest. Low risk before any delivered AI round is diff-only.
@@ -1813,12 +1815,14 @@ export function createAuthorityRuntime({
     if (findingIds.some((findingId) => !findingId) ||
         new Set(findingIds).size !== findingIds.length)
       fail("configured reviewer finding IDs must be non-empty and unique");
-    if (scope === "delta" && !infrastructureError) {
+    if ((scope === "delta" || dispatched.packet.closureFindings) && !infrastructureError) {
       const expectedIds = [...(dispatched.packet.closureFindings?.ids || [])].sort();
       const closureIssue = deltaClosureIssue({ expected: expectedIds,
         verified: report.verifiedFindingIds, status: report.status, findings: report.findings });
       if (closureIssue)
         fail(`AI ${closureIssue}`);
+    }
+    if (scope === "delta" && !infrastructureError) {
       const scoped = dispatched.dispatch.scope.paths || [];
       const outside = report.findings.filter((finding) => {
         const path = String(finding.path || "").replace(/^\.\//, "");
@@ -2065,7 +2069,7 @@ export function createAuthorityRuntime({
       String(value).trim()).filter(Boolean))].sort();
     if (deltaClosureIssue({ expected: expectedIds, verified: suppliedIds,
       status: response.status, findings }))
-      fail("delta review verifiedFindingIds must exactly close the first-round finding IDs " +
+      fail("review verifiedFindingIds must exactly close the closureFindings IDs (first-round or prior human review) " +
         "(a failing review may close fewer only by also reporting a blocker or major finding)");
     if (request.dispatch.scope.mode !== "delta") return;
     const outside = findings.filter((finding) => {

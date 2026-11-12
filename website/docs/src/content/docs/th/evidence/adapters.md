@@ -187,13 +187,12 @@ harness รันคำสั่งสลับกันระหว่าง ba
 เมื่อ change ประกาศ claim แล้วแต่ derived หรือ custom wiring ยังไม่ลงตัว
 
 ```bash
-claude-foundation evidence detect <change>    # อ่าน manifest ไม่รันอะไร
-claude-foundation evidence init <change>      # ดูตัวอย่างก่อน
-claude-foundation evidence init <change> --write
-claude-foundation evidence doctor <change>    # อธิบายว่ายังเหลืออะไรที่ยังไม่ลงตัว
+claude-foundation advance <change> --through proven   # ตรวจหาและต่อสาย
+claude-foundation doctor --stage prove --change <change>   # อธิบายสิ่งที่ยังไม่ลงตัว
 ```
 
-`detect` อ่าน manifest และการตั้งค่าที่รีโปเป็นเจ้าของ **โดยไม่รันสคริปต์** ส่วน `init` เป็นแค่ตัวอย่างจนกว่าจะใส่ `--write` และแม้ใส่แล้วก็เพิ่มเฉพาะการต่อสายที่มั่นใจสูง พร้อมรักษา provider เดิมไว้ กรณีที่กำกวม ต้องใช้อำนาจภายนอก ขาดจำนวนเทส หรือรอผู้ปฏิบัติงานรีวิว จะยังไม่ถูกแก้และมี action ถัดไปบอกไว้ชัดเจน
+`advance` รัน primitive ภายใน `evidence detect` และ `evidence init --write` เอง
+การตรวจหาอ่าน manifest และการตั้งค่าที่รีโปเป็นเจ้าของ **โดยไม่รันสคริปต์** ส่วน `init` เป็นแค่ตัวอย่างจนกว่าจะใส่ `--write` และแม้ใส่แล้วก็เพิ่มเฉพาะการต่อสายที่มั่นใจสูง พร้อมรักษา provider เดิมไว้ กรณีที่กำกวม ต้องใช้อำนาจภายนอก ขาดจำนวนเทส หรือรอผู้ปฏิบัติงานรีวิว จะยังไม่ถูกแก้และมี action ถัดไปบอกไว้ชัดเจน
 
 การตั้งต้นไม่เคยติดตั้ง dependency ไม่สร้าง receipt ไม่ลดทอน claim และไม่ถือว่าการตรวจพบคือการพิสูจน์
 

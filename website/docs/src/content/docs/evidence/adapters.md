@@ -191,13 +191,12 @@ For CI, a reviewer, or another system Change Loop must not execute locally.
 When a change declares claims but derived or custom wiring is unresolved:
 
 ```bash
-claude-foundation evidence detect <change>    # read manifests, execute nothing
-claude-foundation evidence init <change>      # preview
-claude-foundation evidence init <change> --write
-claude-foundation evidence doctor <change>    # explain what is still unresolved
+claude-foundation advance <change> --through proven   # detects and wires
+claude-foundation doctor --stage prove --change <change>   # explains what is unresolved
 ```
 
-`detect` reads repository-owned manifests and configuration **without executing scripts**. `init` is preview-only unless `--write`, and even then adds only high-confidence wiring while preserving existing providers. Ambiguous, external-authority, missing-count, and operator-review cases stay unresolved with an explicit next action.
+`advance` runs the internal `evidence detect` and `evidence init --write`
+primitives itself. Detection reads repository-owned manifests and configuration **without executing scripts**. `init` is preview-only unless `--write`, and even then adds only high-confidence wiring while preserving existing providers. Ambiguous, external-authority, missing-count, and operator-review cases stay unresolved with an explicit next action.
 
 Bootstrap never installs a dependency, creates a receipt, weakens a claim, or treats detection as proof.
 
