@@ -93,7 +93,7 @@ missing_dependencies="$WORK/missing-dependencies/.claude/tests"
 mkdir -p "$missing_dependencies"
 cp "$RUN_ALL" "$missing_dependencies/run-all.sh"
 git -C "$WORK/missing-dependencies" init -q
-if sh "$missing_dependencies/run-all.sh" > "$WORK/missing-dependencies.out" 2>&1; then
+if sh "$missing_dependencies/run-all.sh" --full > "$WORK/missing-dependencies.out" 2>&1; then
   echo "FAIL: full runner accepted missing benchmark dependencies"
   exit 1
 fi
@@ -105,32 +105,68 @@ if grep -q '^=== ' "$WORK/missing-dependencies.out"; then
   echo "FAIL: runner launched suites before checking dependencies"
   exit 1
 fi
-sh "$missing_dependencies/run-all.sh" --list > "$WORK/missing-dependencies-list.out"
+sh "$missing_dependencies/run-all.sh" --full --list > "$WORK/missing-dependencies-list.out"
 grep -q 'openspec native benchmark' "$WORK/missing-dependencies-list.out" || {
   echo "FAIL: listing suites unexpectedly needs benchmark dependencies"
   exit 1
 }
 
-# `--quick` is the inner-loop gate: it keeps ordinary suites and drops the
-# slowest ones and the exclusive benchmark, which the full run still owns.
+# Two tiers. The default is the fast local gate: it keeps ordinary suites and
+# drops the slow tier and the exclusive benchmark; `--quick` is the same gate.
+# `--full` (CI) owns every non-release row, and `--release` adds the sentinel.
+sh "$HERE/../run-all.sh" --list > "$WORK/default-list.out"
 sh "$HERE/../run-all.sh" --quick --list > "$WORK/quick-list.out"
-sh "$HERE/../run-all.sh" --list > "$WORK/full-list.out"
+sh "$HERE/../run-all.sh" --full --list > "$WORK/full-list.out"
 sh "$HERE/../run-all.sh" --release --list > "$WORK/release-list.out"
-for label in 'runtime syntax' 'run-all process control'; do
-  grep -qFx "$label" "$WORK/quick-list.out" || {
-    echo "FAIL: --quick dropped ordinary suite: $label"; exit 1; }
+cmp -s "$WORK/default-list.out" "$WORK/quick-list.out" || {
+  echo "FAIL: --quick is not the default gate"; exit 1; }
+for label in 'runtime syntax' 'run-all process control' 'land surface mutation'; do
+  grep -qFx "$label" "$WORK/default-list.out" || {
+    echo "FAIL: the default gate dropped ordinary suite: $label"; exit 1; }
 done
-for label in 'installer smoke' 'openspec native benchmark'; do
+for label in 'installer smoke' 'harness contracts (topology planning)' \
+  'pull request delivery' 'evidence binding mutation' 'openspec native benchmark'; do
   grep -qFx "$label" "$WORK/full-list.out" || {
     echo "FAIL: full list is missing: $label"; exit 1; }
-  if grep -qFx "$label" "$WORK/quick-list.out"; then
-    echo "FAIL: --quick kept slow suite: $label"; exit 1
+  if grep -qFx "$label" "$WORK/default-list.out"; then
+    echo "FAIL: the default gate kept slow suite: $label"; exit 1
   fi
 done
+# The default gate is exactly the full gate minus the slow tier and exclusive rows.
+grep -vxF -f "$WORK/default-list.out" "$WORK/full-list.out" > "$WORK/slow-only.out" || true
+[ "$(wc -l < "$WORK/default-list.out" | tr -d ' ')" -gt 200 ] || {
+  echo "FAIL: the default gate lost ordinary suites"; exit 1; }
+[ "$(wc -l < "$WORK/slow-only.out" | tr -d ' ')" -lt 40 ] || {
+  echo "FAIL: the slow tier grew past its budget"; exit 1; }
+grep -vxF -f "$WORK/full-list.out" "$WORK/default-list.out" > "$WORK/default-extra.out" || true
+[ ! -s "$WORK/default-extra.out" ] || {
+  echo "FAIL: the default gate runs suites the full gate does not"; exit 1; }
+# Every SLOW and EARLY name is a registered row (a typo would silently move a
+# slow suite into the default gate or lose its early start), and EARLY rows
+# stay in the default gate.
+for tier in SLOW EARLY; do
+  awk -v tier="$tier" '
+    index($0, tier "=\047") == 1 { on = 1; sub(/^[A-Z_]+=\047/, "") }
+    on { line = $0; done = sub(/\047$/, "", line); print line; if (done) exit }
+  ' "$RUN_ALL" > "$WORK/tier-$tier.out"
+  [ -s "$WORK/tier-$tier.out" ] || { echo "FAIL: could not read $tier"; exit 1; }
+  while IFS= read -r label; do
+    grep -qFx -- "$label" "$WORK/full-list.out" || {
+      echo "FAIL: $tier names an unregistered suite: $label"; exit 1; }
+  done < "$WORK/tier-$tier.out"
+done
+while IFS= read -r label; do
+  grep -qFx -- "$label" "$WORK/default-list.out" || {
+    echo "FAIL: EARLY suite is not in the default gate: $label"; exit 1; }
+done < "$WORK/tier-EARLY.out"
+slow_affected="$(FOUNDATION_CHANGED_FILES='.claude/tests/harness/run-installer-tests.sh' \
+  sh "$RUN_ALL" --affected --list)"
+printf '%s\n' "$slow_affected" | grep -qFx 'installer smoke' || {
+  echo "FAIL: --affected did not select a slow suite for its own edit"; exit 1; }
 
 # The sentinel reruns the whole workload suite: `--release` owns it, the full
-# and quick gates leave it out, and a benchmark edit still selects it.
-for list in full quick; do
+# and default gates leave it out, and a benchmark edit still selects it.
+for list in full default; do
   if grep -qFx 'openspec native sentinel' "$WORK/$list-list.out"; then
     echo "FAIL: the $list gate kept the release-only sentinel"; exit 1
   fi

@@ -11,6 +11,7 @@
 
 ## Evidence
 
-- [ ] `PATH="$PWD/node_modules/.bin:$PATH" sh .claude/tests/run-all.sh` is green locally
+- [ ] `PATH="$PWD/node_modules/.bin:$PATH" sh .claude/tests/run-all.sh` (default gate) is green locally
+- [ ] CI `workflow-tests` (the complete `--full` set) is green
 - [ ] Commits are signed off (`git commit -s`, DCO)
 - [ ] Diff contains only changes traceable to this request

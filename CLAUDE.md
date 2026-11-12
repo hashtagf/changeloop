@@ -164,7 +164,7 @@ Website page responsibilities below apply to both the English path under
    records as disposable or project-owned packets as freely hand-editable.
 
 The documentation guardrails run inside
-`.claude/tests/docs/run-doc-consistency.sh`, which is already in the full suite.
+`.claude/tests/docs/run-doc-consistency.sh`, which is already in the default gate.
 They check reading budgets, bilingual page presence, and local links in the
 repository entry guides. Existing checks cover protocol pins, public commands,
 selected lifecycle semantics, and sidebar locales. Use focused checks while
@@ -240,8 +240,8 @@ installed runtime.
    row in `.claude/tests/README.md`.
 6. Update canonical documentation and English/Thai public mirrors together.
    Change `.claude/harness/protocol.json` only for a wire-visible contract.
-7. Run affected checks while iterating, then the authoritative full suite before
-   commit. Review `git diff --check` and the final status; do not commit generated
+7. Run affected checks while iterating, then the default gate before commit;
+   CI runs the complete `--full` set on every push. Review `git diff --check` and the final status; do not commit generated
    benchmark output or temporary consumers.
 
 ## Verification commands
@@ -251,6 +251,7 @@ Prefix shell commands with `rtk`; in a command chain, prefix every segment.
 ```bash
 rtk test bash .claude/tests/run-all.sh --affected
 rtk test bash .claude/tests/run-all.sh
+rtk test bash .claude/tests/run-all.sh --full   # CI runs this on every push
 rtk test bash .claude/tests/docs/run-doc-consistency.sh
 rtk npm run build                         # from website/docs
 rtk npm run bench:openspec-native:sentinel
@@ -258,7 +259,10 @@ rtk npm run release:preflight
 rtk git diff --check
 ```
 
-Use the full registered suite runner as the final deterministic gate. Paid scenario
+The default `run-all.sh` (fast tier, about three minutes) is the local gate
+before commit. `run-all.sh --full` adds the slow tier; CI runs it on every push
+and pull request, and a green full run is required before merge or release. A
+changed shipped file needs both. Paid scenario
 runs are separate release evidence: they require explicit spend authority,
 must use disposable consumers, and must finish at `archived` with oracle and
 clean-install verification. A release-report exit code 2 is a truthful promotion
@@ -271,7 +275,7 @@ candidate's checkpoint; paid execution remains explicitly budget-authorized.
 
 ## Change-specific gates
 
-| Change touches | Required focused checks in addition to the full suite |
+| Change touches | Required focused checks in addition to the default gate |
 |---|---|
 | Runtime/composition | nearest unit/seam tests, wiring and architecture checks |
 | Commands, skills, hooks, docs | context budgets, command contracts, docs consistency |

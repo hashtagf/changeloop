@@ -68,3 +68,25 @@ run-all.sh SHALL ให้ suite harness contracts (topology planning) มี wa
 - **GIVEN** ตั้ง FOUNDATION_SUITE_TIMEOUT_SECONDS เป็น 45
 - **WHEN** ถามค่า timeout ของ topology planning และของ suite ปกติ
 - **THEN** ทั้งสองได้ 45
+
+### Requirement: two-tier-selection
+
+run-all.sh SHALL ใช้ประตูเร็วเป็นค่าปริยาย โดยรันทุก suite ยกเว้นชั้น SLOW, suite แบบ exclusive และ suite release-only ส่วน `--full` SHALL รันทุก suite ยกเว้น release-only และ `--release` SHALL เท่ากับ `--full` บวก suite release-only และ `--affected` SHALL ยังเลือก suite ชั้น SLOW เมื่อไฟล์ที่มันเป็นเจ้าของเปลี่ยน
+
+#### Scenario: ค่าปริยายตัดชั้น SLOW
+
+- **GIVEN** ไม่ได้ส่ง flag เลือกโหมด
+- **WHEN** แสดงรายการ suite ของ run-all.sh
+- **THEN** ไม่มี installer smoke และ openspec native benchmark แต่ยังมี runtime syntax และ `--quick` ได้รายการเดียวกัน
+
+#### Scenario: --full รันชุดครบ
+
+- **GIVEN** ส่ง `--full`
+- **WHEN** แสดงรายการ suite
+- **THEN** มีทุก suite ยกเว้น openspec native sentinel และ `--release` ได้รายการเดียวกันบวก sentinel
+
+#### Scenario: --affected ยังเลือก suite ช้าของไฟล์ที่เปลี่ยน
+
+- **GIVEN** ไฟล์ที่เปลี่ยนคือ `.claude/tests/harness/run-installer-tests.sh`
+- **WHEN** แสดงรายการ suite ด้วย `--affected`
+- **THEN** มี installer smoke

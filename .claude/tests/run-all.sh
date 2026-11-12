@@ -36,25 +36,32 @@ for _host_var in $(env | sed -n 's/^\(FOUNDATION_[A-Z0-9_]*\)=.*/\1/p'); do
 done
 unset CLAUDE_FOUNDATION_PROJECT CLAUDE_PROJECT_DIR _host_var
 
-# Selection: no flag runs the full gate (every row except RELEASE_ONLY);
-# `--release` adds the RELEASE_ONLY rows; `--quick` also drops LONG_FIRST and
-# exclusive rows; `--affected` runs what the selector picks for changed files.
-selection_mode="full"
+# Selection has two deterministic tiers. No flag runs the fast local gate:
+# every row except SLOW, exclusive, and RELEASE_ONLY rows (`--quick` is the
+# same gate under its older name). `--full` runs every row except RELEASE_ONLY
+# and is what CI runs on every push and pull request; `--release` adds the
+# RELEASE_ONLY rows. `--affected` runs what the selector picks for changed
+# files, slow rows included.
+selection_mode="fast"
 list_mode=0
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --affected) selection_mode="affected"; shift ;;
-    --quick) selection_mode="quick"; shift ;;
+    --quick) selection_mode="fast"; shift ;;
+    --full) selection_mode="full"; shift ;;
     --release) selection_mode="release"; shift ;;
     --list) list_mode=1; shift ;;
     *) break ;;
   esac
 done
 
-# The slowest suites (each minutes long on a loaded machine), slowest first.
-# The pool starts them first so none stretches the tail of a full run, and
-# `--quick` leaves them out: it is the fast inner-loop gate, not the final one.
-LONG_FIRST='harness contracts (topology planning)
+# The slow tier: real-Git end-to-end, mutation, installer, and topology suites,
+# each over a minute (several over five) on a loaded machine, roughly slowest
+# first. The default gate leaves them out so it stays within about three
+# minutes; `--full` (CI) and `--release` run them, and `--affected` still
+# selects one when its owned files change. When they run, the pool starts them
+# first so none stretches the tail of the run.
+SLOW='harness contracts (topology planning)
 harness contracts (topology siblings)
 concurrent repositories seam
 installer smoke
@@ -75,9 +82,40 @@ feedback review
 harness contracts (change policy)
 rapid fast path seam
 harness contracts (sandbox land)
-command registry'
+command registry
+installed repository recovery
+base-move rebind
+archive telemetry
+target drift
+feedback isolation'
 
-# Release-only suites: the default full gate leaves them out and `--release`
+# The longest suites of the default tier (about a minute each on a loaded
+# machine), slowest first. They stay in the default gate; the pool only starts
+# them right after any SLOW rows so none begins late and sets the wall time.
+EARLY='risk-tiered review contract
+harness contracts (evidence lifecycle)
+architecture boundaries
+sandbox data-loss guards
+lifecycle safety mutation
+spec sync land gate
+context budgets
+advance lifecycle outcomes
+harness time seam
+run-all process control
+land surface mutation
+Pi host adapter
+harness contracts (evidence recovery)
+harness contracts (evidence execution)
+repository delivery saga
+phase mutation guard
+semantic acceptance seam
+large change packets
+openspec benchmark matrix
+harness contracts (evidence telemetry)
+harness contracts (evidence review)
+root sandbox repository projection'
+
+# Release-only suites: the default and `--full` gates leave them out and `--release`
 # adds them. The sentinel reruns the whole frozen workload suite alone after the
 # pool (about six minutes), and only benchmark edits can change its result, so
 # `--affected` still selects it for those edits and the release workflow and CI
@@ -87,7 +125,7 @@ RELEASE_ONLY='openspec native sentinel'
 # label|command — `!` prefixes a label that must run with the repository to
 # itself. Commands are expanded by the child with $HERE and $ROOT in scope.
 #
-# The pool starts the suites named in LONG_FIRST before the rest, so a slow
+# The pool starts the suites named in SLOW, then EARLY, before the rest, so a slow
 # suite never starts late and leaves a long tail. Replay order below follows
 # this table, so the printed report order is unaffected.
 suites() {
@@ -368,13 +406,13 @@ label_of() { _l="${1%%|*}"; printf '%s' "${_l#!}"; }
 exclusive() { case "$1" in !*) return 0 ;; *) return 1 ;; esac; }
 named_in() { printf '%s\n' "$1" | grep -qFx -- "$2"; }
 
-# Whether a table line runs in a fixed (non-affected) selection mode: `quick`
-# drops exclusive and LONG_FIRST suites, `full` drops RELEASE_ONLY suites, and
-# `release` runs every row.
+# Whether a table line runs in a fixed (non-affected) selection mode: `fast`
+# drops exclusive, SLOW, and RELEASE_ONLY suites, `full` drops RELEASE_ONLY
+# suites, and `release` runs every row.
 in_mode() {
   _mode_label="$(label_of "$2")"
   case "$1" in
-    quick) ! exclusive "$2" && ! named_in "$LONG_FIRST" "$_mode_label" &&
+    fast) ! exclusive "$2" && ! named_in "$SLOW" "$_mode_label" &&
       ! named_in "$RELEASE_ONLY" "$_mode_label" ;;
     full) ! named_in "$RELEASE_ONLY" "$_mode_label" ;;
     *) return 0 ;;
@@ -634,10 +672,11 @@ fi
 # Longest suites start first so none of them begins late and stretches the
 # tail of the run (longest-processing-time-first). Order of the replayed output
 # is unaffected: it follows the table.
-ordered="$(suites | SHARED_SUITES="$shared" LONG_FIRST="$LONG_FIRST" awk '
+ordered="$(suites | SHARED_SUITES="$shared" SLOW="$SLOW" EARLY="$EARLY" awk '
   BEGIN {
     n = split(ENVIRON["SHARED_SUITES"], ids, " "); for (i = 1; i <= n; i++) want[ids[i]] = 1
-    m = split(ENVIRON["LONG_FIRST"], names, "\n"); for (i = 1; i <= m; i++) rank[names[i]] = i
+    m = split(ENVIRON["SLOW"], names, "\n"); for (i = 1; i <= m; i++) rank[names[i]] = i
+    m = split(ENVIRON["EARLY"], names, "\n"); for (i = 1; i <= m; i++) rank[names[i]] = 100 + i
   }
   {
     label = $0; sub(/\|.*/, "", label); sub(/^!/, "", label)

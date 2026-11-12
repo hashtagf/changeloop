@@ -49,18 +49,22 @@ rtk test bash .claude/tests/run-all.sh --affected --list
 rtk test bash .claude/tests/run-all.sh --affected
 ```
 
-For a broad check that skips only the slowest end-to-end suites, run
-`run-all.sh --quick`. It never replaces the full gate.
-
-The full suite remains the authoritative final gate before commit. You do not
-need to run it before and after every edit:
+The default `run-all.sh` gate is the local gate before commit. It runs every
+suite except the slow tier (real-Git end-to-end, mutation, installer, and
+topology suites) in about three minutes. You do not need to run it before and
+after every edit:
 
 ```sh
 rtk proxy env PATH="$PWD/node_modules/.bin:$PATH" bash .claude/tests/run-all.sh
 rtk git diff --check
 ```
 
-The full gate leaves out the release-only `openspec native sentinel`, which
+`run-all.sh --full` runs the complete set, slow tier included. CI runs it on
+every push and pull request, and a green CI full run is required before merge
+or release; a changed shipped file needs both the local default gate and that
+CI run.
+
+Neither gate runs the release-only `openspec native sentinel`, which
 reruns the whole frozen workload suite. `--affected` still selects it when you
 change benchmark files; `run-all.sh --release` adds it for a release candidate.
 
@@ -134,8 +138,8 @@ Use your real name and a reachable email address.
 - One logical change per pull request. Small PRs are reviewed quickly; large
   mixed PRs are usually sent back for splitting.
 - CI must be green. The workflow suite (`workflow-tests`) runs
-  `run-all.sh --release`: the full gate you run locally plus the release-only
-  sentinel.
+  `run-all.sh --release`: the full gate (the local default gate plus the slow
+  tier) and the release-only sentinel.
 
 ## Reporting bugs and requesting features
 

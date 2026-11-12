@@ -1,8 +1,10 @@
 name: workflow-tests
 
-# Runs the deterministic workflow test harness (.claude/tests/run-all.sh
-# --release: the full gate plus the release-only zero-cost benchmark sentinel)
-# on any change to the workflow product. Live e2e / benchmark suites are token-costed and
+# Runs the complete deterministic workflow test harness (.claude/tests/run-all.sh
+# --release: the --full gate, slow tier included, plus the release-only
+# zero-cost benchmark sentinel) on any change to the workflow product. The
+# default local gate skips the slow tier, so this job is where it always runs.
+# Keep --release (a superset of --full) so CI also covers the sentinel. Live e2e / benchmark suites are token-costed and
 # stay off in CI (run-all.sh skips them unless CLAUDE_E2E=1).
 on:
   pull_request:

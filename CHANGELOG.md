@@ -52,6 +52,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   recovery, the moved-target Land option) now names
   `advance <change> --through proven|archived` or `advance <change> --inspect`.
   The public command golden fixture drops from 76 to 68 commands.
+- The deterministic suite now has two tiers (repository-only). Plain
+  `.claude/tests/run-all.sh` is the fast local gate before commit (about three
+  minutes): every suite except the `SLOW` tier of real-Git end-to-end,
+  mutation, installer, and topology suites and the exclusive benchmark.
+  `--quick` is the same gate. New `run-all.sh --full` runs the complete set
+  (the former default); CI runs it as `--release` on every push and pull
+  request, and it must be green before merge or release. `--affected` still
+  selects slow suites whose owned files change.
 - Each harness command asks Git less: repeated `git status`, `git ls-files
   -s`, and `git rev-parse HEAD` listings of an unchanged workspace within one
   process are answered from a per-process memo instead of a new spawn. The

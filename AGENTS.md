@@ -83,7 +83,7 @@ rules must not become dependencies of installed consumer files.
 5. Add a deterministic regression at the lowest boundary that catches the bug.
 6. Update command registry, protocol pins, installer ownership, and canonical
    docs only when their actual contracts change.
-7. Run focused tests while iterating and the authoritative suite before commit.
+7. Run focused tests while iterating and the default gate before commit.
 
 ## Shell and file rules
 
@@ -102,6 +102,7 @@ rules must not become dependencies of installed consumer files.
 ```bash
 rtk test bash .claude/tests/run-all.sh --affected
 rtk test bash .claude/tests/run-all.sh
+rtk test bash .claude/tests/run-all.sh --full   # CI runs this on every push
 rtk test bash .claude/tests/docs/run-doc-consistency.sh
 rtk npm run build                         # run from website/docs
 rtk npm run bench:openspec-native:sentinel
@@ -109,8 +110,11 @@ rtk npm run release:preflight
 rtk git diff --check
 ```
 
-The full `.claude/tests/run-all.sh` run is the authoritative deterministic
-gate. A changed shipped file requires the full suite before commit. Website
+The deterministic gate has two tiers. The default `.claude/tests/run-all.sh`
+run (about three minutes) is the local gate before commit; `run-all.sh --full`
+adds the slow tier, runs in CI on every push and pull request, and must pass
+before release. A changed shipped file requires the default gate locally and a
+green CI full run before merge or release. Website
 documentation changes require the docs build. Wire-visible changes require the
 matching protocol pin and upgrade coverage.
 
