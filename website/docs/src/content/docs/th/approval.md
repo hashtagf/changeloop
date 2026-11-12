@@ -198,6 +198,14 @@ AI อีกหนึ่งรอบพอดี หรือพัก review �
 (ความเป็นอิสระและความหลากหลายของโมเดล) เป็นนโยบายของโปรเจกต์ ดู
 [Review independence and diversity](#review-independence-and-diversity)
 
+AI reviewer ยังตรวจวินัยด้านขอบเขต (scope discipline) ในบรรทัดที่เปลี่ยนด้วย ได้แก่
+abstraction ที่ไม่มีใครขอ, code ที่ตายหรือไม่ได้ใช้, option ที่เผื่อไว้ล่วงหน้า,
+guard หรือ retry ที่กลบอาการแทนการแก้ต้นเหตุ และการแก้ที่โยงกลับไปหาข้อตกลงไม่ได้
+finding กลุ่มนี้เป็น minor เว้นแต่ทำให้พฤติกรรมที่สัญญาไว้ผิดหรือพิสูจน์ไม่ได้
+การแก้ที่ต้นเหตุซึ่งกว้างกว่าบรรทัดที่พัง, preparatory refactor ที่ไม่เปลี่ยนพฤติกรรมและ
+change นั้นใช้ และทุกอย่างที่ข้อตกลงกำหนดไว้ จะไม่ถูกตั้งเป็น finding
+รายละเอียด: [scope discipline ใน evidence reference](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#review-scope-discipline)
+
 ### เกณฑ์รีวิวของโปรเจกต์ (REVIEW.md)
 
 เขียนความคาดหวังในการรีวิวของทีมไว้ครั้งเดียวใน `REVIEW.md` ที่ root ของโปรเจกต์

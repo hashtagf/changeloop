@@ -231,7 +231,12 @@ or verification command, so a completed task never changes meaning silently.
 
 Use the public CLI instead of invoking `foundation.mjs` directly. The CLI finds
 the project from the current directory, or from `--project <path>`, and then
-uses the runtime installed in that project.
+uses the runtime installed in that project. A host session may pin its project
+with `CLAUDE_FOUNDATION_PROJECT` (the Pi adapter exports it to every shell).
+The pin applies only where the command runs inside that project, one of its
+sandboxes, or outside any Change Loop project; a command run inside a different
+project is refused instead of changing the pinned one, and `--project` always
+wins over the pin.
 
 `foundation.mjs` remains the compatibility entrypoint and lifecycle
 orchestration layer. Runtime modules own bounded protocols, policy state
@@ -466,6 +471,25 @@ and workspace hash.
 Run `claude-foundation help` for command syntax and installer options.
 Low-level `runtime` commands are reserved for installed slash commands and
 diagnostics.
+
+## Agent skills
+
+`.claude/skills/` holds lazily loaded procedures; the always-on router
+`.claude/rules/fundamentals.md` names which one skill to load, and each
+skill's description carries its own triggers and the neighbor to use instead.
+Lifecycle skills (`investigate`, `change`, `build`, `prove`, `land`, `dev`,
+`feature`, `changes`) follow the harness, and `harness-html-report` reads its
+state. Every other skill works on its own, without OpenSpec, Change Loop, or
+another skill: harness-specific guidance sits in a conditional "With
+OpenSpec/Change Loop … otherwise …" section, and links to other skills are
+optional reading. Skills supply judgment; they never create state, grant
+authority, or count as proof.
+
+A skill with a `VENDORED.md` beside its `SKILL.md` (`ux-ui-principles`,
+`test-design`) is an unchanged upstream copy; that file records the source
+release, commit, and excluded paths. All skills are installer-managed, so
+upgrade replaces them; customize through project instructions instead of
+editing them.
 
 ## Host integration protocols
 
@@ -1059,3 +1083,9 @@ Change Loop-owned files, preserves project files and managed blocks in
   proven diff to the main worktree.
 - **Requirements changed during Build** — revise the same OpenSpec change and
   run `sandbox sync`; do not preserve a proof for the old agreement.
+- **`CLAUDE_FOUNDATION_PROJECT pins …; refusing to change a different
+  project`** — the host session's pinned project is not the project this
+  command runs in (for example a test fixture or sibling checkout started from
+  an agent shell). Nothing was changed. Run the command from the pinned
+  project, pass `--project <path>`, or unset `CLAUDE_FOUNDATION_PROJECT` for
+  that command.

@@ -64,6 +64,7 @@ stale evidence. Change Loop makes completion content-bound and resumable:
 | Public CLI registry | `.claude/harness/commands.json` |
 | Wire-visible versions | `.claude/harness/protocol.json` |
 | Installed-file ownership | `install.sh` `MANAGED` array |
+| Skill routing and skill catalog rules | `.claude/rules/fundamentals.md`, `openspec/specs/skill-guidance/spec.md` |
 | Deterministic suite ownership | `.claude/tests/README.md` |
 | Current scenario/release status | `docs/reports/user-scenario-release-status.md` |
 | Scenario acceptance portfolio | `docs/reports/user-scenario-test-plan.md` |
@@ -219,6 +220,17 @@ Installers may seed or merge them only through their documented ownership rules.
 
 `install.sh` copies `.claude/harness` except its `tests/` and `fixtures/`
 (`UNSHIPPED`); those stay repository-only.
+
+A skill with `VENDORED.md` (`ux-ui-principles`, `test-design`) is an unchanged
+upstream copy, exempt from the authored-skill budgets and shape rules but not
+from the authority guards (`vendored-skills` in the skill-guidance spec). Do not
+edit it in place: update it by copying a newer upstream release, record the
+release, commit, exclusions, and whitespace-only edits in `VENDORED.md`, and
+update the pinned source in that requirement,
+`.claude/tests/docs/skill-catalog.test.mjs`, and
+`.claude/tests/harness/run-installer-tests.sh`. `skill-creator` and `ui-ux-pro-max` are adapted upstream copies
+without `VENDORED.md`; their local script and path fixes (see `CHANGELOG.md`)
+must be reapplied after any upstream sync.
 
 Never make a shipped file depend on repository-only tests, reports, or release
 paths. Never store benchmark history, incidents, or cost observations in the

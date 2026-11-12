@@ -83,6 +83,10 @@ the live boundary, and session-digest import is unavailable. Shell analysis uses
 the shared runtime policy (audit by default; `FOUNDATION_SHELL_GUARD=block` enables
 strict shell checks). This extension does not provide an OS sandbox or issue
 unattended sandbox attestations. Review/model routing stays in `foundation.json`.
+The extension pins every shell to the session's project, so a Change Loop
+command run inside a different Change Loop project (a test fixture or sibling
+checkout) is refused instead of changing the session's project; run it with
+`--project <path>` or from that project's own session.
 
 :::caution[Codex has no tool hooks]
 Codex cannot run live guards, so the secrets and phase-mutation hooks are inert there. Land gates and the opt-in `no-direct-main-commit.sh` remain the enforcement.

@@ -227,6 +227,14 @@ Exhausted review is never waived. Who may review (independence and model
 diversity) is project policy; see
 [Review independence and diversity](#review-independence-and-diversity).
 
+The AI reviewer also checks scope discipline in the changed lines: unrequested
+abstraction, dead or unused code, speculative options, a guard or retry that
+hides a symptom, and edits that do not trace to the agreement. These findings
+are minor unless they leave a promised behavior false or unproven. A root-cause
+fix wider than the failing line, a behavior-preserving preparatory refactor the
+change uses, and anything the agreement requires are not flagged. Details:
+[scope discipline in the evidence reference](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#review-scope-discipline).
+
 ### Project review rules (REVIEW.md)
 
 Write your team's review expectations once in `REVIEW.md` at the project root:

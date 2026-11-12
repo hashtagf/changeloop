@@ -107,6 +107,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   adapted bundle's files, including `references/upstream.md` and
   `references/change-loop-handoff.md`. Each vendored skill records its source
   in `VENDORED.md`.
+- Every non-lifecycle skill now works on its own: guidance that needs
+  OpenSpec or Change Loop is a conditional "With OpenSpec/Change Loop …
+  otherwise …" section, links to other skills are optional reading, and dead
+  references are removed; references and scripts follow the rewritten
+  `SKILL.md` files. Skill descriptions name sharper English and Thai triggers
+  and the neighboring skill to use instead. `coding-discipline` is rewritten:
+  fix the root cause where the first wrong state appears, treat a
+  behavior-preserving preparatory refactor as its own in-scope slice, record
+  unrelated issues as follow-ups instead of fixing them, validate inputs before
+  irreversible effects, and verify each outcome on the real artifact. The
+  router loads it for a bug fix or Build edit whose scope, assumptions, or diff
+  size the always-on digest does not settle.
 
 ### Removed
 
@@ -187,6 +199,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unless the cwd or the runtime belongs to the pinned project or its sandbox;
   `--project` still selects a project. Shell suites run alone also drop the
   host session's project, identity, and guardrail variables.
+- `skill-creator` helper scripts (`run_eval.py`, `run_loop.py`,
+  `improve_description.py`, `package_skill.py`) run by path as well as with
+  `python -m`, `package_skill.py` prints its real location in usage text, and
+  `quick_validate.py` names the missing PyYAML dependency instead of a
+  traceback. `ui-ux-pro-max` shows `search.py` relative to the skill's own
+  directory instead of a `skills/...` path that did not exist in installed
+  projects.
 
 ## [3.7.0] - 2026-11-10
 

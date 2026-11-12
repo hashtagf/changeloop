@@ -592,7 +592,7 @@ attempt, and reported as `reviewAdvisories.specGaps` on a reached `proven` or
 `archived` target; they never become findings, change the verdict, or block.
 Closing one is a semantic amendment the user decides.
 
-Every configured review prompt, at any depth, also checks scope discipline in
+<a id="review-scope-discipline"></a>Every configured review prompt, at any depth, also checks scope discipline in
 the changed hunks: unrequested abstraction, dead or unused code, speculative
 options or configuration, a guard, retry, or catch that hides a symptom, and
 lines that do not trace to the agreement. Such findings are minor, and major

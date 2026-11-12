@@ -45,6 +45,12 @@ The entrypoint is also run by `.github/workflows/workflow-tests.yml` and
 `.github/workflows/release.yml`, both as `run-all.sh --release`.
 
 Run `npm ci --ignore-scripts` in the test workspace before the full suite.
+`run-all.sh` and the shared `lib/assert.sh` drop the host session's
+`CLAUDE_PROJECT_DIR`, `CLAUDE_FOUNDATION_PROJECT`, and identity, phase, and
+guardrail `FOUNDATION_*` variables, so a run started from an agent shell tests
+its fixtures, not the caller's project and policy; runner controls
+(`FOUNDATION_TEST_*`, `FOUNDATION_SUITE_TIMEOUT_SECONDS`, shards) stay. A suite
+that needs one of those variables sets it inline on the command under test.
 When the benchmark suite is selected, the runner checks for `c8` before launching
 suites, so a missing dependency fails during setup instead of after a long run.
 
@@ -115,7 +121,7 @@ failure.
 | `evals/evals.test.mjs` | Agent eval tooling: catalog validation, the closed-incident-needs-an-eval rule, the paid layer's spend authorization and $100 monthly budget (ledger outside Git, unmeasured runs counted at their ceiling, month rollover, dry run), and the never-failing owed detector |
 | `evals/run-evals.mjs` | Repository agent evals: every deterministic case in `evals/cases/` passes and every closed incident in `openspec/incidents/` has an eval case; paid cases are cataloged but run only through `npm run evals:paid -- --authorize-spend <ref>` |
 | `harness/run-host-instruction-tests.mjs` | Protocol-1 package-owned host instructions and agent contract, opaque arguments, stable failures, project independence, and packaged layout |
-| `harness/run-context-budget-tests.sh` | Always-on, orchestrator, command, agent-contract, plan-summary, and packet-size ceilings, plus the rapid-lane read surface (AGENT + dev + change) and the on-demand Build/Prove/Land reads |
+| `harness/run-context-budget-tests.sh` | Always-on, orchestrator, command, agent-contract, plan-summary, and packet-size ceilings, plus the rapid-lane read surface (AGENT + dev + change) and the on-demand Build/Prove/Land reads; vendored skills (a `VENDORED.md` beside `SKILL.md`) are outside the authored skill inventory and per-skill budgets |
 | `harness/run-agent-contract-tests.sh` | JSON-only plans/packets, completed dependencies, claim authority, corrupt-lease fallback, model ceiling, and dispatch conflicts |
 | `harness/run-user-guidance-tests.sh` | Cross-surface human guidance: user-language summaries, agent-owned routine commands, decision-only user requests, automatic recovery, installer/hook recovery, and dashboard accessibility feedback |
 | `harness/run-packet-scaling-tests.sh` | 1,000-task and 500-claim progressive compaction under exact output limits |
@@ -173,11 +179,12 @@ failure.
 | `harness/run-target-drift-mutation.sh` | Removing the worktree replay or the `land check` target stop is detected by the suite above |
 | `harness/run-evidence-binding-mutation.sh` | Folding the change packet back into the code hash, or dropping review's exemption from that omission, is detected by the land-surface and feedback-review suites; `run-all.sh --full` schedules those detector baselines in the same gate and avoids repeating them, while a standalone mutation run proves them itself |
 | `harness/run-branch-warning-tests.mjs` | Default-branch visibility at Land (warn, never block) and the doctor escalation for the unwired branch guard |
-| `harness/run-upgrade-compat-tests.sh` | Legacy-default migration, custom-policy preservation, partial-policy deep merge, and retained active-change compatibility across runtime upgrades |
+| `harness/run-upgrade-compat-tests.sh` | Legacy-default migration, custom-policy preservation, partial-policy deep merge, and retained active-change compatibility across runtime upgrades; upgrading a v3.7.0 install leaves `ux-ui-principles`, `test-design`, and `testing-fundamentals` identical to the source with no stale adapted-bundle files |
 | `harness/rehearsal-evidence.test.mjs` | A successful release rehearsal is reusable only for the same proposed version, source commit, workflow, dependency lock, deterministic/semantic gate, automated mutation gate, rewritten candidate, and bottle rehearsal |
 | `harness/run-harness-tests.sh` + `harness/contracts/*.sh` | Aggregate runner plus domain slices for change policy, evidence/proof, sandbox/Land, multi-repository behavior, planning/diagnostics, and leases. No arguments runs all five slices in one shared fixture process in the original assertion order; slice-name arguments select independent slices. `run-all.sh` divides evidence/proof into eleven balanced rows and multi-repository into its `profile`, `setup`/`copy`, and `sibling` shards (`multi-repository-<shard>` slices); the `profile` shard and planning-diagnostics stay together because the latter reads the former's `cross-repository-profile` state |
-| `harness/run-installer-tests.sh` | Upgrade-safe installation (`.claude/harness/tests` and `fixtures` are never shipped; earlier recorded copies are removed, unrecorded consumer files stay), legacy cleanup, native CLI/API compatibility, doctor, packet handoff, honest metrics, and Cursor adapter |
-| `harness/run-cli-root-resolution-tests.mjs` | `cli.sh` project-root resolution walks past an owned Build sandbox copy silently and warns only when the resolved root is not its owner |
+| `harness/run-installer-tests.sh` | Upgrade-safe installation (`.claude/harness/tests` and `fixtures` are never shipped; earlier recorded copies are removed, unrecorded consumer files stay), legacy cleanup, native CLI/API compatibility, doctor, packet handoff, honest metrics, and Cursor adapter; vendored `ux-ui-principles` and `test-design` install file-for-file with their `VENDORED.md` provenance and without upstream `evals/`, and files only the adapted UX bundle shipped are removed |
+| `harness/run-cli-root-resolution-tests.mjs` | `cli.sh` project-root resolution walks past an owned Build sandbox copy silently and warns only when the resolved root is not its owner; a host `CLAUDE_FOUNDATION_PROJECT` pin is refused for a command run inside another project, yields to `-C`, and still applies outside any project and inside the pinned project's sandbox |
+| `.claude/harness/tests/project-root-pin.test.mjs` | The runtime honors a `CLAUDE_FOUNDATION_PROJECT` pin only when the cwd or the runtime lives in the pinned project's tree (its sandboxes included) and otherwise refuses before creating any state |
 | `harness/run-stale-recovery-tests.mjs` | Stale proof and stale authority refusals carry the recovery order and the resuming command |
 | `harness/run-blocking-policy-tests.mjs` | The WORKFLOW.md blocking policy: every pre-Land `ASK_USER` in the advance, recovery, proof, lease, and Land code is raised under a user boundary (computed sites are listed and reviewed), the ladder's user-boundary set, rung 3 returning repeated agent and harness work to its owner, uncounted resource waits, no pre-`proven` path to `applied`/`archived`, and Land refusing missing, stale, or unproven work and stale spec approval |
 | `harness/run-proof-loop-tests.sh` | Executable-provider proof, selective amendment receipt reuse, installed setup/provider/product/budget/conflict recovery, and fresh-session recovery after an interrupted archive with unchanged target HEAD/index |
@@ -227,7 +234,7 @@ failure.
 | `harness/run-provenance-contract-tests.sh` | Instruction provenance and host execution import |
 | `harness/run-specsync-gate-tests.sh` | Spec-sync Land gate |
 | `interview/run-interview-tests.sh` | Human-interaction contracts |
-| `docs/run-doc-consistency.sh` | Shipped documentation contracts, canonical lifecycle routes, PRD versus compiled-spec approval, post-Land handoffs, evidence reuse, skill routing, and shipped-path resolution; `docs/skill-catalog.test.mjs` covers portable auditing, reference rejection, proposed routing cases, and harness ownership; `docs/skill-helper-tests.py` covers observed benchmark metrics and independent held-out confirmation without model calls |
+| `docs/run-doc-consistency.sh` | Shipped documentation contracts, canonical lifecycle routes, PRD versus compiled-spec approval, post-Land handoffs, evidence reuse, skill routing, and shipped-path resolution; `docs/skill-catalog.test.mjs` covers portable auditing, reference rejection, proposed routing cases, harness ownership, and the locked vendored-skill list with its pinned upstream source and the authored-skill rules vendored copies are exempt from; `docs/skill-helper-tests.py` covers observed benchmark metrics and independent held-out confirmation without model calls |
 | `harness/*.mjs` node suites | Blocked decisions, OpenSpec version policy, model drift, drift gate, spec-sync verification |
 | `dashboard` (`npm test`) | Dashboard server, snapshot projection, usage scan, and client |
 

@@ -80,6 +80,9 @@ live guard และยังไม่มี session-digest import การว�
 (ค่าเริ่มต้นเป็น audit; ตั้ง `FOUNDATION_SHELL_GUARD=block` เพื่อบังคับตรวจ shell)
 extension นี้ไม่ใช่ OS sandbox และไม่ออก unattended sandbox attestation
 การกำหนด model และ reviewer ยังคงอยู่ใน `foundation.json`
+extension ตรึงทุก shell ไว้กับโปรเจกต์ของ session ดังนั้นคำสั่ง Change Loop ที่รันอยู่ภายใน
+โปรเจกต์ Change Loop อื่น (เช่น test fixture หรือ checkout ข้างเคียง) จะถูกปฏิเสธแทนที่จะไปแก้
+โปรเจกต์ของ session ให้รันด้วย `--project <path>` หรือรันจาก session ของโปรเจกต์นั้นเอง
 
 :::caution[Codex ไม่มี tool hook]
 Codex รัน guard แบบ live ไม่ได้ ดังนั้น secrets guard กับ phase-mutation guard จะไม่ทำงานที่นั่น — การบังคับใช้จึงเหลือ Land gate กับ `no-direct-main-commit.sh` ที่เป็น opt-in
