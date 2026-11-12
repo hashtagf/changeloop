@@ -2127,6 +2127,25 @@ test("a version-4 revision accepts optional discovery coverage for revised requi
   assert.equal(compiled.discovery.coverage.length, 9);
 });
 
+// 3.7.0 started changes from v3 drafts. Such an in-flight change stays
+// amendable after upgrade; only legacy (non-semantic) agreements are refused.
+test("a change started from a v3 draft is still amendable under current rules", () => {
+  const args = revisionFixture([
+    "- [ ] **T001** Build A and B [key:impl] [claims:a,b] — verify: `npm test`"
+  ]);
+  const amendment = {
+    version: 1,
+    reviseRequirements: [{ key: "a", capability: "change", scenario: "A runs",
+      outcome: "A runs at 50 per second" }],
+    evidence: { a: { capabilities: ["test"] } }
+  };
+  assert.deepEqual(compileSemanticAmendment({ ...args, amendment, semanticDraftVersion: 3 })
+    .issues, []);
+  for (const version of [null, 2])
+    assert.match(compileSemanticAmendment({ ...args, amendment, semanticDraftVersion: version })
+      .issues.join("\n"), /requires semanticDraftVersion 3, 4, or 5/);
+});
+
 function readableDraft(requirement, extra = {}) {
   const value = semanticDraftV4(extra);
   value.requirements = [{ key: "payment-retry", capability: "payment-control",

@@ -4,6 +4,7 @@
 // Each issue names the exact field so intake returns one batched EDIT.
 
 import { coversIssues } from "./prototype-checklist.mjs";
+import { isObject } from "../core/values.mjs";
 
 export const SCRATCH_KEYS =Object.freeze(["get", "asIs", "toBe", "ifFail"]);
 // Accepted with the same one-line shape but never required: how to undo the
@@ -49,7 +50,6 @@ export const EXAMPLE_TYPES = Object.freeze(Object.keys(SCHEMA));
 const OPTIONAL_TEXT = ["why", "postBuild", "capability"];
 
 const text = (value) => typeof value === "string" ? value.trim() : "";
-const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const present = (value) => value !== undefined && value !== null && value !== "";
 
 function ruleIssues(value, rule, at, issues) {

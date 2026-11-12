@@ -388,6 +388,12 @@ elif command -v jq >/dev/null 2>&1; then
     mv "$tmp" "$TARGET_PATH/foundation.json"
     printf '✓ converted custom numeric execution.packetBytes to the same task/review/repository/global limits\n'
   fi
+  # 3.7.0 still accepted the opt-in legacy review routing; say what retiring
+  # it means for a change already proven under it.
+  if jq -e '.workflow.reviewPolicy == "legacy" or .workflow.reviewCircuit == "legacy"' \
+      "$TARGET_PATH/foundation.json" >/dev/null 2>&1; then
+    printf '✓ upgraded retired legacy review routing to risk-tiered/full-delta; a change proven under it gets one current review on its next advance\n'
+  fi
   tmp="$(mktemp)"
   jq --slurpfile src "$SOURCE_PATH/foundation.json" '
     .workflow //= $src[0].workflow |

@@ -1806,6 +1806,9 @@ const {
   proofRun
 } = createProofExecutionRuntime({
   markBlocked,
+  deliveryProofCurrent: (id) => currentDeliveryProof({
+    proofAudit, relevantHash, requiredProviders, receiptValidity, receiptPath, fileDigest
+  }, id),
   proofReadinessValue,
   relevantSnapshot,
   loadRuntime,

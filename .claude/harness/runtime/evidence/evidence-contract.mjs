@@ -12,6 +12,7 @@ import {
   SCREENSHOT_SKIPPED_DIRECTORIES, VISUAL_BUILT_IN, VISUAL_CAPABILITY, readVisualBinding, reconcileVisualBinding,
   visualProviderConfig, withVisualRequirement
 } from "./visual-review.mjs";
+import { relativeInside } from "../core/paths.mjs";
 
 const THAI_REQUIRED_SEMANTICS =
   thaiRiskPattern("concurrency", "money", "migration", "irreversible");
@@ -1078,8 +1079,8 @@ export function createEvidenceContract({
   }
 
   function packetRelativePath(id, dir) {
-    const rel = relative(ROOT, dir).replaceAll("\\", "/");
-    return rel && !rel.startsWith("..") && !isAbsolute(rel) ? rel : `openspec/changes/${id}`;
+    const rel = relative(ROOT, dir);
+    return rel && relativeInside(rel) ? rel.replaceAll("\\", "/") : `openspec/changes/${id}`;
   }
 
   function builtInVisualConfig(id, dir, binding, base = {}) {

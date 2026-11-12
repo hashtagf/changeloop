@@ -1,8 +1,9 @@
 import { readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { basename, dirname, extname, isAbsolute, posix, relative, resolve, sep } from "node:path";
+import { basename, dirname, extname, isAbsolute, posix, resolve } from "node:path";
 import { EXCLUDED_WORKSPACE_DIRS } from "../../core/workspace-policy.mjs";
 import { isExcludedPath } from "../../core/workspace-surface.mjs";
 import { requiredDiscoveryDimensions } from "./semantic-intake.mjs";
+import { pathInside } from "../../core/paths.mjs";
 
 const DEFAULT_LIMITS = Object.freeze({
   maxEntries: 12_000,
@@ -65,10 +66,6 @@ export const MANAGED_INSTALL_PATHS = Object.freeze([
 
 const compareText = (left, right) => left < right ? -1 : left > right ? 1 : 0;
 const normalizedPath = (value) => String(value || "").replaceAll("\\", "/");
-const withinRoot = (root, candidate) => {
-  const path = relative(root, candidate);
-  return path === "" || (!path.startsWith(`..${sep}`) && path !== ".." && !isAbsolute(path));
-};
 
 function normalizeLimits(value = {}) {
   const limits = {};
@@ -386,7 +383,7 @@ export function inspectRepositoryIntelligence({
       }
       if (isExcludedPath(path, { excluded: excludedDirectories, tracked: tracked.has(path) })) continue;
       const absolute = resolve(root, ...path.split("/"));
-      if (!withinRoot(root, absolute)) {
+      if (!pathInside(root, absolute)) {
         findings.push({ code: "scan-path-outside-project", path, blocking: true });
         return;
       }

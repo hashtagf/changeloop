@@ -280,11 +280,21 @@ export function baselineAllowedTools({ project, projectCommand, review = false }
   return [...new Set(rules)];
 }
 
-function productPatch(project) {
-  if (!existsSync(join(project, ".git"))) return "";
-  commandResult("git", ["add", "-A", "--intent-to-add"], project);
-  const diff = commandResult("git", ["diff", "--binary", "HEAD"], project);
-  return diff.status === 0 ? diff.stdout : "";
+// The baseline's delivered product diff. `.foundation/` is runner-owned: the
+// quality collector writes coverage there after the host exits (over 1 MiB of
+// V8 coverage), which once overflowed spawnSync's default buffer and recorded
+// a silently empty patch. Keep it out of the product diff, lift the buffer
+// bound, and report a failed capture as unavailable rather than empty.
+const PRODUCT_PATCH_PATHSPEC = ["--", ".", ":(exclude).foundation"];
+export function productPatch(project) {
+  if (!existsSync(join(project, ".git"))) return { status: "unavailable", reason: "no-git", patch: null };
+  const options = { cwd: project, encoding: "utf8", maxBuffer: 512 * 1024 * 1024 };
+  const add = spawnSync("git", ["add", "-A", "--intent-to-add", ...PRODUCT_PATCH_PATHSPEC], options);
+  const diff = add.status === 0
+    ? spawnSync("git", ["diff", "--binary", "HEAD", ...PRODUCT_PATCH_PATHSPEC], options) : add;
+  if (diff.status === 0) return { status: "captured", reason: null, patch: diff.stdout };
+  return { status: "unavailable", patch: null,
+    reason: String(diff.error?.code || diff.stderr || `git exit ${diff.status}`).trim() };
 }
 
 function copyIfPresent(source, target) {
@@ -309,7 +319,14 @@ export function preserveLabEvidence({
   }
   const value = { ...manifest, retained, runnerOutput };
   writeFileSync(join(runDir, "source.patch"), sourcePatch);
-  if (deliveredPatch !== null) writeFileSync(join(runDir, "product.patch"), deliveredPatch);
+  // A string is a captured patch; a capture result records an unavailable
+  // capture in the manifest and writes no (falsely empty) patch file.
+  const delivered = typeof deliveredPatch === "string"
+    ? { status: "captured", reason: null, patch: deliveredPatch } : deliveredPatch;
+  if (delivered) {
+    value.productPatch = { status: delivered.status, reason: delivered.reason };
+    if (delivered.status === "captured") writeFileSync(join(runDir, "product.patch"), delivered.patch);
+  }
   writeFileSync(join(runDir, "manifest.json"), `${JSON.stringify(value, null, 2)}\n`);
   writeIntegrity(runDir);
   return value;

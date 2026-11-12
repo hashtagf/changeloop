@@ -12,7 +12,7 @@ import {
   sortChangedSurface
 } from "../runtime/workflow/change-policy.mjs";
 import {
-  CAPABILITY_ADAPTERS, PROVIDER_CONTRACTS, PROVIDERS
+  PROVIDER_CONTRACTS, PROVIDERS
 } from "../runtime/evidence/provider-catalog.mjs";
 
 test("changed-surface helpers normalize, exclude, merge and sort rows", () => {
@@ -392,7 +392,6 @@ test("performance, async, integration, and deprecation require their evidence", 
   }
   assert.equal(typeof PROVIDER_CONTRACTS.concurrency, "string");
   assert.ok(PROVIDERS.has("concurrency"));
-  assert.equal(CAPABILITY_ADAPTERS.concurrency, "command");
 });
 
 test("infra without a plan-check provider yields an agent-owned setup action with resume", () => {

@@ -18,8 +18,6 @@
 //   when(draft, context): context is { workTypes: string[], lane, language,
 //          archived?: boolean }.
 
-export const OUTLINE_VERSION = 1;
-
 export const VOLATILE_FIELDS = Object.freeze(["status", "approvers", "evidenceFreshness", "reviewRecord"]);
 
 export const OUTLINE_DOCUMENTS = Object.freeze(["proposal", "design", "spec", "tasks"]);

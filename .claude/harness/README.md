@@ -126,11 +126,13 @@ the upstream repository uses those names for its own maintainer guidance.
 | Core | `runtime/core/git-head.mjs` | HEAD and "not a repository" answered from repository files, falling back to Git for any layout it does not model |
 | Core | `runtime/core/git-read-memo.mjs` | Per-process memo for repeated `status`/`ls-files -s`/`rev-parse HEAD` listings, forgotten on any observed fs write, non-read-only child process, lock wait, or `clearSnapshotCache` |
 | Core | `runtime/core/lifecycle-reducer.mjs` | Typed lifecycle transitions and compatibility-preserving state mutation |
+| Core | `runtime/core/paths.mjs` | Shared path containment (`..x` children stay inside) and realpath-or-absolute canonicalization for runtime and hooks |
 | Core | `runtime/core/process-runtime.mjs` | Provider process execution, readiness checks, and managed services |
 | Core | `runtime/core/signals.mjs` | Process-scoped signals (drift restored, budget warning, already archived) that keep their stream line and ride on the advance envelope |
 | Core | `runtime/core/shell-mutation-policy.mjs` | Shared phase-aware shell mutation and canonical Build containment policy |
 | Core | `runtime/core/state-runtime.mjs` | Runtime state, paths, hashing, snapshots, workspace manifests, and Git helpers |
-| Core | `runtime/core/trust.mjs` | Canonical JSON and Ed25519 verification shared by trust protocols |
+| Core | `runtime/core/trust.mjs` | Canonical JSON, SHA-256 hex digests, and Ed25519 verification shared by trust protocols |
+| Core | `runtime/core/values.mjs` | Shared `isObject` and order-preserving `unique` value helpers |
 | Core | `runtime/core/update-advisory.mjs` | Phase-bound stable-release discovery, shared cache, and version comparison |
 | Core | `runtime/core/workspace-policy.mjs` | Canonical workspace and sandbox-copy exclusion policy |
 | Evidence | `runtime/evidence/artifact-store.mjs` | Durable evidence artifacts, containment, digest validation, and prototype rejection |

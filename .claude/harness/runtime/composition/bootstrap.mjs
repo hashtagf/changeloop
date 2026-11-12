@@ -1,7 +1,8 @@
 import {
   existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync
 } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
+import { pathInside } from "../core/paths.mjs";
 
 function insideSandboxCopy(path) {
   const segments = path.split(sep);
@@ -18,11 +19,6 @@ function owningTree(path) {
   return index === -1 ? path : segments.slice(0, index).join(sep) || sep;
 }
 
-function inside(parent, candidate) {
-  const rel = relative(parent, candidate);
-  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
-}
-
 // CLAUDE_FOUNDATION_PROJECT is a host-session export (the Pi adapter sets it
 // for every agent shell), so it leaks into commands run in other projects such
 // as test fixtures. Honor it only when the caller's cwd or this runtime lives
@@ -33,7 +29,7 @@ function findRoot({ start, pinned, harness, fail, warn }) {
     const root = walkRoot({ start, pinned, fail, warn });
     const tree = owningTree(canonicalPath(root));
     const anchors = [start, harness].filter(Boolean).map(canonicalPath);
-    if (anchors.some((anchor) => inside(tree, anchor))) return root;
+    if (anchors.some((anchor) => pathInside(tree, anchor))) return root;
     fail(`CLAUDE_FOUNDATION_PROJECT pins ${root}, but this command runs in ` +
       `${canonicalPath(start)}${harness ? ` with the runtime at ${canonicalPath(harness)}` : ""}; ` +
       `refusing to change a different project. Unset CLAUDE_FOUNDATION_PROJECT ` +
@@ -113,11 +109,6 @@ export function createBootstrap({ start, pinned, harness = null, fail, failRoot 
     } finally {
       if (existsSync(temporary)) rmSync(temporary);
     }
-  }
-
-  function pathInside(parent, candidate) {
-    const rel = relative(resolve(parent), resolve(candidate));
-    return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
   }
 
   return {

@@ -8,7 +8,7 @@
 // command is a new process that would otherwise pay ~0.5 s per probe again, in
 // a small digest-keyed file under `.foundation/cache`.
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
+import { sha256Hex as digest } from "./trust.mjs";
 import {
   existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, realpathSync,
   renameSync, statSync, writeFileSync
@@ -19,10 +19,6 @@ const MAX_HASHED_EXECUTABLE_BYTES = 8 * 1024 * 1024;
 const versionProbes = new Map();
 const strictLints = new Map();
 const indexQueries = new Map();
-
-function digest(value) {
-  return createHash("sha256").update(value).digest("hex");
-}
 
 const PERSISTED_PROBE_LIMIT = 200;
 const SANDBOX_SEGMENT = `${sep}.foundation${sep}sandboxes${sep}`;

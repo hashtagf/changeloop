@@ -7,7 +7,7 @@
 // while a source still hashes to the baseline row — plus an eager pass over a
 // confined declared surface when the copy is made. Large and binary files are
 // never stored: they stay unprovable, which keeps every check fail-closed.
-import { createHash } from "node:crypto";
+import { sha256Hex as sha256 } from "../core/trust.mjs";
 import {
   existsSync, lstatSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync
 } from "node:fs";
@@ -19,8 +19,6 @@ const ROW = /^file:(regular|executable):([a-f0-9]{64})$/;
 // The same NUL-in-the-first-8000-bytes heuristic Git uses for binary content.
 const BINARY_PROBE = 8000;
 const CONFLICT_MARKER = /^(?:<{7}|={7}|>{7})(?: |$)/m;
-
-const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 
 export function copyBaseStore(root) {
   return join(root, ".foundation", "copy-base");

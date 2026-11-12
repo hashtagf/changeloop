@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
-import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
+import { pathInside } from "../core/paths.mjs";
 
 // Preview: an optional pre-Build run of one declared provider in a disposable
 // copy of the target. Its receipt carries `kind: "preview"` and lives under
@@ -52,7 +53,7 @@ export function createPreviewRuntime({
     // A declared preview artifact (a prototype or screenshot) must stay inside
     // the preview workspace; it is checked before anything runs.
     const artifactPath = config.previewArtifact ? resolve(workspace, String(config.previewArtifact)) : null;
-    if (artifactPath && (relative(workspace, artifactPath).startsWith("..") || isAbsolute(relative(workspace, artifactPath))))
+    if (artifactPath && !pathInside(workspace, artifactPath))
       fail(`preview: provider '${provider}' previewArtifact '${config.previewArtifact}' is outside the preview workspace`);
     rmSync(workspace, { recursive: true, force: true });
     mkdirSync(workspace, { recursive: true });

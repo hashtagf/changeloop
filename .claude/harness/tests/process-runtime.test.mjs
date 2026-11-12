@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -17,6 +19,7 @@ import {
   staticServiceRequestHandler,
   writeServiceLog
 } from "../runtime/core/process-runtime.mjs";
+import { canonical, relativeInside } from "../runtime/core/paths.mjs";
 
 test("service workspace resolves repository, runtime, and root locations", () => {
   const loaded = [];
@@ -67,6 +70,35 @@ test("path and readiness URL classification reject escapes and non-network schem
   assert.equal(servesOverNetwork("data:text/plain,ok"), false);
   assert.equal(servesOverNetwork("not a url"), false);
   assert.equal(servesOverNetwork(null), false);
+});
+
+test("path containment keeps '..x' children inside and compares symlinks only after canonicalizing", (t) => {
+  const root = mkdtempSync(join(tmpdir(), "foundation-path-inside-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const real = join(root, "real");
+  const link = join(root, "link");
+  mkdirSync(join(real, "..x"), { recursive: true });
+  symlinkSync(real, link);
+
+  assert.equal(pathInside(real, real), true);
+  assert.equal(pathInside(real, join(real, "..x")), true);
+  assert.equal(pathInside(real, join(real, "..x", "file")), true);
+  assert.equal(pathInside(real, join(real, "..", "x")), false);
+  assert.equal(pathInside(real, root), false);
+  assert.equal(pathInside(real, "/elsewhere"), false);
+  assert.equal(relativeInside(""), true);
+  assert.equal(relativeInside("..x"), true);
+  assert.equal(relativeInside(".."), false);
+  assert.equal(relativeInside(join("..", "x")), false);
+  assert.equal(relativeInside("/abs"), false);
+
+  // Lexical comparison: the logical link path is not inside the physical root
+  // until both sides are canonicalized.
+  assert.equal(pathInside(link, join(link, "..x")), true);
+  assert.equal(pathInside(real, join(link, "..x")), false);
+  assert.equal(pathInside(canonical(real), canonical(join(link, "..x"))), true);
+  assert.equal(canonical(link), realpathSync(real));
+  assert.equal(canonical(join(link, "missing")), join(link, "missing"));
 });
 
 function response({ status = 200, headers = {}, body = "ready" } = {}) {

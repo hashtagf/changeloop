@@ -18,7 +18,6 @@ import { loadMatrix } from "./matrix.mjs";
 
 export const TIME_GATE_PROTOCOL = "foundation-time-gate-v1";
 export const TIME_GATE_TARGETS = { rapid: 1.5, standard: 1.8 };
-export const TIME_GATE_TARGET_RATIO = TIME_GATE_TARGETS.standard;
 export const BASELINE_ARM = "baseline";
 export const CHANGE_LOOP_ARM = "change-loop";
 

@@ -50,7 +50,7 @@ function skillCounts(rows) {
   return counts;
 }
 
-function runRows(root) {
+function runRows(root, label = null) {
   if (!existsSync(root)) return [];
   return readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory())
     .map((entry) => {
@@ -61,28 +61,57 @@ function runRows(root) {
         manifest.runId, "scorecard.json"));
       // Rows written before arms existed are Change Loop rows.
       const arm = manifest.arm || scorecard?.arm || DEFAULT_ARM;
-      return { runDir, manifest, scorecard, arm };
+      return { runDir, manifest, scorecard, arm, label };
     }).filter(Boolean);
 }
 
-// One aggregate row per (scenario, arm). Several result roots can be read at
-// once so arms collected in separate runs compare side by side.
-export function aggregateLabRuns(root, source = null) {
+// The Change Loop source a run measured: its commit, plus the uncommitted
+// patch when the checkout was dirty.
+function sourceIdentity(manifest) {
+  const commit = String(manifest.source?.commit || "unknown").slice(0, 7);
+  const patch = String(manifest.source?.patchDigest || "").replace(/^sha256:/, "").slice(0, 7);
+  return manifest.source?.dirty === true && patch ? `${commit}+${patch}` : commit;
+}
+
+// A row's variant within its arm: the `--label` of its result root, else, when
+// one scenario's unlabeled Change Loop rows measured more than one source,
+// that source (so two harness versions never merge into one arm). Null keeps
+// the historical (scenario, arm) row.
+function assignVariants(rows) {
+  const sources = new Map();
+  for (const row of rows) {
+    if (row.label || row.arm !== DEFAULT_ARM) continue;
+    const scenario = row.manifest.scenario;
+    if (!sources.has(scenario)) sources.set(scenario, new Set());
+    sources.get(scenario).add(sourceIdentity(row.manifest));
+  }
+  return rows.map((row) => ({ ...row, variant: row.label ||
+    (row.arm === DEFAULT_ARM && sources.get(row.manifest.scenario)?.size > 1
+      ? sourceIdentity(row.manifest) : null) }));
+}
+
+// One aggregate row per (scenario, arm, variant). Several result roots can be
+// read at once so arms collected in separate runs compare side by side;
+// `labels[i]` names every run under `root[i]` (for example two releases).
+export function aggregateLabRuns(root, source = null, { labels = [] } = {}) {
   const groups = new Map();
   const roots = Array.isArray(root) ? root : [root];
-  const rowsForSource = roots.flatMap((path) => runRows(resolve(path))).filter((row) =>
+  const rowsForSource = assignVariants(roots.flatMap((path, index) =>
+    runRows(resolve(path), labels[index] || null)).filter((row) =>
     !source || (
       row.manifest.source?.commit === source.commit &&
-      row.manifest.source?.patchDigest === source.patchDigest));
+      row.manifest.source?.patchDigest === source.patchDigest)));
   for (const row of rowsForSource) {
-    const key = `${row.manifest.scenario}\0${row.arm}`;
-    if (!groups.has(key)) groups.set(key, { scenario: row.manifest.scenario, arm: row.arm, rows: [] });
+    const key = `${row.manifest.scenario}\0${row.arm}\0${row.variant ?? ""}`;
+    if (!groups.has(key)) groups.set(key, { scenario: row.manifest.scenario, arm: row.arm,
+      variant: row.variant, rows: [] });
     groups.get(key).rows.push(row);
   }
   return [...groups.values()].sort((left, right) =>
     left.scenario.localeCompare(right.scenario) ||
-      BENCH_ARMS.indexOf(left.arm) - BENCH_ARMS.indexOf(right.arm))
-    .map(({ scenario, arm, rows }) => {
+      BENCH_ARMS.indexOf(left.arm) - BENCH_ARMS.indexOf(right.arm) ||
+      String(left.variant ?? "").localeCompare(String(right.variant ?? "")))
+    .map(({ scenario, arm, variant, rows }) => {
       const strictPasses = rows.filter((row) => row.manifest.strictPass === true &&
         row.scorecard?.outcome?.complete === true &&
         (row.scorecard?.oracle?.configured !== true || row.scorecard.oracle.verdict === "pass") &&
@@ -97,6 +126,7 @@ export function aggregateLabRuns(root, source = null) {
         version: 1,
         scenario,
         arm,
+        ...(variant ? { variant } : {}),
         runs: rows.length,
         strictPasses,
         paidModelRuns: paidModelRows.length,
@@ -196,33 +226,55 @@ function difference(left, right) {
     ? Number((left - right).toFixed(6)) : null;
 }
 
-// Pairwise per scenario: Change Loop against the no-harness baseline. A
-// missing arm stays null; a delta exists only when both sides measured it.
+function armDelta(left, right) {
+  return left && right ? {
+    oraclePasses: difference(left.oraclePasses / left.runs, right.oraclePasses / right.runs),
+    medianOracleScore: difference(left.medianOracleScore, right.medianOracleScore),
+    medianCostUsd: difference(left.medianCostUsd, right.medianCostUsd),
+    medianWallMs: difference(left.medianWallMs, right.medianWallMs),
+    medianModelRequests: difference(left.medianModelRequests, right.medianModelRequests),
+    medianToolCalls: difference(left.medianToolCalls, right.medianToolCalls),
+    permissionPrompts: difference(left.permissionPrompts, right.permissionPrompts)
+  } : null;
+}
+
+const ARM_COLUMNS = { "change-loop": "CL", baseline: "base", "baseline-review": "base+review" };
+function armColumn(arm, variant) {
+  const name = ARM_COLUMNS[arm] || arm;
+  return variant ? `${name} ${variant}` : name;
+}
+
+// Per scenario: every arm present side by side. Change Loop against the
+// no-harness baseline stays the headline pair (`changeLoop`, `baseline`,
+// `delta`); when a reviewed baseline or several Change Loop sources are
+// present, `arms` lists every column and `deltas` compares each with the
+// baseline. A missing arm stays null; a delta exists only when both sides
+// measured it.
 export function compareArms(aggregates) {
   const scenarios = [...new Set(aggregates.map((row) => row.scenario))].sort();
+  const extended = aggregates.some((row) => row.variant ||
+    !["change-loop", "baseline"].includes(row.arm || DEFAULT_ARM));
   return scenarios.map((scenario) => {
     const find = (arm) => aggregates.find((row) => row.scenario === scenario &&
-      (row.arm || DEFAULT_ARM) === arm) || null;
+      (row.arm || DEFAULT_ARM) === arm && !row.variant) || null;
     const changeLoop = armSummary(find("change-loop"));
     const baseline = armSummary(find("baseline"));
-    return {
+    const comparison = {
       version: 1,
       protocol: "foundation-openspec-native-arm-comparison-v1",
       scenario,
       changeLoop,
       baseline,
-      delta: changeLoop && baseline ? {
-        oraclePasses: difference(changeLoop.oraclePasses / changeLoop.runs,
-          baseline.oraclePasses / baseline.runs),
-        medianOracleScore: difference(changeLoop.medianOracleScore, baseline.medianOracleScore),
-        medianCostUsd: difference(changeLoop.medianCostUsd, baseline.medianCostUsd),
-        medianWallMs: difference(changeLoop.medianWallMs, baseline.medianWallMs),
-        medianModelRequests: difference(changeLoop.medianModelRequests,
-          baseline.medianModelRequests),
-        medianToolCalls: difference(changeLoop.medianToolCalls, baseline.medianToolCalls),
-        permissionPrompts: difference(changeLoop.permissionPrompts, baseline.permissionPrompts)
-      } : null
+      delta: armDelta(changeLoop, baseline)
     };
+    if (!extended) return comparison;
+    const arms = aggregates.filter((row) => row.scenario === scenario).map((row) => ({
+      column: armColumn(row.arm || DEFAULT_ARM, row.variant),
+      arm: row.arm || DEFAULT_ARM, variant: row.variant || null, summary: armSummary(row)
+    }));
+    return { ...comparison, arms, deltas: Object.fromEntries(arms
+      .filter((entry) => entry.column !== "base")
+      .map((entry) => [entry.column, armDelta(entry.summary, baseline)])) };
   });
 }
 
@@ -240,21 +292,28 @@ export function formatArmComparison(rows) {
   const cost = (summary) => `${shown(summary.medianCostUsd, (value) => `$${value.toFixed(4)}`)}${
     summary.partialCostRuns ? "*" : ""}`;
   const wall = (summary) => shown(summary.medianWallMs, (value) => `${(value / 1000).toFixed(1)}s`);
+  const metrics = [["oracle", oracle], ["cost", cost], ["wall", wall],
+    ["requests", (s) => shown(s.medianModelRequests)], ["tools", (s) => shown(s.medianToolCalls)],
+    ["prompts", (s) => shown(s.permissionPrompts)]];
+  // The headline pair keeps its historical columns; extended comparisons add
+  // one column per arm (and Change Loop source) present in any scenario.
+  const columns = rows.some((row) => row.arms) ? [...new Map(rows.flatMap((row) =>
+    row.arms || []).map((entry) => [entry.column, entry])).values()]
+    .sort((left, right) => BENCH_ARMS.indexOf(left.arm) - BENCH_ARMS.indexOf(right.arm) ||
+      String(left.variant ?? "").localeCompare(String(right.variant ?? "")))
+    .map((entry) => entry.column) : ["CL", "base"];
+  const summaryFor = (row, column) => row.arms
+    ? row.arms.find((entry) => entry.column === column)?.summary ?? null
+    : column === "CL" ? row.changeLoop : row.baseline;
   const lines = [
-    "| scenario | oracle CL | oracle base | cost CL | cost base | wall CL | wall base | requests CL | requests base | tools CL | tools base | prompts CL | prompts base |",
-    "|---|---|---|---|---|---|---|---|---|---|---|---|---|"
+    `| scenario | ${metrics.flatMap(([name]) => columns.map((column) => `${name} ${column}`))
+      .join(" | ")} |`,
+    `|---|${metrics.flatMap(() => columns.map(() => "---")).join("|")}|`
   ];
-  for (const row of rows) {
-    const { changeLoop: cl, baseline: base } = row;
-    lines.push(`| ${row.scenario} | ${cell(cl, oracle)} | ${cell(base, oracle)} | ${
-      cell(cl, cost)} | ${cell(base, cost)} | ${cell(cl, wall)} | ${cell(base, wall)} | ${
-      cell(cl, (s) => shown(s.medianModelRequests))} | ${
-      cell(base, (s) => shown(s.medianModelRequests))} | ${
-      cell(cl, (s) => shown(s.medianToolCalls))} | ${cell(base, (s) => shown(s.medianToolCalls))} | ${
-      cell(cl, (s) => shown(s.permissionPrompts))} | ${
-      cell(base, (s) => shown(s.permissionPrompts))} |`);
-  }
-  if (rows.some((row) => row.changeLoop?.partialCostRuns || row.baseline?.partialCostRuns))
+  for (const row of rows)
+    lines.push(`| ${row.scenario} | ${metrics.flatMap(([, render]) =>
+      columns.map((column) => cell(summaryFor(row, column), render))).join(" | ")} |`);
+  if (rows.some((row) => columns.some((column) => summaryFor(row, column)?.partialCostRuns)))
     lines.push("", "\\* at least one run reported partial cost (host stopped before its result envelope).");
   return `${lines.join("\n")}\n`;
 }
@@ -263,17 +322,32 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const argv = process.argv.slice(2);
   const mode = argv.includes("--compare") ? "table"
     : argv.includes("--compare-json") ? "json" : "aggregate";
-  const roots = argv.filter((value) => !value.startsWith("--"));
-  if (!roots.length) {
+  // `--label <name>` names the runs of the result root that follows it.
+  const roots = [];
+  const labels = [];
+  let label = null;
+  let usage = false;
+  for (let index = 0; index < argv.length; index += 1) {
+    if (argv[index] === "--label") {
+      label = argv[index + 1];
+      if (!label || label.startsWith("--")) usage = true;
+      index += 1;
+    } else if (!argv[index].startsWith("--")) {
+      roots.push(argv[index]);
+      labels.push(label);
+      label = null;
+    }
+  }
+  if (!roots.length || usage || label) {
     process.stderr.write(
-      "usage: aggregate.mjs <lab-results-directory>... [--compare | --compare-json]\n");
+      "usage: aggregate.mjs [--label <name>] <lab-results-directory>... [--compare | --compare-json]\n");
     process.exitCode = 2;
   } else if (mode === "aggregate") {
-    const result = aggregateLabRuns(roots);
+    const result = aggregateLabRuns(roots, null, { labels });
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     if (result.some((row) => !row.strictPass)) process.exitCode = 1;
   } else {
-    const comparison = compareArms(aggregateLabRuns(roots));
+    const comparison = compareArms(aggregateLabRuns(roots, null, { labels }));
     process.stdout.write(mode === "json" ? `${JSON.stringify(comparison, null, 2)}\n`
       : formatArmComparison(comparison));
   }

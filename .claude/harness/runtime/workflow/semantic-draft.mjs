@@ -15,6 +15,7 @@ import {
   FOLDER_DRAFT_VERSION, isFolderDraftVersion, isSemanticVersion
 } from "./validation/draft-version.mjs";
 import { OUTLINE } from "./validation/outline-contract.mjs";
+import { unique } from "../core/values.mjs";
 
 export {
   SEMANTIC_DRAFT_VERSIONS, isSemanticVersion
@@ -32,10 +33,6 @@ function stringList(value) {
   return Array.isArray(value)
     ? value.map((item) => text(item)).filter(Boolean)
     : [];
-}
-
-function unique(values) {
-  return [...new Set(values)];
 }
 
 function textList(value) {

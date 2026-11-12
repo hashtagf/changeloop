@@ -71,6 +71,8 @@ pull request delivery
 land carry and undo
 agent evals
 upgrade compatibility
+upgrade from 3.7.0
+upgrade from 3.7.0 (legacy review)
 target drift mutation
 landed carry sync seam
 harness reliability gaps
@@ -232,6 +234,8 @@ packet scaling|sh "$HERE/harness/run-packet-scaling-tests.sh"
 large change packets|sh "$HERE/harness/run-large-change-packet-tests.sh"
 packet value|node "$ROOT/.claude/harness/tests/packet-value.test.mjs"
 upgrade compatibility|sh "$HERE/harness/run-upgrade-compat-tests.sh"
+upgrade from 3.7.0|sh "$HERE/harness/run-upgrade-from-3.7-tests.sh" default
+upgrade from 3.7.0 (legacy review)|sh "$HERE/harness/run-upgrade-from-3.7-tests.sh" legacy
 dashboard contracts|npm --prefix "$ROOT/dashboard" test
 quality tooling|node --test "$ROOT"/scripts/quality/test/*.test.mjs
 consumer quality protocols|node --test "$HERE/harness/run-quality-protocol-tests.mjs"
@@ -464,7 +468,9 @@ suite_timeout_seconds() {
     'harness contracts (topology planning)')
       echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-1200}" ;;
     # The sibling topology fixture walks a real change to archived on its own.
-    'pull request delivery'|'proof loop end to end'|'apply conflict'|'concurrent repositories seam'|'installer smoke'|'harness contracts (topology siblings)')
+    # Each upgrade-from-3.7.0 row drives a published release and the current
+    # one through every lifecycle stage on real Git.
+    'pull request delivery'|'proof loop end to end'|'apply conflict'|'concurrent repositories seam'|'installer smoke'|'harness contracts (topology siblings)'|'upgrade from 3.7.0'|'upgrade from 3.7.0 (legacy review)')
       echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-600}" ;;
     *) echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-300}" ;;
   esac
@@ -488,6 +494,49 @@ suite_failed() {
 
 repository_status() {
   git -C "$1" status --porcelain=v1 --untracked-files=all
+}
+
+# Real-model guard. A deterministic suite must never reach a paid model, yet a
+# fixture that copies a configured reviewer silently calls the host's real
+# `claude`/`codex` whenever one is on PATH. Every suite therefore runs with
+# stand-ins first on PATH. Readiness probes (`claude auth status`, `codex login
+# status`, `--version`, `--help`, `codex doctor`) get a deterministic
+# "not available" answer so suites that plan around host reviewers keep
+# working; any other invocation is logged, fails, and fails the suite. A suite
+# that puts its own fake CLI earlier on PATH is unaffected.
+install_model_cli_guard() {
+  mkdir -p "$1/bin"
+  : > "$1/calls.log"
+  for _guard_cli in claude codex; do
+    cat > "$1/bin/$_guard_cli" <<GUARD
+#!/bin/sh
+# run-all real-model guard stand-in for \`$_guard_cli\`.
+case "\$*" in
+  'auth status'*|'login status'*)
+    [ '$_guard_cli' = claude ] && printf '{"loggedIn":false,"authMethod":"none"}\\n' || echo 'Not logged in'
+    exit 1 ;;
+  --version|-v|--help|-h|doctor|'exec --help')
+    echo '$_guard_cli: unavailable in deterministic tests' >&2
+    exit 1 ;;
+esac
+printf '%s\\n' "$_guard_cli \$*" >> '$1/calls.log'
+echo "run-all real-model guard: deterministic suites must not call '$_guard_cli \$*'" >&2
+exit 1
+GUARD
+    chmod +x "$1/bin/$_guard_cli"
+  done
+}
+
+# Appends the guard's finding to the suite output; returns 1 when the suite
+# invoked a model CLI.
+report_model_cli_guard() {
+  [ -s "$1/calls.log" ] || return 0
+  {
+    printf 'real-model guard: suite "%s" invoked a real model CLI (stand-in refused it):\n' "$2"
+    sed 's/^/  /' "$1/calls.log"
+    echo 'Point the fixture at a fake CLI or an absent executable; deterministic suites must not depend on host model CLIs.'
+  } >> "$3"
+  return 1
 }
 
 assert_repository_unchanged() {
@@ -545,6 +594,10 @@ if [ "${1:-}" = "--suite" ]; then
   line="$(nth "$index")"
   started="$(date +%s)"
   echo "$started" > "$work/$index.started"
+  guard="$work/$index.model-cli"
+  install_model_cli_guard "$guard"
+  PATH="$guard/bin:$PATH"
+  export PATH
   if exclusive "$line"; then
     # Mutation suites own their cleanup traps. Keep them in the foreground so
     # HUP/INT/TERM reaches the mutator itself and it can restore source bytes.
@@ -573,6 +626,7 @@ if [ "${1:-}" = "--suite" ]; then
     kill_tree "$watchdog"
     wait "$watchdog" 2>/dev/null || true
   fi
+  report_model_cli_guard "$guard" "$(label_of "$line")" "$work/$index.out" || result=1
   echo $(( $(date +%s) - started )) > "$work/$index.duration"
   echo "$result" > "$work/$index.status"
   exit 0

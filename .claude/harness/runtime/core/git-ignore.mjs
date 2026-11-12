@@ -1,6 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { realpathSync } from "node:fs";
-import { resolve } from "node:path";
+import { canonical } from "./paths.mjs";
 
 // Git-ignored files are not part of any change, decided in one place.
 //
@@ -18,10 +17,6 @@ import { resolve } from "node:path";
 // ignored", which keeps every path compared exactly as before.
 
 const MAX_BUFFER = 64 * 1024 * 1024;
-
-function canonical(path) {
-  try { return realpathSync(path); } catch { return resolve(path); }
-}
 
 // Gitlinks of `repositoryPath`. A path inside a submodule makes
 // `check-ignore` refuse the whole batch, and the superproject's rules never

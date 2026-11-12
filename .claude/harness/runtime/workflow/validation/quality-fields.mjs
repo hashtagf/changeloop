@@ -1,4 +1,7 @@
 import { NFR_CATEGORY_CAPABILITIES } from "../change-validation.mjs";
+import {
+  isObject, localized, objectList, present, requireFields, stringList, table, text,
+} from "./field-helpers.mjs";
 
 // Typed design fields for quality, security, and operability: NFR scenarios,
 // the threat model, observability, the analytics tracking plan, and capacity.
@@ -34,6 +37,7 @@ const LABELS = Object.freeze({
     item: "รายการ", value: "ค่า",
   },
 });
+const labels = localized(LABELS);
 
 // ISO/IEC 25010:2023 characteristics and sub-characteristics, mapped to the
 // grounding nfrAssessment category they evidence (null: no grounding category).
@@ -75,77 +79,8 @@ const STRIDE = Object.freeze({
 });
 const LEVELS = Object.freeze(["low", "medium", "high"]);
 
-function labels(language) {
-  return language === "th" ? LABELS.th : LABELS.en;
-}
-
-function present(value) {
-  if (value === undefined || value === null) return false;
-  if (typeof value === "string") return value.trim() !== "";
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") return Object.keys(value).length > 0;
-  return true;
-}
-
-function isObject(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
-function text(value) {
-  if (Array.isArray(value)) return value.map(text).filter(Boolean).join("; ");
-  if (isObject(value)) {
-    return Object.entries(value).filter(([, item]) => present(item))
-      .map(([key, item]) => `${key}: ${text(item)}`).join(", ");
-  }
-  return String(value ?? "").trim();
-}
-
-function cell(value) {
-  return text(value).replace(/\r?\n/g, " ").replaceAll("|", "\\|") || "—";
-}
-
-function table(headers, rows) {
-  return `| ${headers.join(" | ")} |\n|${headers.map(() => "---").join("|")}|\n` +
-    rows.map((row) => `| ${row.map(cell).join(" | ")} |`).join("\n");
-}
-
 function normalize(value) {
   return String(value ?? "").trim().toLowerCase().replace(/[-_\s]+/g, " ");
-}
-
-function requireFields(row, path, fields, issues) {
-  for (const field of fields) {
-    if (!present(row[field])) issues.push(`${path}.${field} is required`);
-  }
-}
-
-function stringList(value, path, issues, { nonEmpty = false } = {}) {
-  if (value === undefined || value === null) {
-    if (nonEmpty) issues.push(`${path} is required`);
-    return;
-  }
-  if (!Array.isArray(value)) {
-    issues.push(`${path} must be a list of strings`);
-    return;
-  }
-  if (nonEmpty && value.length === 0) issues.push(`${path} must not be empty`);
-  value.forEach((item, index) => {
-    if (typeof item !== "string" || item.trim() === "") {
-      issues.push(`${path}[${index}] must be a non-empty string`);
-    }
-  });
-}
-
-function rowList(value, path, issues) {
-  if (value === undefined || value === null) return [];
-  if (!Array.isArray(value)) {
-    issues.push(`${path} must be a list`);
-    return [];
-  }
-  return value.map((row, index) => {
-    if (!isObject(row)) issues.push(`${path}[${index}] must be an object`);
-    return isObject(row) ? [row, `${path}[${index}]`] : null;
-  }).filter(Boolean);
 }
 
 function uniqueKeys(rows, issues) {
@@ -171,7 +106,7 @@ export function nfrCategory(characteristic) {
 
 export function validateNfr(value, path = "nfr") {
   const issues = [];
-  const rows = rowList(value, path, issues);
+  const rows = objectList(value, path, issues);
   for (const [row, rowPath] of rows) {
     requireFields(row, rowPath, ["key", "characteristic", "stimulus", "response", "measure"], issues);
     if (present(row.characteristic) && nfrCategory(row.characteristic) === undefined)
@@ -203,7 +138,7 @@ export function validateThreatModel(value, path = "threatModel") {
   stringList(value.assets, `${path}.assets`, issues, { nonEmpty: true });
   stringList(value.trustBoundaries, `${path}.trustBoundaries`, issues, { nonEmpty: true });
   if (!present(value.threats)) issues.push(`${path}.threats is required`);
-  const rows = rowList(value.threats, `${path}.threats`, issues);
+  const rows = objectList(value.threats, `${path}.threats`, issues);
   for (const [row, rowPath] of rows) {
     requireFields(row, rowPath,
       ["key", "stride", "threat", "likelihood", "impact", "control", "residual"], issues);
@@ -245,7 +180,7 @@ export function validateObservability(value, path = "observability") {
   if (!isObject(value)) return [`${path} must be an object`];
   const issues = [];
   if (!present(value.rows)) issues.push(`${path}.rows is required`);
-  for (const [row, rowPath] of rowList(value.rows, `${path}.rows`, issues))
+  for (const [row, rowPath] of objectList(value.rows, `${path}.rows`, issues))
     requireFields(row, rowPath, ["failure", "signal", "sli", "slo", "alert", "runbook", "owner"], issues);
   stringList(value.usage, `${path}.usage`, issues);
   for (const field of ["correlation", "piiCheck"]) {
@@ -276,7 +211,7 @@ export function renderObservability(value, { language } = {}) {
 
 export function validateTrackingPlan(value, path = "trackingPlan") {
   const issues = [];
-  for (const [row, rowPath] of rowList(value, path, issues)) {
+  for (const [row, rowPath] of objectList(value, path, issues)) {
     requireFields(row, rowPath, ["measure", "event", "owner"], issues);
     stringList(row.properties, `${rowPath}.properties`, issues, { nonEmpty: true });
   }

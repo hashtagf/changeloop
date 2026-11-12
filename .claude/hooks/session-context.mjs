@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
 import { accessSync, appendFileSync, constants, existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { delimiter, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { nextCommand } from "../harness/runtime/core/next-step.mjs";
 import { shellDisplayArgument } from "../harness/runtime/core/shell-mutation-policy.mjs";
+import { pathInside } from "../harness/runtime/core/paths.mjs";
 
 const HOOK_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(process.env.CLAUDE_PROJECT_DIR || join(HOOK_DIR, "..", ".."));
@@ -63,8 +64,7 @@ function outsideRootRepositories() {
     .filter((row) => row?.allowOutsideRoot === true && typeof row.id === "string" &&
       typeof row.path === "string" && row.path)
     .filter((row) => {
-      const rel = relative(ROOT, resolve(ROOT, row.path));
-      return rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel);
+      return !pathInside(ROOT, resolve(ROOT, row.path));
     });
 }
 

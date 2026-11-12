@@ -1,4 +1,5 @@
-import { isAbsolute, relative, resolve } from "node:path";
+import { isAbsolute, resolve } from "node:path";
+import { pathInside } from "./paths.mjs";
 
 // One shell-word grammar for every operand the policy reads: a double-quoted
 // word with backslash escapes, a single-quoted word with POSIX `'\''` joins,
@@ -26,11 +27,6 @@ export function shellDisplayArgument(value) {
 function hintPath(workspace, suffix) {
   const text = `${workspace}${suffix}`;
   return SAFE_ARGUMENT.test(workspace) ? text : `'${text.replaceAll("'", "'\\''")}'`;
-}
-
-function within(parent, candidate) {
-  const rel = relative(resolve(parent), resolve(candidate));
-  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
 }
 
 function sameDirectory(left, right) {
@@ -254,7 +250,7 @@ function copySourceOperands(command) {
 // any target may land in any of the change's writable workspace roots.
 function targetEscapes(target, workspace, inspection, roots = [workspace]) {
   const absolute = isAbsolute(target) ? resolve(target) : resolve(workspace, target);
-  if (!roots.some((root) => within(root, absolute))) return true;
+  if (!roots.some((root) => pathInside(root, absolute))) return true;
   if (!inspection?.canonicalTarget || !inspection?.contains) return false;
   const canonical = inspection.canonicalTarget(absolute);
   return !canonical || !roots.some((root) => inspection.contains(canonical, root));
@@ -294,7 +290,7 @@ export function repositoryWorkspaces(environment) {
 function mirroredRepository(paths, repositories) {
   for (const path of paths)
     for (const repository of repositories)
-      if (repository.mirror && isAbsolute(path) && within(repository.mirror, path))
+      if (repository.mirror && isAbsolute(path) && pathInside(repository.mirror, path))
         return repository;
   return null;
 }
@@ -421,7 +417,7 @@ export function shellMutationViolation(phase, environment, command = null, inspe
     // The workspace the command is anchored in: the shared sandbox or one of
     // the change's repository sandboxes, whichever holds the anchor.
     const home = anchor && dynamic === null && isAbsolute(anchor.target)
-      ? roots.filter((candidate) => within(candidate, anchor.target))
+      ? roots.filter((candidate) => pathInside(candidate, anchor.target))
         .sort((left, right) => resolve(right).length - resolve(left).length)[0] || null
       : workspace;
     const root = shellDisplayArgument(home || workspace);

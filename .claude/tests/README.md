@@ -107,6 +107,15 @@ failure list and the tail header; the kill stops the tree child first, so the
 suite's own last assertions and summary can otherwise read like an ordinary
 failure.
 
+Every suite runs with stand-in `claude` and `codex` executables first on PATH
+(the real-model guard), so no fixture can reach a paid host model. Readiness
+probes (`claude auth status`, `codex login status`, `--version`, `--help`,
+`codex doctor`) get a deterministic "not logged in/unavailable" answer, which
+the topology planning rows rely on; any other call is refused and fails the
+suite with `real-model guard: suite "<label>" invoked a real model CLI`. A suite
+that needs a model CLI must put its own fake earlier on PATH or point the
+fixture at an absent executable. `run-run-all-control-tests.sh` proves both.
+
 ## Current suites
 
 | Suite | Contract |
@@ -180,6 +189,7 @@ failure.
 | `harness/run-evidence-binding-mutation.sh` | Folding the change packet back into the code hash, or dropping review's exemption from that omission, is detected by the land-surface and feedback-review suites; `run-all.sh --full` schedules those detector baselines in the same gate and avoids repeating them, while a standalone mutation run proves them itself |
 | `harness/run-branch-warning-tests.mjs` | Default-branch visibility at Land (warn, never block) and the doctor escalation for the unwired branch guard |
 | `harness/run-upgrade-compat-tests.sh` | Legacy-default migration, custom-policy preservation, partial-policy deep merge, and retained active-change compatibility across runtime upgrades; upgrading a v3.7.0 install leaves `ux-ui-principles`, `test-design`, and `testing-fundamentals` identical to the source with no stale adapted-bundle files |
+| `harness/run-upgrade-from-3.7-tests.sh` | A published v3.7.0 consumer upgrades without breaking: drafts of every version 3.7.0 accepted, mid-Build, proven, reviewed, review-dispatched, archived, and v1/v3-started changes (`default`), and changes under the opt-in legacy review routing (`legacy`), all reach `archived` with the current CLI; `run-all.sh` runs the two sections as parallel rows |
 | `harness/rehearsal-evidence.test.mjs` | A successful release rehearsal is reusable only for the same proposed version, source commit, workflow, dependency lock, deterministic/semantic gate, automated mutation gate, rewritten candidate, and bottle rehearsal |
 | `harness/run-harness-tests.sh` + `harness/contracts/*.sh` | Aggregate runner plus domain slices for change policy, evidence/proof, sandbox/Land, multi-repository behavior, planning/diagnostics, and leases. No arguments runs all five slices in one shared fixture process in the original assertion order; slice-name arguments select independent slices. `run-all.sh` divides evidence/proof into eleven balanced rows and multi-repository into its `profile`, `setup`/`copy`, and `sibling` shards (`multi-repository-<shard>` slices); the `profile` shard and planning-diagnostics stay together because the latter reads the former's `cross-repository-profile` state |
 | `harness/run-installer-tests.sh` | Upgrade-safe installation (`.claude/harness/tests` and `fixtures` are never shipped; earlier recorded copies are removed, unrecorded consumer files stay), legacy cleanup, native CLI/API compatibility, doctor, packet handoff, honest metrics, and Cursor adapter; vendored `ux-ui-principles` and `test-design` install file-for-file with their `VENDORED.md` provenance and without upstream `evals/`, and files only the adapted UX bundle shipped are removed |
@@ -274,6 +284,7 @@ Put a regression at the lowest deterministic boundary that caught the defect:
 
 - runtime or evidence semantics → `harness/run-harness-tests.sh`;
 - install/upgrade/CLI semantics → `harness/run-installer-tests.sh`;
+- state a published 3.7.0 consumer holds → `harness/run-upgrade-from-3.7-tests.sh`;
 - shipped hook behavior → `hooks/run-hook-tests.sh`.
 
 Run focused checks during repair and the default `run-all.sh` gate before

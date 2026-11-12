@@ -725,7 +725,9 @@ rebuilt count is never below the evidenced attempts, only a chain that
 verifies end to end and covers every evidenced attempt keeps its verdicts, and
 unverifiable attempts become inconclusive delivered AI waves that consume the
 review budget. Legacy review receipts remain readable but cannot
-satisfy protocol v3.
+satisfy protocol v3. A review request a 3.7.0 project left open under the
+retired `legacy` circuit was never dispatched; it reads as `cancelled`, and the
+next pass requests a current review.
 
 External operations use `handoffs.yaml`, not evidence receipts or unchecked
 developer tasks. Prove may finish while those operations are pending. Land

@@ -13,6 +13,7 @@ import {
   CLAUDE_READ_ONLY_TOOLS, claudeResultEnvelope, claudeReviewerEnvironment,
   claudeReviewerFailure, claudeStructuredReview
 } from "./configured-reviewer.mjs";
+import { unique } from "../core/values.mjs";
 
 export const VISUAL_CAPABILITY = "visual";
 export const VISUAL_REVIEW_PROTOCOL = "foundation-visual-review-v1";
@@ -23,7 +24,6 @@ const SCREENSHOT = /\.(png|jpe?g)$/i;
 export const SCREENSHOT_SKIPPED_DIRECTORIES = new Set([".git", "node_modules"]);
 
 const text = (value) => typeof value === "string" ? value.trim() : "";
-const unique = (values) => [...new Set(values)];
 
 // The packet binding written at Change (workflow/prototype-binding.mjs). The
 // evidence domain may not import workflow code, so the record is read here

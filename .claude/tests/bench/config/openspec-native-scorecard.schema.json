@@ -21,6 +21,15 @@
         "host": { "$ref": "#/$defs/nullableString" },
         "requestedModel": { "$ref": "#/$defs/nullableString" },
         "actualModel": { "$ref": "#/$defs/nullableString" },
+        "hostSettings": { "anyOf": [{ "type": "null" }, {
+          "type": "object", "additionalProperties": false,
+          "required": ["isolated", "settingSources", "strictMcpConfig"],
+          "properties": {
+            "isolated": { "type": "boolean" },
+            "settingSources": { "$ref": "#/$defs/nullableString" },
+            "strictMcpConfig": { "type": "boolean" }
+          }
+        }] },
         "configDigest": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }] },
         "startedAt": { "$ref": "#/$defs/nullableTimestamp" },
         "finishedAt": { "$ref": "#/$defs/nullableTimestamp" }

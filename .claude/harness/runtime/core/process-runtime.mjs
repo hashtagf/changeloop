@@ -1,12 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
+import { pathInside } from "./paths.mjs";
 
-export function pathInside(parent, candidate) {
-  const rel = relative(resolve(parent), resolve(candidate));
-  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
-}
+export { pathInside };
 
 // Only an http(s) readiness URL names a port another run can be holding. A
 // data: URL, for instance, always answers, and pre-probing one would report

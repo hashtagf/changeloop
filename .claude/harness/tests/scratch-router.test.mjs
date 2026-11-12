@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  APPROVAL_ROLES, ARTIFACTS, DOMAINS, RISK_LEVELS, inferPathSignals, riskLevel, routeChange
+  APPROVAL_ROLES, ARTIFACTS, DOMAINS, inferPathSignals, riskLevel, routeChange
 } from "../runtime/contracts/scratch-router.mjs";
 
 const WITHDRAWAL = {
@@ -59,7 +59,6 @@ test("runnable artifacts are offered only from High upward", () => {
 });
 
 test("risk levels follow impact and signal weight", () => {
-  assert.deepEqual(RISK_LEVELS, ["Low", "Medium", "High", "Critical"]);
   assert.equal(riskLevel({ impact: "low" }).level, "Low");
   assert.equal(riskLevel({ riskSignals: ["user-interface"] }).level, "Medium");
   assert.equal(riskLevel({ riskSignals: ["persisted-data-change"] }).level, "High");

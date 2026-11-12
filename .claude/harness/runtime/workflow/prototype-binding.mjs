@@ -5,13 +5,14 @@
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
+import { unique } from "../core/values.mjs";
+import { relativeInside } from "../core/paths.mjs";
 
 export const PROTOTYPE_DIR = "prototype";
 export const PROTOTYPE_BINDING = `${PROTOTYPE_DIR}/binding.json`;
 export const PROTOTYPE_MODES = Object.freeze(["strict", "advisory"]);
 
 const text = (value) => typeof value === "string" && value.trim() ? value.trim() : "";
-const unique = (values) => [...new Set(values)];
 
 export function prototypeMode(selection) {
   return text(selection?.mode) || "strict";
@@ -54,7 +55,7 @@ function containedFile(root, reference) {
     canonical = realpathSync(isAbsolute(reference) ? reference : resolve(root, reference));
   } catch { throw refused(); }
   const rel = relative(project, canonical);
-  if (!rel || rel.startsWith("..") || isAbsolute(rel) || !statSync(canonical).isFile()) throw refused();
+  if (!rel || !relativeInside(rel) || !statSync(canonical).isFile()) throw refused();
   return canonical;
 }
 

@@ -7,7 +7,7 @@ import {
   readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync
 } from "node:fs";
 import { constants as fsConstants } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import {
   ROOT_ONLY_EXCLUDED_DIRS, isExcludedPath, isInvestigationPath, sandboxCodePathspec,
   trackedPathSet
@@ -28,6 +28,7 @@ import {
   projectNestedRepositories, projectableRepositories, projectionWorkspace
 } from "./repository-projection.mjs";
 import { repositoryDeliveryTransactions } from "./repository-delivery-saga.mjs";
+import { pathInside } from "../core/paths.mjs";
 
 // A commit read, not executed. Inspection must not resolve a program through
 // PATH, so ref files are the authority for both ordinary and linked worktrees.
@@ -879,15 +880,10 @@ export function gitBaseCheckoutStatus(repository, path, gitBuffer) {
 }
 
 export function isPacketLocalSource(packetPath, sourcePath) {
-  const inside = (parent, child) => {
-    const rel = relative(parent, child);
-    return rel === "" || rel !== ".." && !rel.startsWith(`..${sep}`) &&
-      !isAbsolute(rel);
-  };
   try {
     const packet = resolve(packetPath);
     const source = resolve(sourcePath);
-    return inside(packet, source) && inside(realpathSync(packet), realpathSync(source));
+    return pathInside(packet, source) && pathInside(realpathSync(packet), realpathSync(source));
   } catch {
     return false;
   }

@@ -47,6 +47,14 @@ function text(value) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+// Whether the runner isolated the host's user-level settings (hooks, plugins,
+// permissions, MCP) for this run; null when the run did not record it.
+function hostSettings(value) {
+  if (!value || typeof value !== "object" || typeof value.isolated !== "boolean") return null;
+  return { isolated: value.isolated, settingSources: text(value.settingSources),
+    strictMcpConfig: value.strictMcpConfig === true };
+}
+
 function requiredText(value, field) {
   const result = text(value);
   if (!result) throw new Error(`${field} is required`);
@@ -477,6 +485,7 @@ export function buildScorecard(input) {
       host: text(input.provenance?.host),
       requestedModel: text(input.provenance?.requestedModel),
       actualModel: text(input.provenance?.actualModel),
+      hostSettings: hostSettings(input.provenance?.hostSettings),
       configDigest: input.config ? digest(input.config) : null,
       startedAt,
       finishedAt

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
-import { dirname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
+import { dirname, join, posix, relative, resolve } from "node:path";
 import { sortedJson } from "../core/trust.mjs";
 import { inspectRepositoryIntelligence } from "./validation/repository-intelligence.mjs";
 import {
@@ -13,6 +13,7 @@ import {
 import {
   intakeTemplate, intakeSnapshot, intakeIssues, intakeFrontier, intakeReadinessIssues
 } from "./validation/investigation-intake.mjs";
+import { pathInside } from "../core/paths.mjs";
 
 export const INVESTIGATION_STATE_VERSION = 2;
 const OUTCOMES = new Set([
@@ -57,19 +58,14 @@ function digest(value, domain = "foundation-investigation:1") {
     .update(sortedJson(value)).digest("hex");
 }
 
-function within(root, candidate) {
-  const path = relative(root, candidate);
-  return path === "" || (!path.startsWith(`..${sep}`) && path !== ".." && !isAbsolute(path));
-}
-
 function safeExistingFile(root, declaredPath) {
   const canonicalRoot = realpathSync(resolve(root));
   const absolute = resolve(canonicalRoot, declaredPath);
-  if (!within(canonicalRoot, absolute) || !existsSync(absolute)) return null;
+  if (!pathInside(canonicalRoot, absolute) || !existsSync(absolute)) return null;
   let canonical;
   try { canonical = realpathSync(absolute); }
   catch { return null; }
-  if (canonical !== absolute || !within(canonicalRoot, canonical)) return null;
+  if (canonical !== absolute || !pathInside(canonicalRoot, canonical)) return null;
   const stat = lstatSync(absolute);
   return stat.isFile() && !stat.isSymbolicLink() ? absolute : null;
 }
@@ -354,7 +350,7 @@ export function validateInvestigationBinding({ projectRoot, binding, git = null 
   if (text(binding.statePath) !== expectedPath)
     issues.push(`investigation binding statePath must be '${expectedPath}'`);
   const path = safeExistingFile(root, text(binding.statePath));
-  if (!path || !within(join(root, ".foundation", "investigations"), path))
+  if (!path || !pathInside(join(root, ".foundation", "investigations"), path))
     return unique([...issues, "investigation binding state is missing or unsafe"]);
   let state;
   try { state = JSON.parse(readFileSync(path, "utf8")); }

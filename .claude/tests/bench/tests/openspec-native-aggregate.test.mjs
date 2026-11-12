@@ -147,3 +147,75 @@ test("aggregate groups by arm across result roots and compares arms pairwise", (
     rmSync(baselineRoot, { recursive: true, force: true });
   }
 });
+
+// A paid smoke compared two Change Loop releases and a reviewed baseline: the
+// table paired only change-loop with `baseline`, showed `-` for
+// baseline-review, and merged both releases into one change-loop row.
+test("compare shows every arm and keeps Change Loop sources apart", () => {
+  const roots = ["current", "previous", "review"].map((name) =>
+    mkdtempSync(join(tmpdir(), `foundation-lab-compare-${name}-`)));
+  const [currentRoot, previousRoot, reviewRoot] = roots;
+  const row = (root, runId, arm, commit, { cost, prompts }) => {
+    write(join(root, runId, "manifest.json"), {
+      runId, scenario: "fixture", strictPass: true, ...(arm ? { arm } : {}),
+      source: { commit, dirty: false, patchDigest: "sha256:e3b0c44298fc" }
+    });
+    write(join(root, runId, "openspec-native-runs", runId, "scorecard.json"), {
+      outcome: { status: "completed", complete: true },
+      oracle: { configured: true, verdict: "pass", score: 9, max: 9 },
+      quality: { fail: 0 }, timing: { wallMs: 60000 },
+      usage: { costUsd: cost, modelRequests: 10, costMeasurement: "measured" },
+      operations: { total: 0, hostToolCalls: { total: 20 } },
+      friction: { permissionPrompts: prompts, hookBlocks: 0, toolErrors: 0 }
+    });
+  };
+  try {
+    row(currentRoot, "cl-new", null, "f49b88ca87b8", { cost: 0.9, prompts: 0 });
+    row(previousRoot, "cl-old", null, "a538d2759dbb", { cost: 0.92, prompts: 1 });
+    row(reviewRoot, "base-review", "baseline-review", "f49b88ca87b8", { cost: 0.63, prompts: 4 });
+
+    const unlabeled = aggregateLabRuns(roots);
+    assert.deepEqual(unlabeled.map(({ arm, variant }) => `${arm}/${variant ?? "-"}`),
+      ["change-loop/a538d27", "change-loop/f49b88c", "baseline-review/-"],
+      "two Change Loop sources stay two rows, named by commit");
+    const [comparison] = compareArms(unlabeled);
+    assert.deepEqual(comparison.arms.map((entry) => entry.column),
+      ["CL a538d27", "CL f49b88c", "base+review"]);
+    assert.equal(comparison.changeLoop, null, "no single unnamed Change Loop row to headline");
+    const table = formatArmComparison([comparison]);
+    assert.match(table, /^\| scenario \| oracle CL a538d27 \| oracle CL f49b88c \| oracle base\+review \| cost CL a538d27 /);
+    assert.match(table, /\| \$0\.9200 \| \$0\.9000 \| \$0\.6300 \|/);
+    assert.match(table, /\| 1 \| 0 \| 4 \|\n$/, "the reviewed baseline is shown, not `-`");
+
+    const labeled = compareArms(aggregateLabRuns(roots, null,
+      { labels: ["current", "previous", null] }));
+    assert.deepEqual(labeled[0].arms.map((entry) => entry.column),
+      ["CL current", "CL previous", "base+review"]);
+    assert.deepEqual(Object.keys(labeled[0].deltas), ["CL current", "CL previous", "base+review"]);
+    assert.equal(labeled[0].deltas["CL current"], null, "no baseline arm means no delta");
+  } finally {
+    for (const root of roots) rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("one Change Loop source with the baseline keeps the historical comparison shape", () => {
+  const root = mkdtempSync(join(tmpdir(), "foundation-lab-compare-stable-"));
+  try {
+    for (const [runId, arm, commit] of [["a", null, "abc1234"], ["b", null, "abc1234"],
+      ["c", "baseline", "def5678"]]) {
+      write(join(root, runId, "manifest.json"), { runId, scenario: "fixture", strictPass: true,
+        ...(arm ? { arm } : {}), source: { commit, patchDigest: "p" } });
+      write(join(root, runId, "openspec-native-runs", runId, "scorecard.json"), {
+        outcome: { status: "completed", complete: true }, oracle: { configured: false },
+        quality: { fail: 0 } });
+    }
+    const aggregates = aggregateLabRuns(root);
+    assert.equal(aggregates.some((row) => "variant" in row), false);
+    const [comparison] = compareArms(aggregates);
+    assert.deepEqual(Object.keys(comparison),
+      ["version", "protocol", "scenario", "changeLoop", "baseline", "delta"]);
+    assert.match(formatArmComparison([comparison]), /^\| scenario \| oracle CL \| oracle base \| cost CL \| cost base \| wall CL \| wall base \| requests CL \| requests base \| tools CL \| tools base \| prompts CL \| prompts base \|\n\|---\|---\|---\|---\|---\|---\|---\|---\|---\|---\|---\|---\|---\|\n/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

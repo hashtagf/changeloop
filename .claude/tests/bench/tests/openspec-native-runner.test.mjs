@@ -14,7 +14,7 @@ import addFormats from "ajv-formats";
 import {
   assertBaselineProject, assertDisposableProject, BENCHMARK_VERIFY_AUTHORITY, backendLandArgs,
   baselineOutcome, baselinePrompt, benchmarkLandAuthority, collectNativeScorecard,
-  discoverChangeId, projectProcessIds, watchedStatusReached,
+  discoverChangeId, hostModels, projectProcessIds, requestedHostModel, watchedStatusReached,
   externalAuthorityBoundary, guardrailOutcomes, hostFriction, observedOutcome, operationRowsInWindow,
   mergeHostExecutions, oracleRepairPrompt, parseHostOutput, pendingTaskCount,
   provenLandReady, remainingTimeoutMs, runBenchmarkOracle, runClaude, terminalChangeId
@@ -848,6 +848,62 @@ printf '%s' '{"type":"result","subtype":"success","is_error":false,"total_cost_u
     rmSync(project, { recursive: true, force: true });
     rmSync(outputDir, { recursive: true, force: true });
   }
+});
+
+// A paid smoke recorded null models although the stream named the model, and
+// the host's global `rtk` hook rewrote Bash commands into permission prompts.
+test("live host runs with user settings isolated and records the streamed models", () => {
+  const project = projectFixture();
+  const outputDir = mkdtempSync(join(tmpdir(), "foundation-native-isolation-stub-"));
+  const output = join(outputDir, "rows.jsonl");
+  const argvLog = join(outputDir, "argv.json");
+  const host = join(outputDir, "claude-stub");
+  write(host, `#!/usr/bin/env node
+require("node:fs").writeFileSync(${JSON.stringify(argvLog)}, JSON.stringify(process.argv.slice(2)));
+const rows = [
+  { type: "system", subtype: "init", model: "claude-opus-5-5" },
+  { type: "assistant", message: { id: "r1", model: "claude-opus-5-5", content: [] } },
+  { type: "assistant", message: { id: "r2", model: "claude-haiku-4-5", content: [] } },
+  { type: "assistant", message: { id: "r3", model: "claude-opus-5-5", content: [] } },
+  { type: "result", subtype: "success", is_error: false, total_cost_usd: 1, duration_ms: 5,
+    modelUsage: { "claude-opus-5-5": { costUSD: 0.9 }, "claude-haiku-4-5": { costUSD: 0.1 } } }
+];
+process.stdout.write(rows.map((row) => JSON.stringify(row)).join("\\n") + "\\n");
+`);
+  chmodSync(host, 0o755);
+  try {
+    const runner = new URL("../openspec-native/run.mjs", import.meta.url);
+    const result = spawnSync(process.execPath, [
+      runner.pathname, "--scenario", "todolist-r2", "--project", project,
+      "--prompt", "/dev create app todolist", "--change-id", "todo",
+      "--run-id", "isolation-stub", "--claude-bin", host, "--timeout-ms", "5000",
+      "--output", output
+    ], { encoding: "utf8" });
+    assert.equal(result.status, 0, `${result.stderr}\n${result.stdout.slice(0, 3500)}`);
+    const argv = JSON.parse(readFileSync(argvLog, "utf8"));
+    assert.equal(argv[argv.indexOf("--setting-sources") + 1], "project,local",
+      "user-level settings and hooks never load");
+    assert.ok(argv.includes("--strict-mcp-config"));
+    const scorecard = JSON.parse(readFileSync(output, "utf8").trim());
+    assert.deepEqual(scorecard.provenance.hostSettings,
+      { isolated: true, settingSources: "project,local", strictMcpConfig: true });
+    assert.equal(scorecard.provenance.requestedModel, "claude-opus-5-5");
+    assert.equal(scorecard.provenance.actualModel, "claude-opus-5-5");
+    assert.equal(validate(scorecard), true, JSON.stringify(validate.errors));
+  } finally {
+    rmSync(project, { recursive: true, force: true });
+    rmSync(outputDir, { recursive: true, force: true });
+  }
+});
+
+test("host models come from the stream, an explicit --model, or stay unknown", () => {
+  assert.deepEqual(hostModels([], {}), { sessionModel: null, actualModel: null });
+  assert.deepEqual(hostModels([], { model: "envelope-model" }),
+    { sessionModel: null, actualModel: "envelope-model" });
+  assert.deepEqual(hostModels([], { modelUsage: { small: { costUSD: 0.1 }, big: { costUSD: 2 } } }),
+    { sessionModel: null, actualModel: "big" });
+  assert.equal(requestedHostModel(["--permission-mode", "acceptEdits", "--model", "sonnet"]), "sonnet");
+  assert.equal(requestedHostModel(["--permission-mode", "acceptEdits"]), null);
 });
 
 test("live request ceilings stop the host at a resumable user-decision boundary", () => {

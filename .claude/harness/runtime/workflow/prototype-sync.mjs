@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { sha256Hex as sha256 } from "../core/trust.mjs";
 import { readFileSync, realpathSync, statSync } from "node:fs";
 import { isAbsolute, join, resolve, sep } from "node:path";
 
@@ -10,8 +10,6 @@ import { prototypeExample } from "./prototype-checklist.mjs";
 // revised, or amended, and later says whether the file was edited since, or
 // whether the page lacks the current facts digest. Both are advisory: they
 // never fail `change start`, Build, Prove, or Land, and neither is evidence.
-
-export const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 
 // Stable JSON: keys sorted at every depth, so equal facts give equal digests.
 function canonical(value) {

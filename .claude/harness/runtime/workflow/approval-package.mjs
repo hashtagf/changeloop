@@ -3,6 +3,7 @@ import { isAbsolute, join, relative, resolve, sep } from "node:path";
 
 import { routeChange } from "../contracts/scratch-router.mjs";
 import { missingApprovalLanes } from "../core/user-decisions.mjs";
+import { isObject } from "../core/values.mjs";
 import { TYPE_SURFACES, coverageReport } from "./prototype-checklist.mjs";
 import { factsDigest, pageFile, snapshotFor, syncStatus, syncWarnings } from "./prototype-sync.mjs";
 import { undoPlan } from "./undo-plan.mjs";
@@ -116,7 +117,6 @@ export function previewSuggestions(route, providers, id) {
 }
 
 const list = (value) => Array.isArray(value) ? value : [];
-const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const at = (value, path) => path.split(".").reduce((node, part) => node?.[part], value);
 
 // Plain text for a draft value, or null when there is nothing to show.

@@ -17,6 +17,7 @@ import {
   reviewScenarioChecklist
 } from "../evidence/review-diff.mjs";
 import { deltaReviewInspection } from "./packet-runtime.mjs";
+import { retiredCircuitReviewRequest } from "./authority.mjs";
 
 export function authorityRequestDisplayValue(request, limit = 8192) {
   const packetBytes = Buffer.byteLength(JSON.stringify(request.packet || null));
@@ -115,6 +116,7 @@ export function pendingAuthorityRequest(entries, selection) {
     const value = entry.value;
     if (value.type === selection.type && value.provider === selection.provider &&
         value.workspaceHash === selection.workspaceHash &&
+        !retiredCircuitReviewRequest(value) &&
         ["requested", "dispatched", "pending", "infrastructure-exhausted"]
           .includes(value.status))
       return value;
@@ -239,7 +241,8 @@ export function extendReviewAuthorityOperation(context, id, flags = {}) {
   if (!decisionRef)
     context.fail("authority extend-review requires --decision-ref <ref>");
   const open = (context.authorityStore?.list(id) || []).map((entry) => entry.value)
-    .find((request) => request.type === "review" && request.status === "requested");
+    .find((request) => request.type === "review" && request.status === "requested" &&
+      !retiredCircuitReviewRequest(request));
   const { maxAiAttempts } = context.effectiveReviewAttemptLimit(
     context.reviewPolicy(id), context.deliveredAiAttempts(id), open?.workspaceHash || null);
   const result = context.grantExtraAiWave(id, decisionRef, maxAiAttempts);
@@ -2028,6 +2031,10 @@ export function createAuthorityRuntime({
         `Resume with 'claude-foundation advance ${id}'.`, 1,
       { owner: "harness", boundary: "stale-authority-request", code: "AUTHORITY_REREQUESTED" });
     }
+    if (retiredCircuitReviewRequest(entry.value))
+      fail(`authority request '${requestId}' used the retired legacy review circuit and was never ` +
+        "dispatched, so its response cannot be recorded; resume with " +
+        `'claude-foundation advance ${id} --through proven', which requests a current review`);
     if (!authorityStore.isOpen(request.status))
       fail(`authority request '${requestId}' is ${request.status}`);
     const undispatched = request.type === "review" && request.status !== "dispatched";

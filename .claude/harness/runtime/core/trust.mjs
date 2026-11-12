@@ -1,4 +1,8 @@
-import { verify as verifySignature } from "node:crypto";
+import { createHash, verify as verifySignature } from "node:crypto";
+
+export function sha256Hex(value) {
+  return createHash("sha256").update(value).digest("hex");
+}
 
 export function canonicalJson(value) {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;

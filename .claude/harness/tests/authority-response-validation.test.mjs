@@ -203,6 +203,21 @@ test("open authority status distinguishes current, stale, and expired requests",
   assert.equal(current.value.status, "requested", "status reads must not mutate stored requests");
 });
 
+test("an undispatched 3.7.0 legacy-circuit review request reads as cancelled", () => {
+  const value = {
+    type: "review", reviewCircuit: "legacy", status: "requested",
+    workspaceHash: "current", expiresAt: "2999-01-01T00:00:00.000Z"
+  };
+  for (const status of ["requested", "pending", "infrastructure-exhausted"])
+    assert.equal(authorityStatusValue({ value: { ...value, status } }, "current", null, () => 1).status,
+      "cancelled");
+  assert.equal(authorityStatusValue({ value: { ...value, status: "completed" } },
+    "current", null, () => 1).status, "completed", "a recorded legacy verdict is kept");
+  assert.equal(authorityStatusValue({ value: { ...value, reviewCircuit: "full-delta" } },
+    "current", null, () => 1).status, "requested");
+  assert.equal(value.status, "requested", "status reads must not mutate stored requests");
+});
+
 test("only a current unexpired stale request heals in memory", () => {
   const entry = { value: {
     status: "stale", workspaceHash: "repository-hash", expiresAt: "2999-01-01T00:00:00.000Z"

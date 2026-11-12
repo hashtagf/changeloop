@@ -3,10 +3,11 @@ import { resumeThrough } from "../core/next-step.mjs";
 import {
   appendFileSync, existsSync, mkdirSync, realpathSync, statSync
 } from "node:fs";
-import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import {
   shellDisplayArgument as displayArgument, shellMutationViolation
 } from "../core/shell-mutation-policy.mjs";
+import { pathInside } from "../core/paths.mjs";
 
 function phasesForStatus(status) {
   if (["change", "resolved"].includes(status)) return ["change"];
@@ -26,8 +27,7 @@ function shellGuardBlocks() {
 }
 
 function isWithin(target, root) {
-  const rel = relative(root, target);
-  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+  return pathInside(root, target);
 }
 
 function canonicalTarget(value, base) {

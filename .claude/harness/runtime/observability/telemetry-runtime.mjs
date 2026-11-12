@@ -14,7 +14,7 @@ import {
   statSync,
   writeFileSync
 } from "node:fs";
-import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { measuredNumber } from "../core/measured-number.mjs";
 import {
   normalizeClaudeUserTransition,
@@ -22,6 +22,7 @@ import {
   runtimeSessionId
 } from "./telemetry.mjs";
 import { usageAvailability } from "./metrics-runtime.mjs";
+import { canonical, pathInside } from "../core/paths.mjs";
 
 export function commandTelemetryStatus(code, blocked) {
   return code === 0 ? "completed" : blocked ? "blocked" : "failed";
@@ -671,8 +672,7 @@ export const claudeCursorIdentity = claudeCursorIdentityOperation.bind(null, {
 export function belongsToProjectValue(rootPath, row, canonicalPath) {
   const cwd = row?.cwd || row?.workingDirectory || row?.projectPath;
   if (typeof cwd !== "string" || !cwd) return true;
-  const inside = relative(canonicalPath(rootPath), canonicalPath(cwd));
-  return inside === "" || (!inside.startsWith("..") && !isAbsolute(inside));
+  return pathInside(canonicalPath(rootPath), canonicalPath(cwd));
 }
 
 export function belongsToProjectOperation({ rootPath, canonicalPath }, row) {
@@ -896,19 +896,15 @@ export function createTelemetryRuntime({
   // user's cost numbers. Rows that name a working directory must name one
   // inside this project; rows that name none are kept, since dropping them
   // would silently under-report rather than mis-attribute.
-  function canonicalPathOrSelf(path) {
-    try { return realpathSync(path); } catch { return resolve(path); }
-  }
-
   let canonicalRootCache = null;
   function canonicalRoot() {
-    canonicalRootCache ||= canonicalPathOrSelf(root);
+    canonicalRootCache ||= canonical(root);
     return canonicalRootCache;
   }
 
   const belongsToThisProject = belongsToProjectOperation.bind(null, {
     rootPath: canonicalRoot,
-    canonicalPath: canonicalPathOrSelf
+    canonicalPath: canonical
   });
 
   function claudeHostContext(sourceOverride = null) {

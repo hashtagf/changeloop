@@ -141,6 +141,7 @@ function fixture(options = {}) {
       return request;
     },
     markBlocked: () => { blocked += 1; },
+    ...(options.deliveryProofCurrent ? { deliveryProofCurrent: options.deliveryProofCurrent } : {}),
     ...(options.testDiscrimination ? {
       testDiscrimination: (_id, hash) => options.testDiscrimination(hash)
     } : {}),
@@ -452,6 +453,22 @@ assert.equal(flow.counters().executions, 2,
   "a proof whose audited artifacts are intact but whose workspace moved is not reused");
 assert.equal(flow.counters().finalizations, 1,
   "the moved workspace must earn fresh authority before finalization");
+
+// Receipts re-earned on an unchanged workspace (a 3.7.0 change re-reviewed
+// after its retired review policy was upgraded) leave the retained proof
+// binding old receipts. Advance must finalize a new proof, not reuse the old
+// one forever.
+let retainedProofCurrent = true;
+const reEarned = fixture({ phase: "ready", executionNeeded: false,
+  deliveryProofCurrent: () => retainedProofCurrent });
+assert.equal((await quiet(() => reEarned.runtime.proofAdvance("change-a"))).status, "PASS");
+assert.equal((await quiet(() => reEarned.runtime.proofAdvance("change-a"))).reused, true);
+retainedProofCurrent = false;
+const refinalized = await quiet(() => reEarned.runtime.proofAdvance("change-a"));
+assert.equal(refinalized.status, "PASS");
+assert.notEqual(refinalized.reused, true);
+assert.equal(reEarned.counters().finalizations, 2,
+  "a proof that no longer binds the current receipts is finalized again");
 
 const rejected = fixture({
   requests: [{

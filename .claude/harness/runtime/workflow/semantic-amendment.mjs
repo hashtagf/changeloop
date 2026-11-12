@@ -15,13 +15,13 @@ import {
   amendmentInvestigationSource, investigationCoverageIssues
 } from "./validation/investigation-coverage.mjs";
 import { OUTLINE, outlineRow, sectionHeading } from "./validation/outline-contract.mjs";
-import { isSemanticVersion } from "./validation/draft-version.mjs";
+import { amendmentCompileVersion, isRecordedSemanticVersion } from "./validation/draft-version.mjs";
 import { DESIGN_FIELDS } from "./validation/design-blueprints.mjs";
 import { PROCESS_FIELDS } from "./validation/process-fields.mjs";
+import { unique } from "../core/values.mjs";
 
 const stringList = (value) => Array.isArray(value)
   ? value.map((item) => String(item || "").trim()).filter(Boolean) : [];
-const unique = (values) => [...new Set(values)];
 const markdownCell = (value) => String(value ?? "")
   .replace(/\r?\n/g, " ").replaceAll("|", "\\|");
 const keyOf = (row) => String(row?.key || "").trim();
@@ -946,8 +946,9 @@ export function compileSemanticAmendment({
   const issues = amendmentIssues(amendment);
   const investigationAgreement = amendmentInvestigationSource(investigationSource, amendment);
   if (investigationAgreement) issues.push(...investigationCoverageIssues(investigationAgreement));
-  if (!isSemanticVersion(semanticDraftVersion))
-    issues.push("semantic amendment requires semanticDraftVersion 4 or 5");
+  if (!isRecordedSemanticVersion(semanticDraftVersion))
+    issues.push("semantic amendment requires semanticDraftVersion 3, 4, or 5");
+  const compileVersion = amendmentCompileVersion(semanticDraftVersion);
   const existingClaims = contract.claims || [];
   const priorClaimById = new Map(existingClaims.map((claim) => [claim.id, claim]));
   const claimsByRequirement = new Map();
@@ -1148,7 +1149,7 @@ export function compileSemanticAmendment({
   const normalized = !changedKeys.size ? {
     issues: [], draft: { claims: [], specs: [], execution: { providers: {} } }
   } : normalizeSemanticDraft({
-    version: semanticDraftVersion,
+    version: compileVersion,
     intent: amendment.reason || "Amend the active agreement",
     impact: amendment.impact || "low",
     requirements: [...addRequirements,

@@ -1,14 +1,14 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
-  cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync,
-  realpathSync, rmSync, writeFileSync
+  cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync
 } from "node:fs";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, join, relative } from "node:path";
 
 import { EXCLUDED_WORKSPACE_DIRS } from "../core/workspace-policy.mjs";
 import { withoutGitIgnored } from "../core/git-ignore.mjs";
 import { sandboxCodePathspec } from "../core/workspace-surface.mjs";
+import { canonical, relativeInside } from "../core/paths.mjs";
 
 // A sandbox is the only copy of work that has not landed: commits made inside
 // it live in a detached worktree (or a copied object store) that no branch in
@@ -31,10 +31,6 @@ function runGit(args, cwd, env = null) {
     stdout: String(result.stdout || ""),
     stderr: String(result.stderr || result.error?.message || "")
   };
-}
-
-function canonical(path) {
-  try { return realpathSync(path); } catch { return resolve(path); }
 }
 
 // Bytes, symlink target, and executable bit: what a Land projection carries.
@@ -145,7 +141,7 @@ function nestedRelativePaths(root, state) {
   return Object.entries(state.repositories || {})
     .filter(([repositoryId, record]) => repositoryId !== "root" && record?.targetPath)
     .map(([, record]) => relative(canonical(root), canonical(record.targetPath)))
-    .filter((path) => path && !path.startsWith("..") && !isAbsolute(path))
+    .filter((path) => path && relativeInside(path))
     .sort();
 }
 

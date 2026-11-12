@@ -33,7 +33,8 @@ import fs from "node:fs";
 import childProcess from "node:child_process";
 import { syncBuiltinESMExports } from "node:module";
 import { promisify } from "node:util";
-import { basename, dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { basename, dirname, relative, resolve, sep } from "node:path";
+import { pathInside } from "./paths.mjs";
 
 // Exact argument lists that may be remembered. Anything else runs every time.
 const MEMOIZED_QUERIES = new Set([
@@ -71,11 +72,6 @@ function realOrResolved(path) {
   return absolute;
 }
 
-function inside(parent, child) {
-  const rel = relative(parent, child);
-  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
-}
-
 function foundationIgnored(cwd) {
   // The installed `.foundation/.gitignore`: `*`, then only the two managed
   // files re-included. Anything else (absent, edited) earns no exemption.
@@ -108,8 +104,8 @@ function forget(path) {
   try { target = realOrResolved(text); } catch { entries.clear(); return; }
   if (target.split(sep).includes(".git")) { entries.clear(); return; }
   for (const [key, entry] of entries) {
-    if (inside(target, entry.cwd)) { entries.delete(key); continue; }
-    if (!inside(entry.cwd, target)) continue;
+    if (pathInside(target, entry.cwd)) { entries.delete(key); continue; }
+    if (!pathInside(entry.cwd, target)) continue;
     const rel = relative(entry.cwd, target).split(sep).join("/");
     if (entry.foundationIgnored && rel.startsWith(".foundation/") &&
         rel !== ".foundation/.gitignore") continue;

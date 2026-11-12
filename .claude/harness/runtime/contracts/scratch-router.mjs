@@ -4,7 +4,6 @@
 // renderer, preview suggestions, and approval lanes read one table.
 import { WORK_TYPES } from "./work-types.mjs";
 
-export const RISK_LEVELS = Object.freeze(["Low", "Medium", "High", "Critical"]);
 export const APPROVAL_ROLES = Object.freeze(["product-owner", "tech-lead", "qa", "devops", "security"]);
 
 const RISK_SIGNALS = new Set([

@@ -272,6 +272,9 @@ export function createProofExecutionRuntime({
   // configured review in the foreground; null means the route is a handoff.
   startConcurrentReview = null,
   stableHash = (value) => JSON.stringify(value), die, markBlocked = () => {},
+  // (id) => boolean. Whether the retained proof binds the current receipts;
+  // advance treats a proven change whose receipts were re-earned as stale.
+  deliveryProofCurrent = () => true,
   // Brings the change's sandboxes current (the root sandbox's nested
   // repository paths) before any provider runs in them.
   prepareWorkspace = () => {},
@@ -1577,9 +1580,12 @@ export function createProofExecutionRuntime({
       if (!flags["decision-ref"]) die("proof advance --reset-progress requires --decision-ref");
       advanceStart.progressFingerprint = null;
     }
+    // Reuse needs the retained proof to bind the receipts on disk: receipts
+    // re-earned on the same workspace (e.g. after a review-policy upgrade)
+    // need a new proof, or advance would refresh the same stale proof forever.
     if (readiness.status === "READY" && audit.valid && forcedSnapshot &&
         audit.proof.workspaceHash === forcedSnapshot.workspaceHash &&
-        readiness.workspaceHash === forcedSnapshot.workspaceHash) {
+        readiness.workspaceHash === forcedSnapshot.workspaceHash && deliveryProofCurrent(id)) {
       return printOutcome(writeAdvance(id, {
         version: 1,
         changeId: id,

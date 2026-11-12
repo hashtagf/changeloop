@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   OUTLINE,
-  OUTLINE_VERSION,
   VOLATILE_FIELDS,
   derivedSectionKeys,
   outlineRow,
@@ -43,8 +42,7 @@ const fullDraft = {
 
 const keys = (document, draft, context) => outlineSections(document, draft, context).map((row) => row.key);
 
-test("outline version and documents are exposed", () => {
-  assert.equal(OUTLINE_VERSION, 1);
+test("outline documents are exposed", () => {
   assert.deepEqual(Object.keys(OUTLINE), ["proposal", "design", "spec", "tasks"]);
 });
 

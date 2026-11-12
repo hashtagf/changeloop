@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+This is release **3.8.0** (minor, never a 3.7.x patch): it drops state and
+commands from before 3.7 and changes 3.7.0 behavior (review routing, CLI
+surface). A v3.7.0 project upgrades in place.
+
 ### Added
 
 - Pi host adapter. `cloop init --host pi` (or `install-pi.sh`) installs
@@ -141,6 +145,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   v5 template; `change new --draft` now always routes to `change start`.
   `change new` remains as an internal fixture primitive and leaves the public
   command list.
+  A change 3.7.0 already started from a v3 draft keeps working and can still
+  be amended with `change amend <change> <amendment.json>`.
 - **Breaking:** the deprecated CLI aliases are gone. Use the canonical
   commands instead: `validate` → `change validate`, `proof plan` →
   `proof readiness`, `proof finish` → `proof run`, `agents task` →
@@ -155,12 +161,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `claude-foundation init`, and install/upgrade rewrites both keys to the
   shipped values. Every review receipt now binds to an `authority dispatch`
   attempt, and `RESOLVED` no longer prints `review: required`; it names the
-  tier and model class.
+  tier and model class. In a 3.7.0 project that opted into `legacy`, upgrade says
+  so, an unrecorded legacy-circuit review request is replaced by a current one
+  automatically, and a change proven under it gets one current review on its
+  next `advance`.
 - Twelve unused internal runtime functions (old proposal renderers and
   helpers replaced in 3.7). No command, output, or file format changes.
 
 ### Fixed
 
+- Path containment is decided by one shared rule (`core/paths.mjs`) in the
+  runtime and hooks. Several checks treated a child directory whose name
+  starts with `..` (for example `..cache`) as outside its root; it is now
+  inside, while `..`, `../x`, and absolute paths elsewhere stay outside.
+  Duplicated validation-field, `isObject`/`unique`, realpath, and SHA-256
+  helpers now share one implementation each; validation messages are
+  byte-identical.
+- Test and benchmark tooling (repository only). `run-all.sh` puts stand-in
+  `claude`/`codex` first on PATH for every suite and fails a suite that calls a
+  model (readiness probes get a deterministic "not logged in"). The benchmark
+  lab no longer records an empty baseline `product.patch` when runner coverage
+  under `.foundation/` overflowed the diff buffer, isolates the operator's
+  user-level Claude Code settings and MCP servers for every arm (recorded in
+  `provenance.hostSettings`), fills `requestedModel`/`actualModel` from the host
+  stream, and `aggregate.mjs --compare` shows every arm and keeps Change Loop
+  sources apart (by commit or `--label`).
+- `advance` no longer stops with "ran RUN_INVALIDATED_EVIDENCE twice without
+  changing delivery state" on a proven change whose receipts were re-earned on
+  an unchanged workspace (for example a 3.7.0 change re-reviewed after
+  upgrade). Proof advance reused the old proof, which no longer bound the new
+  receipts; it now finalizes a new one.
+- `change start --inspect` on a v1–v3 draft returned `DONE` although
+  `change start` then refused it; it now returns the draft repair with the
+  supported formats.
 - A review policy with no named reviewer and `fallbackReviewers:
   ["main-session"]` (the fix the missing-CLI error recommends) now reviews in
   the main session. Before, validation accepted it but `advance` repeated a

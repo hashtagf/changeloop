@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  ADAPTERS, CAPABILITY_ADAPTERS, EVALUATION_PROTOCOL, PROVIDER_CONTRACTS, PROVIDERS,
+  EVALUATION_PROTOCOL, PROVIDER_CONTRACTS, PROVIDERS,
   capabilityPhase, evaluationResult, isPostReleaseCapability, providerCapability,
   splitPostReleaseProviders
 } from "../runtime/evidence/provider-catalog.mjs";
@@ -31,20 +31,17 @@ import {
 
 const NEW = ["evaluation", "release-health", "parity", "plan-check", "experiment-guardrail"];
 
-test("catalog contains every new capability with a contract and a known adapter", () => {
+test("catalog contains every new capability with a contract and a phase", () => {
   for (const capability of NEW) {
     assert.equal(typeof PROVIDER_CONTRACTS[capability], "string", capability);
     assert.ok(PROVIDER_CONTRACTS[capability].length > 0, capability);
     assert.ok(PROVIDERS.has(capability), capability);
     assert.equal(providerCapability(capability), capability);
-    assert.ok(ADAPTERS.has(CAPABILITY_ADAPTERS[capability]), capability);
   }
   for (const capability of ["evaluation", "parity", "plan-check"]) {
-    assert.equal(CAPABILITY_ADAPTERS[capability], "command");
     assert.equal(capabilityPhase(capability), "pre-land");
   }
   for (const capability of ["release-health", "experiment-guardrail"]) {
-    assert.equal(CAPABILITY_ADAPTERS[capability], "external");
     assert.equal(isPostReleaseCapability(capability), true);
   }
   assert.equal(isPostReleaseCapability("test"), false);

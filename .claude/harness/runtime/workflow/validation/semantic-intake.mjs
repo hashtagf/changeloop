@@ -1,6 +1,7 @@
 import { lifecycleOutcome } from "../../core/lifecycle-outcome.mjs";
 import { deriveDiscoveryCoverage, isDerivedCoverage } from "./derived-coverage.mjs";
 import { isSemanticVersion } from "./draft-version.mjs";
+import { unique } from "../../core/values.mjs";
 
 const STATUSES = new Set([
   "covered", "not-applicable", "needs-investigation", "needs-user-decision"
@@ -71,10 +72,6 @@ function strings(value) {
   return Array.isArray(value)
     ? value.map((item) => text(item)).filter(Boolean)
     : [];
-}
-
-function unique(values) {
-  return [...new Set(values)];
 }
 
 const unresolvedIssue = (issue) =>

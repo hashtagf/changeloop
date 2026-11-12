@@ -11,7 +11,8 @@ import { fileURLToPath } from "node:url";
 
 import {
   baselineAllowedTools, cleanRoomCommandContract, directoryDigest, installedAllowedTools,
-  prepareLabProject, prepareBaselineProject, runScenarioLab, shellCheck
+  prepareLabProject, prepareBaselineProject, preserveLabEvidence, productPatch, runScenarioLab,
+  shellCheck
 } from "../openspec-native/lab.mjs";
 import { executionPlan, loadMatrix } from "../openspec-native/matrix.mjs";
 
@@ -275,7 +276,41 @@ writeFileSync(value("--output"), '{"fixture":true}\\n');
     assert.equal(manifest.seedDigest, directoryDigest(fixture));
     assert.match(readFileSync(join(result.runDir, "product.patch"), "utf8"),
       /src\/feature\.js/, "the baseline's product diff is preserved");
+    assert.deepEqual(manifest.productPatch, { status: "captured", reason: null });
     assert.deepEqual(manifest.retained, []);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// A paid baseline-review run kept a 0-byte product.patch: the quality collector
+// wrote >1 MiB of coverage under `.foundation/` after the host exited, the diff
+// overflowed spawnSync's default buffer, and the failure was recorded as empty.
+test("baseline product patch excludes runner artifacts and never records a failed capture as empty", () => {
+  const root = mkdtempSync(join(tmpdir(), "foundation-lab-product-patch-"));
+  const fixture = join(root, "fixture");
+  write(join(fixture, "src/server.js"), "module.exports = 1;\n");
+  try {
+    const { project } = prepareBaselineProject({ fixture, tempParent: root, arm: "baseline-review" });
+    write(join(project, "src/server.js"), "module.exports = 2;\n");
+    write(join(project, "REVIEW.md"), "# Review\n");
+    write(join(project, ".foundation/test-results/quality/benchmark-coverage/tmp/coverage.json"),
+      `${"x".repeat(2 * 1024 * 1024)}\n`);
+    const captured = productPatch(project);
+    assert.equal(captured.status, "captured");
+    assert.match(captured.patch, /src\/server\.js/);
+    assert.match(captured.patch, /REVIEW\.md/);
+    assert.doesNotMatch(captured.patch, /\.foundation/);
+    assert.doesNotMatch(captured.patch, /\.foundation-benchmark\.json/);
+
+    const runDir = join(root, "run");
+    const manifest = preserveLabEvidence({ project, runDir, manifest: { version: 1 },
+      deliveredPatch: { status: "unavailable", reason: "ENOBUFS", patch: null } });
+    assert.deepEqual(manifest.productPatch, { status: "unavailable", reason: "ENOBUFS" });
+    assert.equal(existsSync(join(runDir, "product.patch")), false,
+      "an unavailable capture writes no empty patch");
+    rmSync(join(project, ".git"), { recursive: true, force: true });
+    assert.equal(productPatch(project).status, "unavailable");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -319,6 +354,11 @@ test("baseline dry-run prints the exact host plan for free and keeps no project"
     assert.match(reviewed.host.prompt, /review the complete diff .*REVIEW\.md/);
     assert.doesNotMatch(plan.host.prompt, /REVIEW\.md/);
     assert.ok(reviewed.host.argv.includes("Write(/**/REVIEW.md)"));
+    // Host-global settings (hooks such as a Bash-rewriting `rtk`) never reach any arm.
+    for (const argv of [plan.host.argv, reviewed.host.argv]) {
+      assert.equal(argv[argv.indexOf("--setting-sources") + 1], "project,local");
+      assert.ok(argv.includes("--strict-mcp-config"));
+    }
     assert.equal(reviewed.runnerArgs[reviewed.runnerArgs.indexOf("--arm") + 1], "baseline-review");
     assert.deepEqual(readdirSync(tempParent), []);
   } finally {

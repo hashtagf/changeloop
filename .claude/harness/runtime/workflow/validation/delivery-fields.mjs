@@ -4,6 +4,10 @@
 // recovery. Each field exposes validate (path-prefixed issues) and render
 // (markdown body without the section heading, "" when empty).
 
+import {
+  cell, isObject, localized, objectList, present, requireFields, stringList, table,
+} from "./field-helpers.mjs";
+
 const LABELS = Object.freeze({
   en: {
     strategy: "Strategy", deployOrder: "Deploy order", gates: "Gates", rollbackTrigger: "Rollback trigger",
@@ -38,6 +42,7 @@ const LABELS = Object.freeze({
     backup: "การสำรองข้อมูล", rpo: "RPO", rto: "RTO", restoreTest: "การทดสอบกู้คืน", regionFailure: "เมื่อ region ล่ม",
   },
 });
+const labels = localized(LABELS);
 
 const ENABLEMENT = Object.freeze([
   ["mechanism", "qMechanism", "text"],
@@ -49,73 +54,8 @@ const ENABLEMENT = Object.freeze([
 ]);
 const SKEW_META = Object.freeze(["works", "note", "combination"]);
 
-function labels(language) {
-  return language === "th" ? LABELS.th : LABELS.en;
-}
-
-function present(value) {
-  if (value === undefined || value === null) return false;
-  if (typeof value === "string") return value.trim() !== "";
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") return Object.keys(value).length > 0;
-  return true;
-}
-
-function isObject(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
-function text(value) {
-  if (Array.isArray(value)) return value.map(text).filter(Boolean).join("; ");
-  if (isObject(value)) {
-    return Object.entries(value).filter(([, item]) => present(item))
-      .map(([key, item]) => `${key}: ${text(item)}`).join(", ");
-  }
-  return String(value ?? "").trim();
-}
-
-function cell(value) {
-  return text(value).replace(/\r?\n/g, " ").replaceAll("|", "\\|") || "—";
-}
-
 function yesNo(value, l) {
   return value === true ? l.yes : value === false ? l.no : cell(value);
-}
-
-function table(headers, rows) {
-  return `| ${headers.join(" | ")} |\n|${headers.map(() => "---").join("|")}|\n` +
-    rows.map((row) => `| ${row.map(cell).join(" | ")} |`).join("\n");
-}
-
-function requireFields(row, path, fields, issues) {
-  for (const field of fields) {
-    if (!present(row[field])) issues.push(`${path}.${field} is required`);
-  }
-}
-
-function stringList(value, path, issues) {
-  if (value === undefined || value === null) return;
-  if (!Array.isArray(value)) {
-    issues.push(`${path} must be a list of strings`);
-    return;
-  }
-  value.forEach((item, index) => {
-    if (typeof item !== "string" || item.trim() === "") {
-      issues.push(`${path}[${index}] must be a non-empty string`);
-    }
-  });
-}
-
-function objectList(value, path, issues) {
-  if (value === undefined || value === null) return [];
-  if (!Array.isArray(value)) {
-    issues.push(`${path} must be a list`);
-    return [];
-  }
-  return value.map((row, index) => {
-    if (!isObject(row)) issues.push(`${path}[${index}] must be an object`);
-    return isObject(row) ? [row, `${path}[${index}]`] : null;
-  }).filter(Boolean);
 }
 
 function bullet(label, value) {

@@ -1,9 +1,8 @@
 import { spawnSync } from "node:child_process";
-import { realpathSync } from "node:fs";
-import { resolve } from "node:path";
 
 import { compositeRepositorySelection } from "../core/repository-binding.mjs";
 import { assessSandbox, sandboxDescriptors } from "./sandbox-preservation.mjs";
+import { canonical } from "../core/paths.mjs";
 
 // Land used to decide `archived` from what its own records said had been
 // applied. A record is not the target: a repository whose delivery record read
@@ -13,10 +12,6 @@ import { assessSandbox, sandboxDescriptors } from "./sandbox-preservation.mjs";
 // is archived or removed.
 
 export const LAND_PROJECTION_MISSING = "LAND_PROJECTION_MISSING";
-
-function canonical(path) {
-  try { return realpathSync(path); } catch { return resolve(path); }
-}
 
 // An uninitialized submodule is an empty directory inside the superproject, so
 // every Git command run there silently answers for the superproject instead.

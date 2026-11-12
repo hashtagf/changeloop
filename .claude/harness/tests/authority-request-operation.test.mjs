@@ -94,6 +94,14 @@ test("pending authority lookup requires complete identity and an open status", (
   ])
     assert.equal(pendingAuthorityRequest([{ value: { ...matching, status } }], selection).status,
       status);
+  // A 3.7.0 legacy-circuit review request can never be dispatched; it is not
+  // reused, so Prove requests a full-delta review in its place.
+  assert.equal(pendingAuthorityRequest([{ value: {
+    ...matching, status: "requested", reviewCircuit: "legacy"
+  } }], selection), null);
+  assert.equal(pendingAuthorityRequest([{ value: {
+    ...matching, status: "requested", reviewCircuit: "full-delta", requestId: "current"
+  } }], selection).requestId, "current");
 });
 
 test("authority request policy separates review circuit from human acceptance", () => {

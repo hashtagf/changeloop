@@ -62,8 +62,18 @@ function healedAuthorityStatus(value, expectedHashFor, now) {
   return "requested";
 }
 
+// A 3.7.0 review request under the retired "legacy" circuit was never
+// dispatched (that circuit recorded verdicts without one), so no verdict is
+// lost by reading it as cancelled: Prove then requests a full-delta review
+// instead of returning the same undispatchable request forever.
+export function retiredCircuitReviewRequest(value) {
+  return value?.type === "review" && value.reviewCircuit === "legacy" &&
+    ["requested", "pending", "infrastructure-exhausted"].includes(value.status);
+}
+
 export function authorityStatusValue(entry, workspaceHash, expectedHashFor = null, now = Date.now) {
   const value = { ...entry.value };
+  if (retiredCircuitReviewRequest(value)) return { ...value, status: "cancelled" };
   value.status = OPEN_STATUSES.has(value.status)
     ? openAuthorityStatus(value, workspaceHash, expectedHashFor, now)
     : healedAuthorityStatus(value, expectedHashFor, now);

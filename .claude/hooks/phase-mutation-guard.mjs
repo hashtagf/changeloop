@@ -23,6 +23,7 @@ import {
 import {
   workspaceCapabilityValue, workspaceMutationDecision
 } from "../harness/runtime/core/execution-contract.mjs";
+import { canonical, pathInside } from "../harness/runtime/core/paths.mjs";
 
 // Large enough that a real audit trail survives a working session, small enough
 // that an unattended project never carries an unbounded file.
@@ -701,10 +702,10 @@ function prePhaseDraftMutationAllowed() {
   return paths.every((rawPath) => {
     const target = canonicalTarget(rawPath, projectRoot);
     if (!target) return false;
-    const rel = relative(projectRoot, target).split(sep).join("/");
     // Scratch outside the project is not product code; before a phase exists
     // it is the only other place an agent can think on disk.
-    if (rel === ".." || rel.startsWith("../") || isAbsolute(rel)) return true;
+    if (!pathInside(projectRoot, target)) return true;
+    const rel = relative(projectRoot, target).split(sep).join("/");
     return /^(?:\.foundation\/change-start-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.json|\.foundation\/drafts\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.json)$/.test(rel);
   });
 }
@@ -744,13 +745,8 @@ function canonicalTarget(value, base) {
   }
 }
 
-function canonical(value) {
-  try { return realpathSync(resolve(value)); } catch { return resolve(value); }
-}
-
 function isWithin(target, root) {
-  const rel = relative(root, target);
-  return rel === "" || (!rel.startsWith(`..${sep}`) && rel !== ".." && !isAbsolute(rel));
+  return pathInside(root, target);
 }
 
 function recordAudit(row) {

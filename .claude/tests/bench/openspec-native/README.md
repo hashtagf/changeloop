@@ -113,6 +113,18 @@ node .claude/tests/bench/openspec-native/lab.mjs \
 
 Pass `--keep-project` only for an explicit debugging run. Direct `run.mjs`
 invocation remains available for an already prepared disposable project.
+
+Every arm launches the host with `--setting-sources project,local
+--strict-mcp-config`: the operator's user-level Claude Code settings (global
+hooks such as a Bash-rewriting `rtk` hook, plugins, permissions, default
+model) and MCP servers never reach the lab, while the Change Loop arm keeps its
+installed project hooks. Authentication is unaffected. Scorecards record this
+in `provenance.hostSettings` (null for collect-only rows) and fill
+`requestedModel` (explicit `--model`, else the stream's session model) and
+`actualModel` (the model that answered) from the host stream. A user-level
+default model no longer applies; direct `run.mjs` runs pin one with
+`--claude-arg --model --claude-arg <model>`. User memory (`~/.claude/CLAUDE.md`) is not a
+settings source and is not covered by this isolation.
 Each retained run has `manifest.json`, `source.patch`, and `integrity.json`; the
 last file content-binds every preserved artifact. Aggregate repeated runs with:
 
@@ -303,7 +315,9 @@ The baseline arm:
   no installer: no `.claude/`, `openspec/`, `.foundation/`, hooks, or
   `claude-foundation` shim. `run.mjs --arm baseline` refuses a project that
   contains any of them. The seed becomes one local Git commit so read-only Git
-  works and the lab can keep the delivered diff as `product.patch`;
+  works and the lab can keep the delivered diff as `product.patch`
+  (runner-owned `.foundation/` artifacts excluded; a failed capture writes no
+  patch and records `productPatch.status: "unavailable"` in the manifest);
 - sends the scenario task text without its leading slash command, the canonical
   project test command, and the same partition hint, then asks for direct
   implementation with tests, a green project command, and uncommitted changes.
@@ -340,7 +354,14 @@ npm run bench:openspec-native:aggregate -- \
 ```
 
 Aggregates are keyed by scenario and arm; rows written before arms existed are
-Change Loop rows. The pairwise table reports oracle passes and median score,
+Change Loop rows. `--label <name>` before a result root names its runs (for
+example `--label current <dir> --label previous <dir>` for two releases);
+unlabeled Change Loop rows of one scenario that measured different source
+commits split by commit instead of merging. With a reviewed baseline or
+several Change Loop sources the table gets one column per arm (`CL <label>`,
+`base`, `base+review`) and the JSON adds `arms` and per-column `deltas` against
+`baseline`; a plain Change Loop versus baseline comparison keeps its historical
+shape. The table reports oracle passes and median score,
 median cost, wall time, model requests, host tool calls, and permission prompts
 per arm. A `*` marks a cost that at least one run reported only partially,
 because the host was stopped before its result envelope (the Change Loop arm

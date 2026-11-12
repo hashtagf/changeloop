@@ -10,6 +10,7 @@
 // SECTION_HELP entries in dev-document.mjs, so a help example always passes.
 
 import { absenceKind, bareAbsenceIssue } from "./explicit-absence.mjs";
+import { isObject, localized, objectList, present, requireFields, text } from "./field-helpers.mjs";
 
 const LABELS = Object.freeze({
   en: {
@@ -113,35 +114,11 @@ const LABELS = Object.freeze({
     changes: "สิ่งที่เปลี่ยน", permissions: "สิทธิ์และ secret ที่ใช้",
   },
 });
+const labels = localized(LABELS);
 
 const BUGFIX_VARIANTS = Object.freeze(["security", "hotfix"]);
 const SEMVER = Object.freeze(["major", "minor", "patch"]);
 const FLOATING_VERSION = /^(?:latest|current|main|master|head)$/i;
-
-function labels(language) {
-  return language === "th" ? LABELS.th : LABELS.en;
-}
-
-function present(value) {
-  if (value === undefined || value === null) return false;
-  if (typeof value === "string") return value.trim() !== "";
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") return Object.keys(value).length > 0;
-  return true;
-}
-
-function isObject(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
-function text(value) {
-  if (Array.isArray(value)) return value.map(text).filter(Boolean).join("; ");
-  if (isObject(value)) {
-    return Object.entries(value).filter(([, item]) => present(item))
-      .map(([key, item]) => `${key}: ${text(item)}`).join(", ");
-  }
-  return String(value ?? "").trim();
-}
 
 function cell(value, l = LABELS.en) {
   if (value === true) return l.yes;
@@ -172,10 +149,6 @@ function requireObject(value, path, issues) {
   return false;
 }
 
-function requireFields(row, path, fields, issues) {
-  for (const field of fields) if (!present(row[field])) issues.push(`${path}.${field} is required`);
-}
-
 function stringList(value, path, issues, { required = false } = {}) {
   if (value === undefined || value === null) {
     if (required) issues.push(`${path} is required`);
@@ -189,18 +162,6 @@ function stringList(value, path, issues, { required = false } = {}) {
   value.forEach((item, index) => {
     if (typeof item !== "string" || item.trim() === "") issues.push(`${path}[${index}] must be a non-empty string`);
   });
-}
-
-function objectList(value, path, issues) {
-  if (value === undefined || value === null) return [];
-  if (!Array.isArray(value)) {
-    issues.push(`${path} must be a list`);
-    return [];
-  }
-  return value.map((row, index) => {
-    if (!isObject(row)) issues.push(`${path}[${index}] must be an object`);
-    return isObject(row) ? [row, `${path}[${index}]`] : null;
-  }).filter(Boolean);
 }
 
 // --- bugfix ---------------------------------------------------------------

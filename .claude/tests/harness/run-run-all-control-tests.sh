@@ -196,6 +196,43 @@ fi
 printf '%s\n' "$host_env" | grep -qx 'FOUNDATION_MULTI_REPOSITORY_SHARD=profile' || {
   echo "FAIL: the shared test library dropped a runner control"; exit 1; }
 
+# Real-model guard: a suite that calls a host model CLI fails and is named;
+# readiness probes get a deterministic "not logged in"; a suite's own fake CLI
+# earlier on PATH still wins. Run through a copy of run-all whose table holds
+# only these rows, with real-looking `claude`/`codex` on the caller's PATH.
+guarded="$WORK/model-guard"
+mkdir -p "$guarded/.claude/tests" "$WORK/host-bin" "$WORK/own-bin"
+awk '
+  /^  cat <<.TABLE.$/ { print; print "calls claude print|claude -p hello"; print "calls codex exec|codex exec hi"; print "probes readiness|claude auth status --json | grep -q loggedIn.:false && ! codex login status >/dev/null"; print "own fake cli|PATH=\"$OWN_BIN:$PATH\" claude -p hello"; skip = 1; next }
+  skip && /^TABLE$/ { skip = 0 }
+  !skip { print }
+' "$RUN_ALL" > "$guarded/.claude/tests/run-all.sh"
+for cli in claude codex; do
+  printf '#!/bin/sh\necho REAL >> "%s/real-calls"\n' "$WORK" > "$WORK/host-bin/$cli"
+  chmod +x "$WORK/host-bin/$cli"
+done
+printf '#!/bin/sh\necho own-fake\n' > "$WORK/own-bin/claude"
+chmod +x "$WORK/own-bin/claude"
+git -C "$guarded" init -q
+if OWN_BIN="$WORK/own-bin" PATH="$WORK/host-bin:$PATH" FOUNDATION_TEST_JOBS=2 \
+  sh "$guarded/.claude/tests/run-all.sh" > "$WORK/model-guard.out" 2>&1; then
+  echo "FAIL: run-all accepted a suite that called a model CLI"; exit 1
+fi
+[ ! -e "$WORK/real-calls" ] || {
+  echo "FAIL: a suite reached the host's real model CLI"; exit 1; }
+for label in 'calls claude print' 'calls codex exec'; do
+  grep -qF "real-model guard: suite \"$label\" invoked a real model CLI" "$WORK/model-guard.out" || {
+    echo "FAIL: the guard did not name suite: $label"; cat "$WORK/model-guard.out"; exit 1; }
+  grep -qFx "  ✗ $label" "$WORK/model-guard.out" || {
+    echo "FAIL: run-all did not fail suite: $label"; exit 1; }
+done
+grep -qF '  claude -p hello' "$WORK/model-guard.out" || {
+  echo "FAIL: the guard did not show the refused invocation"; exit 1; }
+for label in 'probes readiness' 'own fake cli'; do
+  grep -qFx "✓ $label" "$WORK/model-guard.out" || {
+    echo "FAIL: the guard failed legitimate suite: $label"; cat "$WORK/model-guard.out"; exit 1; }
+done
+
 # The watchdog's limits and its timeout reporting are checked as structured
 # node:test cases, which is also the report Prove reads from this script.
 node --test "$HERE/../../harness/tests/run-all-timeout.test.mjs"

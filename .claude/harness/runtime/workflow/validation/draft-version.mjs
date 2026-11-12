@@ -7,6 +7,18 @@ export function isSemanticVersion(version) {
   return SEMANTIC_DRAFT_VERSIONS.includes(version);
 }
 
+// A change already started from a v3 draft (3.7.0 accepted v3) keeps its
+// compiled agreement and can still be amended or revised; only new drafts
+// must be v4 or v5.
+export function isRecordedSemanticVersion(version) {
+  return version === 3 || isSemanticVersion(version);
+}
+
+// New rows amended into such a change compile under the current v4 rules.
+export function amendmentCompileVersion(version) {
+  return version === 3 ? 4 : version;
+}
+
 // The v5 draft is a folder: change.json declares this version.
 export const FOLDER_DRAFT_VERSION = 5;
 

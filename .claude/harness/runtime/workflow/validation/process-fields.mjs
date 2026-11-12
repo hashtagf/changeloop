@@ -4,6 +4,10 @@
 // field exposes validate (path-prefixed issues) and render (markdown body
 // without the section heading, "" when empty).
 
+import {
+  isObject, localized, objectList, present, requireFields, stringList, table, text,
+} from "./field-helpers.mjs";
+
 const LABELS = Object.freeze({
   en: {
     date: "Date", question: "Question", options: "Options", answer: "Answer", by: "By",
@@ -26,82 +30,16 @@ const LABELS = Object.freeze({
     retrospectiveApproval: "อนุมัติย้อนหลัง", yes: "ใช่", no: "ไม่",
   },
 });
+const labels = localized(LABELS);
 
 const RELEASE_CATEGORIES = Object.freeze(["added", "changed", "deprecated", "removed", "fixed", "security"]);
 const COMPLIANCE_KEYS = Object.freeze([
   "requester", "approver", "implementer", "approvedBefore", "window", "emergency", "retrospectiveApproval",
 ]);
 
-function labels(language) {
-  return language === "th" ? LABELS.th : LABELS.en;
-}
-
-function present(value) {
-  if (value === undefined || value === null) return false;
-  if (typeof value === "string") return value.trim() !== "";
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") return Object.keys(value).length > 0;
-  return true;
-}
-
-function isObject(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
-function text(value) {
-  if (Array.isArray(value)) return value.map(text).filter(Boolean).join("; ");
-  if (isObject(value)) {
-    return Object.entries(value).filter(([, item]) => present(item))
-      .map(([key, item]) => `${key}: ${text(item)}`).join(", ");
-  }
-  return String(value ?? "").trim();
-}
-
-function cell(value) {
-  return text(value).replace(/\r?\n/g, " ").replaceAll("|", "\\|") || "—";
-}
-
-function table(headers, rows) {
-  return `| ${headers.join(" | ")} |\n|${headers.map(() => "---").join("|")}|\n` +
-    rows.map((row) => `| ${row.map(cell).join(" | ")} |`).join("\n");
-}
-
-function requireFields(row, path, fields, issues) {
-  for (const field of fields) {
-    if (!present(row[field])) issues.push(`${path}.${field} is required`);
-  }
-}
-
 function optionalString(row, path, field, issues) {
   if (row[field] !== undefined && (typeof row[field] !== "string" || row[field].trim() === ""))
     issues.push(`${path}.${field} must be a non-empty string when present`);
-}
-
-function stringList(value, path, issues, { nonEmpty = false } = {}) {
-  if (value === undefined || value === null) {
-    if (nonEmpty) issues.push(`${path} is required`);
-    return;
-  }
-  if (!Array.isArray(value)) {
-    issues.push(`${path} must be a list of strings`);
-    return;
-  }
-  if (nonEmpty && value.length === 0) issues.push(`${path} must not be empty`);
-  value.forEach((item, index) => {
-    if (typeof item !== "string" || item.trim() === "") issues.push(`${path}[${index}] must be a non-empty string`);
-  });
-}
-
-function rowList(value, path, issues) {
-  if (value === undefined || value === null) return [];
-  if (!Array.isArray(value)) {
-    issues.push(`${path} must be a list`);
-    return [];
-  }
-  return value.map((row, index) => {
-    if (!isObject(row)) issues.push(`${path}[${index}] must be an object`);
-    return isObject(row) ? [row, `${path}[${index}]`] : null;
-  }).filter(Boolean);
 }
 
 function bullets(items) {
@@ -112,7 +50,7 @@ function bullets(items) {
 
 export function validateDecisionLog(value, path = "decisionLog") {
   const issues = [];
-  for (const [row, rowPath] of rowList(value, path, issues)) {
+  for (const [row, rowPath] of objectList(value, path, issues)) {
     requireFields(row, rowPath, ["date", "question", "answer", "by"], issues);
     stringList(row.options, `${rowPath}.options`, issues, { nonEmpty: true });
     optionalString(row, rowPath, "recommendation", issues);
@@ -145,7 +83,7 @@ export function validateCommunication(value, path = "communication") {
   if (!Array.isArray(value) && !isObject(value)) return [`${path} must be a list or an object`];
   const parts = communicationParts(value);
   const rowsPath = Array.isArray(value) ? path : `${path}.rows`;
-  for (const [row, rowPath] of rowList(parts.rows, rowsPath, issues))
+  for (const [row, rowPath] of objectList(parts.rows, rowsPath, issues))
     requireFields(row, rowPath, ["audience", "channel", "when"], issues);
   if (!Array.isArray(value)) {
     if (!present(parts.rows) && !present(parts.owner) && !present(parts.supportRunbook) && !present(parts.userDocs))

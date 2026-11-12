@@ -20,8 +20,7 @@ import { checkpointReviewResult, recoverReviewResult } from
 import { spawnSync } from "node:child_process";
 import { lstatSync, readdirSync } from "node:fs";
 import {
-  reviewAgreementValue, reviewDepthForTier, reviewDiffValue, reviewModelClass,
-  reviewModelTierForDepth
+  reviewAgreementValue, reviewDepthForTier, reviewDiffValue, reviewModelClass
 } from "../runtime/evidence/review-diff.mjs";
 import { reviewPromptPayload, reviewerConfigValue } from
   "../runtime/evidence/configured-reviewer.mjs";
@@ -742,8 +741,6 @@ try {
   assert.equal(reviewDepthForTier("medium", 0), "diff-first");
   assert.equal(reviewDepthForTier("high", 0), "diff-first");
   assert.equal(reviewDepthForTier(undefined, 0), "diff-first");
-  assert.equal(reviewModelTierForDepth("diff-only"), "fast");
-  assert.equal(reviewModelTierForDepth("diff-first"), "configured");
   const tierPolicy = (review = {}, extra = {}) => ({
     foundationPolicy: () => ({ models: { fast: { family: "haiku" } }, review: {
       defaultReviewer: "claude-opus", reviewers: {

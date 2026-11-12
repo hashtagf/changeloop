@@ -1,8 +1,8 @@
-import { createHash } from "node:crypto";
+import { sha256Hex as sha256 } from "../../core/trust.mjs";
 import { lstatSync, readFileSync, realpathSync } from "node:fs";
-import { isAbsolute, posix, relative, resolve, sep } from "node:path";
+import { isAbsolute, posix, resolve } from "node:path";
+import { pathInside } from "../../core/paths.mjs";
 
-const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const compareText = (left, right) => left < right ? -1 : left > right ? 1 : 0;
 export const SEMANTIC_SOURCE_LIMITS = Object.freeze({
   maxSources: 64,
@@ -21,11 +21,6 @@ function normalizedDeclaredPath(value) {
   if (!path || path.includes("\0") || isAbsolute(path)) return null;
   const normalized = posix.normalize(path);
   return normalized === "." ? null : normalized;
-}
-
-function withinRoot(root, candidate) {
-  const path = relative(root, candidate);
-  return path === "" || (!path.startsWith(`..${sep}`) && path !== ".." && !isAbsolute(path));
 }
 
 function finding(code, path, detail) {
@@ -139,7 +134,7 @@ export function inspectSemanticSources({
     seen.add(path);
 
     const absolute = resolve(declaredRoot, path);
-    if (!withinRoot(declaredRoot, absolute)) {
+    if (!pathInside(declaredRoot, absolute)) {
       findings.push(finding("source-outside-project", path));
       continue;
     }
@@ -163,7 +158,7 @@ export function inspectSemanticSources({
       findings.push(finding("source-missing", path, { reason: error?.code || "unreadable" }));
       continue;
     }
-    if (!withinRoot(root, canonical)) {
+    if (!pathInside(root, canonical)) {
       findings.push(finding("source-outside-project", path));
       continue;
     }

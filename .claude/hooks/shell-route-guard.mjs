@@ -9,9 +9,10 @@
 
 import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
-import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { recordedPhaseContext } from "./phase-state.mjs";
+import { pathInside } from "../harness/runtime/core/paths.mjs";
 
 const SAFE_ARGUMENT = /^[A-Za-z0-9_./:@%+=,-]+$/;
 const display = (value) => SAFE_ARGUMENT.test(value) ? value : `'${value.replaceAll("'", "'\\''")}'`;
@@ -27,8 +28,7 @@ const TEST_COMMAND = new RegExp("^(?:" + [
 const BUILD_STATUSES = new Set(["building", "proven"]);
 
 function within(target, root) {
-  const rel = relative(root, target);
-  return rel === "" || (rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel));
+  return pathInside(root, target);
 }
 
 // Top-level command segments with the operator that follows each, quote-aware.

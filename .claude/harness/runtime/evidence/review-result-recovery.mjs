@@ -1,15 +1,14 @@
-import { createHash } from "node:crypto";
+import { sha256Hex as digest } from "../core/trust.mjs";
 import { readFileSync, realpathSync } from "node:fs";
-import { isAbsolute, relative, resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import { normalizeReviewFindingPaths, validReview } from "./configured-reviewer.mjs";
-
-const digest = (value) => createHash("sha256").update(value).digest("hex");
+import { relativeInside } from "../core/paths.mjs";
 
 function readReport(root, changeId, reference) {
   const directory = realpathSync(resolve(root, ".foundation/reviews", changeId));
   const path = realpathSync(resolve(root, reference));
   const rel = relative(directory, path);
-  if (!rel || rel === ".." || rel.startsWith("../") || isAbsolute(rel))
+  if (!rel || !relativeInside(rel))
     throw new Error("configured review result escapes its change report directory");
   const content = readFileSync(path, "utf8");
   return { path, content, report: JSON.parse(content) };

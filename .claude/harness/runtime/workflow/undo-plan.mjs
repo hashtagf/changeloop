@@ -1,4 +1,5 @@
 import { riskLevel } from "../contracts/scratch-router.mjs";
+import { isObject } from "../core/values.mjs";
 import { bareAbsenceIssue } from "./validation/explicit-absence.mjs";
 
 // How a change is undone. The author's `scratch.undo` wins; otherwise the
@@ -6,7 +7,6 @@ import { bareAbsenceIssue } from "./validation/explicit-absence.mjs";
 // and the High/Critical rule read the same answer, so they cannot disagree.
 
 const list = (value) => Array.isArray(value) ? value : [];
-const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 
 function text(value) {
   if (value === undefined || value === null) return null;

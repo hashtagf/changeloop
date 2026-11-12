@@ -4,18 +4,10 @@ import {
 } from "node:fs";
 import { constants as fsConstants } from "node:fs";
 import { randomBytes } from "node:crypto";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { verifySignedPayload } from "../core/trust.mjs";
-
-function canonicalOrSelf(path) {
-  try { return realpathSync(path); } catch { return resolve(path); }
-}
-
-function isWithinPath(parent, candidate) {
-  const rel = relative(parent, candidate);
-  return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
-}
+import { canonical, pathInside } from "../core/paths.mjs";
 
 export function writableControlSocket(path, options = {}) {
   const {
@@ -167,7 +159,7 @@ export function createHostAttestationRuntime(options) {
       process.env.FOUNDATION_TEST_TRUST_ROOT
       ? resolve(process.env.FOUNDATION_TEST_TRUST_ROOT) : "";
     if (fixture) {
-      if (!isWithinPath(canonicalOrSelf(tmpdir()), canonicalOrSelf(fixture)))
+      if (!pathInside(canonical(tmpdir()), canonical(fixture)))
         console.error(
           `WARNING: ignoring FOUNDATION_TEST_TRUST_ROOT '${fixture}': a fixture trust root must live under ${tmpdir()}`);
       else {

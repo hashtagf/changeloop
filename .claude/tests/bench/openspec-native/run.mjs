@@ -579,7 +579,8 @@ export function collectNativeScorecard({
       dirty: provenance.dirty ?? Boolean(git(["status", "--porcelain"])),
       host: provenance.host ?? "claude-code",
       requestedModel: provenance.requestedModel ?? null,
-      actualModel: provenance.actualModel ?? envelope.model ?? null
+      actualModel: provenance.actualModel ?? envelope.model ?? null,
+      hostSettings: provenance.hostSettings ?? null
     }
   });
 }
@@ -641,9 +642,23 @@ export function requestsUntilTerminal(total, atTerminal) {
   return { observedModelRequests: upTo || null, postTerminalModelRequests: total - upTo };
 }
 
+// Every arm runs with the host's user-level Claude Code settings isolated: a
+// developer's global hooks (for example a Bash-rewriting `rtk` hook), plugins,
+// permissions, and MCP servers otherwise leak into the lab and change prompts
+// and tool results between machines. Project and local settings still load, so
+// the Change Loop arm keeps its installed hooks and the baseline has none.
+// Authentication is unaffected (it is not a settings source).
+export const HOST_SETTINGS_ISOLATION = Object.freeze({
+  isolated: true, settingSources: "project,local", strictMcpConfig: true
+});
+const HOST_ISOLATION_ARGS = Object.freeze([
+  "--setting-sources", HOST_SETTINGS_ISOLATION.settingSources, "--strict-mcp-config"
+]);
+
 // The exact host argv; the dry-run plan prints this same value.
 export function hostArgv(prompt, claudeArgs = []) {
-  return ["-p", prompt, "--output-format", "stream-json", "--verbose", ...claudeArgs];
+  return ["-p", prompt, "--output-format", "stream-json", "--verbose",
+    ...HOST_ISOLATION_ARGS, ...claudeArgs];
 }
 
 // Both arms pass the same budget flag the same way.
@@ -1022,7 +1037,37 @@ export function parseHostOutput(stdout) {
     }
   }
   const envelope = [...rows].reverse().find((row) => row?.type === "result") || {};
-  return { envelope, hostTelemetry: hostToolCalls(rows), observedUsage, rows };
+  return { envelope, hostTelemetry: hostToolCalls(rows), observedUsage, rows,
+    models: hostModels(rows, envelope) };
+}
+
+// The model the host session was started with (its `system/init` row) and the
+// model that actually answered (the most frequent assistant-row model, else the
+// result envelope's `model`, else its single or costliest `modelUsage` entry).
+// Null only when the stream names none.
+export function hostModels(rows, envelope = {}) {
+  const named = (value) => typeof value === "string" && value.trim() ? value.trim() : null;
+  const init = rows.find((row) => row?.type === "system" && row.subtype === "init" &&
+    named(row.model));
+  const counts = new Map();
+  for (const row of rows) {
+    const model = row?.type === "assistant" ? named(row.message?.model) : null;
+    if (model && model !== "<synthetic>") counts.set(model, (counts.get(model) || 0) + 1);
+  }
+  const answered = [...counts].sort((left, right) => right[1] - left[1])[0]?.[0] ?? null;
+  const usage = Object.entries(envelope?.modelUsage && typeof envelope.modelUsage === "object"
+    ? envelope.modelUsage : {})
+    .sort((left, right) => Number(right[1]?.costUSD || 0) - Number(left[1]?.costUSD || 0));
+  return {
+    sessionModel: named(init?.model),
+    actualModel: answered ?? named(envelope?.model) ?? named(usage[0]?.[0])
+  };
+}
+
+// An explicit `--model` handed to the host (last one wins, as in the CLI).
+export function requestedHostModel(claudeArgs = []) {
+  const index = claudeArgs.lastIndexOf("--model");
+  return index >= 0 && claudeArgs[index + 1] ? claudeArgs[index + 1] : null;
 }
 
 function writeResult(output, scorecard) {
@@ -1517,7 +1562,12 @@ async function main() {
       finishedAt: execution.stopwatch.finishedAt,
       durationMs: execution.stopwatch.wallMs
     }] : [],
-    provenance: { requestedModel: args.model || null }
+    provenance: {
+      requestedModel: args.model || requestedHostModel(args["claude-arg"]) ||
+        parsedHost.models?.sessionModel || null,
+      actualModel: parsedHost.models?.actualModel || null,
+      hostSettings: request || lifecycleConfig ? HOST_SETTINGS_ISOLATION : null
+    }
   });
   writeResult(output, scorecard);
   const artifactDir = join(dirname(output), "openspec-native-runs", runId);

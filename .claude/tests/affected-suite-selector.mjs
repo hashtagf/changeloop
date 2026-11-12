@@ -98,6 +98,9 @@ const RULES = [
     ["permission allowlist"]],
   [/evidence-contract|review-routing|change-lifecycle|install\.sh$|^foundation\.json$/,
     ["rapid fast path seam"]],
+  // State a published release left behind is read by these upgrade paths.
+  [/^install\.sh$|validation\/draft-version|workflow\/authority\.mjs$/,
+    ["upgrade compatibility", "upgrade from 3.7.0", "upgrade from 3.7.0 (legacy review)"]],
   [/run-feedback-review-tests/, ["feedback review"]],
   [/run-land-surface-tests/, ["land surface"]],
   [/run-target-drift-tests/, ["target drift"]],

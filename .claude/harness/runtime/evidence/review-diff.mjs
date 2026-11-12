@@ -124,10 +124,6 @@ export function reviewDepthForTier(tier, deliveredAiCount = 0) {
   return tier === "low" && Number(deliveredAiCount) === 0 ? "diff-only" : "diff-first";
 }
 
-export function reviewModelTierForDepth(depth) {
-  return depth === "diff-only" ? "fast" : "configured";
-}
-
 // Which model class a review round runs on. Classes: `fast` (the reviewer's
 // `fastModelId`, else the `models.fast.family` alias, at medium effort),
 // `standard` (`standardModelId`, else `models.standard.family`, at the

@@ -21,7 +21,7 @@ import {
   MINIMAL_DRAFT_WRITING, minimalDraftFolderTemplate, normalizeSemanticDraft, renderRequirementMarkdown,
   renderSpecHeading, semanticDraftTemplate, unknownTaskFieldWarnings
 } from "./semantic-draft.mjs";
-import { isSemanticVersion } from "./validation/draft-version.mjs";
+import { isRecordedSemanticVersion, isSemanticVersion } from "./validation/draft-version.mjs";
 import { hotfixRegressionIssues } from "./validation/hotfix-regression.mjs";
 import { assembleReviewPolicy, collectReviewSignals } from "../evidence/evidence-contract.mjs";
 import { classifyReviewRisk } from "../evidence/review-routing.mjs";
@@ -577,10 +577,6 @@ export function renderDraftDecisions(decisions) {
 
 export function draftBullets(items) {
   return items.length ? items.map((item) => `- ${item}`).join("\n") : "- none";
-}
-
-function tableCell(value) {
-  return String(value ?? "").replace(/\r?\n/g, " ").replaceAll("|", "\\|");
 }
 
 // A rapid packet has no design.md, so the decisions it records (normally the
@@ -1639,7 +1635,7 @@ export function createChangeLifecycle({
     try { walk(base); } catch { return ""; }
     const lines = files.sort().map((file) => `  file: ${file}\n`);
     let semantic = false;
-    try { semantic = isSemanticVersion(loadRuntime(id)?.semanticDraftVersion); } catch {}
+    try { semantic = isRecordedSemanticVersion(loadRuntime(id)?.semanticDraftVersion); } catch {}
     if (!files.some((file) => file.includes("/specs/")))
       lines.push(semantic
         ? "  specs: none (docs-only change; it modifies no living spec)\n"
@@ -2066,8 +2062,12 @@ export function createChangeLifecycle({
       ? { source: options.preparedSource, folderIssues: options.folderIssues || [] }
       : startDraftSource(draftPath);
     const { source, folderIssues } = prepared;
-    if (folderIssues.length && !isSemanticVersion(source?.version)) {
-      const action = folderRepairAction(draftPath, folderIssues);
+    // A retired v1-v3 draft (3.7.0 still accepted v3) must read as a draft
+    // repair here, not as ready: start refuses it.
+    const retired = source && typeof source === "object" && !isSemanticVersion(source.version)
+      ? [retiredDraftIssue(source.version)] : [];
+    if ((folderIssues.length || retired.length) && !isSemanticVersion(source?.version)) {
+      const action = folderRepairAction(draftPath, [...folderIssues, ...retired]);
       if (!options.quiet) console.log(JSON.stringify(action, null, 2));
       return action;
     }
@@ -2122,7 +2122,9 @@ export function createChangeLifecycle({
     const active = loadRuntime(id);
     if (!isSemanticVersion(active.semanticDraftVersion))
       fail(`change amend --inspect requires a semantic-draft v4 or v5 change; '${id}' is version ${
-        active.semanticDraftVersion || "legacy"}`);
+        active.semanticDraftVersion || "legacy"}${isRecordedSemanticVersion(active.semanticDraftVersion)
+        ? `; a v3 change has no amendment intake: apply it directly with claude-foundation change amend ${id} ${amendmentPath}`
+        : ""}`);
     const path = resolve(root, amendmentPath);
     if (!pathInside(root, path) || !existsSync(path))
       fail("change amend requires a JSON file inside the project");
@@ -2859,8 +2861,8 @@ export function createChangeLifecycle({
         "start a successor change");
     if (!existsSync(changePath(id)))
       fail(`change revise requires an existing active change; '${id}' was not found`);
-    if (!isSemanticVersion(state.semanticDraftVersion))
-      fail(`change revise requires a semantic-draft v4 or v5 change; '${id}' is not one`);
+    if (!isRecordedSemanticVersion(state.semanticDraftVersion))
+      fail(`change revise requires a semantic-draft change; '${id}' is not one`);
     const amend = `claude-foundation change amend ${id} <amendment.json> --inspect`;
     const receipts = join(root, ".foundation", "receipts", id);
     const built = (state.workspace && (state.workspace.mode !== "current" ||
@@ -3131,8 +3133,8 @@ export function createChangeLifecycle({
   }
 
   function amendChangeUnlocked(id, amendmentPath, options, state, expectedRevision) {
-    if (!isSemanticVersion(state.semanticDraftVersion))
-      fail(`change amend requires a semantic-draft v4 or v5 change; '${id}' is not one`);
+    if (!isRecordedSemanticVersion(state.semanticDraftVersion))
+      fail(`change amend requires a semantic-draft change; '${id}' is not one`);
     if (["applied", "archived"].includes(state.status))
       fail(`change amend cannot rewrite an agreement in '${state.status}' status; start a successor change`);
     if (state.land?.status || state.workspace?.applied)

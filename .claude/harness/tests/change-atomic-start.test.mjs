@@ -1053,6 +1053,19 @@ test("a verify whose known runner prints no countable result gets an advisory, n
   assert.match(output, /^ {2}verify advisory: task 'implement-bounded-result' verify runs 'go test'/m);
 });
 
+// 3.7.0 accepted v1 and v3 drafts. One left unstarted across an upgrade must
+// inspect as a draft repair, not DONE followed by a refused start.
+test("inspecting a retired v1 or v3 draft returns a draft repair", (t) => {
+  const value = fixture(t);
+  for (const version of [1, 3]) {
+    writeJson(value.draftPath, { ...minimalRapidV4(), version });
+    const { result } = captureLog(() => value.lifecycle.inspectDraft(value.draftPath, { quiet: true }));
+    assert.equal(result.action, "EDIT");
+    assert.match(JSON.stringify(result.intake),
+      new RegExp(`draft version ${version} is no longer supported`));
+  }
+});
+
 // Every paid scenario saved the draft with `cat > … <<'EOF'`, which the host
 // refuses; the save route has to sit in the output the agent copies from.
 test("the start template leads with the pre-allowed file-tool save route to a v5 folder", (t) => {

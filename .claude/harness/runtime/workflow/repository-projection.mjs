@@ -1,9 +1,9 @@
 import {
-  existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, realpathSync, renameSync,
-  rmSync, symlinkSync
+  existsSync, lstatSync, mkdirSync, readdirSync, readlinkSync, renameSync, rmSync, symlinkSync
 } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { canonical, pathInside } from "../core/paths.mjs";
 
 // Root code and tests consume declared nested repositories (submodules and
 // nested Git repositories) through their path under root. A root sandbox is a
@@ -51,10 +51,6 @@ export function projectionWorkspace(state = {}) {
   // A copy without Git has no gitlink to read and no index to keep quiet.
   if (workspace.mode === "copy" && workspace.git === "absent") return null;
   return workspace.path;
-}
-
-function canonical(path) {
-  try { return realpathSync(path); } catch { return resolve(path); }
 }
 
 function entryState(path) {
@@ -190,7 +186,7 @@ export function projectNestedRepositories(context, id, state) {
   for (const repository of projectableRepositories(context.repositories)) {
     const rel = repository.relativePath;
     const path = join(workspace, rel);
-    if (relative(workspace, resolve(workspace, rel)).startsWith("..")) continue;
+    if (!pathInside(workspace, resolve(workspace, rel))) continue;
     const gitlink = recordedGitlink(git, workspace, rel);
     const record = selected.has(repository.id) ? state.repositories?.[repository.id] : null;
     const sandbox = record?.path && existsSync(record.path) ? canonical(record.path) : null;

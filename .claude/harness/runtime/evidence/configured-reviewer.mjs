@@ -4,12 +4,13 @@ import {
   existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import {
   SCENARIO_COVERAGE_STATUSES, parseScenarioCoverage, parseSpecGaps,
   reviewChecklistInstruction
 } from "./review-diff.mjs";
 import { executableIdentity } from "../core/tool-identity.mjs";
+import { relativeInside } from "../core/paths.mjs";
 
 // No `uniqueItems` anywhere in this schema: OpenAI structured output rejects
 // the keyword, failing every dispatch as an infrastructure error. `validReview`
@@ -238,7 +239,7 @@ function findingWorkspaceIssue(finding, binding, inspections, manifest) {
   const workspaceRoot = resolve(inspection.workspacePath);
   const candidate = resolve(workspaceRoot, binding.repositoryPath);
   const fromRoot = relative(workspaceRoot, candidate);
-  if (!fromRoot || fromRoot.startsWith("..") || isAbsolute(fromRoot))
+  if (!fromRoot || !relativeInside(fromRoot))
     return `${finding.id}: path '${binding.raw}' does not resolve inside repository '${binding.repositoryId}'`;
   if (!existsSync(candidate)) {
     const identity = manifest.get(binding.scoped)?.identity;
@@ -249,7 +250,7 @@ function findingWorkspaceIssue(finding, binding, inspections, manifest) {
   let realRelative;
   try { realRelative = relative(realpathSync(workspaceRoot), realpathSync(candidate)); }
   catch { return `${finding.id}: path '${binding.raw}' cannot be resolved in the reviewed workspace`; }
-  if (!realRelative || realRelative === ".." || realRelative.startsWith(`..${sep}`) || isAbsolute(realRelative))
+  if (!realRelative || !relativeInside(realRelative))
     return `${finding.id}: path '${binding.raw}' does not resolve inside repository '${binding.repositoryId}'`;
   return findingLineIssue(finding, binding, candidate);
 }

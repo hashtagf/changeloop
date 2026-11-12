@@ -39,18 +39,6 @@ export const PROVIDER_CONTRACTS = {
   "experiment-guardrail": "Experiment guardrail metrics stay within their declared bounds after release."
 };
 
-// The adapter each capability defaults to. Pre-Land capabilities run as a
-// project command; post-release capabilities are signals observed after
-// release, so they are recorded from external evidence.
-export const CAPABILITY_ADAPTERS = Object.freeze({
-  concurrency: "command",
-  evaluation: "command",
-  parity: "command",
-  "plan-check": "command",
-  "release-health": "external",
-  "experiment-guardrail": "external"
-});
-
 // When a capability's evidence exists. Absent means "pre-land": it gates
 // proof and Land. "post-release" capabilities exist only after the change
 // ships, so they are rollout gates recorded in the handoff and never block

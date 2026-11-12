@@ -1477,9 +1477,10 @@ try {
   workspaceHash = "workspace-record-validation";
   recordRejected({ status: "completed" }, /is completed/);
   recordRejected({}, /dispatch the request first: claude-foundation authority dispatch/);
-  // A request persisted by the retired legacy circuit is not exempt from dispatch.
+  // A request persisted by the retired legacy circuit is not exempt from
+  // dispatch; it was never dispatched, so advance requests a current review.
   recordRejected({ reviewCircuit: "legacy" },
-    /dispatch the request first: claude-foundation authority dispatch/);
+    /retired legacy review circuit and was never dispatched.*advance change-record-validation --through proven/);
 
   quiet(() => authority.dispatchAuthority("change-record-validation", {
     request: recordRequest.requestId, scope: "full", "reviewer-type": "ai",
@@ -1574,13 +1575,18 @@ try {
     "change-record-legacy", { type: "review" }));
   const legacyEntry = authorityStore.list("change-record-legacy")
     .find((row) => row.value.requestId === legacyRequest.requestId);
-  authorityStore.replace(legacyEntry, {
-    ...legacyEntry.value, reviewCircuit: "legacy"
-  });
   const legacyTemplate = JSON.parse(captureLog(() => authority.showAuthorityStatus(
     "change-record-legacy", {
       request: legacyRequest.requestId, template: true
     })).rows[0]);
+  // A legacy-circuit request reads as cancelled, so it offers no template:
+  // the response was prepared before the request was marked legacy.
+  authorityStore.replace(legacyEntry, {
+    ...legacyEntry.value, reviewCircuit: "legacy"
+  });
+  assert.throws(() => quiet(() => authority.showAuthorityStatus("change-record-legacy", {
+    request: legacyRequest.requestId, template: true
+  })), /no open authority request/);
   writeJson(recordResponsePath, {
     ...legacyTemplate, status: "inconclusive", evidence: {
       ...legacyTemplate.evidence, observed: "legacy review remained inconclusive",
@@ -1590,7 +1596,7 @@ try {
   });
   assert.throws(() => quiet(() => authority.recordAuthority("change-record-legacy", {
     request: legacyRequest.requestId, response: recordResponsePath
-  })), /dispatch the request first/,
+  })), /retired legacy review circuit and was never dispatched/,
   "a legacy-circuit review cannot be recorded without a dispatch");
 
   state = { version: 2, changeId: "change-record-receipt", reviewHistory: null };
