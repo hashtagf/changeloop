@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "rendering-module",
+      "requirementKey": "rendering-module",
+      "scenario": "Rendering module owns the functions",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "behavior-identical",
+      "requirementKey": "behavior-identical",
+      "scenario": "Existing importers keep working",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(test -f .claude/harness/runtime/workflow/draft-packet-render.mjs && ! grep -q '^export function renderDraftProposal' .claude/harness/runtime/workflow/change-lifecycle.mjs && node --test .claude/harness/tests/design-render.test.mjs .claude/harness/tests/change-draft-materialization.test.mjs .claude/harness/tests/reader-guide.test.mjs .claude/harness/tests/change-creation.test.mjs) && (env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh)"
+      ],
+      "segments": [
+        "test -f .claude/harness/runtime/workflow/draft-packet-render.mjs && ! grep -q '^export function renderDraftProposal' .claude/harness/runtime/workflow/change-lifecycle.mjs && node --test .claude/harness/tests/design-render.test.mjs .claude/harness/tests/change-draft-materialization.test.mjs .claude/harness/tests/reader-guide.test.mjs .claude/harness/tests/change-creation.test.mjs",
+        "env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}
