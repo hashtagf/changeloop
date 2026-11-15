@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-This is release **3.8.0** (minor, never a 3.7.x patch): it drops state and
-commands from before 3.7 and changes 3.7.0 behavior (review routing, CLI
-surface). A v3.7.0 project upgrades in place.
+This is release **3.7.1**. Although numbered as a patch by owner decision, it
+drops state and commands from before 3.7 and changes 3.7.0 behavior (review
+routing, CLI surface); read Changed and Removed before upgrading. A v3.7.0
+project upgrades in place.
 
 ### Added
 
@@ -21,6 +22,14 @@ surface). A v3.7.0 project upgrades in place.
   until reload or new user input. Guard coverage is partial: custom/MCP tools
   and other extensions are outside the live boundary, session-digest import is
   unavailable, and no OS sandbox attestation is issued.
+- Shared Pi runtime. `cloop init <target> --host pi --shared-runtime` keeps
+  the runtime, hooks, skills, commands, and OpenSpec schemas in a
+  content-addressed bundle under Pi's agent directory. The project holds only
+  its `.changeloop.json` pin, `foundation.json`, OpenSpec settings and
+  artifacts, and `.foundation` state. A missing or mismatched pin fails closed.
+  After the global extension is installed, `/changeloop init` then `/reload`
+  configures another trusted project. Existing local installations are not
+  migrated and remain supported; project settings survive re-initialization.
 - Hotfix regression for its incident. A new hotfix draft must include a
   scenario whose `regressionOf` equals `bugfix.incident.link`, in a requirement
   with an executable capability; otherwise `change start` returns an agent

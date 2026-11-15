@@ -18,6 +18,15 @@ comparison: 2026-10-08, no-harness/v3.6.0/v3.6.1/v3.6.2.
 
 ## Current scenario checkpoint
 
+### v3.7.1 candidate — 2026-11-15 (no paid smoke, owner exception)
+
+Source adds the Pi host adapter and shared Pi runtime install, review rules,
+hotfix regression, and retires pre-3.7 compatibility (see the changelog). No
+paid scenario smoke ran for this candidate; no paid evidence is claimed and the
+v3.7.0 checkpoint below does not cover it. The deterministic default gate passed
+locally and the CI full run passed on `c20bf1c3`. The maintainer authorized
+publication as an explicit exception. Repeated assurance is not claimed.
+
 ### v3.7.0 candidate `88f28fe` — 2026-11-10 (all-lane smoke, exception for one failure)
 
 Source moves the project to `hashtagf/changeloop` and `changeloop.ai`, adds the

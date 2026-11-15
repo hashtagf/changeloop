@@ -103,6 +103,9 @@ solar-system/
 opencode/
 changeloop-cli/
 
+# Machine-local Pi wrapper for this checkout's CLI.
+/.pi/bin/
+
 # Residue from running the sandbox-land contract suite against the repo root.
 # The suite writes these fixture names into its own temp project; they must
 # never be committed here.

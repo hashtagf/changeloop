@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "changelog-names-3-7-1",
+      "requirementKey": "changelog-names-3-7-1",
+      "scenario": "Changelog names 3.7.1",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "status-records-exception",
+      "requirementKey": "status-records-exception",
+      "scenario": "Status report records the exception",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "ignore-pi-bin",
+      "requirementKey": "ignore-pi-bin",
+      "scenario": "Pi wrapper is ignored",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    }
+  ],
+  "providers": {
+    "static-analysis": {
+      "adapter": "command",
+      "capability": "static-analysis",
+      "command": [
+        "sh",
+        "-c",
+        "(grep -q 'release \\*\\*3.7.1\\*\\*' CHANGELOG.md && ! grep -q '3\\.8\\.0' CHANGELOG.md && grep -q 'shared-runtime' CHANGELOG.md) && (grep -q 'v3.7.1' docs/reports/user-scenario-release-status.md) && (grep -qx '/.pi/bin/' .gitignore)"
+      ],
+      "claims": "declared"
+    }
+  }
+}
