@@ -1398,6 +1398,16 @@ instruction to land, in any wording (for example "land it when proven" in a
 only as an alias of `advance <change> --through archived`; it issues no grant of
 its own, and the phase guard rewrites it to that route.
 
+In the Pi interactive host, `/land` without an ID and direct short consent such
+as `land ได้เลย` or `land it` resolve the single `proven` or `applied` change
+linked to the current session's phase history. Multiple ready changes open a
+selection list; no matching change grants no authority. Users need not copy an
+internal change ID. This convenience does not interpret generic agreement,
+quoted examples, worker messages, or RPC text as consent. Other explicit wording
+can use `/land`; `/land <change>` remains available for a specific target.
+The resolved authority stays session-local and change-specific, is revoked by
+new user input or reload, and does not authorize `/deliver` or publication.
+
 Land is the single hard gate ([blocking policy](#blocking-policy)). It refuses
 until the spec approval is still valid (checked again even when a grant
 exists), the lifecycle is `proven` (or `applied` during recovery), assurance

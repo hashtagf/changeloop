@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { HOST_COMMANDS } from "../runtime/core/host-instruction.mjs";
 import { normalizeHarnessCliInvocations } from "../runtime/core/shell-mutation-policy.mjs";
 import { assertSharedInstallation, isSharedProject } from '../runtime/core/project-installation.mjs';
+import { isLandConsent, resolveSessionLand } from '../runtime/core/pi-land-context.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const TOOLS = { read: "Read", grep: "Grep", write: "Write", edit: "Edit", bash: "Bash" };
@@ -116,7 +117,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       const landOperation = grants.length || /--through(?:=|\s+)archived\b|\b(?:land(?:-|\s+)(?:advance|archive|resume|recover|record|pointers|plan)|archive|sandbox(?:-|\s+)apply)\b/.test(normalized);
       if (landOperation && !(grants.length && invocation?.command === "land" &&
           grants.every((grant) => invocation.args === grant[1])))
-        throw new Error(`Land requires an explicit /land ${grants[0]?.[1] || "<change>"} in this Pi session.`);
+        throw new Error('Land needs user approval in this session. Ask the user to say "land ได้เลย" or use /land; do not retry the same blocked command or switch hosts.');
       const deliveries = [...normalized.matchAll(/\b(?:deliver\s+advance|delivery-advance)\s+([a-z0-9-]+)/g)];
       if (/\b(?:deliver\s+advance|delivery-advance)\b/.test(normalized) &&
           !(deliveries.length && invocation?.command === "deliver" &&
@@ -161,8 +162,21 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     }
   });
 
-  pi.on("input", (event) => {
+  pi.on("input", async (event, ctx) => {
     if (event.source !== "extension") invocation = null;
+    if (event.source !== "interactive" || !isLandConsent(event.text)) return;
+    if (!ready) { ctx.ui.notify("Change Loop unavailable; fix the startup error and /reload.", "error"); return { action: "handled" }; }
+    try {
+      const id = await resolveSessionLand(root, ctx);
+      if (!id) return { action: "handled" };
+      const value = await hostJson("instruction", ["land", "--protocol", "1", "--format", "json", "--arguments", id], ctx);
+      if (typeof value.instruction !== "string" || !value.instruction.trim() ||
+          value.foundationVersion !== contract.foundationVersion) throw new Error("Change Loop changed; /reload before continuing.");
+      invocation = { command: "land", args: id };
+      status(ctx, `land · ${id}`);
+      return { action: "transform", text: isSharedProject(root) ? value.instruction.replaceAll('.claude/', `${runtimeRoot}/.claude/`) : value.instruction,
+        images: event.images };
+    } catch (error) { ctx.ui.notify(error.message, "error"); return { action: "handled" }; }
   });
   pi.on("before_agent_start", async (event) => {
     if (!contract) return;
@@ -170,7 +184,8 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     return { systemPrompt: `${event.systemPrompt}\n\n${instructions}\n\n` +
       "Pi host: each bash call starts in the session cwd; use an absolute cd to the returned workspace in EACH call. " +
       "Use absolute sandbox file paths. Follow runtime resume routes; /build and /prove never authorize Land. " +
-      "Land requires /land <change>; /deliver <change> separately authorizes publication. " +
+      'For the single ready change in this session, explicit user consent such as "land ได้เลย" or /land resolves the change automatically. ' +
+      "Do not ask users to copy change IDs when session context resolves them. /deliver <change> separately authorizes publication. " +
       "Guard coverage is partial: custom/MCP tools and other extensions are outside this adapter's live boundary. " +
       "Do not claim OS sandboxing or unattended authority." };
   });
@@ -181,6 +196,10 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       await ctx.waitForIdle();
       invocation = null;
       if (!ready) { ctx.ui.notify("Change Loop unavailable; fix the startup error and /reload.", "error"); return; }
+      if (command === "land" && !args.trim()) {
+        args = await resolveSessionLand(root, ctx);
+        if (!args) return;
+      }
       if (["land", "deliver"].includes(command) && !ID.test(args.trim())) {
         ctx.ui.notify(`Use /${command} <change-id>`, "error"); return;
       }

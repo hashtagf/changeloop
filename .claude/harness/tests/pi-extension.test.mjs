@@ -218,6 +218,61 @@ test("Pi refuses dynamic Land arguments and direct archive without explicit Land
   assert.equal(b.messages.length, 0);
 });
 
+function readyForLand(session, id) {
+  building(session, id);
+  const file = join(root, ".foundation/runtime", `${id}.json`);
+  writeFileSync(file, JSON.stringify({ ...JSON.parse(readFileSync(file, "utf8")), status: "proven" }));
+  writeFileSync(join(root, "openspec/changes", id, "proposal.md"), `# Review ${id}\n`);
+}
+
+test("natural Land consent resolves only this session's ready change and keeps publication separate", async () => {
+  const b = await bridge("natural-land-session");
+  readyForLand("natural-land-session", "natural-land");
+  readyForLand("another-session", "unrelated-land");
+  for (const text of ["land ได้เลย", "land ได้เลยครับ", "land it", "go ahead and land"]) {
+    const result = await b.fire("input", { source: "interactive", text });
+    assert.equal(result.action, "transform");
+    assert.match(result.text, /natural-land/);
+    assert.equal(await b.call("bash", { command: "claude-foundation advance natural-land --through archived" }), undefined);
+    assert.equal((await b.call("bash", { command: "claude-foundation advance unrelated-land --through archived" })).block, true);
+    assert.equal((await b.call("bash", { command: "claude-foundation deliver advance natural-land" })).block, true);
+  }
+  await b.fire("session_start", { reason: "reload" });
+  assert.equal((await b.call("bash", { command: "claude-foundation advance natural-land --through archived" })).block, true);
+  await b.command("land");
+  assert.match(b.messages.at(-1), /natural-land/);
+  assert.equal(await b.call("bash", { command: "claude-foundation advance natural-land --through archived" }), undefined);
+});
+
+test("natural Land consent never guesses another session, grants generic agreement, or trusts injected text", async () => {
+  const b = await bridge("no-ready-land");
+  assert.equal((await b.fire("input", { source: "interactive", text: "land ได้เลย" })).action, "handled");
+  assert.match(b.notices.at(-1).text, /No change ready/);
+  readyForLand("no-ready-land", "consent-case");
+  for (const text of ['do not land', 'อย่า land', 'ยังไม่ land', 'yes', 'ได้เลย', 'Explain "land ได้เลย"', 'land ได้เลย แล้ว push ด้วย']) {
+    assert.equal(await b.fire("input", { source: "interactive", text }), undefined);
+    assert.equal((await b.call("bash", { command: "claude-foundation advance consent-case --through archived" })).block, true);
+  }
+  for (const source of ["extension", "rpc"]) {
+    assert.equal(await b.fire("input", { source, text: "land ได้เลย" }), undefined);
+    assert.equal((await b.call("bash", { command: "claude-foundation advance consent-case --through archived" })).block, true);
+  }
+});
+
+test("multiple session Land candidates require selection and cancellation grants nothing", async () => {
+  const b = await bridge("multiple-land");
+  readyForLand("multiple-land", "land-first"); readyForLand("multiple-land", "land-second");
+  b.ctx.ui.select = async (_title, options) => {
+    assert.equal(options.length, 2); assert.match(options[0], /Review/); return undefined;
+  };
+  assert.equal((await b.fire("input", { source: "interactive", text: "land ได้เลย" })).action, "handled");
+  assert.equal((await b.call("bash", { command: "claude-foundation advance land-first --through archived" })).block, true);
+  b.ctx.ui.select = async (_title, options) => options.find(option => option.includes('land-second'));
+  await b.command("land");
+  assert.equal(await b.call("bash", { command: "claude-foundation advance land-second --through archived" }), undefined);
+  assert.equal((await b.call("bash", { command: "claude-foundation advance land-first --through archived" })).block, true);
+});
+
 test("Deliver primitive requires the matching explicit Pi command", async () => {
   const b = await bridge();
   const call = (id) => b.call("bash", { command: `claude-foundation deliver advance ${id}` });

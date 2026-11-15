@@ -162,6 +162,9 @@ if (mode === "params") {
   };
   collect(entrypoint);
   for (const path of modules) collect(readFileSync(path, "utf8"));
+  // Host adapters are shipped code too; a runtime module only they import is wired.
+  for (const path of walk(join(harness, "adapters")).filter((file) => file.endsWith(".mjs")))
+    collect(readFileSync(path, "utf8"));
   for (const path of modules) {
     const name = relative(runtimeRoot, path);
     if (standalone.has(name)) continue;
