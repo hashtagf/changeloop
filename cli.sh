@@ -37,7 +37,7 @@ find_project_root() {
     fail "cannot access project path: $PROJECT_START"
   while :; do
     if [ -f "$cursor/openspec/config.yaml" ] &&
-       [ -f "$cursor/.claude/harness/foundation.mjs" ]; then
+       { [ -f "$cursor/.changeloop.json" ] || [ -f "$cursor/.claude/harness/foundation.mjs" ]; }; then
       # A Build sandbox is a full copy of the project, marker files included.
       # Resolving to the copy would split runtime state between the sandbox's
       # .foundation/ and the project's, so resolution walks past a sandbox
@@ -94,6 +94,9 @@ run_runtime() {
   # The runtime re-resolves its root; hand it the one resolved here.
   [ -z "${CLAUDE_FOUNDATION_PROJECT:-}" ] || export CLAUDE_FOUNDATION_PROJECT="$root"
   runtime="$root/.claude/harness/foundation.mjs"
+  if [ -f "$root/.changeloop.json" ]; then
+    runtime="$(node "$SCRIPT_DIR/.claude/harness/runtime/core/project-installation.mjs" resolve "$root")/.claude/harness/foundation.mjs" || return 1
+  fi
   command -v node >/dev/null 2>&1 || fail "Node.js is required to run the project harness"
   cd "$root"
   actual_api="$(node "$runtime" api-version 2>/dev/null || true)"

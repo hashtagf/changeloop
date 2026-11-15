@@ -3,6 +3,7 @@ import {
 } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { pathInside } from "../core/paths.mjs";
+import { assertSharedInstallation, isFoundationProject } from '../core/project-installation.mjs';
 
 function insideSandboxCopy(path) {
   const segments = path.split(sep);
@@ -41,8 +42,7 @@ function findRoot({ start, pinned, harness, fail, warn }) {
 function walkRoot({ start, pinned, fail, warn }) {
   let cursor = resolve(pinned || start);
   for (;;) {
-    if (existsSync(join(cursor, "openspec", "config.yaml")) &&
-        existsSync(join(cursor, ".claude", "harness", "foundation.mjs"))) {
+    if (isFoundationProject(cursor)) {
       if (pinned || !insideSandboxCopy(cursor)) return cursor;
       warn(`claude-foundation: control-plane state resolves at the project root; ` +
         `provider commands still execute in the registered change sandbox (found sandbox copy at ${cursor})`);
@@ -60,6 +60,7 @@ function canonicalPath(path) {
 
 export function createBootstrap({ start, pinned, harness = null, fail, failRoot = fail, warn = console.error }) {
   const root = canonicalPath(findRoot({ start, pinned, harness, fail: failRoot, warn }));
+  assertSharedInstallation(root);
   const paths = {
     runtime: join(root, ".foundation", "runtime"),
     receipts: join(root, ".foundation", "receipts"),

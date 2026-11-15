@@ -154,7 +154,7 @@ installer smoke|sh "$HERE/harness/run-installer-tests.sh"
 cli root resolution|node --test "$HERE/harness/run-cli-root-resolution-tests.mjs"
 runtime root pin|node --test "$ROOT/.claude/harness/tests/project-root-pin.test.mjs"
 host instruction contract|FOUNDATION_UPDATE_CHECK=0 node --test "$HERE/harness/run-host-instruction-tests.mjs"
-Pi host adapter|FOUNDATION_UPDATE_CHECK=0 node --test "$ROOT/.claude/harness/tests/pi-extension.test.mjs"
+Pi host adapter|FOUNDATION_UPDATE_CHECK=0 node --test "$ROOT/.claude/harness/tests/pi-extension.test.mjs" "$ROOT/.claude/harness/tests/pi-shared.test.mjs"
 update advisory contract|sh "$HERE/harness/run-update-advisory-tests.sh"
 harness contracts (sandbox land)|sh "$HERE/harness/run-harness-tests.sh" sandbox-land
 harness contracts (change policy)|sh "$HERE/harness/run-harness-tests.sh" change-policy

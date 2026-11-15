@@ -4,6 +4,7 @@ import {
 } from "node:fs";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { openSpecEnvironment } from '../core/project-installation.mjs';
 import { predictSpecSync, verifySpecSync } from "./spec-sync-verify.mjs";
 import {
   projectionCounts, targetHeadMovedDecision, undeclaredDeletions
@@ -1664,7 +1665,7 @@ export function createApplyRuntime({
     // before the destructive step and the CLI can disappear in between.
     assertOpenSpecCli(root, fail);
     archiveCheckpoint("before-archive-command", state);
-    const cli = spawnSync("openspec", ["archive", id, "--yes"], { cwd: root, encoding: "utf8" });
+    const cli = spawnSync("openspec", ["archive", id, "--yes"], { cwd: root, encoding: "utf8", env: openSpecEnvironment(root) });
     if (cli.status !== 0) fail(`OpenSpec archive failed: ${(cli.stderr || cli.stdout).trim()}`);
     archiveCheckpoint("after-archive-command", state);
     state.preArchiveWorkspaceHash = preArchiveWorkspaceHash;

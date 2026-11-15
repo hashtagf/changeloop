@@ -1,5 +1,6 @@
 import { carryApprovalAcrossBookkeeping, currentWaivers } from "../core/user-decisions.mjs";
 import { spawnSync } from "node:child_process";
+import { openSpecEnvironment } from '../core/project-installation.mjs';
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { auditTraceability } from "../evidence/traceability.mjs";
@@ -60,7 +61,7 @@ export function assertOpenSpecStrictValid(id, dir, fail, options = {}) {
   if (strictLintPassed(memoKey, projectRoot)) return;
   const lint = spawnSync("openspec",
     ["validate", id, "--type", "change", "--strict", "--json", "--no-interactive"],
-    { cwd: projectRoot, encoding: "utf8", timeout: 60_000 });
+    { cwd: projectRoot, encoding: "utf8", timeout: 60_000, env: openSpecEnvironment(projectRoot) });
   if (lint.error || lint.status !== 0) {
     const raw = `${lint.stdout || ""}\n${lint.stderr || ""}`.trim();
     let detail = raw.slice(0, 4000);

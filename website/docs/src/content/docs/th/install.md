@@ -73,6 +73,11 @@ cloop init /path/to/your-project --host cursor    # หรือ opencode, codex
 | **Codex CLI** | prompt หลักเจ็ดตัวรวม `/deliver` แบบ optional พร้อม utility/alias สองตัวใน `$CODEX_HOME/prompts` (Codex ไม่มีไดเรกทอรี prompt ต่อโปรเจกต์) พร้อม ownership marker เพื่อให้การติดตั้งซ้ำรีเฟรชเฉพาะ prompt ของ Change Loop โดยไม่ทับ prompt ชื่อซ้ำของผู้ใช้ |
 
 เมื่อ Pi ถาม ให้ยืนยันความเชื่อถือโปรเจกต์ แล้วเปิด session ใหม่หรือใช้ `/reload`
+หากต้องการให้ runtime อยู่นอก repo ของโปรเจกต์ Pi ให้เพิ่ม `--shared-runtime` ใน
+`cloop init /path/to/your-project --host pi` โดย runtime ที่ pin เวอร์ชันจะอยู่ใน Pi
+ส่วนโปรเจกต์มีเพียง `.changeloop.json`, `foundation.json`, settings และ artifacts
+ของ OpenSpec กับ state ที่สร้างใน `.foundation` โปรเจกต์ถัดไปใช้ `/changeloop init`
+ใน Pi แล้ว `/reload` ได้ การติดตั้งแบบเดิมยังใช้ต่อได้ คำสั่งนี้ไม่ลบหรือย้ายไฟล์เดิม
 ใช้ `/land <change>` เพื่อสั่ง Land โดยชัดเจน ส่วน `/build` และ `/prove` ไม่ให้สิทธิ์ Land
 การ reload หรือข้อความใหม่จากผู้ใช้จะยกเลิกสิทธิ์ Land จากคำสั่งก่อนหน้า
 guard ของ Pi ครอบคลุมบางส่วน: custom/MCP tools และ extension อื่นอยู่นอกขอบเขต

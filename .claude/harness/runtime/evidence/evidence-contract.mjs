@@ -1,4 +1,5 @@
 import { currentWaivers } from "../core/user-decisions.mjs";
+import { projectResource } from '../core/project-installation.mjs';
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { measuredNumber } from "../core/measured-number.mjs";
@@ -1086,7 +1087,7 @@ export function createEvidenceContract({
   function builtInVisualConfig(id, dir, binding, base = {}) {
     return visualProviderConfig({
       changeId: id, packetPath: dir, packetRelative: packetRelativePath(id, dir), binding,
-      scriptPath: join(ROOT, ".claude", "harness", "runtime", "evidence", "visual-review.mjs"),
+      scriptPath: projectResource(ROOT, ".claude", "harness", "runtime", "evidence", "visual-review.mjs"),
       base
     });
   }
@@ -1124,7 +1125,7 @@ export function createEvidenceContract({
       adapter: "command",
       capability: "dependency-supply-chain",
       version: "2",
-      command: ["node", join(ROOT, ".claude", "harness", "runtime", "evidence",
+      command: ["node", projectResource(ROOT, ".claude", "harness", "runtime", "evidence",
         "npm-lockfile-check.mjs")],
       repository: repository.id === "root" ? undefined : repository.id,
       // Workspace/local manifests and npm configuration affect the install

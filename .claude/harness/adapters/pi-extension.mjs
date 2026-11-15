@@ -6,6 +6,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { HOST_COMMANDS } from "../runtime/core/host-instruction.mjs";
 import { normalizeHarnessCliInvocations } from "../runtime/core/shell-mutation-policy.mjs";
+import { assertSharedInstallation, isSharedProject } from '../runtime/core/project-installation.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const TOOLS = { read: "Read", grep: "Grep", write: "Write", edit: "Edit", bash: "Bash" };
@@ -41,7 +42,7 @@ function execute(command, args, { cwd, env, input, signal, timeout = 10000 } = {
 }
 
 export default function install(pi, { createBashTool, createLocalBashOperations, projectRoot = ROOT,
-  hostExecutable = "claude-foundation", hostPrefixArgs = [] }) {
+  runtimeRoot = projectRoot, hostExecutable = "claude-foundation", hostPrefixArgs = [] }) {
   const root = projectRoot;
   let invocation = null;
   let contract;
@@ -56,6 +57,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       FOUNDATION_GUARDRAIL_MODE: "block",
       FOUNDATION_HOST_COMMAND: invocation?.command || "",
       FOUNDATION_HOST_ARGUMENTS: invocation?.args || "" };
+    if (isSharedProject(root)) env.PATH = `${join(runtimeRoot, 'bin')}${process.platform === 'win32' ? ';' : ':'}${env.PATH || ''}`;
     // Do not inherit another coding host's session/transcript or phase override.
     for (const key of ["FOUNDATION_CLAUDE_SESSION_ID", "CLAUDE_SESSION_ID",
       "CODEX_THREAD_ID", "FOUNDATION_CLAUDE_TRANSCRIPT_PATH", "FOUNDATION_ACTIVE_PHASE",
@@ -78,14 +80,14 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     if (result.code !== 0) throw new Error("Change Loop instruction unavailable; reinstall with --host pi.");
     const value = JSON.parse(result.stdout);
     if (value.protocol !== 1 || !value.foundationVersion) throw new Error("Unsupported Change Loop host protocol.");
-    const installed = JSON.parse(readFileSync(join(root, ".claude/harness/protocol.json"), "utf8"));
+    const installed = JSON.parse(readFileSync(join(runtimeRoot, ".claude/harness/protocol.json"), "utf8"));
     if (value.foundationVersion !== installed.runtime) throw new Error("Change Loop CLI and project versions differ; refresh the project with --host pi, then /reload.");
     return value;
   };
 
   const hook = async (script, event, ctx, timeout = 10000) => {
     if (!ready) throw new Error("Change Loop guards unavailable; reinstall with --host pi and /reload.");
-    const result = await execute("bash", [join(root, ".claude/hooks", script)],
+    const result = await execute("bash", [join(runtimeRoot, ".claude/hooks", script)],
       { cwd: event.cwd || ctx.cwd, env: environment(ctx), input: JSON.stringify(event),
         signal: ctx.signal, timeout });
     if (script === "lint.sh" && result.code === 2)
@@ -145,8 +147,9 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   pi.on("session_start", async (_event, ctx) => {
     invocation = null; contract = undefined; ready = false; touched.clear();
     try {
+      assertSharedInstallation(root, runtimeRoot);
       for (const file of ["protect-secrets.sh", "phase-mutation-guard.sh", "lint.sh", "shell-route-guard.sh"])
-        if (!existsSync(join(root, ".claude/hooks", file))) throw new Error(`Missing Change Loop guard: ${file}`);
+        if (!existsSync(join(runtimeRoot, ".claude/hooks", file))) throw new Error(`Missing Change Loop guard: ${file}`);
       const jq = await execute("jq", ["--version"], { cwd: root, env: environment(ctx) });
       if (jq.code !== 0) throw new Error("Change Loop guards require jq.");
       contract = await hostJson("agent-contract", ["--protocol", "1", "--format", "json"], ctx);
@@ -163,7 +166,8 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   });
   pi.on("before_agent_start", async (event) => {
     if (!contract) return;
-    return { systemPrompt: `${event.systemPrompt}\n\n${contract.contract}\n\n` +
+    const instructions = isSharedProject(root) ? contract.contract.replaceAll('.claude/', `${runtimeRoot}/.claude/`) : contract.contract;
+    return { systemPrompt: `${event.systemPrompt}\n\n${instructions}\n\n` +
       "Pi host: each bash call starts in the session cwd; use an absolute cd to the returned workspace in EACH call. " +
       "Use absolute sandbox file paths. Follow runtime resume routes; /build and /prove never authorize Land. " +
       "Land requires /land <change>; /deliver <change> separately authorizes publication. " +
@@ -187,7 +191,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
             value.foundationVersion !== contract.foundationVersion) throw new Error("Change Loop changed; /reload before continuing.");
         invocation = { command, args: args.trim() };
         status(ctx, `${command}${args.trim() ? ` · ${args.trim().slice(0, 80)}` : ""}`);
-        pi.sendUserMessage(value.instruction);
+        pi.sendUserMessage(isSharedProject(root) ? value.instruction.replaceAll('.claude/', `${runtimeRoot}/.claude/`) : value.instruction);
       } catch (error) { ctx.ui.notify(error.message, "error"); }
     }
   });
@@ -235,7 +239,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       const local = createLocalBashOperations();
       return { operations: { exec(_command, cwd, options) {
         const exports = Object.entries(environment(ctx))
-          .filter(([key]) => key.startsWith("FOUNDATION_") || ["CLAUDE_PROJECT_DIR", "CLAUDE_FOUNDATION_PROJECT"].includes(key))
+          .filter(([key]) => key.startsWith("FOUNDATION_") || ["CLAUDE_PROJECT_DIR", "CLAUDE_FOUNDATION_PROJECT"].includes(key) || (isSharedProject(root) && key === 'PATH'))
           .map(([key, value]) => `export ${key}=${quote(value)}`).join("\n");
         const clear = "unset FOUNDATION_CLAUDE_SESSION_ID CLAUDE_SESSION_ID CODEX_THREAD_ID FOUNDATION_CLAUDE_TRANSCRIPT_PATH FOUNDATION_ACTIVE_PHASE FOUNDATION_WORKSPACE_ROOT FOUNDATION_ALLOWED_PATHS_JSON";
         return local.exec(`${clear}\n${exports}\n${input.command}`, cwd, options);

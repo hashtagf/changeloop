@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { checkNpmWorkspace } from "./npm-lockfile-check.mjs";
+import { isSharedProject, projectResource } from '../core/project-installation.mjs';
 import { aliasedTestProvider } from "./provider-catalog.mjs";
 
 const PROVIDER_SCRIPT_ALIASES = {
@@ -203,12 +204,12 @@ export function scriptCandidates(capability, tooling, repository, repositoryCoun
 export function npmLockfileCandidates(tooling, repository, repositoryCount, declaredSurface) {
   if (!tooling || tooling.manager !== "npm" ||
       !existsSync(join(repository.workspacePath, "package-lock.json")) ||
-      !existsSync(join(repository.workspacePath, ".claude", "harness", "runtime",
+      !existsSync(projectResource(repository.workspacePath, ".claude", "harness", "runtime",
         "evidence", "npm-lockfile-check.mjs"))) return [];
   return [providerCandidate(null, "dependency-supply-chain", repository, repositoryCount, {
     adapter: "command",
     version: "2",
-    command: ["node", ".claude/harness/runtime/evidence/npm-lockfile-check.mjs"]
+    command: ["node", isSharedProject(repository.workspacePath) ? projectResource(repository.workspacePath, '.claude/harness/runtime/evidence/npm-lockfile-check.mjs') : ".claude/harness/runtime/evidence/npm-lockfile-check.mjs"]
   }, "package.json + package-lock.json", repositoryCount === 1 ? "high" : "review",
   `built-in deterministic npm manifest/lockfile consistency check (discovery: ${
     checkNpmWorkspace(repository.workspacePath, { validateInstall: false }).status})`)];
@@ -293,7 +294,7 @@ export function discoverMissingEvidence({
         detail: "Foundation consumer quality gate bound to all affected repositories",
         config: {
           adapter: "command",
-          command: ["node", ".claude/harness/foundation.mjs", "quality-run", "--enforce"],
+          command: ["node", isSharedProject(root) ? projectResource(root, '.claude/harness/foundation.mjs') : ".claude/harness/foundation.mjs", "quality-run", "--enforce"],
           repositories: targets.map((repository) => repository.id)
         }
       });

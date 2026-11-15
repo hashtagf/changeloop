@@ -76,6 +76,12 @@ cloop init /path/to/your-project --host cursor    # or opencode, codex, pi
 | **Codex CLI** | The nine prompts in `$CODEX_HOME/prompts` (Codex has no per-project prompt directory), stamped with an ownership marker so re-installs refresh Change Loop prompts without clobbering a same-named user prompt |
 
 Trust the Pi project when Pi asks, then start a new session or run `/reload`.
+To keep runtime code out of a Pi consumer repository, add `--shared-runtime` to
+`cloop init /path/to/your-project --host pi`. This installs a pinned runtime bundle
+in Pi and leaves only `.changeloop.json`, `foundation.json`, OpenSpec settings and
+artifacts, and generated `.foundation` state in the project. Later projects can
+use `/changeloop init` in Pi and `/reload`. Existing local installations are kept;
+shared initialization does not remove or migrate their files.
 Use `/land <change>` for explicit Land; `/build` and `/prove` never authorize it.
 Reload or a new user message revokes the previous command's Land authority.
 Pi guard coverage is partial: custom/MCP tools and other extensions are outside

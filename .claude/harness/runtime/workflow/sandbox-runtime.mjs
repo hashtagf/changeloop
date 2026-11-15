@@ -1,5 +1,6 @@
 import { assertSpecApproval, agreementIdentity, amendedAgreementMatches, approvalMatches, userDecisionError } from "../core/user-decisions.mjs";
 import { spawnSync } from "node:child_process";
+import { isSharedProject } from '../core/project-installation.mjs';
 import { resumeThrough } from "../core/next-step.mjs";
 import { createHash } from "node:crypto";
 import {
@@ -1289,7 +1290,7 @@ export function assertRelocatedSandboxIdentity(context, id, workspace, candidate
 
 export function assertRelocatedSandboxLayout(context, workspace, candidate) {
   const required = [
-    join(candidate, ".claude", "harness", "foundation.mjs"),
+    isSharedProject(context.root) ? join(candidate, '.changeloop.json') : join(candidate, ".claude", "harness", "foundation.mjs"),
     join(candidate, "openspec", "config.yaml")
   ];
   if (required.some((path) => !context.pathExists(path)))

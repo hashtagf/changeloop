@@ -158,7 +158,7 @@ if (mode === "params") {
   ]);
   const imported = new Set();
   const collect = (source) => {
-    for (const match of source.matchAll(/from\s+"([^"]+\.mjs)"/g)) imported.add(match[1]);
+    for (const match of source.matchAll(/from\s+['"]([^'"]+\.mjs)['"]/g)) imported.add(match[1]);
   };
   collect(entrypoint);
   for (const path of modules) collect(readFileSync(path, "utf8"));

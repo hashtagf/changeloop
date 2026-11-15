@@ -525,6 +525,17 @@ the package-owned host endpoints above and requires matching CLI/project
 versions and jq. It preserves the user's prompt, adds the agent contract, and
 exposes all canonical commands. It never copies workflow prose into the adapter.
 
+For a settings-only consumer, use `claude-foundation init <target> --host pi
+--shared-runtime`. The runtime, hooks, skills, commands and OpenSpec schemas live
+in a content-addressed bundle under Pi's agent directory. The consumer contains
+only `.changeloop.json` (bundle/version pin), `foundation.json`, OpenSpec settings
+and artifacts, and generated `.foundation` state. Pi loads the global extension
+and chooses the project-pinned bundle; unavailable or mismatched pins fail closed.
+After the global extension is installed, `/changeloop init` configures another
+trusted project, followed by `/reload`. Existing local installations are not
+deleted or migrated by this command. Their original installation mode remains
+supported. Project settings survive repeated shared initialization.
+
 Built-in Read/Grep/Bash use secret guards; Write/Edit/Bash use phase guards;
 successful structured edits feed lint diagnostics back as tool results.
 The bash wrapper and `!`/`!!` backend export the Pi session/model identity to

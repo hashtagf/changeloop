@@ -11,6 +11,7 @@ import {
 import { dirname, join, relative, resolve } from "node:path";
 import { acquireProcessLock } from "../core/process-lock.mjs";
 import { requireDeps } from "../core/required-deps.mjs";
+import { projectResource } from '../core/project-installation.mjs';
 import { DRAFT_FOLDER_VERSION, loadDraftFolder } from "./draft-folder.mjs";
 import { transitionLifecycleState } from "../core/lifecycle-reducer.mjs";
 import { foundationChangeStores, retiredChangeStores } from "./retired-change-stores.mjs";
@@ -1291,7 +1292,7 @@ export function createChangeLifecycle({
     };
   }
   function templateDir(schema) {
-    return join(root, "openspec", "schemas", schema, "templates");
+    return projectResource(root, "openspec", "schemas", schema, "templates");
   }
 
   function instantiate(path, title) {

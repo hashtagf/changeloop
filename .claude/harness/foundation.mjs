@@ -2,6 +2,7 @@
 // First: installs the mutation observer behind the Git read memo before any
 // other module can capture an unobserved fs or child_process function.
 import "./runtime/core/git-read-memo.mjs";
+import { isSharedProject } from './runtime/core/project-installation.mjs';
 import { assertSpecApproval, preserveSpecApprovalAcross } from "./runtime/core/user-decisions.mjs";
 
 import {
@@ -332,7 +333,7 @@ const {
   // while the candidate entrypoint runs from its sandbox. Protocol integrity
   // belongs to that executable bundle, not to the state root it operates on.
   protocolPath: join(dirname(fileURLToPath(import.meta.url)), "protocol.json"),
-  policyPath: join(dirname(fileURLToPath(import.meta.url)), "..", "..", "foundation.json"),
+  policyPath: isSharedProject(ROOT) ? join(ROOT, 'foundation.json') : join(dirname(fileURLToPath(import.meta.url)), "..", "..", "foundation.json"),
   protocols: {
     runtime: VERSION,
     runtimeApi: RUNTIME_API_VERSION,

@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { projectResource } from './project-installation.mjs';
 import { nextCommand } from "./next-step.mjs";
 import { deriveChangeProjection } from "./state-projections.mjs";
 import { legacyLandSagaLine, legacyLandSagaMarkers } from "./legacy-land-saga.mjs";
@@ -574,7 +575,7 @@ export function createDiagnosticsRuntime({
 
     function collectInstallationChecks() {
     for (const hook of ["protect-secrets.sh", "lint.sh"]) {
-      const installed = existsSync(join(root, ".claude", "hooks", hook));
+      const installed = existsSync(projectResource(root, ".claude", "hooks", hook));
       checks.push({
         level: installed ? "ok" : "error",
         name: `hook:${hook}`,
