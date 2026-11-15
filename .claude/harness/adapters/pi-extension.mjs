@@ -43,8 +43,14 @@ function execute(command, args, { cwd, env, input, signal, timeout = 10000 } = {
 }
 
 export default function install(pi, { createBashTool, createLocalBashOperations, projectRoot = ROOT,
-  runtimeRoot = projectRoot, hostExecutable = "claude-foundation", hostPrefixArgs = [] }) {
+  runtimeRoot = projectRoot, hostExecutable = "claude-foundation", hostPrefixArgs = [],
+  parentSessionId = process.env.FOUNDATION_PARENT_SESSION_ID }) {
   const root = projectRoot;
+  // A worker started by a coordinating Pi session resolves that session's
+  // phase (as a native subagent shares its parent's session) but never holds
+  // Land or Deliver authority of its own.
+  const parent = /^[A-Za-z0-9._:-]{1,200}$/.test(String(parentSessionId || "")) ? String(parentSessionId) : "";
+  const workerRefusal = "This Pi session is a worker; only the coordinating session can land or deliver.";
   let invocation = null;
   let contract;
   let ready = false;
@@ -125,7 +131,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
         throw new Error(`Publication requires an explicit /deliver ${deliveries[0]?.[1] || "<change>"} in this Pi session.`);
     }
     const event = () => ({ tool_name: tool, tool_input: toolInput(), cwd,
-      session_id: ctx.sessionManager.getSessionId() });
+      session_id: parent || ctx.sessionManager.getSessionId() });
     const apply = (output) => {
       const updated = output.updatedInput;
       if (!updated) return;
@@ -165,6 +171,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   pi.on("input", async (event, ctx) => {
     if (event.source !== "extension") invocation = null;
     if (event.source !== "interactive" || !isLandConsent(event.text)) return;
+    if (parent) { ctx.ui.notify(workerRefusal, "warning"); return { action: "handled" }; }
     if (!ready) { ctx.ui.notify("Change Loop unavailable; fix the startup error and /reload.", "error"); return { action: "handled" }; }
     try {
       const id = await resolveSessionLand(root, ctx);
@@ -196,6 +203,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       await ctx.waitForIdle();
       invocation = null;
       if (!ready) { ctx.ui.notify("Change Loop unavailable; fix the startup error and /reload.", "error"); return; }
+      if (parent && ["land", "deliver"].includes(command)) { ctx.ui.notify(workerRefusal, "error"); return; }
       if (command === "land" && !args.trim()) {
         args = await resolveSessionLand(root, ctx);
         if (!args) return;

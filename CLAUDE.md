@@ -194,6 +194,8 @@ Repository-only development surfaces:
   authorized; there is no scheduled paid workflow.
 - `dashboard/`, `website/`, and `examples/` — observability UI, public docs, and
   sample consumers.
+- `pi-extensions/` — maintainer Pi extensions (agent team, user questions,
+  background jobs), installed into Pi by `pi-extensions/install.sh`.
 
 ## Shipping boundary
 

@@ -1,0 +1,71 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "extensions-in-repo",
+      "requirementKey": "extensions-in-repo",
+      "scenario": "Extensions are present without personal paths",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "not-shipped",
+      "requirementKey": "not-shipped",
+      "scenario": "Shipping surfaces ignore the folder",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "installer-install-sh-runs-with-pi-coding-agent-dir-set-to-an-emp",
+      "requirementKey": "installer",
+      "scenario": "Fresh install",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "installer-an-installed-extension-differs-from-the-repository-and",
+      "requirementKey": "installer",
+      "scenario": "Replaced copy is backed up",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "installer-install-sh-dry-run-runs-against-an-empty-agent-directo",
+      "requirementKey": "installer",
+      "scenario": "Dry run changes nothing",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "test-runner",
+      "requirementKey": "test-runner",
+      "scenario": "Runner and docs exist",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    }
+  ],
+  "providers": {
+    "static-analysis": {
+      "adapter": "command",
+      "capability": "static-analysis",
+      "command": [
+        "sh",
+        "-c",
+        "(for e in agent-team ask-user background-bash; do test -f pi-extensions/$e/index.ts || exit 1; done; test ! -e pi-extensions/claude-accounts && test ! -e pi-extensions/agent-team/reports && ! grep -rq '/Users/' pi-extensions && node --test pi-extensions/ask-user/store.test.cjs) && (T=$(mktemp -d) && PI_CODING_AGENT_DIR=$T bash pi-extensions/install.sh --dry-run && test ! -e $T/extensions && PI_CODING_AGENT_DIR=$T bash pi-extensions/install.sh && for e in agent-team ask-user background-bash; do diff -rq pi-extensions/$e $T/extensions/$e || exit 1; done && echo x >> $T/extensions/ask-user/README.md && PI_CODING_AGENT_DIR=$T bash pi-extensions/install.sh && diff -rq pi-extensions/ask-user $T/extensions/ask-user && ls $T/extension-backups/*/ask-user/README.md) && (grep -q 'pi-extensions/test.sh' pi-extensions/README.md && grep -q 'pi-extensions/install.sh --dry-run' pi-extensions/README.md && grep -q -- '--tui' pi-extensions/test.sh && bash -n pi-extensions/test.sh) && (grep -q 'pi-extensions/' CLAUDE.md && ! grep -q 'pi-extensions' install.sh install-pi.sh Formula/claude-foundation.rb)"
+      ],
+      "claims": "declared"
+    }
+  }
+}

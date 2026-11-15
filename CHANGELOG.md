@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Pi parallel Build workers. A Pi worker session is separate from its
+  coordinator, so the phase guard refused every worker write into the change
+  workspace. A worker started with `FOUNDATION_PARENT_SESSION_ID` now resolves
+  the coordinating session's phase and may write only inside that workspace.
+  Worker sessions refuse `/land`, `/deliver`, and natural Land consent.
+
 ## [3.7.2] - 2026-11-15
 
 ### Added

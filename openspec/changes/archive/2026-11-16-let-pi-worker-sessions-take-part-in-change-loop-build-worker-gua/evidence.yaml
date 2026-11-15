@@ -1,0 +1,113 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "worker-phase-inheritance-the-parent-session-is-in-build-and-a-wo",
+      "requirementKey": "worker-phase-inheritance",
+      "scenario": "Worker writes in the parent's workspace",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "worker-phase-inheritance-the-same-worker-writes-a-file-in-the-ma",
+      "requirementKey": "worker-phase-inheritance",
+      "scenario": "Worker stays out of the main checkout",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "worker-phase-inheritance-a-session-without-foundation-parent-ses",
+      "requirementKey": "worker-phase-inheritance",
+      "scenario": "Unrelated session gains nothing",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "worker-no-land",
+      "requirementKey": "worker-no-land",
+      "scenario": "Worker cannot land",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "team-propagates-parent",
+      "requirementKey": "team-propagates-parent",
+      "scenario": "Nested workers keep the root session",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "team-changeloop-task-a-brief-is-built-for-change-c1-task-t002-wh",
+      "requirementKey": "team-changeloop-task",
+      "scenario": "Leased task brief",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "team-changeloop-task-a-brief-is-requested-for-a-change-with-no-r",
+      "requirementKey": "team-changeloop-task",
+      "scenario": "Unknown change is refused",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "team-roles-the-reviewer-role-is-resolved-in-a-project-whose-deep",
+      "requirementKey": "team-roles",
+      "scenario": "Reviewer is read-only and deep",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "team-roles-agent-spawn-is-called-with-role-admin",
+      "requirementKey": "team-roles",
+      "scenario": "Unknown role is refused",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "team-limits",
+      "requirementKey": "team-limits",
+      "scenario": "Project cap",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/pi-extension.test.mjs) && (grep -q FOUNDATION_PARENT_SESSION_ID .claude/harness/README.md && grep -q FOUNDATION_PARENT_SESSION_ID CHANGELOG.md) && (node --test pi-extensions/agent-team/roles.test.cjs)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/pi-extension.test.mjs",
+        "grep -q FOUNDATION_PARENT_SESSION_ID .claude/harness/README.md && grep -q FOUNDATION_PARENT_SESSION_ID CHANGELOG.md",
+        "node --test pi-extensions/agent-team/roles.test.cjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

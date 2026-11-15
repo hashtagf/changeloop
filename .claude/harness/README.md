@@ -542,6 +542,13 @@ The bash wrapper and `!`/`!!` backend export the Pi session/model identity to
 runtime children without changing the parent environment. Each bash call starts
 in the session cwd: anchor every Build call to its absolute workspace.
 
+A Pi worker tool starts each worker with `FOUNDATION_PARENT_SESSION_ID` set to
+the coordinating session. The worker's guards then resolve that session's
+phase, so a parallel Build worker may write inside the change workspace and
+nowhere else, as a native subagent does. A worker session refuses `/land`,
+`/deliver`, and natural Land consent; only the coordinating session lands or
+delivers.
+
 `/land <change>` grants only that change's Land in the current session; reload,
 session replacement, or new user input revokes it. `/deliver <change>` separately
 authorizes the matching publication workflow. Runtime proof and Land gates remain

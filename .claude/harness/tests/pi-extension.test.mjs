@@ -13,9 +13,13 @@ const temp = realpathSync(mkdtempSync(join(tmpdir(), "pi-adapter-")));
 const root = join(temp, "project with spaces");
 const update = process.env.FOUNDATION_UPDATE_CHECK;
 process.env.FOUNDATION_UPDATE_CHECK = "0";
+// The suite may itself run inside a Pi session's Change Loop shell; its project
+// pin and session identity must not leak into the disposable consumer.
+const hostEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) =>
+  !/^(?:CLAUDE_FOUNDATION_PROJECT|CLAUDE_PROJECT_DIR|FOUNDATION_(?:SESSION_ID|HOST|HOST_COMMAND|HOST_ARGUMENTS|MAIN_IDENTITY|GUARDRAIL_MODE|PARENT_SESSION_ID|WORKSPACE_ROOT|ACTIVE_PHASE))$/.test(key)));
 const run = (args) => spawnSync("bash", [join(source, "cli.sh"), ...args], {
   cwd: source, encoding: "utf8", timeout: 60000,
-  env: { ...process.env, FOUNDATION_UPDATE_CHECK: "0" }
+  env: { ...hostEnv, FOUNDATION_UPDATE_CHECK: "0" }
 });
 before(() => {
   const result = run(["init", root, "--host", "pi", "--yes"]);
@@ -27,7 +31,7 @@ after(() => {
   else process.env.FOUNDATION_UPDATE_CHECK = update;
 });
 
-async function bridge(session = "pi-test") {
+async function bridge(session = "pi-test", { parent = "" } = {}) {
   const handlers = new Map(), commands = new Map(), messages = [], notices = [], statuses = [];
   let bash;
   const pi = {
@@ -41,6 +45,7 @@ async function bridge(session = "pi-test") {
     ui: { notify: (text, kind) => notices.push({ text, kind }), setStatus: (_key, value) => statuses.push(value) } };
   let shell;
   install(pi, { projectRoot: root, hostExecutable: "bash", hostPrefixArgs: [join(source, "cli.sh")],
+    parentSessionId: parent,
     createBashTool: (cwd, options) => ({ name: "bash", description: "native bash", parameters: {},
       execute: async (_id, args) => options?.spawnHook({ command: args.command, cwd,
         env: { ...process.env, FOUNDATION_CLAUDE_SESSION_ID: "foreign", CODEX_THREAD_ID: "foreign" } }) }),
@@ -156,6 +161,31 @@ test("Pi guards refuse main-checkout and symlink writes but permit sandbox write
   symlinkSync(root, link);
   const escaped = await b.call("edit", { path: join(link, "src/main.js"), oldText: "a", newText: "b" });
   assert.equal(escaped.block, true);
+});
+
+test("a Pi worker inherits its parent's Build workspace and nothing more", async () => {
+  const workspace = building("coordinator", "pi-worker-case");
+  const worker = await bridge("worker-session", { parent: "coordinator" });
+  assert.equal(await worker.call("write", { path: join(workspace, "src/worker.js"), content: "ok" }), undefined);
+  assert.equal((await worker.call("write", { path: "src/main.js", content: "bad" })).block, true);
+  const stranger = await bridge("worker-session");
+  const refused = await stranger.call("write", { path: join(workspace, "src/worker.js"), content: "bad" });
+  assert.equal(refused.block, true);
+  assert.match(refused.reason, /phase guard/);
+});
+
+test("a Pi worker never lands or delivers, even for its parent's ready change", async () => {
+  readyForLand("coordinator", "pi-worker-ready");
+  const worker = await bridge("worker-session", { parent: "coordinator" });
+  await worker.command("land", "pi-worker-ready");
+  await worker.command("land");
+  await worker.command("deliver", "pi-worker-ready");
+  assert.equal(worker.messages.length, 0);
+  assert.deepEqual(await worker.fire("input", { source: "interactive", text: "land ได้เลย" }), { action: "handled" });
+  assert.equal(worker.messages.length, 0);
+  assert.equal((await worker.call("bash", { command: "claude-foundation advance pi-worker-ready --through archived" })).block, true);
+  assert.equal((await worker.call("bash", { command: "claude-foundation deliver advance pi-worker-ready" })).block, true);
+  assert.ok(worker.notices.some((notice) => /worker/.test(notice.text)));
 });
 
 test("Pi guards allow semantic draft v5 before the first runtime phase", async () => {
