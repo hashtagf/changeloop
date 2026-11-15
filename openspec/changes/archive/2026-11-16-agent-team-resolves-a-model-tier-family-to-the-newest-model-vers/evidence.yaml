@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "newest-version-claude-opus-4-6-and-claude-opus-4-20250514-are-av",
+      "requirementKey": "newest-version",
+      "scenario": "Snapshot date does not outrank a newer version",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "newest-version-claude-opus-5-5-claude-opus-5-5-20261001-claude-o",
+      "requirementKey": "newest-version",
+      "scenario": "Newest version wins over aliases and snapshots",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "newest-version-only-claude-opus-latest-matches-the-family",
+      "requirementKey": "newest-version",
+      "scenario": "Alias only as a last resort",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test pi-extensions/agent-team/roles.test.cjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

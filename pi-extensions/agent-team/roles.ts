@@ -51,6 +51,26 @@ export function projectSettings(project?: string) {
 }
 
 type Model = { provider: string; id: string };
+
+/** Version of a model id within a family: dash-separated numbers, then an optional 8-digit snapshot date. */
+export function familyVersion(id: string, family: string) {
+  const lower = id.toLowerCase(), at = lower.indexOf(family);
+  if (at < 0) return undefined;
+  const rest = lower.slice(at + family.length).match(/^-(\d{1,4}(?:-\d{1,4})*)(?:-(\d{8}))?$/);
+  if (!rest) return { version: [] as number[], date: 0, versioned: false };
+  return { version: rest[1].split('-').map(Number), date: rest[2] ? Number(rest[2]) : 0, versioned: true };
+}
+
+/** Newer first: versioned ids, higher version, undated (current) before snapshots, newer snapshot. */
+export function compareFamilyVersions(a: ReturnType<typeof familyVersion>, b: ReturnType<typeof familyVersion>) {
+  if (a!.versioned !== b!.versioned) return a!.versioned ? -1 : 1;
+  for (let index = 0; index < Math.max(a!.version.length, b!.version.length); index++) {
+    const difference = (b!.version[index] ?? -1) - (a!.version[index] ?? -1);
+    if (difference) return difference;
+  }
+  if (!a!.date !== !b!.date) return a!.date ? 1 : -1;
+  return b!.date - a!.date;
+}
 export function resolveTierModel(tier: Tier, { configured, families = DEFAULT_FAMILIES, current, available = [] }:
   { configured?: Record<string, any>; families?: Record<Tier, string>; current?: Model; available?: Model[] }) {
   const pinned = configured?.[tier];
@@ -61,8 +81,9 @@ export function resolveTierModel(tier: Tier, { configured, families = DEFAULT_FA
   if (pinned?.provider && pinned?.model) return { provider: String(pinned.provider), model: String(pinned.model) };
   const family = families[tier];
   const match = available.filter(model => (!current || model.provider === current.provider) &&
-    model.id.toLowerCase().includes(family))
-    .sort((a, b) => b.id.localeCompare(a.id, undefined, { numeric: true }))[0];
+    familyVersion(model.id, family))
+    .sort((a, b) => compareFamilyVersions(familyVersion(a.id, family), familyVersion(b.id, family)) ||
+      a.id.localeCompare(b.id))[0];
   if (match) return { provider: match.provider, model: match.id };
   return current ? { provider: current.provider, model: current.id } : {};
 }

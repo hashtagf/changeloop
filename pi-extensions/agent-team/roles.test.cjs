@@ -37,6 +37,16 @@ test('tier models prefer configuration, then the project family, then the curren
   assert.equal(roles.resolveTierModel('fast', { current, available: [] }).model, 'claude-sonnet-4-5');
 });
 
+test('a family resolves to its newest version, not a snapshot date or alias', () => {
+  const pick = (ids) => roles.resolveTierModel('deep', { current: { provider: 'p', id: 'x' },
+    available: ids.map(id => ({ provider: 'p', id })) }).model;
+  assert.equal(pick(['claude-opus-4-20250514', 'claude-opus-4-6']), 'claude-opus-4-6');
+  assert.equal(pick(['claude-opus-latest', 'claude-opus-4-8', 'claude-opus-5', 'claude-opus-5-5-20261001', 'claude-opus-5-5']), 'claude-opus-5-5');
+  assert.equal(pick(['claude-opus-5-5-20260101', 'claude-opus-5-5-20261001']), 'claude-opus-5-5-20261001');
+  assert.equal(pick(['claude-opus-latest']), 'claude-opus-latest');
+  assert.equal(pick(['claude-sonnet-5-5']), 'x');
+});
+
 test('unknown roles are refused with the supported names', () => {
   assert.throws(() => roles.resolveRole('admin', { current }), /explorer, executor, reviewer, verifier/);
 });

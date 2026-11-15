@@ -73,7 +73,7 @@ Model routing is guidance, not a keyword parser.
 with `write`/`edit` excluded (bash remains, so this is a guardrail, not a
 sandbox). Every role ends its report with SUMMARY, CHANGES, CHECKS and BLOCKERS.
 A tier resolves to `models.<tier>` in `config.json` (`"provider/id"`), else the
-newest available model of the tier family from the project's `foundation.json`
+newest version (numeric order; snapshot dates only break ties; aliases last) of the tier family from the project's `foundation.json`
 (haiku/sonnet/opus by default) on the current provider, else the current model.
 
 For a Change Loop `execution.mode: parallel` envelope, spawn one worker per lease
