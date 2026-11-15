@@ -18,6 +18,15 @@ comparison: 2026-10-08, no-harness/v3.6.0/v3.6.1/v3.6.2.
 
 ## Current scenario checkpoint
 
+### v3.7.2 candidate — 2026-11-16 (no paid smoke, owner exception)
+
+Source adds opt-in Deliver merge after passing checks (`deliver.merge`). No
+paid scenario smoke ran for this candidate and no paid evidence is claimed; the
+merge path is covered only by deterministic tests with a simulated GitHub CLI,
+not a live provider. The default deterministic gate passed locally (241 suites).
+The maintainer authorized publication as an explicit exception. Repeated
+assurance is not claimed.
+
 ### v3.7.1 candidate — 2026-11-15 (no paid smoke, owner exception)
 
 Source adds the Pi host adapter and shared Pi runtime install, review rules,

@@ -322,7 +322,8 @@ for (const scenario of ["normal", "mixed-files", "resume-edit", "resume-mode", "
   "crlf", "autocrlf", "conversion-resume", "custom-filter", "reserved-filter",
   "encoding", "legacy-archive-mode", "post-land-mode-remove", "non-main-default",
   "unknown-default", "stale-default", "modified-links", "head-advanced", "push-forbidden",
-  "naming-template", "naming-invalid"])
+  "naming-template", "naming-invalid", "merge-green", "merge-pending", "merge-failed",
+  "merge-none", "merge-refused", "merge-draft", "merge-invalid-policy"])
 test(`delivery verifies publication boundaries: ${scenario}`, async (t) => {
   const root = mkdtempSync(join(tmpdir(), "foundation-delivery-e2e-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
@@ -428,6 +429,10 @@ test(`delivery verifies publication boundaries: ${scenario}`, async (t) => {
   let failCommitOnce = ["resume-edit", "resume-mode", "recovered-commit"].includes(scenario);
   let fetchedBase = remoteBase;
   let pullRequest = null;
+  let merges = 0;
+  let checkRows = scenario === "merge-pending" ? [{ name: "test", bucket: "pending" }]
+    : scenario === "merge-failed" ? [{ name: "test", bucket: "fail" }, { name: "lint", bucket: "pass" }]
+      : scenario === "merge-none" ? [] : [{ name: "test", bucket: "pass" }, { name: "docs", bucket: "skipping" }];
   let actualDefault = scenario === "non-main-default" ? "trunk" : "main";
   let defaultAvailable = scenario !== "unknown-default";
   const run = (executable, args, options) => {
@@ -467,10 +472,27 @@ test(`delivery verifies publication boundaries: ${scenario}`, async (t) => {
         number: 42, url: "https://github.com/acme/booking/pull/42", state: "OPEN",
         isDraft: false, headRefOid: commit, headRefName: expectedBranch, baseRefName: "main"
       };
+      if (scenario === "merge-draft") pullRequest.isDraft = true;
       return { status: 0, stdout: `${pullRequest.url}\n`, stderr: "" };
     }
     if (args[1] === "view")
       return { status: 0, stdout: JSON.stringify(pullRequest), stderr: "" };
+    if (args[1] === "checks")
+      return checkRows.length
+        ? { status: checkRows.some((row) => row.bucket === "pending") ? 8 : 0, stdout: JSON.stringify(checkRows), stderr: "" }
+        : { status: 1, stdout: "", stderr: "no checks reported on the 'change/booking-flow' branch" };
+    if (args[1] === "merge") {
+      merges += 1;
+      assert.equal(args.includes("--admin"), false, "Deliver never bypasses branch protection");
+      assert.equal(args.includes("--auto"), false);
+      assert.equal(args[args.indexOf("--match-head-commit") + 1], commit);
+      assert(args.includes("--squash"));
+      if (scenario === "merge-refused")
+        return { status: 1, stdout: "", stderr: "Pull request is not mergeable: review required" };
+      pullRequest = { ...pullRequest, state: "MERGED", mergeCommit: { oid: "merged-sha" },
+        mergedAt: "2026-09-16T02:00:00Z" };
+      return { status: 0, stdout: "merged\n", stderr: "" };
+    }
     return { status: 1, stdout: "", stderr: "unexpected gh command" };
   };
   const runtime = createPullRequestRuntime({
@@ -490,7 +512,9 @@ test(`delivery verifies publication boundaries: ${scenario}`, async (t) => {
       ...(scenario === "naming-template" ? {
         ticketPattern: "[A-Z]+-\\d+", commitSubject: "{commitType}({ticket}): {title} [{changeId}]"
       } : {}),
-      ...(scenario === "naming-invalid" ? { commitSubject: "{commitType}: {summary}" } : {})
+      ...(scenario === "naming-invalid" ? { commitSubject: "{commitType}: {summary}" } : {}),
+      ...(scenario === "merge-invalid-policy" ? { merge: "always" }
+        : scenario.startsWith("merge-") ? { merge: "after-checks" } : {})
     } }),
     now: () => "2026-09-16T01:00:00.000Z",
     run,
@@ -562,6 +586,15 @@ test(`delivery verifies publication boundaries: ${scenario}`, async (t) => {
     assert.equal(pushes, 0);
     assert.equal(creates, 0);
     assert.equal(checkedGit(["rev-parse", "HEAD"], root), originalHead);
+    return;
+  }
+  if (scenario === "merge-invalid-policy") {
+    assert.equal(interrupted.action, "WAIT");
+    assert.equal(interrupted.boundary, "delivery-policy");
+    assert.match(interrupted.reason, /deliver\.merge must be one of never, after-checks; found 'always'/);
+    assert.equal(pushes, 0);
+    assert.equal(creates, 0);
+    assert.equal(merges, 0);
     return;
   }
   if (["custom-filter", "reserved-filter", "encoding"].includes(scenario)) {
@@ -674,7 +707,48 @@ test(`delivery verifies publication boundaries: ${scenario}`, async (t) => {
   }
 
   const first = await runtime.advance(id);
+  if (scenario.startsWith("merge-")) {
+    assert.equal(creates, 1);
+    assert.equal(checkedGit(["rev-parse", "HEAD"], root), originalHead);
+    if (["merge-failed", "merge-none", "merge-draft"].includes(scenario)) {
+      assert.equal(first.action, "ASK_USER");
+      assert.equal(first.boundary, "merge-gate");
+      if (scenario === "merge-failed") assert.match(first.reason, /checks failed: test/);
+      assert.equal(merges, 0);
+      return;
+    }
+    if (scenario === "merge-refused") {
+      assert.equal(first.action, "WAIT");
+      assert.equal(first.boundary, "branch-protection");
+      assert.equal(first.wait.owner, "repository-reviewer");
+      assert.match(first.reason, /review required/);
+      assert.equal(merges, 1);
+      assert.equal(readJson(runtime.receiptPath(id)).merge, undefined);
+      return;
+    }
+    if (scenario === "merge-pending") {
+      assert.equal(first.action, "WAIT");
+      assert.equal(first.boundary, "ci-checks");
+      assert.equal(first.resumeCommand, `claude-foundation deliver advance ${id}`);
+      assert.equal(merges, 0);
+      checkRows = [{ name: "test", bucket: "pass" }];
+    }
+    const merged = scenario === "merge-pending" ? await runtime.advance(id) : first;
+    assert.equal(merged.action, "DONE");
+    assert.equal(merged.reached, "merged");
+    assert.deepEqual(merged.merge, { method: "squash", commit: "merged-sha", mergedAt: "2026-09-16T02:00:00Z" });
+    assert.equal(readJson(runtime.receiptPath(id)).merge.commit, "merged-sha");
+    assert.equal(merges, 1);
+    const again = await runtime.advance(id);
+    assert.equal(again.reached, "merged");
+    assert.equal(again.reused, true);
+    assert.equal(merges, 1, "a repeated Deliver never merges twice");
+    assert.equal(creates, 1);
+    return;
+  }
+  assert.equal(merges, 0, "without deliver.merge Deliver never merges");
   assert.equal(first.action, "DONE");
+  assert.equal(first.reached, "pr-opened");
   assert.equal(first.pullRequests[0].url, "https://github.com/acme/booking/pull/42");
   assert.equal(creates, 1);
   assert.equal(pushes, 2);
@@ -829,7 +903,8 @@ test(`multi-repository delivery preserves ${topology} topology and target HEADs:
     ],
     pathIdentity, readJson, writeJson,
     stableHash: (value) => hash(JSON.stringify(value)), git,
-    foundationPolicy: () => ({ deliver: { defaultBaseBranch: "main" } }),
+    // An opted-in merge never applies to a multi-repository delivery.
+    foundationPolicy: () => ({ deliver: { defaultBaseBranch: "main", merge: "after-checks" } }),
     now: () => "2026-09-16T02:00:00.000Z", run,
     fail: (message) => { throw new Error(message); }
   });
@@ -850,6 +925,8 @@ test(`multi-repository delivery preserves ${topology} topology and target HEADs:
   assert.equal(result.action, "DONE");
   assert.deepEqual(result.pullRequests.map((row) => row.repositoryId), ["api", "root"]);
   assert.deepEqual(pushed, ["api", "root"]);
+  assert.equal(result.reached, "pr-opened");
+  assert.match(result.notice, /deliver\.merge applies only to single-repository changes/);
   assert.equal(checkedGit(["rev-parse", "HEAD"], root), rootHead);
   assert.equal(checkedGit(["rev-parse", "HEAD"], child), childHead);
   const workspace = runtime.workspacePath(id);
@@ -860,6 +937,7 @@ test(`multi-repository delivery preserves ${topology} topology and target HEADs:
   } else assert.equal(gitlink, "");
   const reused = await runtime.advance(id);
   assert.equal(reused.reused, true);
+  assert.match(reused.notice, /single-repository/);
   assert.equal(pullRequests.size, 2);
 });
 

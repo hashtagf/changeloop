@@ -129,8 +129,9 @@ See the [Land contract](WORKFLOW.md#land-change) for exact behavior.
 ```
 
 This separately authorizes the delivery workflow for an isolated commit, branch
-push, and PR. Land alone never authorizes these actions. Deliver does not merge
-or deploy. See [Deliver](WORKFLOW.md#deliver-change-optional).
+push, and PR. Land alone never authorizes these actions. Deliver never deploys,
+and merges only when `foundation.json` sets `deliver.merge` to `after-checks`
+(after every PR check passed). See [Deliver](WORKFLOW.md#deliver-change-optional).
 
 ## Which command should I use?
 

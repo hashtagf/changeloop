@@ -135,9 +135,11 @@ harness และเทส และ runtime จะไม่ส่งเป็�
 
 ถ้าไม่เรียก `/deliver` จะไม่สร้าง delivery directory, งาน evidence เฉพาะ PR หรือ
 gate เพิ่ม ถ้า change prove แล้วแต่ยังไม่ archive การเรียก `/deliver` ถือเป็นอำนาจ
-Land ด้วย harness จะ Land ผ่าน `advance --through archived` แล้วส่งต่อ คำสั่งนี้ไม่อนุญาต force-push, push เข้า default branch, merge, deploy,
-publish หรือแก้ product และสำเร็จได้เมื่อ provider ยืนยันว่า base, head กับ commit
-ของ PR ที่เปิดอยู่ตรงกับ delivery receipt เท่านั้น
+Land ด้วย harness จะ Land ผ่าน `advance --through archived` แล้วส่งต่อ คำสั่งนี้ไม่อนุญาต force-push, push เข้า default branch, deploy,
+publish หรือแก้ product และจะ merge เฉพาะเมื่อตั้ง `deliver.merge` เป็น `after-checks`
+โดย merge เฉพาะ head ที่ส่งไปหลัง check ผ่านครบ สำเร็จได้เมื่อ provider ยืนยันว่า base,
+head กับ commit ของ PR ที่เปิดอยู่ตรงกับ delivery receipt หรือเมื่อเปิด
+`deliver.merge` ต้องอ่าน merge commit กลับมาได้
 
 ## การกู้คืนและทางออกฉุกเฉิน
 

@@ -377,6 +377,19 @@ invalid subject or branch stops Deliver as a `delivery-policy` wait before
 anything is committed; correct the setting and run `/deliver` again.
 `WORKFLOW.md` (`/deliver <change>`) owns the full naming rules.
 
+To let Deliver merge its own pull request, opt in:
+
+```json
+{ "deliver": { "merge": "after-checks", "mergeMethod": "squash" } }
+```
+
+`deliver.merge` is `never` (default) or `after-checks`; `deliver.mergeMethod` is
+`squash` (default), `merge`, or `rebase`. Deliver merges only a
+single-repository delivery, only its exact delivered head, and only after every
+reported check passed. Pending checks wait for a resume; failing or missing
+checks, a draft PR, or branch protection stop without merging, and Deliver never
+uses an admin override. An invalid value is a `delivery-policy` wait.
+
 Where and how the pull request is opened:
 
 | Field | Default | Meaning |

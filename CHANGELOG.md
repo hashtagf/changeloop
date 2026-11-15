@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Opt-in merge for Deliver. With `deliver.merge: "after-checks"` in
+  `foundation.json`, `/deliver` merges its single-repository pull request after
+  every reported check passed, bound to the delivered head commit
+  (`deliver.mergeMethod`: `squash` default, `merge`, or `rebase`), and records
+  the merge commit in the delivery receipt. Pending checks return a resumable
+  WAIT; failing or missing checks, drafts, and branch protection stop without
+  merging; Deliver never uses an admin override. Without the setting Deliver
+  still stops at the open pull request.
+
 ## [3.7.1] - 2026-11-15
 
 This is release **3.7.1**. Although numbered as a patch by owner decision, it

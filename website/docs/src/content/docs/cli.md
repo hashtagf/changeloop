@@ -138,9 +138,11 @@ If `/deliver` is absent, no delivery directory, PR-specific evidence work, or
 gate is created. On a proven change that is not archived yet, `/deliver` is
 also Land authority: the harness lands it through `advance --through archived`
 and continues delivery. The explicit command never authorizes force-push,
-default-branch push, merge, deploy, publish, or product edits. Success requires
-an open PR whose provider-reported base, head, and commit match the durable
-delivery receipt.
+default-branch push, deploy, publish, or product edits. It merges only when
+`deliver.merge` is `after-checks`, and then only the delivered head after every
+check passed. Success requires an open PR whose provider-reported base, head,
+and commit match the durable delivery receipt, or, with `deliver.merge`, the
+read-back merge commit.
 
 ## Recovery and escape hatches
 

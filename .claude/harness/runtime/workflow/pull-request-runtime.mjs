@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { dirname, join, relative } from "node:path";
 import { spawnSync } from "node:child_process";
 import { repositoryDeliveryOrder } from "./repository-delivery-saga.mjs";
+import { createDeliveryMerge, mergePolicy } from "./delivery-merge.mjs";
 import { environmentCause, errorCodes } from "./advance-recovery.mjs";
 import {
   createDeliveryIntegrity, deliveryProjectionEntry, assertLandEntryMode, assertDeliveryEntries
@@ -59,6 +60,7 @@ export function deliveryPolicy(policy = {}) {
     missingPresentationEvidence: clean(configured.missingPresentationEvidence) || "draft",
     missingRequiredEvidence: clean(configured.missingRequiredEvidence) || "block",
     updateOwnedPullRequest: configured.updateOwnedPullRequest !== false,
+    merge: mergePolicy(configured),
     allowForcePush: false,
     allowDefaultBranchPush: false,
     allowedHosts: Array.isArray(configured.allowedHosts)
@@ -653,6 +655,7 @@ export function createPullRequestRuntime({
   fail = (message) => { throw new Error(message); }
 }) {
   const integrity = createDeliveryIntegrity({ git, run, runChecked, gitOutput });
+  const merger = createDeliveryMerge({ run, root });
   const statePath = (id) => join(deliveriesRoot, id, "state.json");
   const receiptPath = (id) => join(deliveriesRoot, id, "receipt.json");
   const bodyPath = (id) => join(deliveriesRoot, id, "pull-request.md");
@@ -1249,6 +1252,21 @@ export function createPullRequestRuntime({
   // Invoking Deliver on a proven change is the user's authority to Land it
   // first: the normal `advance --through archived` route lands (issuing its
   // grant under this invocation), then delivery continues in the same call.
+  // Opt-in merge of a verified single-repository delivery. The receipt keeps
+  // the read-back merge so a repeated Deliver never merges twice.
+  function mergeDelivered(id, delivery, receipt, provider, policy, reused) {
+    const merge = receipt.merge || merger.mergeStage({ slug: provider.remote.slug,
+      url: receipt.pullRequest.url, commit: receipt.commit, method: policy.merge.method });
+    if (!receipt.merge) {
+      receipt.merge = merge;
+      writeJson(receiptPath(id), receipt);
+      checkpoint(delivery, "merged", { merge, receiptDigest: stableHash(receipt) });
+    }
+    return deliveryEnvelope(id, "DONE", {
+      completed: true, reached: "merged", reused, pullRequests: [receipt.pullRequest], merge
+    });
+  }
+
   async function landThenDeliver(id) {
     saveDelivery({ ...loadDelivery(id), landAuthority: {
       kind: "explicit-deliver-command", requestedAt: now()
@@ -1284,12 +1302,18 @@ export function createPullRequestRuntime({
       // A receipt written before multi-repository support has no
       // `multiRepository` flag and stays readable for idempotent reuse.
       const multi = repositories.length > 1 || repositories.some((row) => row.id !== "root");
+      const mergeEnabled = policy.merge.mode === "after-checks";
+      const singleRepositoryNotice = mergeEnabled && multi
+        ? { notice: "deliver.merge applies only to single-repository changes; these pull requests stay open." } : {};
+      if (priorReceipt && !multi && !priorReceipt.multiRepository && mergeEnabled)
+        return mergeDelivered(id, delivery, priorReceipt, providerContext(policy), policy, true);
       if (priorReceipt?.multiRepository || (priorReceipt && !multi))
         return deliveryEnvelope(id, "DONE", {
           completed: true, reached: "pr-opened", reused: true,
-          pullRequests: reusedPullRequests(policy, priorReceipt, repositories, delivery)
+          pullRequests: reusedPullRequests(policy, priorReceipt, repositories, delivery),
+          ...singleRepositoryNotice
         });
-      if (multi) return await advanceMulti(id, lifecycle, delivery, policy, repositories);
+      if (multi) return { ...await advanceMulti(id, lifecycle, delivery, policy, repositories), ...singleRepositoryNotice };
       const provider = providerContext(policy);
       assertProviderBinding(delivery.provider, provider);
       requestDelivery(delivery);
@@ -1379,7 +1403,8 @@ export function createPullRequestRuntime({
         verifiedAt: now()
       };
       writeJson(receiptPath(id), receipt);
-      checkpoint(delivery, "verified", { receiptDigest: stableHash(receipt) });
+      delivery = checkpoint(delivery, "verified", { receiptDigest: stableHash(receipt) });
+      if (mergeEnabled) return mergeDelivered(id, delivery, receipt, provider, policy, false);
       return deliveryEnvelope(id, "DONE", {
         completed: true, reached: followUp ? "pr-updated" : "pr-opened", reused: false,
         pullRequests: [receipt.pullRequest],
@@ -1443,6 +1468,33 @@ export function createPullRequestRuntime({
         return deliveryEnvelope(id, "WAIT", {
           completed: false, boundary: "git-conversion", owner: "repository-operator",
           reason: error.message, resumeCommand
+        });
+      if (error.code === "DELIVERY_MERGE_POLICY_INVALID")
+        return deliveryEnvelope(id, "WAIT", {
+          completed: false, boundary: "delivery-policy", owner: "repository-operator",
+          reason: error.message, resumeCommand
+        });
+      if (error.code === "DELIVERY_CHECKS_PENDING")
+        return deliveryEnvelope(id, "WAIT", {
+          completed: false, boundary: "ci-checks", owner: "ci", reason: error.message, resumeCommand,
+          wait: { owner: "ci", checkCommand: resumeCommand,
+            condition: "Every reported pull-request check finishes; Deliver merges only when all passed." }
+        });
+      if (error.code === "DELIVERY_MERGE_REFUSED")
+        return deliveryEnvelope(id, "WAIT", {
+          completed: false, boundary: "branch-protection", owner: "repository-reviewer",
+          reason: error.message, resumeCommand,
+          wait: { owner: "repository-reviewer", checkCommand: resumeCommand,
+            condition: `The repository's merge requirements are met: ${error.message}` }
+        });
+      if (error.code === "DELIVERY_MERGE_BLOCKED")
+        return deliveryDecision(id, {
+          boundary: "merge-gate", reason: error.message,
+          options: [
+            ["fix-in-a-follow-up-change-then-deliver", "Fix the cause in a follow-up change or pull request, then run Deliver again."],
+            ["leave-pull-request-open", "Keep the pull request open and merge it outside Deliver."]
+          ],
+          resumeCommand
         });
       if (error.code === "DELIVERY_NAMING_INVALID")
         return deliveryEnvelope(id, "WAIT", {

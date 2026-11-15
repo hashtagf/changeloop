@@ -1,0 +1,112 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "merge-is-opt-in-deliver-opens-the-pull-request",
+      "requirementKey": "merge-is-opt-in",
+      "scenario": "No merge policy keeps the PR open",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "merge-is-opt-in-deliver-reads-its-policy",
+      "requirementKey": "merge-is-opt-in",
+      "scenario": "Unknown merge policy is refused",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "merge-after-green-checks-deliver-continues-after-opening-the-pul",
+      "requirementKey": "merge-after-green-checks",
+      "scenario": "Green checks merge the pull request",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "merge-after-green-checks-deliver-runs-again",
+      "requirementKey": "merge-after-green-checks",
+      "scenario": "Repeated Deliver does not merge twice",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "merge-stops-safely-deliver-evaluates-the-pull-request-checks",
+      "requirementKey": "merge-stops-safely",
+      "scenario": "Pending checks wait",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "merge-stops-safely-deliver-evaluates-the-pull-request-checks-2",
+      "requirementKey": "merge-stops-safely",
+      "scenario": "Failing checks stop",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "merge-stops-safely-deliver-evaluates-the-pull-request-checks-3",
+      "requirementKey": "merge-stops-safely",
+      "scenario": "No reported checks stop",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "merge-stops-safely-deliver-requests-the-merge",
+      "requirementKey": "merge-stops-safely",
+      "scenario": "Branch protection refusal waits",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "merge-stops-safely-deliver-reaches-the-merge-stage",
+      "requirementKey": "merge-stops-safely",
+      "scenario": "Draft pull request is not merged",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "merge-single-repository",
+      "requirementKey": "merge-single-repository",
+      "scenario": "Multi-repository delivery is not merged",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/pull-request-runtime.test.mjs) && (grep -q 'deliver.merge' .claude/commands/deliver.md && grep -q 'deliver.merge' website/docs/src/content/docs/foundation-config.md && grep -q 'deliver.merge' website/docs/src/content/docs/th/foundation-config.md && grep -q 'deliver.merge' CHANGELOG.md && bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/pull-request-runtime.test.mjs",
+        "grep -q 'deliver.merge' .claude/commands/deliver.md && grep -q 'deliver.merge' website/docs/src/content/docs/foundation-config.md && grep -q 'deliver.merge' website/docs/src/content/docs/th/foundation-config.md && grep -q 'deliver.merge' CHANGELOG.md && bash .claude/tests/docs/run-doc-consistency.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

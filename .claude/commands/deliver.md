@@ -9,10 +9,10 @@ is this command.
 Run `claude-foundation deliver advance <change>` once; a proven change Lands
 first. It grants only Land, isolation, committing the proven projection,
 pushing its feature branch, and opening or updating a pull request—never
-force-push, default-branch push, merge, or deploy. A review follow-up citing
-a delivered, still-open PR updates that PR; otherwise a new one opens, saying
-why.
+force-push, default-branch push, or deploy; it merges only under
+`deliver.merge: "after-checks"`. A review follow-up citing
+a delivered, open PR updates it; otherwise one opens.
 
-Recover and resume internally; never give the user commands, SHAs, or JSON.
-Ask only consequential decisions. `DONE` requires read-back binding an open
-PR to the delivered commit. Without Deliver, `archived` is complete.
+Recover internally; never give the user commands, SHAs, or JSON. Ask only
+real decisions. `DONE` requires read-back binding the PR (or merge)
+to the delivered commit. Without Deliver, `archived` is complete.

@@ -366,6 +366,19 @@ placeholder ที่ใช้ได้คือ `{changeId}`, `{title}`, `{comm
 ใด ๆ ให้แก้การตั้งค่าแล้วสั่ง `/deliver` อีกครั้ง กฎการตั้งชื่อฉบับเต็มอยู่ใน
 `WORKFLOW.md` (`/deliver <change>`)
 
+ถ้าต้องการให้ Deliver merge pull request เอง ให้เปิดใช้:
+
+```json
+{ "deliver": { "merge": "after-checks", "mergeMethod": "squash" } }
+```
+
+`deliver.merge` เป็น `never` (ค่าเริ่มต้น) หรือ `after-checks` ส่วน
+`deliver.mergeMethod` เป็น `squash` (ค่าเริ่มต้น), `merge` หรือ `rebase` Deliver
+จะ merge เฉพาะงาน repo เดียว เฉพาะ head ที่ส่งไปจริง และหลัง check ที่รายงานผ่านครบ
+เท่านั้น ถ้า check ยังรันอยู่จะรอให้สั่งต่อ ถ้า check ล้ม ไม่มี check, PR เป็น draft
+หรือติดกฎ branch จะหยุดโดยไม่ merge และไม่ใช้ admin override ค่าที่ไม่ถูกต้องจะหยุดเป็น
+wait แบบ `delivery-policy`
+
 ปลายทางและวิธีเปิด pull request:
 
 | Field | ค่าเริ่มต้น | ความหมาย |

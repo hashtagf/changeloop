@@ -129,7 +129,8 @@ Land เป็นด่านบังคับเพียงด่านเด
 
 คำสั่งนี้ให้อำนาจแยกสำหรับ workflow ที่ commit ในพื้นที่แยก, push branch
 และเปิด PR การอนุญาต Land อย่างเดียวไม่ครอบคลุมการกระทำเหล่านี้
-Deliver ไม่ merge หรือ deploy ดู [Deliver](WORKFLOW.md#deliver-change-optional)
+Deliver ไม่ deploy และจะ merge เฉพาะเมื่อ `foundation.json` ตั้ง `deliver.merge`
+เป็น `after-checks` (หลัง check ของ PR ผ่านครบ) ดู [Deliver](WORKFLOW.md#deliver-change-optional)
 
 ## ควรใช้ Command ไหน
 
