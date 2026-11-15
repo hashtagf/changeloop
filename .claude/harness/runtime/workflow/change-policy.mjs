@@ -47,6 +47,11 @@ export function carriedInUnchanged(
 ) {
   const copied = state?.workspace?.sandboxPreexisting;
   if (unchangedManifestEntry(fileDigest, workspace, copied, rel)) return true;
+  // A copy sandbox also copies whatever the target held uncommitted at
+  // isolation, such as another session's landed files. Still byte-identical
+  // to that snapshot, the copy is carried in, not this change's edit.
+  if (state?.workspace?.mode === "copy" &&
+      unchangedManifestEntry(fileDigest, workspace, state.workspace.targetDirty, rel)) return true;
   return unchangedManifestEntry(fileDigest, workspace, preexisting, rel);
 }
 

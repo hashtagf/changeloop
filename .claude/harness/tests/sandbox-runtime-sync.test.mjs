@@ -620,3 +620,32 @@ test("sync reporting renders copy and moved-target conflicts", () => {
   });
   assert.match(rows.at(-1), /TARGET MOVED retry/);
 });
+
+// 2026-11-16: an untracked file copied in at isolation enters both manifests
+// only after another session commits it. With no baseline entry, its isolation
+// bytes (targetDirty) decide whether this change ever touched the copy.
+test("copy sync fast-forwards an untouched isolation copy and still conflicts on an edited one", () => {
+  const fixture = syncFixture("sync-foreign");
+  for (const manifest of [fixture.targetManifest, fixture.sandboxManifest,
+    fixture.state.workspace.baseline])
+    for (const path of Object.keys(manifest)) delete manifest[path];
+  write(join(fixture.sandbox, "foreign.txt"), "isolation\n");
+  write(join(fixture.root, "foreign.txt"), "committed elsewhere\n");
+  write(join(fixture.sandbox, "edited.txt"), "edited by this change\n");
+  write(join(fixture.root, "edited.txt"), "committed elsewhere\n");
+  fixture.state.workspace.targetDirty = {
+    "foreign.txt": createHash("sha256").update("isolation\n").digest("hex"),
+    "edited.txt": createHash("sha256").update("isolation\n").digest("hex")
+  };
+  Object.assign(fixture.targetManifest, { "foreign.txt": "target", "edited.txt": "target" });
+  Object.assign(fixture.sandboxManifest, { "foreign.txt": "copy", "edited.txt": "edited" });
+
+  const output = capture(() => fixture.runtime.sync("sync-foreign", {}));
+
+  assert.match(output.rows.join("\n"), /fast-forwarded: 1 file/);
+  assert.doesNotMatch(output.rows.join("\n"), /CONFLICT foreign\.txt/);
+  assert.match(output.rows.join("\n"), /CONFLICT edited\.txt/);
+  assert.equal(readFileSync(join(fixture.sandbox, "foreign.txt"), "utf8"), "committed elsewhere\n");
+  assert.equal(readFileSync(join(fixture.sandbox, "edited.txt"), "utf8"), "edited by this change\n");
+  rmSync(fixture.root, { recursive: true, force: true });
+});

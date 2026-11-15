@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import {
   addChangedSurfaceSource,
   capabilitiesForWorkTypes,
+  carriedInUnchanged,
   changedSurfaceRows,
   createChangePolicy,
   repositoryBaseHead,
@@ -430,4 +431,24 @@ test("data-fix and security reuse existing capabilities and cicd adds none", () 
   assert.deepEqual(capabilitiesForWorkTypes(["cicd"]).capabilities, []);
   assert.deepEqual(capabilitiesForWorkTypes(["cicd"]).postRelease, []);
   assert.deepEqual(capabilitiesForWorkTypes(["data-fix", "security"]).triggers["data-migration"], ["work-type:data-fix"]);
+});
+
+// 2026-11-16: another session's uncommitted files were copied into a copy
+// sandbox at isolation. Untouched, they are carried in, not this change's edits.
+test("a copy sandbox does not claim untouched isolation copies of the target's dirty files", () => {
+  const workspace = mkdtempSync(join(tmpdir(), "copy-foreign-dirty-"));
+  try {
+    writeFileSync(join(workspace, "foreign.txt"), "other session\n");
+    writeFileSync(join(workspace, "edited.txt"), "edited by this change\n");
+    const digest = (path) => `digest:${readFileSync(path, "utf8")}`;
+    const state = { workspace: { mode: "copy", targetDirty: {
+      "foreign.txt": "digest:other session\n", "edited.txt": "digest:other session\n"
+    } } };
+    assert.equal(carriedInUnchanged(digest, workspace, {}, "foreign.txt", state), true);
+    assert.equal(carriedInUnchanged(digest, workspace, {}, "edited.txt", state), false,
+      "an isolation copy the change edited is still its edit");
+    assert.equal(carriedInUnchanged(digest, workspace, {}, "foreign.txt",
+      { workspace: { ...state.workspace, mode: "worktree" } }), false,
+    "a worktree never copies the target's dirty files");
+  } finally { rmSync(workspace, { recursive: true, force: true }); }
 });

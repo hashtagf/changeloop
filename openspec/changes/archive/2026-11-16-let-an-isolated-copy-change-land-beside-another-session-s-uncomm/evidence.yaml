@@ -1,0 +1,59 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "untouched-copy-not-claimed-the-changed-surface-is-computed",
+      "requirementKey": "untouched-copy-not-claimed",
+      "scenario": "Untouched foreign file is not claimed",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "untouched-copy-not-claimed-the-changed-surface-is-computed-2",
+      "requirementKey": "untouched-copy-not-claimed",
+      "scenario": "Edited foreign file is still claimed",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "untouched-copy-forwards-on-sync-sandbox-sync-runs",
+      "requirementKey": "untouched-copy-forwards-on-sync",
+      "scenario": "Untouched copy fast-forwards",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "untouched-copy-forwards-on-sync-sandbox-sync-runs-2",
+      "requirementKey": "untouched-copy-forwards-on-sync",
+      "scenario": "Edited copy still conflicts",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/change-policy-surface.test.mjs) && (node --test .claude/harness/tests/sandbox-runtime-sync.test.mjs) && (env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/change-policy-surface.test.mjs",
+        "node --test .claude/harness/tests/sandbox-runtime-sync.test.mjs",
+        "env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

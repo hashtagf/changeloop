@@ -2057,6 +2057,12 @@ export function createSandboxRuntime({
     cpSync(join(root, rel), destination, VERBATIM_COPY);
   }
 
+  function untouchedIsolationCopy(workspace, rel) {
+    const recorded = workspace.targetDirty?.[rel];
+    if (!recorded) return false;
+    try { return fileDigest(join(workspace.path, rel)) === recorded; } catch { return false; }
+  }
+
   function reconcileCopyWorkspacePath({
     rel, baseline, targetManifest, sandboxManifest, resolves, usedResolves, workspace
   }) {
@@ -2073,7 +2079,9 @@ export function createSandboxRuntime({
       advanceCopyBaseline(baseline, rel, target);
       return "settled";
     }
-    if (sandboxEntry === base) {
+    // A path the baseline never saw (untracked at isolation, tracked since)
+    // whose copy still holds its isolation bytes was never touched here.
+    if (sandboxEntry === base || (base === null && untouchedIsolationCopy(workspace, rel))) {
       forwardCopyWorkspacePath(workspace, rel, target);
       advanceCopyBaseline(baseline, rel, target);
       return "forwarded";

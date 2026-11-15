@@ -1,0 +1,7 @@
+# Tasks
+
+> This is the sole implementation ledger.
+
+- [x] **T001** Changed surface ignores untouched isolation copies of the target's dirty files [key:task-1] [kind:implementation] [paths:.claude/harness/runtime/workflow/change-policy.mjs,.claude/harness/tests/change-policy-surface.test.mjs] [claims:untouched-copy-not-claimed-the-changed-surface-is-computed,untouched-copy-not-claimed-the-changed-surface-is-computed-2] — verify: `node --test .claude/harness/tests/change-policy-surface.test.mjs`
+- [x] **T002** Copy sync fast-forwards untouched isolation copies and still conflicts on edited ones [key:task-2] [kind:implementation] [paths:.claude/harness/runtime/workflow/sandbox-runtime.mjs,.claude/harness/tests/sandbox-runtime-sync.test.mjs] [claims:untouched-copy-forwards-on-sync-sandbox-sync-runs,untouched-copy-forwards-on-sync-sandbox-sync-runs-2] — verify: `node --test .claude/harness/tests/sandbox-runtime-sync.test.mjs`
+- [x] **T003** Default deterministic gate stays green [key:task-3] [kind:implementation] [paths:.claude/harness/runtime/workflow/change-policy.mjs,.claude/harness/runtime/workflow/sandbox-runtime.mjs] [claims:untouched-copy-not-claimed-the-changed-surface-is-computed,untouched-copy-not-claimed-the-changed-surface-is-computed-2,untouched-copy-forwards-on-sync-sandbox-sync-runs,untouched-copy-forwards-on-sync-sandbox-sync-runs-2] — verify: `env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh`
