@@ -31,27 +31,44 @@ with tempfile.TemporaryDirectory(prefix='pi-questions-tui-') as folder:
   start=len(output);os.write(master,data);return start
  try:
   await_text('Esc = พักไว้')
+  assert b'\x07' in output,'terminal BEL on new questions'
   start=send(b'\x1b');await_text('/questions',start)
   assert len(list((root/'pending').glob('*/*.json')))==4
   start=send(b'/questions\r');await_text('Esc = พักไว้',start)
-  start=send(b'\r');await_text('Write an answer',start)
-  # Escape inside choices goes back, without marking anything answered.
+  start=send(b'\r');await_text('Type something.',start)
+  # Escape inside the questionnaire goes back, without marking anything answered.
   start=send(b'\x1b');await_text('Esc = พักไว้',start)
   assert not list((root/'answers').glob('*.json'))
-  send(b'\r');await_text('Write an answer',start)
-  start=send(b'\x1b[B\x1b[B\r');await_text('submit',start)
+  start=send(b'\r');await_text('Type something.',start)
+  start=send(b'\x1b[B\x1b[B\r');await_text('คำตอบของคุณ',start)
   start=send(b'Singapore\r');await_text('บันทึกคำตอบแล้ว',start)
   assert len(list((root/'answers').glob('*.json')))==1
+  # The list returns with the remaining batch; Esc keeps it pending.
+  await_text('(+1)',start)
   start=send(b'\x1b');await_text('/questions',start)
-  start=send(b'/reload\r');await_text('Reloaded',start);await_text('Esc = พักไว้',start)
+  start=send(b'/reload\r');await_text('Reloaded',start);await_text('Which format?',start)
   assert len(list((root/'pending').glob('*/*.json')))==2
-  start=send(b'\r');await_text('First option',start)
+  await_text('Plain JSON',start);await_text('Preview',start)
+  start=send(b'\r');await_text('Which checks?',start)
+  # Draft persistence: the Format choice survives /reload before submitting.
+  send(b'\x1b');deadline=time.monotonic()+5
+  while not list((root/'drafts').glob('*/*.json')):
+   assert time.monotonic()<deadline,'draft saved on Esc'
+   if select.select([master],[],[],.1)[0]:output+=os.read(master,65536)
+  start=send(b'/reload\r');await_text('Reloaded',start);await_text('■ Format',start)
+  send(b'1');start=send(b'\t');await_text('ทบทวนคำตอบ',start)
+  start=send(b'n');await_text('โน้ตรวมทั้งชุด',start)
+  start=send(b'ship it\r');await_text('ship it',start)
   start=send(b'\r');await_text('No pending questions',start)
-  assert len(list((root/'answers').glob('*.json')))==2
+  answers=[json.loads(f.read_text()) for f in (root/'answers').glob('*.json')]
+  assert len(answers)==2
+  batch=[a for a in answers if a['response'].get('globalNote')][0]
+  assert batch['response']['answers'][1]['selected']==['Lint'],batch
   assert not list((root/'pending').glob('*/*.json'))
+  assert not list((root/'drafts').glob('*/*.json')),'drafts removed after answering'
   assert len(list((root/'outbox').glob('*/*.json')))==2,'Offline owner retains both answer deliveries'
   assert b'Unexpected model call' not in output
-  print('PASS: native question list, Escape retention, custom and option answers, reload persistence, offline-owner delivery; no model call.')
+  print('PASS: BEL, question list, tabbed questionnaire with preview/multi-select/global note, Escape retention, draft persistence across reload, custom answer, reload persistence, offline-owner delivery; no model call.')
  finally:
   process.terminate()
   try:process.wait(timeout=4)

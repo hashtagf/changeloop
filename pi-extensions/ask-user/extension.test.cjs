@@ -93,3 +93,52 @@ test('real Pi loader: tool, reload, answer batching, durable delivery and idle r
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('real Pi loader: structured batch tool call and event-bus bridge (prompt, answer, result, resolved)', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'pi-question-events-'));
+  const saved = { q: process.env.PI_QUESTIONS_ROOT, t: process.env.PI_TEAM_ROOT };
+  process.env.PI_QUESTIONS_ROOT = path.join(root, 'questions'); process.env.PI_TEAM_ROOT = path.join(root, 'team');
+  const version = fs.readFileSync(path.join(os.homedir(), '.pi/agent/install/current-version'), 'utf8').trim();
+  const base = path.join(os.homedir(), `.pi/agent/install/releases/${version}/node_modules/@earendil-works/pi-coding-agent`);
+  const { loadExtensions, createExtensionRuntime } = await import(path.join(base, 'dist/core/extensions/loader.js'));
+  const { createEventBus } = await import(path.join(base, 'dist/core/event-bus.js'));
+  const bus = createEventBus(), seen = { prompt: [], result: [], resolved: [] };
+  for (const name of Object.keys(seen)) bus.on(`ask-user:${name === 'result' ? 'answer-result' : name}`, p => seen[name].push(p));
+  const ctx = { cwd: root, mode: 'rpc', isIdle: () => false, hasPendingMessages: () => false,
+    sessionManager: { getSessionId: () => 'events-main', getBranch: () => [] }, ui: { setStatus() {}, notify() {} } };
+  const loaded = await loadExtensions([path.join(__dirname, 'index.ts')], root, bus, createExtensionRuntime());
+  assert.deepEqual(loaded.errors, []);
+  const extension = loaded.extensions[0];
+  const fire = async name => { for (const handler of extension.handlers.get(name) || []) await handler({}, ctx); };
+  try {
+    await fire('session_start');
+    const tool = extension.tools.get('ask_user'); const definition = tool.definition || tool;
+    const { Value } = await import(path.join(base, '../../typebox/build/value/index.mjs'));
+    const params = { key: 'plan', questions: [
+      { question: 'Which cache?', header: 'Cache', options: [{ label: 'Redis', recommended: true, preview: 'x' }, 'Memory'] },
+      { question: 'Which tests?', multiSelect: true, options: ['Unit', 'E2E'] }] };
+    assert.ok(Value.Check(definition.parameters, params), 'schema accepts the batch form');
+    const result = await definition.execute('c1', params, undefined, undefined, ctx);
+    await assert.rejects(definition.execute('c2', { key: 'bad', question: 'x', questions: [{ question: 'y' }] }, undefined, undefined, ctx), /exactly one/);
+    await fire('agent_settled');
+    assert.equal(seen.prompt.length, 1);
+    assert.deepEqual(seen.prompt[0].questions[0].options[0], { label: 'Redis', description: undefined, recommended: true, hasPreview: true });
+    const id = result.details.id;
+    bus.emit('ask-user:answer', { id, requestId: 'r1', answers: [{ questionIndex: 0, optionIndexes: [0] }] });
+    assert.equal(seen.result.at(-1).code, 'invalid_answer');
+    bus.emit('ask-user:answer', { id: 'f'.repeat(64), answers: [] });
+    assert.equal(seen.result.at(-1).code, 'not_found');
+    bus.emit('ask-user:answer', { id, requestId: 'r2', answers: [{ questionIndex: 0, optionIndexes: [1] }, { questionIndex: 1, optionIndexes: [0, 1], notes: 'both' }], globalNote: 'via telegram' });
+    assert.deepEqual(seen.result.at(-1), { ok: true, code: undefined, reason: undefined, id, requestId: 'r2' });
+    bus.emit('ask-user:answer', { id, text: 'late' });
+    assert.equal(seen.result.at(-1).code, 'already_answered');
+    assert.equal(seen.resolved.length, 1); assert.equal(seen.resolved[0].response.globalNote, 'via telegram');
+    await fire('session_shutdown');
+    bus.emit('ask-user:answer', { id, text: 'after shutdown' });
+    assert.equal(seen.result.length, 4, 'listener removed on shutdown');
+  } finally {
+    await fire('session_shutdown');
+    for (const [k, v] of [['PI_QUESTIONS_ROOT', saved.q], ['PI_TEAM_ROOT', saved.t]]) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

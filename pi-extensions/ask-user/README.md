@@ -5,6 +5,33 @@ its ID and pending status. The model can continue independent work. Instructions
 require it to wait for an answer before dependent work; this is not a sandbox
 that can mechanically determine which arbitrary commands depend on a question.
 
+Structured form (ideas adapted from `@juicesharp/rpiv-ask-user-question`, MIT):
+`ask_user({ key, questions: [{ question, header?, multiSelect?, options?: [text |
+{ label, description?, recommended?, preview? }] }] })` sends 1-4 related questions
+answered together. The legacy `{ question, options?: string[] }` form still works
+and legacy records stay readable. Labels `Type something.` and `Next` are reserved.
+Answers are stored as `value` (readable text) plus `response`
+(`answers[{ questionIndex, kind: option|custom|multi, answer, selected?, notes? }]`,
+`globalNote?`); structured answers must cover every question.
+
+In the terminal the record opens as a tabbed questionnaire: ↑↓/1-9 choose,
+Space toggles multi-select, `Type something.` writes a custom answer (kept with
+checked options in multi-select), `n` adds a per-question note or, on the Submit
+tab, a global note, and a markdown `preview` renders beside the options (≥100
+columns) or below them. Esc keeps the question pending; the unsent draft (choices,
+typed text, notes, tab) is saved under `drafts/` per answering session, survives
+`/reload` and restarts, is never treated as an answer, and is removed once the
+question is answered anywhere.
+RPC hosts fall back to native select/input (multi-select: `1,3; extra text`).
+A terminal BEL marks newly visible questions (`PI_ASK_USER_BELL=0` disables).
+
+Event bus (`pi.events`, per process): `ask-user:prompt` (new pending question,
+no preview bodies), `ask-user:resolved` (answered anywhere; closes an open
+dialog), inbound `ask-user:answer` `{ id, requestId?, answers: [{ questionIndex,
+optionIndexes?, text?, notes? }], globalNote? }` or `{ id, text }`, and verdict
+`ask-user:answer-result` `{ ok, code?: invalid_payload|not_found|invalid_answer|
+already_answered, reason?, id, requestId? }`. First answer wins.
+
 In Pi, `/questions` or **Ctrl+Alt+U** opens the pending list. Select a question,
 choose an option or type an answer. New questions open the list once when Pi is
 idle. Esc, empty input, reload, shutdown and worker exit never resolve or remove
@@ -29,7 +56,8 @@ messages were questions or turn existing transient extension dialogs into these
 records. The Web UI can invoke `/questions` through its existing command/dialog
 bridge; no separate web question dashboard is installed.
 
-Validation: `rtk node --test ~/.pi/agent/extensions/ask-user/*.test.cjs`.
+Validation: `rtk node --test ~/.pi/agent/extensions/ask-user/*.test.cjs` and
+`rtk python3 ~/.pi/agent/extensions/ask-user/test/tui-smoke.py` (real Pi in a PTY).
 Existing sessions need `/reload`; existing workers need their own reload/resume.
 # Delivery reliability
 
