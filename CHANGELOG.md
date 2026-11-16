@@ -22,6 +22,14 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 - A base-source check with no verdict (timed out or unavailable) is named in
   the Prove outcome and the Land report instead of passing silently, and a
   repository whose product code changed with no test provider is a repair.
+- Land writes `verification.md` beside the archived proposal: the proof run
+  Land accepted and one row per receipt (provider, claims, status, observed
+  result, command, duration, receipt SHA-256), advisories, and whether a
+  review record exists, so the evidence summary travels with Git. Log paths,
+  environment values, and `.foundation/` paths are left out, and an
+  unreadable receipt is listed as `unavailable`. Land refuses a packet that
+  already contains `verification.md`; a resumed Land writes the same file
+  once and stops on an edited one, keeping it.
 
 ### Changed
 
