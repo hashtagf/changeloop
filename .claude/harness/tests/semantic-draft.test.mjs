@@ -360,6 +360,8 @@ test("draft inspection persists source freshness and blocks stale compilation", 
   writeFileSync(join(root, "README.md"), "first\n");
   writeFileSync(join(root, "ignored-output.json"), "x".repeat(300_000));
   const source = semanticDraftV4({ integrations: [], securityTriggers: [], scratch: APPROVER_SCRATCH });
+  // Each scenario names the test file that proves it.
+  for (const task of source.tasks) task.paths = [...task.paths, "test/**"];
   source.discovery.coverage = source.discovery.coverage
     .filter((row) => ![
       "security-privacy", "permission-rejection", "integration-contract",
@@ -845,7 +847,7 @@ test("v4 semantic amendment records an optional discovery delta in proposal", (t
     }],
     addTasks: [{
       key: "handle-bounded-failure", outcome: "Handle the bounded failure",
-      covers: ["bounded-failure"], paths: ["src/**"], verify: "npm test"
+      covers: ["bounded-failure"], paths: ["src/**", "test/**"], verify: "npm test"
     }],
     evidence: { "bounded-failure": { capabilities: ["test"] } }
   };
@@ -1868,7 +1870,7 @@ test("semantic amendment revises an existing requirement in place", (t) => {
         outcome: "A runs at 50 per second"
       }],
       addTasks: [{ key: "rework-a", outcome: "Raise A throughput", covers: ["a"],
-        paths: ["src/**"], verify: "npm test" }],
+        paths: ["src/**", "test/**"], verify: "npm test" }],
       evidence: { a: { capabilities: ["test"] } }
     }
   });
@@ -2152,7 +2154,7 @@ function readableDraft(requirement, extra = {}) {
   value.requirements = [{ key: "payment-retry", capability: "payment-control",
     operation: "added", ...requirement }];
   value.tasks = [{ key: "implement-retry", outcome: "Implement retries",
-    covers: ["payment-retry"], paths: ["src/**"], verify: "npm test" }];
+    covers: ["payment-retry"], paths: ["src/**", "test/**"], verify: "npm test" }];
   value.evidence = { "payment-retry": { capabilities: ["test"] } };
   delete value.integrations;
   return value;
@@ -2529,7 +2531,7 @@ test("the template shows per-work-type section shapes that compile cleanly", () 
   const examples = template.workTypeExamples;
   assert.ok(examples.ui.uiStates.length && examples.ui.componentMap.length && examples.api.apiContracts.length);
   const copied = { ...template, ...examples.ui, ...examples.api, ...examples.config,
-    tasks: [{ ...template.tasks[0], paths: ["src/**"] }] };
+    tasks: [{ ...template.tasks[0], paths: ["src/**", "test/**"] }] };
   assert.deepEqual(designBlueprintWarnings(copied).filter((row) => /placeholder|missing/.test(row)), []);
   assert.deepEqual(devDocumentShapeIssues(copied), []);
   assert.match(template.userFlow.source, /A\["User acts"\]/);
@@ -2873,7 +2875,7 @@ test("an amendment adding a new capability states its Purpose and a revise keeps
       ],
       reviseRequirements: [{ key: "show-three-fixed-columns", capability: "kanban-board",
         scenario: "Page opens", outcome: "Four columns show" }],
-      addTasks: [{ key: "archive", outcome: "Archive cards", paths: ["src/**"], verify: "npm test",
+      addTasks: [{ key: "archive", outcome: "Archive cards", paths: ["src/**", "test/**"], verify: "npm test",
         covers: ["archive-done-cards", "session-expiry", "show-three-fixed-columns"] }],
       evidence: { "archive-done-cards": { capabilities: ["test"] },
         "session-expiry": { capabilities: ["test"] },
@@ -3393,7 +3395,7 @@ function startFixture(t) {
         outcome: "The bounded result is returned"
       }],
       tasks: [{ key: "implement-bounded-result", outcome: "Implement the bounded result",
-        covers: ["bounded-result"], paths: ["src/**"], verify: "npm test" }],
+        covers: ["bounded-result"], paths: ["src/**", "test/**"], verify: "npm test" }],
       evidence: { "bounded-result": { capabilities: ["test"] } },
       ...overrides
     });

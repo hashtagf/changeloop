@@ -236,7 +236,7 @@ test("revise --merge on a minimal draft derives keys for added rows and needs a 
     id: "revisable-change", intent: "Reject empty note titles",
     requirements: [{ description: "The system SHALL reject a note whose title is empty",
       scenarios: [{ when: "a user submits an empty title", then: "the note is not created" }] }],
-    tasks: [{ outcome: "Validate note titles", verify: "npm test", paths: ["src/note.js"] }]
+    tasks: [{ outcome: "Validate note titles", verify: "npm test", paths: ["src/note.js", "test/**"] }]
   });
   const [prior] = value.state().draftSource.draft.requirements;
   const [task] = value.state().draftSource.draft.tasks;
@@ -271,7 +271,7 @@ test("revise --merge on a minimal v5 draft derives keys and keeps version 5", (t
     version: 5, id: "revisable-change", intent: "Reject empty note titles",
     requirements: [{ description: "The system SHALL reject a note whose title is empty",
       scenarios: [{ when: "a user submits an empty title", then: "the note is not created" }] }],
-    tasks: [{ outcome: "Validate note titles", verify: "npm test", paths: ["src/note.js"] }]
+    tasks: [{ outcome: "Validate note titles", verify: "npm test", paths: ["src/note.js", "test/**"] }]
   });
   assert.equal(value.state().draftSource.draft.version, 5);
   const [prior] = value.state().draftSource.draft.requirements;
@@ -293,7 +293,7 @@ test("revise --merge refuses a patch that changes the draft version", (t) => {
     id: "revisable-change", intent: "Reject empty note titles",
     requirements: [{ description: "The system SHALL reject a note whose title is empty",
       scenarios: [{ when: "a user submits an empty title", then: "the note is not created" }] }],
-    tasks: [{ outcome: "Validate note titles", verify: "npm test", paths: ["src/note.js"] }]
+    tasks: [{ outcome: "Validate note titles", verify: "npm test", paths: ["src/note.js", "test/**"] }]
   });
   const before = snapshot(value.root);
   assert.throws(() => value.revise({ version: 5 }, { merge: true }),
@@ -427,7 +427,7 @@ test("a clean version-4 revision inspects and revises in one call", (t) => {
         then: "50 messages per second are accepted" }],
       outcome: "The service accepts 50 messages per second" }],
     tasks: [{ key: "implement", outcome: "Implement the requirement", covers: ["throughput"],
-      paths: ["src/**"], verify: "npm test" }],
+      paths: ["src/**", "test/**"], verify: "npm test" }],
     evidence: { throughput: { capabilities: ["test"] } }
   };
   value.revise(draft);
@@ -806,7 +806,7 @@ function folderDraft(outcome = "The service accepts 20 messages per second") {
     scratch: APPROVER_SCRATCH,
     requirements: rows,
     tasks: [{ key: "implement", outcome: "Implement the requirements",
-      covers: rows.map((row) => row.key), paths: ["src/**"], verify: "npm test" }],
+      covers: rows.map((row) => row.key), paths: ["src/**", "test/**"], verify: "npm test" }],
     evidence: Object.fromEntries(rows.map((row) => [row.key, { capabilities: ["test"] }]))
   };
 }

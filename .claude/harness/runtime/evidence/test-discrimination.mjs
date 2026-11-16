@@ -9,6 +9,7 @@ import { providerExecutionEnvironment } from "./adapter-runtime.mjs";
 import { providerTimeoutMs } from "./provider-catalog.mjs";
 import { environmentIdentity, taskCheckArgv } from "./task-check-evidence.mjs";
 import { spawnCapturedAsync } from "./configured-reviewer.mjs";
+import { scopeAllowsPath } from "../core/graph-execution.mjs";
 // Work whose tests should pass before and after the change.
 import { BEHAVIOR_NEUTRAL_WORK } from "../contracts/work-types.mjs";
 
@@ -126,11 +127,74 @@ export function baseRunOutcome(result) {
   return result.status === 0 ? "passes-on-base" : "fails-on-base";
 }
 
+// ---- Scenario binding ---------------------------------------------------------
+// Change records which test files prove each scenario (scenarioTestBinding on
+// the runtime state). A change compiled before the binding has none and keeps
+// the per-repository judgment.
+
+const GLOB = /[*?{}[\]]/;
+
+export function bindingRows(state) {
+  const record = state?.scenarioTestBinding;
+  return record?.version === 1 && Array.isArray(record.rows) ? record.rows : null;
+}
+
+/** Binding rows whose files name or match `file`. */
+export function boundScenarios(binding, file) {
+  return (binding || []).filter((row) => (row.files || []).some((pattern) =>
+    pattern === file || scopeAllowsPath(pattern, file)));
+}
+
+/** Literal bound test files that are not files in the workspace, with their scenarios. */
+export function missingBoundFiles(binding, workspace) {
+  const missing = new Map();
+  for (const row of binding || []) for (const path of row.files || []) {
+    if (GLOB.test(path) || lstatSync(join(workspace, path), { throwIfNoEntry: false })?.isFile()) continue;
+    missing.set(path, [...(missing.get(path) || []), row.scenario]);
+  }
+  return [...missing].map(([path, scenarios]) => ({ path, scenarios }));
+}
+
+const NO_VERDICT = new Set(["timed-out", "unavailable", "test-provider-not-runnable-on-base"]);
+
+/**
+ * One repository outcome from its base runs. Aggregated: the single run's
+ * outcome. Per file: a passing file bound to a non-regression scenario is a
+ * finding even when another file fails on base; files bound only to
+ * regression scenarios may pass on base.
+ */
+export function combineBaseRuns(row, jobs, binding) {
+  const files = jobs.flatMap((job) => job.files.map((file) => ({ file, outcome: job.outcome })));
+  if (!row.perFile) return { ...row, outcome: jobs[0]?.outcome || "unavailable" };
+  const judged = [], undecided = [];
+  let fails = false, guard = false, noVerdict = null;
+  for (const { file, outcome } of files) {
+    if (outcome === "fails-on-base") fails = true;
+    else if (NO_VERDICT.has(outcome)) {
+      noVerdict ||= outcome;
+      undecided.push({ file, reason: outcome });
+    }
+    else if (outcome === "passes-on-base") {
+      const scenarios = boundScenarios(binding, file);
+      if (scenarios.length && scenarios.every((scenario) => scenario.regression)) guard = true;
+      else if (scenarios.length) judged.push({ file, scenarios: scenarios
+        .filter((scenario) => !scenario.regression).map((scenario) => scenario.scenario) });
+    }
+  }
+  if (judged.length) return { ...row, files, outcome: "passes-on-base",
+    testFiles: judged.map((entry) => entry.file),
+    scenarios: [...new Set(judged.flatMap((entry) => entry.scenarios))] };
+  const outcome = fails ? "fails-on-base" : noVerdict || (guard ? "regression-guard" : "passes-on-base");
+  // A file without a verdict stays visible even when a sibling fails on base.
+  return { ...row, files, outcome, ...(undecided.length ? { undecided } : {}) };
+}
+
 export function discriminationFinding(row) {
   const files = row.testFiles || [];
   const base = String(row.baseHead || "").slice(0, 12);
+  const scenarios = row.scenarios?.length ? ` (scenario: ${row.scenarios.join("; ")})` : "";
   const message = files.length
-    ? `test file(s) ${files.join(", ")} in repository '${row.repositoryId}' pass on the original code (base ${base}), so they do not verify the change; add or strengthen a test that fails without the change and passes with it`
+    ? `test file(s) ${files.join(", ")}${scenarios} in repository '${row.repositoryId}' pass on the original code (base ${base}), so they do not verify the change; add or strengthen a test that fails without the change and passes with it`
     : `no test in repository '${row.repositoryId}' fails on the original code (base ${base}), so the passing suite does not verify the change; add a test that fails without the change and passes with it`;
   return {
     id: `test-discrimination:${row.repositoryId}`,
@@ -144,9 +208,64 @@ export function discriminationFinding(row) {
   };
 }
 
+export function missingBoundFinding(row) {
+  return {
+    id: `test-discrimination-missing:${row.repositoryId}`,
+    provider: row.provider,
+    classification: "product",
+    severity: "error",
+    rootCause: "bound-test-missing",
+    message: `test file(s) bound to scenarios do not exist in repository '${row.repositoryId}': ` +
+      row.missingBound.map((entry) => `${entry.path} (scenario: ${entry.scenarios.join("; ")})`).join(", ") +
+      "; create each test so it fails without the change and passes with it",
+    paths: row.missingBound.map((entry) => entry.path),
+    repositoryId: row.repositoryId
+  };
+}
+
+export function missingProviderFinding(row) {
+  return {
+    id: `test-discrimination-provider:${row.repositoryId}`,
+    provider: null,
+    classification: "product",
+    severity: "error",
+    rootCause: "no-test-provider",
+    message: `repository '${row.repositoryId}' changes product code but has no test provider, so no test can show the change differs from the original code; add the test evidence capability for it through a change amendment (cloop change amend --template)`,
+    paths: [],
+    repositoryId: row.repositoryId
+  };
+}
+
+export function discriminationFindings(rows) {
+  return [
+    ...rows.filter((row) => row.outcome === "passes-on-base").map(discriminationFinding),
+    ...rows.filter((row) => row.missingBound?.length).map(missingBoundFinding),
+    ...rows.filter((row) => row.outcome === "no-test-provider").map(missingProviderFinding)
+  ];
+}
+
+/** Repositories without a verdict: reported to the user, never a block. */
+export function inconclusiveRows(rows) {
+  return rows.flatMap((row) => {
+    const provider = row.provider ? { provider: row.provider } : {};
+    if (row.undecided?.length)
+      return row.undecided.map((entry) => ({ repositoryId: row.repositoryId, reason: entry.reason,
+        file: entry.file, ...provider }));
+    return NO_VERDICT.has(row.outcome)
+      ? [{ repositoryId: row.repositoryId, reason: row.outcome, ...provider }] : [];
+  });
+}
+
+export function inconclusiveLine(row) {
+  return `test discrimination (no verdict) in repository '${row.repositoryId}'${
+    row.file ? ` for ${row.file}` : ""}: ${row.reason}; ` +
+    "the tests were not shown to fail on the original code";
+}
+
 export function discriminationStatus(rows) {
-  if (rows.some((row) => row.outcome === "passes-on-base")) return "fail";
-  if (rows.some((row) => row.outcome === "fails-on-base")) return "pass";
+  if (rows.some((row) => row.outcome === "passes-on-base" || row.outcome === "no-test-provider" ||
+    row.missingBound?.length)) return "fail";
+  if (rows.some((row) => ["fails-on-base", "regression-guard"].includes(row.outcome))) return "pass";
   return "not-applicable";
 }
 
@@ -219,17 +338,27 @@ export function createTestDiscriminationRuntime({
   receiptValidity, configuredCommand, fileDigest, stableHash, loadRuntime,
   spawnCommandSync = spawnSync, spawnCommandAsync = spawnCapturedAsync, environment = process.env
 }) {
+  // { provider, config }, { pending }, { ineligible } for a test provider this
+  // check cannot run on base (a service, readiness probe, several
+  // repositories, or another adapter), or null when the repository has none.
   function testProvider(id, repositoryId, hash) {
+    let ineligible = null;
     for (const provider of [...requiredProviders(id)].sort()) {
       const config = providerConfig(id, provider);
-      if (providerCapability(provider, config) !== "test" || !Array.isArray(config?.command) ||
-          !["command", "test-discovery"].includes(config.adapter) ||
-          config.service || config.readiness || config.repositories) continue;
-      if ((providerRepository(id, provider, config)?.id || "root") !== repositoryId) continue;
+      if (providerCapability(provider, config) !== "test") continue;
+      const repositories = Array.isArray(config?.repositories) ? config.repositories : [];
+      const own = (providerRepository(id, provider, config)?.id || "root") === repositoryId;
+      if (!own && !repositories.includes(repositoryId)) continue;
+      if (!Array.isArray(config?.command) || !["command", "test-discovery"].includes(config.adapter) ||
+          config.service || config.readiness || repositories.length) {
+        ineligible ||= provider;
+        continue;
+      }
+      if (!own) continue;
       if (receiptValidity(id, provider, hash).validity !== "valid") return { pending: provider };
       return { provider, config };
     }
-    return null;
+    return ineligible ? { ineligible } : null;
   }
 
   function cachePath(id, key) {
@@ -257,6 +386,8 @@ export function createTestDiscriminationRuntime({
     if (!productPaths.length) return { ...base, outcome: "no-product-change" };
     const selected = testProvider(id, repository.id, hash);
     if (!selected) return { ...base, outcome: "no-test-provider" };
+    if (selected.ineligible)
+      return { ...base, provider: selected.ineligible, outcome: "test-provider-not-runnable-on-base" };
     if (selected.pending) return { ...base, provider: selected.pending, outcome: "test-evidence-pending" };
     const { provider, config } = selected;
     const baseHead = repositoryBaseHead(repository, state);
@@ -267,49 +398,81 @@ export function createTestDiscriminationRuntime({
       lstatSync(join(workspace, row.path), { throwIfNoEntry: false })?.isFile())
       .map((row) => row.path);
     const built = configuredCommand(provider, config);
-    const scoped = segmentTestCommand(config, testFiles) || scopedTestCommand(built, testFiles);
-    const command = scoped || { command: built.command, args: built.args };
     const overlay = overlayRows(workspace, dirty, productPaths, fileDigest);
     const envFrom = Object.fromEntries((config.envFrom || [])
       .filter((name) => environment[name] !== undefined).map((name) => [name, environment[name]]));
     const additions = { ...envFrom, ...(config.env || {}), FOUNDATION_CHANGE_ID: id,
       FOUNDATION_REPOSITORY_ID: repository.id };
-    const key = stableHash({
+    const binding = bindingRows(state);
+    // A test file the agreement binds to a scenario must exist when Prove runs.
+    const missingBound = binding && repository.id === "root"
+      ? missingBoundFiles(binding, workspace) : [];
+    // With a binding, each changed test file is judged on its own, so a test
+    // that verifies nothing cannot hide behind another file that fails on base.
+    // Only possible when the runner takes one file at a time.
+    const perFile = binding && testFiles.length ? testFiles.map((file) => ({
+      files: [file], command: segmentTestCommand(config, [file]) || scopedTestCommand(built, [file])
+    })) : null;
+    const usePerFile = Boolean(perFile?.every((job) => job.command));
+    const aggregated = segmentTestCommand(config, testFiles) || scopedTestCommand(built, testFiles);
+    const jobs = usePerFile ? perFile.map((job) => ({ ...job, scoped: true }))
+      : [{ files: testFiles, command: aggregated || { command: built.command, args: built.args },
+        scoped: Boolean(aggregated) }];
+    const describe = (job) => [job.command.command, ...job.command.args].join(" ");
+    const row = { ...base, provider, baseHead, testFiles,
+      command: jobs.map(describe).join(" ; "), scoped: jobs.every((job) => job.scoped),
+      perFile: usePerFile, ...(missingBound.length ? { missingBound } : {}) };
+    const keyOf = (job) => stableHash({
       version: TEST_DISCRIMINATION_VERSION, repositoryId: repository.id, baseHead,
-      command: [command.command, ...command.args], env: config.env || {},
+      command: [job.command.command, ...job.command.args], env: config.env || {},
       envFrom: [...(config.envFrom || [])].sort(), overlay, productPaths,
       environment: environmentIdentity(
         providerExecutionEnvironment(environment, additions, workspace), stableHash)
     });
-    const row = { ...base, provider, baseHead, testFiles,
-      command: [command.command, ...command.args].join(" "), scoped: Boolean(scoped) };
-    const path = cachePath(id, key);
-    const prior = cached(path, key);
-    if (prior) return { ...row, outcome: prior.outcome, cached: true };
+    const planned = jobs.map((job) => {
+      const key = keyOf(job);
+      const prior = cached(cachePath(id, key), key);
+      return { ...job, key, outcome: prior?.outcome, cached: Boolean(prior) };
+    });
+    const settle = () => combineBaseRuns(row, planned, binding);
+    if (planned.every((job) => job.cached)) return { ...settle(), cached: true };
     const prepared = buildScratch(workspace, baseHead, overlay);
-    if (!prepared) return { ...row, outcome: "unavailable" };
+    if (!prepared) {
+      for (const job of planned) if (!job.cached) job.outcome = "unavailable";
+      return settle();
+    }
     const options = {
       cwd: prepared.tree, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
       timeout: providerTimeoutMs(config),
       env: providerExecutionEnvironment(environment, additions, prepared.tree)
     };
-    const finish = (result) => {
+    const finish = (job, result) => {
       const outcome = baseRunOutcome(result);
-      const log = join(LOGS, id, "test-discrimination", `${key}.log`);
+      const log = join(LOGS, id, "test-discrimination", `${job.key}.log`);
       mkdirSync(dirname(log), { recursive: true });
       writeFileSync(log, `exit=${result?.status ?? "error"}\n${result?.stdout || ""}${result?.stderr || ""}`);
       // Only a verdict is cached; an unavailable or timed-out run is retried.
       if (["passes-on-base", "fails-on-base"].includes(outcome))
-        record(path, { version: TEST_DISCRIMINATION_VERSION, key, changeId: id, ...row, outcome });
-      return { ...row, outcome };
+        record(cachePath(id, job.key), { version: TEST_DISCRIMINATION_VERSION, key: job.key,
+          changeId: id, ...base, provider, baseHead, testFiles: job.files,
+          command: describe(job), scoped: job.scoped, outcome });
+      job.outcome = outcome;
     };
     const cleanup = () => rmSync(prepared.scratch, { recursive: true, force: true });
+    const pending = planned.filter((job) => !job.cached);
     if (asynchronous) {
-      return Promise.resolve().then(() => spawnCommandAsync(command.command, command.args, options))
-        .then(finish).finally(cleanup);
+      return (async () => {
+        try {
+          for (const job of pending)
+            finish(job, await spawnCommandAsync(job.command.command, job.command.args, options));
+          return settle();
+        } finally { cleanup(); }
+      })();
     }
     try {
-      return finish(spawnCommandSync(command.command, command.args, options));
+      for (const job of pending)
+        finish(job, spawnCommandSync(job.command.command, job.command.args, options));
+      return settle();
     } finally {
       cleanup();
     }
@@ -332,8 +495,8 @@ export function createTestDiscriminationRuntime({
     const status = discriminationStatus(repositories);
     return {
       version: TEST_DISCRIMINATION_VERSION, status, workTypes, repositories,
-      findings: repositories.filter((row) => row.outcome === "passes-on-base")
-        .map(discriminationFinding)
+      findings: discriminationFindings(repositories),
+      inconclusive: inconclusiveRows(repositories)
     };
   }
 

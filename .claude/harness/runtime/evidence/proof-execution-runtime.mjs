@@ -765,17 +765,32 @@ export function createProofExecutionRuntime({
     // on; any other hash is evaluated again.
     const result = early?.workspaceHash === readiness.workspaceHash
       ? early.result : await testDiscrimination(id, readiness.workspaceHash);
+    recordInconclusiveDiscrimination(id, readiness.workspaceHash, result);
     if (result?.status !== "fail" || !result.findings?.length) return null;
     return stopProofAdvance(writeConvergentRepairStop(id, readiness, advanceStart, {
       gate: "evidence", stage: "tests-not-discriminating", findings: result.findings,
       failures: result.findings.map((finding) => ({
         provider: finding.provider, repositoryId: finding.repositoryId,
-        validity: "passes-on-base", reason: finding.message
+        validity: finding.rootCause === "tests-pass-on-base" ? "passes-on-base" : finding.rootCause,
+        reason: finding.message
       })),
       executedProviders,
       strategy: "strengthen-discriminating-tests",
       nextReason: "The change's tests pass on the original code, so they do not verify the change. Add or strengthen a test that fails without the change and passes with it, then resume this same gate"
     }));
+  }
+
+  // A behavior-changing run whose base check gave no verdict (timed out,
+  // base unavailable) is kept on the change so the Prove outcome and the Land
+  // report say the tests were not shown to fail on the original code.
+  function recordInconclusiveDiscrimination(id, workspaceHash, result) {
+    if (!result || !Array.isArray(result.repositories)) return;
+    const rows = Array.isArray(result.inconclusive) ? result.inconclusive : [];
+    const state = loadRuntime(id);
+    if (!rows.length && !state.testDiscrimination) return;
+    if (rows.length) state.testDiscrimination = { workspaceHash, recordedAt: now(), inconclusive: rows };
+    else delete state.testDiscrimination;
+    saveRuntime(state);
   }
 
   // What advisory providers reported this run, kept on the change so the

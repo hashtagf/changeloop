@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Every scenario of behavior-changing work must name the test file that
+  proves it (a `testMap` row or a test path in its task), and a product task's
+  `verify` must run tests, not only a no-op, lint, format, or typecheck
+  command. `change start`, `revise`, and `amend` return one EDIT naming each
+  gap. Prove then judges test discrimination per bound test file, so a test
+  that passes on the original code cannot hide behind another file that
+  fails; `regression: true` scenarios may pass on base, and a bound file that
+  does not exist is a repair.
+- A base-source check with no verdict (timed out or unavailable) is named in
+  the Prove outcome and the Land report instead of passing silently, and a
+  repository whose product code changed with no test provider is a repair.
+
 ### Changed
 
 - **Breaking:** the CLI is `cloop` only. Homebrew installs `bin/cloop` and no

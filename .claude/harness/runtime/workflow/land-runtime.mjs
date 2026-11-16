@@ -2,11 +2,14 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { validityRecovery } from "../evidence/receipt-validity.mjs";
 import { advisoryVisualLine, visualWaiverSummary } from "../evidence/visual-review.mjs";
+import { inconclusiveLine } from "../evidence/test-discrimination.mjs";
 
 // Advisory results the Land report names, labelled as not passing evidence.
 export function landAdvisoryLines(state) {
   const rows = state?.advisoryEvidence?.rows;
-  return Array.isArray(rows) ? rows.map(advisoryVisualLine) : [];
+  const inconclusive = state?.testDiscrimination?.inconclusive;
+  return [...(Array.isArray(rows) ? rows.map(advisoryVisualLine) : []),
+    ...(Array.isArray(inconclusive) ? inconclusive.map(inconclusiveLine) : [])];
 }
 import { MANUAL_APPLY_STATUS, targetHeadMovedDecision } from "./apply-recovery.mjs";
 import {

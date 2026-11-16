@@ -15,7 +15,7 @@ const resultPath = join(root, "task-result.json");
 const id = "task-proof";
 const node = {
   id: "task:T1", kind: "task", lifecycle: "build", repository: "root",
-  paths: ["src/**"], claims: ["claim-1"], resources: ["workspace:root"],
+  paths: ["src/**", "test/**"], claims: ["claim-1"], resources: ["workspace:root"],
   outputSchema: { name: "result", version: 1 }
 };
 const graph = {
@@ -25,7 +25,7 @@ const state = { graphExecutionVersion: 2, contractRevision: 4 };
 const validResult = {
   taskId: "T1", repository: "root", graphRevision: 3,
   graphIdentity: "graph-identity", contractRevision: 4,
-  paths: ["src/**"], claimIds: ["claim-1"],
+  paths: ["src/**", "test/**"], claimIds: ["claim-1"],
   outputSchema: { name: "result", version: 1 }, status: "observed",
   planDigest: "plan-digest", workspaceHash: "workspace-hash", leaseId: "lease-1",
   fencingGeneration: 1, executionAttempt: 1,

@@ -158,7 +158,7 @@ test("long appendix lists are counted instead of dumped", () => {
   const compiled = compile({
     requirements: keys.map((key) => ({ key, capability: "board",
       scenarios: [{ name: `Case ${key}`, when: "s" }], outcome: "o" })),
-    tasks: [{ key: "all", outcome: "All", covers: keys, paths: ["src/**"], verify: "npm test" }],
+    tasks: [{ key: "all", outcome: "All", covers: keys, paths: ["src/**", "test/**"], verify: "npm test" }],
     evidence: Object.fromEntries(keys.map((key) => [key, { capabilities: ["test"] }])),
     fileMap: undefined,
     discovery: {
@@ -227,7 +227,7 @@ test("assumptions and the architecture diagram render in design; open questions 
 test("file map keeps an explicit task column", () => {
   assert.deepEqual(fileMapWithTasks([{ path: "a.ts", tasks: ["T009"] }],
     [{ id: "T001", paths: ["a.ts"] }]), [{ path: "a.ts", tasks: ["T009"] }]);
-  assert.deepEqual(fileMapWithTasks([{ path: "src/x" }], [{ id: "T001", paths: ["src/**"] }]),
+  assert.deepEqual(fileMapWithTasks([{ path: "src/x" }], [{ id: "T001", paths: ["src/**", "test/**"] }]),
     [{ path: "src/x", tasks: ["T001"] }]);
   assert.deepEqual(fileMapWithTasks([{ path: "lib/**" }], [{ id: "T001", paths: ["lib/a.ts"] }]),
     [{ path: "lib/**", tasks: ["T001"] }]);

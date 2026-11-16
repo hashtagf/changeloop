@@ -242,7 +242,7 @@ test("lease: independent workspaces acquire atomically with increasing fencing",
   const plans = new Map([
     ["T001", { id: "T001", dependsOn: [], leaseKeys: ["path:root:src/api"], paths: ["src/api/**"], claims: [], repository: "root" }],
     ["T002", { id: "T002", dependsOn: [], leaseKeys: ["path:web:src/web"], paths: ["src/web/**"], claims: [], repository: "web" }],
-    ["T003", { id: "T003", dependsOn: [], leaseKeys: ["path:root:src"], paths: ["src/**"], claims: [], repository: "root" }]
+    ["T003", { id: "T003", dependsOn: [], leaseKeys: ["path:root:src"], paths: ["src/**", "test/**"], claims: [], repository: "root" }]
   ]);
   const runtime = createLeaseRuntime({
     leases: root, stableHash,
@@ -306,7 +306,7 @@ test("lease: a takeover under the same owner rejects the superseded generation's
   const plan = {
     dispatchable: true, planDigest: "p", graphRevision: "g", graphIdentity: "gi",
     contractRevision: 1, workspaceHash: "w",
-    tasks: [{ id: "T001", dependsOn: [], leaseKeys: ["path:root:src"], paths: ["src/**"], claims: [], repository: "root" }],
+    tasks: [{ id: "T001", dependsOn: [], leaseKeys: ["path:root:src"], paths: ["src/**", "test/**"], claims: [], repository: "root" }],
     graph: { nodes: [] }
   };
   const runtime = createLeaseRuntime({
@@ -364,7 +364,7 @@ test("lease: force recovery preserves task-local fencing across reacquisition", 
     dispatchable: true, planDigest: "p", graphRevision: "g", graphIdentity: "gi",
     contractRevision: 1, workspaceHash: "w",
     tasks: [{ id: "T001", dependsOn: [], leaseKeys: ["path:root:src"],
-      paths: ["src/**"], claims: [], repository: "root" }],
+      paths: ["src/**", "test/**"], claims: [], repository: "root" }],
     graph: { nodes: [] }
   };
   const runtime = createLeaseRuntime({

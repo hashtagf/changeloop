@@ -98,7 +98,7 @@ test("advance returns bounded Build work without invoking a model", () => {
     dispatch: { action: "run-in-session", packetCommand: "packet",
       task: { taskId: "T001" } },
     plan: { tasks: [{ id: "T001", text: "Implement behavior",
-      repository: "root", paths: ["src/**"] }] }
+      repository: "root", paths: ["src/**", "test/**"] }] }
   });
   assert.equal(value.action, "EDIT");
   assert.equal(value.legacyAction, "EXECUTE_TASK");
@@ -676,7 +676,7 @@ test("plain advance prepares the amended agreement before choosing work", async 
       return { action: "run-in-session", packetCommand: "packet", task: { taskId: "T002" } };
     },
     agentPlanValue: () => ({ tasks: [{ id: "T002", text: "New amended task",
-      repository: "root", paths: ["src/**"] }] }),
+      repository: "root", paths: ["src/**", "test/**"] }] }),
     relevantHash: () => "workspace-a", deliveredAiAttempts: () => [],
     authorityStatusValue: () => ({ requests: [] }),
     readJson: () => ({}), proofAdvancePath: () => "/proof.json", stableHash,
@@ -687,7 +687,7 @@ test("plain advance prepares the amended agreement before choosing work", async 
 });
 
 test("one coordinator read plans the task graph once for dispatch and Build", () => {
-  const plan = { tasks: [{ id: "T001", text: "Implement", repository: "root", paths: ["src/**"] }] };
+  const plan = { tasks: [{ id: "T001", text: "Implement", repository: "root", paths: ["src/**", "test/**"] }] };
   let plans = 0;
   const handed = [];
   const runtime = createAdvanceRuntime(advanceRuntimeDeps({
@@ -883,7 +883,7 @@ test("a weak host can finish by reading one action and calling its resume", asyn
     agentPlanValue: () => ({
       tasks: [{
         id: "T001", text: "Implement bounded behavior — verify: `npm test`",
-        paths: ["src/**"], repository: "root"
+        paths: ["src/**", "test/**"], repository: "root"
       }]
     }),
     relevantHash: () => "workspace-a",
@@ -899,7 +899,7 @@ test("a weak host can finish by reading one action and calling its resume", asyn
   }));
   const first = await runtime.advanceThrough("change-a", "archived");
   assert.equal(first.action, "EDIT");
-  assert.deepEqual(first.allowedPaths, ["src/**"]);
+  assert.deepEqual(first.allowedPaths, ["src/**", "test/**"]);
   assert.deepEqual(first.verification, ["npm test"]);
   assert.equal(first.resume, "cloop advance change-a --through archived");
   assert.ok(JSON.stringify(first).length < 8192, "action stays within the bounded host context");

@@ -1,0 +1,205 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "scenario-test-binding-bound",
+      "requirementKey": "scenario-test-binding",
+      "scenario": "ทุก scenario ผูกไฟล์ test",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "scenario-test-binding-unbound",
+      "requirementKey": "scenario-test-binding",
+      "scenario": "scenario ไม่มีไฟล์ test",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "scenario-test-binding-neutral",
+      "requirementKey": "scenario-test-binding",
+      "scenario": "งาน behavior-neutral ไม่ต้องผูก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "scenario-test-binding-amend-unbound",
+      "requirementKey": "scenario-test-binding",
+      "scenario": "amendment เพิ่ม scenario ที่ไม่ผูก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "per-file-discrimination-hidden",
+      "requirementKey": "per-file-discrimination",
+      "scenario": "test ที่ไม่ทดสอบซ่อนหลังไฟล์อื่น",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "per-file-discrimination-all-fail",
+      "requirementKey": "per-file-discrimination",
+      "scenario": "ทุกไฟล์ล้มบนโค้ดเดิม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "per-file-discrimination-regression",
+      "requirementKey": "per-file-discrimination",
+      "scenario": "ไฟล์ของ scenario regression ผ่านบนโค้ดเดิม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "per-file-discrimination-missing-file",
+      "requirementKey": "per-file-discrimination",
+      "scenario": "ไฟล์ test ที่ผูกไว้ไม่มีอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "per-file-discrimination-unscoped",
+      "requirementKey": "per-file-discrimination",
+      "scenario": "runner รับไฟล์ไม่ได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "per-file-discrimination-cached",
+      "requirementKey": "per-file-discrimination",
+      "scenario": "รันซ้ำโดยไม่เปลี่ยนอะไร",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-noop",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "verify ไม่มีผล",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-lint-only",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "verify เป็น lint",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-test-file",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "verify อ้างไฟล์ test",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-runner",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "verify เรียก test runner",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-docs-task",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "task เอกสารอย่างเดียว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-amend-noop",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "amendment แก้ verify เป็น echo",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "discrimination-no-verdict-visible-no-provider",
+      "requirementKey": "discrimination-no-verdict-visible",
+      "scenario": "ไม่มี test provider",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "discrimination-no-verdict-visible-timed-out",
+      "requirementKey": "discrimination-no-verdict-visible",
+      "scenario": "รันบนโค้ดเดิมเกินเวลา",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "discrimination-no-verdict-visible-unavailable",
+      "requirementKey": "discrimination-no-verdict-visible",
+      "scenario": "เตรียมโค้ดเดิมไม่ได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "discrimination-no-verdict-visible-verdict",
+      "requirementKey": "discrimination-no-verdict-visible",
+      "scenario": "มีคำตัดสิน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/verify-shape.test.mjs) && (node --test .claude/harness/tests/scenario-test-binding.test.mjs) && (node --test .claude/harness/tests/test-discrimination.test.mjs) && (node --test .claude/harness/tests/test-discrimination-verdict.test.mjs) && (bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/verify-shape.test.mjs",
+        "node --test .claude/harness/tests/scenario-test-binding.test.mjs",
+        "node --test .claude/harness/tests/test-discrimination.test.mjs",
+        "node --test .claude/harness/tests/test-discrimination-verdict.test.mjs",
+        "bash .claude/tests/docs/run-doc-consistency.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

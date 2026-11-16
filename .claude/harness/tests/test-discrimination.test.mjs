@@ -96,10 +96,12 @@ const GREET_CHANGE = {
 };
 
 function harness({ repositories, workTypes = ["feature"], spawns = [], logs,
-  command = ["node", "--test"], environment = null }) {
+  command = ["node", "--test"], environment = null, binding = null, providers = null,
+  timeoutMs = undefined }) {
   const byId = new Map(repositories.map((row) => [row.id, row]));
   const state = { repositories: Object.fromEntries(repositories.map((row) =>
-    [row.id, { baseHead: row.baseHead }])) };
+    [row.id, { baseHead: row.baseHead }])),
+    ...(binding ? { scenarioTestBinding: { version: 1, rows: binding } } : {}) };
   const surface = () => repositories.flatMap((row) => {
     const tracked = git(row.workspacePath, "diff", "--name-only", row.baseHead);
     const untracked = git(row.workspacePath, "ls-files", "--others", "--exclude-standard");
@@ -108,8 +110,8 @@ function harness({ repositories, workTypes = ["feature"], spawns = [], logs,
   });
   return createTestDiscriminationRuntime({
     LOGS: logs,
-    requiredProviders: () => repositories.map((row) => `test-${row.id}`),
-    providerConfig: () => ({ adapter: "command", command }),
+    requiredProviders: () => providers || repositories.map((row) => `test-${row.id}`),
+    providerConfig: () => ({ adapter: "command", command, ...(timeoutMs ? { timeoutMs } : {}) }),
     providerCapability: () => "test",
     providerRepository: (_id, provider) => byId.get(provider.slice(5)),
     selectedRepositories: () => repositories,
@@ -368,4 +370,102 @@ test("test discrimination, coverage notes, and dev documents read the one shared
   assert.equal(lightKind("package.json"), "dependency");
   assert.equal(taskChangeIssue({ workTypes: ["feature"], task: { id: "T1", paths: ["package.json"] },
     changedPaths: [] }), null);
+});
+
+// ---- Per-file judgment with a scenario binding ------------------------------
+const PASSES_ON_BASE = "import test from 'node:test';\nimport assert from 'node:assert/strict';\n" +
+  "import { greet } from '../src/greet.js';\ntest('mentions the name', () => assert.match(greet('Lin'), /Lin/));\n";
+const FAILS_ON_BASE = "import test from 'node:test';\nimport assert from 'node:assert/strict';\n" +
+  "import { greet } from '../src/greet.js';\ntest('formats', () => assert.equal(greet('Ada'), 'Hello, Ada!'));\n";
+const bound = (scenario, files, regression = false) =>
+  ({ claimId: scenario, requirementKey: "greet", scenario, regression, files });
+
+test("per-file-discrimination-hidden: a passing bound test cannot hide behind a file failing on base", (t) => {
+  const root = fixtureRoot(t);
+  const repo = repository(root, "root", GREET_BASE, { ...GREET_CHANGE,
+    "test/a.test.mjs": FAILS_ON_BASE, "test/b.test.mjs": PASSES_ON_BASE });
+  const binding = [bound("formats", ["test/a.test.mjs"]), bound("mentions name", ["test/b.test.mjs"])];
+  const spawns = [];
+  const result = harness({ repositories: [repo], spawns, binding, logs: join(root, "logs") })
+    .evaluate("change-a", "hash-a");
+  assert.equal(result.status, "fail");
+  assert.equal(result.findings.length, 1);
+  assert.deepEqual(result.findings[0].paths, ["test/b.test.mjs"]);
+  assert.match(result.findings[0].message, /test\/b\.test\.mjs \(scenario: mentions name\)/);
+  assert.doesNotMatch(result.findings[0].message, /a\.test\.mjs/);
+  // Each file ran alone on base.
+  assert.deepEqual(spawns.map((row) => row.args), [["--test", "test/a.test.mjs"], ["--test", "test/b.test.mjs"]]);
+  // Without a binding the same change keeps the per-repository judgment.
+  assert.equal(harness({ repositories: [repo], logs: join(root, "logs-legacy") })
+    .evaluate("change-a", "hash-a").status, "pass");
+});
+
+test("per-file-discrimination-all-fail: every file failing on base has no finding", (t) => {
+  const root = fixtureRoot(t);
+  const repo = repository(root, "root", GREET_BASE, { ...GREET_CHANGE,
+    "test/a.test.mjs": FAILS_ON_BASE, "test/c.test.mjs": FAILS_ON_BASE.replace("'formats'", "'formats again'") });
+  const result = harness({ repositories: [repo], logs: join(root, "logs"),
+    binding: [bound("formats", ["test/a.test.mjs", "test/c.test.mjs"])] }).evaluate("change-a", "hash-a");
+  assert.equal(result.status, "pass");
+  assert.deepEqual(result.findings, []);
+  assert.equal(result.repositories[0].outcome, "fails-on-base");
+});
+
+test("per-file-discrimination-regression: a file bound only to regression scenarios may pass on base", (t) => {
+  const root = fixtureRoot(t);
+  const repo = repository(root, "root", GREET_BASE, { ...GREET_CHANGE,
+    "test/a.test.mjs": FAILS_ON_BASE, "test/b.test.mjs": PASSES_ON_BASE });
+  const result = harness({ repositories: [repo], logs: join(root, "logs"), binding: [
+    bound("formats", ["test/a.test.mjs"]), bound("keeps the name", ["test/b.test.mjs"], true)] })
+    .evaluate("change-a", "hash-a");
+  assert.equal(result.status, "pass");
+  assert.deepEqual(result.findings, []);
+  // Only regression files changed: guarded, not a failure.
+  const only = repository(root, "only", GREET_BASE, { ...GREET_CHANGE, "test/b.test.mjs": PASSES_ON_BASE });
+  const guard = harness({ repositories: [only], logs: join(root, "logs-only"),
+    binding: [bound("keeps the name", ["test/b.test.mjs"], true)] }).evaluate("change-a", "hash-a");
+  assert.equal(guard.repositories[0].outcome, "regression-guard");
+  assert.equal(guard.status, "pass");
+});
+
+test("per-file-discrimination-missing-file: a bound test file that does not exist is a repair", (t) => {
+  const root = fixtureRoot(t);
+  const repo = repository(root, "root", GREET_BASE, { ...GREET_CHANGE, "test/a.test.mjs": FAILS_ON_BASE });
+  const result = harness({ repositories: [repo], logs: join(root, "logs"), binding: [
+    bound("formats", ["test/a.test.mjs"]), bound("reads config", ["tests/config.test.mjs"]),
+    bound("glob bound", ["test/**"])] }).evaluate("change-a", "hash-a");
+  assert.equal(result.status, "fail");
+  const finding = result.findings.find((row) => row.rootCause === "bound-test-missing");
+  assert.deepEqual(finding.paths, ["tests/config.test.mjs"]);
+  assert.match(finding.message, /tests\/config\.test\.mjs \(scenario: reads config\)/);
+});
+
+test("per-file-discrimination-unscoped: a runner that takes no files runs once, unscoped", (t) => {
+  const root = fixtureRoot(t);
+  const repo = repository(root, "root", GREET_BASE, { ...GREET_CHANGE,
+    "test/a.test.mjs": FAILS_ON_BASE, "test/b.test.mjs": PASSES_ON_BASE });
+  const spawns = [];
+  const result = harness({ repositories: [repo], spawns, logs: join(root, "logs"),
+    command: ["npm", "test"],
+    binding: [bound("formats", ["test/a.test.mjs"]), bound("mentions name", ["test/b.test.mjs"])] })
+    .evaluate("change-a", "hash-a");
+  assert.equal(spawns.length, 1);
+  assert.deepEqual(spawns[0].args, ["test"]);
+  assert.equal(result.repositories[0].scoped, false);
+  assert.equal(result.repositories[0].perFile, false);
+});
+
+test("per-file-discrimination-cached: an unchanged rerun reuses every per-file verdict", (t) => {
+  const root = fixtureRoot(t);
+  const repo = repository(root, "root", GREET_BASE, { ...GREET_CHANGE,
+    "test/a.test.mjs": FAILS_ON_BASE, "test/b.test.mjs": FAILS_ON_BASE.replace("'formats'", "'formats b'") });
+  const spawns = [];
+  const runtime = harness({ repositories: [repo], spawns, logs: join(root, "logs"),
+    binding: [bound("formats", ["test/a.test.mjs", "test/b.test.mjs"])] });
+  assert.equal(runtime.evaluate("change-a", "hash-a").status, "pass");
+  assert.equal(spawns.length, 2);
+  const again = runtime.evaluate("change-a", "hash-a");
+  assert.equal(again.status, "pass");
+  assert.equal(again.repositories[0].cached, true);
+  assert.equal(spawns.length, 2, "no base run repeats");
 });

@@ -49,12 +49,18 @@ import {
 } from "./semantic-intake-state.mjs";
 import {
   amendmentRepositoryOrderIssues, amendmentTaskRepositoryIssues, amendmentVerifyPathIssues,
-  compileSemanticAmendment,
+  amendmentVerifyShapeIssues, compileSemanticAmendment,
   semanticAmendmentTemplate, taskContractOnlyAmendment, taskRepositoryIssues, verifyPathIssues,
   writeSemanticAmendment
 } from "./semantic-amendment.mjs";
 import { amendmentInvestigationSource, investigationCoverageIssues,
   renderInvestigationCoverage } from "./validation/investigation-coverage.mjs";
+import { behaviorChangingTypes, verifyShapeIssues } from "./validation/verify-shape.mjs";
+import {
+  amendedScenarioTestBinding, amendmentScenarioBindingIssues, bindingRecord, scenarioBindingIssues,
+  scenarioTestBinding
+} from "./validation/scenario-test-binding.mjs";
+import { changeWorkTypes } from "./task-change.mjs";
 import { validateInvestigationBinding } from "./investigation-runtime.mjs";
 import {
   designBlueprintWarnings, verifyCountAdvisories
@@ -1540,6 +1546,8 @@ export function createChangeLifecycle({
     const workspaceRoot = active.workspace?.path && existsSync(active.workspace.path)
       ? active.workspace.path : root;
     const tasksPath = join(activeChangePath(id, active), "tasks.md");
+    const tasksContent = existsSync(tasksPath) ? readFileSync(tasksPath, "utf8") : "";
+    const workTypes = changeWorkTypes(activeChangePath(id, active));
     return inspectSemanticIntakeSource(amendmentIntakeSource(amendment), {
       statePath: semanticIntakeStatePath(amendmentPath, `amend:${id}`),
       resume: `cloop change amend ${id} ${amendmentPath} --inspect`,
@@ -1547,10 +1555,12 @@ export function createChangeLifecycle({
       validateCompiledDraft: false,
       excludedSourcePath: relative(root, path).replaceAll("\\", "/"),
       standardLane: active.schema === "foundation-standard",
-      extraIssues: [...amendmentVerifyPathIssues(amendment,
-        existsSync(tasksPath) ? readFileSync(tasksPath, "utf8") : "",
+      extraIssues: [...amendmentVerifyPathIssues(amendment, tasksContent,
         { exists: (candidate) => existsSync(join(workspaceRoot, candidate)) ||
           existsSync(join(root, candidate)) }),
+      ...amendmentVerifyShapeIssues(amendment, tasksContent, { workTypes }),
+      ...amendmentScenarioBindingIssues(amendment,
+        { behaviorChanging: behaviorChangingTypes(workTypes) }),
       ...amendmentRepositoryIssues(id, active, amendment),
       ...investigationCoverageIssues(amendmentInvestigationSource(
         active.investigationAgreement || active.draftSource?.draft, amendment)),
@@ -2039,6 +2049,10 @@ export function createChangeLifecycle({
       structural || !issue.includes("executable evidence wiring")), ...domainLanguageIssues(draft),
       // Caught here, in the same EDIT batch, instead of when Build runs the check.
       ...verifyPathIssues(draft.tasks, { exists: (path) => existsSync(join(root, path)) }),
+      // A task is ticked by its verify, and each scenario is proven by a test file.
+      ...verifyShapeIssues(draft.tasks, { workTypes: inferWorkTypes(draft) }),
+      ...scenarioBindingIssues(scenarioTestBinding(draft),
+        { behaviorChanging: behaviorChangingTypes(inferWorkTypes(draft)) }),
       // Build dispatches each task to its repository; a task whose files live
       // in a declared repository but is bound to root would build elsewhere.
       ...taskRepositoryIssues(draft.tasks, {
@@ -2132,6 +2146,7 @@ export function createChangeLifecycle({
           pending.requirementFingerprints = draftRequirementFingerprints(draft);
           // The compiled-from draft, so `change revise --merge` takes a patch.
           pending.draftSource = compiledDraftSource(pending, source);
+          pending.scenarioTestBinding = bindingRecord(scenarioTestBinding(draft));
         }
         if (completedIntakeEffectiveness)
           pending.semanticIntakeEffectiveness = completedIntakeEffectiveness;
@@ -2464,6 +2479,7 @@ export function createChangeLifecycle({
           storedBefore ? draftFingerprints : packetFingerprints(basePath));
         next.requirementFingerprints = draftFingerprints;
         next.draftSource = compiledDraftSource(next, source);
+        next.scenarioTestBinding = bindingRecord(scenarioTestBinding(draft));
         if (!carrySpecApproval(prior, next, id, delta, "pre-build-revision")) {
           if (prior.pendingApprovalDelta) next.pendingApprovalDelta = prior.pendingApprovalDelta;
           recordApprovalDelta(next, delta);
@@ -2801,6 +2817,15 @@ export function createChangeLifecycle({
         for (const key of compiled.removedRequirementKeys) delete fingerprints[key];
         nextState.requirementFingerprints = fingerprints;
       }
+      // Prove judges per bound file only through this binding, so an amendment
+      // that adds a scenario or a test path must update it.
+      if (priorState.scenarioTestBinding?.rows)
+        nextState.scenarioTestBinding = bindingRecord(amendedScenarioTestBinding(
+          priorState.scenarioTestBinding.rows, {
+            draft: compiled.bindingDraft, testMap: amendment.testMap,
+            ledgerTasks: taskBlocks(compiled.tasksContent).map(taskMetadata),
+            retiredClaimIds: [...compiled.removedClaimIds, ...compiled.changedClaimIds]
+          }));
       // A proven candidate is still amendable until Land begins. Re-enter
       // Build so advance dispatches added tasks and re-finalizes this revision;
       // the prior proof and Land grant cannot authorize the amended packet.

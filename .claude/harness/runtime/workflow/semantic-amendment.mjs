@@ -19,6 +19,7 @@ import { amendmentCompileVersion, isRecordedSemanticVersion } from "./validation
 import { DESIGN_FIELDS } from "./validation/design-blueprints.mjs";
 import { PROCESS_FIELDS } from "./validation/process-fields.mjs";
 import { unique } from "../core/values.mjs";
+import { verifyShapeIssues } from "./validation/verify-shape.mjs";
 
 const stringList = (value) => Array.isArray(value)
   ? value.map((item) => String(item || "").trim()).filter(Boolean) : [];
@@ -561,6 +562,25 @@ export function verifyPathIssues(tasks, { exists, scopes = [], label = "task" } 
     }
   });
   return issues;
+}
+
+/** Added tasks and tasks whose verify an amendment changes, with their effective paths. */
+function amendmentVerifyRows(amendment, tasksContent) {
+  const lines = String(tasksContent || "").split("\n").filter((line) => taskId(line));
+  const existing = new Map(lines.map((line) => [semanticTaskKey(line) || taskId(line), line]));
+  const updated = amendmentList(amendment, "updateTasks").filter((task) =>
+    task && hasField(task, "verify")).map((task) => {
+    const line = existing.get(keyOf(task)) || existing.get(String(task.key || "").toUpperCase());
+    return { key: keyOf(task), verify: task.verify,
+      paths: hasField(task, "paths") ? task.paths : line ? taskPaths(line) : [] };
+  });
+  return [...amendmentList(amendment, "addTasks"), ...updated];
+}
+
+/** Verify-shape repairs for an amendment's added and verify-changing tasks. */
+export function amendmentVerifyShapeIssues(amendment, tasksContent, { workTypes }) {
+  return verifyShapeIssues(amendmentVerifyRows(amendment, tasksContent),
+    { workTypes, label: "amendment task" });
 }
 
 /** The same check for an amendment's added and updated tasks. */
@@ -1389,6 +1409,8 @@ export function compileSemanticAmendment({
       priorScenarios: priorScenarios(keyOf(row))
     })),
     discovery: normalized.draft.discovery,
+    // The compiled added and revised requirements, for the scenario-test binding.
+    bindingDraft: normalized.draft,
     investigationAgreement,
     amendmentReason: amendment.reason || "Agreement expanded during Build",
     // Outline sections this amendment replaces in place (design.md, proposal.md).

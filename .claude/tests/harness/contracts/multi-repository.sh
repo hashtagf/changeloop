@@ -621,7 +621,7 @@ sibling_draft() { # <repository-of-the-sibling-task> <selection-json>
   node -e '
     const [repository, selection] = process.argv.slice(1);
     const task = (key, repo) => ({ key, repository: repo, outcome: `Mark ${key}`,
-      covers: ["marker"], paths: ["src/**"], verify: "npm test" });
+      covers: ["marker"], paths: ["src/**", "test/**"], verify: "npm test" });
     console.log(JSON.stringify({ version: 4, id: "sibling-marker",
       intent: "Mark every repository", impact: "low", coupling: "isolated",
       why: "Every repository exposes the marker.",

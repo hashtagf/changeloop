@@ -64,7 +64,7 @@ test("each EDIT task check is a pre-allowed command while the bare runner is not
       groups: [verifies.map((_, index) => `T00${index + 1}`)],
       tasks: verifies.map((verify, index) => ({
         id: `T00${index + 1}`, text: `Task — verify: \`${verify}\``,
-        repository: "root", paths: ["src/**"]
+        repository: "root", paths: ["src/**", "test/**"]
       }))
     }
   });

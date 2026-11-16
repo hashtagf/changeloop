@@ -53,7 +53,7 @@ function runtimeWith({ providers, grep = {}, repositories = ["root"] }) {
       loadRuntime: () => ({}),
       taskBlocks: () => [{ id: "T001" }],
       activeChangePath: () => packet,
-      taskMetadata: () => ({ repository: "root", paths: ["src/**"] }),
+      taskMetadata: () => ({ repository: "root", paths: ["src/**", "test/**"] }),
       canonicalChangedSurface: () => [],
       selectedRepositories: () => repositories.map((id) => ({
         id, mode: "write", workspacePath: workspaceFor(id)

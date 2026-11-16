@@ -3,7 +3,7 @@ import { requireDeps } from "../core/required-deps.mjs";
 import { grantVisualRepair, repairActionForWorkspace } from "../evidence/repair-runtime.mjs";
 import { recordVisualDriftWaiver } from "./change-validation.mjs";
 import { advisoryVisualLine } from "../evidence/visual-review.mjs";
-import { behaviorChangingWork } from "../evidence/test-discrimination.mjs";
+import { behaviorChangingWork, inconclusiveLine } from "../evidence/test-discrimination.mjs";
 import { changeWorkTypes } from "./task-change.mjs";
 import { proofCursorToken } from "../evidence/proof-execution-runtime.mjs";
 import { isProcessAlive } from "../core/process-lock.mjs";
@@ -1274,11 +1274,19 @@ export function createAdvanceRuntime({
     } catch { return []; }
   }
 
+  function inconclusiveDiscrimination(id) {
+    try {
+      const rows = loadRuntime(id).testDiscrimination?.inconclusive;
+      return Array.isArray(rows) ? rows : [];
+    } catch { return []; }
+  }
+
   function done(id, stage, through) {
     const next = stage === "build" ? resume(id, "proven")
       : stage === "proven" ? resume(id, "archived") : null;
     const specGaps = stage === "build" ? [] : reviewSpecGaps(id);
     const advisory = stage === "build" ? [] : advisoryEvidenceRows(id);
+    const inconclusive = stage === "build" ? [] : inconclusiveDiscrimination(id);
     return envelope(id, "DONE", {
       legacyAction: stage === "archived" ? "ARCHIVED" : "TARGET_REACHED",
       reason: `${stage} target reached`, completed: true, reached: stage,
@@ -1287,6 +1295,10 @@ export function createAdvanceRuntime({
       // Reported for the user; advisory results never count as passing evidence.
       ...(advisory.length ? { advisoryEvidence: {
         passingEvidence: false, rows: advisory, summary: advisory.map(advisoryVisualLine)
+      } } : {}),
+      // Behavior-changing tests whose base run gave no verdict, named for the user.
+      ...(inconclusive.length ? { testDiscrimination: {
+        verdict: "none", rows: inconclusive, summary: inconclusive.map(inconclusiveLine)
       } } : {}),
       next
     });

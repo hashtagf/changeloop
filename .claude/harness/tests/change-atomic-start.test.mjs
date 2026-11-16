@@ -42,7 +42,7 @@ function draft(overrides = {}) {
     }],
     tasks: [{
       key: "implement-atomic-start", outcome: "Implement atomically",
-      covers: ["atomic-outcome"], paths: ["src/**"], verify: "npm test"
+      covers: ["atomic-outcome"], paths: ["src/**", "test/**"], verify: "npm test"
     }],
     ...overrides
   };
@@ -159,7 +159,7 @@ test("v4 start persists completed intake effectiveness before deleting its snaps
     }],
     tasks: [{
       key: "implement-semantic-outcome", outcome: "Implement the bounded result",
-      covers: ["semantic-outcome"], paths: ["src/**"], verify: "npm test"
+      covers: ["semantic-outcome"], paths: ["src/**", "test/**"], verify: "npm test"
     }],
     evidence: { "semantic-outcome": { capabilities: ["test"] } }
   };
@@ -197,7 +197,7 @@ function minimalRapidV4(overrides = {}) {
     }],
     tasks: [{
       key: "implement-bounded-result", outcome: "Implement the bounded result",
-      covers: ["bounded-result"], paths: ["src/**"], verify: "npm test"
+      covers: ["bounded-result"], paths: ["src/**", "test/**"], verify: "npm test"
     }],
     evidence: { "bounded-result": { capabilities: ["test"] } },
     ...overrides
@@ -429,7 +429,7 @@ function rapidWithoutEvidence(overrides = {}) {
     }],
     tasks: [{
       key: "implement-derived-result", outcome: "Implement the derived result",
-      covers: ["derived-result"], paths: ["src/**"], verify: "npm test"
+      covers: ["derived-result"], paths: ["src/**", "test/**"], verify: "npm test"
     }],
     ...overrides
   };
@@ -509,7 +509,7 @@ test("a minimal draft without version compiles and starts in one call", (t) => {
       description: "The system SHALL reject a note whose title is empty",
       scenarios: [{ when: "a user submits an empty title", then: "the note is not created" }]
     }],
-    tasks: [{ outcome: "Validate note titles", verify: "npm test", paths: ["src/note.js"] }]
+    tasks: [{ outcome: "Validate note titles", verify: "npm test", paths: ["src/note.js", "test/**"] }]
   });
   const { output } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
   assert.match(output, /^AGREED reject-empty-note-titles/m);
@@ -536,7 +536,7 @@ function idlessDraft(intent, overrides = {}) {
     }],
     tasks: [{
       key: "implement-amendment-replaces", outcome: "Implement the bounded result",
-      covers: ["amendment-replaces"], paths: ["src/**"], verify: "npm test"
+      covers: ["amendment-replaces"], paths: ["src/**", "test/**"], verify: "npm test"
     }],
     evidence: { "amendment-replaces": { capabilities: ["test"] } },
     ...overrides
@@ -602,7 +602,7 @@ test("a rapid minimal draft compiles a delta spec that archive merges into opens
           then: "the column shows an empty state" }
       ]
     }],
-    tasks: [{ outcome: "Build the board page", verify: "npm test", paths: ["index.html"] }],
+    tasks: [{ outcome: "Build the board page", verify: "npm test", paths: ["index.html", "test/**"] }],
     decisions: [{ key: "stack", choice: "Plain HTML and JavaScript", reason: "No build step" }]
   });
   const { output } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
@@ -738,8 +738,8 @@ test("a minimal draft with ambiguous covers returns one EDIT naming covers", (t)
         scenarios: [{ when: "a title has double spaces", then: "one space is stored" }] }
     ],
     tasks: [
-      { outcome: "Trim the title", verify: "npm test", paths: ["src/note.js"] },
-      { outcome: "Collapse repeated spaces", verify: "npm test", paths: ["src/note.js"] }
+      { outcome: "Trim the title", verify: "npm test", paths: ["src/note.js", "test/**"] },
+      { outcome: "Collapse repeated spaces", verify: "npm test", paths: ["src/note.js", "test/**"] }
     ]
   });
   const { result } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
@@ -767,7 +767,7 @@ test("a minimal draft joins an existing capability or asks which one", (t) => {
       description: "The system SHALL send a weekly digest",
       scenarios: [{ when: "a week ends", then: "a digest is sent" }]
     }],
-    tasks: [{ outcome: "Send digests", verify: "npm test", paths: ["src/digest.js"] }]
+    tasks: [{ outcome: "Send digests", verify: "npm test", paths: ["src/digest.js", "test/**"] }]
   });
   const { result } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
   assert.equal(result.action, "EDIT");
@@ -781,7 +781,7 @@ test("a minimal draft joins an existing capability or asks which one", (t) => {
       description: "The system SHALL reject a note whose title is empty",
       scenarios: [{ when: "a user submits an empty title", then: "the note is not created" }]
     }],
-    tasks: [{ outcome: "Validate note titles", verify: "npm test", paths: ["src/notes/title.js"] }]
+    tasks: [{ outcome: "Validate note titles", verify: "npm test", paths: ["src/notes/title.js", "test/**"] }]
   });
   const { output } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
   assert.match(output, /^AGREED reject-empty-note-titles/m);
@@ -794,7 +794,7 @@ test("a verify naming a test file nobody creates is an EDIT at start", (t) => {
   const value = fixture(t);
   const missing = minimalRapidV4({ tasks: [{
     key: "implement-bounded-result", outcome: "Implement the bounded result",
-    covers: ["bounded-result"], paths: ["src/**"],
+    covers: ["bounded-result"], paths: ["src/**", "test/**"],
     verify: "node --test tests/bounded-result.test.mjs"
   }] });
   writeJson(value.draftPath, missing);
@@ -817,7 +817,7 @@ test("an existing test file named by verify needs no task path", (t) => {
   writeFileSync(join(value.root, "tests", "bounded.test.mjs"), "");
   writeJson(value.draftPath, minimalRapidV4({ tasks: [{
     key: "implement-bounded-result", outcome: "Implement the bounded result",
-    covers: ["bounded-result"], paths: ["src/**"],
+    covers: ["bounded-result"], paths: ["src/**", "test/**"],
     verify: "node --test ./tests/bounded.test.mjs && npm test -- tests/bounded.test.mjs:12"
   }] }));
   assert.match(captureLog(() => value.lifecycle.startAtomic(value.draftPath)).output,
@@ -833,7 +833,7 @@ test("verify path references skip commands that change directory", () => {
   assert.deepEqual(verifyPathIssues([{ key: "a", verify: "node --test tests/x.test.mjs",
     repository: "api" }], { exists: () => false }), []);
   assert.deepEqual(amendmentVerifyPathIssues({
-    addTasks: [{ key: "added", verify: "node --test tests/new.test.mjs", paths: ["src/**"] }],
+    addTasks: [{ key: "added", verify: "node --test tests/new.test.mjs", paths: ["src/**", "test/**"] }],
     updateTasks: [{ key: "existing", verify: "node --test tests/old.test.mjs" }]
   }, "- [ ] **T001** Existing [key:existing] [paths:tests/old.test.mjs] — verify: `npm test`\n",
   { exists: () => false }), [
@@ -873,7 +873,7 @@ test("a task whose files live in a declared repository must name it", (t) => {
   const exists = () => false;
   // Bound to root (no repository): paths and a cd into the submodule are both repairs.
   const unbound = taskRepositoryIssues([{
-    semanticKey: "api-handler", paths: ["services/hook/hook-api/internal/**"],
+    semanticKey: "api-handler", paths: ["services/hook/hook-api/internal/**", "test/**"],
     verify: "cd services/hook/hook-api && go test ./..."
   }], { repositories, exists });
   assert.match(unbound.join("\n"),
@@ -883,7 +883,7 @@ test("a task whose files live in a declared repository must name it", (t) => {
   // Bound to the repository but still written from the control root.
   const rooted = taskRepositoryIssues([{
     semanticKey: "api-handler", repository: "hook-api",
-    paths: ["services/hook/hook-api/internal/**"],
+    paths: ["services/hook/hook-api/internal/**", "test/**"],
     verify: "cd services/hook/hook-api && go test ./..."
   }], { repositories, selection: [{ id: "hook-api", mode: "write" }], exists });
   assert.match(rooted.join("\n"),
@@ -891,25 +891,25 @@ test("a task whose files live in a declared repository must name it", (t) => {
   assert.match(rooted.join("\n"),
     /verify changes into 'services\/hook\/hook-api', but verify already runs from repository 'hook-api'/);
   // Another repository, or a directory outside the task repository, cannot run.
-  assert.match(taskRepositoryIssues([{ semanticKey: "x", repository: "hook-api", paths: ["a/**"],
+  assert.match(taskRepositoryIssues([{ semanticKey: "x", repository: "hook-api", paths: ["a/**", "test/**"],
     verify: "cd ../hook-worker && go test ./..." }],
   { repositories, selection: ["hook-api"], exists }).join("\n"),
   /verify changes into '\.\.\/hook-worker', outside repository 'hook-api'/);
-  assert.match(taskRepositoryIssues([{ semanticKey: "x", repository: "hook-api", paths: ["a/**"],
+  assert.match(taskRepositoryIssues([{ semanticKey: "x", repository: "hook-api", paths: ["a/**", "test/**"],
     verify: "cd services/hook/hook-worker && go test ./..." }],
   { repositories, selection: ["hook-api"], exists }).join("\n"),
   /which is repository 'hook-worker'; verify runs from repository 'hook-api'/);
   // A real subdirectory of the task repository with the same name is allowed.
   assert.deepEqual(taskRepositoryIssues([{ semanticKey: "x", repository: "hook-api",
-    paths: ["a/**"], verify: "cd services/hook/hook-api && go test ./..." }],
+    paths: ["a/**", "test/**"], verify: "cd services/hook/hook-api && go test ./..." }],
   { repositories, selection: ["hook-api"],
     exists: (path) => path === "/project/services/hook/hook-api/services/hook/hook-api" }), []);
   // Selection: a named repository must be selected, and a multi-repository
   // draft binds every task.
-  assert.match(taskRepositoryIssues([{ semanticKey: "x", repository: "hook-api", paths: ["a/**"],
+  assert.match(taskRepositoryIssues([{ semanticKey: "x", repository: "hook-api", paths: ["a/**", "test/**"],
     verify: "go test -v ./..." }], { repositories, exists }).join("\n"),
   /runs in repository 'hook-api', which the draft's 'repositories' does not list/);
-  assert.match(taskRepositoryIssues([{ semanticKey: "x", repository: "hook-db", paths: ["a/**"],
+  assert.match(taskRepositoryIssues([{ semanticKey: "x", repository: "hook-db", paths: ["a/**", "test/**"],
     verify: "go test -v ./..." }], { repositories, selection: ["hook-db"], exists }).join("\n"),
   /names repository 'hook-db', which openspec\/repositories\.yaml does not declare/);
   assert.match(taskRepositoryIssues([{ semanticKey: "x", paths: ["docs/**"], verify: "npm test" }],
@@ -917,16 +917,16 @@ test("a task whose files live in a declared repository must name it", (t) => {
   /task 'x' names no 'repository' while the draft selects hook-api/);
   // Correct bindings, root-only work, and a project without repositories pass.
   assert.deepEqual(taskRepositoryIssues([
-    { semanticKey: "a", repository: "hook-api", paths: ["internal/**"], verify: "go test -v ./..." },
+    { semanticKey: "a", repository: "hook-api", paths: ["internal/**", "test/**"], verify: "go test -v ./..." },
     { semanticKey: "b", repository: "root", paths: ["docs/**"], verify: "cd docs && npm test" }
   ], { repositories, selection: ["root", { id: "hook-api" }], exists }), []);
-  assert.deepEqual(taskRepositoryIssues([{ semanticKey: "a", paths: ["services/**"],
+  assert.deepEqual(taskRepositoryIssues([{ semanticKey: "a", paths: ["services/**", "test/**"],
     verify: "npm test" }], { repositories, exists }), []);
-  assert.deepEqual(taskRepositoryIssues([{ semanticKey: "a", paths: ["src/**"],
+  assert.deepEqual(taskRepositoryIssues([{ semanticKey: "a", paths: ["src/**", "test/**"],
     verify: "cd web && npm test" }], { exists }), []);
   // Amendment tasks use the change's selection.
   assert.match(amendmentTaskRepositoryIssues({
-    addTasks: [{ key: "n", repository: "hook-api", paths: ["a/**"], verify: "cd ../x && make" }],
+    addTasks: [{ key: "n", repository: "hook-api", paths: ["a/**", "test/**"], verify: "cd ../x && make" }],
     updateTasks: [{ key: "old", verify: "cd services/hook/hook-api && go test ./..." }]
   }, "- [ ] **T001** Old [key:old] [repo:hook-api] [paths:a/**] — verify: `go test -v ./...`\n",
   { repositories, selection: ["hook-api"], exists }).join("\n"),
@@ -938,7 +938,7 @@ test("change start returns an EDIT for a submodule task bound to root", (t) => {
   const value = fixture(t, { catalog: submoduleCatalog });
   const wrong = minimalRapidV4({ tasks: [{
     key: "implement-bounded-result", outcome: "Implement the bounded result",
-    covers: ["bounded-result"], paths: ["services/hook/hook-api/internal/**"],
+    covers: ["bounded-result"], paths: ["services/hook/hook-api/internal/**", "test/**"],
     verify: "cd services/hook/hook-api && go test -v ./..."
   }] });
   writeJson(value.draftPath, wrong);
@@ -950,13 +950,13 @@ test("change start returns an EDIT for a submodule task bound to root", (t) => {
   // Bound and written relative to the repository, it compiles with a selection.
   writeJson(value.draftPath, minimalRapidV4({
     repositories: [{ id: "hook-api", mode: "write" }],
-    tasks: [{ ...wrong.tasks[0], repository: "hook-api", paths: ["internal/**"],
+    tasks: [{ ...wrong.tasks[0], repository: "hook-api", paths: ["internal/**", "test/**"],
       verify: "go test -v ./..." }]
   }));
   assert.match(captureLog(() => value.lifecycle.startAtomic(value.draftPath)).output,
     /^AGREED single-shot-change/m);
   assert.match(readFileSync(join(value.changes, "single-shot-change", "tasks.md"), "utf8"),
-    /\[repo:hook-api\][^\n]*\[paths:internal\/\*\*\]/);
+    /\[repo:hook-api\][^\n]*\[paths:internal\/\*\*,test\/\*\*\]/);
   assert.deepEqual(JSON.parse(readFileSync(join(value.changes, "single-shot-change",
     "repositories.yaml"), "utf8")).repositories, [{ id: "hook-api", mode: "write" }]);
 });
@@ -984,9 +984,9 @@ test("change start orders a root task after tasks in a nested repository", (t) =
     tasks: [
       { key: "implement-bounded-result", repository: "hook-api",
         outcome: "Implement the bounded result", covers: ["bounded-result"],
-        paths: ["internal/**"], verify: "go test -v ./..." },
+        paths: ["internal/**", "test/**"], verify: "go test -v ./..." },
       { key: "use-bounded-result", repository: "root", outcome: "Use the bounded result",
-        covers: ["consumer-result"], paths: ["src/**"], verify: "npm test" }
+        covers: ["consumer-result"], paths: ["src/**", "test/**"], verify: "npm test" }
     ],
     ...overrides
   });
@@ -1015,10 +1015,10 @@ test("change start orders a root task after tasks in a nested repository", (t) =
         then: "The extended result is returned" }], outcome: "The extended result is returned" }],
     addTasks: [
       { key: "use-extended-result", repository: "root", outcome: "Use the extended result",
-        covers: ["extended-result"], paths: ["src/**"], verify: "npm test" },
+        covers: ["extended-result"], paths: ["src/**", "test/**"], verify: "npm test" },
       { key: "implement-extended-result", repository: "hook-api",
         outcome: "Implement the extended result", covers: ["extended-result"],
-        paths: ["internal/**"], verify: "go test -v ./...", dependsOn: ["use-extended-result"] }
+        paths: ["internal/**", "test/**"], verify: "go test -v ./...", dependsOn: ["use-extended-result"] }
     ],
     evidence: { "extended-result": { capabilities: ["test"] } }
   });
@@ -1043,7 +1043,7 @@ test("a verify whose known runner prints no countable result gets an advisory, n
   const value = fixture(t);
   writeJson(value.draftPath, minimalRapidV4({ tasks: [{
     key: "implement-bounded-result", outcome: "Implement the bounded result",
-    covers: ["bounded-result"], paths: ["src/**"], verify: "go test ./..."
+    covers: ["bounded-result"], paths: ["src/**", "test/**"], verify: "go test ./..."
   }] }));
   const inspected = captureLog(() => value.lifecycle.inspectDraft(value.draftPath)).result;
   assert.equal(inspected.action, "DONE");
@@ -1185,20 +1185,20 @@ test("a writable sibling repository outside the root owns tasks", (t) => {
   const repositories = siblingCatalog("/project/gateway").repositories;
   const selection = [{ id: "root", mode: "write" }, { id: "sdk", mode: "write" }];
   assert.deepEqual(taskRepositoryIssues([
-    { semanticKey: "sdk", repository: "sdk", paths: ["src/**"], verify: "npm test" },
-    { semanticKey: "gw", repository: "root", paths: ["src/**"], verify: "npm test" }
+    { semanticKey: "sdk", repository: "sdk", paths: ["src/**", "test/**"], verify: "npm test" },
+    { semanticKey: "gw", repository: "root", paths: ["src/**", "test/**"], verify: "npm test" }
   ], { repositories, selection }), []);
   // Root work still cannot reach the sibling through the parent directory.
   assert.match(taskRepositoryIssues([{ semanticKey: "gw", repository: "root",
-    paths: ["src/**"], verify: "cd ../sdk && npm test" }], { repositories, selection }).join("\n"),
+    paths: ["src/**", "test/**"], verify: "cd ../sdk && npm test" }], { repositories, selection }).join("\n"),
   /verify changes into '\.\.\/sdk', outside repository 'root'/);
   // A read-only repository is a proof input: it cannot own a task that edits files.
   assert.match(taskRepositoryIssues([{ semanticKey: "p", repository: "partner",
-    paths: ["src/**"], verify: "npm test" }],
+    paths: ["src/**", "test/**"], verify: "npm test" }],
   { repositories, selection: [{ id: "partner" }] }).join("\n"),
   /task 'p' edits files in repository 'partner', which is read-only/);
   assert.match(taskRepositoryIssues([{ semanticKey: "s", repository: "sdk",
-    paths: ["src/**"], verify: "npm test" }],
+    paths: ["src/**", "test/**"], verify: "npm test" }],
   { repositories, selection: [{ id: "sdk", mode: "read" }] }).join("\n"),
   /task 's' edits files in repository 'sdk', which is read-only/);
   t.diagnostic("sibling binding checks are pure");
@@ -1220,17 +1220,17 @@ test("change start compiles tasks in root, a submodule, and a writable sibling",
       userSees: "The gateway reports the result is unavailable", recovery: "Retry the request" }],
     tasks: [
       { key: "users-result", repository: "users", outcome: "Implement the users result",
-        covers: ["bounded-result"], paths: ["src/**"], verify: "npm test" },
+        covers: ["bounded-result"], paths: ["src/**", "test/**"], verify: "npm test" },
       { key: "sdk-result", repository: "sdk", outcome: "Implement the sdk result",
-        covers: ["bounded-result"], paths: ["src/**"], verify: "npm test" },
+        covers: ["bounded-result"], paths: ["src/**", "test/**"], verify: "npm test" },
       { key: "gateway-result", repository: "root", outcome: "Implement the gateway result",
-        covers: ["bounded-result"], paths: ["src/**"], verify: "npm test" }
+        covers: ["bounded-result"], paths: ["src/**", "test/**"], verify: "npm test" }
     ]
   }));
   const { output, result } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
   assert.match(output, /^AGREED single-shot-change/m, JSON.stringify(result?.intake?.issues));
   const ledger = readFileSync(join(value.changes, "single-shot-change", "tasks.md"), "utf8");
-  assert.match(ledger, /\*\*T002\*\*[^\n]*\[repo:sdk\][^\n]*\[paths:src\/\*\*\]/);
+  assert.match(ledger, /\*\*T002\*\*[^\n]*\[repo:sdk\][^\n]*\[paths:src\/\*\*,test\/\*\*\]/);
   // Root contains its submodule but never its sibling.
   assert.match(ledger, /\*\*T003\*\*[^\n]*\[repo:root\][^\n]*\[depends:T001\]/);
   assert.doesNotMatch(ledger.match(/^.*\*\*T003\*\*.*$/m)[0], /T002/);
@@ -1258,7 +1258,7 @@ test("dev document sections and draft checks arrive together on the first inspec
     impact: "medium",
     tasks: [{
       key: "implement-bounded-result", outcome: "Implement the endpoint",
-      covers: ["bounded-result"], paths: ["src/api/results.js"],
+      covers: ["bounded-result"], paths: ["src/api/results.js", "test/**"],
       verify: "node --test tests/api/results.test.mjs"
     }]
   }));
@@ -1308,9 +1308,9 @@ function derivedRiskV4(overrides = {}) {
     }],
     tasks: [
       { key: "send-total", outcome: "Send the order total", covers: ["order-total"],
-        paths: ["services/orders/**"], verify: "npm test" },
+        paths: ["services/orders/**", "test/**"], verify: "npm test" },
       { key: "record-total", outcome: "Record the order total", covers: ["order-total"],
-        paths: ["services/billing/**"], verify: "npm test" }
+        paths: ["services/billing/**", "test/**"], verify: "npm test" }
     ],
     evidence: { "order-total": { capabilities: ["test"] } },
     ...overrides
@@ -1369,7 +1369,7 @@ test("a migration with rollback derives medium impact and the standard lane", (t
       ]
     }],
     tasks: [{ key: "fix-rollback", outcome: "Fix the rollback", covers: ["status-round-trip"],
-      paths: ["db/migrations/002_account_status.sql"], verify: "npm test" }],
+      paths: ["db/migrations/002_account_status.sql", "test/**"], verify: "npm test" }],
     dataModel: [{ entity: "Account", fields: ["status"], migration: "002", rollback: "002 down" }],
     evidence: { "status-round-trip": { capabilities: ["test"] } }
   }));
@@ -1393,7 +1393,7 @@ test("a published API contract derives the standard lane and one actionable EDIT
       description: "The API SHALL return every note as JSON",
       scenarios: [{ when: "A client requests GET /notes", then: "Every note is returned" }]
     }],
-    tasks: [{ outcome: "Serve the notes list", verify: "npm test", paths: ["src/server.js"] }]
+    tasks: [{ outcome: "Serve the notes list", verify: "npm test", paths: ["src/server.js", "test/**"] }]
   });
   const { result } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
   assert.equal(result.action, "EDIT");
@@ -1420,7 +1420,7 @@ test("a published API contract derives the standard lane and one actionable EDIT
       ]
     }],
     tasks: [{ key: "serve", outcome: "Serve the notes list", covers: ["list-notes"],
-      paths: ["src/server.js"], verify: "npm test" }],
+      paths: ["src/server.js", "test/**"], verify: "npm test" }],
     evidence: { "list-notes": { capabilities: ["test"] } }
   }));
   captureLog(() => value.lifecycle.startAtomic(value.draftPath));
@@ -1446,7 +1446,7 @@ test("a standard-lane draft without why, failure matrix, or evidence agrees in o
         { when: "A client deletes an unknown note id", then: "404 not found is returned and nothing changes" }
       ]
     }],
-    tasks: [{ outcome: "Serve the notes API", verify: "npm test", paths: ["src/server.js"] }]
+    tasks: [{ outcome: "Serve the notes API", verify: "npm test", paths: ["src/server.js", "test/**"] }]
   });
   const { result, output } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
   assert.notEqual(result?.action, "EDIT", output);
@@ -1495,7 +1495,7 @@ test("a draft the harness cannot complete returns one EDIT with every issue", (t
       description: "The API SHALL return every note as JSON",
       scenarios: [{ when: "A client requests GET /notes", then: "Every note is returned" }]
     }],
-    tasks: [{ outcome: "Serve the notes list", paths: ["src/server.js"],
+    tasks: [{ outcome: "Serve the notes list", paths: ["src/server.js", "test/**"],
       verify: "node --test tests/missing.test.mjs" }]
   });
   const { result } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
@@ -1516,18 +1516,18 @@ test("small bugfix, feature, refactor, and docs drafts stay rapid without design
     ["fix-rounding", { intent: "Round half values up",
       requirements: [{ description: "The system SHALL round 2.5 to 3",
         scenarios: [{ when: "2.5 is rounded", then: "3 is returned" }] }],
-      tasks: [{ outcome: "Fix rounding", verify: "npm test", paths: ["src/round.js"] }] }],
+      tasks: [{ outcome: "Fix rounding", verify: "npm test", paths: ["src/round.js", "test/**"] }] }],
     ["add-greeting", { intent: "Add a greeting",
       requirements: [{ description: "The system SHALL greet a named user",
         scenarios: [{ when: "Ada opens the page", then: "Hello, Ada is shown" }] }],
-      tasks: [{ outcome: "Greet the user", verify: "npm test", paths: ["src/greet.js"] }] }],
+      tasks: [{ outcome: "Greet the user", verify: "npm test", paths: ["src/greet.js", "test/**"] }] }],
     ["split-parser", { version: 4, intent: "Split the parser", workType: ["refactor"],
       refactor: { invariants: ["Same output"], characterization: "npm test" },
       requirements: [{ key: "same-output", capability: "parser", operation: "added",
         description: "The parser SHALL keep its output", outcome: "The output is unchanged",
         scenarios: [{ name: "Same", when: "Any input is parsed", then: "The output is unchanged" }] }],
       tasks: [{ key: "split", outcome: "Split the parser", covers: ["same-output"],
-        paths: ["src/routes/parse.js"], verify: "npm test" }] }],
+        paths: ["src/routes/parse.js", "test/**"], verify: "npm test" }] }],
     ["reword-guide", { intent: "Reword the guide",
       requirements: [{ description: "The guide SHALL describe setup in three steps",
         scenarios: [{ when: "A reader opens the guide", then: "Setup has three steps" }] }],
@@ -1688,7 +1688,7 @@ test("a risky path the draft does not cover prints a note and still starts", (t)
   const base = minimalRapidV4();
   writeJson(value.draftPath, minimalRapidV4({
     impact: "medium", workType: ["chore"], requirements: WITH_FAILURE,
-    tasks: [{ ...base.tasks[0], paths: ["db/migrations/0042_orders.sql"] }]
+    tasks: [{ ...base.tasks[0], paths: ["db/migrations/0042_orders.sql", "test/**"] }]
   }));
   const { result, output } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
   assert.notEqual(result?.action, "EDIT", output);
@@ -1728,7 +1728,7 @@ function hotfixV4({ regressionOf = "INC-212", capabilities = ["test"], variant =
     }],
     tasks: [{
       key: "batch-price-calls", outcome: "Batch the gateway price calls",
-      covers: ["large-cart-checkout"], paths: ["src/**"], verify: "npm test"
+      covers: ["large-cart-checkout"], paths: ["src/**", "test/**"], verify: "npm test"
     }],
     evidence: { "large-cart-checkout": { capabilities } }
   });

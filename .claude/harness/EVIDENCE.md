@@ -1114,11 +1114,27 @@ strengthens a test that fails without the change. A behavior change with no
 changed test file needs an existing test that fails on base. Changed tests are
 progress; an unchanged rerun reaches the existing no-progress boundary. A spawn
 failure, timeout, missing `baseHead`, or unresolvable surface is no verdict and
-never blocks. Each verdict is cached under
+never blocks, but it is not silent: the row is kept on the change
+(`testDiscrimination.inconclusive`) and named in the Prove `DONE` outcome
+(`testDiscrimination`) and in the Land report as "test discrimination (no
+verdict)". A repository whose product code changed but which has no `test`
+provider is a REPAIR (`rootCause: "no-test-provider"`): add test evidence
+through an amendment.
+
+A change compiled with a scenario binding (`scenarioTestBinding` on its
+runtime state; see [WORKFLOW.md § Decisions](../../WORKFLOW.md#decisions)) is judged per test file. When the runner takes file arguments, each
+changed test file runs alone on base; a file that passes on base and is bound
+to a scenario that is not `regression: true` is a finding naming the file and
+its scenarios, even when another file fails on base. A file bound only to
+regression scenarios may pass on base (`regression-guard`). A literal bound
+test file missing from the workspace is a REPAIR (`rootCause:
+"bound-test-missing"`). A runner that takes no file arguments keeps the single
+run above, and a change compiled before the binding keeps the per-repository
+judgment. Each verdict is cached under
 `.foundation/logs/<change>/test-discrimination/` by the digest of the base
 commit, the command, its effective environment digest, and every overlaid file, so an unchanged
 rerun runs nothing; cost is at most one extra test command per affected
-repository per distinct test content. The internal `proof run` and `proof
+repository (per changed test file when judged per file) per distinct test content. The internal `proof run` and `proof
 finalize` primitives and do not run this check.
 
 The same rule applies in Build. When a behavior task's `verify` passes but

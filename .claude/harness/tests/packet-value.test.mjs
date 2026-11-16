@@ -43,7 +43,7 @@ const repositories = {
 const baseTasks = [
   {
     id: "T1", done: false, kind: "implementation", repository: "root",
-    dependsOn: [], paths: ["src/**"], resources: ["workspace-write"],
+    dependsOn: [], paths: ["src/**", "test/**"], resources: ["workspace-write"],
     claims: ["c1"], text: "implement root"
   },
   {
@@ -415,7 +415,7 @@ try {
   writeFileSync(leasePath, JSON.stringify({
     leaseId: "lease-1", graphRevision: 1, graphIdentity: "graph", planDigest: "plan",
     contractRevision: 3, workspaceHash: "repo-hash", fencingGeneration: 2,
-    executionAttempt: 1, repository: "root", paths: ["src/**"], claimIds: ["c1"],
+    executionAttempt: 1, repository: "root", paths: ["src/**", "test/**"], claimIds: ["c1"],
     outputSchema: "result-v1", expiresAt: "2099-01-01T00:00:00.000Z"
   }));
   assert.equal(runtime.packetValue("packet-test", null, "T1").executionAuthority.leaseId, "lease-1");

@@ -469,6 +469,17 @@ inspects). Inspection returns one typed `EDIT`, `ASK_USER`, or `DONE` action
 with an exact resume route. Its `EDIT` batch also names, as agent repairs, a
 task `verify` that references a test file which neither exists nor falls inside
 any task's `paths`, and an `apiContracts` error listed without a status or code.
+For behavior-changing work (any work type except refactor, config, dependency,
+docs, test, or chore) the batch also names a task with product `paths` whose
+`verify` runs no test (only a no-op such as `true` or `echo`, or only lint,
+format, or typecheck commands), and every scenario that names no test file. A
+scenario binds through a `testMap` row whose `scenario` is its name, key, or
+claim id, or through a test path in a task that covers its requirement; a
+scenario marked `regression: true` (or `regressionOf`) guards existing
+behavior. `change revise` and `change amend` (added requirements and added or
+verify-changing tasks) apply the same checks. The compiled binding is stored on
+the change, and Prove judges test discrimination per bound test file
+([EVIDENCE.md § Tests that fail without the change](.claude/harness/EVIDENCE.md#tests-that-fail-without-the-change)).
 When `openspec/repositories.yaml` (or `.gitmodules`) declares repositories
 besides root, nested or trusted `../` siblings, `change start --template` lists
 them with the `repositories` selection and per-task `repository`, and the batch

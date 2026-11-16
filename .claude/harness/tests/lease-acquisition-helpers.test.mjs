@@ -358,7 +358,7 @@ test("observed release writes enforce graph authority and granted path scopes", 
       { path: "src/a.mjs", identity: "old" },
       { path: "src/same.mjs", identity: "same" }
     ],
-    paths: ["src/**"]
+    paths: ["src/**", "test/**"]
   };
   const context = {
     agentPlanValue: () => ({

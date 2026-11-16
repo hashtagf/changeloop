@@ -1684,7 +1684,7 @@ export function minimalSemanticDraftTemplate() {
     tasks: [{
       outcome: "Implement and verify the bounded outcome",
       verify: "npm test",
-      paths: ["src/**"]
+      paths: ["src/**", "test/**"]
     }]
   };
 }
@@ -1759,7 +1759,7 @@ export function semanticDraftTemplate() {
       key: "implement-outcome",
       outcome: "Implement and verify the bounded outcome",
       covers: ["observable-outcome"],
-      paths: ["src/**"],
+      paths: ["src/**", "test/**"],
       verify: "npm test"
     }],
     evidence: {
@@ -2049,7 +2049,7 @@ function draftFolderV5() {
           description: "The system SHALL return only results with the chosen tag",
           scenarios: [{ when: "A user filters by tag 'red'", then: "Only red results are listed" }]
         }],
-        tasks: [{ outcome: "Filter search by tag", verify: "npm test", paths: ["src/search/**"] }]
+        tasks: [{ outcome: "Filter search by tag", verify: "npm test", paths: ["src/search/**", "test/search/**"] }]
       },
       "proposal.md": "## Why\n\nUsers with many results cannot find tagged items.\n\n" +
         "## Scope\n\n- Tag filter on search\n",

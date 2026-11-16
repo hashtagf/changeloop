@@ -321,7 +321,7 @@ test("an edit outside task paths is recorded into the change surface, not refuse
       saveRuntime: (value) => { saves.push(value); state = value; },
       clearSnapshotCache: () => { cleared += 1; },
       taskBlocks: (text) => text.split("\n").filter(Boolean),
-      taskMetadata: () => ({ repository: "root", paths: ["src/**"] }),
+      taskMetadata: () => ({ repository: "root", paths: ["src/**", "test/**"] }),
       activeChangePath: () => root,
       canonicalChangedSurface: () => surface,
       selectedRepositories: () => [{ id: "root", mode: "write" }],
@@ -381,7 +381,7 @@ test("deletions and control-plane paths outside task paths are recorded with fla
       loadRuntime: () => structuredClone(state),
       saveRuntime: (value) => { saves.push(value); state = value; },
       taskBlocks: (text) => text.split("\n").filter(Boolean),
-      taskMetadata: () => ({ repository: "root", paths: ["src/**"] }),
+      taskMetadata: () => ({ repository: "root", paths: ["src/**", "test/**"] }),
       activeChangePath: () => root,
       canonicalChangedSurface: () => [
         ".claude/settings.json", ".env", ".env.example", "README.md", "fixtures/gone.json"
@@ -432,7 +432,7 @@ test("surface additions are recorded against the repository that changed", () =>
     writeFileSync(join(root, "tasks.md"), "- [x] T001\n- [x] T002\n");
     let state = { id: "demo" };
     const tasks = [
-      { repository: "api", paths: ["src/**"] }, { repository: "web", paths: ["src/**"] }
+      { repository: "api", paths: ["src/**", "test/**"] }, { repository: "web", paths: ["src/**", "test/**"] }
     ];
     let index = 0;
     const runtime = createProofReadinessRuntime(proofReadinessRuntimeDeps({

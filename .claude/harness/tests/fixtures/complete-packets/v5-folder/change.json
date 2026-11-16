@@ -302,7 +302,8 @@
         "manual-refund-form"
       ],
       "paths": [
-        "src/refunds/**"
+        "src/refunds/**",
+        "test/refunds/**"
       ],
       "verify": "npm test"
     },
@@ -313,7 +314,8 @@
         "refund-status"
       ],
       "paths": [
-        "web/orders/**"
+        "web/orders/**",
+        "web/orders/__tests__/**"
       ],
       "verify": "npm run test:web"
     }

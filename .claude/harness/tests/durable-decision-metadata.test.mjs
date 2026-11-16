@@ -183,7 +183,7 @@ function semanticDraft(decisions) {
         scenarios: [{ name: "List", when: "the user opens reports", then: "reports are listed" }] }
     ],
     tasks: [{ key: "build", outcome: "Export", covers: ["export-csv", "list-reports"],
-      paths: ["src/**"], verify: "npm test" }],
+      paths: ["src/**", "test/**"], verify: "npm test" }],
     evidence: { "export-csv": { capabilities: ["test"] }, "list-reports": { capabilities: ["test"] } },
     decisions
   };

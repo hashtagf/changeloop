@@ -327,7 +327,7 @@ test("e2e compile: a v5 folder starts a change with exact prose and derived sect
     }],
     tasks: [{
       key: "implement-refund", outcome: "Implement the refund API", covers: ["refund-once"],
-      paths: ["src/**"], verify: "npm test"
+      paths: ["src/**", "test/**"], verify: "npm test"
     }],
     evidence: { "refund-once": { capabilities: ["test"] } }
   });
@@ -367,7 +367,7 @@ const startChangeJson = () => ({
   }],
   tasks: [{
     key: "implement-refund", outcome: "Implement the refund API", covers: ["refund-once"],
-    paths: ["src/**"], verify: "npm test"
+    paths: ["src/**", "test/**"], verify: "npm test"
   }],
   evidence: { "refund-once": { capabilities: ["test"] } }
 });
@@ -427,7 +427,7 @@ const filledMinimalFolder = (lifecycle, change = {}) => {
       ...minimal["change.json"], intent: "Filter notes by tag",
       requirements: [{ description: "The system SHALL list only notes with the chosen tag",
         scenarios: [{ when: "a user filters by tag red", then: "only red notes are listed" }] }],
-      tasks: [{ outcome: "Filter notes by tag", verify: "npm test", paths: ["src/notes/**"] }],
+      tasks: [{ outcome: "Filter notes by tag", verify: "npm test", paths: ["src/notes/**", "test/**"] }],
       ...change
     },
     "proposal.md": "## Why\n\nUsers cannot find tagged notes in a long list.\n"
@@ -582,7 +582,7 @@ test("a v4 minimal JSON draft without version still starts", (t) => {
     intent: "Filter notes by tag",
     requirements: [{ description: "The system SHALL list only notes with the chosen tag",
       scenarios: [{ when: "a user filters by tag red", then: "only red notes are listed" }] }],
-    tasks: [{ outcome: "Filter notes by tag", verify: "npm test", paths: ["src/notes/**"] }]
+    tasks: [{ outcome: "Filter notes by tag", verify: "npm test", paths: ["src/notes/**", "test/**"] }]
   });
   quiet(() => lifecycle.startAtomic(".foundation/drafts/notes-tag.json"));
   assert.equal(readdirSync(changes).length, 1);

@@ -229,7 +229,7 @@ test("an authored file map renders as given", () => {
     { path: "src/b.ts", change: "add", responsibility: "Shared parser", tasks: ["T001"] }
   ];
   const design = renderDraftDesign({ fileMap,
-    tasks: [{ id: "T001", outcome: "Parse", paths: ["src/**"], verify: "npm test" }] });
+    tasks: [{ id: "T001", outcome: "Parse", paths: ["src/**", "test/**"], verify: "npm test" }] });
   assert.match(design, /^\| src\/a\.ts \| modify \| Shared parser \| T001 \|$/m);
   assert.match(design, /^\| src\/b\.ts \| add \| Shared parser \| T001 \|$/m);
 });

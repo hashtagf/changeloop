@@ -380,7 +380,7 @@ function rich(overrides = {}) {
       key: "audit", capability: "contacts", outcome: "Imports are audited",
       scenarios: [{ name: "Logged", when: "an import ends", then: "one audit entry exists" }]
     }],
-    tasks: [{ key: "t", covers: ["import", "audit"], verify: "npm test", paths: ["src/**"] }],
+    tasks: [{ key: "t", covers: ["import", "audit"], verify: "npm test", paths: ["src/**", "test/**"] }],
     evidence: { import: { capabilities: ["test"] }, audit: { capabilities: ["test"] } },
     discovery: { coverage: [
       { dimension: "operability", status: "not-applicable", rationale: "Batch job, existing logs" },
@@ -651,7 +651,7 @@ function v5Draft(extra = {}) {
     }],
     tasks: [{
       key: "implement-refund", outcome: "Implement the refund API", covers: ["refund-once"],
-      paths: ["src/**"], verify: "npm test"
+      paths: ["src/**", "test/**"], verify: "npm test"
     }],
     evidence: { "refund-once": { capabilities: ["test"] } },
     ...extra
