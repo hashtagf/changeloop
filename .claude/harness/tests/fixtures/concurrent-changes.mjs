@@ -150,7 +150,7 @@ export function assertAgentConflict(stop, w, label) {
   assert.equal(stop.actor, "agent");
   assert.equal(stop.boundary, "conflict");
   assert.equal(stop.resume,
-    `claude-foundation advance ${w.ids[label]} --through archived`);
+    `cloop advance ${w.ids[label]} --through archived`);
 }
 
 // The route the harness took, recorded in the change's runtime record.
