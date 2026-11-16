@@ -670,7 +670,7 @@ Persistent tasks across sessions. list/get; create needs key/title; update/delet
 | `offset` | integer | no | min 0 |
 | `title` | string | no |  |
 | `description` | string | no |  |
-| `status` | "open" \| "plan" \| "design" \| "build" \| "verify" \| "review" \| "pr" \| "merge" \| "tag" \| "deployed" | no |  |
+| `status` | "open" \| "investigate" \| "change" \| "build" \| "prove" \| "land" \| "deliver" \| "merge" \| "tag" \| "deploy" | no |  |
 | `nextStep` | string | no |  |
 | `blocker` | string | no |  |
 | `evidence` | string | no |  |
@@ -806,11 +806,11 @@ Persistent tasks across sessions. list/get; create needs key/title; update/delet
         },
         {
           "type": "string",
-          "const": "plan"
+          "const": "investigate"
         },
         {
           "type": "string",
-          "const": "design"
+          "const": "change"
         },
         {
           "type": "string",
@@ -818,15 +818,15 @@ Persistent tasks across sessions. list/get; create needs key/title; update/delet
         },
         {
           "type": "string",
-          "const": "verify"
+          "const": "prove"
         },
         {
           "type": "string",
-          "const": "review"
+          "const": "land"
         },
         {
           "type": "string",
-          "const": "pr"
+          "const": "deliver"
         },
         {
           "type": "string",
@@ -838,7 +838,7 @@ Persistent tasks across sessions. list/get; create needs key/title; update/delet
         },
         {
           "type": "string",
-          "const": "deployed"
+          "const": "deploy"
         }
       ]
     },
@@ -877,11 +877,11 @@ Persistent tasks across sessions. list/get; create needs key/title; update/delet
               },
               {
                 "type": "string",
-                "const": "plan"
+                "const": "investigate"
               },
               {
                 "type": "string",
-                "const": "design"
+                "const": "change"
               },
               {
                 "type": "string",
@@ -889,15 +889,15 @@ Persistent tasks across sessions. list/get; create needs key/title; update/delet
               },
               {
                 "type": "string",
-                "const": "verify"
+                "const": "prove"
               },
               {
                 "type": "string",
-                "const": "review"
+                "const": "land"
               },
               {
                 "type": "string",
-                "const": "pr"
+                "const": "deliver"
               },
               {
                 "type": "string",
@@ -909,7 +909,7 @@ Persistent tasks across sessions. list/get; create needs key/title; update/delet
               },
               {
                 "type": "string",
-                "const": "deployed"
+                "const": "deploy"
               }
             ]
           }

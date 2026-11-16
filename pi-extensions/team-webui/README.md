@@ -56,15 +56,18 @@ The hub runs independently of its creator. Closing, switching or reloading one s
 
 ## Persistent task board
 
-Choose **Tasks** in the workspace header. The columns are **Open → Plan → Design
-→ Build → Verify → Review → PR → Merge → Tag → Deployed**. Select a project,
+Choose **Tasks** in the workspace header. The columns are **Open → Investigate → Change
+→ Build → Prove → Land → Deliver → Merge → Tag → Deploy**, matching the Change
+Loop phases. Stores from older versions migrate once on open: Plan/Design →
+Change, Verify/Review → Prove (landed Change Loop cards → Land), PR → Deliver,
+Deployed → Deploy. Select a project,
 create a card, drag it to another stage, or open it to choose a status with the
 keyboard. Search and status filters are available on desktop and mobile.
 
 Each card keeps its description, owner session, next step, blocker, evidence and
 change history. Tasks belong to the project, shared across its Git worktrees and
 sessions. They remain accessible after their owner or every project session goes
-offline. There is no delete or automatic expiry. Deployed cards remain available.
+offline. There is no delete or automatic expiry. Deploy cards remain available.
 Boards paginate after 200 matching tasks; Next/Previous expose the remaining work.
 
 SQLite transactions and version checks prevent two agents or browser windows from
@@ -100,7 +103,7 @@ hub must be restarted (`/serve stop`, then `/serve`) to load new API routes;
 this does not stop Pi sessions or background jobs.
 
 Status records progress only. It does **not** perform Git or deployment actions
-or provide permission for them. PR/Merge/Tag/Deployed require an evidence/reference
+or provide permission for them. Deliver/Merge/Tag/Deploy require an evidence/reference
 field; the application records that claim without independently verifying it.
 
 ### Handoff and dependency graph
@@ -130,10 +133,10 @@ remain possible; agents must check readiness before dependent work.
 The board imports local `.foundation/runtime/*.json` changes and
 `.foundation/investigations/*.json` investigations automatically, with one card
 per source record. TUI, web and agents share these cards. The read-only phase is
-**Investigate → Change → Build → Prove → Land → Deliver** alongside the ten planning
-columns. Change includes plan/design/implementation plan; Prove includes review
-and verification. Applied/archived maps to Land, never merge/tag/deployed.
-Only a verified local Deliver record with an open-PR receipt maps to PR.
+**Investigate → Change → Build → Prove → Land → Deliver**, and each card's board
+status follows that phase. Change includes plan/design/implementation plan; Prove
+includes review and verification. Applied/archived maps to Land, never
+merge/tag/deploy. A started local Deliver record maps to Deliver.
 This is a local snapshot, not fresh proof validation or a live GitHub check.
 
 Sync occurs on task reads, agent turn start and TUI opening/refresh, cached for
@@ -214,7 +217,7 @@ For browser checks, start `PI_CODING_AGENT_DIR=/tmp/pi-web-preview node team-web
 
 Choose **Chat / 3D City** in the header. The enlarged city supports 64 visible
 agents and ten Kanban districts. The latest active task assigned to a session
-determines its district (a deployed task is used when no active task exists).
+determines its district (a deploy-status task is used when no active task exists).
 Assignments refresh every five seconds while City is visible. Session presence
 still controls whether the agent is working, resting or offline. No assigned
 task means a general-work Build district for busy sessions, or the park for idle
@@ -223,15 +226,15 @@ sessions; offline agents stay at the station. Blocker text stops decorative work
 | Status | District | Decorative activity |
 |---|---|---|
 | open | Intake | Read a brief |
-| plan | Planning | Point at a plan |
-| design | Design | Sketch |
+| investigate | Research | Point at a plan |
+| change | Change | Sketch |
 | build | Build | Type on a device |
-| verify | Test Lab | Inspect equipment |
-| review | Review | Read findings |
-| pr | PR Exchange | Hand over documents |
+| prove | Test Lab | Inspect equipment |
+| land | Landing | Read findings |
+| deliver | PR Exchange | Hand over documents |
 | merge | Integration | Assemble parts |
 | tag | Release | Pack a release |
-| deployed | Operations | Scan monitors |
+| deploy | Operations | Scan monitors |
 
 Agents walk through avenues on status changes, with staggered local wandering,
 limb motion and idle breathing. Movement and props are illustrations, not proof

@@ -14,10 +14,10 @@ function fixture(t) {
 
 test('plan respects explicit blockers, threshold regressions, owner scope and completed tasks', t => {
   const { store, add } = fixture(t);
-  const a = add('Design', { ownerSessionId: 'designer', status: 'review' });
-  const b = add('Build', { ownerSessionId: 'builder', dependsOn: [{ id: a.id, status: 'review' }] });
+  const a = add('Design', { ownerSessionId: 'designer', status: 'land' });
+  const b = add('Build', { ownerSessionId: 'builder', dependsOn: [{ id: a.id, status: 'land' }] });
   const c = add('Blocked', { ownerSessionId: 'builder', blocker: 'Waiting for user' });
-  add('Done', { status: 'deployed', evidence: 'deployment-reference' });
+  add('Done', { status: 'deploy', evidence: 'deployment-reference' });
   let plan = store.plan('/project', { ownerSessionId: 'builder' });
   assert.deepEqual(plan.counts, { pending: 2, ready: 1, blocked: 1, deployed: 0 });
   assert.equal(plan.tasks.find(x => x.id === b.id).ready, true);
@@ -34,11 +34,11 @@ test('plan identifies chain, independent work and fan-in without creating worker
   assert.equal(store.plan('/project').topology, 'empty');
   const a = add('A');
   assert.equal(store.plan('/project').topology, 'single');
-  const b = add('B', { dependsOn: [{ id: a.id, status: 'review' }] });
+  const b = add('B', { dependsOn: [{ id: a.id, status: 'land' }] });
   assert.equal(store.plan('/project').topology, 'sequential');
   const c = add('C');
   assert.equal(store.plan('/project').topology, 'parallel');
-  add('D', { dependsOn: [{ id: b.id, status: 'review' }, { id: c.id, status: 'review' }] });
+  add('D', { dependsOn: [{ id: b.id, status: 'land' }, { id: c.id, status: 'land' }] });
   const before = store.get('/project', a.id);
   assert.equal(store.plan('/project').topology, 'dag');
   assert.equal(store.plan('/project').execution, 'advisory-only');
@@ -65,7 +65,7 @@ test('brief is durable and bounded, retains blockers and flags omitted text', t 
   const dependencies = Array.from({ length: 5 }, (_, i) => add(`prerequisite-${i}`));
   const task = add('Handoff', {
     description: 'c'.repeat(4000), nextStep: 's'.repeat(2000), evidence: 'e'.repeat(4000), blocker: 'b'.repeat(1000),
-    dependsOn: dependencies.map(t => ({ id: t.id, status: 'review' })), ownerSessionId: 'existing-session',
+    dependsOn: dependencies.map(t => ({ id: t.id, status: 'land' })), ownerSessionId: 'existing-session',
   });
   const brief = createTaskStore(root).brief('/project', task.id);
   assert.equal(brief.context.length, 1200);

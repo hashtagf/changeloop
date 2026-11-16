@@ -42,7 +42,7 @@ export const toolGuides = {
       { action: 'restore', id: '<task-id>', version: 3 },
     ],
     verify:
-      'Use IDs/versions returned by the tool, not the example numbers. plan checks dependency thresholds plus explicit blockers, excludes deployed/trash, and optionally filters ownerSessionId. Its topology is advisory, not execution: check shared files and owner availability before parallel work. brief supplies goal/context/nextStep/evidence; use get when truncatedFields is nonempty. Follow nextOffset. Deleted cards retain history and identity.',
+      'Use IDs/versions returned by the tool, not the example numbers. plan checks dependency thresholds plus explicit blockers, excludes deploy/trash, and optionally filters ownerSessionId. Its topology is advisory, not execution: check shared files and owner availability before parallel work. brief supplies goal/context/nextStep/evidence; use get when truncatedFields is nonempty. Follow nextOffset. Deleted cards retain history and identity.',
     failure:
       '409 means reload and compare before retrying; never blindly replace the version. Remove or redirect active dependents deliberately before deleting their prerequisite. Restore deleted prerequisites before their dependents. Change Loop sync does not resurrect trash.',
     boundaries:
@@ -132,9 +132,9 @@ export const toolGuides = {
   workflow: {
     when: 'The project uses Change Loop and work should follow its lifecycle.',
     why: 'Canonical commands preserve scope, proof and delivery state; board metadata alone cannot perform or authorize workflow actions.',
-    how: 'Investigate → Change (plan/design/implementation plan) → Build → Prove (review/verify) → Land → Deliver. task_board list/get sync existing local records; sync forces refresh; link attaches an existing changeId to a manual card. Reuse imported cards. Inspect project command definitions for exact behavior.',
+    how: 'Investigate → Change (plan/design/implementation plan) → Build → Prove (review/verify) → Land → Deliver; board statuses mirror these phases, then merge → tag → deploy. task_board list/get sync existing local records; sync forces refresh; link attaches an existing changeId to a manual card. Reuse imported cards. Inspect project command definitions for exact behavior.',
     verify:
-      'Land applies/archives work, not necessarily Git merge. Deliver behavior follows project implementation and permissions. Require real receipts for PR, merge, tag and deployed claims. Resolve the session’s intended change rather than making the user copy a long ID; ask only if genuinely ambiguous.',
+      'Land applies/archives work, not necessarily Git merge. Deliver behavior follows project implementation and permissions. Require real receipts for deliver (PR), merge, tag and deploy claims. Resolve the session’s intended change rather than making the user copy a long ID; ask only if genuinely ambiguous.',
     failure:
       'If a guard rejects an action, inspect the observed cause and current context; never forge approval/proof, repeatedly retry unchanged input or bypass guards. Sync is read-only and does not establish fresh proof.',
   },

@@ -88,7 +88,7 @@ export function createTaskTUI(store, changeLoop) {
                 const status=await ctx.ui.select('Move task to status',taskStatuses);
                 if (!status || disposed) continue;
                 let evidence=task.evidence;
-                if (['pr','merge','tag','deployed'].includes(status)) {
+                if (['deliver','merge','tag','deploy'].includes(status)) {
                   evidence=await ctx.ui.editor('Evidence / reference (status only; no Git or deploy action)',evidence);
                   if (evidence===undefined || disposed) continue;
                 }

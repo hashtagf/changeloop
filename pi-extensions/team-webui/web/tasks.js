@@ -6,15 +6,15 @@ const el = (tag, cls, text) => {
 };
 const labels = {
   open: 'Open',
-  plan: 'Plan',
-  design: 'Design',
+  investigate: 'Investigate',
+  change: 'Change',
   build: 'Build',
-  verify: 'Verify',
-  review: 'Review',
-  pr: 'PR',
+  prove: 'Prove',
+  land: 'Land',
+  deliver: 'Deliver',
   merge: 'Merge',
   tag: 'Tag',
-  deployed: 'Deployed',
+  deploy: 'Deploy',
 };
 export function createTaskBoard({ api, catalog, preferredProject, toast }) {
   let visible = false,
@@ -237,7 +237,7 @@ export function createTaskBoard({ api, catalog, preferredProject, toast }) {
         const edge = (editing.dependsOn || []).find((e) => e.id === node.id);
         check.checked = Boolean(edge);
         select.append(...statuses.map((s) => option(s, labels[s])));
-        select.value = edge?.status || 'review';
+        select.value = edge?.status || 'prove';
         select.setAttribute('aria-label', 'Required status for ' + node.title);
         label.append(
           check,
@@ -510,7 +510,7 @@ export function createTaskBoard({ api, catalog, preferredProject, toast }) {
         drag = undefined;
         if (!task || task.status === status) return;
         void safe(async () => {
-          if (['pr', 'merge', 'tag', 'deployed'].includes(status)) {
+          if (['deliver', 'merge', 'tag', 'deploy'].includes(status)) {
             await openTask(task, status);
             return;
           }

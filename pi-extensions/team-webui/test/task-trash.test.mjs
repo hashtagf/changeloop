@@ -24,22 +24,22 @@ test('trash is reversible, versioned, project scoped and excluded from active vi
 });
 test('active dependencies cannot be orphaned by delete, create, update or restore',t=>{
  const s=setup(t),a=s.create('/p',{key:'a',title:'Prerequisite'}).task;
- const b=s.create('/p',{key:'b',title:'Dependent',dependsOn:[{id:a.id,status:'review'}]}).task;
+ const b=s.create('/p',{key:'b',title:'Dependent',dependsOn:[{id:a.id,status:'land'}]}).task;
  assert.throws(()=>s.delete('/p',a.id,{version:1}),/Dependent/);
  s.delete('/p',b.id,{version:1});s.delete('/p',a.id,{version:1});
  assert.throws(()=>s.restore('/p',b.id,{version:2}),/existing task/);
  assert.equal(s.get('/p',b.id).task.version,2);
- assert.throws(()=>s.create('/p',{key:'c',title:'C',dependsOn:[{id:a.id,status:'review'}]}),/existing task/);
+ assert.throws(()=>s.create('/p',{key:'c',title:'C',dependsOn:[{id:a.id,status:'land'}]}),/existing task/);
  const c=s.create('/p',{key:'c',title:'C'}).task;
- assert.throws(()=>s.update('/p',c.id,{version:1,dependsOn:[{id:a.id,status:'review'}]}),/existing task/);
+ assert.throws(()=>s.update('/p',c.id,{version:1,dependsOn:[{id:a.id,status:'land'}]}),/existing task/);
  s.restore('/p',a.id,{version:2});s.restore('/p',b.id,{version:2});assert.equal(s.graph('/p').edges.length,1);
 });
 test('Change Loop sync keeps tombstones instead of reimporting removed work',t=>{
  const s=setup(t),source={sourceKey:'change:a',fingerprint:'one',phase:'build',boardStatus:'build',title:'Imported',description:'',nextStep:'Build',blocker:'',evidence:''};
  const a=s.syncWorkflow('/p',source).task;s.delete('/p',a.id,{version:1});
- const synced=s.syncWorkflow('/p',{...source,fingerprint:'two',phase:'prove',boardStatus:'verify'});
+ const synced=s.syncWorkflow('/p',{...source,fingerprint:'two',phase:'prove',boardStatus:'prove'});
  assert.equal(synced.changed,false);assert.equal(synced.task.version,2);assert.equal(s.list('/p').total,0);
- s.restore('/p',a.id,{version:2});assert.equal(s.syncWorkflow('/p',{...source,fingerprint:'two',phase:'prove',boardStatus:'verify'}).task.status,'verify');
+ s.restore('/p',a.id,{version:2});assert.equal(s.syncWorkflow('/p',{...source,fingerprint:'two',phase:'prove',boardStatus:'prove'}).task.status,'prove');
 });
 test('a history write failure rolls back both task changes and their events',t=>{
  const root=mkdtempSync(join(tmpdir(),'task-atomic-'));t.after(()=>rmSync(root,{recursive:true,force:true}));

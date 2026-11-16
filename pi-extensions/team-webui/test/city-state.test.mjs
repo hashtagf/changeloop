@@ -27,10 +27,10 @@ test('city has distinct status destinations within the island for all 64 citizen
   assert.notDeepEqual(cityDestination('idle', 0), cityDestination('offline', 0));
 });
 test('Kanban assignment controls district while presence and blocking control motion, never inventing task progress',()=>{
- const row={id:'agent',online:true,busy:true},task={id:'task',ownerSessionId:'agent',status:'verify',title:'Test'};
- assert.equal(cityAssignment(row,[task]).district,'verify');assert.equal(cityAssignment(row,[task]).pose,'inspect');
+ const row={id:'agent',online:true,busy:true},task={id:'task',ownerSessionId:'agent',status:'prove',title:'Test'};
+ assert.equal(cityAssignment(row,[task]).district,'prove');assert.equal(cityAssignment(row,[task]).pose,'inspect');
  assert.equal(cityAssignment({...row,busy:false},[task]).pose,'idle');assert.equal(cityAssignment(row,[{...task,blocker:'Waiting'}]).pose,'wait');
  assert.equal(cityAssignment({...row,online:false},[task]).district,'offline');assert.equal(cityAssignment(row,[]).source,'session');
  assert.equal(cityAssignment({...row,busy:false},[]).district,'idle');assert.equal(cityAssignment({...row,id:'other'},[task]).task,undefined);
- const destination=cityDestination('build',63),route=cityRoute(cityDestination('plan',63),destination);assert.deepEqual(route.at(-1),destination);assert.equal(route[1].x,30);
+ const destination=cityDestination('build',63),route=cityRoute(cityDestination('investigate',63),destination);assert.deepEqual(route.at(-1),destination);assert.equal(route[1].x,30);
 });

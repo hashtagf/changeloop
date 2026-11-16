@@ -23,10 +23,10 @@ export function readChangeLoop(project,id,kind='change') {
   let phase,boardStatus,nextStep,blocker='',deliveryStatus=null,prs=[];
   let lifecycleStatus=text(state.status,100),proofStatus=null;
   if(kind==='investigation') {
-    phase='investigate';boardStatus='open';
+    phase='investigate';boardStatus='investigate';
     nextStep='Continue Investigate using the Change Loop resume route; create or link a change when the agreement is ready.';
   } else {
-    const mapping={change:['change','plan'],resolved:['change','plan'],building:['build','build'],proven:['prove','review'],landing:['prove','review'],applied:['land','review'],archived:['land','review']};
+    const mapping={change:['change','change'],resolved:['change','change'],building:['build','build'],proven:['prove','prove'],landing:['prove','prove'],applied:['land','land'],archived:['land','land']};
     if(!mapping[lifecycleStatus])throw problem(409,`Unsupported Change Loop lifecycle: ${lifecycleStatus || 'missing'}`);
     [phase,boardStatus]=mapping[lifecycleStatus];
     nextStep={change:'Complete plan, design and implementation plan through Change.',build:'Continue Build in the Change Loop workspace, then run Prove.',prove:'Run the current proof checks and obtain explicit Land approval before applying.',land:lifecycleStatus==='archived'?'Land is archived. Deliver is separate and requires user authority; do not infer merge, tag or deployment.':'Continue the existing Land transaction through archive.'}[phase];
@@ -37,7 +37,7 @@ export function readChangeLoop(project,id,kind='change') {
     const receipt=read(project,`.foundation/deliveries/${id}/receipt.json`,true);
     if((delivery&&delivery.changeId!==id)||(receipt&&receipt.changeId!==id))throw problem(409,'Change Loop delivery identity mismatch.');
     if(delivery && delivery.status!=='new') {
-      phase='deliver';deliveryStatus=text(delivery.status,100);
+      phase='deliver';boardStatus='deliver';deliveryStatus=text(delivery.status,100);
       nextStep='Continue Deliver through its saved resume route. An opened PR is not a merge, tag or deployment.';
       if(delivery.lastError)blocker='Deliver reports an error; inspect the Change Loop delivery state before continuing.';
     }
@@ -45,7 +45,7 @@ export function readChangeLoop(project,id,kind='change') {
     const verified=lifecycleStatus==='archived' && delivery?.status==='verified' && Boolean(receipt?.verifiedAt) && rows.length>0 &&
       rows.every(pr=>pr && /^https:\/\//.test(pr.url||'') && typeof pr.headCommit==='string' && /^[a-f0-9]{40,64}$/.test(pr.headCommit) && pr.state==='OPEN');
     if(verified) {
-      phase='deliver';boardStatus='pr';prs=rows.map(pr=>({url:text(pr.url,2000),headCommit:pr.headCommit,state:pr.state}));
+      phase='deliver';boardStatus='deliver';prs=rows.map(pr=>({url:text(pr.url,2000),headCommit:pr.headCommit,state:pr.state}));
       nextStep='PR recorded by Deliver. Check current PR state and obtain any required merge/release authority; do not infer merge, tag or deployment.';
     }
   }

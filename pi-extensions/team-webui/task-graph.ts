@@ -1,6 +1,11 @@
 import { problem } from './workspace.ts';
 
-export const stages = ['open','plan','design','build','verify','review','pr','merge','tag','deployed'];
+export const stages = ['open','investigate','change','build','prove','land','deliver','merge','tag','deploy'];
+// Pre-0.5 board statuses, migrated once when a store opens.
+export const legacyStages = {plan:'change',design:'change',verify:'prove',review:'prove',pr:'deliver',deployed:'deploy'};
+// Statuses that claim an external outcome need an evidence/reference.
+export const evidenceStages = ['deliver','merge','tag','deploy'];
+export const finalStage = 'deploy';
 export function dependencies(value) {
   if (!Array.isArray(value) || value.length > 100) throw problem(400,'Use at most 100 dependencies.');
   const seen=new Set<any>();

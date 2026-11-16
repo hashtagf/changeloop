@@ -11,7 +11,7 @@ function compact(task, node) {
     nextStep: task.nextStep.slice(0, 200),
     blocker: task.blocker.slice(0, 200),
     dependencyReady: node.blockedBy.length === 0,
-    ready: task.status !== 'deployed' && !task.blocker && !node.blockedBy.length,
+    ready: task.status !== 'deploy' && !task.blocker && !node.blockedBy.length,
     blockedBy: node.blockedBy.slice(0, 3),
     moreBlockers: Math.max(0, node.blockedBy.length - 3),
   };
@@ -27,7 +27,7 @@ export function taskPlan(tasks, { offset = 0, limit = 20, ownerSessionId }: any 
   const byId = new Map<any, any>(tasks.map(t => [t.id, t]));
   const nodes = new Map<any, any>(graph.nodes.map(n => [n.id, n]));
   const pending = graph.layers.flat().map(id => byId.get(id))
-    .filter(t => t.status !== 'deployed' && (ownerSessionId === undefined || t.ownerSessionId === ownerSessionId));
+    .filter(t => t.status !== 'deploy' && (ownerSessionId === undefined || t.ownerSessionId === ownerSessionId));
   const ids = new Set(pending.map(t => t.id));
   const edges = graph.edges.filter(e => ids.has(e.from) && ids.has(e.to));
   const branches = new Map<any, any>(), joins = new Map<any, any>();
@@ -43,7 +43,7 @@ export function taskPlan(tasks, { offset = 0, limit = 20, ownerSessionId }: any 
   const ready = rows.filter(t => t.ready).length;
   return {
     topology,
-    counts: { pending: rows.length, ready, blocked: rows.length - ready, deployed: tasks.filter(t => t.status === 'deployed' && (ownerSessionId === undefined || t.ownerSessionId === ownerSessionId)).length },
+    counts: { pending: rows.length, ready, blocked: rows.length - ready, deployed: tasks.filter(t => t.status === 'deploy' && (ownerSessionId === undefined || t.ownerSessionId === ownerSessionId)).length },
     depth: widths.length,
     maxLayerWidth: Math.max(0, ...widths),
     advisory: ready > 1

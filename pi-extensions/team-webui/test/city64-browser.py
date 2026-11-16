@@ -24,13 +24,13 @@ with sync_playwright() as p:
  page.locator('#city-roster button').filter(has_text='Agent 01').click();expect(page.locator('#city-agent-meta')).to_contain_text('Kanban:')
  result=page.request.get(base+'/api/city').json();task=next(t for t in result['assignments'] if t['ownerSessionId']=='preview-main')
  full=page.request.get(base+'/api/tasks',params={'project':task['project'],'id':task['id']}).json()['task']
- response=page.request.post(base+'/api/tasks',headers={'Origin':base},data={'action':'update','project':task['project'],'id':task['id'],'version':full['version'],'status':'verify'})
+ response=page.request.post(base+'/api/tasks',headers={'Origin':base},data={'action':'update','project':task['project'],'id':task['id'],'version':full['version'],'status':'prove'})
  assert response.status==200,response.text()
  expect(page.locator('#city-agent-meta')).to_contain_text('ทดสอบ',timeout=10000)
  expect(page.locator('[data-district=open]')).to_contain_text('6');expect(page.locator('[data-district=verify]')).to_contain_text('7')
  page.locator('#city-pause').click();frozen=canvas.get_attribute('data-motion');page.wait_for_timeout(400);assert canvas.get_attribute('data-motion')==frozen
  current=page.request.get(base+'/api/tasks',params={'project':task['project'],'id':task['id']}).json()['task']
- change=page.request.post(base+'/api/tasks',headers={'Origin':base},data={'action':'update','project':task['project'],'id':task['id'],'version':current['version'],'status':'design'});assert change.status==200
+ change=page.request.post(base+'/api/tasks',headers={'Origin':base},data={'action':'update','project':task['project'],'id':task['id'],'version':current['version'],'status':'change'});assert change.status==200
  expect(page.locator('#city-agent-meta')).to_contain_text('ออกแบบ',timeout=10000);assert canvas.get_attribute('data-motion')==frozen
  page.locator('#city-pause').click();page.wait_for_timeout(300)
  page.locator('#view-chat').click();frozen=canvas.get_attribute('data-motion');page.wait_for_timeout(700);assert canvas.get_attribute('data-motion')==frozen

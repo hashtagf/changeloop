@@ -18,8 +18,8 @@ export function buildCity(scene) {
     // Visible equipment distinguishes each work district.
     for(const x of [-3,3]){
       box(1.4,.12,.8,d.x+x,.85,d.z-1,d.color);box(.15,.8,.15,d.x+x,.4,d.z-1,'#61786b');
-      if(['build','verify','deployed'].includes(d.id)){box(.85,.65,.12,d.x+x,1.28,d.z-1.2,'#38585f');box(.7,.45,.03,d.x+x,1.3,d.z-1.12,'#91d5bb');}
-      else if(['plan','design','review'].includes(d.id)){box(1.1,1.15,.12,d.x+x,1.6,d.z-1.2,'#f5efd5');box(.7,.08,.04,d.x+x,1.8,d.z-1.1,d.color);}
+      if(['build','prove','deploy'].includes(d.id)){box(.85,.65,.12,d.x+x,1.28,d.z-1.2,'#38585f');box(.7,.45,.03,d.x+x,1.3,d.z-1.12,'#91d5bb');}
+      else if(['investigate','change','land'].includes(d.id)){box(1.1,1.15,.12,d.x+x,1.6,d.z-1.2,'#f5efd5');box(.7,.08,.04,d.x+x,1.8,d.z-1.1,d.color);}
       else {box(.65,.55,.6,d.x+x,1.2,d.z-1,'#bc9369');}
     }
     // Low greenery keeps the working forecourts visible.

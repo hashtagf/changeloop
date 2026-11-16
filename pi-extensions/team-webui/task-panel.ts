@@ -61,7 +61,7 @@ export class TaskPanel {
     const height = Math.max(4, this.options.tui.terminal.rows), fg = (color, text) => this.options.theme.fg(color, text);
     const fit = value => truncateToWidth(value, Math.max(1, width));
     const pad = (value, size) => { const text = truncateToWidth(value, size); return text + ' '.repeat(Math.max(0, size - visibleWidth(text))); };
-    let lines = [fg('accent', (this.state.deleted?'Trash · ':'Kanban · ') + clean(this.options.project)), fg('muted', 'Open → Plan → Design → Build → Verify → Review → PR → Merge → Tag → Deployed')];
+    let lines = [fg('accent', (this.state.deleted?'Trash · ':'Kanban · ') + clean(this.options.project)), fg('muted', 'Open → Investigate → Change → Build → Prove → Land → Deliver → Merge → Tag → Deploy')];
     if (this.viewing && this.selected()) {
       const task = this.selected();
       const body = [`${task.status.toUpperCase()} · ${task.title}`, `Owner: ${task.ownerName || 'Unassigned'} · version ${task.version}`,

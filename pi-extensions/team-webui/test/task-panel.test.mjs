@@ -62,27 +62,27 @@ test('TUI actions create, edit, move and assign through the shared persistent st
       const key=['n','e','m','e','\x1b'][step++];panel.handleInput(key);return p;
     },
     async input(title){return title.startsWith('New')?'Native task':'Write a test';},
-    async select(){return ['Next step','verify','Unassign owner'][select++];},
+    async select(){return ['Next step','prove','Unassign owner'][select++];},
     async editor(){return 'Run the verification';},notify(message,type){if(type==='error')throw Error(message);},
   }};
   await board.show('/project',ctx);board.close();
   const saved=createTaskStore(root).list('/project').tasks[0];
-  assert.equal(saved.title,'Native task');assert.equal(saved.status,'verify');assert.equal(saved.nextStep,'Run the verification');assert.equal(saved.ownerSessionId,'');
+  assert.equal(saved.title,'Native task');assert.equal(saved.status,'prove');assert.equal(saved.nextStep,'Run the verification');assert.equal(saved.ownerSessionId,'');
   assert.equal(store.get('/project',saved.id).history.length,4);
 });
 test('TUI dependency editing and graph selection use the same DAG and reject cycles without retrying as stale edits',async t=>{
   const {createTaskTUI,saveTaskEdit}=await library(),root=mkdtempSync(join(tmpdir(),'pi-tui-graph-'));
   t.after(()=>rmSync(root,{recursive:true,force:true}));const store=createTaskStore(root);
-  const prerequisite=store.create('/project',{key:'a',title:'Design',status:'plan'}).task;
+  const prerequisite=store.create('/project',{key:'a',title:'Design',status:'investigate'}).task;
   const dependent=store.create('/project',{key:'b',title:'Build',status:'open'}).task;
   let step=0,selection=0,graphSeen=false;
   const ctx={sessionManager:{getSessionId:()=> 'main'},ui:{
     async custom(factory){let done;const result=new Promise(resolve=>done=resolve);const panel=factory({terminal:{rows:28},requestRender(){}},{fg:(_,s)=>s},{},done);panel.handleInput(['d','g','\x1b'][step++]);return result;},
-    async select(title,labels){selection++;if(selection===1)return labels[0];if(selection===2)return labels.find(s=>s.includes(prerequisite.id));if(selection===3)return 'review';graphSeen=title.includes('Dependency graph')&&labels.some(s=>s.includes('waiting for Design → review'));return labels.find(s=>s.includes(dependent.id));},
+    async select(title,labels){selection++;if(selection===1)return labels[0];if(selection===2)return labels.find(s=>s.includes(prerequisite.id));if(selection===3)return 'land';graphSeen=title.includes('Dependency graph')&&labels.some(s=>s.includes('waiting for Design → land'));return labels.find(s=>s.includes(dependent.id));},
     notify(message,type){if(type==='error')throw Error(message);}
   }};
   await createTaskTUI(store).show('/project',ctx);assert.ok(graphSeen);
-  assert.deepEqual(store.get('/project',dependent.id).task.dependsOn,[{id:prerequisite.id,status:'review'}]);
+  assert.deepEqual(store.get('/project',dependent.id).task.dependsOn,[{id:prerequisite.id,status:'land'}]);
   await assert.rejects(()=>saveTaskEdit(store,'/project',prerequisite,{dependsOn:[{id:dependent.id,status:'build'}]},{ui:{select(){throw Error('must not offer stale edit recovery');}}}),/cycle/);
 });
 

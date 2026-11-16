@@ -3,6 +3,17 @@
 All notable changes to `@hashtagf/pi-extensions`. Headings follow Pi's package
 changelog format (`## [x.y.z]`) so Pi can show them after an update.
 
+## [Unreleased]
+
+### Changed
+
+- team-webui: task board statuses now follow Change Loop phases — `open`,
+  `investigate`, `change`, `build`, `prove`, `land`, `deliver`, `merge`, `tag`,
+  `deploy`. Existing stores migrate once (plan/design → change, verify/review →
+  prove or land for landed Change Loop cards, pr → deliver, deployed → deploy),
+  including dependency thresholds. Imported Change Loop cards map phase to
+  status directly. Deliver/merge/tag/deploy require evidence.
+
 ## [0.4.0]
 
 ### Added

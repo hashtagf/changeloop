@@ -4,11 +4,46 @@ import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { problem } from './workspace.ts';
-import { dependencies, taskGraph, stages } from './task-graph.ts';
+import { dependencies, taskGraph, stages, legacyStages, evidenceStages } from './task-graph.ts';
 import { taskPlan, taskBrief } from './task-planning.ts';
 
 export const taskStatuses = stages;
 const activeTaskFilter = "json_extract(data,'$.deletedAt') IS NULL";
+const STORE_VERSION = 1;
+// Landed Change Loop lifecycles map to land, not prove, under the new stages.
+const legacyStatus = (status, lifecycle?) =>
+  status === 'review' && ['applied', 'archived'].includes(lifecycle)
+    ? 'land'
+    : legacyStages[status] || status;
+// Also re-run when a not-yet-reloaded older session writes a legacy status.
+const legacyFilter = `status IN (${Object.keys(legacyStages).map((s) => `'${s}'`).join(',')})`;
+const needsMigration = (db) =>
+  db.prepare('PRAGMA user_version').get().user_version < STORE_VERSION ||
+  Boolean(db.prepare(`SELECT 1 FROM tasks WHERE ${legacyFilter} LIMIT 1`).get());
+function migrate(db) {
+  if (!needsMigration(db)) return;
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    if (needsMigration(db)) {
+      const update = db.prepare('UPDATE tasks SET status=?,data=? WHERE id=?');
+      for (const row of db.prepare('SELECT id,data FROM tasks').all()) {
+        const task = JSON.parse(row.data);
+        const lifecycle = task.workflow?.lifecycleStatus;
+        task.status = legacyStatus(task.status, lifecycle);
+        if (task.workflow?.boardStatus)
+          task.workflow.boardStatus = legacyStatus(task.workflow.boardStatus, lifecycle);
+        if (Array.isArray(task.dependsOn))
+          task.dependsOn = task.dependsOn.map((e) => ({ ...e, status: legacyStatus(e.status) }));
+        update.run(task.status, JSON.stringify(task), row.id);
+      }
+      db.exec(`PRAGMA user_version=${STORE_VERSION}`);
+    }
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+}
 const fields = {
   title: 240,
   description: 12000,
@@ -61,6 +96,7 @@ export function createTaskStore(
         CREATE UNIQUE INDEX IF NOT EXISTS task_workflow_source ON tasks(project,json_extract(data,'$.workflow.sourceKey')) WHERE json_extract(data,'$.workflow.sourceKey') IS NOT NULL;
         CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT, task_id TEXT NOT NULL, at INTEGER NOT NULL, actor TEXT NOT NULL, data TEXT NOT NULL);
         CREATE INDEX IF NOT EXISTS task_events ON events(task_id,seq);`);
+      migrate(db);
       return fn(db);
     } finally {
       db.close();
@@ -89,7 +125,7 @@ export function createTaskStore(
   };
   const requireEvidence = (task) => {
     if (
-      ['pr', 'merge', 'tag', 'deployed'].includes(task.status) &&
+      evidenceStages.includes(task.status) &&
       !task.evidence
     ) {
       throw problem(400, 'Add evidence or a reference for this status.');
@@ -178,7 +214,7 @@ export function createTaskStore(
     contextSummary(project, sessionId) {
       project = projectPath(project);
       return use((db) => {
-        const active = `${activeTaskFilter} AND status!='deployed'`;
+        const active = `${activeTaskFilter} AND status!='deploy'`;
         const projectActive = Number(
           db
             .prepare(
@@ -222,7 +258,7 @@ export function createTaskStore(
       return use((db) =>
         db
           .prepare(
-            `SELECT data FROM (SELECT data,ROW_NUMBER() OVER (PARTITION BY json_extract(data,'$.ownerSessionId') ORDER BY CASE WHEN status='deployed' THEN 1 ELSE 0 END,updated DESC,id) AS rank FROM tasks WHERE ${activeTaskFilter} AND json_extract(data,'$.ownerSessionId')!='') WHERE rank=1 LIMIT 512`,
+            `SELECT data FROM (SELECT data,ROW_NUMBER() OVER (PARTITION BY json_extract(data,'$.ownerSessionId') ORDER BY CASE WHEN status='deploy' THEN 1 ELSE 0 END,updated DESC,id) AS rank FROM tasks WHERE ${activeTaskFilter} AND json_extract(data,'$.ownerSessionId')!='') WHERE rank=1 LIMIT 512`,
           )
           .all()
           .map((row) => {
@@ -269,7 +305,7 @@ export function createTaskStore(
       return use((db) =>
         db
           .prepare(
-            `SELECT data FROM tasks WHERE ${activeTaskFilter} AND json_extract(data,'$.ownerSessionId')=? AND status!='deployed' ORDER BY updated DESC,id LIMIT ? OFFSET ?`,
+            `SELECT data FROM tasks WHERE ${activeTaskFilter} AND json_extract(data,'$.ownerSessionId')=? AND status!='deploy' ORDER BY updated DESC,id LIMIT ? OFFSET ?`,
           )
           .all(sessionId, limit, offset)
           .map((row) => {
@@ -449,7 +485,7 @@ export function createTaskStore(
               ? "json_extract(data,'$.deletedAt') IS NOT NULL"
               : activeTaskFilter,
           ];
-        if (activeOnly) filters.push("status!='deployed'");
+        if (activeOnly) filters.push("status!='deploy'");
         if (status) {
           filters.push('status=?');
           params.push(status);

@@ -18,7 +18,7 @@ with sync_playwright() as p:
  page.locator('[name=nextStep]').fill('Continue authorized Deliver');page.locator('#task-save').click()
  expect(page.locator('#task-dialog')).not_to_be_visible();page.reload()
  expect(card).to_contain_text('Continue authorized Deliver');expect(card).to_have_count(1)
- page.locator('#task-filter').select_option('review');expect(page.locator('.task-column')).to_have_count(1);expect(card).to_be_visible()
+ page.locator('#task-filter').select_option('land');expect(page.locator('.task-column')).to_have_count(1);expect(card).to_be_visible()
  page.screenshot(path=str(out/'changeloop-kanban-desktop.png'))
  page.set_viewport_size({'width':390,'height':844});expect(card).to_be_visible()
  assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')

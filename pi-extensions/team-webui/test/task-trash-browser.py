@@ -12,7 +12,7 @@ with sync_playwright() as p:
  def post(body):
   return page.request.post(base+'/api/tasks',headers={'Origin':base},data={'project':project,**body})
  a=post({'action':'create','key':'trash-a','title':'Trash prerequisite'}).json()['task']
- b=post({'action':'create','key':'trash-b','title':'Trash dependent','dependsOn':[{'id':a['id'],'status':'review'}]}).json()['task']
+ b=post({'action':'create','key':'trash-b','title':'Trash dependent','dependsOn':[{'id':a['id'],'status':'land'}]}).json()['task']
  page.locator('#task-refresh').click();card=page.locator('[data-task-id="'+a['id']+'"]');expect(card).to_be_visible();card.click()
  page.once('dialog',lambda d:d.accept());page.locator('#task-delete').click();expect(page.locator('#task-edit-error')).to_contain_text('Remove dependencies')
  page.locator('#task-close').click()

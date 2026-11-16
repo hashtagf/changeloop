@@ -10,7 +10,7 @@ with sync_playwright() as p:
  page.locator('#view-tasks').click();expect(page.locator('#task-project option')).to_have_count(2);expect(page.locator('.task-column')).to_have_count(10);project=page.locator('#task-project').input_value()
  def post(body):
   r=page.request.post(base+'/api/tasks',headers={'Origin':base},data={'project':project,**body});assert r.status==200,r.text();return r.json()['task']
- a=post({'action':'create','key':'design','title':'Design contract','status':'plan'})
+ a=post({'action':'create','key':'design','title':'Design contract','status':'investigate'})
  b=post({'action':'create','key':'build','title':'Implement contract','nextStep':'Build after design review'})
  page.locator('#task-refresh').click();card=page.locator('.task-card').filter(has_text='Implement contract');card.click()
  page.locator('summary').filter(has_text='Dependencies').click()
@@ -23,7 +23,7 @@ with sync_playwright() as p:
  page.screenshot(path=str(out/'task-graph-desktop.png'))
  page.locator('[data-graph-task-id="'+a['id']+'"]').click();page.locator('summary').filter(has_text='Dependencies').click()
  page.locator('[data-dependency-id="'+b['id']+'"]').check();page.locator('#task-save').click();expect(page.locator('#task-edit-error')).to_contain_text('cycle')
- page.locator('[data-dependency-id="'+b['id']+'"]').uncheck();page.locator('[name=status]').select_option('review');page.locator('#task-save').click()
+ page.locator('[data-dependency-id="'+b['id']+'"]').uncheck();page.locator('[name=status]').select_option('land');page.locator('#task-save').click()
  expect(page.locator('#task-dialog')).not_to_be_visible();expect(page.locator('[data-graph-task-id="'+b['id']+'"]')).to_contain_text('Dependencies ready')
  page.locator('[data-graph-task-id="'+b['id']+'"]').click()
  page.locator('[name=ownerSessionId]').select_option('preview-review');page.locator('[name=nextStep]').fill('Review this contract and save findings on this card')
