@@ -68,6 +68,7 @@ draft() {
       paths: (process.env.DECLARE_REPORT ? ["app.txt", process.env.REPORT] : ["app.txt"]),
       verify: "sh run-test.sh " + process.env.REPORT,
       covers: ["greeting-updated"] }];
+    d.testMap = [{ scenario: "greeting-updated", file: "run-test.sh" }];
     d.evidence = { "greeting-updated": { capabilities:
       process.env.ADD_LINT ? ["test", "static-analysis"] : ["test"] } };
     d.discovery.coverage = d.discovery.coverage.map((row) => ({
@@ -97,7 +98,7 @@ draft() {
     d.discovery.sourceDigest = process.env.SOURCE_DIGEST;
     writeFileSync("draft.json", JSON.stringify(d, null, 2));'
   node .claude/harness/foundation.mjs start draft.json --inspect > .foundation/start-inspect.json
-  node -e 'if (require("./.foundation/start-inspect.json").action !== "DONE") process.exit(1)'
+  node -e 'if (require("./.foundation/start-inspect.json").action !== "DONE") process.exit(1)' || { cat .foundation/start-inspect.json >&2; exit 1; }
   if ! node .claude/harness/foundation.mjs start draft.json > start.log 2>&1; then
     cat start.log >&2
     exit 1
@@ -284,6 +285,7 @@ node -e '
         then: "v2 remains observable" }, outcome: "v2 remains observable" }],
     updateTasks: [{ key: "update-app", covers: ["greeting-updated", "v2-persists"] }],
     evidence: { "v2-persists": { capabilities: ["test"] } },
+    testMap: [{ scenario: "v2 persists", file: "run-test.sh" }],
     discovery: { coverage: dimensions.map((dimension) => ({ dimension,
       status: "covered", covers: ["v2-persists"] })), decisions: [] } };
   writeFileSync("amendment.json", JSON.stringify(amendment, null, 2));'
@@ -304,6 +306,8 @@ AMENDMENT_SOURCE_DIGEST="$(node -p 'require("./.foundation/amendment-inspect.jso
     writeFileSync("amendment.json", JSON.stringify(a, null, 2));'
 node .claude/harness/foundation.mjs amend selective-amendment amendment.json --inspect \
   > .foundation/amendment-inspect.json
+grep -q '"action": "DONE"' .foundation/amendment-inspect.json ||
+  node -e 'const r=require("./.foundation/amendment-inspect.json"); console.error(JSON.stringify({action:r.action,reason:r.reason,intake:r.intake}))'
 assert_contains "amendment reaches the resumable DONE gate" \
   "$(cat .foundation/amendment-inspect.json)" '"action": "DONE"'
 amended="$(node .claude/harness/foundation.mjs amend selective-amendment amendment.json \
@@ -480,6 +484,7 @@ node -e '
   d.tasks = [{ key: "update-app", outcome: "Update app.txt", paths: ["app.txt"],
     verify: "sh run-test.sh test-results/report.json", covers: ["greeting-updated"] }];
   d.evidence = { "greeting-updated": { capabilities: ["test"] } };
+  d.testMap = [{ scenario: "greeting-updated", file: "run-test.sh" }];
   d.discovery.coverage = d.discovery.coverage.map((row) => ({
     dimension: row.dimension, status: "covered", covers: ["greeting-updated"] }));
   writeFileSync("draft.json", JSON.stringify(d, null, 2));'
@@ -495,7 +500,8 @@ acknowledge_intake() {
     d.discovery.sourceDigest = process.env.SOURCE_DIGEST;
     writeFileSync("draft.json", JSON.stringify(d, null, 2));'
   node .claude/harness/foundation.mjs "$@" --inspect > .foundation/intake-inspect.json
-  node -e 'if (require("./.foundation/intake-inspect.json").action !== "DONE") process.exit(1)'
+  node -e 'if (require("./.foundation/intake-inspect.json").action !== "DONE") process.exit(1)' ||
+    { cat .foundation/intake-inspect.json >&2; exit 1; }
 }
 mkdir -p .foundation
 acknowledge_intake start draft.json
@@ -510,6 +516,7 @@ node -e '
       then: "the greeting is logged" }, outcome: "log the greeting" });
   d.tasks[0].covers.push("greeting-logged");
   d.evidence["greeting-logged"] = { capabilities: ["test"] };
+  d.testMap.push({ scenario: "greeting-logged", file: "run-test.sh" });
   writeFileSync("draft.json", JSON.stringify(d, null, 2));'
 # An ordinary revision completes its own intake without a separate inspect.
 revised="$(node .claude/harness/foundation.mjs revise revise-before-build draft.json --consume-draft)"

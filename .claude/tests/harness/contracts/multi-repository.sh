@@ -633,7 +633,18 @@ sibling_draft() { # <repository-of-the-sibling-task> <selection-json>
           then: "The marker is present" }], outcome: "The marker is present" }],
       tasks: [task("lib-marker", "lib"), task("sibling-marker", repository),
         task("root-marker", "root")],
-      evidence: { marker: { capabilities: ["test"] } } }));' "$@"
+      evidence: { marker: { capabilities: ["test"] } },
+      // Each writable repository changes product code, so each needs its own
+      // test provider for Prove to show the change fails on the original code.
+      execution: { version: 1, services: {}, providers: Object.fromEntries(
+        ["root", "lib", repository].flatMap((repo) => {
+          const run = { adapter: "test-discovery", reportFormat: "auto", minimum: 1,
+            command: ["npm", "test"], ...(repo === "root" ? {} : { repository: repo }) };
+          return repo === "root" ? [["test", { ...run, capability: "test", claims: "declared" }]]
+            : [[`test-${repo}`, { ...run, capability: "test", claims: "declared",
+                discoveryProvider: `discovery-${repo}` }],
+              [`discovery-${repo}`, { ...run, capability: "discovery" }]];
+        })) } }));' "$@"
 }
 mkdir -p .foundation/drafts
 sibling_draft ref '[{"id":"root"},{"id":"lib"},{"id":"ref"}]' \
@@ -643,14 +654,15 @@ assert_contains "a read sibling cannot own a task that edits files" \
   "edits files in repository 'ref', which is read-only"
 sibling_draft sdk '[{"id":"root","mode":"write"},{"id":"lib","mode":"write"},{"id":"sdk","mode":"write"},{"id":"ref","mode":"read"}]' \
   > .foundation/drafts/sibling-marker.json
-assert_contains "change start accepts a task bound to a writable sibling" \
-  "$(node .claude/harness/foundation.mjs start .foundation/drafts/sibling-marker.json 2>&1)" \
+sibling_start="$(node .claude/harness/foundation.mjs start .foundation/drafts/sibling-marker.json 2>&1 || true)"
+case "$sibling_start" in *"AGREED sibling-marker"*) ;; *) printf "%s\n" "$sibling_start" >&2 ;; esac
+assert_contains "change start accepts a task bound to a writable sibling" "$sibling_start" \
   "AGREED sibling-marker"
 sibling_ledger="$(cat openspec/changes/sibling-marker/tasks.md)"
 assert_contains "the sibling task compiles into the ledger" "$sibling_ledger" \
   "[key:sibling-marker] [repo:sdk]"
 assert_contains "root follows the submodule it contains, never the sibling" "$sibling_ledger" \
-  "[repo:root] [kind:implementation] [paths:src/**] [depends:T001]"
+  "[repo:root] [kind:implementation] [paths:src/**,test/**] [depends:T001]"
 node .claude/harness/foundation.mjs advance sibling-marker --approve-spec \
   --decision-ref fixture://user/approve-sibling --through build >/dev/null 2>&1 || true
 sibling_sandbox=.foundation/repository-sandboxes/sibling-marker/sdk
