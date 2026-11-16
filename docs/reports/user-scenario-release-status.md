@@ -18,6 +18,18 @@ comparison: 2026-10-08, no-harness/v3.6.0/v3.6.1/v3.6.2.
 
 ## Current scenario checkpoint
 
+### v3.7.4 candidate — 2026-11-16 (no paid smoke, owner exception)
+
+Source makes `cloop` the only CLI name, requires every scenario of
+behavior-changing work to name a test that fails on the original code, makes
+Land write `verification.md` into the archived change, moves each phase's
+full contract out of `WORKFLOW.md`, and fixes non-Git gathering roots (see the
+changelog). No paid scenario smoke ran for this candidate and no paid evidence
+is claimed. Each fix has a deterministic regression; the default gate passed
+locally and CI ran the full gate on the candidate commit. The maintainer
+authorized publication as an explicit exception. Repeated assurance is not
+claimed.
+
 ### v3.7.3 candidate — 2026-11-16 (no paid smoke, owner exception)
 
 Source fixes four blockers for running several changes at once, broadens Pi
