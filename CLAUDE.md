@@ -257,6 +257,9 @@ installed runtime.
    API change, not another line of prose. `scripts/lint/ratchet.mjs` keeps
    harness findings and large-file sizes, including `foundation.mjs`, from
    growing; run `--tighten` after cleanup and commit the lowered baseline.
+   A new or changed skill needs `.claude/skills/<name>/contract.json`
+   (trigger, inputs, action, outputs, handoff, and who does or decides
+   what); `scripts/lint/skill-contracts.mjs` checks it.
 6. Add the lowest-level regression that would have caught the defect. A new
    suite requires its script, registration in `.claude/tests/run-all.sh`, and a
    row in `.claude/tests/README.md`.

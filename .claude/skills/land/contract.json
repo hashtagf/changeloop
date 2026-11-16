@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "skill": "land",
+  "trigger": "The user explicitly says to land, apply, or archive a proven change (/land, 'land ได้เลย')",
+  "inputs": [
+    "the proven change and its proof",
+    "the user's explicit Land instruction"
+  ],
+  "action": "Run advance through archived: apply the proven outcome as uncommitted target diffs, archive, and recover the same transaction",
+  "outputs": [
+    {
+      "kind": "code",
+      "description": "uncommitted target diff in each writable repository"
+    },
+    {
+      "kind": "state",
+      "description": "archived change and updated openspec/specs"
+    }
+  ],
+  "handoff": [
+    {
+      "to": "command:deliver",
+      "when": "the user separately asks to commit, push, or open a PR"
+    },
+    {
+      "to": "user",
+      "when": "the diff is ready for review"
+    }
+  ],
+  "responsibility": {
+    "aiDoes": [
+      "applies and archives through the harness",
+      "explains real blockers in plain language"
+    ],
+    "humanDoes": [
+      "reviews the final diff"
+    ],
+    "humanDecides": [
+      "grant Land",
+      "commit, push, or PR as separate authority"
+    ]
+  }
+}

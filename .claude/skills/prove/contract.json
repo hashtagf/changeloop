@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "skill": "prove",
+  "trigger": "An existing change needs evidence produced or refreshed (/prove, stale receipts, review, acceptance)",
+  "inputs": [
+    "the sandbox workspace and compiled packet",
+    "configured evidence providers",
+    "existing receipts"
+  ],
+  "action": "Run advance through proven, reuse fresh receipts, run missing or stale providers and review, and apply whole REPAIR batches",
+  "outputs": [
+    {
+      "kind": "evidence",
+      "description": "content-bound receipts and proof for every required claim"
+    },
+    {
+      "kind": "report",
+      "description": "what passed, what remains unproven, and review spec gaps"
+    }
+  ],
+  "handoff": [
+    {
+      "to": "skill:land",
+      "when": "the change is proven and the user grants Land"
+    },
+    {
+      "to": "skill:build",
+      "when": "evidence fails and product code needs repair"
+    },
+    {
+      "to": "user",
+      "when": "repeated no-progress needs a decision"
+    }
+  ],
+  "responsibility": {
+    "aiDoes": [
+      "runs providers and review",
+      "repairs failed evidence through Build"
+    ],
+    "humanDoes": [],
+    "humanDecides": [
+      "further work, risk acceptance, or pause after repeated no-progress"
+    ]
+  }
+}

@@ -1,0 +1,194 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "contract-shape-contract-json-field",
+      "requirementKey": "contract-shape",
+      "scenario": "สัญญาครบ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "contract-shape-contract-json-handoff-outputs",
+      "requirementKey": "contract-shape",
+      "scenario": "ขาด field",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "contract-shape-output-kind",
+      "requirementKey": "contract-shape",
+      "scenario": "kind ไม่รู้จัก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "contract-shape-contract-json-json",
+      "requirementKey": "contract-shape",
+      "scenario": "JSON เสีย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "contract-shape-field-skill",
+      "requirementKey": "contract-shape",
+      "scenario": "ชื่อไม่ตรงโฟลเดอร์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "handoff-resolution-handoff-to-skill-no-such-skill",
+      "requirementKey": "handoff-resolution",
+      "scenario": "skill ปลายทางไม่มี",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "handoff-resolution-handoff-to-command-deliver-claude-commands-de",
+      "requirementKey": "handoff-resolution",
+      "scenario": "command ปลายทางมีอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "handoff-resolution-handoff-to-skill-command-user",
+      "requirementKey": "handoff-resolution",
+      "scenario": "รูปแบบปลายทางผิด",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "human-accountability-outputs-kind-git-humandecides",
+      "requirementKey": "human-accountability",
+      "scenario": "git ไม่มีคนตัดสินใจ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "human-accountability-outputs-kind-agreement-humandecides-spec",
+      "requirementKey": "human-accountability",
+      "scenario": "agreement มีคนอนุมัติ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "human-accountability-handoff-to-user-humandecides-humandoes",
+      "requirementKey": "human-accountability",
+      "scenario": "ส่งต่อคนแต่ไม่บอกคนทำอะไร",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "missing-contract-ratchet-skill-baseline",
+      "requirementKey": "missing-contract-ratchet",
+      "scenario": "repo ตรง baseline",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "missing-contract-ratchet-skill-skill-md-contract-json",
+      "requirementKey": "missing-contract-ratchet",
+      "scenario": "skill ใหม่ไม่มีสัญญา",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "missing-contract-ratchet-skill-baseline-contract-json",
+      "requirementKey": "missing-contract-ratchet",
+      "scenario": "baseline ค้าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "missing-contract-ratchet-baseline-json",
+      "requirementKey": "missing-contract-ratchet",
+      "scenario": "baseline เสีย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lifecycle-contracts-land",
+      "requirementKey": "lifecycle-contracts",
+      "scenario": "Land อยู่กับคน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lifecycle-contracts-change",
+      "requirementKey": "lifecycle-contracts",
+      "scenario": "Change ส่งต่อให้คนอนุมัติ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "gate-wiring-claude-skills-claude-commands",
+      "requirementKey": "gate-wiring",
+      "scenario": "แก้ skill",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "gate-wiring-dashboard-server-mjs",
+      "requirementKey": "gate-wiring",
+      "scenario": "แก้ไฟล์อื่น",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test scripts/lint/test/skill-contracts.test.mjs) && (node --test scripts/lint/test/lifecycle-contracts.test.mjs) && (node --test .claude/tests/harness/affected-suite-selector.test.mjs)"
+      ],
+      "segments": [
+        "node --test scripts/lint/test/skill-contracts.test.mjs",
+        "node --test scripts/lint/test/lifecycle-contracts.test.mjs",
+        "node --test .claude/tests/harness/affected-suite-selector.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

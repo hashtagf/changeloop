@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "skill": "changes",
+  "trigger": "The user asks for current status without editing (/changes, 'ติดอะไร', 'ทำอะไรต่อ')",
+  "inputs": [
+    "cloop changes output for active changes"
+  ],
+  "action": "Summarize active changes, their next useful action, and blockers in the user's language without mutating anything",
+  "outputs": [
+    {
+      "kind": "report",
+      "description": "status summary with next actions and grouped blockers"
+    }
+  ],
+  "handoff": [
+    {
+      "to": "user",
+      "when": "the summary is ready"
+    }
+  ],
+  "responsibility": {
+    "aiDoes": [
+      "reads and summarizes status"
+    ],
+    "humanDoes": [],
+    "humanDecides": [
+      "which next action to authorize"
+    ]
+  }
+}
