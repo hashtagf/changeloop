@@ -9,6 +9,8 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+## [3.7.5] - 2026-11-16
+
 ### Changed
 
 - Guards advise instead of refuse. On Pi the adapter runs guards in `auto`
@@ -1460,7 +1462,8 @@ project upgrades in place.
   older abandon or a Land undo left such bookkeeping behind, creating a change
   with that id moves it into the newest retirement record.
 
-[Unreleased]: https://github.com/hashtagf/changeloop/compare/v3.7.4...HEAD
+[Unreleased]: https://github.com/hashtagf/changeloop/compare/v3.7.5...HEAD
+[3.7.5]: https://github.com/hashtagf/changeloop/compare/v3.7.4...v3.7.5
 [3.7.4]: https://github.com/hashtagf/changeloop/compare/v3.7.3...v3.7.4
 [3.7.3]: https://github.com/hashtagf/changeloop/compare/v3.7.2...v3.7.3
 [3.7.2]: https://github.com/hashtagf/changeloop/compare/v3.7.1...v3.7.2
