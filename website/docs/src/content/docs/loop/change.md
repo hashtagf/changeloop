@@ -277,7 +277,9 @@ for what approvers see; `.claude/harness/lifecycle/change.md` lists all 29 examp
 At archive, Land appends the volatile records to the archived `proposal.md`
 only: Appendix: Review record, Appendix: Compliance change record (only when
 `openspec/config.yaml` sets `compliance: change-record`), and Appendix: Rollout
-gates.
+gates. It also writes `verification.md` beside the archived proposal: the proof
+run Land accepted and one row per receipt with its claims, result, command, and
+SHA-256, so the evidence summary travels with Git.
 
 After compilation, `openspec/changes/<id>/` is the source of truth. The draft is
 temporary and `.foundation/` is derived runtime state.
