@@ -1501,8 +1501,17 @@ export function createAdvanceRuntime({
         recordedPhase = phase;
       }
     };
+    // A Land that stopped before applying leaves the change proven. The
+    // session's phase follows the lifecycle, so the main checkout is not held
+    // under Land rules while the stop waits; mid-apply keeps Land for recovery.
+    const releaseStoppedLand = (value) => {
+      if (recordedPhase === "land" && value?.reached !== "archived") {
+        try { if (loadRuntime(id).status === "proven") recordActivePhase("prove"); } catch {}
+      }
+      return value;
+    };
     try {
-      return await captureAsync(async () => {
+      return releaseStoppedLand(await captureAsync(async () => {
         if (through && !["build", "proven", "archived"].includes(through))
           throw new Error("advance --through must be build|proven|archived");
         let initial = loadRuntime(id);
@@ -1659,10 +1668,10 @@ export function createAdvanceRuntime({
           unchangedAutomations = before === after ? unchangedAutomations + 1 : 0;
           if (unchangedAutomations >= 2) return noProgress(id, through, value, operationResult);
         }
-      });
+      }));
     } catch (error) {
       markBlocked(error?.message || String(error));
-      return finish(failureAction(id, error, { stage, through }));
+      return releaseStoppedLand(await finish(failureAction(id, error, { stage, through })));
     }
   }
 

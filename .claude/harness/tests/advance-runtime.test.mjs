@@ -785,6 +785,30 @@ test("advance --through converts prepare and Land failures without rejecting", a
   assert.doesNotMatch(JSON.stringify(land), /land check/);
 });
 
+// 2026-11-16: a stopped Land left the session under Land rules for 12 hours.
+test("a Land that stops before applying returns the session to prove", async () => {
+  for (const [label, after, last] of [["still proven", "proven", "prove"],
+    ["mid-apply", "applied", "land"]]) {
+    const state = { status: "proven" };
+    const phases = [];
+    const runtime = createAdvanceRuntime(advanceRuntimeDeps({
+      loadRuntime: () => state,
+      agentDispatchValue: () => ({ action: "build-complete" }),
+      relevantHash: () => "workspace-a", deliveredAiAttempts: () => [],
+      authorityStatusValue: () => ({ requests: [] }),
+      readJson: () => ({ status: "PASS", workspaceHash: "workspace-a" }),
+      proofAdvancePath: () => "/proof.json", stableHash,
+      hasLandGrant: () => true,
+      recordPhase: (_id, phase) => phases.push(phase),
+      runLand: async () => { state.status = after; throw new Error("target edited outside the sandbox"); }
+    }));
+    const value = await runtime.advanceThrough("change-a", "archived");
+    assert.equal(value.action, "REPAIR", label);
+    assert(phases.includes("land"), `${label}: Land was entered`);
+    assert.equal(phases.at(-1), last, label);
+  }
+});
+
 test("advance convergence follows semantic progress beyond 32 proof runs", async () => {
   const state = { status: "building", revision: 0 };
   let proofRuns = 0;

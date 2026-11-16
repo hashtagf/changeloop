@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "stopped-land-releases-phase-advance-through-archived-returns",
+      "requirementKey": "stopped-land-releases-phase",
+      "scenario": "Stopped Land records prove",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "stopped-land-releases-phase-advance-through-archived-returns-2",
+      "requirementKey": "stopped-land-releases-phase",
+      "scenario": "Interrupted apply keeps land",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/advance-runtime.test.mjs) && (env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/advance-runtime.test.mjs",
+        "env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}
