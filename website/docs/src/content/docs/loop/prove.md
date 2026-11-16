@@ -63,6 +63,17 @@ The harness resumes the original target and reuses the answer while its scope is
 unchanged. Waiting names the owner and condition; pausing does not run setup or
 providers. A retry grants no waiver, extra budget, or Land authority.
 
+Each scenario of behavior-changing work is bound to a test file at Change.
+Prove runs each changed test file alone against the original code (when the
+runner takes file arguments): a bound file that already passes there is a
+finding naming the file and its scenarios, even when another test file fails.
+A file bound only to `regression: true` scenarios may pass on the original
+code. A bound test file missing from the workspace, or a repository whose
+product code changed with no `test` provider, is a `REPAIR`. A base check that
+times out or cannot run is not silent: it is named in the `DONE` outcome and in
+the Land report as "test discrimination (no verdict)". Details:
+[EVIDENCE.md](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#tests-that-fail-without-the-change).
+
 On the rapid lane, a clean test run whose count cannot be parsed passes when its
 output shows an executed test; the receipt records `countMeasurement:
 "exit-code"` rather than a count. Standard lanes still require a counted

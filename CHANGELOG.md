@@ -33,6 +33,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it is never an unguarded route. The Homebrew formula keeps its name
   (`brew upgrade claude-foundation`).
 
+### Fixed
+
+- A control root that is not a Git repository but gathers many repositories
+  (for example a folder of 821 service checkouts) works without workarounds.
+  Change intake scans only the declared repositories (narrowed to the draft's
+  selection) instead of exhausting the scan limit on the whole folder. The
+  root copy sandbox and its manifests skip every nested Git checkout: a
+  declared one has its own sandbox, and Land refuses a file written into an
+  undeclared one and asks you to declare it. Copying and hashing those
+  checkouts had produced a 17 GB root sandbox and a 115 MB runtime state file
+  in one such folder.
+- A Git root that ignores its gathered checkouts, or tracks them as gitlinks,
+  also scans the declared repositories' files at change intake.
+- Before a change starts and during Change, the phase guard lets Write and
+  Edit create the v5 draft folder (`.foundation/drafts/<id>/`) and
+  `openspec/repositories.yaml`, so agents no longer fall back to shell writes
+  that bypass the guard. Its refusal names the draft folder route.
+
 ## [3.7.3] - 2026-11-16
 
 ### Added

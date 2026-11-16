@@ -168,6 +168,15 @@ standard change ต้องมี ถ้าขาดจะเป็น `EDIT` �
 hotfix ที่สร้างใหม่ (`bugfix.variant: "hotfix"`) ต้องมี regression ของ incident นั้นด้วย
 คือ scenario ที่ตั้ง `regressionOf` ตรงกับ `bugfix.incident.link` ใน requirement ที่รันการตรวจได้จริง
 เช่น `test` ถ้าไม่มี agent จะได้ `EDIT` และแก้ draft เอง ส่วน hotfix ที่สร้างก่อนอัปเกรดจะไม่ถูกบล็อก
+
+งานที่เปลี่ยนพฤติกรรม (ทุกชนิดยกเว้น refactor, config, dependency, docs, test และ chore)
+ต้องผูกทุก scenario กับไฟล์ test ด้วย ผ่านแถว `testMap` ที่ `scenario` ระบุถึงมัน หรือ path
+ของ test ใน task ที่ cover requirement ของมัน task ที่มี `paths` เป็นโค้ด product ต้อง `verify`
+ด้วยการรัน test ไม่ใช่แค่คำสั่งว่าง lint, format หรือ typecheck `change start`, `revise` และ
+`amend` คืน `EDIT` เดียวที่ระบุทุก scenario ที่ยังไม่ผูกและทุก task ที่ไม่รัน test จากนั้น Prove
+ตรวจว่าไฟล์ที่ผูกไว้ล้มบนโค้ดเดิม ([/prove](/docs/th/loop/prove/)) scenario ที่ตั้ง
+`regression: true` ใช้กันพฤติกรรมเดิม จึงผ่านอยู่แล้วได้
+
 ชนิดงานยังเลือก evidence capability ด้วย ส่วน skill นั้น agent เลือกเองจากคำอธิบายของ
 skill ที่อ้างถึง `workType`, `riskSignals`, requirement และ scenario รายการครบทั้ง 23 ชนิดอยู่ใน
 `WORKFLOW.md` หัวข้อ "Work types and required sections" ส่วน capability อยู่ใน

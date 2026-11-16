@@ -52,6 +52,15 @@ acceptance เป็น `ASK_USER` path ของ control-plane, CI หรือ
 เมื่อขอบเขตยังไม่เปลี่ยน การรอระบุเจ้าของกับเงื่อนไข ส่วนการพักไม่รัน setup หรือ
 provider ต่อ การ retry ไม่ได้ให้อำนาจ waiver เพิ่มงบ หรือ Land
 
+ทุก scenario ของงานที่เปลี่ยนพฤติกรรมถูกผูกกับไฟล์ test ตั้งแต่ Change Prove รัน
+ไฟล์ test ที่เปลี่ยนทีละไฟล์บนโค้ดเดิม (เมื่อ runner รับชื่อไฟล์ได้) ไฟล์ที่ผูกไว้แต่ผ่าน
+บนโค้ดเดิมอยู่แล้วเป็น finding ที่ระบุไฟล์และ scenario ของมัน แม้จะมีไฟล์ test อื่นล้มก็ตาม
+ไฟล์ที่ผูกกับ scenario `regression: true` อย่างเดียวผ่านบนโค้ดเดิมได้ ไฟล์ test ที่ผูกไว้
+แต่ไม่มีใน workspace หรือ repository ที่โค้ด product เปลี่ยนแต่ไม่มี provider `test` เป็น
+`REPAIR` ส่วนการตรวจบนโค้ดเดิมที่ timeout หรือรันไม่ได้ไม่ผ่านไปเงียบ ๆ: ระบบระบุไว้ใน
+outcome `DONE` และในรายงาน Land ว่า "test discrimination (no verdict)" รายละเอียด:
+[EVIDENCE.md](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#tests-that-fail-without-the-change)
+
 ใน lane rapid ถ้า test รันผ่านแต่นับจำนวนไม่ได้ จะผ่านได้เมื่อ output แสดงว่ามี test รันจริง
 receipt จะบันทึก `countMeasurement: "exit-code"` แทนตัวเลข ส่วน lane standard ยังต้อง
 นับจำนวนได้
