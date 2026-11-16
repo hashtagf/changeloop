@@ -24,3 +24,21 @@ test('installed Pi reload replaces a cached Change Loop adapter instead of retai
  assert.deepEqual(await load(),{version:'natural',accepted:true});
  assert.deepEqual(await load(),{version:'natural',accepted:true});
 });
+
+test('installed Pi reload refreshes modules the adapter imports, not only the adapter entry',async t=>{
+ const root=mkdtempSync(join(tmpdir(),'pi-land-loader-deps-'));
+ t.after(()=>rmSync(root,{recursive:true,force:true}));
+ for(const dir of ['.pi/extensions','.pi/lib','.claude/harness/adapters','.claude/harness/runtime/core'])mkdirSync(join(root,dir),{recursive:true});
+ const entry=join(root,'.pi/extensions/changeloop.ts');
+ writeFileSync(entry,readFileSync(join(repo,'.pi/extensions/changeloop.ts'),'utf8'));
+ writeFileSync(join(root,'.pi/lib/native-import.mjs'),readFileSync(join(repo,'.pi/lib/native-import.mjs'),'utf8'));
+ writeFileSync(join(root,'.claude/harness/adapters/pi-extension.mjs'),`import * as dep from '../runtime/core/dep.mjs';\nexport default function install(pi){pi.on('input',()=>({names:Object.keys(dep).sort()}));}`);
+ const dep=join(root,'.claude/harness/runtime/core/dep.mjs');
+ const version=readFileSync(join(homedir(),'.pi/agent/install/current-version'),'utf8').trim();
+ const {loadExtensions,createExtensionRuntime,clearExtensionCache}=await import(join(homedir(),`.pi/agent/install/releases/${version}/node_modules/@earendil-works/pi-coding-agent/dist/core/extensions/loader.js`));
+ async function load(){clearExtensionCache();const result=await loadExtensions([entry],root,undefined,createExtensionRuntime());assert.deepEqual(result.errors,[]);return result.extensions[0].handlers.get('input')[0]({source:'interactive',text:'x'},{});}
+ writeFileSync(dep,'export const landRequest=1;');
+ assert.deepEqual(await load(),{names:['landRequest']});
+ writeFileSync(dep,'export const landRequest=1;export const deliverRequest=2;');
+ assert.deepEqual(await load(),{names:['deliverRequest','landRequest']});
+});

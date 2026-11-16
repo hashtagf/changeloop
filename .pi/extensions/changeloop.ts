@@ -4,18 +4,23 @@ import { createBashTool, createLocalBashOperations } from "@earendil-works/pi-co
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
-import { importNative } from '../lib/native-import.mjs';
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { importRevision } from '../lib/native-import.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const bin = join(root, ".pi/bin");
 const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
+// The adapter imports runtime and hook modules; any of them changing is a new revision.
+const sources = (dir: string): string[] => !existsSync(dir) ? [] : readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : 1)
+  .flatMap((entry) => entry.isDirectory() ? (entry.name === "node_modules" || entry.name === "tests" ? [] : sources(join(dir, entry.name)))
+    : /\.(mjs|js|json)$/.test(entry.name) ? [join(dir, entry.name)] : []);
 
 export default async function changeloop(pi: ExtensionAPI) {
-  // Pi reloads this TS entry, but native ESM otherwise retains an old adapter.
+  // Pi reloads this TS entry, but native ESM otherwise retains the old adapter graph.
   const adapter = join(root, '.claude/harness/adapters/pi-extension.mjs');
-  const revision = createHash('sha256').update(readFileSync(adapter)).digest('hex');
-  const { default: install } = await importNative(pathToFileURL(adapter).href + '?pi-revision=' + revision);
+  const hash = createHash('sha256');
+  for (const file of ["harness", "hooks"].flatMap((dir) => sources(join(root, ".claude", dir)))) hash.update(file).update('\0').update(readFileSync(file)).update('\0');
+  const { default: install } = await importRevision(pathToFileURL(adapter).href, hash.digest('hex'), pathToFileURL(join(root, '.claude')).href);
   install(pi, {
     projectRoot: root,
     hostExecutable: "bash",
