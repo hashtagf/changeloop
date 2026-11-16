@@ -1,0 +1,177 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "package-manifest-node-pi-extensions-scripts-pack-check-mjs",
+      "requirementKey": "package-manifest",
+      "scenario": "Manifest ถูกต้อง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "package-manifest-manifest-package-json",
+      "requirementKey": "package-manifest",
+      "scenario": "แพ็กเกจของ host อยู่ใน dependencies",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "package-manifest-manifest",
+      "requirementKey": "package-manifest",
+      "scenario": "ไฟล์ใน pi.extensions หายไป",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pack-contents-pack-check-mjs-npm-pack-dry-run-json",
+      "requirementKey": "pack-contents",
+      "scenario": "เนื้อหา tarball ถูกต้อง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pack-contents-2",
+      "requirementKey": "pack-contents",
+      "scenario": "มีไฟล์เทสต์หลุดเข้า tarball",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "changelog-version-changelog",
+      "requirementKey": "changelog-version",
+      "scenario": "version ตรงกัน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "changelog-version-changelog-2",
+      "requirementKey": "changelog-version",
+      "scenario": "ลืมเพิ่มหัวข้อ version ใหม่",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "typecheck-npm-prefix-pi-extensions-run-typecheck",
+      "requirementKey": "typecheck",
+      "scenario": "โค้ดปัจจุบันผ่าน typecheck",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "typecheck-tsc",
+      "requirementKey": "typecheck",
+      "scenario": "เรียก API ที่ไม่มีอยู่",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "tool-docs-node-pi-extensions-scripts-tool-docs-mjs-check",
+      "requirementKey": "tool-docs",
+      "scenario": "เอกสารตรงกับโค้ด",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "tool-docs-check",
+      "requirementKey": "tool-docs",
+      "scenario": "เอกสารล้าสมัย",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ask-user-config-config",
+      "requirementKey": "ask-user-config",
+      "scenario": "ปิด bell จาก config",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ask-user-config-config-xdg-config-home",
+      "requirementKey": "ask-user-config",
+      "scenario": "ไม่มีไฟล์ config",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ask-user-config-config-2",
+      "requirementKey": "ask-user-config",
+      "scenario": "JSON เสีย",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ask-user-config-config-3",
+      "requirementKey": "ask-user-config",
+      "scenario": "ค่าผิดชนิด",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "event-namespace-pi-extensions-ask-user-answer",
+      "requirementKey": "event-namespace",
+      "scenario": "bridge ภายนอกตอบผ่านชื่อใหม่",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "event-namespace-ask-user-answer",
+      "requirementKey": "event-namespace",
+      "scenario": "ชื่อเดิมไม่มีผล",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test pi-extensions/scripts/pack-check.test.cjs && node pi-extensions/scripts/pack-check.mjs) && (npm --prefix pi-extensions run typecheck && node --test pi-extensions/scripts/typecheck.test.cjs && bash pi-extensions/test.sh) && (node --test pi-extensions/ask-user/*.test.cjs) && (node --test pi-extensions/scripts/tool-docs.test.cjs && node pi-extensions/scripts/tool-docs.mjs --check)"
+      ],
+      "segments": [
+        "node --test pi-extensions/scripts/pack-check.test.cjs && node pi-extensions/scripts/pack-check.mjs",
+        "npm --prefix pi-extensions run typecheck && node --test pi-extensions/scripts/typecheck.test.cjs && bash pi-extensions/test.sh",
+        "node --test pi-extensions/ask-user/*.test.cjs",
+        "node --test pi-extensions/scripts/tool-docs.test.cjs && node pi-extensions/scripts/tool-docs.mjs --check"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

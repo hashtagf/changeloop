@@ -17,7 +17,7 @@ export async function walkQuestions(ctx, record, opts): Promise<Response | undef
       const text = await ctx.ui.input(`${prefix}\n${q.options.map(optionText).join('\n')}${previews}\nพิมพ์เลขคั่นด้วย , และเพิ่มข้อความหลัง ; ได้ (เช่น 1,3; อื่น ๆ)`, '1,3', opts);
       if (!text?.trim()) return undefined;
       const [nums, ...rest] = /^[\d\s,]*(;|$)/.test(text) ? text.split(';') : ['', text];
-      const selected = [...new Set(nums.split(',').map(n => n.trim()).filter(Boolean).map(Number))];
+      const selected: number[] = [...new Set<number>(nums.split(',').map(n => n.trim()).filter(Boolean).map(Number))];
       if (selected.some(n => !q.options[n - 1])) { ctx.ui.notify(`ไม่มีตัวเลือก ${selected.filter(n => !q.options[n - 1]).join(', ')}`, 'warning'); return undefined; }
       answers.push({ questionIndex: i, selected: selected.map(n => q.options[n - 1].label), answer: rest.join(';').trim() || null });
     } else {

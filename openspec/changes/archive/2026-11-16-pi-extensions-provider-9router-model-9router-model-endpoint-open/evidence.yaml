@@ -1,0 +1,149 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "provider-registration-extension-extensionapi",
+      "requirementKey": "provider-registration",
+      "scenario": "ใช้ URL จาก env",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "provider-registration-2",
+      "requirementKey": "provider-registration",
+      "scenario": "ใช้ URL จากไฟล์ config",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "provider-registration-extension",
+      "requirementKey": "provider-registration",
+      "scenario": "ไม่มีการตั้งค่าเลย",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "provider-registration-4",
+      "requirementKey": "provider-registration",
+      "scenario": "ค่าใน config ไม่ใช่ URL",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "package-wiring-npm-prefix-pi-extensions-run-check",
+      "requirementKey": "package-wiring",
+      "scenario": "ตรวจแพ็กเกจครบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "package-wiring-bash-pi-extensions-install-sh-dry-run",
+      "requirementKey": "package-wiring",
+      "scenario": "install dry-run",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "model-discovery-refreshmodels-credential-api-key-test-key-allown",
+      "requirementKey": "model-discovery",
+      "scenario": "ดึงรายชื่อสำเร็จ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "model-discovery-refreshmodels-allownetwork-false",
+      "requirementKey": "model-discovery",
+      "scenario": "ไม่อนุญาต network ใช้รายชื่อที่บันทึกไว้",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "model-discovery-refreshmodels-allownetwork-false-context-stored",
+      "requirementKey": "model-discovery",
+      "scenario": "ไม่อนุญาต network และยังไม่เคยบันทึก",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "model-discovery-refreshmodels",
+      "requirementKey": "model-discovery",
+      "scenario": "key ผิด",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "model-discovery-refreshmodels-2",
+      "requirementKey": "model-discovery",
+      "scenario": "router ติดต่อไม่ได้หรือตอบผิดรูปแบบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "model-discovery-abort-signal-server",
+      "requirementKey": "model-discovery",
+      "scenario": "ยกเลิกระหว่างดึง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "chat-through-router-pi-interactive-extension-server-get-v1-model",
+      "requirementKey": "chat-through-router",
+      "scenario": "เปิด Pi แบบ interactive แล้วใช้ pi -p",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "chat-through-router-pi-p-model-9router-id",
+      "requirementKey": "chat-through-router",
+      "scenario": "pi -p ก่อนเคยดึงรายชื่อ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test pi-extensions/nine-router/*.test.cjs) && (npm --prefix pi-extensions run check && bash pi-extensions/install.sh --dry-run | grep -q nine-router) && (node --test pi-extensions/nine-router/test/*.test.cjs)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "node --test pi-extensions/nine-router/*.test.cjs",
+        "npm --prefix pi-extensions run check && bash pi-extensions/install.sh --dry-run | grep -q nine-router",
+        "node --test pi-extensions/nine-router/test/*.test.cjs"
+      ]
+    }
+  }
+}

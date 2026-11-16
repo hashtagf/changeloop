@@ -34,7 +34,7 @@ export function isAnswered(q: Question, s: QState) {
 }
 
 export function draftResponse(questions: Question[], draft: Draft): Response {
-  return validateResponse(questions, { globalNote: draft.globalNote, answers: questions.flatMap((q, i) => {
+  return validateResponse(questions, { globalNote: draft.globalNote, answers: questions.flatMap((q, i): any[] => {
     const s = draft.qs[i];
     if (!isAnswered(q, s)) return [];
     if (q.multiSelect) return [{ questionIndex: i, selected: [...s.selected].sort((a, b) => a - b).map(n => q.options[n].label), answer: s.custom.trim() || null, notes: s.notes }];

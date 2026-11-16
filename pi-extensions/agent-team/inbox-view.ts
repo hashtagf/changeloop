@@ -2,7 +2,7 @@ import { readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import * as store from './store.ts';
 
-function inboxView(root, self, options = {}) {
+function inboxView(root, self, options: any = {}) {
   const location = store.dir(root, self), folder = join(location, 'inbox');
   if (options.id) {
     if (!/^\d+-[a-f0-9-]+$/.test(options.id)) throw new Error('Invalid message ID');

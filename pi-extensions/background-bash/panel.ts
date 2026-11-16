@@ -54,6 +54,8 @@ export class BackgroundPanel {
     else if (!this.viewing && /^[^\x00-\x1f\x7f]+$/u.test(data)) { this.query += data; this.update(this.all); }
     this.options.tui.requestRender();
   }
+  /** Renders from live state on every call; nothing is cached. */
+  invalidate() {}
   render(width: number) {
     const { theme, tui } = this.options, height = Math.max(5, Math.min(32, tui.terminal.rows - 10));
     const fit = (line: string) => truncateToWidth(line, width);

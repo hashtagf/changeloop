@@ -76,7 +76,7 @@ function register(root, identity) {
 function heartbeat(root, id, presence) {
   atomic(path.join(dir(root, id), 'presence.json'), { ...presence, id, pid: process.pid, lastSeen: Date.now() });
 }
-function send(root, from, to, message, { delivery = 'followUp', type = 'message', details } = {}) {
+function send(root, from, to, message, { delivery = 'followUp', type = 'message', details }: { delivery?: string; type?: string; details?: unknown } = {}) {
   member(root, from);
   const recipient = member(root, to);
   if (recipient.kind === 'managed' && ['stopped', 'failed', 'exited', 'interrupted'].includes(recipient.status)) {
@@ -90,7 +90,7 @@ function send(root, from, to, message, { delivery = 'followUp', type = 'message'
   atomic(path.join(dir(root, to), 'inbox', `${id}.json`), envelope);
   return { id, to, status: member(root, to).online ? 'queued' : 'queued_offline' };
 }
-function inbox(root, id, { unreadOnly = false, limit = 30, filter = () => true } = {}) {
+function inbox(root, id, { unreadOnly = false, limit = 30, filter = (_message: any): boolean => true } = {}) {
   const location = dir(root, id), folder = path.join(location, 'inbox');
   if (!fs.existsSync(folder)) return [];
   const all = fs.readdirSync(folder).filter(file => /^\d+-[a-f0-9-]+\.json$/.test(file)).sort();
@@ -112,7 +112,7 @@ function inbox(root, id, { unreadOnly = false, limit = 30, filter = () => true }
   }
   return result;
 }
-function deliver(root, id, handler, { filter = () => true } = {}) {
+function deliver(root, id, handler, { filter = (_message: any): boolean => true } = {}) {
   const lock = path.join(dir(root, id), 'delivery.lock');
   try { fs.mkdirSync(lock, { mode: 0o700 }); }
   catch (error) {

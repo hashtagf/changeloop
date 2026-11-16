@@ -23,14 +23,17 @@ typed text, notes, tab) is saved under `drafts/` per answering session, survives
 `/reload` and restarts, is never treated as an answer, and is removed once the
 question is answered anywhere.
 RPC hosts fall back to native select/input (multi-select: `1,3; extra text`).
-A terminal BEL marks newly visible questions (`PI_ASK_USER_BELL=0` disables).
+A terminal BEL marks newly visible questions; disable it with `askUser.bell:
+false` in `~/.config/pi-extensions/config.json` or `PI_ASK_USER_BELL=0`.
 
-Event bus (`pi.events`, per process): `ask-user:prompt` (new pending question,
-no preview bodies), `ask-user:resolved` (answered anywhere; closes an open
-dialog), inbound `ask-user:answer` `{ id, requestId?, answers: [{ questionIndex,
-optionIndexes?, text?, notes? }], globalNote? }` or `{ id, text }`, and verdict
-`ask-user:answer-result` `{ ok, code?: invalid_payload|not_found|invalid_answer|
-already_answered, reason?, id, requestId? }`. First answer wins.
+Event bus (`pi.events`, per process, prefix `pi-extensions:ask-user:`):
+`pi-extensions:ask-user:prompt` (new pending question, no preview bodies),
+`pi-extensions:ask-user:resolved` (answered anywhere; closes an open dialog),
+inbound `pi-extensions:ask-user:answer` `{ id, requestId?, answers: [{
+questionIndex, optionIndexes?, text?, notes? }], globalNote? }` or `{ id, text }`,
+and verdict `pi-extensions:ask-user:answer-result` `{ ok, code?: invalid_payload|
+not_found|invalid_answer|already_answered, reason?, id, requestId? }`. First
+answer wins. The pre-0.1.0 `ask-user:*` names are not used.
 
 In Pi, `/questions` or **Ctrl+Alt+U** opens the pending list. Select a question,
 choose an option or type an answer. New questions open the list once when Pi is

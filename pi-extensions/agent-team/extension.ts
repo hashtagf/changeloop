@@ -1,4 +1,6 @@
-import { CustomEditor, type ExtensionAPI, type ExtensionContext, type EditorFactory } from '@earendil-works/pi-coding-agent';
+import { CustomEditor, type ExtensionAPI, type ExtensionContext, type ExtensionUIContext } from '@earendil-works/pi-coding-agent';
+// EditorFactory is not re-exported from the package index.
+type EditorFactory = Parameters<ExtensionUIContext['setEditorComponent']>[0];
 import { Type } from 'typebox';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -315,7 +317,7 @@ export default function agentTeam(pi: ExtensionAPI) {
     monitor = setInterval(tick, 1000); monitor.unref?.(); tick();
   });
   pi.on('before_agent_start', event => {
-    turnPrompt = event.prompt;
+    turnPrompt = 'prompt' in event ? event.prompt : undefined;
     const parent = self ? store.member(root, self).parentId : undefined;
     const viewing = dock?.activeAgentId;
     const automatic = self ? autoDelegation(root, self) : false;

@@ -103,7 +103,7 @@ test('real Pi loader: structured batch tool call and event-bus bridge (prompt, a
   const { loadExtensions, createExtensionRuntime } = await import(path.join(base, 'dist/core/extensions/loader.js'));
   const { createEventBus } = await import(path.join(base, 'dist/core/event-bus.js'));
   const bus = createEventBus(), seen = { prompt: [], result: [], resolved: [] };
-  for (const name of Object.keys(seen)) bus.on(`ask-user:${name === 'result' ? 'answer-result' : name}`, p => seen[name].push(p));
+  for (const name of Object.keys(seen)) bus.on(`pi-extensions:ask-user:${name === 'result' ? 'answer-result' : name}`, p => seen[name].push(p));
   const ctx = { cwd: root, mode: 'rpc', isIdle: () => false, hasPendingMessages: () => false,
     sessionManager: { getSessionId: () => 'events-main', getBranch: () => [] }, ui: { setStatus() {}, notify() {} } };
   const loaded = await loadExtensions([path.join(__dirname, 'index.ts')], root, bus, createExtensionRuntime());
@@ -124,17 +124,21 @@ test('real Pi loader: structured batch tool call and event-bus bridge (prompt, a
     assert.equal(seen.prompt.length, 1);
     assert.deepEqual(seen.prompt[0].questions[0].options[0], { label: 'Redis', description: undefined, recommended: true, hasPreview: true });
     const id = result.details.id;
-    bus.emit('ask-user:answer', { id, requestId: 'r1', answers: [{ questionIndex: 0, optionIndexes: [0] }] });
+    let legacyResults = 0; bus.on('ask-user:answer-result', () => legacyResults++);
+    bus.emit('ask-user:answer', { id, text: 'legacy channel' });
+    assert.equal(legacyResults, 0); assert.equal(seen.result.length, 0, 'old channel names are ignored');
+    assert.equal(fs.existsSync(path.join(process.env.PI_QUESTIONS_ROOT, 'answers', id + '.json')), false, 'question still pending');
+    bus.emit('pi-extensions:ask-user:answer', { id, requestId: 'r1', answers: [{ questionIndex: 0, optionIndexes: [0] }] });
     assert.equal(seen.result.at(-1).code, 'invalid_answer');
-    bus.emit('ask-user:answer', { id: 'f'.repeat(64), answers: [] });
+    bus.emit('pi-extensions:ask-user:answer', { id: 'f'.repeat(64), answers: [] });
     assert.equal(seen.result.at(-1).code, 'not_found');
-    bus.emit('ask-user:answer', { id, requestId: 'r2', answers: [{ questionIndex: 0, optionIndexes: [1] }, { questionIndex: 1, optionIndexes: [0, 1], notes: 'both' }], globalNote: 'via telegram' });
+    bus.emit('pi-extensions:ask-user:answer', { id, requestId: 'r2', answers: [{ questionIndex: 0, optionIndexes: [1] }, { questionIndex: 1, optionIndexes: [0, 1], notes: 'both' }], globalNote: 'via telegram' });
     assert.deepEqual(seen.result.at(-1), { ok: true, code: undefined, reason: undefined, id, requestId: 'r2' });
-    bus.emit('ask-user:answer', { id, text: 'late' });
+    bus.emit('pi-extensions:ask-user:answer', { id, text: 'late' });
     assert.equal(seen.result.at(-1).code, 'already_answered');
     assert.equal(seen.resolved.length, 1); assert.equal(seen.resolved[0].response.globalNote, 'via telegram');
     await fire('session_shutdown');
-    bus.emit('ask-user:answer', { id, text: 'after shutdown' });
+    bus.emit('pi-extensions:ask-user:answer', { id, text: 'after shutdown' });
     assert.equal(seen.result.length, 4, 'listener removed on shutdown');
   } finally {
     await fire('session_shutdown');

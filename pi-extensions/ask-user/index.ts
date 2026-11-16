@@ -5,9 +5,11 @@ import { createQuestionStore } from './store.ts';
 import { createQuestionPresenter } from './presenter.ts';
 import { recordedAnswers } from './delivery.ts';
 import { questionsOf, publicQuestions, responseFromIndexes, formatResponse } from './schema.ts';
+import { loadAskUserConfig, bellEnabled, DEFAULTS } from './config.ts';
 import * as team from '../agent-team/store.ts';
 
-export const EVENTS = { prompt: 'ask-user:prompt', resolved: 'ask-user:resolved', answer: 'ask-user:answer', result: 'ask-user:answer-result' };
+export const EVENT_PREFIX = 'pi-extensions:ask-user:';
+export const EVENTS = { prompt: `${EVENT_PREFIX}prompt`, resolved: `${EVENT_PREFIX}resolved`, answer: `${EVENT_PREFIX}answer`, result: `${EVENT_PREFIX}answer-result` };
 
 const policy = `When you need a user decision, missing information or preference, use ask_user with a stable key, a self-contained question and optional choices. Prefer typed options ({ label, description, recommended, preview }) over prose, mark one recommended choice first, use multiSelect when several may apply, and batch up to 4 related decisions in one call with questions[] instead of asking one by one. Do not bury questions in prose. Questions remain pending until the user answers through /questions; never cancel, expire or infer an answer from silence, unrelated replies or quoted messages. Do not repeat an existing question with a new key. Continue independent work; pause work that depends on an unanswered question. A user-question-answer message identifies the exact original question and session. Apply that answer only to that question; it does not grant unrelated authority.`;
 
@@ -37,7 +39,7 @@ const Parameters = Type.Object({
 
 export default function askUser(pi) {
   const store = createQuestionStore();
-  let ctx, presenter, timer, lastStatus = '', stopped = true, presenting = false, unsubscribe;
+  let ctx, presenter, timer, lastStatus = '', stopped = true, presenting = false, unsubscribe, config = { ...DEFAULTS };
   const offered = new Set<string>();
   const queued = new Set<string>();
   const announced = new Set<string>();
@@ -58,7 +60,7 @@ export default function askUser(pi) {
     return { sessionId, recipientSessionId: member.sessionId || sessionId, agentName };
   };
   const bell = () => {
-    if (process.env.PI_ASK_USER_BELL === '0' || ctx?.mode !== 'tui' || !process.stdout.isTTY) return;
+    if (!bellEnabled(config) || ctx?.mode !== 'tui' || !process.stdout.isTTY) return;
     try { process.stdout.write('\x07'); } catch {}
   };
   // Announce newly visible questions once per process and report ones resolved anywhere.
@@ -137,6 +139,7 @@ export default function askUser(pi) {
   pi.on('session_start', (_event, context) => {
     clearInterval(timer); presenter?.close(); unsubscribe?.();
     ctx = context; stopped = false; lastStatus = ''; offered.clear(); queued.clear(); announced.clear();
+    config = loadAskUserConfig(process.env, message => context.ui.notify(message, 'warning'));
     presenter = createQuestionPresenter(store, session(), refresh);
     unsubscribe = pi.events?.on(EVENTS.answer, onExternalAnswer);
     timer = setInterval(() => { try { refresh(); } catch (error) { ctx.ui.notify(`Questions: ${error.message}`, 'error'); } }, 1500);

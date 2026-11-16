@@ -21,7 +21,7 @@ function createNotifications(root, send, clock = Date.now) {
     if (!pending.length || !ctx.isIdle?.() || ctx.hasPendingMessages?.()) return 0;
     const failure = job => job.status !== 'completed' || job.exitCode !== 0;
     const now = clock();
-    let state = {};
+    let state: { lastWakeAt?: number } = {};
     try { state = JSON.parse(readFileSync(stateFile, 'utf8')); } catch (error) { if (error.code !== 'ENOENT') throw error; }
     const important = pending.some(failure);
     const first = Math.min(...pending.map(job => job.finishedAt ?? job.createdAt));

@@ -7,7 +7,7 @@ function summary(member) {
   return { id: member.id, name: clip(member.name, 120), kind: member.kind,
     status: clip(member.status, 24), online: Boolean(member.online), parentId: member.parentId };
 }
-function selectMembers(members, self, options = {}) {
+function selectMembers(members, self, options: any = {}) {
   const scope = options.scope ?? 'team';
   if (!['team', 'all'].includes(scope)) throw new Error('scope must be team or all');
   const limit = options.limit ?? 20, offset = options.offset ?? 0;
@@ -28,7 +28,7 @@ function selectMembers(members, self, options = {}) {
     offset, limit, nextOffset: offset + page.length < matching.length ? offset + page.length : null,
     members: page.map(summary) };
 }
-function listAgents(root, self, options = {}) {
+function listAgents(root, self, options: any = {}) {
   if (options.details && !options.id) throw new Error('details requires a single agent id');
   if (!options.id) return selectMembers(store.list(root), self, options);
   const member = store.resolve(root, options.id, self);

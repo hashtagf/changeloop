@@ -1,0 +1,80 @@
+{
+  "name": "@hashtagf/pi-extensions",
+  "version": "0.2.0",
+  "description": "Pi extensions: worker agent team with task board, persistent structured user questions, background shell jobs, and a 9router provider.",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "subagents",
+    "ask-user",
+    "questionnaire",
+    "background-jobs",
+    "task-board",
+    "9router",
+    "provider"
+  ],
+  "type": "module",
+  "license": "MIT",
+  "author": "hashtagf",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hashtagf/changeloop.git",
+    "directory": "pi-extensions"
+  },
+  "homepage": "https://github.com/hashtagf/changeloop/tree/main/pi-extensions#readme",
+  "bugs": {
+    "url": "https://github.com/hashtagf/changeloop/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "pi": {
+    "extensions": [
+      "./agent-team/index.ts",
+      "./ask-user/index.ts",
+      "./background-bash/index.ts",
+      "./nine-router/index.ts"
+    ]
+  },
+  "files": [
+    "agent-team/",
+    "ask-user/",
+    "background-bash/",
+    "nine-router/",
+    "!**/*.test.cjs",
+    "!**/test.cjs",
+    "!**/test/",
+    "docs/",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "bash test.sh && node --test scripts/*.test.cjs",
+    "test:tui": "bash test.sh --tui",
+    "typecheck": "tsc -p tsconfig.json",
+    "docs": "node scripts/tool-docs.mjs --write",
+    "docs:check": "node scripts/tool-docs.mjs --check",
+    "pack:check": "node scripts/pack-check.mjs",
+    "check": "npm run typecheck && npm run docs:check && npm run pack:check && npm test",
+    "install:local": "bash install.sh",
+    "prepublishOnly": "npm run check"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-ai": "1.5.2",
+    "@earendil-works/pi-coding-agent": "1.5.2",
+    "@earendil-works/pi-tui": "1.5.2",
+    "@types/node": "^26.6.6",
+    "typebox": "1.3.27",
+    "typescript": "^7.0.2"
+  }
+}

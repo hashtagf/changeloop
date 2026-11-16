@@ -29,7 +29,7 @@ export default function backgroundBash(pi: ExtensionAPI) {
       PI_SESSION_FILE: ctx.sessionManager.getSessionFile?.() ?? '', PI_PROVIDER: ctx.model?.provider ?? '',
       PI_MODEL: ctx.model?.id ?? '', PI_REASONING_LEVEL: ctx.thinkingLevel ?? '' },
   });
-  const query = (dir: string, action: string, id?: string, lines?: number) => {
+  const query = (dir: string, action: string, id?: string, lines?: number): any => {
     return jobQuery(dir, { action, id, lines });
   };
   const openJobs = async (ctx: ExtensionContext, initial?: string, native = false) => {
