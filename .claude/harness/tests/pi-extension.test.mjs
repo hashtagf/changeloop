@@ -7,6 +7,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import install from "../adapters/pi-extension.mjs";
 import { HOST_COMMANDS } from "../runtime/core/host-instruction.mjs";
+import { isLandConsent } from "../runtime/core/pi-land-context.mjs";
 
 const source = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const temp = realpathSync(mkdtempSync(join(tmpdir(), "pi-adapter-")));
@@ -279,6 +280,27 @@ test("Pi refuses dynamic Land arguments and direct archive without explicit Land
     assert.equal((await b.call("bash", { command })).block, true, command);
   await b.command("land", "pi-case; touch bad");
   assert.equal(b.messages.length, 0);
+});
+
+// 2026-11-16: "land ได้" was refused; questions and refusals must stay refused.
+test("natural Land consent accepts short affirmatives and refuses questions and refusals", () => {
+  for (const text of ["land ได้", "land ได้เลย", "land เลย", "land ได้ครับ", "land ได้ค่ะ",
+    "ลง land ได้", "ลง land ได้เลย", "land it", "go ahead and land", "/land"].filter((t) => !t.startsWith("/")))
+    assert.equal(isLandConsent(text), true, text);
+  for (const text of ["land ได้ไหม", "land ได้ยัง", "land ได้หรือยัง", "land?", "land ได้มั้ย",
+    "อย่า land", "ยังไม่ต้อง land", "ไม่ต้อง land", "don't land", "do not land",
+    "> land ได้เลย", "ok", "ได้เลย"])
+    assert.equal(isLandConsent(text), false, text);
+});
+
+// 2026-11-16: committing an archived change was refused as a Land operation.
+test("Pi treats the word archive in an ordinary command as data, not Land", async () => {
+  const b = await bridge();
+  for (const command of ["git add openspec/changes/archive/2026-11-16-x/tasks.md",
+    "rg -n archive .claude/hooks", "git commit -m 'archive old notes; sandbox apply docs'"]) {
+    const result = await b.call("bash", { command });
+    assert.doesNotMatch(String(result?.reason || ""), /Land needs user approval/, command);
+  }
 });
 
 function readyForLand(session, id) {

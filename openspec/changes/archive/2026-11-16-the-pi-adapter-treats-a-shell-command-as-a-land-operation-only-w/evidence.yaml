@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "archive-word-not-land-the-agent-runs-git-add-openspec-changes-ar",
+      "requirementKey": "archive-word-not-land",
+      "scenario": "Git on an archived change path runs",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "archive-word-not-land-the-agent-runs-node-claude-harness-foundat",
+      "requirementKey": "archive-word-not-land",
+      "scenario": "CLI archive still needs Land",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "natural-land-consent-variants-the-user-types-land-in-the-pi-sess",
+      "requirementKey": "natural-land-consent-variants",
+      "scenario": "Short affirmative grants consent",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "natural-land-consent-variants-the-user-types-land-or-land",
+      "requirementKey": "natural-land-consent-variants",
+      "scenario": "Question is not consent",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "natural-land-consent-variants-the-user-types-land-or-don-t-land",
+      "requirementKey": "natural-land-consent-variants",
+      "scenario": "Refusal is not consent",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/pi-extension.test.mjs) && (env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "node --test .claude/harness/tests/pi-extension.test.mjs",
+        "env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh"
+      ]
+    }
+  }
+}

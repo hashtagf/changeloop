@@ -1,0 +1,7 @@
+# Tasks
+
+> This is the sole implementation ledger.
+
+- [x] **T001** Land detection in the Pi adapter is anchored to Change Loop CLI invocations [key:task-1] [kind:implementation] [paths:.claude/harness/adapters/pi-extension.mjs,.claude/harness/tests/pi-extension.test.mjs] [claims:archive-word-not-land-the-agent-runs-git-add-openspec-changes-ar,archive-word-not-land-the-agent-runs-node-claude-harness-foundat] — verify: `node --test .claude/harness/tests/pi-extension.test.mjs`
+- [x] **T002** Default deterministic gate stays green [key:task-2] [kind:implementation] [paths:.claude/harness/adapters/pi-extension.mjs] [claims:archive-word-not-land-the-agent-runs-git-add-openspec-changes-ar,archive-word-not-land-the-agent-runs-node-claude-harness-foundat,natural-land-consent-variants-the-user-types-land-in-the-pi-sess,natural-land-consent-variants-the-user-types-land-or-land,natural-land-consent-variants-the-user-types-land-or-don-t-land] — verify: `env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh`
+- [x] **T003** isLandConsent accepts the agreed affirmatives and rejects questions and refusals [key:task-3] [paths:.claude/harness/runtime/core/pi-land-context.mjs,.claude/harness/tests/pi-extension.test.mjs] [claims:natural-land-consent-variants-the-user-types-land-in-the-pi-sess,natural-land-consent-variants-the-user-types-land-or-land,natural-land-consent-variants-the-user-types-land-or-don-t-land] — verify: `node --test .claude/harness/tests/pi-extension.test.mjs`

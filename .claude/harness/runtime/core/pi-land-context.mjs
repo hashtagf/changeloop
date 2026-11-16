@@ -5,8 +5,10 @@ const ID = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 
 // Whole user utterances only: quoted examples, negatives and generic agreement
 // are not Land authority. Tool output and worker messages never enter here.
+// The whole-string anchor is what refuses questions and refusals: any extra
+// word (ไหม, ยัง, อย่า, ไม่ต้อง, don't, ?) makes the utterance not match.
 export function isLandConsent(text) {
-  return /^(?:land(?:\s+(?:it|this|this change|now|please))?|(?:please\s+)?(?:go ahead and\s+)?land(?:\s+it)?|(?:ช่วย\s*)?land\s*(?:ได้เลย|เลย|งานนี้ได้เลย|งานนี้ให้หน่อย))(?:\s*(?:ครับ|ค่ะ|นะ|please))?[.!！]*$/iu.test(String(text).trim());
+  return /^(?:land(?:\s+(?:it|this|this change|now|please))?|(?:please\s+)?(?:go ahead and\s+)?land(?:\s+it)?|(?:ช่วย\s*|ลง\s*)?land\s*(?:ได้เลย|ได้|เลย|งานนี้ได้เลย|งานนี้ให้หน่อย))(?:\s*(?:ครับ|ค่ะ|นะ|please))?[.!！]*$/iu.test(String(text).trim());
 }
 
 export function sessionLandCandidates(root, sessionId) {

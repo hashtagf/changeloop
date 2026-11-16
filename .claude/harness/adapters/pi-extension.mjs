@@ -140,9 +140,15 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       const normalized = normalizeHarnessCliInvocations(String(input.command))
         .replace(/(['"])([a-z0-9-]+)\1/g, "$2");
       // Public advance grants Land; it is not a harmless Build continuation.
+      // Land subcommands exist only on the Change Loop CLI, so they count only
+      // after `claude-foundation` or `foundation.mjs`; the word archive in a
+      // path or message (git add openspec/changes/archive/...) is data.
+      const cli = String.raw`(?:\bclaude-foundation|foundation\.mjs)\s+`;
+      const landWords = String.raw`(?:land(?:-|\s+)(?:advance|archive|resume|recover|record|pointers|plan)|archive|sandbox(?:-|\s+)apply)`;
       const grants = [...normalized.matchAll(/\badvance\s+([a-z0-9-]+)[^;&|\n]*?--through(?:=|\s+)archived\b/g),
-        ...normalized.matchAll(/\b(?:land(?:-|\s+)(?:advance|archive|resume|recover|record|pointers|plan)|archive|sandbox(?:-|\s+)apply)\s+([a-z0-9-]+)/g)];
-      const landOperation = grants.length || /--through(?:=|\s+)archived\b|\b(?:land(?:-|\s+)(?:advance|archive|resume|recover|record|pointers|plan)|archive|sandbox(?:-|\s+)apply)\b/.test(normalized);
+        ...normalized.matchAll(new RegExp(`${cli}${landWords}\\s+([a-z0-9-]+)`, "g"))];
+      const landOperation = grants.length || /--through(?:=|\s+)archived\b/.test(normalized) ||
+        new RegExp(`${cli}${landWords}\\b`).test(normalized);
       if (landOperation && !(grants.length && invocation?.command === "land" &&
           grants.every((grant) => invocation.args === grant[1])))
         throw new Error('Land needs user approval in this session. Ask the user to say "land ได้เลย" or use /land; do not retry the same blocked command or switch hosts.');
