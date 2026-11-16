@@ -417,7 +417,7 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
   if (baseline) args.push("--arm", selectedArm);
   // One pinned model for every arm; the Pi shim maps it to its provider.
   if (model) args.push("--claude-arg", "--model", "--claude-arg", model);
-  if (pi) args.push("--claude-bin", join(HERE, "pi-host.mjs"));
+  if (pi) args.push("--claude-bin", join(HERE, "pi-host.mjs"), "--host", "pi");
   if (baseline && scenario.execution === "paid")
     args.push("--claude-arg", "--permission-mode", "--claude-arg", "acceptEdits",
       "--claude-arg", "--allowedTools",

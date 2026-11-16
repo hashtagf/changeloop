@@ -539,8 +539,11 @@ supported. Project settings survive repeated shared initialization.
 Built-in Read/Grep/Bash use secret guards; Write/Edit/Bash use phase guards;
 successful structured edits feed lint diagnostics back as tool results.
 The bash wrapper and `!`/`!!` backend export the Pi session/model identity to
-runtime children without changing the parent environment. Each bash call starts
-in the session cwd: anchor every Build call to its absolute workspace.
+runtime children without changing the parent environment. During Build each
+agent bash call starts in the recorded change workspace (as Claude Code does
+after the contract's single `cd` there); otherwise it starts in the session cwd.
+The user's `!`/`!!` commands keep the session cwd. A guard's additional context,
+such as an unverified shell-mutation warning, is appended to the tool result.
 
 A Pi worker tool starts each worker with `FOUNDATION_PARENT_SESSION_ID` set to
 the coordinating session. The worker's guards then resolve that session's

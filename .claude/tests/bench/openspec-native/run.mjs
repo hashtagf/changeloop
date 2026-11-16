@@ -1563,6 +1563,7 @@ async function main() {
       durationMs: execution.stopwatch.wallMs
     }] : [],
     provenance: {
+      host: args.host || null,
       requestedModel: args.model || requestedHostModel(args["claude-arg"]) ||
         parsedHost.models?.sessionModel || null,
       actualModel: parsedHost.models?.actualModel || null,

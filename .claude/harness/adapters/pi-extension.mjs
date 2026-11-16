@@ -1,13 +1,16 @@
 // Pi host bridge. The installed runtime owns instructions, phase state and proof.
 // This module has no Pi dependency so the host boundary is testable offline.
 import { spawn } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { HOST_COMMANDS } from "../runtime/core/host-instruction.mjs";
 import { normalizeHarnessCliInvocations } from "../runtime/core/shell-mutation-policy.mjs";
 import { assertSharedInstallation, isSharedProject } from '../runtime/core/project-installation.mjs';
 import { isLandConsent, resolveSessionLand } from '../runtime/core/pi-land-context.mjs';
+import { recordedPhaseContext } from '../../hooks/phase-state.mjs';
+
+const PHASE_FRESHNESS_MS = 12 * 60 * 60 * 1000;
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const TOOLS = { read: "Read", grep: "Grep", write: "Write", edit: "Edit", bash: "Bash" };
@@ -55,6 +58,25 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   let contract;
   let ready = false;
   const touched = new Map();
+  const guardNotes = new Map();
+
+  // Claude Code keeps the agent's cwd after the contract's single `cd` into the
+  // Build workspace; every Pi bash call starts fresh in the session cwd. During
+  // Build start agent shell calls in the recorded workspace instead, so a
+  // relative write lands there and the guard judges containment from there.
+  const buildWorkspace = (ctx) => {
+    if (invocation?.command === "investigate") return null;
+    try {
+      const recorded = recordedPhaseContext({ projectRoot: root,
+        sessionId: parent || ctx.sessionManager.getSessionId(), freshnessMs: PHASE_FRESHNESS_MS,
+        pathExists: existsSync, readDirectory: (path) => readdirSync(path, { withFileTypes: true }),
+        readText: readFileSync, nowMs: Date.now });
+      if (recorded?.phase !== "build" || !ID.test(recorded.changeId || "")) return null;
+      const state = JSON.parse(readFileSync(join(root, ".foundation/runtime", `${recorded.changeId}.json`), "utf8"));
+      const path = state?.workspace?.path;
+      return typeof path === "string" && statSync(path).isDirectory() ? path : null;
+    } catch { return null; }
+  };
 
   const environment = (ctx, base = process.env) => {
     const env = { ...base, CLAUDE_PROJECT_DIR: root,
@@ -132,7 +154,10 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     }
     const event = () => ({ tool_name: tool, tool_input: toolInput(), cwd,
       session_id: parent || ctx.sessionManager.getSessionId() });
+    const notes = [];
     const apply = (output) => {
+      if (typeof output.additionalContext === "string" && output.additionalContext.trim())
+        notes.push(output.additionalContext.trim());
       const updated = output.updatedInput;
       if (!updated) return;
       if (updated.command !== undefined) input.command = updated.command;
@@ -149,10 +174,11 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     if (["Read", "Grep", "Bash"].includes(tool)) apply(await hook("protect-secrets.sh", event(), ctx));
     if (["Write", "Edit", "Bash"].includes(tool)) apply(await hook("phase-mutation-guard.sh", event(), ctx));
     if (tool === "Bash") apply(await hook("shell-route-guard.sh", event(), ctx));
+    return notes;
   };
 
   pi.on("session_start", async (_event, ctx) => {
-    invocation = null; contract = undefined; ready = false; touched.clear();
+    invocation = null; contract = undefined; ready = false; touched.clear(); guardNotes.clear();
     try {
       assertSharedInstallation(root, runtimeRoot);
       for (const file of ["protect-secrets.sh", "phase-mutation-guard.sh", "lint.sh", "shell-route-guard.sh"])
@@ -189,8 +215,9 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     if (!contract) return;
     const instructions = isSharedProject(root) ? contract.contract.replaceAll('.claude/', `${runtimeRoot}/.claude/`) : contract.contract;
     return { systemPrompt: `${event.systemPrompt}\n\n${instructions}\n\n` +
-      "Pi host: each bash call starts in the session cwd; use an absolute cd to the returned workspace in EACH call. " +
-      "Use absolute sandbox file paths. Follow runtime resume routes; /build and /prove never authorize Land. " +
+      "Pi host: during Build every bash call starts in the change workspace, as if you had run cd there once; never cd to the project root to write files. " +
+      "Outside Build each bash call starts in the session cwd. Use absolute sandbox paths for Write and Edit. " +
+      "Follow runtime resume routes; /build and /prove never authorize Land. " +
       'For the single ready change in this session, explicit user consent such as "land ได้เลย" or /land resolves the change automatically. ' +
       "Do not ask users to copy change IDs when session context resolves them. /deliver <change> separately authorizes publication. " +
       "Guard coverage is partial: custom/MCP tools and other extensions are outside this adapter's live boundary. " +
@@ -226,7 +253,11 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   pi.on("tool_call", async (event, ctx) => {
     try {
       if (event.toolName === "powershell") throw new Error("Change Loop Pi guards support bash; use bash for this workflow.");
-      await guard(event.toolName, event.input, ctx);
+      const notes = await guard(event.toolName, event.input, ctx,
+        event.toolName === "bash" ? buildWorkspace(ctx) || ctx.cwd : ctx.cwd);
+      // Claude Code shows a guard's additional context to the model; Pi has no
+      // pre-call channel, so the note rides on the tool's result.
+      if (notes?.length) guardNotes.set(event.toolCallId, notes.join("\n"));
       if (["write", "edit"].includes(event.toolName)) touched.set(event.toolCallId,
         resolve(ctx.cwd, String(event.input.path).replace(/^@/, "")));
     } catch (error) { return { block: true, reason: error.message }; }
@@ -242,12 +273,16 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
         } catch { /* ordinary shell output is not a lifecycle envelope */ }
       }
     }
+    const note = guardNotes.get(event.toolCallId); guardNotes.delete(event.toolCallId);
+    const content = note ? [...event.content, { type: "text", text: note }] : event.content;
+    const noted = note ? { content } : undefined;
     const path = touched.get(event.toolCallId); touched.delete(event.toolCallId);
-    if (!path || event.isError) return;
+    if (!path || event.isError) return noted;
     try {
       const result = await hook("lint.sh", { tool_name: "Write", tool_input: { file_path: path } }, ctx, 30000);
-      if (result.diagnostics) return { content: [...event.content, { type: "text", text: result.diagnostics }], isError: true };
-    } catch (error) { return { content: [...event.content, { type: "text", text: error.message }], isError: true }; }
+      if (result.diagnostics) return { content: [...content, { type: "text", text: result.diagnostics }], isError: true };
+    } catch (error) { return { content: [...content, { type: "text", text: error.message }], isError: true }; }
+    return noted;
   });
 
   // The native bash implementation preserves streaming, cancellation and Pi's
@@ -255,7 +290,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   const bash = createBashTool(root);
   pi.registerTool({ ...bash,
     async execute(id, args, signal, onUpdate, ctx) {
-      return createBashTool(ctx.cwd, { spawnHook: ({ command, cwd, env }) => ({ command, cwd,
+      return createBashTool(buildWorkspace(ctx) || ctx.cwd, { spawnHook: ({ command, cwd, env }) => ({ command, cwd,
         env: environment(ctx, env) }) }).execute(id, args, signal, onUpdate);
     }
   });

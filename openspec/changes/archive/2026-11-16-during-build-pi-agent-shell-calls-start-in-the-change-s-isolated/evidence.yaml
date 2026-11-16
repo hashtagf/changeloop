@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "build-shell-cwd-the-session-is-in-build-and-the-agent-runs-a-bas",
+      "requirementKey": "build-shell-cwd",
+      "scenario": "Relative write lands in the workspace",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "build-shell-cwd-the-session-has-no-recorded-build-phase-and-the",
+      "requirementKey": "build-shell-cwd",
+      "scenario": "Outside Build nothing moves",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "build-shell-cwd-a-worker-session-started-with-foundation-parent",
+      "requirementKey": "build-shell-cwd",
+      "scenario": "Worker inherits the coordinator's workspace",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "guard-warning-visible",
+      "requirementKey": "guard-warning-visible",
+      "scenario": "Shell write outside the workspace is reported",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "scorecard-host",
+      "requirementKey": "scorecard-host",
+      "scenario": "Pi dry run names the host",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/pi-extension.test.mjs) && (node --test .claude/tests/bench/tests/openspec-native-lab.test.mjs)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/pi-extension.test.mjs",
+        "node --test .claude/tests/bench/tests/openspec-native-lab.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

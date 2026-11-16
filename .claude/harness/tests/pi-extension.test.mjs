@@ -128,7 +128,8 @@ test("Pi prompt retains existing instructions and explains per-call cwd", async 
   const result = await b.fire("before_agent_start", { systemPrompt: "existing rules" });
   assert.match(result.systemPrompt, /^existing rules/);
   assert.match(result.systemPrompt, /Change Loop agent contract/);
-  assert.match(result.systemPrompt, /EACH call/);
+  assert.match(result.systemPrompt, /during Build every bash call starts in the change workspace/);
+  assert.match(result.systemPrompt, /never cd to the project root to write files/);
   assert.match(result.systemPrompt, /partial/);
 });
 
@@ -186,6 +187,38 @@ test("a Pi worker never lands or delivers, even for its parent's ready change", 
   assert.equal((await worker.call("bash", { command: "claude-foundation advance pi-worker-ready --through archived" })).block, true);
   assert.equal((await worker.call("bash", { command: "claude-foundation deliver advance pi-worker-ready" })).block, true);
   assert.ok(worker.notices.some((notice) => /worker/.test(notice.text)));
+});
+
+test("Build shell calls start in the change workspace; other phases and user shell keep the session cwd", async () => {
+  const workspace = building("cwd-session", "pi-cwd-case");
+  const b = await bridge("cwd-session");
+  const result = await b.bash().execute("t", { command: "mkdir -p src && echo built > src/relative.js" },
+    undefined, undefined, b.ctx);
+  assert.equal(result.cwd, workspace);
+  const ran = spawnSync("bash", ["-c", result.command], { cwd: result.cwd, encoding: "utf8" });
+  assert.equal(ran.status, 0, ran.stderr);
+  assert.equal(readFileSync(join(workspace, "src/relative.js"), "utf8"), "built\n");
+  assert.equal(existsSync(join(root, "src/relative.js")), false);
+  const worker = await bridge("cwd-worker", { parent: "cwd-session" });
+  assert.equal((await worker.bash().execute("t", { command: "true" }, undefined, undefined, worker.ctx)).cwd, workspace);
+  const idle = await bridge("no-build-session");
+  assert.equal((await idle.bash().execute("t", { command: "true" }, undefined, undefined, idle.ctx)).cwd, root);
+  await b.command("investigate", "why");
+  assert.equal((await b.bash().execute("t", { command: "true" }, undefined, undefined, b.ctx)).cwd, root);
+});
+
+test("the guard's shell-mutation warning reaches the agent in the tool result", async () => {
+  building("note-session", "pi-note-case");
+  const b = await bridge("note-session");
+  const command = `cd '${root}' && echo bad > src/outside.js`;
+  assert.equal(await b.call("bash", { command }, "note-1"), undefined);
+  const result = await b.fire("tool_result", { toolName: "bash", toolCallId: "note-1", isError: false,
+    content: [{ type: "text", text: "ran" }] });
+  assert.equal(result.content[0].text, "ran");
+  assert.match(result.content.at(-1).text, /unverified shell mutation/);
+  const quiet = await b.fire("tool_result", { toolName: "bash", toolCallId: "note-1", isError: false,
+    content: [{ type: "text", text: "again" }] });
+  assert.equal(quiet, undefined);
 });
 
 test("Pi guards allow semantic draft v5 before the first runtime phase", async () => {
@@ -316,9 +349,10 @@ test("Deliver primitive requires the matching explicit Pi command", async () => 
 
 test("native bash gets live Pi identity without inheriting other hosts or phase overrides", async () => {
   const b = await bridge();
+  const workspace = building();
   await b.command("build", "pi-case");
   const result = await b.bash().execute("t", { command: "true" }, undefined, undefined, b.ctx);
-  assert.equal(result.cwd, root);
+  assert.equal(result.cwd, workspace);
   assert.equal(result.env.FOUNDATION_SESSION_ID, "pi-test");
   assert.equal(result.env.FOUNDATION_MODEL_ID, "test-model");
   assert.equal(result.env.FOUNDATION_HOST_COMMAND, "build");

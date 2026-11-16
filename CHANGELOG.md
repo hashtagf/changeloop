@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Pi Build shell calls start in the change workspace. Every Pi bash call used
+  to start in the project root, so a relative shell write during Build landed
+  in the main checkout and Land refused the change. Agent bash calls now start
+  in the recorded Build workspace, as Claude Code does after its single `cd`,
+  and the phase guard's shell-mutation warning, previously dropped by the Pi
+  adapter, is appended to the tool result.
 - Pi parallel Build workers. A Pi worker session is separate from its
   coordinator, so the phase guard refused every worker write into the change
   workspace. A worker started with `FOUNDATION_PARENT_SESSION_ID` now resolves

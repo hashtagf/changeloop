@@ -390,6 +390,7 @@ test("Pi host dry-run installs the Pi adapter, routes through the shim and pins 
     assert.equal(plan.runnerArgs[plan.runnerArgs.indexOf("--claude-bin") + 1], plan.host.claudeBin);
     assert.equal(plan.host.argv[plan.host.argv.indexOf("--model") + 1], "claude-sonnet-5-5");
     assert.equal(plan.piExtensionInstalled, true);
+    assert.equal(plan.runnerArgs[plan.runnerArgs.indexOf("--host") + 1], "pi");
     assert.equal(plan.harnessInstalled, true);
     assert.deepEqual(readdirSync(tempParent), []);
     assert.throws(() => runScenarioLab({ matrixPath: matrix, scenarioId: "fixture", tempParent,
