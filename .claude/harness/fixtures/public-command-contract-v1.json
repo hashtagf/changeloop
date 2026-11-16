@@ -3,7 +3,7 @@
   "protocol": "foundation-public-command-golden-v1",
   "hostCommands": {
     "count": 9,
-    "sha256": "bd980b24cee658d464811eba97b8215f5b3b4c0e78b19e17c8c2e2aa4a18e743"
+    "sha256": "59e02df3a2d30ac18f4bb25599c9e4bcb982685f53af57bd6f3a1da941270e9a"
   },
   "cliCommands": {
     "count": 68,
