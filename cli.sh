@@ -250,7 +250,16 @@ case "${1:-}" in
           exit 0
         fi
         exec node "$SCRIPT_DIR/.claude/harness/runtime/core/host-instruction.mjs" "$@" ;;
-      *) fail "host requires 'agent-contract' or 'instruction'" ;;
+      pi-runtime)
+        command -v node >/dev/null 2>&1 || fail "Node.js is required to install the Pi runtime bundle"
+        if [ "${1:-}" = "--help" ] && [ "$#" -eq 1 ]; then
+          printf '%s\n' \
+            'claude-foundation host pi-runtime [--protocol 1] [--format json] [--agent-dir <path>]' \
+            "Install this CLI's runtime as Pi's current shared Change Loop bundle and print protocol-1 JSON."
+          exit 0
+        fi
+        exec node "$SCRIPT_DIR/.claude/harness/adapters/pi-runtime.mjs" "$@" ;;
+      *) fail "host requires 'agent-contract', 'instruction', or 'pi-runtime'" ;;
     esac ;;
   init)
     # Explicit alias for the installer. `--host` picks the adapter (every

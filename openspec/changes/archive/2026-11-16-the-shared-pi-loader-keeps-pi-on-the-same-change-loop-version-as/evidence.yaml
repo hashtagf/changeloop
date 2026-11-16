@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "host-pi-runtime",
+      "requirementKey": "host-pi-runtime",
+      "scenario": "Endpoint installs and reports",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "loader-syncs-pi-s-current-bundle-is-from-an-older-version-and-th",
+      "requirementKey": "loader-syncs",
+      "scenario": "Upgrade is picked up",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "loader-syncs-the-machine-cli-reports-the-same-version-as-pi-s-cu",
+      "requirementKey": "loader-syncs",
+      "scenario": "Same version starts without reinstalling",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "loader-syncs-the-machine-cli-exits-with-an-error",
+      "requirementKey": "loader-syncs",
+      "scenario": "Broken CLI keeps the old bundle",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "project-follow-a-project-s-changeloop-json-is-version-1-host-pi",
+      "requirementKey": "project-follow",
+      "scenario": "Follow resolves to current",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "project-follow-a-project-pins-bundle-a-and-pi-s-current-bundle-i",
+      "requirementKey": "project-follow",
+      "scenario": "Pinned stays pinned",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "project-follow-changeloop-pin-then-changeloop-follow-run-in-a-tr",
+      "requirementKey": "project-follow",
+      "scenario": "Switch modes",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "docs",
+      "requirementKey": "docs",
+      "scenario": "Documented",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(FOUNDATION_UPDATE_CHECK=0 node --test .claude/harness/tests/pi-shared.test.mjs) && (grep -q 'host pi-runtime' .claude/harness/README.md && grep -q 'follow' CHANGELOG.md && bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "segments": [
+        "FOUNDATION_UPDATE_CHECK=0 node --test .claude/harness/tests/pi-shared.test.mjs",
+        "grep -q 'host pi-runtime' .claude/harness/README.md && grep -q 'follow' CHANGELOG.md && bash .claude/tests/docs/run-doc-consistency.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

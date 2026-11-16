@@ -528,13 +528,36 @@ exposes all canonical commands. It never copies workflow prose into the adapter.
 For a settings-only consumer, use `claude-foundation init <target> --host pi
 --shared-runtime`. The runtime, hooks, skills, commands and OpenSpec schemas live
 in a content-addressed bundle under Pi's agent directory. The consumer contains
-only `.changeloop.json` (bundle/version pin), `foundation.json`, OpenSpec settings
+only `.changeloop.json` (runtime mode), `foundation.json`, OpenSpec settings
 and artifacts, and generated `.foundation` state. Pi loads the global extension
 and chooses the project-pinned bundle; unavailable or mismatched pins fail closed.
 After the global extension is installed, `/changeloop init` configures another
 trusted project, followed by `/reload`. Existing local installations are not
 deleted or migrated by this command. Their original installation mode remains
 supported. Project settings survive repeated shared initialization.
+
+Pi follows the machine's Change Loop. At startup and `/reload` the global loader
+runs `cloop version` (else `claude-foundation`, or `CHANGELOOP_MACHINE_CLI`;
+`none` disables it); when that version differs from Pi's current bundle it runs
+`claude-foundation host pi-runtime --protocol 1 --format json`, which installs
+that CLI's own package as the current bundle (content-addressed, offline,
+repeatable) and refreshes the loader. A missing or failing CLI keeps the
+existing bundle and shows a warning. `.changeloop.json` either follows the
+machine (`{"version":1,"host":"pi","installation":"shared","follow":"machine"}`,
+the default for new projects) and resolves to Pi's current bundle, or pins one
+bundle (`runtime`, `runtimeApi`, `bundle`) that never changes on its own.
+`/changeloop follow` and `/changeloop pin` switch an existing project; init
+never rewrites an existing marker. A followed project runs the newer runtime's
+upgrade compatibility for its active changes, as a local reinstall would.
+
+No per-repository setup is needed. In a folder without `.changeloop.json` the
+loader offers `/change`, `/investigate`, `/dev`, and `/feature`; the first one
+run in a trusted project creates follow-machine settings at the nearest Git
+root (else the folder), reloads Pi, and runs the same command once through a
+two-minute hand-off file in the Pi agent directory. Opening a folder or chatting
+writes nothing and installs no guards. Setup is refused, writing nothing, in an
+untrusted project, the home directory or filesystem root, and a project with a
+local installation, which keeps its own adapter.
 
 Built-in Read/Grep/Bash use secret guards; Write/Edit/Bash use phase guards;
 successful structured edits feed lint diagnostics back as tool results.

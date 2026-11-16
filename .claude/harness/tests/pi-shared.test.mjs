@@ -5,7 +5,9 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, realpath
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { installSharedPi, initializeSharedProject } from '../adapters/pi-installation.mjs';
+import { installSharedPi, initializeSharedProject, setProjectRuntimeMode } from '../adapters/pi-installation.mjs';
+import { chmodSync, cpSync } from 'node:fs';
+import { followMachine, machineCli } from '../adapters/pi-machine.mjs';
 const source = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const temporary = realpathSync(mkdtempSync(join(tmpdir(), 'pi-shared-')));
 const root = join(temporary, 'project with spaces');
@@ -100,7 +102,7 @@ test('real Pi auto-loads the global extension in a settings-only project without
   const version = readFileSync(join(piInstall, 'current-version'), 'utf8').trim();
   const cli = join(piInstall, 'releases', version, 'node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js');
   const child = spawn(process.execPath, [cli, '--mode', 'rpc', '--no-mcp', '--no-skills', '--no-context-files', '--session-dir', join(temporary, 'sessions')], {
-    cwd: root, env: { ...process.env, PI_CODING_AGENT_DIR: join(temporary, 'agent'), FOUNDATION_UPDATE_CHECK: '0',
+    cwd: root, env: { ...process.env, PI_CODING_AGENT_DIR: join(temporary, 'agent'), FOUNDATION_UPDATE_CHECK: '0', CHANGELOOP_MACHINE_CLI: 'none',
       PI_TEAM_ROOT: join(temporary, 'team'), PI_OFFLINE: '1' }, stdio: ['pipe', 'pipe', 'pipe'] });
   let output = '', stderr = '';
   child.stdout.on('data', data => { output += data; }); child.stderr.on('data', data => { stderr += data; });
@@ -136,8 +138,9 @@ test('Pi shared discovery binds a sandbox copy to its owner and respects nested 
   const version = readFileSync(versionPath, 'utf8').trim();
   const { loadExtensions, createExtensionRuntime } = await import(pathToFileURL(join(piInstall, 'releases', version,
     'node_modules/@earendil-works/pi-coding-agent/dist/core/extensions/loader.js')));
-  const previous = process.cwd(), agent = process.env.PI_CODING_AGENT_DIR;
+  const previous = process.cwd(), agent = process.env.PI_CODING_AGENT_DIR, machine = process.env.CHANGELOOP_MACHINE_CLI;
   try {
+    process.env.CHANGELOOP_MACHINE_CLI = 'none';
     process.env.PI_CODING_AGENT_DIR = join(temporary, 'agent'); process.chdir(sandbox);
     const result = await loadExtensions([join(temporary, 'agent/extensions/changeloop.ts')], sandbox, undefined, createExtensionRuntime());
     assert.deepEqual(result.errors, []);
@@ -149,9 +152,228 @@ test('Pi shared discovery binds a sandbox copy to its owner and respects nested 
     process.chdir(child);
     const fresh = await loadExtensions([join(temporary, 'agent/extensions/changeloop.ts')], child, undefined, createExtensionRuntime());
     assert.deepEqual(fresh.errors, []);
-    assert.equal(fresh.extensions[0].commands.has('change'), false, 'An unrelated nested Git repository does not inherit outer guards');
+    assert.equal(fresh.extensions[0].commands.has('land'), false, 'An unrelated nested Git repository does not inherit outer guards');
+    assert.equal(fresh.extensions[0].handlers.has('tool_call'), false, 'Only first-use commands, no guards, in an unconfigured repository');
     await fresh.extensions[0].commands.get('changeloop').handler('init', { cwd: child, isProjectTrusted: () => true, ui: { notify: text => notices.push(text) } });
     assert.equal(existsSync(join(nested, '.changeloop.json')), true, 'Init from src configures the Git root');
     assert.equal(existsSync(join(child, '.changeloop.json')), false);
-  } finally { process.chdir(previous); if (agent === undefined) delete process.env.PI_CODING_AGENT_DIR; else process.env.PI_CODING_AGENT_DIR = agent; }
+  } finally {
+    process.chdir(previous); if (agent === undefined) delete process.env.PI_CODING_AGENT_DIR; else process.env.PI_CODING_AGENT_DIR = agent;
+    if (machine === undefined) delete process.env.CHANGELOOP_MACHINE_CLI; else process.env.CHANGELOOP_MACHINE_CLI = machine;
+  }
+});
+
+test('new shared projects follow the machine version; init keeps an existing marker', () => {
+  assert.deepEqual(JSON.parse(readFileSync(join(root, '.changeloop.json'), 'utf8')),
+    { version: 1, host: 'pi', installation: 'shared', follow: 'machine' });
+  const pinned = join(temporary, 'pinned-init');
+  assert.equal(initializeSharedProject(pinned, bundle.path, { follow: false }).bundle, bundle.bundle);
+  assert.equal(initializeSharedProject(pinned, bundle.path).bundle, bundle.bundle, 'init does not rewrite a pin');
+});
+
+test('host pi-runtime installs this CLI as the current Pi bundle and is repeatable', () => {
+  const agent = join(temporary, 'agent-endpoint');
+  const call = () => spawnSync('bash', [join(source, 'cli.sh'), 'host', 'pi-runtime', '--protocol', '1', '--format', 'json', '--agent-dir', agent],
+    { cwd: temporary, encoding: 'utf8', timeout: 120000, env: { ...process.env, CLAUDE_FOUNDATION_PROJECT: '', FOUNDATION_UPDATE_CHECK: '0' } });
+  const first = call();
+  assert.equal(first.status, 0, first.stderr + first.stdout);
+  const value = JSON.parse(first.stdout);
+  const protocol = JSON.parse(readFileSync(join(source, '.claude/harness/protocol.json'), 'utf8'));
+  assert.equal(value.protocol, 1);
+  assert.equal(value.foundationVersion, protocol.runtime);
+  assert.equal(JSON.parse(readFileSync(join(agent, 'changeloop/installation.json'), 'utf8')).current, value.bundle);
+  assert.equal(existsSync(join(value.path, 'bundle.json')), true);
+  assert.equal(JSON.parse(call().stdout).bundle, value.bundle);
+  const bad = spawnSync('bash', [join(source, 'cli.sh'), 'host', 'pi-runtime', '--protocol', '2'], { encoding: 'utf8' });
+  assert.notEqual(bad.status, 0);
+  assert.equal(JSON.parse(bad.stdout).error.code, 'unsupported-protocol');
+});
+
+test('follow resolves to the current bundle, a pin stays pinned, and modes switch explicitly', () => {
+  const agent = join(temporary, 'agent-follow');
+  const fake = '9.9.9-api42-0123456789abcdef';
+  mkdirSync(join(agent, 'changeloop/releases', fake), { recursive: true });
+  writeFileSync(join(agent, 'changeloop/releases', fake, 'bundle.json'), JSON.stringify({ bundle: fake }));
+  mkdirSync(join(agent, 'changeloop'), { recursive: true });
+  writeFileSync(join(agent, 'changeloop/installation.json'), JSON.stringify({ current: fake }));
+  const resolveRoot = (project) => spawnSync(process.execPath, [join(source, '.claude/harness/runtime/core/project-installation.mjs'), 'resolve', project],
+    { encoding: 'utf8', env: { ...process.env, PI_CODING_AGENT_DIR: agent } });
+  const project = join(temporary, 'follow-project');
+  initializeSharedProject(project, bundle.path);
+  const followed = resolveRoot(project);
+  assert.equal(followed.status, 0, followed.stderr);
+  assert.equal(followed.stdout.trim(), join(agent, 'changeloop/releases', fake));
+  // Bundle A is installed beside the different current bundle B (the fake).
+  cpSync(bundle.path, join(agent, 'changeloop/releases', bundle.bundle), { recursive: true });
+  const pinned = setProjectRuntimeMode(project, 'pin', bundle.path);
+  assert.equal(pinned.bundle, bundle.bundle);
+  assert.equal(JSON.parse(readFileSync(join(project, '.changeloop.json'), 'utf8')).bundle, bundle.bundle);
+  const stays = resolveRoot(project);
+  assert.equal(stays.status, 0, stays.stderr);
+  assert.equal(stays.stdout.trim(), join(agent, 'changeloop/releases', bundle.bundle), 'A pin is not redirected to the current bundle');
+  setProjectRuntimeMode(project, 'follow', bundle.path);
+  const marker = JSON.parse(readFileSync(join(project, '.changeloop.json'), 'utf8'));
+  assert.deepEqual(marker, { version: 1, host: 'pi', installation: 'shared', follow: 'machine' });
+  writeFileSync(join(project, '.changeloop.json'), JSON.stringify({ ...marker, bundle: bundle.bundle }));
+  assert.notEqual(resolveRoot(project).status, 0, 'follow plus a pin is refused');
+  assert.throws(() => setProjectRuntimeMode(join(temporary, 'no-settings'), 'follow', bundle.path), /no shared Change Loop settings/);
+});
+
+function fakeMachine(name, realBundle) {
+  const calls = join(temporary, `${name}.log`), cli = join(temporary, name);
+  writeFileSync(cli, `#!/usr/bin/env bash
+printf '%s\\n' "$*" >> '${calls}'
+case "$1" in
+  version) [ "$FAKE_BROKEN" = 1 ] && exit 3; printf 'claude-foundation %s\\n' "$FAKE_VERSION" ;;
+  host) [ "$FAKE_BROKEN_INSTALL" = 1 ] && { echo boom >&2; exit 4; }
+    b="$FAKE_VERSION-api42-fedcba9876543210"; mkdir -p "$PI_CODING_AGENT_DIR/changeloop/releases"
+    rm -rf "$PI_CODING_AGENT_DIR/changeloop/releases/$b"; cp -R '${realBundle}' "$PI_CODING_AGENT_DIR/changeloop/releases/$b"
+    printf '{"bundle":"%s"}' "$b" > "$PI_CODING_AGENT_DIR/changeloop/releases/$b/bundle.json"
+    printf '{"current":"%s"}' "$b" > "$PI_CODING_AGENT_DIR/changeloop/installation.json"
+    printf '{"protocol":1,"foundationVersion":"%s","bundle":"%s"}\\n' "$FAKE_VERSION" "$b" ;;
+esac
+`);
+  chmodSync(cli, 0o755);
+  const installs = () => existsSync(calls) ? readFileSync(calls, 'utf8').split('\n').filter(line => line.startsWith('host pi-runtime')).length : 0;
+  return { cli, calls, installs };
+}
+
+test('Pi follows the machine CLI version and a broken CLI only warns', () => {
+  const agent = join(temporary, 'agent-machine');
+  const installed = installSharedPi(source, agent), base = join(agent, 'changeloop');
+  const machine = fakeMachine('fake-cloop', installed.path);
+  const current = () => JSON.parse(readFileSync(join(base, 'installation.json'), 'utf8')).current;
+  const env = (extra) => ({ ...process.env, CHANGELOOP_MACHINE_CLI: machine.cli, ...extra });
+  assert.equal(followMachine(base, agent, env({ FAKE_VERSION: installed.runtime })), undefined);
+  assert.equal(machine.installs(), 0, 'The same version does not reinstall');
+  assert.equal(current(), installed.bundle);
+  assert.equal(followMachine(base, agent, env({ FAKE_VERSION: '9.8.7' })), undefined);
+  assert.equal(machine.installs(), 1);
+  assert.equal(current(), '9.8.7-api42-fedcba9876543210');
+  const failed = followMachine(base, agent, env({ FAKE_VERSION: '9.8.8', FAKE_BROKEN_INSTALL: '1' }));
+  assert.match(failed, /9\.8\.8 could not be installed in Pi \(boom\)/);
+  assert.equal(current(), '9.8.7-api42-fedcba9876543210', 'A failed install keeps the current bundle');
+  assert.match(followMachine(base, agent, env({ FAKE_BROKEN: '1' })), /Could not read the machine Change Loop version/);
+  const before = readFileSync(machine.calls, 'utf8');
+  assert.equal(followMachine(base, agent, { ...process.env, CHANGELOOP_MACHINE_CLI: 'none' }), undefined);
+  assert.equal(readFileSync(machine.calls, 'utf8'), before, 'none disables the machine check');
+  // PATH lookup prefers cloop and never picks a CLI inside a Pi bundle.
+  const bin = join(temporary, 'machine-bin'); mkdirSync(bin, { recursive: true });
+  for (const name of ['cloop', 'claude-foundation']) { writeFileSync(join(bin, name), '#!/bin/sh\n'); chmodSync(join(bin, name), 0o755); }
+  assert.equal(machineCli(base, { PATH: [join(installed.path, 'bin'), bin].join(':') }), join(bin, 'cloop'));
+  assert.equal(machineCli(base, { PATH: join(installed.path, 'bin') }), undefined);
+});
+
+test('the installed Pi loader applies the machine version at load', { skip: !existsSync(join(piInstall, 'current-version')) }, async () => {
+  const agent = join(temporary, 'agent-loader');
+  const installed = installSharedPi(source, agent);
+  const machine = fakeMachine('fake-cloop-loader', installed.path);
+  const version = readFileSync(join(piInstall, 'current-version'), 'utf8').trim();
+  const { loadExtensions, createExtensionRuntime } = await import(pathToFileURL(join(piInstall, 'releases', version,
+    'node_modules/@earendil-works/pi-coding-agent/dist/core/extensions/loader.js')));
+  const outside = join(temporary, 'outside'); mkdirSync(outside, { recursive: true });
+  const saved = Object.fromEntries(['PI_CODING_AGENT_DIR', 'CHANGELOOP_MACHINE_CLI', 'FAKE_VERSION', 'FAKE_BROKEN_INSTALL']
+    .map(key => [key, process.env[key]]));
+  const previous = process.cwd();
+  const load = async () => {
+    const result = await loadExtensions([join(agent, 'extensions/changeloop.ts')], outside, undefined, createExtensionRuntime());
+    assert.deepEqual(result.errors, []);
+    const notices = [];
+    for (const handler of result.extensions[0].handlers.get('session_start') || [])
+      await handler({}, { ui: { notify: (text, kind) => notices.push({ text, kind }), setStatus() {} } });
+    return notices;
+  };
+  try {
+    process.chdir(outside);
+    Object.assign(process.env, { PI_CODING_AGENT_DIR: agent, CHANGELOOP_MACHINE_CLI: machine.cli, FAKE_VERSION: '9.8.7' });
+    await load();
+    assert.equal(JSON.parse(readFileSync(join(agent, 'changeloop/installation.json'), 'utf8')).current, '9.8.7-api42-fedcba9876543210');
+    Object.assign(process.env, { FAKE_VERSION: '9.8.8', FAKE_BROKEN_INSTALL: '1' });
+    const notices = await load();
+    assert.ok(notices.some(notice => notice.kind === 'warning' && /9\.8\.8 could not be installed/.test(notice.text)), JSON.stringify(notices));
+  } finally {
+    process.chdir(previous);
+    for (const [key, value] of Object.entries(saved)) if (value === undefined) delete process.env[key]; else process.env[key] = value;
+  }
+});
+
+test('first-use setup writes follow settings, hands one command to the reload, and refuses unsafe folders', async () => {
+  const { bootstrapProject, takePendingCommand, bootstrapRefusal, projectRootFor, PENDING_TTL_MS } =
+    await import('../adapters/pi-bootstrap.mjs');
+  const agent = join(temporary, 'agent-bootstrap');
+  const repo = join(temporary, 'fresh-repo'); mkdirSync(join(repo, '.git'), { recursive: true });
+  const nested = join(repo, 'src/app'); mkdirSync(nested, { recursive: true });
+  assert.equal(projectRootFor(nested), repo);
+  const result = bootstrapProject({ cwd: nested, command: 'change', args: 'add a feature', trusted: true, runtime: bundle.path, agentDir: agent });
+  assert.equal(result.root, repo);
+  assert.deepEqual(JSON.parse(readFileSync(join(repo, '.changeloop.json'), 'utf8')),
+    { version: 1, host: 'pi', installation: 'shared', follow: 'machine' });
+  assert.equal(existsSync(join(nested, '.changeloop.json')), false);
+  assert.equal(takePendingCommand({ root: repo, agentDir: agent }), '/change add a feature');
+  assert.equal(takePendingCommand({ root: repo, agentDir: agent }), undefined, 'consumed once');
+  const pending = join(agent, 'changeloop/pending-command.json');
+  bootstrapProject({ cwd: repo, command: 'investigate', trusted: true, runtime: bundle.path, agentDir: agent });
+  assert.equal(takePendingCommand({ root: join(temporary, 'other'), agentDir: agent }), undefined);
+  assert.equal(existsSync(pending), false, 'a foreign hand-off is removed');
+  const created = Date.now();
+  bootstrapProject({ cwd: repo, command: 'dev', trusted: true, runtime: bundle.path, agentDir: agent, now: created });
+  assert.equal(takePendingCommand({ root: repo, agentDir: agent, now: created + PENDING_TTL_MS + 1 }), undefined);
+  assert.equal(existsSync(pending), false, 'a stale hand-off is removed');
+  const untrusted = join(temporary, 'untrusted-repo'); mkdirSync(join(untrusted, '.git'), { recursive: true });
+  assert.throws(() => bootstrapProject({ cwd: untrusted, command: 'change', trusted: false, runtime: bundle.path, agentDir: agent }), /Trust this project/);
+  assert.deepEqual(readdirSync(untrusted), ['.git']);
+  const home = join(temporary, 'pretend-home'); mkdirSync(home);
+  assert.throws(() => bootstrapProject({ cwd: home, command: 'change', trusted: true, runtime: bundle.path, agentDir: agent, home }), /Open a project folder/);
+  assert.deepEqual(readdirSync(home), []);
+  assert.match(bootstrapRefusal('/', { trusted: true }), /Open a project folder/);
+  const local = join(temporary, 'local-install'); mkdirSync(join(local, '.claude/harness'), { recursive: true });
+  writeFileSync(join(local, '.claude/harness/foundation.mjs'), '');
+  assert.match(bootstrapRefusal(local, { trusted: true }), /local Change Loop installation/);
+  assert.throws(() => bootstrapProject({ cwd: repo, command: 'land', trusted: true, runtime: bundle.path, agentDir: agent }), /Unsupported/);
+});
+
+test('the Pi loader offers first-use commands, writes nothing on open, and reruns the command after reload', { skip: !existsSync(join(piInstall, 'current-version')) }, async () => {
+  const agent = join(temporary, 'agent-first-use');
+  installSharedPi(source, agent);
+  const version = readFileSync(join(piInstall, 'current-version'), 'utf8').trim();
+  const { loadExtensions, createExtensionRuntime } = await import(pathToFileURL(join(piInstall, 'releases', version,
+    'node_modules/@earendil-works/pi-coding-agent/dist/core/extensions/loader.js')));
+  const repo = join(temporary, 'first-use-repo'); mkdirSync(join(repo, '.git'), { recursive: true });
+  const local = join(temporary, 'first-use-local'); mkdirSync(join(local, '.claude/harness'), { recursive: true });
+  writeFileSync(join(local, '.claude/harness/foundation.mjs'), '');
+  const saved = Object.fromEntries(['PI_CODING_AGENT_DIR', 'CHANGELOOP_MACHINE_CLI'].map(key => [key, process.env[key]]));
+  const previous = process.cwd(), sent = [], notices = [];
+  const ui = { notify: (text, kind) => notices.push({ text, kind }), setStatus() {} };
+  const load = async (cwd) => {
+    process.chdir(cwd);
+    const runtime = createExtensionRuntime();
+    runtime.sendUserMessage = (text, options) => sent.push({ text, options });
+    const result = await loadExtensions([join(agent, 'extensions/changeloop.ts')], cwd, undefined, runtime);
+    assert.deepEqual(result.errors, []);
+    return result.extensions[0];
+  };
+  try {
+    Object.assign(process.env, { PI_CODING_AGENT_DIR: agent, CHANGELOOP_MACHINE_CLI: 'none' });
+    assert.equal((await load(local)).commands.has('change'), false, 'a local installation keeps its own commands');
+    const fresh = await load(repo);
+    for (const name of ['change', 'investigate', 'dev', 'feature']) assert.ok(fresh.commands.has(name), name);
+    for (const handler of fresh.handlers.get('session_start') || []) await handler({}, { ui });
+    assert.deepEqual(readdirSync(repo), ['.git'], 'opening the folder writes nothing');
+    let reloaded = 0;
+    await fresh.commands.get('change').handler('add a feature', { cwd: repo, isProjectTrusted: () => true,
+      reload: async () => { reloaded += 1; }, ui });
+    assert.equal(reloaded, 1);
+    assert.equal(existsSync(join(repo, '.changeloop.json')), true);
+    const configured = await load(repo);
+    assert.ok(configured.commands.has('land'), 'the full adapter loads after setup');
+    const ctx = { cwd: repo, model: { id: 'fixture', provider: 'test' }, signal: undefined,
+      sessionManager: { getSessionId: () => 'first-use' }, waitForIdle: async () => {}, ui };
+    for (const handler of configured.handlers.get('session_start') || []) await handler({ reason: 'reload' }, ctx);
+    assert.deepEqual(sent, [{ text: '/change add a feature', options: { expandPromptTemplates: true } }]);
+    for (const handler of configured.handlers.get('session_start') || []) await handler({ reason: 'reload' }, ctx);
+    assert.equal(sent.length, 1, 'the command runs once');
+  } finally {
+    process.chdir(previous);
+    for (const [key, value] of Object.entries(saved)) if (value === undefined) delete process.env[key]; else process.env[key] = value;
+  }
 });

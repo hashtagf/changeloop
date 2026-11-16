@@ -1,0 +1,85 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "bootstrap-commands-a-trusted-git-repository-without-settings-run",
+      "requirementKey": "bootstrap-commands",
+      "scenario": "First /change in a fresh repository",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "bootstrap-commands-a-pending-command-is-older-than-two-minutes-o",
+      "requirementKey": "bootstrap-commands",
+      "scenario": "Stale or foreign hand-off is ignored",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "bootstrap-refusals-an-untrusted-repository-runs-change",
+      "requirementKey": "bootstrap-refusals",
+      "scenario": "Untrusted folder",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "bootstrap-refusals-change-runs-in-the-home-directory-with-no-git",
+      "requirementKey": "bootstrap-refusals",
+      "scenario": "Home directory",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "bootstrap-refusals-pi-opens-a-project-that-has-claude-harness-fo",
+      "requirementKey": "bootstrap-refusals",
+      "scenario": "Local installation",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "no-write-on-open",
+      "requirementKey": "no-write-on-open",
+      "scenario": "Just opened",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "first-use-docs",
+      "requirementKey": "first-use-docs",
+      "scenario": "Documented",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(FOUNDATION_UPDATE_CHECK=0 node --test .claude/harness/tests/pi-shared.test.mjs) && (grep -q 'first' .claude/harness/README.md && grep -q 'first' CHANGELOG.md && bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "segments": [
+        "FOUNDATION_UPDATE_CHECK=0 node --test .claude/harness/tests/pi-shared.test.mjs",
+        "grep -q 'first' .claude/harness/README.md && grep -q 'first' CHANGELOG.md && bash .claude/tests/docs/run-doc-consistency.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

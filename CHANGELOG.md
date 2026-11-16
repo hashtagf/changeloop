@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Pi follows the machine's Change Loop. After `brew upgrade`, reopening or
+  reloading Pi installs the new runtime through the new
+  `claude-foundation host pi-runtime` endpoint; a missing or failing CLI keeps
+  the existing runtime and shows a warning. New shared projects follow the
+  machine version (`"follow": "machine"` in `.changeloop.json`); projects that
+  pin a bundle keep it until `/changeloop follow` (`/changeloop pin` pins again).
+- Change Loop works in Pi without per-repository setup. In a trusted
+  repository without Change Loop settings, the first `/change`,
+  `/investigate`, `/dev`, or `/feature` creates follow-machine settings at the
+  project root, reloads Pi, and continues the command. Opening a folder or
+  chatting writes nothing; untrusted folders, the home directory, and projects
+  with a local installation are refused.
+
 ### Changed
 
 - Model-tier routing is on in new installations. The shipped `foundation.json`

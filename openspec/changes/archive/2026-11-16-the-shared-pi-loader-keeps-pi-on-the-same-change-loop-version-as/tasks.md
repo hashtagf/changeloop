@@ -1,0 +1,6 @@
+# Tasks
+
+> This is the sole implementation ledger.
+
+- [x] **T001** host pi-runtime endpoint, follow-mode marker resolution, pin/follow helpers, loader sync, and tests [key:task-1] [kind:implementation] [paths:cli.sh,.claude/harness/adapters/pi-runtime.mjs,.claude/harness/adapters/pi-installation.mjs,.claude/harness/adapters/pi-shared.ts,.claude/harness/runtime/core/project-installation.mjs,.claude/harness/tests/pi-shared.test.mjs] [claims:host-pi-runtime,loader-syncs-pi-s-current-bundle-is-from-an-older-version-and-th,loader-syncs-the-machine-cli-reports-the-same-version-as-pi-s-cu,loader-syncs-the-machine-cli-exits-with-an-error,project-follow-a-project-s-changeloop-json-is-version-1-host-pi,project-follow-a-project-pins-bundle-a-and-pi-s-current-bundle-i,project-follow-changeloop-pin-then-changeloop-follow-run-in-a-tr] — verify: `FOUNDATION_UPDATE_CHECK=0 node --test .claude/harness/tests/pi-shared.test.mjs`
+- [x] **T002** Harness README and changelog [key:task-2] [kind:implementation] [paths:.claude/harness/README.md,CHANGELOG.md] [claims:docs] — verify: `grep -q 'host pi-runtime' .claude/harness/README.md && grep -q 'follow' CHANGELOG.md && bash .claude/tests/docs/run-doc-consistency.sh`

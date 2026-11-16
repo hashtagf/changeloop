@@ -1,7 +1,7 @@
 import { cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import { dirname, join, resolve } from 'node:path';
-import { PACKAGE_ROOT, SHARED_MARKER } from '../runtime/core/project-installation.mjs';
+import { PACKAGE_ROOT, SHARED_MARKER, followsMachine } from '../runtime/core/project-installation.mjs';
 
 // Only runtime-owned paths enter the bundle; project settings/artifacts are seeded separately.
 const BUNDLE_PATHS = ['.claude/harness', '.claude/hooks', '.claude/commands', '.claude/skills', '.claude/rules',
@@ -33,20 +33,40 @@ function digestTree(root) {
   }
   walk(); return hash.digest('hex');
 }
-export function initializeSharedProject(target, packageRoot = PACKAGE_ROOT) {
+function pinnedMarker(packageRoot) {
+  const descriptor = JSON.parse(readFileSync(join(packageRoot, 'bundle.json'), 'utf8'));
+  return { version: 1, host: 'pi', installation: 'shared', runtime: descriptor.runtime,
+    runtimeApi: descriptor.runtimeApi, bundle: descriptor.bundle };
+}
+const FOLLOW_MARKER = Object.freeze({ version: 1, host: 'pi', installation: 'shared', follow: 'machine' });
+
+// `follow` follows the machine's Change Loop (Pi's current bundle); `pin` pins this bundle.
+export function setProjectRuntimeMode(target, mode, packageRoot = PACKAGE_ROOT) {
+  target = resolve(target);
+  const markerPath = safeDestination(target, SHARED_MARKER);
+  if (!existsSync(markerPath)) throw new Error('This project has no shared Change Loop settings; run /changeloop init first.');
+  if (!['follow', 'pin'].includes(mode)) throw new Error('Use follow or pin.');
+  const marker = mode === 'follow' ? { ...FOLLOW_MARKER } : pinnedMarker(packageRoot);
+  writeJSON(markerPath, marker);
+  return { root: target, ...marker };
+}
+
+export function initializeSharedProject(target, packageRoot = PACKAGE_ROOT, { follow = true } = {}) {
   target = resolve(target);
   if (existsSync(join(target, '.claude/harness/foundation.mjs')) && !existsSync(join(target, SHARED_MARKER)))
     throw new Error('This project has a local runtime. Keep using it until a reviewed migration removes its owned files; shared init does not delete existing installations.');
   const files = [SHARED_MARKER, 'foundation.json', 'openspec/config.yaml', 'openspec/repositories.yaml', '.foundation/.gitignore'];
   mkdirSync(target, { recursive: true });
   for (const path of files) safeDestination(target, path);
-  const descriptor = JSON.parse(readFileSync(join(packageRoot, 'bundle.json'), 'utf8'));
-  const marker = { version: 1, host: 'pi', installation: 'shared', runtime: descriptor.runtime,
-    runtimeApi: descriptor.runtimeApi, bundle: descriptor.bundle };
+  const pinned = pinnedMarker(packageRoot);
   const markerPath = join(target, SHARED_MARKER);
+  let marker = follow ? { ...FOLLOW_MARKER } : pinned;
   if (existsSync(markerPath)) {
+    // Init never rewrites an existing marker; a different pin needs an explicit /changeloop follow or pin.
     const existing = JSON.parse(readFileSync(markerPath, 'utf8'));
-    if (Object.entries(marker).some(([key, value]) => existing[key] !== value)) throw new Error('Project already pins another Change Loop bundle. Explicitly upgrade its settings instead of overwriting them.');
+    if (!followsMachine(existing) && Object.entries(pinned).some(([key, value]) => existing[key] !== value))
+      throw new Error('Project already pins another Change Loop bundle. Run /changeloop follow or /changeloop pin to change it instead of overwriting it.');
+    marker = existing;
   }
   for (const path of files.slice(1)) {
     const destination = join(target, path);

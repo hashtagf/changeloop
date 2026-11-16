@@ -95,3 +95,127 @@ The Pi adapter SHALL treat short typed affirmatives such as 'land ได้', 'l
 
 - **WHEN** the user types 'ยังไม่ต้อง land' or "don't land"
 - **THEN** it is not recognized as Land consent
+
+### Requirement: host-pi-runtime
+
+claude-foundation host pi-runtime --protocol 1 --format json SHALL install the CLI's own package as the current shared Pi bundle in the Pi agent directory and SHALL print protocol-1 JSON with foundationVersion, bundle and path.
+
+- The agent directory is --agent-dir, else PI_CODING_AGENT_DIR, else ~/.pi/agent.
+- Installing the same package twice yields the same bundle and changes nothing else.
+- It refuses a user-owned global changeloop.ts as installSharedPi already does.
+
+#### Scenario: Endpoint installs and reports
+
+- **WHEN** host pi-runtime runs against an empty agent directory
+- **THEN** the JSON names this package's runtime version and a bundle that installation.json lists as current
+
+### Requirement: loader-syncs
+
+At load, the shared Pi loader SHALL compare the machine CLI version with Pi's current bundle and, when they differ, run that CLI's host pi-runtime endpoint before choosing a runtime.
+
+- The machine CLI is CHANGELOOP_MACHINE_CLI when set (none disables the check), else cloop on PATH, else claude-foundation on PATH.
+- A CLI inside a Pi runtime bundle is ignored.
+- If the CLI is missing, fails or times out, the loader keeps the existing bundle and shows a warning; it does not fail closed for that reason.
+
+#### Scenario: Upgrade is picked up
+
+- **WHEN** Pi's current bundle is from an older version and the machine CLI reports a newer one
+- **THEN** after the loader runs, installation.json names a bundle of the machine version
+
+#### Scenario: Same version starts without reinstalling
+
+- **WHEN** the machine CLI reports the same version as Pi's current bundle
+- **THEN** host pi-runtime is not run
+
+#### Scenario: Broken CLI keeps the old bundle
+
+- **WHEN** the machine CLI exits with an error
+- **THEN** Pi keeps the existing current bundle and the loader reports a warning
+
+### Requirement: project-follow
+
+A .changeloop.json with follow set to machine SHALL resolve to Pi's current bundle in the loader and in CLI runtime resolution, and /changeloop init SHALL write that form for a new project.
+
+- A pinned marker (bundle, runtime, runtimeApi) keeps resolving to exactly that bundle.
+- /changeloop follow rewrites the marker to follow the machine version; /changeloop pin pins the current bundle.
+- An existing marker is never rewritten by init.
+
+#### Scenario: Follow resolves to current
+
+- **WHEN** a project's .changeloop.json is {version 1, host pi, installation shared, follow machine}
+- **THEN** the CLI resolve command prints the path of Pi's current bundle
+
+#### Scenario: Pinned stays pinned
+
+- **WHEN** a project pins bundle A and Pi's current bundle is B
+- **THEN** the project still resolves to bundle A
+
+#### Scenario: Switch modes
+
+- **WHEN** /changeloop pin then /changeloop follow run in a trusted project
+- **THEN** the marker first names the current bundle, then contains follow machine and no bundle
+
+### Requirement: docs
+
+The harness README Pi adapter section and the changelog SHALL describe machine-version following, the follow and pin modes, and host pi-runtime.
+
+#### Scenario: Documented
+
+- **WHEN** a maintainer reads the Pi adapter section and the Unreleased changelog
+- **THEN** both name host pi-runtime and the follow machine mode
+
+### Requirement: bootstrap-commands
+
+In a folder without Change Loop settings, the shared Pi loader SHALL register change, investigate, dev and feature commands that, in a trusted project, create follow-machine settings at the project root, reload Pi, and then run the same command with the same arguments once.
+
+- The project root is the nearest Git root, else the current folder.
+- The pending command is handed to the reloaded loader through a file in the Pi agent directory, bound to that project root and consumed once within two minutes.
+
+#### Scenario: First /change in a fresh repository
+
+- **WHEN** a trusted Git repository without settings runs /change add a feature
+- **THEN** .changeloop.json follows the machine version at the Git root, Pi reloads, and /change add a feature is sent once after the reload
+
+#### Scenario: Stale or foreign hand-off is ignored
+
+- **WHEN** a pending command is older than two minutes or names another project root
+- **THEN** no command is sent and the pending file is removed
+
+### Requirement: bootstrap-refusals
+
+The bootstrap commands SHALL refuse without writing when the project is untrusted, has a local Change Loop installation, or resolves to the home directory or filesystem root.
+
+- A folder with a local runtime (.claude/harness/foundation.mjs at its project root) gets no bootstrap commands, so its own adapter keeps owning those names.
+
+#### Scenario: Untrusted folder
+
+- **WHEN** an untrusted repository runs /change
+- **THEN** no file is written and the user is told to trust the project
+
+#### Scenario: Home directory
+
+- **WHEN** /change runs in the home directory with no Git root
+- **THEN** no file is written and the user is told to open a project folder
+
+#### Scenario: Local installation
+
+- **WHEN** Pi opens a project that has .claude/harness/foundation.mjs
+- **THEN** the shared loader registers no change command there
+
+### Requirement: no-write-on-open
+
+Loading Pi in a folder without settings SHALL NOT create .changeloop.json, foundation.json, openspec or .foundation.
+
+#### Scenario: Just opened
+
+- **WHEN** Pi loads and starts a session in a fresh repository
+- **THEN** the repository contains no new Change Loop files
+
+### Requirement: first-use-docs
+
+The harness README Pi adapter section and the changelog SHALL describe first-use setup and its refusals.
+
+#### Scenario: Documented
+
+- **WHEN** a maintainer reads the Pi adapter section and the Unreleased changelog
+- **THEN** both describe that the first /change in a trusted repository sets it up
