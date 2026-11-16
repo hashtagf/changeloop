@@ -414,7 +414,10 @@ elif command -v jq >/dev/null 2>&1; then
     .land = ($src[0].land + (.land // {})) |
     .quality = ($src[0].quality + (.quality // {})) |
     .execution.budgetWatchdog //= $src[0].execution.budgetWatchdog |
-    .models.routing //= $src[0].models.routing
+    # New installs ship routing on, but an upgrade never changes an existing
+    # project: keep an explicit value (jq //= would replace false) and pin a
+    # missing key to false, the runtime default it already ran with.
+    (if (.models // {} | has("routing")) then . else .models.routing = false end)
   ' "$TARGET_PATH/foundation.json" > "$tmp"
   mv "$tmp" "$TARGET_PATH/foundation.json"
   printf '✓ installed risk-tiered workflow and configured reviewer defaults; existing explicit review waivers were preserved\n'

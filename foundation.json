@@ -24,7 +24,7 @@
     "budgetWatchdog": false
   },
   "models": {
-    "routing": false,
+    "routing": true,
     "fast": {
       "family": "haiku",
       "fallbackTier": "standard",

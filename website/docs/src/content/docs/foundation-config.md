@@ -16,7 +16,7 @@ behavior to be different.
 
 | I want to… | Set in `foundation.json` | Notes |
 |---|---|---|
-| Use a different or cheaper model for some work | `models.routing: true`, then `models.fast`/`standard`/`deep` `.family` | Routing is **off** by default: every task uses the `standard` tier. See [`models`](#models-route-purpose-not-a-host-specific-command) |
+| Use a different or cheaper model for some work | `models.fast`/`standard`/`deep` `.family` (routing is on in new installs) | New installations ship `models.routing: true`; `false` or a missing key puts every task on the `standard` tier. See [`models`](#models-route-purpose-not-a-host-specific-command) |
 | Require a reviewer other than the implementer | `review.independence: "required"` | Reviewer identity and AI session must differ |
 | Require a different AI provider to review | `review.diversity: "required"` and `review.defaultReviewer: "codex-sol"` (or `claude-opus` if Codex implements) | Fails closed if the reviewer matches the implementer. See [`review`](#review-choose-convenience-or-separation-of-duties) |
 | Run a project setup command in every new workspace | `sandbox.setupCommand` (and `sandbox.setupTimeoutMs`) | Dependencies are installed from the lockfile automatically; set `sandbox.installDependencies: false` to opt out |
@@ -177,9 +177,12 @@ not by adding provider commands to `foundation.json`. See
 }
 ```
 
-`models.routing` is a boolean and defaults to `false`: until you set it to
-`true`, every task uses the `standard` tier unless the task itself requests a
-tier, and the tier table below has no effect on planning.
+`models.routing` is a boolean. New installations ship with `true`, so tasks
+use the `fast`, `standard`, or `deep` tier by kind and risk, and a high-risk
+task never drops to `fast`. With `false`, or when the key is missing, every task
+uses the `standard` tier unless the task itself requests a tier, and the tier
+table below has no effect on planning. Upgrading keeps the project's existing
+value and writes `false` for a project that never set it.
 
 The three keys—`fast`, `standard`, and `deep`—are portable tiers. `family`
 describes the preferred family, while the native agent host remains responsible

@@ -1,0 +1,6 @@
+# Tasks
+
+> This is the sole implementation ledger.
+
+- [x] **T001** Installer upgrade keeps explicit routing and writes false for a missing key; shipped default is true; installer, upgrade and budget tests updated [key:task-1] [kind:implementation] [paths:install.sh,foundation.json,.claude/tests/harness/run-upgrade-compat-tests.sh,.claude/tests/harness/run-context-budget-tests.sh] [claims:ship-routing-on,upgrade-keeps-routing-a-project-with-models-routing-false-is-upg,upgrade-keeps-routing-a-project-whose-foundation-json-has-no-mod,upgrade-keeps-routing-a-project-with-models-routing-true-is-upgr] — verify: `node -e "if(require('./foundation.json').models.routing!==true)process.exit(1)" && bash .claude/tests/harness/run-upgrade-compat-tests.sh && bash .claude/tests/harness/run-context-budget-tests.sh`
+- [x] **T002** English and Thai foundation-config pages and the changelog describe the new default [key:task-2] [kind:implementation] [paths:CHANGELOG.md,website/docs/src/content/docs/foundation-config.md,website/docs/src/content/docs/th/foundation-config.md] [claims:docs-default] — verify: `grep -q 'routing' CHANGELOG.md && grep -q 'New installations ship with' website/docs/src/content/docs/foundation-config.md && grep -q 'การติดตั้งใหม่' website/docs/src/content/docs/th/foundation-config.md && bash .claude/tests/docs/run-doc-consistency.sh`

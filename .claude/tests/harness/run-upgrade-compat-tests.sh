@@ -57,6 +57,21 @@ assert_eq "consumer budget watchdog opt-in survives upgrade" "true" \
   "$(jq -r '.execution.budgetWatchdog' "$optin/foundation.json")"
 assert_eq "consumer model routing opt-in survives upgrade" "true" \
   "$(jq -r '.models.routing' "$optin/foundation.json")"
+
+optout="$TMP/optout"
+mkdir -p "$optout"
+printf '%s\n' '{"version":1,"models":{"routing":false}}' > "$optout/foundation.json"
+assert_cmd_zero "installer upgrades an explicit routing opt-out" \
+  bash "$ROOT/install.sh" "$optout" --source "$ROOT" --yes
+assert_eq "explicit model routing false survives upgrade" "false" \
+  "$(jq -r '.models.routing' "$optout/foundation.json")"
+
+fresh="$TMP/fresh-routing"
+mkdir -p "$fresh"
+assert_cmd_zero "installer seeds a fresh project" \
+  bash "$ROOT/install.sh" "$fresh" --source "$ROOT" --yes
+assert_eq "fresh install ships model routing on" "true" \
+  "$(jq -r '.models.routing' "$fresh/foundation.json")"
 assert_eq "consumer quality gate survives upgrade" "warn" \
   "$(jq -r '.quality.changeGate' "$optin/foundation.json")"
 

@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "routing-on",
+      "requirementKey": "routing-on",
+      "scenario": "Routing enabled",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node -e \"const m=require('./foundation.json').models; if(m.routing!==true||m.fast.family!=='haiku'||m.standard.family!=='sonnet'||m.deep.family!=='opus') process.exit(1)\" && printf 'TAP version 13\\n1..1\\nok 1 - foundation.json enables model routing with haiku/sonnet/opus tiers\\n'"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

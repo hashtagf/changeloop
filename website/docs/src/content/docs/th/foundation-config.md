@@ -15,7 +15,7 @@ Change Loop ว่า agent ทำงานอัตโนมัติได้�
 
 | ฉันต้องการ… | ตั้งใน `foundation.json` | หมายเหตุ |
 |---|---|---|
-| ใช้ model อื่นหรือ model ที่ถูกกว่าสำหรับงานบางประเภท | `models.routing: true` แล้วแก้ `models.fast`/`standard`/`deep` `.family` | routing **ปิด**เป็นค่าเริ่มต้น: ทุก task ใช้ tier `standard` ดูหัวข้อ `models` |
+| ใช้ model อื่นหรือ model ที่ถูกกว่าสำหรับงานบางประเภท | แก้ `models.fast`/`standard`/`deep` `.family` (การติดตั้งใหม่เปิด routing ไว้แล้ว) | การติดตั้งใหม่ตั้ง `models.routing: true` ถ้าเป็น `false` หรือไม่มี key ทุก task ใช้ tier `standard` ดูหัวข้อ `models` |
 | ให้ reviewer ต้องไม่ใช่คนเดียวกับผู้ implement | `review.independence: "required"` | identity และ AI session ของ reviewer ต้องต่างกัน |
 | ให้ AI คนละ provider มารีวิว | `review.diversity: "required"` และ `review.defaultReviewer: "codex-sol"` (หรือ `claude-opus` ถ้า Codex เป็นผู้ implement) | ถ้า reviewer ตรงกับผู้ implement จะ fail closed ดูหัวข้อ `review` |
 | รันคำสั่ง setup ของโปรเจกต์ในทุก workspace ใหม่ | `sandbox.setupCommand` (และ `sandbox.setupTimeoutMs`) | harness ติดตั้ง dependency จาก lockfile ให้อัตโนมัติ; ตั้ง `sandbox.installDependencies: false` เพื่อปิด |
@@ -174,8 +174,11 @@ provider command ลง `foundation.json` ดูรายละเอียด�
 }
 ```
 
-`models.routing` เป็น boolean และค่าเริ่มต้นคือ `false`: จนกว่าจะตั้งเป็น `true`
-ทุก task จะใช้ tier `standard` เว้นแต่ task เองขอ tier และตาราง tier ด้านล่างยังไม่มีผลต่อการวางแผน
+`models.routing` เป็น boolean การติดตั้งใหม่ตั้งเป็น `true` ให้ task ใช้ tier `fast`,
+`standard` หรือ `deep` ตามประเภทและความเสี่ยง และ task ความเสี่ยงสูงไม่ถูกลดไป `fast`
+ถ้าเป็น `false` หรือไม่มี key ทุก task จะใช้ tier `standard` เว้นแต่ task เองขอ tier
+และตาราง tier ด้านล่างไม่มีผลต่อการวางแผน การอัปเกรดคงค่าเดิมของโปรเจกต์ไว้
+และเขียน `false` ให้โปรเจกต์ที่ไม่เคยตั้งค่านี้
 
 key `fast`, `standard` และ `deep` คือ portable tier ส่วน `family` ระบุ family
 ที่ต้องการ ขณะที่ native agent host เป็นตัวรัน model จริง `fallbackTier` ต้องเป็น

@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "ship-routing-on",
+      "requirementKey": "ship-routing-on",
+      "scenario": "Fresh install",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "upgrade-keeps-routing-a-project-with-models-routing-false-is-upg",
+      "requirementKey": "upgrade-keeps-routing",
+      "scenario": "Explicit false survives",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "upgrade-keeps-routing-a-project-whose-foundation-json-has-no-mod",
+      "requirementKey": "upgrade-keeps-routing",
+      "scenario": "Missing key stays off",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "upgrade-keeps-routing-a-project-with-models-routing-true-is-upgr",
+      "requirementKey": "upgrade-keeps-routing",
+      "scenario": "Explicit true survives",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "docs-default",
+      "requirementKey": "docs-default",
+      "scenario": "Docs agree",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node -e \"if(require('./foundation.json').models.routing!==true)process.exit(1)\" && bash .claude/tests/harness/run-upgrade-compat-tests.sh && bash .claude/tests/harness/run-context-budget-tests.sh) && (grep -q 'routing' CHANGELOG.md && grep -q 'New installations ship with' website/docs/src/content/docs/foundation-config.md && grep -q 'การติดตั้งใหม่' website/docs/src/content/docs/th/foundation-config.md && bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "segments": [
+        "node -e \"if(require('./foundation.json').models.routing!==true)process.exit(1)\" && bash .claude/tests/harness/run-upgrade-compat-tests.sh && bash .claude/tests/harness/run-context-budget-tests.sh",
+        "grep -q 'routing' CHANGELOG.md && grep -q 'New installations ship with' website/docs/src/content/docs/foundation-config.md && grep -q 'การติดตั้งใหม่' website/docs/src/content/docs/th/foundation-config.md && bash .claude/tests/docs/run-doc-consistency.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

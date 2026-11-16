@@ -504,8 +504,8 @@ assert_cmd_zero "standard request budget is explicit" \
   jq -e '.execution.requestBudgets.standard == 200' "$ROOT/foundation.json"
 assert_cmd_zero "budget watchdog is opt-in (default off)" \
   jq -e '.execution.budgetWatchdog == false' "$ROOT/foundation.json"
-assert_cmd_zero "model tier routing is opt-in (default off)" \
-  jq -e '.models.routing == false' "$ROOT/foundation.json"
+assert_cmd_zero "new installs ship model tier routing on" \
+  jq -e '.models.routing == true' "$ROOT/foundation.json"
 assert_cmd_zero "quality change gate defaults off" \
   jq -e '.quality.changeGate == "off"' "$ROOT/foundation.json"
 

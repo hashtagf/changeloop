@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Model-tier routing is on in new installations. The shipped `foundation.json`
+  sets `models.routing: true`, so Build tasks use the `fast`, `standard`, or
+  `deep` tier by kind and risk. Upgrades keep each project's existing value:
+  an explicit `false` is no longer replaced, and a project that never set the
+  key gets `false`, the behavior it already had.
+
 ### Fixed
 
 - Pi parallel Build workers. A Pi worker session is separate from its
