@@ -784,9 +784,28 @@ export function createChangeLifecycle({
   // to the draft's selection, plus the seeds that live at the root. Walking the
   // whole folder would reach every unrelated repository and exhaust the scan
   // limits. Without declared repositories the whole-tree walk remains.
+  // A Git root sees a declared nested repository as a gitlink or, when it
+  // ignores the folder, not at all; its files join the scan the same way.
   function repositoryGitPaths(source = {}, seeds = []) {
     const rootPaths = gitVisiblePaths(root);
-    if (rootPaths) return rootPaths;
+    if (rootPaths) {
+      const nested = declaredRepositoryGitPaths(source);
+      if (!nested.includedPaths.length) return rootPaths;
+      return {
+        trackedPaths: [...new Set([...rootPaths.trackedPaths, ...nested.trackedPaths])],
+        includedPaths: [...new Set([...rootPaths.includedPaths, ...nested.includedPaths])]
+      };
+    }
+    const { trackedPaths, includedPaths } = declaredRepositoryGitPaths(source);
+    if (!includedPaths.length) return { includedPaths: null, trackedPaths: [] };
+    for (const seed of [...seeds, ...lessonsSourcePaths()])
+      if (existsSync(join(root, seed))) includedPaths.push(seed);
+    return { trackedPaths, includedPaths: [...new Set(includedPaths)] };
+  }
+
+  // The Git-visible files of each declared repository (narrowed to the
+  // draft's selection), prefixed with its path below the root.
+  function declaredRepositoryGitPaths(source = {}) {
     const selected = new Set((Array.isArray(source.repositories) ? source.repositories : [])
       .map((entry) => typeof entry === "string" ? entry : entry?.id).filter(Boolean));
     const repositories = declaredRepositories().filter((row) =>
@@ -801,10 +820,7 @@ export function createChangeLifecycle({
       trackedPaths.push(...paths.trackedPaths.map((path) => `${prefix}/${path}`));
       includedPaths.push(...paths.includedPaths.map((path) => `${prefix}/${path}`));
     }
-    if (!includedPaths.length) return { includedPaths: null, trackedPaths: [] };
-    for (const seed of [...seeds, ...lessonsSourcePaths()])
-      if (existsSync(join(root, seed))) includedPaths.push(seed);
-    return { trackedPaths, includedPaths: [...new Set(includedPaths)] };
+    return { trackedPaths, includedPaths };
   }
 
   // "skipped" (rapid-shaped change) is usable like "ready"; only "blocked" is not.

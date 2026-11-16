@@ -107,6 +107,12 @@ sees (narrowed to the draft's `repositories` selection, plus root seeds such
 as `openspec/lessons.md`) instead of walking every sibling. Write this file
 and the draft folder with the editor tools; the phase guard allows both before
 the change starts and during Change, but not during Build, Prove, or Land.
+The root's own sandbox and file manifests skip every nested repository
+(declared or not): a declared one is edited in its own sandbox, and Land
+refuses a file written into an undeclared one and asks you to declare it.
+A Git root scans the same declared repositories too, so a root that tracks
+only its control plane and ignores the gathered checkouts still grounds a
+change in the files it will edit.
 
 Check the result before creating a change:
 

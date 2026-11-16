@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "non-git-root-sandbox-scope-copy-sandbox-root",
+      "requirementKey": "non-git-root-sandbox-scope",
+      "scenario": "repo ที่ประกาศไม่ถูกคัดลอกเข้า sandbox ของ root",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "non-git-root-sandbox-scope-copy-sandbox-root-2",
+      "requirementKey": "non-git-root-sandbox-scope",
+      "scenario": "repo ที่ไม่ได้ประกาศไม่ถูกคัดลอก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "non-git-root-sandbox-scope-copy-sandbox-root-3",
+      "requirementKey": "non-git-root-sandbox-scope",
+      "scenario": "ไฟล์ control plane ของ root ยังอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "non-git-root-sandbox-scope-copy-sandbox-root-4",
+      "requirementKey": "non-git-root-sandbox-scope",
+      "scenario": "root ที่เป็น git ไม่เปลี่ยน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "non-git-root-sandbox-scope-land",
+      "requirementKey": "non-git-root-sandbox-scope",
+      "scenario": "แก้ไฟล์ใน repo ที่ไม่ได้ประกาศ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/non-git-root-sandbox.test.mjs) && (bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/non-git-root-sandbox.test.mjs",
+        "bash .claude/tests/docs/run-doc-consistency.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

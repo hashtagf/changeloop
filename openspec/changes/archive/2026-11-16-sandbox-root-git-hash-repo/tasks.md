@@ -1,0 +1,6 @@
+# Tasks
+
+> This is the sole implementation ledger.
+
+- [x] **T001** copy sandbox และ manifest ของ root ที่ไม่ใช่ git ข้าม repo ที่ประกาศและไดเรกทอรีที่เป็น git repository [key:skip-nested-in-copy-and-manifest] [kind:implementation] [paths:.claude/harness/runtime/workflow/sandbox-runtime.mjs,.claude/harness/runtime/core/state-runtime.mjs,.claude/harness/runtime/workflow/apply-runtime.mjs,.claude/harness/tests/non-git-root-sandbox.test.mjs] [claims:non-git-root-sandbox-scope-copy-sandbox-root,non-git-root-sandbox-scope-copy-sandbox-root-2,non-git-root-sandbox-scope-copy-sandbox-root-3,non-git-root-sandbox-scope-copy-sandbox-root-4,non-git-root-sandbox-scope-land] — verify: `node --test .claude/harness/tests/non-git-root-sandbox.test.mjs`
+- [x] **T002** เอกสาร multi-repository บอกว่า sandbox ของ root ที่ไม่ใช่ git ไม่รวม repo ย่อย ทั้งอังกฤษและไทย [key:document-non-git-sandbox] [kind:implementation] [paths:website/docs/src/content/docs/multi-repository.md,website/docs/src/content/docs/th/multi-repository.md] [claims:non-git-root-sandbox-scope-copy-sandbox-root,non-git-root-sandbox-scope-copy-sandbox-root-2,non-git-root-sandbox-scope-copy-sandbox-root-3,non-git-root-sandbox-scope-copy-sandbox-root-4,non-git-root-sandbox-scope-land] — verify: `bash .claude/tests/docs/run-doc-consistency.sh`

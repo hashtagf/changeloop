@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "git-root-declared-repo-scan-change-start-repository-intelligence",
+      "requirementKey": "git-root-declared-repo-scan",
+      "scenario": "repo ที่ root ignore ถูกสแกน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "git-root-declared-repo-scan-draft-repositories-app",
+      "requirementKey": "git-root-declared-repo-scan",
+      "scenario": "draft เลือก repo บางตัว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "git-root-declared-repo-scan-3",
+      "requirementKey": "git-root-declared-repo-scan",
+      "scenario": "ไฟล์ที่ repo ignore ไม่ถูกสแกน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "git-root-declared-repo-scan-4",
+      "requirementKey": "git-root-declared-repo-scan",
+      "scenario": "repo ที่ประกาศไม่มีอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "git-root-declared-repo-scan-5",
+      "requirementKey": "git-root-declared-repo-scan",
+      "scenario": "root เป็น git ที่ไม่มี repo ประกาศ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/repository-intelligence.test.mjs) && (bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/repository-intelligence.test.mjs",
+        "bash .claude/tests/docs/run-doc-consistency.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

@@ -20,7 +20,9 @@ import {
 import { deliveryTreeEntries, assertDeliveryEntries } from "./delivery-integrity.mjs";
 import { amendedAgreementMatches, approvalMatches } from "../core/user-decisions.mjs";
 import { emitSignal } from "../core/signals.mjs";
-import { DEPENDENCY_LOCKFILES, rejectedPaths, workspaceSetupPlan } from "./sandbox-runtime.mjs";
+import {
+  DEPENDENCY_LOCKFILES, gatheringRoot, nestedRepositoryAncestor, rejectedPaths, workspaceSetupPlan
+} from "./sandbox-runtime.mjs";
 
 // The root files whose change means the target's installed dependencies no
 // longer match: the manifest and every lockfile the sandbox setup knows.
@@ -562,6 +564,15 @@ export function copyApplyCodePaths(context, id, state, sandboxPath) {
   const target = context.workspaceManifest(context.root, id, true);
   const sandbox = context.workspaceManifest(sandboxPath, id, true);
   const codePaths = context.copyCodePaths(id, state);
+  // A root without Git that gathers checkouts never copied its nested
+  // repositories into the sandbox, so a path below one is work written where
+  // no repository sandbox reads it; projecting it would edit that checkout.
+  if (gatheringRoot(context.root)) {
+    const nested = codePaths.filter((path) => nestedRepositoryAncestor(context.root, path));
+    if (nested.length)
+      context.fail(`apply encountered nested repository path(s): ${nested.slice(0, 10).join(", ")}${
+        nested.length > 10 ? ", ..." : ""}; register nested repositories in openspec/repositories.yaml before creating the sandbox`);
+  }
   for (const path of codePaths) {
     if ((target[path] ?? null) !== (baseline[path] ?? null) &&
         ((target[path] ?? null) !== (sandbox[path] ?? null) ||

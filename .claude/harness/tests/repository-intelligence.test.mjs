@@ -324,7 +324,7 @@ test("rapid draft inspection skips the repository scan; medium impact runs it", 
 // A folder that gathers many repositories without being one itself: two
 // declared repositories and an undeclared sibling. `siblingEntries` makes the
 // sibling large enough to exhaust the scan entry limit if it were walked.
-function gatheringRoot(t, { declare = true, siblingEntries = 0 } = {}) {
+function gatheringRoot(t, { declare = true, siblingEntries = 0, rootGit = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), "repository-intelligence-gathering-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const write = (path, text) => {
@@ -343,6 +343,14 @@ function gatheringRoot(t, { declare = true, siblingEntries = 0 } = {}) {
     writeFileSync(join(root, "archive/unrelated", `f${index}.txt`), "");
   write("openspec/lessons.md", "# Lessons\n");
   mkdirSync(join(root, "openspec", "specs"), { recursive: true });
+  if (rootGit) {
+    // A root Git repository that tracks only its control plane and ignores
+    // every gathered checkout.
+    write(".gitignore", "/services/\n/archive/\n");
+    write("openspec/plan.md", "administrator login plan\n");
+    assert.equal(spawnSync("git", ["init", "-q"], { cwd: root }).status, 0);
+    assert.equal(spawnSync("git", ["add", "-A"], { cwd: root }).status, 0);
+  }
   const repositories = declare ? [
     { id: "app", type: "git", path: join(root, "services/app"), relativePath: "services/app" },
     { id: "lib", type: "git", path: join(root, "services/lib"), relativePath: "services/lib" }
@@ -419,6 +427,42 @@ test("a non-Git root without declared repositories keeps the whole-tree scan", (
   const value = inspect();
   assert.equal(value.status, "blocked");
   assert.equal(value.findings.some((row) => row.code === "scan-entry-limit"), true);
+});
+
+test("a Git root that ignores its checkouts still scans its declared repositories", (t) => {
+  const { inspect } = gatheringRoot(t, { rootGit: true });
+  const value = inspect();
+  assert.equal(value.status, "ready", JSON.stringify(value.findings));
+  assert.ok(value.selectedSources.some((path) => path.startsWith("services/app/")),
+    JSON.stringify(value.selectedSources));
+  assert.ok(value.selectedSources.includes("openspec/plan.md"), "root files stay");
+  assert.equal(value.selectedSources.some((path) => path.includes("/generated/")), false);
+  assert.equal(value.selectedSources.some((path) => path.startsWith("archive/")), false);
+});
+
+test("a Git root narrows declared repositories to the draft selection", (t) => {
+  const { inspect } = gatheringRoot(t, { rootGit: true });
+  const value = inspect({ repositories: [{ id: "app", mode: "write" }] });
+  assert.equal(value.status, "ready", JSON.stringify(value.findings));
+  assert.ok(value.selectedSources.some((path) => path.startsWith("services/app/")));
+  assert.equal(value.selectedSources.some((path) => path.startsWith("services/lib/")), false);
+});
+
+test("a Git root skips a declared repository that is missing", (t) => {
+  const { root, inspect } = gatheringRoot(t, { rootGit: true });
+  rmSync(join(root, "services"), { recursive: true, force: true });
+  const value = inspect();
+  assert.equal(value.status, "ready", JSON.stringify(value.findings));
+  assert.ok(value.selectedSources.includes("openspec/plan.md"));
+  assert.equal(value.selectedSources.some((path) => path.startsWith("services/")), false);
+});
+
+test("a Git root without declared repositories scans only its own files", (t) => {
+  const { inspect } = gatheringRoot(t, { rootGit: true, declare: false });
+  const value = inspect();
+  assert.equal(value.status, "ready", JSON.stringify(value.findings));
+  assert.equal(value.selectedSources.every((path) => !path.startsWith("services/")), true);
+  assert.ok(value.selectedSources.includes("openspec/plan.md"));
 });
 
 test("a project's openspec/lessons.md always joins the declared seeds when present", async (t) => {

@@ -741,6 +741,11 @@ export function createStateRuntime({
     // keeps an unrelated tree out of that diff.
     const declared = declaredSurfaceMatcher(id, manifestState,
       workspaceRepositoryId(manifestState, workspace));
+    // A workspace that is no Git repository but gathers checkouts: a nested
+    // repository is no part of its surface (a declared one has its own
+    // sandbox and manifest). Hashing them put ~160,000 entries into two
+    // manifests and a 115 MB runtime state file every command re-read.
+    const gathering = !view && !gitAware && !existsSync(join(workspace, ".git"));
     function collect(dir) {
       for (const entry of readdirSync(dir, { withFileTypes: true })) {
         const path = join(dir, entry.name);
@@ -749,6 +754,7 @@ export function createStateRuntime({
           excluded: excludedWorkspaceDirs, tracked: tracked.has(rel)
         })) continue;
         if (ignored.has(rel)) continue;
+        if (gathering && entry.isDirectory() && existsSync(join(path, ".git"))) continue;
         if (rel.startsWith("openspec/changes/archive/")) continue;
         if (rel.startsWith("openspec/changes/") &&
             (excludeChange || !isCurrentChangePath(rel, id))) continue;

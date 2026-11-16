@@ -574,8 +574,34 @@ export function ignoredSandboxPaths(root, git) {
     .map((path) => path.endsWith("/") ? path.slice(0, -1) : path));
 }
 
+// A root that is no Git repository but gathers repositories (a folder of
+// checkouts). Its nested repositories are no part of the root's work: a
+// declared one has its own sandbox and an undeclared one cannot Land.
+export function gatheringRoot(root) {
+  return !existsSync(join(root, ".git"));
+}
+
+// A directory below `root` that is itself a Git checkout (`.git` directory or
+// file). Only consulted for a gathering root.
+export function nestedRepositoryDirectory(root, rel) {
+  return Boolean(rel) && existsSync(join(root, rel, ".git"));
+}
+
+// The nearest directory above `rel` (inside `root`) that is a Git checkout,
+// or null.
+export function nestedRepositoryAncestor(root, rel) {
+  const parts = String(rel || "").split("/").filter(Boolean);
+  for (let index = 1; index < parts.length; index += 1) {
+    const prefix = parts.slice(0, index).join("/");
+    if (nestedRepositoryDirectory(root, prefix)) return prefix;
+  }
+  return null;
+}
+
 // A copy that carries Git leaves each declared nested repository directory
-// empty, as a worktree does: the root sandbox projects it afterwards.
+// empty, as a worktree does: the root sandbox projects it afterwards. A
+// gathering root (no Git at all) copies none of its nested repositories:
+// copying them made a 17 GB sandbox of a folder whose change touched one.
 export function sandboxCopyPlan({
   root, carriesGit, git, sandboxCopyExcludedDirs, excludedWorkspaceDirs, nestedPaths = []
 }) {
@@ -584,9 +610,11 @@ export function sandboxCopyPlan({
   const listedPaths = listed.status === 0 ? listed.stdout.split("\0").filter(Boolean) : [];
   const tracked = trackedPathSet(listedPaths);
   const ignored = ignoredSandboxPaths(root, git);
-  const nested = carriesGit ? nestedPaths : [];
+  const gathering = !carriesGit && gatheringRoot(root);
+  const nested = carriesGit || gathering ? nestedPaths : [];
   const excludes = (rel) => ignored.has(rel) ||
-    nested.some((path) => rel.startsWith(`${path}/`)) ||
+    nested.some((path) => rel.startsWith(`${path}/`) || (gathering && rel === path)) ||
+    (gathering && nestedRepositoryDirectory(root, rel)) ||
     isExcludedPath(rel, { excluded: copyExcluded, tracked: tracked.has(rel) });
   const filter = (source) =>
     !excludes(relative(root, source).replaceAll("\\", "/"));

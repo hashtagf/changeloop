@@ -355,6 +355,7 @@ git-ignored surface|node --test "$ROOT/.claude/harness/tests/git-ignore.test.mjs
 git read memo|node --test "$ROOT/.claude/harness/tests/git-read-memo.test.mjs"
 workspace inspection|node --test "$ROOT/.claude/harness/tests/workspace-inspection.test.mjs"
 sandbox create phases|node --test "$ROOT/.claude/harness/tests/sandbox-create-phases.test.mjs"
+non-Git root sandbox scope|node --test "$ROOT/.claude/harness/tests/non-git-root-sandbox.test.mjs"
 change validation phases|node --test "$ROOT/.claude/harness/tests/change-validation-phases.test.mjs"
 semantic invariant validation|node --test "$ROOT/.claude/harness/tests/semantic-invariant-issues.test.mjs"
 waive gate|node --test "$ROOT/.claude/harness/tests/waive-gate.test.mjs"
