@@ -1,0 +1,326 @@
+{
+  "version": 2,
+  "purpose": "change",
+  "language": "th",
+  "id": "archive-proof-record",
+  "activeChange": null,
+  "problem": "change ที่ archive แล้วใน openspec/changes/archive มีผล review แต่ไม่มีผล test/proof ที่อ่านได้ หลักฐานจริงอยู่ใน .foundation/evidence ซึ่ง gitignore จึงหายเมื่อ clone ไปเครื่องอื่น ต้องออกแบบให้ Land บันทึกผลพิสูจน์ลง archive",
+  "mode": "analyze",
+  "intent": {
+    "goal": "change ที่ archive แล้วมีหลักฐาน review และ test ที่อ่านได้และติดไปกับ Git",
+    "outcome": "เปิด proposal.md ของ change ที่ archive แล้วเห็นว่า proof run ไหนผ่าน provider ใดพิสูจน์ claim ใด ด้วยคำสั่งอะไร ผลเป็นอย่างไร และ hash ของ receipt ที่ใช้ตรวจย้อนได้",
+    "actors": [
+      "ผู้ดูแล repo",
+      "reviewer ของ PR",
+      "ผู้ตรวจ audit ภายหลัง"
+    ],
+    "scope": [
+      "archive appendix ตอน Land",
+      "Deliver PR body อ่านข้อมูลเดิมได้"
+    ]
+  },
+  "conversation": [
+    {
+      "key": "u-ask",
+      "speaker": "user",
+      "statement": "changeloop มีหลักฐานการ review and test ลงใน change spec หรือยัง และมีสร้าง REVIEW.md ให้ repo ที่ติดตั้งหรือยัง",
+      "source": "session message 1"
+    },
+    {
+      "key": "a-answer",
+      "speaker": "agent",
+      "statement": "REVIEW.md ถูก seed แล้ว หลักฐาน review/test ยังไม่อยู่ใน change spec (คำตอบแรกพลาดเรื่อง review — ภายหลังพบว่ามี Appendix: Review record แล้ว)",
+      "source": "session message 2"
+    },
+    {
+      "key": "u-investigate",
+      "speaker": "user",
+      "statement": "investigate design to land",
+      "source": "session message 3"
+    },
+    {
+      "key": "u-shape",
+      "speaker": "user",
+      "statement": "เลือก: ไฟล์ verification.md แยก",
+      "source": "/questions answer d6c3f412"
+    }
+  ],
+  "requirements": [
+    {
+      "key": "r-proof-in-archive",
+      "revision": 1,
+      "kind": "behavior",
+      "statement": "Land เขียนสรุปผล proof run ที่ Land ยอมรับลงใน change ที่ archive",
+      "origin": "user",
+      "status": "stated",
+      "material": true,
+      "conversationKeys": [
+        "u-ask",
+        "u-investigate"
+      ]
+    },
+    {
+      "key": "r-no-machine-state-commit",
+      "revision": 1,
+      "kind": "constraint",
+      "statement": "ไม่ commit .foundation หรือ log ดิบ และไม่แก้ proof JSON ที่เครื่องสร้าง",
+      "origin": "agent",
+      "status": "superseded",
+      "material": true,
+      "conversationKeys": [
+        "u-investigate"
+      ],
+      "reason": "เป็น invariant เดิมของ repo ไม่ต้องให้ผู้ใช้ตัดสิน",
+      "supersededBy": {
+        "key": "r-no-machine-state-commit",
+        "revision": 2
+      }
+    },
+    {
+      "key": "r-no-machine-state-commit",
+      "revision": 2,
+      "kind": "constraint",
+      "statement": "ไม่ commit .foundation หรือ log ดิบ และไม่แก้ proof JSON ที่เครื่องสร้าง (invariant เดิมของ repo ตาม AGENTS.md และกลไก appendix)",
+      "origin": "agent",
+      "status": "proposed",
+      "material": false,
+      "conversationKeys": [
+        "u-investigate"
+      ]
+    },
+    {
+      "key": "r-resume-idempotent",
+      "revision": 1,
+      "kind": "constraint",
+      "statement": "Land ที่ resume ต้องเขียนข้อความเดิมครั้งเดียวเหมือน appendix เดิม และอยู่ก่อน delivery integrity bind",
+      "origin": "agent",
+      "status": "superseded",
+      "material": true,
+      "conversationKeys": [
+        "u-investigate"
+      ],
+      "reason": "เป็น invariant เดิมของ repo ไม่ต้องให้ผู้ใช้ตัดสิน",
+      "supersededBy": {
+        "key": "r-resume-idempotent",
+        "revision": 2
+      }
+    },
+    {
+      "key": "r-resume-idempotent",
+      "revision": 2,
+      "kind": "constraint",
+      "statement": "Land ที่ resume ต้องเขียนข้อความเดิมครั้งเดียวเหมือน appendix เดิม และอยู่ก่อน delivery integrity bind (invariant เดิมของ repo ตาม AGENTS.md และกลไก appendix)",
+      "origin": "agent",
+      "status": "proposed",
+      "material": false,
+      "conversationKeys": [
+        "u-investigate"
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "key": "q-shape",
+      "question": "รูปแบบหลักฐาน test ใน archive: appendix ตารางสรุปใน proposal.md (แนะนำ) / ไฟล์ verification.md แยก / คัดลอก receipt JSON เต็ม",
+      "material": true,
+      "status": "answered",
+      "dependsOn": [],
+      "workKeys": [
+        "w-change"
+      ],
+      "answer": "ไฟล์ verification.md แยกใน archive folder",
+      "conversationKeys": [
+        "u-shape"
+      ]
+    }
+  ],
+  "work": [
+    {
+      "key": "w-change",
+      "outcome": "draft change สำหรับ proof record appendix",
+      "questionKeys": [
+        "q-shape"
+      ]
+    }
+  ],
+  "experiments": [],
+  "historyGaps": [],
+  "sources": [
+    ".claude/harness/runtime/workflow/apply-runtime.mjs",
+    ".claude/harness/runtime/workflow/validation/process-fields.mjs",
+    ".claude/harness/runtime/workflow/validation/outline-contract.mjs",
+    ".claude/harness/runtime/workflow/pull-request-runtime.mjs",
+    ".claude/harness/tests/archive-appendices.test.mjs",
+    "WORKFLOW.md",
+    "install.sh",
+    ".claude/harness/runtime/core/user-decisions.mjs",
+    ".claude/harness/runtime/workflow/land-journal.mjs",
+    ".claude/harness/runtime/workflow/land-undo.mjs",
+    ".claude/harness/runtime/workflow/delivery-integrity.mjs"
+  ],
+  "facts": [
+    {
+      "key": "f-appendix-exists",
+      "statement": "archiveAppendixMarkdown (apply-runtime.mjs:823) สร้าง appendix เฉพาะตอน archive: Review record, Compliance change record (ถ้าเปิด), Rollout gates — ไม่มีผล test/proof",
+      "sources": [
+        ".claude/harness/runtime/workflow/apply-runtime.mjs"
+      ]
+    },
+    {
+      "key": "f-appendix-lifecycle",
+      "statement": "prepareArchiveAppendix render ก่อน openspec archive แล้วเก็บใน state.land.archiveAppendix; appendArchiveAppendix ต่อท้าย archived proposal.md หลัง spec sync verify และก่อน recordDeliveryIntegrity; strip/append ด้วย byte offset เพื่อให้ resume เขียนครั้งเดียว",
+      "sources": [
+        ".claude/harness/runtime/workflow/apply-runtime.mjs"
+      ]
+    },
+    {
+      "key": "f-review-rendered",
+      "statement": "renderReviewRecord (process-fields.mjs:253) แสดงรอบ review, finding, severity, การแก้, reviewer เฉพาะเมื่อมี review attempt ที่ completed; change ที่ review ไม่บังคับจะไม่มีส่วนนี้",
+      "sources": [
+        ".claude/harness/runtime/workflow/validation/process-fields.mjs"
+      ]
+    },
+    {
+      "key": "f-archive-coverage",
+      "statement": "55 จาก 135 archive ใน repo นี้มี Appendix: Review record; change 2026-11-16 ส่วนใหญ่ไม่มีเพราะ reviewRequired=false (rapid lane, low impact)",
+      "sources": [
+        ".claude/harness/runtime/workflow/apply-runtime.mjs"
+      ]
+    },
+    {
+      "key": "f-dod-text",
+      "statement": "proposal.md มี Definition of done และ Acceptance traceability ที่บอกว่าต้องพิสูจน์อะไร (claim, task, คำสั่ง check) แต่ไม่บอกผลจริง",
+      "sources": [
+        ".claude/harness/runtime/workflow/validation/outline-contract.mjs"
+      ]
+    },
+    {
+      "key": "f-proof-data",
+      "statement": "state.land.proofRunId ชี้ proof run ที่ Land ยอมรับ; manifest.json มี status, workspaceHash, contractFingerprint, providers, advisories, rolloutGates, receipts; receipt มี provider, claims, status, observed, command, durationMs, finishedAt, log (path ใน .foundation)",
+      "sources": [
+        ".claude/harness/runtime/workflow/apply-runtime.mjs"
+      ]
+    },
+    {
+      "key": "f-foundation-ignored",
+      "statement": ".foundation/.gitignore ignore ทุกอย่างยกเว้น .gitignore และ README.md ดังนั้น receipt/manifest/log ไม่ติดไปกับ Git",
+      "sources": [
+        "install.sh"
+      ]
+    },
+    {
+      "key": "f-pr-evidence",
+      "statement": "pullRequestNarrative (pull-request-runtime.mjs:270) ใส่ testEvidence เป็น provider + path + sha256 ของ receipt ใน PR body อยู่แล้ว — Deliver มีหลักฐานแบบ reference แต่ archive ไม่มี",
+      "sources": [
+        ".claude/harness/runtime/workflow/pull-request-runtime.mjs"
+      ]
+    },
+    {
+      "key": "f-docs-contract",
+      "statement": "WORKFLOW.md:1441-1451 กำหนดรายการ appendix ที่ archive เขียน; outline-contract.mjs มี row archiveOnly สำหรับ reviewRecord/complianceRecord; tests อยู่ที่ archive-appendices.test.mjs",
+      "sources": [
+        "WORKFLOW.md",
+        ".claude/harness/runtime/workflow/validation/outline-contract.mjs",
+        ".claude/harness/tests/archive-appendices.test.mjs"
+      ]
+    },
+    {
+      "key": "f-review-md",
+      "statement": "install.sh seed REVIEW.md จาก template ถ้ายังไม่มี และ git add เฉพาะที่สร้างในรอบนั้น",
+      "sources": [
+        "install.sh"
+      ]
+    },
+    {
+      "key": "f-packet-identity",
+      "statement": "packetIdentity (user-decisions.mjs:66) hash ทุกไฟล์ใน packet dir; assertRetainedArchiveIntegrity (apply-runtime.mjs:1451) เทียบ approval identity และ archivePacketEntries กับ archive folder ตอนกู้ archive ที่ค้าง — ไฟล์เพิ่มจะทำให้ไม่ตรง จึงต้องลบ verification.md ก่อนตรวจ เหมือน stripArchiveAppendix",
+      "sources": [
+        ".claude/harness/runtime/core/user-decisions.mjs",
+        ".claude/harness/runtime/workflow/apply-runtime.mjs"
+      ]
+    },
+    {
+      "key": "f-journal-verify",
+      "statement": "verifyLandJournalOperation (land-journal.mjs:218) เทียบ archive path กับ identity after ของ packet ใน journal ตอนกู้ — ต้องลบ verification.md ก่อน assertRecoveredProjection",
+      "sources": [
+        ".claude/harness/runtime/workflow/land-journal.mjs"
+      ]
+    },
+    {
+      "key": "f-integrity-binds-tree",
+      "statement": "recordDeliveryIntegrity hash ทั้ง archive tree หลัง append และ land-undo ย้ายทั้ง folder (land-undo.mjs:215) — เขียน verification.md ก่อน recordDeliveryIntegrity ก็ครอบคลุม Deliver และ undo โดยไม่ต้องแก้",
+      "sources": [
+        ".claude/harness/runtime/workflow/apply-runtime.mjs",
+        ".claude/harness/runtime/workflow/land-undo.mjs",
+        ".claude/harness/runtime/workflow/delivery-integrity.mjs"
+      ]
+    },
+    {
+      "key": "f-extra-files-ok",
+      "statement": "archive folder ใน repo มีไฟล์นอก OpenSpec อยู่แล้ว (grounding.yaml 18, handoffs.yaml 18, repositories.yaml 40) — OpenSpec ยอมรับไฟล์เพิ่ม",
+      "sources": [
+        "install.sh"
+      ]
+    }
+  ],
+  "hypotheses": [
+    {
+      "key": "h-reuse-appendix",
+      "statement": "เพิ่ม Proof record เป็น appendix ใหม่ใน archiveAppendixMarkdown ได้โดยไม่ต้องเปลี่ยนกลไก Land/resume/integrity",
+      "status": "supported",
+      "factKeys": [
+        "f-appendix-exists",
+        "f-appendix-lifecycle",
+        "f-proof-data"
+      ]
+    }
+  ],
+  "options": [
+    {
+      "key": "o-appendix",
+      "summary": "Appendix: Proof record ใน archived proposal.md: proof run id + status + workspace hash, ตาราง provider | claims | status | observed | command | receipt sha256, advisory/waiver, และบรรทัด review not-required พร้อมเหตุผลเมื่อไม่มี review",
+      "tradeoffs": "ใช้กลไกเดิมทั้งหมด diff เล็ก อ่านใน PR ได้ทันที; ไม่มี log ดิบ"
+    },
+    {
+      "key": "o-file",
+      "summary": "ไฟล์ verification.md แยกใน archive folder",
+      "tradeoffs": "แยกชัด แต่ต้องเพิ่มไฟล์ใน archivePacketEntries/delivery integrity/undo-land และ OpenSpec ไม่รู้จักไฟล์นี้; ตรวจแล้ว: integrity/undo ครอบคลุมเอง ต้องเพิ่มแค่ strip ก่อนตรวจตอนกู้ และจองชื่อไฟล์"
+    },
+    {
+      "key": "o-copy",
+      "summary": "คัดลอก manifest/receipt JSON ลง archive",
+      "tradeoffs": "ครบที่สุดแต่มี path เครื่อง, environment, ข้อมูลผันผวน และเสี่ยงข้อมูลลับ; ขัดหลัก machine state ไม่ commit"
+    }
+  ],
+  "selection": {
+    "optionKey": "o-file",
+    "reason": "ผู้ใช้เลือก",
+    "rejected": [
+      {
+        "optionKey": "o-appendix",
+        "reason": "ผู้ใช้ต้องการไฟล์แยก"
+      },
+      {
+        "optionKey": "o-copy",
+        "reason": "มี machine state/ข้อมูลผันผวน"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "key": "d-shape",
+      "question": "รูปแบบหลักฐาน test ใน archive: appendix ตารางสรุปใน proposal.md (แนะนำ) / ไฟล์ verification.md แยก / คัดลอก receipt JSON เต็ม",
+      "status": "resolved",
+      "choice": "ไฟล์ verification.md แยก",
+      "reason": "ผู้ใช้เลือก",
+      "by": "user",
+      "conversationKeys": [
+        "u-shape"
+      ]
+    }
+  ],
+  "conclusion": {
+    "summary": "ออกแบบได้: verification.md แยกใช้จุดเดียวกับ appendix เดิม (render ก่อน archive, เขียนหลัง spec verify, ก่อน delivery integrity) Deliver/undo-land ครอบคลุมเอง งานเพิ่มคือ strip ก่อนตรวจตอนกู้ และจองชื่อไฟล์ พร้อมเข้า Change"
+  },
+  "changeIntent": "Land เขียน openspec/changes/archive/<date>-<id>/verification.md (ภาษาเดียวกับ draft) หลัง spec sync verify ก่อน recordDeliveryIntegrity: proof run ที่ Land ยอมรับ (id, status, workspace hash, contract fingerprint), ตาราง provider·claims·status·observed·command·duration·receipt sha256, waiver/advisory, rollout gates, สถานะ review (ลิงก์ Appendix: Review record หรือเหตุผลที่ไม่บังคับ); render ก่อน openspec archive เก็บใน state.land; กู้ Land ที่ค้างลบไฟล์ที่ตรงกับข้อความที่บันทึกก่อนตรวจ approval/projection แล้วเขียนใหม่ครั้งเดียว; ไม่ลบไฟล์ที่ไม่ตรง; Land check ปฏิเสธ packet ที่มี verification.md อยู่แล้ว; ไม่ใส่ log ดิบ path เครื่อง หรือ environment; Review record คงอยู่ใน proposal.md"
+}
