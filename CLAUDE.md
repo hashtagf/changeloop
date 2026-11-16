@@ -51,7 +51,8 @@ stale evidence. Change Loop makes completion content-bound and resumable:
 - The normal code-delivery flow succeeds at `archived`, never merely `proven`.
 - Land leaves an uncommitted target diff and never commits, pushes, or opens a
   pull request; only the optional `/deliver` command may, under its own explicit
-  authority. `WORKFLOW.md` owns the full Land and Deliver contracts.
+  authority. `.claude/harness/lifecycle/land.md` and `deliver.md` own the full
+  Land and Deliver contracts.
 
 ## Sources of truth
 
@@ -93,7 +94,8 @@ the explicit contracts they test, not every claim's truth.
 | `AGENTS.md` | Short repository-wide constraints and pointers for coding agents | Working rules or canonical source locations change | Detailed lifecycle and duplicated documentation policy |
 | `CLAUDE.md` | Maintainer source map, shipping boundary, development and documentation rules | Repository structure, ownership, or development policy changes | Consumer tutorial and full runtime contract |
 | `CONTRIBUTING.md` | Contributor setup, check selection, contribution and DCO process | Dependencies, verification entrypoints, or contribution process change | Complete suite inventory and instructions to commit unfinished work to test it |
-| `WORKFLOW.md` | Canonical lifecycle, authority, recovery, and invalidation contract | Runtime lifecycle semantics change | Release anecdotes and repository-only operational dependencies |
+| `WORKFLOW.md` | Canonical lifecycle overview, ownership, authority, blocking policy, recovery, invalidation, and cross-cutting contracts | Cross-cutting lifecycle semantics change | Release anecdotes, repository-only dependencies, and one phase's full rules |
+| `.claude/harness/lifecycle/<phase>.md` | One phase's full contract (`investigate`, `change`, `build`, `prove`, `land`, `deliver`), linked from WORKFLOW.md | That phase's semantics change | Rules shared by several phases (keep them in WORKFLOW.md) |
 | `.claude/harness/README.md` | Runtime structure, operator commands, state locations, troubleshooting | Operator surface or runtime layout changes | A second copy of provider semantics |
 | `.claude/harness/EVIDENCE.md` | Canonical provider, receipt, proof, and reviewer semantics | Evidence or review contracts change | Product onboarding and historical benchmark claims |
 | `.claude/harness/CONSUMER-QUALITY.md` | Installed consumer quality operation and policy | Quality discovery, enforcement, or reports change | Repository-only performance experiments |
@@ -125,7 +127,7 @@ Website page responsibilities below apply to both the English path under
 | Page | Reader's question | Source to check when updating |
 |---|---|---|
 | `install.md` | How do I install, prepare a host, or upgrade? | Installer/CLI behavior and host adapters |
-| `loop.md`, `loop/*.md` | What happens in each lifecycle step? | The matching `WORKFLOW.md` section |
+| `loop.md`, `loop/*.md` | What happens in each lifecycle step? | The matching `.claude/harness/lifecycle/<phase>.md` |
 | `artifacts.md` | What files appear, who owns them, and what may I edit? | `install.sh` ownership and the harness README's state inventory |
 | `foundation-config.md` | What policy can I configure? | Runtime config validation/defaults and `foundation.json` |
 | `multi-repository.md` | How do I scope and deliver across repositories? | `WORKFLOW.md` repository safety and harness repository execution |

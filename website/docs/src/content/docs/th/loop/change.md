@@ -94,7 +94,7 @@ task ถ้ายังไม่ครบจะคืนงานซ่อมข
 โดยไม่สร้างอะไร ปัญหาที่เป็นอิสระทั้งหมดถูกรายงานพร้อมกัน และ compile ที่ล้มไม่ทิ้ง change
 ครึ่งชุด `--inspect` ตรวจอย่างเดียว `--consume-draft` ลบ draft หลังเริ่ม บันทึกการอนุมัติ spec
 ด้วย `advance <change> --approve-spec --decision-ref <ref>` หรือ flag เดียวกันบน
-`change start`, `revise` หรือ `amend` กฎ intake ฉบับเต็มอยู่ใน `WORKFLOW.md` หัวข้อ "/change"
+`change start`, `revise` หรือ `amend` กฎ intake ฉบับเต็มอยู่ใน `.claude/harness/lifecycle/change.md`
 
 ```bash
 cloop change start .foundation/drafts/<id>.json
@@ -124,7 +124,7 @@ quality, rollout ไปจนถึง test `EDIT` เดียวระบุ s
 derive เอง, ที่ผิดลำดับ, ที่ว่าง หรือที่มี `TODO`/`TBD` คำสั่ง `change start --template`
 แสดงหัวข้อที่รับได้ใน `draftFolderV5` ส่วน status, approver, ความสดของ evidence และ
 review record ไม่แสดงก่อน Land ให้อ่านด้วย `cloop changes` ลำดับและกฎ
-ฉบับเต็มอยู่ใน `WORKFLOW.md` หัวข้อ "Draft v5 folder and outline"
+ฉบับเต็มอยู่ใน `.claude/harness/lifecycle/change.md` หัวข้อ "Draft v5 folder and outline"
 
 ## ชนิดงาน
 
@@ -156,7 +156,7 @@ hotfix ที่สร้างใหม่ (`bugfix.variant: "hotfix"`) ต้�
 
 ชนิดงานยังเลือก evidence capability ด้วย ส่วน skill นั้น agent เลือกเองจากคำอธิบายของ
 skill ที่อ้างถึง `workType`, `riskSignals`, requirement และ scenario รายการครบทั้ง 23 ชนิดอยู่ใน
-`WORKFLOW.md` หัวข้อ "Work types and required sections" ส่วน capability อยู่ใน
+`.claude/harness/lifecycle/change.md` หัวข้อ "Work types and required sections" ส่วน capability อยู่ใน
 `.claude/harness/EVIDENCE.md` หัวข้อ "Work-type capabilities"
 
 ## Decision
@@ -166,7 +166,7 @@ Decision มี `status` ได้ (`proposed`, `accepted`, `superseded` ถ้�
 Decisions to ratify ของ proposal เพื่อให้คุณ ratify หรือแก้พร้อมการอนุมัติ ส่วน
 `design.md` บันทึก decision ที่ accepted และ superseded Decision ที่ accepted และ
 `durable: true` จะเพิ่มบรรทัด `Rationale` ใต้ requirement แต่ละข้อที่ระบุ เหตุผลจึงอยู่รอด
-ผ่าน archive เข้า living spec ดู `WORKFLOW.md` หัวข้อ "Decisions"
+ผ่าน archive เข้า living spec ดู `.claude/harness/lifecycle/change.md` หัวข้อ "Decisions"
 
 ## Extension แบบมีชนิด
 
@@ -219,7 +219,7 @@ grounding เกิดเมื่อมี override จริงเท่าน
 packet บล็อกที่ผิดรูปจะได้ intake `EDIT` และ `change start` แค่เตือน
 (`NOTE: scratch`) เมื่อ change ระดับ medium หรือ high ไม่มีตัวอย่าง ดูสิ่งที่ผู้อนุมัติ
 เห็นได้ใน [การอนุมัติโดยคน](/docs/th/approval/) ส่วนรายชื่อชนิดตัวอย่างทั้ง 29 ชนิด
-อยู่ใน `WORKFLOW.md`
+อยู่ใน `.claude/harness/lifecycle/change.md`
 
 ตอน archive Land ต่อท้าย record ที่เปลี่ยนแปลงได้ไว้ใน `proposal.md` ที่ archive แล้วเท่านั้น:
 Appendix: Review record, Appendix: Compliance change record (เฉพาะเมื่อ

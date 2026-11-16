@@ -15,6 +15,7 @@ assert_cmd_zero "skill evaluation helpers preserve measurements and held-out ind
   env PYTHONDONTWRITEBYTECODE=1 python3 "$HERE/skill-helper-tests.py"
 
 WF="$ROOT/WORKFLOW.md"
+LIFECYCLE="$ROOT/.claude/harness/lifecycle"
 README="$ROOT/README.md"
 README_TH="$ROOT/README.th.md"
 AGENT="$ROOT/.claude/harness/AGENT.md"
@@ -118,9 +119,9 @@ assert_cmd_zero "authority continuations name their decision reference" \
 assert_cmd_zero "retiring a change is registered as a runtime command" \
   jq -e '.runtimeCommands | index("abandon") != null' "$COMMANDS"
 assert_file_contains "the workflow documents retiring an unprovable change" \
-  "$WF" "change abandon <change> --reason <reason> --decision-ref <ref>"
+  "$LIFECYCLE/change.md" "change abandon <change> --reason <reason> --decision-ref <ref>"
 assert_file_contains "the workflow documents where a retired change goes" \
-  "$WF" ".foundation/recovery/abandoned/"
+  "$LIFECYCLE/change.md" ".foundation/recovery/abandoned/"
 assert_file_contains "the workflow documents that stops carry their exits" \
   "$WF" "## Recovery and user decisions"
 assert_file_contains "the workflow makes deterministic recovery harness-owned" \
@@ -371,7 +372,7 @@ else
 fi
 
 invented=""
-for named in $(grep -oE '\.foundation/[a-z-]+/' "$WF" \
+for named in $(grep -ohE '\.foundation/[a-z-]+/' "$WF" "$LIFECYCLE"/*.md \
     | sed -E 's|\.foundation/([a-z-]+)/|\1|' | sort -u); do
   printf '%s\n' "$roots" | grep -qx "$named" || invented="$invented $named"
 done
@@ -501,7 +502,7 @@ const land = prose(".claude/commands/land.md");
 const route = land.match(/Run `([^`]+)`/)?.[1];
 // /land and /dev share one guard-free route (N1 structure B, 2026-10-01).
 assert.equal(route, "cloop advance <change> --through archived");
-assert.ok(read("WORKFLOW.md").includes(route));
+assert.ok(read(".claude/harness/lifecycle/land.md").includes(route));
 for (const boundary of ["Authority", "resource", "conflict", "external dependency", "repeated no-progress"])
   assert.ok(land.includes(boundary), `Land omits ${boundary}`);
 assert.doesNotMatch(land, /Only semantic conflicts/);

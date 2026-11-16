@@ -4,7 +4,7 @@ Use this for an explicitly authorized PR operation or a local description
 draft; act only on a direct user instruction for that operation. With Change
 Loop, Land and /dev do not commit, push, open a PR, post comments, or merge; the
 optional /deliver route (also reached by `/dev --through delivered`) owns its scoped post-Land transaction (installed
-WORKFLOW.md is canonical for its authority and recovery).
+`.claude/harness/lifecycle/deliver.md` is canonical for its authority and recovery).
 
 ## Prepare the description
 

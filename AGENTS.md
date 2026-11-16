@@ -55,7 +55,8 @@ agreement source of truth.
 Use the smallest relevant canonical source:
 
 - `README.md` / `README.th.md` — user entrypoints and first-change summaries.
-- `WORKFLOW.md` — detailed lifecycle contract.
+- `WORKFLOW.md` — lifecycle overview and cross-cutting contract;
+  `.claude/harness/lifecycle/<phase>.md` — one phase's full contract.
 - `.claude/harness/README.md` — runtime structure and operator surface.
 - `.claude/harness/EVIDENCE.md` — provider and receipt semantics.
 - `.claude/harness/protocol.json` — wire-visible version pins.

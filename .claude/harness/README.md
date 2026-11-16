@@ -202,6 +202,7 @@ the upstream repository uses those names for its own maintainer guidance.
 | Docs | `runtime/README.md` | Domain boundaries and dependency rules |
 | Docs | `AGENT.md` | Small portable contract loaded by Claude, Codex, and other agents |
 | Docs | `EVIDENCE.md` | Evidence contract, execution adapter, and proof reference |
+| Docs | `lifecycle/<phase>.md` | Full contract of one lifecycle phase; `WORKFLOW.md` keeps the overview and cross-cutting rules |
 | Docs | `CONSUMER-QUALITY.md` | Installed quality protocols, onboarding, adapters, baselines, and fail-closed rules |
 | Docs | `README.md` | Runtime overview and operator guide |
 
@@ -215,7 +216,7 @@ exports `validate<Field>(value, path)` (issues prefixed by the exact path, such
 as `boundaries[0].timeout is required`) and `render<Field>(value, {language})`
 (markdown without the heading, Thai labels for `th`); older field shapes stay
 valid. New fields are optional in v4 as well. The section order, work
-types, and required sections are specified in [WORKFLOW.md](../../WORKFLOW.md#draft-v5-folder-and-outline).
+types, and required sections are specified in [the /change contract](lifecycle/change.md#draft-v5-folder-and-outline).
 
 Agents write intent, requirements,
 tasks, and explicit discovery dispositions once (evidence capabilities default
@@ -306,7 +307,7 @@ cloop doctor --stage prove --change <change>
 `investigate --template` now emits record v2; v1 records, states, and handoffs
 remain readable. `purpose: research` permits a facts-only investigation;
 `purpose: change` retains the intent of a feature, improvement, or bug. Command
-names and arguments are unchanged. See [the lifecycle contract](../../WORKFLOW.md#investigate-problem)
+names and arguments are unchanged. See [the lifecycle contract](lifecycle/investigate.md)
 for boundaries and authority.
 
 | Field | Record shape |
@@ -400,7 +401,7 @@ the envelope carries, and the budget no-progress cap are specified in
 | `feedback <change> [--pretty] [--diagnostics]` | Reports current readiness, source-aware timing, repair intervals, blocker coverage, evidence reuse, and the next action; diagnostics exports allowlisted metadata | Explaining why Prove took time without labeling repair as wait |
 | `outcomes [--pretty]` | Read-only rollup of archived changes (first-proof pass, proof runs, review and repair rounds, decisions, cost, declared escaped defects) by workType × impact × riskSignals; unknown values stay `null` | Judging whether workflow changes improve outcomes |
 | `lessons [--min-changes <n>] [--pretty]` | Read-only grouping of blocker and review codes that recur in at least `n` changes (default 3), each with a suggested permanent check | Turning recurring problems into checks |
-| `package <change> [--pretty]` | Prints the change's approval data as JSON (risk, domains, artifacts per role with proof/preview/none labels, scratch lines, failure cases, owed approval-page surfaces, page drift); writes no file. The approval page `.foundation/previews/<change>/prototype.html` is written by the agent or user ([WORKFLOW.md](../../WORKFLOW.md#approval-package-preview-and-role-lanes)) | Giving whoever writes the page its facts |
+| `package <change> [--pretty]` | Prints the change's approval data as JSON (risk, domains, artifacts per role with proof/preview/none labels, scratch lines, failure cases, owed approval-page surfaces, page drift); writes no file. The approval page `.foundation/previews/<change>/prototype.html` is written by the agent or user ([the /change contract](lifecycle/change.md#approval-package-preview-and-role-lanes)) | Giving whoever writes the page its facts |
 | `preview <change> --provider <name> [--decision-ref <ref>] [--pretty]` | Before Build only: runs one declared provider on a throwaway copy and records a `kind: "preview"` receipt that never satisfies Prove or Land; `external: true` needs the user's `--decision-ref` | Trying a plan, dry run, or screenshot before approval |
 | `exec <change> [--phase <phase>] [--repo <id>] [--task <id>] -- <command…>` | Runs and times a command in the change's sandbox under the shared mutation policy (the named repository or task, else the caller's directory, else the pending tasks' repository); never the main checkout | Long builds, installs, full test runs, a submodule task's checks |
 | `telemetry host-import <change> <result.json>` | Imports a validated host execution result without prompt or tool payloads | Recording actual model attempts, fallback, usage, and instruction provenance |

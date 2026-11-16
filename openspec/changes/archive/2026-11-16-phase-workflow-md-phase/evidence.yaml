@@ -1,0 +1,53 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "lifecycle-files-lifecycle-commands-workflow-md",
+      "requirementKey": "lifecycle-files",
+      "scenario": "ไฟล์ phase ครบและลิงก์จาก WORKFLOW.md",
+      "impact": "medium",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "lifecycle-files-workflow-md-land-change-deliver-change-optional",
+      "requirementKey": "lifecycle-files",
+      "scenario": "anchor เดิมยังเปิดได้",
+      "impact": "medium",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "lifecycle-files-lifecycle-commands",
+      "requirementKey": "lifecycle-files",
+      "scenario": "ไม่มีเนื้อหาหาย",
+      "impact": "medium",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "lifecycle-files-repo-anchor-workflow-md",
+      "requirementKey": "lifecycle-files",
+      "scenario": "ลิงก์ที่ชี้ส่วนที่ย้ายไม่เสีย",
+      "impact": "medium",
+      "capabilities": [
+        "static-analysis"
+      ]
+    }
+  ],
+  "providers": {
+    "static-analysis": {
+      "adapter": "command",
+      "capability": "static-analysis",
+      "command": [
+        "sh",
+        "-c",
+        "(bash .claude/tests/docs/run-doc-consistency.sh) && (node --test .claude/tests/docs/documentation-governance.test.mjs .claude/tests/harness/affected-suite-selector.test.mjs)"
+      ],
+      "claims": "declared"
+    }
+  }
+}

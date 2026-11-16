@@ -120,7 +120,7 @@ or production verification.
 Land is the single hard gate: it lands only a passing proof of the current
 workspace, and proves again first when that proof is stale. Before Land, the
 harness stops only for your decisions. Target conflicts must be resolved.
-See the [Land contract](WORKFLOW.md#land-change) for exact behavior.
+See the [Land contract](.claude/harness/lifecycle/land.md) for exact behavior.
 
 ### 5. Optionally deliver a pull request
 
@@ -131,7 +131,7 @@ See the [Land contract](WORKFLOW.md#land-change) for exact behavior.
 This separately authorizes the delivery workflow for an isolated commit, branch
 push, and PR. Land alone never authorizes these actions. Deliver never deploys,
 and merges only when `foundation.json` sets `deliver.merge` to `after-checks`
-(after every PR check passed). See [Deliver](WORKFLOW.md#deliver-change-optional).
+(after every PR check passed). See [Deliver](.claude/harness/lifecycle/deliver.md).
 
 ## Which command should I use?
 

@@ -142,7 +142,7 @@ independent problem is reported together and a failed compile leaves no partial
 change. `--inspect` inspects only; `--consume-draft` removes the draft after a
 start. Spec approval is recorded with `advance <change> --approve-spec
 --decision-ref <ref>`, or the same flags on `change start`, `revise`, or
-`amend`. Full intake rules: `WORKFLOW.md` under "/change".
+`amend`. Full intake rules: `.claude/harness/lifecycle/change.md`.
 
 ## Draft v5 folder
 
@@ -168,7 +168,7 @@ rollout, and tests. One `EDIT` names any unknown, derived, out-of-order, empty,
 or `TODO`/`TBD` section. `change start --template` prints the accepted headings
 as `draftFolderV5`. Status, approvers, evidence freshness, and the review
 record never render before Land; read them with `cloop changes`.
-The full order and rules live in `WORKFLOW.md` under "Draft v5 folder and
+The full order and rules live in `.claude/harness/lifecycle/change.md` under "Draft v5 folder and
 outline".
 
 ## Work types
@@ -204,8 +204,8 @@ scenario marked `regression: true` guards existing behavior and may already
 pass. Work types also select evidence capabilities. Agents choose
 skills themselves from skill descriptions that name `workType`, `riskSignals`,
 requirements, and scenarios.
-The full catalog of 23 types is in `WORKFLOW.md` under "Work types and required
-sections"; capabilities are in `.claude/harness/EVIDENCE.md` under "Work-type
+The full catalog of 23 types is in `.claude/harness/lifecycle/change.md` under "Work types and
+required sections"; capabilities are in `.claude/harness/EVIDENCE.md` under "Work-type
 capabilities".
 
 ## Decisions
@@ -216,7 +216,7 @@ decision appears only under the proposal's Decisions to ratify, so you ratify
 or change it with approval; `design.md` records accepted and superseded ones.
 An accepted `durable: true` decision adds a `Rationale` line under each named
 requirement, so the reason survives archive into the living spec. See
-`WORKFLOW.md` under "Decisions".
+`.claude/harness/lifecycle/change.md` under "Decisions".
 
 ## Typed extensions
 
@@ -272,7 +272,7 @@ with real values, such as `api`, `examples`, `dataDiff`, `permission`, or a
 lane or the packet, a malformed block is an intake `EDIT`, and `change start`
 only advises (`NOTE: scratch`) when a medium or high change has none. See
 [Approval page, previews, and role lanes](/docs/approval/#approval-package-previews-and-role-lanes)
-for what approvers see; `WORKFLOW.md` lists all 29 example types.
+for what approvers see; `.claude/harness/lifecycle/change.md` lists all 29 example types.
 
 At archive, Land appends the volatile records to the archived `proposal.md`
 only: Appendix: Review record, Appendix: Compliance change record (only when

@@ -34,6 +34,13 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
   Guards still treat a leftover `claude-foundation` binary as the same CLI, so
   it is never an unguarded route. The Homebrew formula keeps its name
   (`brew upgrade claude-foundation`).
+- `WORKFLOW.md` keeps the lifecycle overview, ownership, the blocking policy,
+  and the rules shared by every phase (about 5.7k words, from 21.5k). Each
+  phase's full contract moved unchanged to
+  `.claude/harness/lifecycle/<phase>.md` (`investigate`, `change`, `build`,
+  `prove`, `land`, `deliver`), which installs with the harness. The phase
+  headings in `WORKFLOW.md` stay, so links such as `WORKFLOW.md#land-change`
+  still open a summary that links on.
 
 ### Fixed
 

@@ -420,7 +420,7 @@ receipts carry `kind: "preview"`, live under `.foundation/previews/<change>/`,
 and are refused as `preview-evidence` wherever they appear, including when
 copied into the receipt store; artifacts and references under
 `.foundation/previews/` are rejected like prototypes. A preview is a reading
-aid for approvers ([WORKFLOW.md](../../WORKFLOW.md#approval-package-preview-and-role-lanes)),
+aid for approvers ([the /change contract](lifecycle/change.md#approval-package-preview-and-role-lanes)),
 and every claim is still proven by a Prove run. A provider declared with
 `"previewOnly": true` is outside the proof contract: it is never a required
 provider, never covers a claim, and is not subject to provider wiring rules
@@ -861,7 +861,7 @@ that policy from a successful browser exit.
 ## Visual
 
 The `visual` capability compares the real UI with the prototype a change
-binds ([WORKFLOW.md](../../WORKFLOW.md#prototype-bound-visual-check)). It is
+binds ([the /change contract](lifecycle/change.md#prototype-bound-visual-check)). It is
 required only for the claims of requirements a `strict` binding covers; an
 `advisory` binding reports without requiring it, and a change without a
 binding never owes it.
@@ -1122,7 +1122,7 @@ provider is a REPAIR (`rootCause: "no-test-provider"`): add test evidence
 through an amendment.
 
 A change compiled with a scenario binding (`scenarioTestBinding` on its
-runtime state; see [WORKFLOW.md § Decisions](../../WORKFLOW.md#decisions)) is judged per test file. When the runner takes file arguments, each
+runtime state; see [the /change contract § Decisions](lifecycle/change.md#decisions)) is judged per test file. When the runner takes file arguments, each
 changed test file runs alone on base; a file that passes on base and is bound
 to a scenario that is not `regression: true` is a finding naming the file and
 its scenarios, even when another file fails on base. A file bound only to

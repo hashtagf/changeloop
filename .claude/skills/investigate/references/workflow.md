@@ -15,7 +15,7 @@ Follow `EDIT`, `ASK_USER`, or `DONE` and its resume route. For Change, copy
 requirements through `investigationCoverage`. Reporting never starts Change.
 
 For Build/Prove, set `activeChange`; follow the
-[workspace-binding contract](../../../../WORKFLOW.md#investigate-problem).
+[workspace-binding contract](../../../harness/lifecycle/investigate.md).
 
 Write in the user's language (`language: "th"` selects Thai headings). The harness
 generates `openspec/investigations/<id>.report.md` after each batch. Link it with

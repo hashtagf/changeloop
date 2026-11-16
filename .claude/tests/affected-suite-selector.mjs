@@ -45,7 +45,7 @@ const LAND = [
 const RULES = [
   [/pi-extension|install-pi|adapters\/install-support|host-capabilities/, ["Pi host adapter", "installer smoke", "host capability matrix"]],
   [/^README(?:\.th)?\.md$/, ["user guidance contracts"]],
-  [/^(?:(?:README(?:\.th)?|AGENTS|CLAUDE|CONTRIBUTING|WORKFLOW|RELEASING)\.md$|docs\/.*\.md$|website\/docs\/|\.claude\/harness\/(?:README|EVIDENCE|CONSUMER-QUALITY)\.md$|\.claude\/tests\/README\.md$)/,
+  [/^(?:(?:README(?:\.th)?|AGENTS|CLAUDE|CONTRIBUTING|WORKFLOW|RELEASING)\.md$|docs\/.*\.md$|website\/docs\/|\.claude\/harness\/(?:README|EVIDENCE|CONSUMER-QUALITY)\.md$|\.claude\/harness\/lifecycle\/[^/]+\.md$|\.claude\/tests\/README\.md$)/,
     ["workflow documentation contracts"]],
   [/^dashboard\//, ["dashboard contracts"]],
   // A case, its tooling, or an incident record that must keep an eval.
@@ -110,7 +110,7 @@ const RULES = [
   [/handoff-policy\.test/, ["external operation handoff"]],
   [/proof-advance\.test/, ["bounded review repair closure"]],
   [/contracts\/evidence-proof|run-harness-tests/, EVIDENCE],
-  [/advance-recovery|advance-runtime|lifecycle-reducer|lifecycle-outcome|convergent-gate|proof-readiness|proof-execution-runtime|land-runtime|lease-runtime|agent-dispatch|^WORKFLOW\.md$/,
+  [/advance-recovery|advance-runtime|lifecycle-reducer|lifecycle-outcome|convergent-gate|proof-readiness|proof-execution-runtime|land-runtime|lease-runtime|agent-dispatch|^WORKFLOW\.md$|^\.claude\/harness\/lifecycle\/(?:prove|land)\.md$/,
     ["blocking policy"]],
   [/run-all\.sh|affected-suite-selector/, [
     "run-all process control", "affected test selection"

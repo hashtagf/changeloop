@@ -1,0 +1,6 @@
+# Tasks
+
+> This is the sole implementation ledger.
+
+- [x] **T001** ย้ายรายละเอียดแต่ละ phase ไป .claude/harness/lifecycle/ และให้ WORKFLOW.md เหลือสรุปพร้อมลิงก์ [key:split-lifecycle] [kind:implementation] [paths:WORKFLOW.md,.claude/harness/lifecycle/**,.claude/harness/README.md] [claims:lifecycle-files-lifecycle-commands-workflow-md,lifecycle-files-workflow-md-land-change-deliver-change-optional,lifecycle-files-lifecycle-commands,lifecycle-files-repo-anchor-workflow-md] — verify: `bash .claude/tests/docs/run-doc-consistency.sh`
+- [x] **T002** ลิงก์และ test ที่อ้างส่วนที่ย้ายชี้ไฟล์ใหม่ และมี test ตรวจว่าไฟล์ phase ครบและลิงก์ใน WORKFLOW.md ชี้ถึง [key:relink-and-guard] [kind:implementation] [paths:.claude/tests/docs/**,.claude/tests/affected-suite-selector.mjs,.claude/tests/harness/affected-suite-selector.test.mjs,.claude/tests/README.md,.claude/harness/EVIDENCE.md,.claude/skills/**,.claude/commands/**,AGENTS.md,CLAUDE.md,README.md,README.th.md,CONTRIBUTING.md,website/docs/src/content/docs/**] [claims:lifecycle-files-lifecycle-commands-workflow-md,lifecycle-files-workflow-md-land-change-deliver-change-optional,lifecycle-files-lifecycle-commands,lifecycle-files-repo-anchor-workflow-md] — verify: `node --test .claude/tests/docs/documentation-governance.test.mjs .claude/tests/harness/affected-suite-selector.test.mjs`

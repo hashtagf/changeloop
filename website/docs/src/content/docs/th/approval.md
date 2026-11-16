@@ -80,7 +80,7 @@ harness คำนวณข้อเท็จจริงที่หน้าค
 อย่างไร ข้อมูลของใครถูกใช้) คำตอบเป็น `none: <เหตุผล>` หรือ `unknown: <เหตุผล>` ได้เสมอ
 และไม่บล็อก ส่วน change ระดับ High หรือ Critical ต้องบอกวิธีย้อนกลับ หรือบอกว่าทำไมย้อนไม่ได้
 หน้าที่เก่าหรือถูกแก้แค่เพิ่มคำเตือนในคำถามอนุมัติ รายละเอียดเต็ม:
-[WORKFLOW.md § Approval page](https://github.com/hashtagf/changeloop/blob/main/WORKFLOW.md#approval-package-preview-and-role-lanes)
+[Approval page contract](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/lifecycle/change.md#approval-package-preview-and-role-lanes)
 
 **Preview เป็นทางเลือก** ก่อน Build agent อาจรัน provider ที่ประกาศไว้หนึ่งตัวกับสำเนาที่
 ทิ้งได้ เพื่อให้เห็นพฤติกรรมเบื้องต้น preview ไม่ใช่ proof และไม่บล็อก ส่วน provider ที่ระบุ

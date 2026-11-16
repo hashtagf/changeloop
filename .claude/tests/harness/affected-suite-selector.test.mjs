@@ -43,7 +43,8 @@ test("documentation edits select the documentation gate without unrelated suites
     "README.md", "README.th.md", "AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md",
     "WORKFLOW.md", "RELEASING.md", ".claude/tests/README.md",
     ".claude/harness/README.md", ".claude/harness/EVIDENCE.md",
-    ".claude/harness/CONSUMER-QUALITY.md", "docs/reports/README.md",
+    ".claude/harness/CONSUMER-QUALITY.md", ".claude/harness/lifecycle/change.md",
+    "docs/reports/README.md",
     "website/docs/astro.config.mjs", "website/docs/src/content/docs/th/quickstart.md"
   ]) {
     const { selected } = selectAffectedSuites([file], known);

@@ -88,7 +88,7 @@ undone, what happens when it breaks, whose data is used). An answer may be
 `none: <reason>` or `unknown: <reason>`; nothing blocks on it, and a High or
 Critical change must say how to undo it or why it cannot be undone. A stale or
 edited page only adds a warning to the approval question. Full contract:
-[WORKFLOW.md § Approval page](https://github.com/hashtagf/changeloop/blob/main/WORKFLOW.md#approval-package-preview-and-role-lanes).
+[Approval page contract](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/lifecycle/change.md#approval-package-preview-and-role-lanes).
 
 **Previews are optional.** Before Build the agent may run one declared provider
 against a throwaway copy to show early behavior. A preview is never proof and

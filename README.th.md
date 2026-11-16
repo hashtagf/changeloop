@@ -119,7 +119,7 @@ Land นำงานปัจจุบันจากพื้นที่แย
 Land เป็นด่านบังคับเพียงด่านเดียว: จะ Land เฉพาะเมื่อ proof ของ workspace ปัจจุบันผ่าน
 และจะ prove ใหม่ก่อนถ้า proof นั้นเก่าแล้ว ก่อนถึง Land harness จะหยุดเฉพาะเรื่องที่คุณต้องตัดสินใจ
 และต้องแก้ conflict ของไฟล์ปลายทางก่อน
-อ่านพฤติกรรมละเอียดใน [สัญญา Land](WORKFLOW.md#land-change)
+อ่านพฤติกรรมละเอียดใน [สัญญา Land](.claude/harness/lifecycle/land.md)
 
 ### 5. เลือก Deliver เป็น pull request (ไม่บังคับ)
 
@@ -130,7 +130,7 @@ Land เป็นด่านบังคับเพียงด่านเด
 คำสั่งนี้ให้อำนาจแยกสำหรับ workflow ที่ commit ในพื้นที่แยก, push branch
 และเปิด PR การอนุญาต Land อย่างเดียวไม่ครอบคลุมการกระทำเหล่านี้
 Deliver ไม่ deploy และจะ merge เฉพาะเมื่อ `foundation.json` ตั้ง `deliver.merge`
-เป็น `after-checks` (หลัง check ของ PR ผ่านครบ) ดู [Deliver](WORKFLOW.md#deliver-change-optional)
+เป็น `after-checks` (หลัง check ของ PR ผ่านครบ) ดู [Deliver](.claude/harness/lifecycle/deliver.md)
 
 ## ควรใช้ Command ไหน
 

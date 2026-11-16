@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -124,4 +125,55 @@ test("live artifact guides do not treat runtime storage as disposable or uniform
     for (const input of ["drafts/", "policy.json"]) assert.ok(body.includes(input), `${file}: ${input}`);
     assert.ok(body.includes("file-ownership-and-writers"), `${file}: canonical ownership link`);
   }
+});
+
+// WORKFLOW.md keeps the lifecycle overview and cross-cutting rules; each phase's
+// full contract lives in one installed file, and the old phase anchors still
+// open a heading in WORKFLOW.md that links on.
+test("each lifecycle phase has one linked contract file and every link into them resolves", () => {
+  const phases = ["investigate", "change", "build", "prove", "land", "deliver"];
+  const lifecycle = phases.map(phase => `.claude/harness/lifecycle/${phase}.md`);
+  const workflow = read("WORKFLOW.md");
+  for (const path of lifecycle) {
+    assert.ok(existsSync(resolve(root, path)), `${path} exists`);
+    assert.ok(workflow.includes(`](${path})`), `WORKFLOW.md links ${path}`);
+  }
+  for (const anchor of ["land-change", "deliver-change-optional", "blocking-policy", "investigate-problem"])
+    assert.ok(anchors(workflow).has(anchor), `WORKFLOW.md#${anchor} still resolves`);
+  // Every tracked Markdown document whose link targets WORKFLOW.md or a
+  // lifecycle file, plus every local link inside those files. Archived
+  // changes and dated reports are historical records and keep their links.
+  // Tracked and untracked-but-not-ignored files: Land leaves new documents
+  // uncommitted, and Prove runs this test on that tree.
+  const listed = spawnSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "*.md"],
+    { cwd: root, encoding: "utf8" });
+  assert.equal(listed.status, 0, "git ls-files");
+  const documents = [...new Set([...listed.stdout.split("\0"), "WORKFLOW.md", ...lifecycle])].filter(file => file && existsSync(resolve(root, file)) &&
+    !/^(?:openspec\/changes\/archive\/|docs\/reports\/|docs\/changelog-history\.md$|CHANGELOG\.md$|\.claude\/tests\/bench\/tasks\/)/.test(file));
+  const targets = new Set(["WORKFLOW.md", ...lifecycle].map(file => resolve(root, file)));
+  const own = new Set(["WORKFLOW.md", ...lifecycle]);
+  const broken = [];
+  for (const file of documents) {
+    for (const [, link] of withoutFences(read(file)).matchAll(/\[[^\]]*\]\(([^\s)]+)\)/g)) {
+      // The website links the canonical files on GitHub; check those against
+      // the repository root like local links.
+      const github = link.match(/^https:\/\/github\.com\/hashtagf\/changeloop\/blob\/main\/(.+)$/);
+      const href = github ? github[1] : link;
+      if (!github && (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//"))) continue;
+      const [rawPath, rawAnchor] = href.split("#");
+      const path = decodeURIComponent(rawPath);
+      const resolved = github ? resolve(root, path)
+        : path ? resolve(root, dirname(file), path) : resolve(root, file);
+      if (!own.has(file) && !targets.has(resolved)) continue;
+      // A link that leaves the repository only resolves by accident (for
+      // example from a sandbox nested inside another checkout).
+      if (!resolved.startsWith(`${root}/`) || !existsSync(resolved)) {
+        broken.push(`${file}: ${link}`); continue;
+      }
+      const anchor = rawAnchor && decodeURIComponent(rawAnchor);
+      if (anchor && resolved.endsWith(".md") && !anchors(readFileSync(resolved, "utf8")).has(anchor))
+        broken.push(`${file}: ${link}`);
+    }
+  }
+  assert.deepEqual(broken, [], "links into the lifecycle contract must resolve");
 });
