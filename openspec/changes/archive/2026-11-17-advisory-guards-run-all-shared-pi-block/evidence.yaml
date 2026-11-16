@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "advisory-tests-gated",
+      "requirementKey": "advisory-tests-gated",
+      "scenario": "gate ผ่าน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "release-status-exception",
+      "requirementKey": "release-status-exception",
+      "scenario": "รายงานมีข้อยกเว้น",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "FOUNDATION_UPDATE_CHECK=0 node --test .claude/tests/harness/test-registration.test.mjs .claude/harness/tests/pi-shared.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    },
+    "static-analysis": {
+      "adapter": "command",
+      "capability": "static-analysis",
+      "command": [
+        "sh",
+        "-c",
+        "(FOUNDATION_UPDATE_CHECK=0 node --test .claude/tests/harness/test-registration.test.mjs .claude/harness/tests/pi-shared.test.mjs) && (grep -q 'v3.7.5 candidate.*no paid smoke' docs/reports/user-scenario-release-status.md)"
+      ],
+      "claims": "declared"
+    }
+  }
+}

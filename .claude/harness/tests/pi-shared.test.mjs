@@ -57,7 +57,11 @@ test('shared templates create a change without introducing project runtime files
   assert.equal(existsSync(join(root, '.claude')), false);
   assert.equal(existsSync(join(root, 'openspec/schemas')), false);
 });
-test('shared Pi uses central hooks and commands while retaining isolation and explicit Land authority', async () => {
+test('shared Pi uses central hooks and commands while retaining isolation and explicit Land authority', async (t) => {
+  // Guards advise by default; the refusals asserted here are the opt-in block mode.
+  const previousMode = process.env.FOUNDATION_GUARDRAIL_MODE;
+  process.env.FOUNDATION_GUARDRAIL_MODE = 'block';
+  t.after(() => { if (previousMode === undefined) delete process.env.FOUNDATION_GUARDRAIL_MODE; else process.env.FOUNDATION_GUARDRAIL_MODE = previousMode; });
   const { default: install } = await import(pathToFileURL(join(bundle.path, '.claude/harness/adapters/pi-extension.mjs')));
   const handlers = new Map(), commands = new Map(), notices = [], messages = [];
   const pi = { on: (name, fn) => handlers.set(name, fn), registerCommand: (name, command) => commands.set(name, command),

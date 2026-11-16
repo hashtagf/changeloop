@@ -18,6 +18,18 @@ comparison: 2026-10-08, no-harness/v3.6.0/v3.6.1/v3.6.2.
 
 ## Current scenario checkpoint
 
+### v3.7.5 candidate — 2026-11-17 (no paid smoke, owner exception)
+
+Source makes the live guards advise instead of refuse (Pi runs them in `auto`
+mode; Land, Deliver, commit/push, edits outside a change, shell shapes and the
+project worker cap proceed with a warning; secret redaction and opt-in
+`FOUNDATION_GUARDRAIL_MODE=block` are unchanged) and defaults
+`execution.maxParallelAgents` to 64 (see the changelog). No paid scenario
+smoke ran for this candidate and no paid evidence is claimed. Each change has
+a deterministic regression; the default gate passed locally and CI runs the
+full gate on the candidate commit. The maintainer authorized publication as an
+explicit exception. Repeated assurance is not claimed.
+
 ### v3.7.4 candidate — 2026-11-16 (no paid smoke, owner exception)
 
 Source makes `cloop` the only CLI name, requires every scenario of
