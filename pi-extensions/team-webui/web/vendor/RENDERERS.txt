@@ -1,0 +1,5 @@
+marked 18.2.0 · MIT · git+https://github.com/markedjs/marked.git
+dompurify 3.4.18 · (MPL-2.0 OR Apache-2.0) · git://github.com/cure53/DOMPurify.git
+mermaid 12.3.0 · MIT · https://github.com/mermaid-js/mermaid
+Built locally with team-webui/scripts/build-renderers.mjs (npm run build:renderers); dependencies pinned in package-lock.json.
+Third-party license notices are embedded in each bundle.

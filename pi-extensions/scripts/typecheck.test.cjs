@@ -21,6 +21,14 @@ test('the extensions typecheck cleanly', () => {
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
 
+test('every extension in pi.extensions is inside the typecheck include list', () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  const include = JSON.parse(fs.readFileSync(path.join(root, 'tsconfig.json'), 'utf8')).include;
+  const folders = pkg.pi.extensions.map(entry => entry.replace(/^\.\//, '').split('/')[0]);
+  const missing = folders.filter(folder => !include.some(pattern => pattern.startsWith(`${folder}/`)));
+  assert.deepEqual(missing, [], `add ${missing.join(', ')} to tsconfig.json include`);
+});
+
 test('typecheck reports a call to an API that ExtensionAPI does not have', () => {
   const header = "import type { ExtensionAPI } from '@earendil-works/pi-coding-agent';\n";
   assert.equal(typecheck(header + 'export default function (pi: ExtensionAPI) { pi.registerTool; }\n').status, 0, 'control probe compiles');

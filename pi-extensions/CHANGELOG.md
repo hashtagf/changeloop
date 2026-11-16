@@ -3,6 +3,33 @@
 All notable changes to `@hashtagf/pi-extensions`. Headings follow Pi's package
 changelog format (`## [x.y.z]`) so Pi can show them after an update.
 
+## [0.4.0]
+
+### Added
+
+- team-webui: the Pi workspace web hub (`/serve`), `task_board`,
+  `tool_guide` and the task panel, previously the separate unversioned
+  `pi-team-webui` package. It now uses the sibling background-bash manager.
+  `npm run build:renderers` rebuilds its Markdown/Mermaid bundles.
+- claude-accounts: `/accounts` per-session Claude account switching. It
+  loads the `git:github.com/inhumanxd/pi-claude-subscription` package from
+  the Pi agent directory; without it Pi still starts and `/accounts`
+  explains how to install it.
+
+### Changed
+
+- `npm run typecheck` covers every extension in the package.
+
+## [0.3.0]
+
+### Added
+
+- session-title: an unnamed session is named after the first user prompt
+  (first line, up to 48 characters), and the agent keeps it current with the
+  `session_title` tool. Orca and other titlebars show the session name, so
+  tabs show what each session is doing. A name set with `/name` is never
+  replaced.
+
 ## [0.2.0]
 
 ### Added

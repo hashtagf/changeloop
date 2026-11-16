@@ -603,3 +603,389 @@ Compact paginated job list: active only by default, 20 per page (max 50). includ
 </details>
 
 ## nine-router
+
+## session-title
+
+### `session_title`
+
+Set the short label shown in this session's terminal tab (1-60 characters). Call it when the main task changes. Refused when the user named the session with /name.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `title` | string | yes | 2-6 words naming the current work; min length 1, max length 60 |
+
+<details><summary>JSON schema</summary>
+
+```json
+{
+  "type": "object",
+  "required": [
+    "title"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60,
+      "description": "2-6 words naming the current work"
+    }
+  }
+}
+```
+
+</details>
+
+## team-webui
+
+**Commands**
+
+| Command | Description |
+|---|---|
+| `/tasks` | Full-screen task Kanban; /tasks add <title> |
+| `/serve` | Shared workspace: /serve [--lan] [--port 4318], status, stop |
+
+**Shortcuts**
+
+| Key | Description |
+|---|---|
+| `ctrl+alt+t` | Open full-screen task Kanban |
+
+### `task_board`
+
+Persistent tasks across sessions. list/get; create needs key/title; update/delete/restore need id/version. delete is recoverable; list deleted:true shows trash. plan checks readiness/topology; brief(id) prepares a compact handoff. handoff assigns an existing session without spawn/message. inbox/agents/list/plan paginate via offset/limit (default 20); agents includeInactive:true includes offline. graph checks dependencies; sync/link reuse Change Loop records. Status is not execution or approval. Details: tool_guide tasks/agents.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `action` | "list" \| "get" \| "create" \| "update" \| "delete" \| "restore" \| "sync" \| "link" \| "graph" \| "plan" \| "brief" \| "agents" \| "handoff" \| "inbox" | yes |  |
+| `project` | string | no |  |
+| `limit` | integer | no | min 1, max 40 |
+| `includeInactive` | boolean | no |  |
+| `deleted` | boolean | no |  |
+| `id` | string | no |  |
+| `changeId` | string | no |  |
+| `recordKind` | "change" \| "investigation" | no |  |
+| `key` | string | no |  |
+| `version` | integer | no |  |
+| `search` | string | no |  |
+| `offset` | integer | no | min 0 |
+| `title` | string | no |  |
+| `description` | string | no |  |
+| `status` | "open" \| "plan" \| "design" \| "build" \| "verify" \| "review" \| "pr" \| "merge" \| "tag" \| "deployed" | no |  |
+| `nextStep` | string | no |  |
+| `blocker` | string | no |  |
+| `evidence` | string | no |  |
+| `ownerSessionId` | string | no |  |
+| `ownerName` | string | no |  |
+| `dependsOn` | { id, status }[] | no | max items 100 |
+
+<details><summary>JSON schema</summary>
+
+```json
+{
+  "type": "object",
+  "required": [
+    "action"
+  ],
+  "properties": {
+    "action": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "list"
+        },
+        {
+          "type": "string",
+          "const": "get"
+        },
+        {
+          "type": "string",
+          "const": "create"
+        },
+        {
+          "type": "string",
+          "const": "update"
+        },
+        {
+          "type": "string",
+          "const": "delete"
+        },
+        {
+          "type": "string",
+          "const": "restore"
+        },
+        {
+          "type": "string",
+          "const": "sync"
+        },
+        {
+          "type": "string",
+          "const": "link"
+        },
+        {
+          "type": "string",
+          "const": "graph"
+        },
+        {
+          "type": "string",
+          "const": "plan"
+        },
+        {
+          "type": "string",
+          "const": "brief"
+        },
+        {
+          "type": "string",
+          "const": "agents"
+        },
+        {
+          "type": "string",
+          "const": "handoff"
+        },
+        {
+          "type": "string",
+          "const": "inbox"
+        }
+      ]
+    },
+    "project": {
+      "type": "string"
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 40
+    },
+    "includeInactive": {
+      "type": "boolean"
+    },
+    "deleted": {
+      "type": "boolean"
+    },
+    "id": {
+      "type": "string"
+    },
+    "changeId": {
+      "type": "string"
+    },
+    "recordKind": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "change"
+        },
+        {
+          "type": "string",
+          "const": "investigation"
+        }
+      ]
+    },
+    "key": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer"
+    },
+    "search": {
+      "type": "string"
+    },
+    "offset": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "open"
+        },
+        {
+          "type": "string",
+          "const": "plan"
+        },
+        {
+          "type": "string",
+          "const": "design"
+        },
+        {
+          "type": "string",
+          "const": "build"
+        },
+        {
+          "type": "string",
+          "const": "verify"
+        },
+        {
+          "type": "string",
+          "const": "review"
+        },
+        {
+          "type": "string",
+          "const": "pr"
+        },
+        {
+          "type": "string",
+          "const": "merge"
+        },
+        {
+          "type": "string",
+          "const": "tag"
+        },
+        {
+          "type": "string",
+          "const": "deployed"
+        }
+      ]
+    },
+    "nextStep": {
+      "type": "string"
+    },
+    "blocker": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "string"
+    },
+    "ownerSessionId": {
+      "type": "string"
+    },
+    "ownerName": {
+      "type": "string"
+    },
+    "dependsOn": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "open"
+              },
+              {
+                "type": "string",
+                "const": "plan"
+              },
+              {
+                "type": "string",
+                "const": "design"
+              },
+              {
+                "type": "string",
+                "const": "build"
+              },
+              {
+                "type": "string",
+                "const": "verify"
+              },
+              {
+                "type": "string",
+                "const": "review"
+              },
+              {
+                "type": "string",
+                "const": "pr"
+              },
+              {
+                "type": "string",
+                "const": "merge"
+              },
+              {
+                "type": "string",
+                "const": "tag"
+              },
+              {
+                "type": "string",
+                "const": "deployed"
+              }
+            ]
+          }
+        }
+      },
+      "maxItems": 100
+    }
+  }
+}
+```
+
+</details>
+
+### `tool_guide`
+
+Read a short, task-specific guide: when/why/how to use installed tools, examples, verification and failure handling. Read only the relevant topic; this tool never executes the examples.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `topic` | "index" \| "tasks" \| "questions" \| "agents" \| "shell" \| "research" \| "cloud" \| "workflow" | yes |  |
+
+<details><summary>JSON schema</summary>
+
+```json
+{
+  "type": "object",
+  "required": [
+    "topic"
+  ],
+  "properties": {
+    "topic": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "index"
+        },
+        {
+          "type": "string",
+          "const": "tasks"
+        },
+        {
+          "type": "string",
+          "const": "questions"
+        },
+        {
+          "type": "string",
+          "const": "agents"
+        },
+        {
+          "type": "string",
+          "const": "shell"
+        },
+        {
+          "type": "string",
+          "const": "research"
+        },
+        {
+          "type": "string",
+          "const": "cloud"
+        },
+        {
+          "type": "string",
+          "const": "workflow"
+        }
+      ]
+    }
+  }
+}
+```
+
+</details>
+
+## claude-accounts
+
+**Commands**
+
+| Command | Description |
+|---|---|
+| `/accounts` | Claude accounts: select, add/use/login <name>, rename <old> <new>, list, cancel. Selection is per session. |

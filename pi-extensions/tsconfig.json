@@ -16,6 +16,6 @@
     "resolveJsonModule": true,
     "verbatimModuleSyntax": false
   },
-  "include": ["agent-team/**/*.ts", "ask-user/**/*.ts", "background-bash/**/*.ts", "nine-router/**/*.ts"],
+  "include": ["agent-team/**/*.ts", "ask-user/**/*.ts", "background-bash/**/*.ts", "nine-router/**/*.ts", "session-title/**/*.ts", "team-webui/*.ts", "claude-accounts/**/*.ts"],
   "exclude": ["node_modules", "**/test/**"]
 }

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="th">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pi Workspace</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css">  <link rel="stylesheet" href="/render.css">
+</head>
+<link rel="stylesheet" href="/tasks.css">
+<body>
+<section id="join" class="join"><form id="login-form" class="login-card">
+<div class="brand">π <span>WORKSPACE</span></div><h1>Your projects.<br>Your agents.</h1>
+<p>One workspace for Pi sessions, files and Git.</p>
+<label for="name">Your name</label><input id="name" autocomplete="nickname" maxlength="40" required placeholder="Name">
+<label for="token">Access code</label><input id="token" type="password" autocomplete="off" required placeholder="Paste the code from /serve">
+<button type="submit" class="primary">Open workspace <span>↗</span></button><p id="login-error" role="alert"></p>
+<small>Access includes the connected projects, files and Git.</small></form></section>
+<div id="workspace" class="workspace" hidden>
+<aside id="sidebar" class="sidebar" aria-label="Projects and sessions">
+<div class="sidebar-head"><a class="brand" href="/">π <span>WORKSPACE</span></a><button id="close-sidebar" class="mobile-only icon" aria-label="Close projects">×</button><span id="connection" class="connection" role="status">Connecting</span></div>
+<div class="search-wrap"><input id="search" type="search" placeholder="Find project or session…" aria-label="Find project or session"><kbd>⌘ K</kbd></div>
+<div class="side-caption"><span>PROJECTS · FIXED ORDER</span><span id="session-count"></span></div>
+<button id="toggle-history" class="nav-history quiet" aria-pressed="false" aria-controls="projects">Show saved</button>
+<nav id="projects" aria-label="Project sessions"></nav>
+<div class="sidebar-foot"><span id="member"></span><button id="invite" class="quiet" title="Copy invite link">Invite ↗</button><button id="logout" class="icon" aria-label="Sign out">⏻</button></div>
+</aside>
+<main id="main">
+<header class="topbar"><button id="show-sidebar" class="icon mobile-only" aria-label="Show projects">☰</button><div class="breadcrumb"><span id="project-title">Pi Workspace</span><span class="slash">/</span><strong id="session-title">Choose a session</strong></div><div class="view-switch" role="group" aria-label="Workspace view"><button id="view-chat" aria-pressed="true">Chat</button><button id="view-city" aria-pressed="false">3D City</button></div><button id="open-background" class="quiet" aria-label="Open background jobs"><span class="background-label">Background</span><span class="background-short">BG</span> <span id="background-count">0</span></button><button id="toggle-inspector" class="quiet" aria-expanded="false" aria-controls="inspector">Files & Git <span>◫</span></button></header>
+<div id="banner" class="banner" role="status" hidden></div>
+<section id="city" class="city" aria-label="Agent city" hidden>
+<div class="city-heading"><div><div class="city-eyebrow">PI / AGENT CITY</div><h1>เมืองที่งานเดินหน้า</h1><p>64 agents · 10 ย่านงาน · เลือกย่านหรือคนเพื่อดูใกล้ ๆ</p></div><span id="city-live" class="city-live">LIVE · สถานะจริง</span></div>
+<div class="city-toolbar"><label class="sr-only" for="city-project">กรองโปรเจกต์</label><select id="city-project"><option value="">ทุกโปรเจกต์</option></select><input id="city-search" type="search" placeholder="ค้นหา agent…" aria-label="ค้นหา agent ในเมือง"><label class="city-saved"><input id="city-saved" type="checkbox"> รวมออฟไลน์</label></div>
+<div class="city-stats"><span><i class="city-person-dot working"></i><b id="city-working">0</b> กำลังทำงาน</span><span><i class="city-person-dot idle"></i><b id="city-idle">0</b> พร้อม / พัก</span><span><i class="city-person-dot offline"></i><b id="city-offline">0</b> ออฟไลน์ · สถานี</span></div>
+<div id="city-stage" class="city-stage"><div class="city-map-caption">KANBAN CITY <span>สถานที่ตามงานจริง · animation ตกแต่ง</span></div><div id="city-loading" class="city-overlay" role="status">กำลังสร้างเมือง…</div><div id="city-empty" class="city-overlay" hidden>ยังไม่มี agent ตรงกับตัวกรองนี้</div><div id="city-error" class="city-overlay" role="alert" hidden></div><div class="city-camera" role="group" aria-label="ควบคุมมุมมองเมือง"><button id="city-left" aria-label="หมุนเมืองซ้าย">↶</button><button id="city-right" aria-label="หมุนเมืองขวา">↷</button><button id="city-zoom-in" aria-label="ขยายเมือง">+</button><button id="city-zoom-out" aria-label="ย่อเมือง">−</button><button id="city-reset">มุมเริ่มต้น</button></div></div>
+<div class="city-caption"><span>ลากเพื่อหมุน · คลิกคนเพื่อเลือก</span><button id="city-pause" class="quiet" aria-pressed="false">หยุดการเคลื่อนไหว</button></div>
+<div id="city-detail" class="city-detail" hidden><div><strong id="city-agent-name"></strong><p id="city-agent-meta"></p></div><button id="city-open-chat" class="primary">เปิดแชต ↗</button></div>
+<div class="city-roster-heading"><strong>ผู้คนในเมือง</strong><span id="city-total"></span></div><div id="city-roster" class="city-roster" aria-label="รายชื่อ agent ในเมือง"></div>
+<p class="city-footnote">ตำแหน่งย่านอ้างอิง task ที่มอบหมายและสถานะ session · ท่าทาง/การเดินสุ่มเป็นภาพประกอบ ไม่รันงานหรือเปลี่ยน Kanban</p>
+</section>
+<div id="welcome" class="welcome"><div class="welcome-symbol">π</div><h1>A place for every thread.</h1><p>Select a session to continue its conversation.<br>Agents keep working while you switch.</p></div>
+<section id="conversation" class="conversation" aria-label="Conversation" hidden>
+<div class="chat-heading"><div><div class="eyebrow" id="worktree-title">WORKTREE</div><h1 id="chat-title"></h1></div><span id="agent-status" class="pill"></span></div>
+<div id="messages" class="messages" aria-live="off"></div>
+<div id="activity-line" class="activity-line" role="status"></div>
+</section>
+<div id="composer-area" class="composer-area" hidden>
+<div id="extension-widgets" class="extension-widgets"></div>
+<div id="attachments" class="attachments"></div>
+<form id="composer" class="composer"><label class="sr-only" for="prompt">Message this session</label>
+<textarea id="prompt" rows="2" placeholder="Message Pi, or use an extension /command…" aria-describedby="compose-hint"></textarea>
+<div class="composer-toolbar"><div><button type="button" id="attach" class="icon" title="Attach files or paste images" aria-label="Attach files">＋</button><input id="file-input" type="file" multiple hidden><select id="delivery" aria-label="Message delivery"><option value="followUp">Queue after task</option><option value="steer">Steer next turn</option></select></div><div><button id="stop" type="button" class="stop" hidden>■ Stop</button><button id="send" type="submit" class="primary">Send ↑</button></div></div></form>
+<div class="compose-meta"><span id="model"></span><span id="compose-hint">Enter send · Shift Enter newline · drop files to attach</span></div></div>
+</main>
+<aside id="inspector" class="inspector" aria-label="Session inspector" hidden><div class="inspector-head"><div class="tabs" role="tablist"><button data-tab="files" role="tab" aria-selected="true">Files</button><button data-tab="git" role="tab" aria-selected="false">Git</button><button data-tab="extensions" role="tab" aria-selected="false">Extensions</button><button data-tab="jobs" role="tab" aria-selected="false">Jobs</button><button data-tab="activity" role="tab" aria-selected="false">Activity</button></div><button id="close-inspector" class="icon" aria-label="Close inspector">×</button></div><div id="inspector-body" class="inspector-body" role="tabpanel"></div></aside>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+<dialog id="extension-dialog"><form method="dialog" id="dialog-form"><div id="dialog-content"></div><div class="dialog-actions"><button type="button" id="dialog-cancel" class="quiet">Cancel</button><button id="dialog-submit" type="submit" class="primary">Continue</button></div></form></dialog>
+<script type="module" src="/app.js"></script>
+</body></html>

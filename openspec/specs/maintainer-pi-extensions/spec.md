@@ -5,12 +5,17 @@ Move the maintainer's own Pi extensions (agent-team, ask-user, background-bash) 
 ## Requirements
 ### Requirement: extensions-in-repo
 
-The repository SHALL contain the agent-team, ask-user and background-bash Pi extensions under pi-extensions/ as sibling folders, without generated reports or machine-specific absolute paths, and SHALL NOT contain the claude-accounts extension.
+The repository SHALL contain the agent-team, ask-user, background-bash, nine-router, session-title, team-webui and claude-accounts Pi extensions under pi-extensions/ as sibling folders, without generated reports or machine-specific absolute paths.
 
 #### Scenario: Extensions are present without personal paths
 
 - **WHEN** a maintainer lists pi-extensions/ and searches it for /Users/
-- **THEN** each of agent-team, ask-user and background-bash has an index.ts, claude-accounts is absent, and no file contains a /Users/ path
+- **THEN** each of agent-team, ask-user, background-bash, nine-router, session-title, team-webui and claude-accounts has an index.ts, and no file contains a /Users/ path
+
+#### Scenario: Generated reports stay out
+
+- **WHEN** a maintainer lists pi-extensions/team-webui
+- **THEN** there is no reports/, node_modules/ or __pycache__/ folder
 
 ### Requirement: not-shipped
 
@@ -184,7 +189,7 @@ CHANGELOG.md SHALL มีหัวข้อของ version ปัจจุบ�
 
 ### Requirement: typecheck
 
-npm run typecheck ใน pi-extensions SHALL ผ่าน tsc --noEmit กับโค้ด .ts ของทั้งสาม extension
+npm run typecheck ใน pi-extensions SHALL ผ่าน tsc --noEmit กับโค้ด .ts ของทุก extension ใน pi.extensions
 
 #### Scenario: โค้ดปัจจุบันผ่าน typecheck
 
@@ -196,6 +201,11 @@ npm run typecheck ใน pi-extensions SHALL ผ่าน tsc --noEmit กับ
 - **GIVEN** ไฟล์ชั่วคราวเรียก pi.registerToolz ซึ่งไม่มีใน ExtensionAPI
 - **WHEN** รัน tsc กับไฟล์นั้น
 - **THEN** tsc รายงาน error
+
+#### Scenario: ทุก extension อยู่ในขอบเขต typecheck
+
+- **WHEN** เทียบ include ของ tsconfig.json กับ pi.extensions
+- **THEN** ทุกโฟลเดอร์ใน pi.extensions อยู่ใน include
 
 ### Requirement: tool-docs
 
@@ -377,3 +387,129 @@ model ของ provider 9router SHALL ส่ง chat request แบบ streamin
 
 - **WHEN** รัน bash pi-extensions/install.sh --dry-run
 - **THEN** รายการที่จะ copy มี nine-router
+
+### Requirement: auto-name
+
+session-title SHALL ตั้งชื่อ session จากข้อความแรกของผู้ใช้เมื่อ session ยังไม่มีชื่อ
+
+- ใช้บรรทัดแรกที่มีเนื้อหา ตัดช่องว่างซ้ำ และตัดให้ยาวไม่เกิน 48 ตัวอักษรแบบไม่ตัดกลาง grapheme พร้อม … เมื่อถูกตัด
+- ไม่ตั้งจากข้อความที่ขึ้นต้นด้วย / (คำสั่ง) หรือข้อความที่ไม่มีตัวอักษร
+- ไม่ตั้งเมื่อ session มีชื่ออยู่แล้ว
+
+#### Scenario: ตั้งชื่อจากคำสั่งแรก
+
+- **GIVEN** session ยังไม่มีชื่อ
+- **WHEN** ผู้ใช้ส่งข้อความ "ปรับให้แสดงชื่อ ที่ว่าทำงานอะไรอยู่"
+- **THEN** ชื่อ session เป็น "ปรับให้แสดงชื่อ ที่ว่าทำงานอะไรอยู่"
+
+#### Scenario: ข้อความยาวถูกตัด
+
+- **WHEN** ข้อความแรกยาว 120 ตัวอักษร
+- **THEN** ชื่อยาวไม่เกิน 48 ตัวอักษรและลงท้ายด้วย …
+
+#### Scenario: ไม่ทับชื่อเดิม
+
+- **GIVEN** session ชื่อ "Release prep" อยู่แล้ว
+- **WHEN** ผู้ใช้ส่งข้อความ
+- **THEN** ชื่อยังเป็น "Release prep"
+
+#### Scenario: ข้ามคำสั่งและข้อความว่าง
+
+- **WHEN** ข้อความแรกเป็น "/reload" หรือมีแค่ "???"
+- **THEN** ไม่มีการตั้งชื่อ และข้อความถัดไปที่มีเนื้อหาจะถูกใช้แทน
+
+### Requirement: agent-title-tool
+
+session-title SHALL ให้ agent ตั้งชื่องานปัจจุบันผ่าน tool session_title
+
+- รับ title 1-60 ตัวอักษรหลังตัดช่องว่าง
+- เปลี่ยนชื่อได้เฉพาะเมื่อชื่อปัจจุบันว่างหรือเป็นชื่อที่ extension ตั้งเอง
+- ถ้าผู้ใช้ตั้งชื่อเองด้วย /name ให้ปฏิเสธพร้อมข้อความว่าเป็นชื่อที่ผู้ใช้ตั้ง
+- system prompt แนะนำให้เรียกเมื่องานหลักเปลี่ยน ด้วยชื่อสั้น 2-6 คำ
+
+#### Scenario: agent อัปเดตชื่อ
+
+- **GIVEN** ชื่อปัจจุบันตั้งจากข้อความแรก
+- **WHEN** agent เรียก session_title { title: "Tab titles from work" }
+- **THEN** ชื่อ session เป็น "Tab titles from work"
+
+#### Scenario: ชื่อที่ผู้ใช้ตั้งไม่ถูกทับ
+
+- **GIVEN** ผู้ใช้ตั้งชื่อ "Mine" ด้วย /name
+- **WHEN** agent เรียก session_title
+- **THEN** ชื่อยังเป็น "Mine" และ tool ตอบว่าผู้ใช้ตั้งชื่อเอง
+
+#### Scenario: title ว่างหรือยาวเกิน
+
+- **WHEN** agent เรียกด้วย title ว่างหรือยาว 61 ตัวอักษร
+- **THEN** tool ปฏิเสธและชื่อไม่เปลี่ยน
+
+#### Scenario: จำว่าชื่อไหน extension ตั้งหลัง reload
+
+- **GIVEN** extension ตั้งชื่อไว้แล้ว Pi ถูก /reload
+- **WHEN** agent เรียก session_title
+- **THEN** ชื่อเปลี่ยนได้ เพราะยังรู้ว่าเป็นชื่ออัตโนมัติ
+
+### Requirement: title-package-wiring
+
+pi-extensions SHALL รวม session-title ใน manifest, installer, test runner และเอกสาร tool
+
+#### Scenario: ตรวจแพ็กเกจผ่าน
+
+- **WHEN** รัน npm run check ใน pi-extensions
+- **THEN** ผ่าน และ docs/tools.md มี session_title
+
+### Requirement: team-webui-package
+
+team-webui SHALL โหลดจาก pi-extensions และลงทะเบียน tool, command และ shortcut ชุดเดิมของ pi-team-webui
+
+- ลงทะเบียน task_board และ tool_guide และ command เดิมเช่น /serve
+- ใช้ ../background-bash/manager.cjs ที่อยู่ข้างกัน
+- เทสต์ Node ของ team-webui รันใน test.sh และผ่านทั้งหมด
+- tarball มี web/ ที่ใช้ตอนรัน แต่ไม่มี test/ และ scripts/ สำหรับ benchmark
+
+#### Scenario: ลงทะเบียนครบ
+
+- **WHEN** โหลด pi-extensions ผ่าน loader ของ Pi
+- **THEN** มี tool task_board และ tool_guide และ command serve
+
+#### Scenario: background jobs จาก extension ข้างกัน
+
+- **GIVEN** ไม่มี ~/.pi/agent/extensions/background-bash
+- **WHEN** team-webui สร้างตัวจัดการ background jobs
+- **THEN** ใช้ manager.cjs จาก pi-extensions/background-bash ได้
+
+#### Scenario: เทสต์ reload ครบโมดูล
+
+- **GIVEN** เทสต์ reload คัดลอกโมดูลไปโฟลเดอร์ชั่วคราว
+- **WHEN** รันเทสต์
+- **THEN** ทุกโมดูลที่ task-store import ถูกคัดลอกและเทสต์ผ่าน
+
+### Requirement: claude-accounts-package
+
+claude-accounts SHALL หา pi-claude-subscription จาก <agent dir>/git/github.com/inhumanxd/pi-claude-subscription ตอนโหลด
+
+- ใช้ getAgentDir() จึงตาม PI_CODING_AGENT_DIR
+- ถ้าไม่พบแพ็กเกจ /accounts ยังลงทะเบียน Pi ไม่ล้ม และคำสั่งตอบข้อความบอกให้ติดตั้ง git:github.com/inhumanxd/pi-claude-subscription
+- ไม่มี token หรือ credential ในโค้ดหรือข้อความ
+
+#### Scenario: ใช้แพ็กเกจที่ติดตั้งไว้
+
+- **GIVEN** agent dir มี pi-claude-subscription
+- **WHEN** โหลด claude-accounts และมีบัญชี work ใน auth.json
+- **THEN** provider claude-subscription-account-work ถูกลงทะเบียน
+
+#### Scenario: ไม่มีแพ็กเกจ subscription
+
+- **GIVEN** agent dir ไม่มี pi-claude-subscription
+- **WHEN** โหลดแล้วสั่ง /accounts add work
+- **THEN** Pi โหลดสำเร็จ และ /accounts แจ้งให้ติดตั้งแพ็กเกจโดยไม่ลงทะเบียน provider
+
+### Requirement: renderer-build
+
+npm run build:renderers ใน pi-extensions SHALL สร้าง team-webui/web/vendor/markdown.js และ mermaid.js จาก devDependencies ที่ pin ไว้
+
+#### Scenario: สร้าง renderer
+
+- **WHEN** รัน npm --prefix pi-extensions run build:renderers
+- **THEN** markdown.js, mermaid.js และ RENDERERS.txt ถูกเขียนใน team-webui/web/vendor

@@ -8,9 +8,9 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const HOST_PACKAGES = ['@earendil-works/pi-ai', '@earendil-works/pi-coding-agent', '@earendil-works/pi-tui', 'typebox'];
-export const EXTENSIONS = ['agent-team', 'ask-user', 'background-bash', 'nine-router'];
+export const EXTENSIONS = ['agent-team', 'ask-user', 'background-bash', 'nine-router', 'session-title', 'team-webui', 'claude-accounts'];
 const REQUIRED_FILES = [...EXTENSIONS.map(name => `${name}/index.ts`), 'LICENSE', 'CHANGELOG.md', 'README.md', 'docs/tools.md', 'package.json'];
-const FORBIDDEN = [/\.test\.cjs$/, /(^|\/)test\.cjs$/, /(^|\/)test\//, /(^|\/)node_modules\//];
+const FORBIDDEN = [/\.test\.cjs$/, /\.test\.mjs$/, /(^|\/)__pycache__\//, /^team-webui\/scripts\//, /(^|\/)test\.cjs$/, /(^|\/)test\//, /(^|\/)node_modules\//];
 
 export function checkManifest(pkg, root) {
   const problems = [];

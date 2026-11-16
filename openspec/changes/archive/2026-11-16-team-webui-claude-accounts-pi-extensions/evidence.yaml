@@ -1,0 +1,122 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "extensions-in-repo-a-maintainer-lists-pi-extensions-and-searches",
+      "requirementKey": "extensions-in-repo",
+      "scenario": "Extensions are present without personal paths",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "extensions-in-repo-a-maintainer-lists-pi-extensions-team-webui",
+      "requirementKey": "extensions-in-repo",
+      "scenario": "Generated reports stay out",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "typecheck-npm-prefix-pi-extensions-run-typecheck",
+      "requirementKey": "typecheck",
+      "scenario": "โค้ดปัจจุบันผ่าน typecheck",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "typecheck-tsc",
+      "requirementKey": "typecheck",
+      "scenario": "เรียก API ที่ไม่มีอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "typecheck-include-tsconfig-json-pi-extensions",
+      "requirementKey": "typecheck",
+      "scenario": "ทุก extension อยู่ในขอบเขต typecheck",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "team-webui-package-pi-extensions-loader-pi",
+      "requirementKey": "team-webui-package",
+      "scenario": "ลงทะเบียนครบ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "team-webui-package-team-webui-background-jobs",
+      "requirementKey": "team-webui-package",
+      "scenario": "background jobs จาก extension ข้างกัน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "team-webui-package-3",
+      "requirementKey": "team-webui-package",
+      "scenario": "เทสต์ reload ครบโมดูล",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "claude-accounts-package-claude-accounts-work-auth-json",
+      "requirementKey": "claude-accounts-package",
+      "scenario": "ใช้แพ็กเกจที่ติดตั้งไว้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "claude-accounts-package-accounts-add-work",
+      "requirementKey": "claude-accounts-package",
+      "scenario": "ไม่มีแพ็กเกจ subscription",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "renderer-build",
+      "requirementKey": "renderer-build",
+      "scenario": "สร้าง renderer",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(cd pi-extensions && node --test team-webui/test/*.test.mjs) && (cd pi-extensions && node --test claude-accounts/*.test.cjs) && (npm --prefix pi-extensions run check)"
+      ],
+      "segments": [
+        "cd pi-extensions && node --test team-webui/test/*.test.mjs",
+        "cd pi-extensions && node --test claude-accounts/*.test.cjs",
+        "npm --prefix pi-extensions run check"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

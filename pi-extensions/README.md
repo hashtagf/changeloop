@@ -11,6 +11,9 @@ folder. The product's Pi adapter lives in `.claude/harness/adapters/`.
 | `ask-user/` | Persistent structured user questions (`ask_user`, `/questions`) |
 | `background-bash/` | Background shell jobs (`background_bash`, `background_job`) |
 | `nine-router/` | `9router` model provider with catalog discovery ([README](nine-router/README.md)) |
+| `session-title/` | Names each session after its work so terminal tabs differ (`session_title`) |
+| `team-webui/` | Workspace web hub (`/serve`), task board (`task_board`), `tool_guide` ([README](team-webui/README.md)) |
+| `claude-accounts/` | Per-session Claude account switching (`/accounts`); needs the `pi-claude-subscription` package ([README](claude-accounts/README.md)) |
 
 The extensions import each other by sibling path, so they ship as one package
 and stay side by side when installed. Every tool, command and shortcut is
@@ -27,7 +30,8 @@ pi-extensions/
 ├── docs/tools.md       # generated tool reference
 ├── scripts/            # pack-check, tool-docs, typecheck tests (not published)
 ├── tsconfig.json
-├── agent-team/  ask-user/  background-bash/  nine-router/
+├── agent-team/  ask-user/  background-bash/  nine-router/  session-title/
+├── team-webui/  claude-accounts/
 ├── install.sh          # copy-install into ~/.pi/agent/extensions
 └── test.sh             # Node tests; --tui adds real-terminal smokes
 ```
@@ -44,6 +48,7 @@ npm install                 # dev tools only: tsc, Pi types and loader
 npm run check               # typecheck + docs:check + pack:check + tests
 npm run test:tui            # adds the real-terminal smokes
 npm run docs                # regenerate docs/tools.md after changing a tool
+npm run build:renderers     # rebuild team-webui Markdown/Mermaid bundles
 bash install.sh --dry-run
 bash install.sh             # copies into ~/.pi/agent/extensions, backs up replaced copies
 ```

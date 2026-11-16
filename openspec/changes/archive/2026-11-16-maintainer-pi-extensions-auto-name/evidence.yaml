@@ -1,0 +1,103 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "auto-name-1",
+      "requirementKey": "auto-name",
+      "scenario": "ตั้งชื่อจากคำสั่งแรก",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "auto-name-120",
+      "requirementKey": "auto-name",
+      "scenario": "ข้อความยาวถูกตัด",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "auto-name-3",
+      "requirementKey": "auto-name",
+      "scenario": "ไม่ทับชื่อเดิม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "auto-name-reload",
+      "requirementKey": "auto-name",
+      "scenario": "ข้ามคำสั่งและข้อความว่าง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "agent-title-tool-agent-session-title-title-tab-titles-from-work",
+      "requirementKey": "agent-title-tool",
+      "scenario": "agent อัปเดตชื่อ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "agent-title-tool-agent-session-title",
+      "requirementKey": "agent-title-tool",
+      "scenario": "ชื่อที่ผู้ใช้ตั้งไม่ถูกทับ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "agent-title-tool-agent-title-61",
+      "requirementKey": "agent-title-tool",
+      "scenario": "title ว่างหรือยาวเกิน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "agent-title-tool-agent-session-title-2",
+      "requirementKey": "agent-title-tool",
+      "scenario": "จำว่าชื่อไหน extension ตั้งหลัง reload",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "title-package-wiring",
+      "requirementKey": "title-package-wiring",
+      "scenario": "ตรวจแพ็กเกจผ่าน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test pi-extensions/session-title/*.test.cjs) && (npm --prefix pi-extensions run check)"
+      ],
+      "segments": [
+        "node --test pi-extensions/session-title/*.test.cjs",
+        "npm --prefix pi-extensions run check"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

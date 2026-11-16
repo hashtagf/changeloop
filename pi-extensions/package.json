@@ -1,7 +1,7 @@
 {
   "name": "@hashtagf/pi-extensions",
-  "version": "0.2.0",
-  "description": "Pi extensions: worker agent team with task board, persistent structured user questions, background shell jobs, and a 9router provider.",
+  "version": "0.4.0",
+  "description": "Pi extensions: worker agent team with task board, persistent structured user questions, background shell jobs, a 9router provider, session titles that name the current work, a workspace web UI with task board, and Claude account switching.",
   "keywords": [
     "pi-package",
     "pi-extension",
@@ -36,7 +36,10 @@
       "./agent-team/index.ts",
       "./ask-user/index.ts",
       "./background-bash/index.ts",
-      "./nine-router/index.ts"
+      "./nine-router/index.ts",
+      "./session-title/index.ts",
+      "./team-webui/index.ts",
+      "./claude-accounts/index.ts"
     ]
   },
   "files": [
@@ -44,7 +47,13 @@
     "ask-user/",
     "background-bash/",
     "nine-router/",
+    "session-title/",
+    "team-webui/",
+    "claude-accounts/",
     "!**/*.test.cjs",
+    "!**/*.test.mjs",
+    "!**/__pycache__/",
+    "!team-webui/scripts/",
     "!**/test.cjs",
     "!**/test/",
     "docs/",
@@ -56,6 +65,7 @@
     "test": "bash test.sh && node --test scripts/*.test.cjs",
     "test:tui": "bash test.sh --tui",
     "typecheck": "tsc -p tsconfig.json",
+    "build:renderers": "node team-webui/scripts/build-renderers.mjs",
     "docs": "node scripts/tool-docs.mjs --write",
     "docs:check": "node scripts/tool-docs.mjs --check",
     "pack:check": "node scripts/pack-check.mjs",
@@ -74,6 +84,10 @@
     "@earendil-works/pi-coding-agent": "1.5.2",
     "@earendil-works/pi-tui": "1.5.2",
     "@types/node": "^26.6.6",
+    "dompurify": "3.4.18",
+    "esbuild": "0.28.2",
+    "marked": "18.2.0",
+    "mermaid": "12.3.0",
     "typebox": "1.3.27",
     "typescript": "^7.0.2"
   }

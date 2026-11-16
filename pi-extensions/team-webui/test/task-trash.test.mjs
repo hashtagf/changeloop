@@ -1,0 +1,58 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createTaskStore} from '../task-store.ts';
+import {DatabaseSync} from 'node:sqlite';
+const setup=t=>{const root=mkdtempSync(join(tmpdir(),'task-trash-'));t.after(()=>rmSync(root,{recursive:true,force:true}));return createTaskStore(root);};
+test('trash is reversible, versioned, project scoped and excluded from active views',t=>{
+ const s=setup(t),a=s.create('/p',{key:'a',title:'A',ownerSessionId:'agent'}).task;
+ assert.throws(()=>s.delete('/other',a.id,{version:1}),e=>e.status===404);
+ assert.throws(()=>s.delete('/p',a.id,{}),e=>e.status===400);
+ const gone=s.delete('/p',a.id,{version:1},'user:test').task;
+ assert.ok(gone.deletedAt);assert.equal(gone.deletedBy,'user:test');
+ assert.equal(s.list('/p').total,0);assert.equal(s.list('/p',{deleted:true}).total,1);
+ assert.equal(s.inbox('agent').length,0);assert.equal(s.cityAssignments().length,0);assert.equal(s.graph('/p').nodes.length,0);
+ assert.equal(s.create('/p',{key:'a',title:'duplicate'}).task.id,a.id);
+ assert.throws(()=>s.update('/p',a.id,{version:2,title:'bad'}),/Restore/);
+ assert.throws(()=>s.restore('/p',a.id,{version:1}),e=>e.status===409);
+ assert.ok(s.delete('/p',a.id,{version:2}).unchanged);
+ const back=s.restore('/p',a.id,{version:2}).task;
+ assert.equal(back.id,a.id);assert.equal(back.version,3);assert.equal(back.deletedAt,undefined);assert.equal(s.inbox('agent').length,1);
+ assert.deepEqual(s.get('/p',a.id).history.map(e=>e.action),['restored','deleted','created']);
+});
+test('active dependencies cannot be orphaned by delete, create, update or restore',t=>{
+ const s=setup(t),a=s.create('/p',{key:'a',title:'Prerequisite'}).task;
+ const b=s.create('/p',{key:'b',title:'Dependent',dependsOn:[{id:a.id,status:'review'}]}).task;
+ assert.throws(()=>s.delete('/p',a.id,{version:1}),/Dependent/);
+ s.delete('/p',b.id,{version:1});s.delete('/p',a.id,{version:1});
+ assert.throws(()=>s.restore('/p',b.id,{version:2}),/existing task/);
+ assert.equal(s.get('/p',b.id).task.version,2);
+ assert.throws(()=>s.create('/p',{key:'c',title:'C',dependsOn:[{id:a.id,status:'review'}]}),/existing task/);
+ const c=s.create('/p',{key:'c',title:'C'}).task;
+ assert.throws(()=>s.update('/p',c.id,{version:1,dependsOn:[{id:a.id,status:'review'}]}),/existing task/);
+ s.restore('/p',a.id,{version:2});s.restore('/p',b.id,{version:2});assert.equal(s.graph('/p').edges.length,1);
+});
+test('Change Loop sync keeps tombstones instead of reimporting removed work',t=>{
+ const s=setup(t),source={sourceKey:'change:a',fingerprint:'one',phase:'build',boardStatus:'build',title:'Imported',description:'',nextStep:'Build',blocker:'',evidence:''};
+ const a=s.syncWorkflow('/p',source).task;s.delete('/p',a.id,{version:1});
+ const synced=s.syncWorkflow('/p',{...source,fingerprint:'two',phase:'prove',boardStatus:'verify'});
+ assert.equal(synced.changed,false);assert.equal(synced.task.version,2);assert.equal(s.list('/p').total,0);
+ s.restore('/p',a.id,{version:2});assert.equal(s.syncWorkflow('/p',{...source,fingerprint:'two',phase:'prove',boardStatus:'verify'}).task.status,'verify');
+});
+test('a history write failure rolls back both task changes and their events',t=>{
+ const root=mkdtempSync(join(tmpdir(),'task-atomic-'));t.after(()=>rmSync(root,{recursive:true,force:true}));
+ const s=createTaskStore(root),task=s.create('/p',{key:'original',title:'Original'}).task;
+ const trigger=enabled=>{const db=new DatabaseSync(join(root,'tasks.sqlite'));try{db.exec(enabled?"CREATE TRIGGER reject_history BEFORE INSERT ON events BEGIN SELECT RAISE(ABORT,'fixture history failure'); END;":'DROP TRIGGER reject_history');}finally{db.close();}};
+ trigger(true);
+ assert.throws(()=>s.create('/p',{key:'failed',title:'Failed creation'}),/fixture history failure/);
+ assert.throws(()=>s.update('/p',task.id,{version:1,title:'Failed edit'}),/fixture history failure/);
+ assert.throws(()=>s.delete('/p',task.id,{version:1}),/fixture history failure/);
+ assert.equal(s.list('/p').total,1);assert.equal(s.get('/p',task.id).task.title,'Original');assert.equal(s.get('/p',task.id).task.version,1);
+ assert.equal(s.get('/p',task.id).history.length,1);
+ trigger(false);s.delete('/p',task.id,{version:1});trigger(true);
+ assert.throws(()=>s.restore('/p',task.id,{version:2}),/fixture history failure/);
+ assert.equal(s.list('/p').total,0);assert.equal(s.get('/p',task.id).task.version,2);
+ trigger(false);s.restore('/p',task.id,{version:2});assert.equal(s.get('/p',task.id).history.length,3);
+});

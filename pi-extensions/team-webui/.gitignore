@@ -1,0 +1,3 @@
+# Browser-check screenshots and benchmark evidence are local only.
+reports/
+__pycache__/

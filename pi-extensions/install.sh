@@ -5,7 +5,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}"
 DEST="$AGENT_DIR/extensions"
-EXTENSIONS=(agent-team ask-user background-bash nine-router)
+EXTENSIONS=(agent-team ask-user background-bash nine-router session-title team-webui claude-accounts)
 DRY_RUN=no
 for arg in "$@"; do
   case "$arg" in

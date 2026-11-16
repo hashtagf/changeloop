@@ -1,0 +1,74 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { spawn } from 'node:child_process';
+import { createTaskStore, taskStatuses } from '../task-store.ts';
+import { createHub } from '../hub.ts';
+
+const fixture = t => { const root=mkdtempSync(join(tmpdir(),'pi-tasks-test-'));t.after(()=>rmSync(root,{recursive:true,force:true}));return {root,store:createTaskStore(root)}; };
+test('tasks persist across store instances, keys deduplicate, projects isolate and history retains every stage', t => {
+  const {root,store}=fixture(t);
+  let task=store.create('/project-one',{key:'feature',title:'Persistent work',nextStep:'Write a plan',ownerSessionId:'old-session'},'agent:old-session').task;
+  assert.equal(store.create('/project-one',{key:'feature',title:'Retry'}).task.id,task.id);
+  assert.notEqual(store.create('/project-two',{key:'feature',title:'Other project'}).task.id,task.id);
+  assert.equal(createTaskStore(root).list('/project-one').tasks[0].nextStep,'Write a plan');
+  for(const status of taskStatuses.slice(1))task=store.update('/project-one',task.id,{version:task.version,status,evidence:'fixture evidence',nextStep:'Continue from '+status},'agent:new-session').task;
+  assert.equal(createTaskStore(root).list('/project-one').tasks[0].status,'deployed');
+  assert.equal(store.get('/project-one',task.id).history.length,10);
+  assert.throws(()=>store.update('/project-one',task.id,{version:task.version,evidence:''}),e=>e.status===400);
+  assert.throws(()=>store.get('/project-two',task.id),e=>e.status===404);
+  assert.throws(()=>store.update('/project-one',task.id,{version:1,title:'stale'},'old'),e=>e.status===409);
+  assert.equal(store.get('/project-one',task.id).task.title,'Persistent work');
+  assert.equal(store.list('/project-one',{activeOnly:true}).tasks.length,0);
+});
+test('validation, pagination and evidence requirements cannot silently drop tasks', t => {
+  const {store}=fixture(t);
+  assert.throws(()=>store.create('/p',{key:'empty',title:''}),e=>e.status===400);
+  assert.throws(()=>store.create('/p',{key:'bad-status',title:'x',status:'done'}),e=>e.status===400);
+  let task=store.create('/p',{key:'x',title:'Wait',blocker:'User answer'}).task;
+  assert.throws(()=>store.update('/p',task.id,{version:task.version,status:'deployed'}),e=>e.status===400);
+  for(let i=0;i<5;i++)store.create('/p',{key:String(i),title:'Task '+i});
+  const first=store.list('/p',{limit:2}),second=store.list('/p',{limit:2,offset:first.nextOffset});
+  assert.equal(first.total,6);assert.equal(first.tasks.length,2);assert.equal(second.tasks.length,2);
+  assert.equal(new Set([...first.tasks,...second.tasks].map(t=>t.id)).size,4);
+  assert.equal(store.list('/p',{search:'Wait'}).tasks[0].blocker,'User answer');
+});
+test('simultaneous writers cannot overwrite a newer task version', async t => {
+  const {root,store}=fixture(t),task=store.create('/p',{key:'shared',title:'Shared'}).task;
+  const module=new URL('../task-store.ts',import.meta.url).href;
+  const run=title=>new Promise((resolve,reject)=>{
+    const code=`import {createTaskStore} from ${JSON.stringify(module)};try {createTaskStore(process.argv[1]).update('/p',process.argv[2],{version:1,title:process.argv[3]},'test');console.log('saved')}catch(e){console.log(e.status||e.message)}`;
+    const child=spawn(process.execPath,['--input-type=module','-e',code,root,task.id,title]);let output='';child.stdout.on('data',s=>output+=s);child.on('error',reject);child.on('close',()=>resolve(output.trim()));
+  });
+  assert.deepEqual((await Promise.all([run('A'),run('B')])).sort(),['409','saved']);
+  assert.equal(store.get('/p',task.id).task.version,2);
+});
+test('hub task API requires authentication/origin, works offline, and retains projects after all sessions leave', async t => {
+  const {store}=fixture(t);store.create('/offline-project',{key:'offline',title:'Resume me'});
+  const hub=await createHub({port:0,token:'task-test',registry:async()=>[],history:async()=>[],members:async()=>new Map(),tasksService:store});
+  t.after(()=>hub.stop());const base=hub.urls[0];
+  assert.equal((await fetch(base+'/api/tasks/projects')).status,401);
+  assert.equal((await fetch(base+'/api/city')).status,401);
+  const login=await fetch(base+'/api/login',{method:'POST',headers:{'Content-Type':'application/json',Origin:base},body:JSON.stringify({name:'Tester',token:'task-test'})});
+  const cookie=login.headers.get('set-cookie').split(';')[0];
+  const get=path=>fetch(base+path,{headers:{Cookie:cookie}});
+  assert.equal((await (await get('/api/tasks/projects')).json()).projects[0].root,'/offline-project');
+  const task=(await (await get('/api/tasks?project=/offline-project')).json()).tasks[0];
+  const post=(body,origin=base)=>fetch(base+'/api/tasks',{method:'POST',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const body={action:'update',project:'/offline-project',id:task.id,version:task.version,status:'plan'};
+  assert.equal((await post(body,'https://untrusted.invalid')).status,403);
+  assert.equal((await post(body)).status,200);
+  assert.equal((await post(body)).status,409);
+  assert.equal((await post({...body,action:'delete'})).status,409);
+  assert.equal((await get('/api/tasks?project=/another-project')).status,404);
+  assert.equal(store.get('/offline-project',task.id).task.status,'plan');
+  store.update('/offline-project',task.id,{version:2,ownerSessionId:'agent-one'});
+  store.create('/offline-project',{key:'finished',title:'Finished',ownerSessionId:'agent-one',status:'deployed',evidence:'Fixture'});
+  const city=await get('/api/city');assert.equal(city.status,200);
+  const assignments=(await city.json()).assignments;assert.equal(assignments.length,1);assert.equal(assignments[0].id,task.id);assert.equal(assignments[0].status,'plan');
+  const deleted=await post({...body,action:'delete',version:3});assert.equal(deleted.status,200);
+  assert.equal((await (await get('/api/tasks?project=/offline-project&deleted=true')).json()).total,1);
+  assert.equal((await post({...body,action:'restore',version:4})).status,200);
+});
