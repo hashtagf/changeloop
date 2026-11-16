@@ -55,6 +55,12 @@ score comparisons are scoped to the current affected paths.
 
 ## Adapters and profiles
 
+A provider is either `command` (the project command emits
+`foundation-crap-v1` or `foundation-automated-mutation-v1` JSON on stdout or at
+its `output` path) or `builtin` (a project command whose native reports a
+normalizer converts). Report paths are repository-relative. Mutation declares
+`tool` or `harness-sandbox` isolation.
+
 Built-in normalizers: `javascript-istanbul`, `go-complexity-cover`,
 `python-radon-coverage`, `php-clover`, `canonical-functions`, and
 `generic-mutation-json`.

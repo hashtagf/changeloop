@@ -246,7 +246,7 @@ build-the-lever + model-the-domain/reader-load → coding-discipline / programmi
 - [docs/reports/scenario-checkpoint-v3.6.3-2026-10-11.th.md](<../../docs/reports/scenario-checkpoint-v3.6.3-2026-10-11.th.md>)
 - [docs/reports/scenario-pstack-gates-2026-10-15.th.md](<../../docs/reports/scenario-pstack-gates-2026-10-15.th.md>)
 - [docs/reports/weekly-review-feedback-remediation-plan-2026-09-11.md](<../../docs/reports/weekly-review-feedback-remediation-plan-2026-09-11.md>)
-- [docs/workflow-optimization-summary-2026-07-30.md](<../../docs/workflow-optimization-summary-2026-07-30.md>)
+- [docs/reports/workflow-optimization-summary-2026-07-30.md](<../../docs/reports/workflow-optimization-summary-2026-07-30.md>)
 - [openspec/changes/archive/2026-10-15-change-code-repository-submodule-prove-amend-waive-recovery-issu/proposal.md](<../changes/archive/2026-10-15-change-code-repository-submodule-prove-amend-waive-recovery-issu/proposal.md>)
 - [openspec/changes/archive/2026-10-15-change-pstack-agent/design.md](<../changes/archive/2026-10-15-change-pstack-agent/design.md>)
 - [openspec/changes/archive/2026-10-15-change-pstack-agent/proposal.md](<../changes/archive/2026-10-15-change-pstack-agent/proposal.md>)
@@ -276,7 +276,7 @@ build-the-lever + model-the-domain/reader-load → coding-discipline / programmi
 - [website/docs/src/content/docs/th/artifacts.md](<../../website/docs/src/content/docs/th/artifacts.md>)
 - [docs/reports/harness-behavior-plan-2026-09-05.md](<../../docs/reports/harness-behavior-plan-2026-09-05.md>)
 - [docs/reports/scenario-checkpoint-v3.6.3-2026-10-11.th.md](<../../docs/reports/scenario-checkpoint-v3.6.3-2026-10-11.th.md>)
-- [docs/workflow-optimization-summary-2026-07-30.md](<../../docs/workflow-optimization-summary-2026-07-30.md>)
+- [docs/reports/workflow-optimization-summary-2026-07-30.md](<../../docs/reports/workflow-optimization-summary-2026-07-30.md>)
 - [openspec/changes/archive/2026-10-15-change-code-repository-submodule-prove-amend-waive-recovery-issu/proposal.md](<../changes/archive/2026-10-15-change-code-repository-submodule-prove-amend-waive-recovery-issu/proposal.md>)
 - [website/docs/src/content/docs/th/loop/change.md](<../../website/docs/src/content/docs/th/loop/change.md>)
 

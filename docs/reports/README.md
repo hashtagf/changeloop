@@ -55,7 +55,7 @@ use, start with the [README](../../README.md); for development, use
 | See the executable scenario and acceptance matrix | [User scenario test plan](user-scenario-test-plan.md) | Current contract |
 | Operate dogfood, pilot, rollback, and production observation | [Rollout operations](rollout-operations.md) | Current runbook |
 | Review delivery convergence, ownership, tool preparation, permission, and uncommitted multi-repository Land | [Delivery convergence master plan](delivery-convergence-master-plan-2026-09-05.md) | v3.5.7 implementation record |
-| Configure consumer CRAP and mutation gates | [Consumer quality](../consumer-quality.md) / [ภาษาไทย](../consumer-quality.th.md) | Current guide |
+| Configure consumer CRAP and mutation gates | [Consumer quality gates](https://changeloop.ai/docs/consumer-quality/) / [ภาษาไทย](https://changeloop.ai/docs/th/consumer-quality/) | Current guide |
 | Understand the agent-harness simplification design | [Agent harness simplification plan](agent-harness-simplification-plan-2026-09-03.md) | Implemented design |
 | Review the repository-wide simplification audit | [Agent harness simplification implementation audit](agent-harness-simplification-implementation-audit-2026-09-03.md) | v3.5.3 implementation record |
 | Review the v3.5.4 lifecycle safety remediation | [Lifecycle safety remediation plan](v3.5.4-lifecycle-safety-remediation-plan-2026-09-04.md) | v3.5.4 release acceptance record |
@@ -66,6 +66,12 @@ Detailed runtime semantics live in [WORKFLOW.md](../../WORKFLOW.md). Do not copy
 those contracts into a report; link to them instead.
 
 ## Historical material
+
+- [Product roadmap](roadmap.md) — planning sequence after the backend
+  simplification; a plan, not a release claim.
+
+- [Workflow optimization summary](workflow-optimization-summary-2026-07-30.md) —
+  2026-07-30 `/dev` speed, context, cost, and quality optimization record.
 
 - [Project review and fix plan](project-review-fix-plan-2026-09-17.md) —
   2026-09-17 repository-wide inventory, deterministic checks, and reproduced

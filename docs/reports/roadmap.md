@@ -2,11 +2,11 @@
 
 This roadmap describes the next product-development sequence after the current
 backend simplification. It is a planning document, not a release claim or a
-replacement for the lifecycle contract in [`WORKFLOW.md`](../WORKFLOW.md).
+replacement for the lifecycle contract in [`WORKFLOW.md`](../../WORKFLOW.md).
 Current release readiness remains in
-[`reports/user-scenario-release-status.md`](reports/user-scenario-release-status.md),
+[`reports/user-scenario-release-status.md`](user-scenario-release-status.md),
 and rollout thresholds remain in
-[`reports/rollout-operations.md`](reports/rollout-operations.md).
+[`reports/rollout-operations.md`](rollout-operations.md).
 
 The target user outcome is to keep the existing workflow:
 
@@ -41,7 +41,7 @@ and recoverable archive completion. The native host still owns model execution.
 
 The existing sandbox protects workspace and apply integrity. It does not by
 itself contain processes, network access, host secrets, or system commands; see
-the canonical [sandbox safety contract](../WORKFLOW.md#sandbox-and-repository-safety).
+the canonical [sandbox safety contract](../../WORKFLOW.md#sandbox-and-repository-safety).
 
 The repository also has a read-only dashboard projection and dashboard. A new
 Web UI is not a prerequisite for the core lifecycle.
@@ -62,7 +62,7 @@ Web UI is not a prerequisite for the core lifecycle.
 
 Do not mix the next architecture changes into the current large backend patch.
 First establish an immutable baseline and complete the release gates named by
-the current [release status](reports/user-scenario-release-status.md).
+the current [release status](user-scenario-release-status.md).
 
 Deliverables:
 
@@ -326,7 +326,7 @@ boundary and run the authoritative repository suite. Shipped runtime, protocol,
 adapter, command, installer, or public-document changes also require their
 matching protocol pin, upgrade coverage, installer ownership update, English
 and Thai documentation alignment, and the full shipping checks described in
-[`CLAUDE.md`](../CLAUDE.md) and [`RELEASING.md`](../RELEASING.md).
+[`CLAUDE.md`](../../CLAUDE.md) and [`RELEASING.md`](../../RELEASING.md).
 
 Paid behavioral, remote-provider, dogfood, pilot, or production scenarios are
 separate release activities and require explicit authority. Their absence is a

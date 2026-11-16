@@ -611,70 +611,53 @@ primitive-created/in-flight changes retain their compatibility route.
 
 #### Approval page, approval data, and role lanes
 
-The approval question names the **approval page**: the file
-`.foundation/previews/<change>/prototype.html` that the agent or the user
-writes by hand and that the draft names as its `prototype` example. No skill
-ships for it and the harness writes no page. `change start`, `advance`, and `package <change>` write no HTML and no
-`.foundation/packages/` file; a package written by an earlier version stays
-readable and is not updated. With no page yet, the question gives the four
-`scratch` lines as text and says to use the skill; it never blocks. In a Thai
-draft the question calls the page `หน้าอนุมัติ` and does not ask the user to
-know the word package.
+The approval question names the **approval page**,
+`.foundation/previews/<change>/prototype.html`, which the agent (when asked) or
+the user writes by hand and the draft names as its `prototype` example. No
+skill ships for it, and `change start`, `advance`, and `package` write no HTML
+and no `.foundation/packages/` file (an older package stays readable, not
+updated). With no page yet the question gives the four `scratch` lines as text
+and never blocks; a Thai draft calls the page `หน้าอนุมัติ`.
 
 `package <change> [--pretty]` prints the change's data as JSON and writes no
-file. The scratch router derives the risk from the agreement's existing
-`workType`, `riskSignals`, `impact`, `coupling`, `integrations`, and
-`securityTriggers`: a risk level (Critical when `impact` is high with
-`financial` or `access-control`; High when `impact` is high or a weight-3
-signal is declared; Medium for any other signal or medium impact; Low
-otherwise), up to 28 technical domains, and approval artifacts grouped by
-approver role, each deduplicated across domains. Every change shows its change
+file. The scratch router derives from `workType`, `riskSignals`, `impact`,
+`coupling`, `integrations`, and `securityTriggers`: a risk level (Critical when
+`impact` is high with `financial` or `access-control`; High when `impact` is
+high or a weight-3 signal is declared; Medium for any other signal or medium
+impact; Low otherwise), up to 28 technical domains, and approval artifacts per
+approver role, deduplicated across domains. Every change shows its change
 impact and test map; Low shows nothing else, and runnable artifacts appear only
 from High upward. A `proof` label requires a valid passing receipt; other
-artifacts are `preview` or `none`. The data also carries the `scratch` lines with
-undo and who, scope counts (a count the draft cannot give is `null`, never 0),
-failure scenarios with the recovery only when the draft states it, the status of
-each required section, whether this revision is approved and which
-`approval.roles` lanes are missing, and suggested previews. Evidence the
-harness cannot read becomes an entry in `warnings`; the rest is still printed.
+artifacts are `preview` or `none`. The data also carries the `scratch` lines
+with undo and who, scope counts (`null`, never 0, when unknown), failure
+scenarios with recovery only when stated, required-section status, approval
+and missing `approval.roles` lanes, and suggested previews; unreadable evidence
+becomes a `warnings` entry.
 
-**What the page must show.** The data's `prototype.checklist` lists the surfaces
-the change owes, inferred only from its work types and the typed fields of its
-draft, each with its source field and whether the draft specifies it. Every one
-of the 26 catalog work types has at least one surface and always owes before and
-after; types that can fail also owe failure cases with recovery. A surface the
-draft does not specify is reported as such, never filled in. A test fails when a
-work type is added without a row. The `prototype` example may declare
-`covers`, the surface keys the page really shows; the checklist reports each
-surface as `covered`, `missing`, `unknown` (no `covers` declared), or `none`
-(no prototype). A `covers` key outside the change's surfaces is an intake
-`EDIT` naming its path. The declaration is the agent's claim, never evidence,
-and Prove and Land never read it. `change start` prints an advisory `NOTE:
-prototype` line naming what is still owed; it never blocks.
+**What the page must show.** `prototype.checklist` lists the surfaces the change
+owes, inferred only from its work types and typed draft fields, each with its
+source field and whether the draft specifies it. Each of the 26 catalog work
+types owes at least one surface plus before and after, and types that can fail
+owe failure cases with recovery; a test fails when a work type is added without
+a row. The `prototype` example may declare `covers` (the surfaces the page
+shows); each surface reads `covered`, `missing`, `unknown` (no `covers`), or
+`none` (no prototype), and a `covers` key outside the change's surfaces is an
+intake `EDIT`. `covers` is the agent's claim, never evidence: Prove and Land
+never read it, and `change start` only prints an advisory `NOTE: prototype`.
 
-**Keeping the page honest.** The risk level, proof count, and role lanes come
-only from the harness's own computation; the harness never reads them from the
-page, so a page that says every test passed changes no count. At `change
-start`, `change revise`, and `change amend` the harness records the page file's
-digest and a `factsDigest` of the facts it computed. `package` and the approval
-question warn, and never block, when the file was edited after the recorded
-revision (`drift`) or does not contain the current `factsDigest` (`factsStale`),
-and a changed fact since the record is reported as `factsChanged`. The warnings
-are not evidence and do not affect Prove or Land.
-
-**Who writes the page.** No skill ships for it. The agent, when asked, or the
-user reads the compiled change, runs `package`, and writes the whole page: the header, a
-strip of the harness's facts copied verbatim with the `factsDigest`, the
-prototype as the main view, the checklist with its statuses, before and after,
-the path, failures with recovery, undo and who, and reviewer details closed by
-default. The page is one file, makes no network request, has no decision
-controls (the user's reply in chat is the decision), uses the draft's language,
-is usable by keyboard without relying on colour alone, and is labelled as not
-proof. Where the host has a design skill or an Artifact type for designs the author
-builds on that canvas, one numbered frame per screen or state, and always exports
-the file because the harness checks the file. When the page is edited the agent
-revises or amends the change in the same turn, since the agreement stays the
-source of truth.
+**Keeping the page honest.** Risk level, proof count, and role lanes come only
+from the harness's computation, never from the page. At `change start`,
+`revise`, and `amend` the harness records the page digest and a `factsDigest`;
+`package` and the approval question warn, never block, on `drift` (edited after
+the recorded revision), `factsStale` (current `factsDigest` absent), or
+`factsChanged`. The page is one file with no network request and no decision
+controls (the chat reply is the decision), in the draft's language, keyboard
+usable without relying on colour alone, labelled as not proof: a header, the
+harness facts copied verbatim with the `factsDigest`, the prototype as the main
+view, the checklist, before and after, the path, failures with recovery, undo
+and who, and reviewer details closed by default. A host design canvas may hold
+one numbered frame per screen or state, but the file is always exported. When
+the page is edited the agent revises or amends the change in the same turn.
 
 `preview <change> --provider <name>` is optional at every risk level and never
 blocks approval or Build. Before Build only, it copies the target into
@@ -743,6 +726,8 @@ Lane approvals carry across additive revisions and amendments under the same
 rule as the whole approval, and the required lanes are routed again: a role the
 revision newly selects must approve before Build. Removing a requirement resets
 every lane. A malformed `approval` block or non-array `roles` is refused.
+
+#### Revising, amending, and abandoning a change
 
 To change an agreement that has not started Build, revise it in place instead
 of abandoning it and writing a new draft:

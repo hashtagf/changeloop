@@ -41,11 +41,11 @@ recovery, administration และ host integration ด้านล่าง
 | คำสั่ง | ใช้ทำอะไร |
 |---|---|
 | `changes` | แสดง change ที่ active สถานะ lifecycle และ action ถัดไปของแต่ละตัว |
-| `current` | แสดง change ที่ active เพียงตัวเดียวพร้อมสถานะและคำสั่งถัดไป ถ้าไม่มีหรือมีหลายตัวจะแสดงรายการตัวเลือกแล้วจบด้วย exit code ไม่ใช่ศูนย์ ขณะที่มี change active เพียงตัวเดียว `advance`, `packet`, `metrics`, `feedback` และ `package` เว้น `<change>` ได้ ส่วน flag ของ Land และการอนุมัติต้องระบุ id ชัดเจนเสมอ |
+| `current` | แสดง change ที่ active ตัวเดียวพร้อมคำสั่งถัดไป ถ้าไม่มีหรือมีหลายตัวจะแสดงตัวเลือกแล้ว exit ไม่เป็นศูนย์ เมื่อมี change active ตัวเดียว คำสั่งอ่านและ `advance` เว้น `<change>` ได้ |
 | `doctor [--stage change\|build\|prove] [--change <id>]` | วินิจฉัยความพร้อมของโปรเจกต์ provider และ lifecycle |
 | `packet <change> [--phase <phase>] [--repo <id>] [--task <id>]` | อ่าน handoff ของ operation ปัจจุบัน |
 | `metrics <change>` | ดูการใช้งาน ประสิทธิผล semantic intake งบ ต้นทุน และเวลาการรันที่วัดได้ |
-| `package <change> [--pretty]` | พิมพ์ข้อมูลอนุมัติของ change เป็น JSON (ระดับความเสี่ยงพร้อมเหตุผล technical domain, artifact แยกตามบทบาทผู้อนุมัติพร้อมป้าย proof/preview/none, บรรทัดสรุป, สิ่งที่หน้าอนุมัติต้องแสดงและ prototype ครอบคลุมข้อไหน, หน้าถูกแก้หรือข้อเท็จจริงล้าสมัยหรือไม่ และ suggested preview สำหรับ High/Critical) ไม่เขียนไฟล์และไม่เปลี่ยนสถานะ lifecycle ตัวหน้าอนุมัติ agent หรือผู้ใช้เขียนเอง ไม่มี skill ส่งมาให้ |
+| `package <change> [--pretty]` | พิมพ์ข้อมูลอนุมัติของ change เป็น JSON (ความเสี่ยง, domain, artifact พร้อมป้าย proof/preview/none, สิ่งที่หน้าอนุมัติต้องแสดง) ไม่เขียนไฟล์ ดู [การอนุมัติโดยคน](/docs/th/approval/) |
 | `feedback <change>` | อธิบายเวลา reviewer, repair ที่มีหลักฐาน, human wait และเวลาที่ยังระบุไม่ได้ พร้อม reuse และ action ถัดไป |
 | `change audit <change>` | ตรวจความเชื่อมโยงของ scenario claim task และ provider |
 | `handoff status <change>` | ดู operation ที่ต้องสิทธิ์ภายนอกและผลต่อ Land |

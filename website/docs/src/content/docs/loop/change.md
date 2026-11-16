@@ -68,32 +68,14 @@ declares `version: 5` and `workType`, which selects the required sections;
 A one-file JSON draft without `version`, `.foundation/drafts/<id>.json`, still
 starts as draft v4 with the same defaults.
 
-The compiler fills in the version, requirement and task keys, capability (an
-optional top-level `capability` names it; otherwise an existing `openspec/specs`
-capability matched by requirement text or task paths; with no confident match
-one `EDIT` lists the capabilities to choose from; when no specs exist, the
-intent's noun phrase in at most three words, such as `kanban-board`), operation
-(`modified` when a canonical requirement matches, otherwise `added`), scenario
-names, `covers` (inferred
-only with one task or one requirement; several of both return one `EDIT`
-naming each `tasks[i].covers`),
-rapid defaults, and test evidence from `verify`. A derived requirement key is
-whole words from the SHALL clause (at most five words and 40 characters, no
-trailing word such as "and" or "to"), and the requirement heading is that
-clause as a readable title, such as "Persist its cards in browser
-localStorage". A delta for a capability with no living spec states a
-`## Purpose` (the capability overview, else the intent, with requirement titles
-when the intent is short) that archive carries into the new spec; an existing
-spec's Purpose is never replaced. A derived scenario name is a
-short whole-word title from `when` (at most 60 characters, no leading article or
-dangling word); two that read the same are told apart by their `given` or
-`then`, else a number. Add `decisions: [{ "key", "choice", "reason"? }]` for
-each default you chose without asking (stack, storage): they are recorded as
-`decidedBy: agent`, listed under Decisions in the proposal, and keep the rapid
-lane. With no `why`, the proposal omits Why rather than repeat the intent.
-One `change start <draft>`
-inspects and starts it, and prints the packet files and tasks. A draft that
-states `version: 4` or `version: 5`, or declares risk, uses the full form below.
+The compiler fills in everything else: version, stable requirement and task
+keys, the capability (an explicit `capability`, else the matching existing spec,
+else one `EDIT` listing the choices), the operation (`modified` when a canonical
+requirement matches), readable requirement and scenario titles, `covers` (one
+`EDIT` when several tasks and requirements make it ambiguous), rapid defaults,
+and test evidence from `verify`. Add `decisions: [{ "key", "choice", "reason"? }]`
+for each default chosen without asking; they are listed as `decidedBy: agent`.
+A draft that declares risk uses the full form below.
 
 ## The full semantic draft
 
@@ -139,63 +121,28 @@ The full core stays small:
 }
 ```
 
-The agent uses meaningful keys. Discovery coverage is optional for an ordinary
-change: `impact: high` and typed risk declarations (`riskSignals`, security
-triggers, integrations, external operations) add required dimensions, prose is
-never scanned for keywords, and a risk-derived `not-applicable` row needs only
-a rationale. A required dimension the draft already states needs no row: the
-harness derives a `covered` row, marked derived in the proposal appendix, from
-`currentState`, `userStories`, requirements, scenario `kind` (`success`,
-`failure`, `boundary`), `compatibility`, `nonGoals`, tasks with `verify` and
-evidence, `failureMatrix`, `apiContracts`, `dataModel`, `uiStates`,
-`jobContract`, or documented `integrations`. Without such content the
-dimension stays missing, and an authored row always wins, so a
-`needs-user-decision` row is still asked. The harness refuses unresolved investigation or user-decision statuses, checks
-decision prerequisite cycles, and exposes at most three dependency-ready
-decisions at a time. The compiler creates stable claim/task IDs,
-spec-to-claim-to-task-to-provider links, classification, and versioned defaults.
-It reports every independent draft problem together, pointing back to the input
-field. A failed compile leaves no partial change.
+Discovery coverage is optional for an ordinary change. `impact: high` and typed
+risk declarations (`riskSignals`, security triggers, integrations, external
+operations) add required dimensions; a dimension the draft already states
+(current state, scenarios by `kind`, compatibility, contracts, data model, UI
+states, and similar) is derived as covered, and an authored row always wins.
+Use `riskSignals` rather than prose keywords; with `access-control`, tag one
+scenario `access: allow` and one `access: deny`.
 
-Specs are written for people. Each scenario is one case with a short `name`,
-optional `given` preconditions, one `when`, one `then`, and optional `and`
-results; a `when` or `then` that joins cases with `;` is refused, as is a
-requirement statement long enough to hide several requirements (list
-constraints in `details` instead). `capabilityOverviews` gives each spec file a
-human title and a short overview, and `language` records the document language:
-prose follows it while `SHALL`, `GIVEN`, `WHEN`, `THEN`, and `AND` stay English
-for the OpenSpec parser.
+Each scenario is one case: a short `name`, optional `given`, one `when`, one
+`then`, optional `and`. A `when` or `then` joined with `;` is refused, and long
+requirement statements move constraints into `details`. `language` sets the
+document language; `SHALL`, `GIVEN`, `WHEN`, `THEN`, and `AND` stay English for
+the OpenSpec parser.
 
-Print the current schema with `change start --template`, then run
-`change start <draft.json>` (or `change start <folder>` for a draft v5 folder). A complete draft is inspected, compiled, and
-started in one call, and the output lists the packet files and tasks.
-Otherwise the harness returns agent-owned source investigation or repair, or at
-most three linked user decisions, plus an exact resume route, and creates
-nothing. `--inspect` inspects without starting; `--consume-draft` also removes
-the draft after a successful start. Record the user's spec approval with
-`advance <change> --approve-spec --decision-ref <ref>`, or add
-`--approve-spec --decision-ref <ref>` to the `change start`, `change revise`, or
-`change amend` call that applies the approving answer. Open design questions are
-printed with the approval packet. The first inspection also returns, as agent
-repairs, a task `verify` naming a test file that neither exists nor falls in any
-task's `paths`, and an `apiContracts` error without a status or code. Versions 1 through 3 remain
-supported for existing integrations.
-Use typed `riskSignals` for access control, persisted data, integrations,
-performance SLOs, UI, operational risk, external side effects, and financial
-effects so required coverage does not depend on the language used in prose.
-With `access-control`, tag at least one scenario `access: allow` and one
-`access: deny`. Optional `constraints` render in the proposal, and optional
-`fixes` names the archived changes this change corrects. The harness records
-the source digest itself, so a correct draft reaches `DONE` on its first
-inspect; design and reader-guide warnings are advisory.
-Inspection stores one machine-owned snapshot bound to the draft and its local
-source digests. Before inspection, bounded repository intelligence ranks specs,
-tests, callers, integrations, persistence, and permission boundaries. Typed
-risk and repository signals adapt the read budget without dropping required
-dimensions. Source-answerable questions, duplicate alternatives, and
-unsupported recommendations are rejected. A changed source returns
-`refresh-source-coverage`; the snapshot records compact effectiveness metrics,
-not a transcript.
+`change start <draft>` inspects, compiles, and starts in one call and lists the
+packet files and tasks. Otherwise it returns agent repairs or at most three
+linked user decisions with a resume route, and creates nothing; every
+independent problem is reported together and a failed compile leaves no partial
+change. `--inspect` inspects only; `--consume-draft` removes the draft after a
+start. Spec approval is recorded with `advance <change> --approve-spec
+--decision-ref <ref>`, or the same flags on `change start`, `revise`, or
+`amend`. Full intake rules: `WORKFLOW.md` under "/change".
 
 ## Draft v5 folder
 
@@ -309,24 +256,14 @@ and a fixed version rather than `latest` or a branch.
 
 ## Conditional artifacts and source of truth
 
-Rapid changes contain `proposal.md`, `tasks.md`, `evidence.yaml`, and a concise
-delta `specs/<capability>/spec.md` rendered exactly as in standard; Land merges
-it into `openspec/specs`. Only a legacy rapid packet or declared docs-only work
-(`workType: ["docs"]` adding requirements) declares `skip_specs` and has no
-delta, so README wording never becomes a living requirement. Every proposal opens with a rendered header (id, lane and why,
-owner, created, status) and states scope, an acceptance traceability table
-(requirement, scenario, task, evidence, test files), and a definition of done
-generated from the enforced policy, with an optional one-line `successMeasure`.
-Tasks live only in `tasks.md`; the derived folder tree (paths new at the base
-marked `+`) sits in `design.md`'s file map. The rapid proposal is the compact
-dev document: summary, user flow, failure matrix, and its decisions.
-Existing changes keep their older layout and still read. Descriptive sections (`fileMap`,
-`testMap`, `componentMap`, `userFlow`, `configContract`, `refactor`) render
-there too and never move a low-risk change to standard. A standard v4 or v5 change
-always adds `design.md` with the full dev document and states its work type,
-noting when it was inferred. Flowchart node labels holding `(`, `)`, or `"`
-must be quoted, as in `A["mean(values)"]`. Execution, repository,
-handoff, and grounding files appear only for real overrides.
+Every change has `proposal.md`, `tasks.md`, `evidence.yaml`, and a delta
+`specs/<capability>/spec.md` that Land merges into `openspec/specs` (declared
+docs-only work skips the delta). The proposal opens with a header, scope, an
+acceptance traceability table, and a definition of done generated from the
+enforced policy. Tasks live only in `tasks.md`. A standard change also adds
+`design.md` with the full dev document; execution, repository, handoff, and
+grounding files appear only for real overrides. Quote flowchart labels holding
+`(`, `)`, or `"`, as in `A["mean(values)"]`.
 
 Two optional draft fields exist only for the approval page: `scratch` (four
 plain lines: `get`, `asIs`, `toBe`, `ifFail`) and `examples` (typed blocks
@@ -374,21 +311,12 @@ must cover it) and `removeRequirements` drops one with a `migration`:
 cloop change amend <change> <amendment.json> --consume-amendment
 ```
 
-It preserves completed tasks, custom prose, diagrams, and unrelated sections;
-adds stable links, increments the revision, validates, and rolls back on
-failure. An existing task may gain claim coverage, but replacing its outcome
-requires a new task; a completed task's verify command changes only with
-`reopen: true`, which unticks it so it must pass again. To fix the verify
-command of an unfinished task, send only `updateTasks: [{"key", "verify",
-"paths"?}]`: no requirement, evidence, or intake is needed, and Prove reruns
-that task's evidence. `change amend --template` prints both forms. Legacy changes retain their
-compatible manual path. A version-4 amendment must include discovery coverage
-for its added requirements; the validated delta is appended to `proposal.md`.
-Before mutation, the harness records the affected claims, tasks, and
-dependency-closed provider set as bounded input for proof scheduling. It
-preserves only passing unaffected receipts whose declared provider, claim, and
-input fingerprints remain exact; affected or ambiguous bindings rerun through
-the returned Prove route.
+It preserves completed tasks and unrelated prose, increments the revision,
+validates, and rolls back on failure. Replacing a task's outcome needs a new
+task; a completed task's `verify` changes only with `reopen: true`. To fix an
+unfinished task's verify command, send only `updateTasks: [{"key", "verify",
+"paths"?}]`. `change amend --template` prints both forms. Passing receipts the
+amendment does not affect are kept; affected ones rerun through Prove.
 
 A successful `/change` is already validated and isolated. Continue with
 `cloop advance <change> --through build`.

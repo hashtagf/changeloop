@@ -393,16 +393,16 @@ the envelope carries, and the budget no-progress cap are specified in
 | `advance <change> --through archived --restore-target <path,path>` / `--recover-apply settle\|keep-current\|restore-backup` / `advance <change> --undo-land`, each with `--decision-ref <ref>` where the user decides | Restores conflicting target paths inside Land, settles an interrupted apply, or undoes an archived Land whose diff is still uncommitted; see [WORKFLOW.md § `/land`](../../WORKFLOW.md#land-change) | Land conflict, interrupted apply, or the user's undo |
 | `doctor` | Checks runtime and project readiness | After install or when diagnosing setup |
 | `changes` | Lists active changes and readiness | Finding work to resume or land |
-| `current` | Prints the one active change with readiness and next command; with none or several it lists candidates and exits non-zero. While exactly one change is active, `advance`, `packet`, `metrics`, `feedback`, `package`, `change audit`, `authority status`, and `handoff status` may omit `<change>`; `advance` with `--through archived`, `--approve-spec`, `--restore-target`, `--recover-apply`, or `--undo-land` always needs the explicit id | Lost the change id |
+| `current` | Prints the one active change with readiness and next command; with none or several it lists candidates and exits non-zero. With exactly one active change most read commands and `advance` may omit `<change>`; Land, approval, and recovery flags need the explicit id | Lost the change id |
 | `packet <change> --phase <phase>` | Prints a compact diagnostic handoff; review packets are ≤20 KiB; `--task` for a completed task prints its read-only packet (`executionAuthority.status: "completed"`) | Operator/debug inspection |
 | `packet <change> --repo <id> [--task <id>] [--pretty]` | Prints a bounded repository or task packet | Starting a native subagent |
 | `metrics <change>` | Reports measured phase/provider cost, emitted context bytes, and blocked operations by code, phase, and operation with the latest local reason | Finding latency, orchestration overhead, or where a change keeps stopping |
 | `feedback <change> [--pretty] [--diagnostics]` | Reports current readiness, source-aware timing, repair intervals, blocker coverage, evidence reuse, and the next action; diagnostics exports allowlisted metadata | Explaining why Prove took time without labeling repair as wait |
-| `outcomes [--pretty]` | Read-only rollup of archived changes: first-proof pass, proof runs, review attempts and repair rounds, amendments, reopened tasks, recorded user decisions, cost, and declared escaped defects (from later changes' `fixes`), grouped by workType × impact × riskSignals; unknown values stay `null` with a denominator and `unknownCount`; unreadable states are listed under `skipped` | Judging whether workflow changes improve accepted outcomes |
-| `lessons [--min-changes <n>] [--pretty]` | Read-only grouping of blocker codes and review finding codes that recur in at least `n` distinct changes (default 3, minimum 2), each with a suggested permanent check and the `/change` route; untyped blockers and uncoded findings are counted separately; never creates checks or exports free-text reasons | Turning recurring problems into checks |
-| `package <change> [--pretty]` | Prints the change's approval data as JSON and writes no file: risk level with reasons, technical domains, artifacts by approver role with proof/preview/none labels, the `scratch` lines with undo and who, scope counts (`null` when unknown), failure cases, required-section status, approval and missing lanes, optional suggested previews, the surfaces the approval page must show (`prototype.checklist`, with which the prototype's `covers` declares), and the page's `drift` and `factsStale` status with the `factsDigest`; never changes lifecycle state. The approval page itself is `.foundation/previews/<change>/prototype.html`, written by hand by the agent or the user (no skill ships for it); `change start`, `revise`, `amend`, and the `advance` approval question only read it and record its digest, and a missing page falls back to the summary as text ([WORKFLOW.md](../../WORKFLOW.md#approval-package-preview-and-role-lanes)) | Giving whoever writes the page the facts and the owed surfaces, and seeing what is still missing |
-| `preview <change> --provider <name> [--decision-ref <ref>] [--pretty]` | Optional, before Build only: runs one declared provider in `.foundation/previews/<change>/workspace` and records a `kind: "preview"` receipt bound to the contract revision. A provider marked `external: true` runs only with the user's `--decision-ref`; preview receipts never satisfy Prove or Land ([WORKFLOW.md](../../WORKFLOW.md#approval-package-preview-and-role-lanes)) | Trying a plan, dry run, mock, or screenshot before approval |
-| `exec <change> [--phase <phase>] [--repo <id>] [--task <id>] -- <command…>` | Derives the phase, runs Build and Prove commands in the change's sandbox under the shared mutation policy, passes the exit code through, and records duration. A multi-repository change picks the sandbox from `--repo`/`--task`, else the caller's directory (a repository sandbox, the shared mirror, or the checkout's copy maps to the same relative path in that repository's sandbox), else the pending tasks when they share one repository, else the shared sandbox; never the main checkout. An unknown repository or task refuses with the known names | Long build-phase commands (container builds, installs, full test runs) and a submodule task's checks |
+| `outcomes [--pretty]` | Read-only rollup of archived changes (first-proof pass, proof runs, review and repair rounds, decisions, cost, declared escaped defects) by workType × impact × riskSignals; unknown values stay `null` | Judging whether workflow changes improve outcomes |
+| `lessons [--min-changes <n>] [--pretty]` | Read-only grouping of blocker and review codes that recur in at least `n` changes (default 3), each with a suggested permanent check | Turning recurring problems into checks |
+| `package <change> [--pretty]` | Prints the change's approval data as JSON (risk, domains, artifacts per role with proof/preview/none labels, scratch lines, failure cases, owed approval-page surfaces, page drift); writes no file. The approval page `.foundation/previews/<change>/prototype.html` is written by the agent or user ([WORKFLOW.md](../../WORKFLOW.md#approval-package-preview-and-role-lanes)) | Giving whoever writes the page its facts |
+| `preview <change> --provider <name> [--decision-ref <ref>] [--pretty]` | Before Build only: runs one declared provider on a throwaway copy and records a `kind: "preview"` receipt that never satisfies Prove or Land; `external: true` needs the user's `--decision-ref` | Trying a plan, dry run, or screenshot before approval |
+| `exec <change> [--phase <phase>] [--repo <id>] [--task <id>] -- <command…>` | Runs and times a command in the change's sandbox under the shared mutation policy (the named repository or task, else the caller's directory, else the pending tasks' repository); never the main checkout | Long builds, installs, full test runs, a submodule task's checks |
 | `telemetry host-import <change> <result.json>` | Imports a validated host execution result without prompt or tool payloads | Recording actual model attempts, fallback, usage, and instruction provenance |
 | `budget continue <change> --reason <reason>` | Opens one policy-gated audited window without deleting usage | Optional explicit widening; exhaustion auto-continues |
 | `change validate <change>` | Validates change artifacts | After creating or revising an agreement |
@@ -444,33 +444,14 @@ project explicitly enables enforcement. The complete installed command,
 protocol, adapter, baseline, exception, CI, and fail-closed reference is
 [`CONSUMER-QUALITY.md`](CONSUMER-QUALITY.md).
 
-If the whole project directory moves, rerunning `sandbox create <change>` can
-rebind a recorded sandbox to the canonical `.foundation/sandboxes/<change>` in
-the new project location. Recovery requires the old path to be absent, the
-change marker and harness layout to match, and any recorded Git metadata to
-remain valid. A moved worktree with a broken Git pointer is refused and must be
-recreated.
-
-`--unattended` is a presence-only security flag. Valued and duplicate forms are
-rejected before telemetry or workspace mutation. The host first calls `sandbox
-challenge`, signs the canonical challenge with an Ed25519 key installed in a
-system-owned trust root, and supplies the envelope with `--attestation`.
-Attestations are short-lived, project/agreement/permission-bound, single-use,
-and still fail when a host-control socket, SSH agent, or mounted cluster
-credential is exposed. Container detection alone is never treated as trust.
-
-Review and acceptance adapters are external-only. Review packets combine
-committed and dirty paths from recorded repository bases with contract
-artifacts. Protocol-v3 receipts store reviewer/subject tuples, actual AI
-sessions, finding closure, and exact scope in a change-level hash-chained
-attempt history. Low gets one full AI review; medium and high get at most one
-full AI review plus one post-correction delta. One infrastructure retry is
-separate from delivered review waves. A final in-contract blocker is closed by
-its named claims and passing critical-case receipts; without that binding, one closure review covers the repaired delta. High-risk decisions are settled
-in the initial Decision Sheet, not a mandatory human-final gate. Deleting a receipt, aborting, or
-renaming a provider cannot reset the circuit. Acceptance is revalidated against explicit claims, human
-identity, criteria, observation, provenance, durable evidence, contract reason,
-and workspace hash.
+If the whole project directory moves, rerunning `sandbox create <change>`
+rebinds a recorded sandbox to the new location when the old path is gone and
+its Git metadata is still valid; a moved worktree with a broken Git pointer must
+be recreated. Unattended sandboxes need a signed host attestation (`sandbox
+challenge`, then `--unattended --attestation <file>`); see the website's
+[Human approval § Host attestation](https://changeloop.ai/docs/approval/#host-attestation).
+Review routing, attempt limits, and acceptance validation are owned by
+[EVIDENCE.md](EVIDENCE.md).
 
 Run `cloop help` for command syntax and installer options.
 Low-level `runtime` commands are reserved for installed slash commands and

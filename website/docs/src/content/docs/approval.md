@@ -72,184 +72,80 @@ full rule lives in `WORKFLOW.md` under "Authority from the user's words".
 ## Approval page, previews, and role lanes
 
 When a change starts, and again when `advance` asks for spec approval, you are
-pointed to the **approval page**: one file, `.foundation/previews/<change>/prototype.html`,
-that the agent writes for this change when you ask, or that you write yourself.
-No skill ships for it. Open it. It leads with a
-clickable prototype in the look of your project, then a short strip of facts, then
-the rest in this order: what the prototype must show and how much of it does; the
-before and after; the path a user takes, including the one that fails; the
-failure cases with how to recover; how to undo the change and who it affects; and a
-closed **Reviewer details** section. Anything the agreement does not say reads
-**unknown**; nothing is guessed. The page has no approve button or form: you decide
-by replying in the chat.
+pointed to the **approval page**, `.foundation/previews/<change>/prototype.html`.
+The agent writes it when you ask (or you write it yourself). It leads with a
+clickable prototype in your project's look, then the facts, the before and
+after, the user path including the failing one, failure cases with recovery,
+how to undo the change, and who it affects. Anything the agreement does not say
+reads **unknown**. There is no approve button: you decide by replying in chat.
 
-The harness does not write that page. It computes the facts and checks the page:
+The harness computes the facts the page copies and checks the page against
+them: the risk level (Low to Critical), the technical domains, and the approval
+artifacts per role, each labeled **proof** only when a passing receipt backs
+it. Each kind of work owes its own surface (what users see, how a bug is shown
+fixed, what must stay the same, who uses a contract, whether data can be
+undone, what happens when it breaks, whose data is used). An answer may be
+`none: <reason>` or `unknown: <reason>`; nothing blocks on it, and a High or
+Critical change must say how to undo it or why it cannot be undone. A stale or
+edited page only adds a warning to the approval question. Full contract:
+[WORKFLOW.md § Approval page](https://github.com/hashtagf/changeloop/blob/main/WORKFLOW.md#approval-package-preview-and-role-lanes).
 
-- **Facts.** The risk level (Low, Medium, High, or Critical, derived from impact and
-  risk signals), the technical domains, and the approval artifacts grouped by
-  approver role (product-owner, tech-lead, qa, devops, security). Each artifact
-  is labeled **proof** only when a valid passing receipt backs it, otherwise
-  **preview** or **none**. The page copies these; it cannot raise a proof count by
-  saying tests passed.
-- **What it must show.** For every kind of work the harness lists what the page
-  owes (the table below), says which items the prototype declares it covers, and
-  which are missing or unknown. The declaration is the agent's claim, not proof.
-  `change start` mentions what is still owed in one advisory line.
-- **Warnings.** If the page was edited after the last revision, or no longer carries
-  the current facts, the approval question warns you. Warnings never block.
+**Previews are optional.** Before Build the agent may run one declared provider
+against a throwaway copy to show early behavior. A preview is never proof and
+never blocks; a provider marked `external: true` runs only after you authorize
+that run.
 
-If there is no page yet, the question gives you the four summary lines as plain text
-and the agent uses the skill; you can still approve from the packet. When you ask
-for a change on the page, the agent updates the agreement in the same turn, so the
-page and the agreement do not drift apart. If your tool has a design canvas, the
-agent builds the page there as numbered frames, one per screen or state, and also
-keeps the exported file. Agents read the same facts with `cloop package
-<change>`, which prints them as JSON and writes nothing.
-
-**What the page must show.** Each kind of work owes its own surface, plus before
-and after and, where it can fail, the failure cases with recovery:
-
-| Group | Kind of work | The question |
-|---|---|---|
-| A | feature, ui, client-release, experiment | What will users see and do? |
-| B | bugfix | What is the problem, and how will we know it is fixed? |
-| C | refactor, dependency, config, docs, test, chore | Is it safe, and what must stay the same? |
-| D | api, library, deprecation | Who uses this contract, and what happens to them? |
-| E | data, migration, data-fix | Can data be damaged, and can it be undone? |
-| F | async, integration, infra, observability, performance, cicd | What happens when it breaks, and what does it cost? |
-| G | privacy, ml, security | Whose data is used, for how long, and what if it goes wrong? |
-
-A change that spans several kinds shows each surface once.
-
-**Three newer kinds of work, and answers that are always possible.** A one-off
-fix to production data (`data-fix`) shows its scope, snapshot, dry run, whether
-it is safe to rerun, and how to roll it back. Security hardening with no single
-bug (`security`) shows the threat model, the weakness, the control, and how it is
-verified. A change to a pipeline or build (`cicd`) shows what changes, the
-permissions and secrets it uses, its blast radius, and its rollback. Machine
-learning work must say how the model is evaluated, an experiment must name
-guardrails and stop rules, and an infrastructure change must say what it costs.
-Nothing here ever blocks you or the agent: any of these answers can be
-**`none: <reason>`** or **`unknown: <reason>`** when the fact does not exist or is
-not yet known, and the page writes that word and the reason on the page for you to weigh. A
-High or Critical change must also say how to undo it, or say plainly that it
-cannot be and why. These rules apply to a draft that is being started or
-revised; a change already underway is never held up by them. If a file the
-change touches points at a risk the draft did not cover, `change start` prints one
-advisory note and carries on.
-
-**Previews are optional.** Before Build, the agent may run one declared
-provider against a throwaway copy of the target to show early behavior. For a High or Critical change the approval data lists suggested previews. A preview result is never
-proof: it cannot satisfy Prove or Land, never blocks approval or Build, and
-shows as stale once the spec changes. A provider marked `external: true`
-(for example a payment sandbox or staging) reaches outside your machine, so it
-runs only after you authorize that specific run; without your decision it is
-refused and nothing runs.
-
-**Role lanes are opt-in.** By default one spec approval covers the change. If
-the project sets `approval.roles` in `foundation.json` (see
+**Role lanes are opt-in.** By default one approval covers the change. If
+`approval.roles` is set in `foundation.json` (see
 [`approval`](/docs/foundation-config/#approval-role-approval-lanes)), each
-selected role approves the current revision separately, and Build does not
-start until every required lane has approved. You decide which role you are
-approving as; an approval given without a role covers every lane. The harness
-records the role as stated and does not verify identity. Adding requirements
-keeps lane approvals; removing a requirement resets every lane.
+selected role approves the current revision and Build waits for every required
+lane. An approval without a role covers every lane; removing a requirement
+resets every lane.
 
 ## Acceptance
 
 Acceptance is a named person saying the outcome is the one they wanted. It is
 the only boundary about the *product* rather than the *work*.
 
-**A standard change starts undecided, and undecided blocks.** `change validate`
-fails until somebody decides, which is deliberate: silence is not consent, and
-a change cannot drift into being accepted because nobody objected.
-
-You decide it explicitly, one way or the other: either nothing subjective
-needs a person and the deterministic checks are the whole story, or somebody
-has to look at it and say yes, with a stated reason. The agent records which
-(commands are under [Recording the acceptance decision](#recording-the-acceptance-decision)).
-
-A rapid change starts at `not-required` instead, because rapid is reserved for
-low-impact isolated work. Declaring a claim with the `acceptance` capability
-also makes acceptance required, and that declaration outranks a
-not-required decision.
-
-A passing acceptance receipt needs a named human, an explicit `accept`
-decision, at least one distinct acceptance criterion, and a recorded
-observation. It is re-validated on every read against the workspace hash, the
-claims currently in scope, and the stated reason — so if any of those move
-afterward, the acceptance goes invalid rather than silently carrying over.
+A standard change starts **undecided, and undecided blocks** (`change validate`
+fails until it is decided): someone decides
+either that the deterministic checks are the whole story, or that a person must
+look and say yes, with a reason. A rapid change starts at `not-required`; a
+claim with the `acceptance` capability makes it required. A passing acceptance
+needs a named human, an explicit `accept`, at least one criterion, and an
+observation, and it goes invalid if the workspace, claims, or reason move
+afterward.
 
 ## Independent review
 
 Review asks whether the implementation is sound. The reviewer may be a human
-**or** a different AI — what matters is independence, not species.
+**or** a different AI; independence matters, not species.
 
-Review always routes by risk tier (`workflow.reviewPolicy: "risk-tiered"`; the
-retired `legacy` value is refused): every change is reviewed and risk controls
-the bounded route. The exception is a low-tier rapid change that no
-security keyword, risk signal, or `--review` flags: the project's own tests
-prove it and no AI review runs.
+Every change is reviewed by risk tier, except a low-tier rapid change with no
+security keyword, risk signal, or `--review`, which its own tests prove:
 
-- **low:** one full AI review; a material correction promotes to medium
-- **medium:** one full AI review, one correction batch, then at most one
-  fresh-session delta that closes the original finding IDs
-- **high:** material risks are decided in the initial Decision Sheet; one full
-  AI review and at most one post-correction delta; no mandatory human final
+- **low:** one full AI review; a material correction promotes it to medium
+- **medium:** one full review, one correction batch, then at most one delta
+  review that closes the original findings
+- **high:** material risks are decided up front; one full review and at most
+  one post-correction delta
 
-Authorization/secrets, public or cross-repository contracts, migrations or
-destructive state, money, concurrency, replay/idempotency, brokers/real wire,
-and activation of legacy behavior are high-risk signals.
-
-:::note[The risk circuit]
-The tier limit is enforced before dispatch: low receives one full review; a
-correction promotes it to the bounded full/delta route used by medium and high.
-Reviewer infrastructure gets one separate full retry. After two delivered AI
-waves, Change Loop refuses another open review. A final in-contract blocker
-closes through the claims and current critical-case receipts named by that
-finding, or else through one closure review of the repaired delta; a real contract contradiction reopens one batched Decision Sheet, and
-missing authority becomes an external handoff. The attempt history is a
-SHA-256 hash chain; a broken chain is quarantined and rebuilt by the harness,
-never lowering the attempt count or reusing a verdict that no longer verifies.
-
-Blocker or major findings from a human reviewer bind the next review the same
-way: that review, human or AI, must verify them closed or fail with what
-remains.
-
-The review-dispatch limit keeps the workflow fast; it does not cap repair
-attempts. The agent may keep fixing grouped findings and rechecking invalidated
-evidence while the work is making progress.
-:::
-
-When the allowed AI rounds are used and a verdict is still open, you choose: a
-human verdict from a named person, exactly one more AI attempt, or pause.
-Exhausted review is never waived. Who may review (independence and model
-diversity) is project policy; see
-[Review independence and diversity](#review-independence-and-diversity).
-
-The AI reviewer also checks scope discipline in the changed lines: unrequested
-abstraction, dead or unused code, speculative options, a guard or retry that
-hides a symptom, and edits that do not trace to the agreement. These findings
-are minor unless they leave a promised behavior false or unproven. A root-cause
-fix wider than the failing line, a behavior-preserving preparatory refactor the
-change uses, and anything the agreement requires are not flagged. Details:
-[scope discipline in the evidence reference](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#review-scope-discipline).
+After two delivered AI waves Change Loop opens no further review on its own.
+When a verdict is still open you choose: a human verdict from a named person,
+exactly one more AI attempt, or pause. Exhausted review is never waived. The
+review cap does not cap repair: the agent keeps fixing while the work makes
+progress. The reviewer also flags scope creep in the changed lines (unrequested
+abstraction, dead code, a guard that hides a symptom) as minor unless it leaves
+a promise false. Details:
+[EVIDENCE.md § Review](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#review-scope-discipline).
 
 ### Project review rules (REVIEW.md)
 
-Write your team's review expectations once in `REVIEW.md` at the project root:
-which passes to run, what each severity means, how many nits to report, and
-what to skip. The AI reviewer reads it on every review as **advisory**
-guidance. It shapes what the reviewer looks at and how it reports; it never
-turns a review into a pass or a fail on its own.
-
-- No `REVIEW.md`, or an empty one: review works exactly as before.
-- Edit, delete, or create `REVIEW.md` after a review: that review expires and
-  runs again on the next Prove. Reviews recorded before your upgrade stay valid.
-- Installing or upgrading adds a starter `REVIEW.md` only when you have none; it
-  never overwrites yours. Edit it like any project file.
-
-Details: [project review rules in the evidence reference](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#project-review-rules).
+Write your team's review expectations once in `REVIEW.md` at the project root.
+The AI reviewer reads it on every review as **advisory** guidance; it never
+turns a review into a pass or a fail by itself. Editing it expires earlier
+reviews; installing or upgrading adds a starter file only when you have none.
+Details: [project review rules](https://github.com/hashtagf/changeloop/blob/main/.claude/harness/EVIDENCE.md#project-review-rules).
 
 ## Where decisions get recorded
 
@@ -261,137 +157,64 @@ a command being available is never approval to run it.**
 
 ## For agents and integrators
 
-Everything from here down is mechanism: commands the agent runs for you,
-project policy keys, and host evidence. Users supply the decisions above;
-nothing here asks you to run a command. Each boundary has a different owner:
+Everything from here down is mechanism the agent runs for you; nothing here
+asks a user to run a command.
 
 | Boundary | Owner | Question it answers |
 |---|---|---|
 | **Acceptance** | User; agent records the decision | Is this the outcome we wanted, and is acceptance required? |
-| **Review** | Configured reviewer; project sets assurance policy | Does implementation meet the review criteria? Independence is separately configured |
+| **Review** | Configured reviewer; project sets assurance policy | Does implementation meet the review criteria? |
 | **Authority bridge** | Agent/harness integration | How does a decision or verdict become a validated receipt? |
-| **Host attestation** | Trusted host operator/integration | Does the execution environment meet the unattended sandbox requirements? |
+| **Host attestation** | Trusted host operator | Is the environment safe for unattended sandboxes? |
 
 ### Recording the acceptance decision
 
 ```bash
-# Nothing subjective to sign off — the deterministic checks are the whole story
 cloop change resolve <change> --acceptance-not-required
-
-# Somebody has to look at it and say yes
 cloop change resolve <change> \
   --acceptance-required --acceptance-reason "<why a person must judge this>"
 ```
 
 ### Review independence and diversity
 
-Two properties govern who may review. Both are waivable, and each waiver is
-declared the same way: a key in the committed `foundation.json`, never a
-command flag — an exemption the reviewed party can write at the moment it is
-caught is not an exemption.
-
-**Independence.** The shipped policy uses
-`"review": { "independence": "self" }`, allowing the reviewer to share an
-implementer's identity and session. It applies at every impact and stamps an
-`independence-waived-self-review` trigger on the policy. The receipt records
-what happened: `review.policy.independent` stays `false`, with
-`independenceWaived: true` beside it explaining why it passed. Projects that
-require separation of duties can strengthen the value to `required`; reviewer
-identity must then differ from every implementation subject and an AI reviewer
-must use a different session.
-
-**Diversity.** The shipped policy uses
-`"review": { "diversity": "single-model" }`, so diversity is preferred and a
-Claude-Code-only installation can review in a fresh Claude session without
-requiring Codex. This stamps a `diversity-waived-single-model` trigger on the
-policy. Teams with both providers can strengthen the value to `required`; the
-AI reviewer must then come from a different provider and model family than the
-implementer.
-
-The shipped default selects `claude-opus`; select `codex-sol` instead for a
-Codex-only team. Configured AI review still runs read-only and ephemeral even
-though the default policy does not require a distinct identity or session.
-
-Each waiver relaxes only its own axis. A same-model self-review of critical work
-needs both declared; declaring one leaves the other enforced. Withdrawing either
-key invalidates the receipts it allowed, because the review policy is part of
-the contract fingerprint.
-
-When review is exhausted, the options map to `authority dispatch
---reviewer-type human` then `authority record` (human verdict),
-`authority extend-review <change> --decision-ref <user-decision>` (exactly one
-more AI wave per decision reference), or pause.
+Both are policy keys in the committed `foundation.json`, never command flags.
+The shipped `"review": { "independence": "self" }` lets the reviewer share the
+implementer's identity and session (receipts record `independenceWaived:
+true`); `required` demands a different identity and session. The shipped
+`"review": { "diversity": "single-model" }` lets a Claude-only install review in
+a fresh Claude session; `required` demands a different provider and model
+family. Each waiver relaxes only its own axis, and withdrawing one invalidates
+the receipts it allowed. Exhausted review maps to `authority dispatch
+--reviewer-type human` then `authority record`, `authority extend-review
+<change> --decision-ref <user-decision>` (one more AI wave), or pause.
 
 ### Gate waivers and advanced continuations
 
-Users never construct the Land grant or a decision-reference command.
-Advanced continuations—`budget continue`, `change abandon`, `change waive`,
-and `agents release --force`—still record the decision that authorized them.
-
-`change waive` is the recorded exit for a gate that ran and failed: it
-withdraws one capability's enforcement on your explicit decision, travels as a
-`user-waived` advisory through proof and into the archive, and `--revoke`
-restores the requirement. It refuses a waiver that would leave no required
-provider. Acceptance is refused there; withdraw that requirement with
-`change resolve --acceptance-not-required` instead. Review may use the same
-waiver route, while independence and diversity are declared in
-`foundation.json` as above.
+`budget continue`, `change abandon`, `change waive`, and `agents release
+--force` record the decision that authorized them. `change waive` withdraws one
+failed capability on an explicit decision (`--revoke` restores it), travels as
+a `user-waived` advisory into the archive, and refuses to leave no required
+provider; acceptance is withdrawn with `change resolve
+--acceptance-not-required` instead.
 
 ## The authority bridge
 
-**For agent and host integrators.** Users supply decisions; the integration
-records and validates them through this mechanism.
-
-The normal entry point is one resumable command:
-
-```bash
-cloop advance <change> --through proven
-```
-
-The coordinator invokes the compatible proof primitive, creates or reuses the
-request, and never polls an unchanged external wait.
-When the packet is actually handed off, configured Codex or Claude Code review
-uses `authority run`. A named-human review must use `authority dispatch` before `authority
-record`. Human acceptance uses request/status/record without a review dispatch.
-
-`authority request` refuses to open unless the implementation tasks are
-complete and that authority is genuinely required. The request is bound to the
-workspace hash, expires after 24 hours, and is single-use. Dispatch records the
-exact full or delta packet and consumes an attempt even if the reviewer crashes;
-only a completed response can unlock the next route.
-
-`authority record` validates the response against the request — version,
-request ID, change ID, type, and workspace hash must all match — and then runs
-the ordinary receipt validator. If the response claims a pass but the resulting
-receipt would not be valid, the previous receipt is restored and the operation
-fails. A completed request cannot be replayed.
-
-:::tip
-`authority status --template` gives the agent or integration operator the
-response shape. Users answer the decision question in ordinary language;
-they do not construct receipt JSON or invent a reviewer verdict.
-:::
-
-If the workspace changes after a request is opened, the request goes stale and
-must be reopened. A verdict is bound to the code it was given, not to the
-change in general.
+`advance --through proven` creates or reuses the authority request and never
+polls an unchanged wait. Configured Codex or Claude Code review uses `authority
+run`; a named human review uses `authority dispatch` then `authority record`;
+human acceptance uses request, status, and record. A request opens only when
+tasks are complete and the authority is required; it binds the workspace hash,
+expires after 24 hours, and is single-use. `authority record` validates the
+response against the request and runs the receipt validator; a pass that would
+not yield a valid receipt restores the previous receipt and fails. A workspace
+change makes the request stale. `authority status --template` shows the
+response shape; users never write receipt JSON.
 
 ## Host attestation
 
-**For trusted host operators.** This is environment evidence from the host,
-not a document the project user signs to approve a feature.
-
-This one is **not** human approval, despite living near it.
-
-`sandbox challenge` plus `doctor --unattended --attestation <file>` is a signed
-statement from a trusted host that the sandbox boundary is safe enough to run
-without a person watching. It is Ed25519-signed, the nonce expires in ten
-minutes, and a consumed nonce is recorded so it cannot be replayed.
-
-Trust roots are root-owned system files only, and Change Loop independently
-refuses unattended execution when it finds a writable container socket, a
-mounted Kubernetes service-account token, or a mounted SSH agent socket — the
-things that would let "sandboxed" work reach outside the sandbox.
-
-Detection is not authorization. Finding that unattended execution is possible
-never implies permission to use it.
+**Not** human approval: a trusted host's Ed25519-signed statement (`sandbox
+challenge` plus `doctor --unattended --attestation <file>`, ten-minute nonce,
+no replay) that the sandbox is safe to run unattended. Trust roots are
+root-owned system files, and Change Loop still refuses unattended execution
+with a writable container socket, a mounted Kubernetes service-account token,
+or a mounted SSH agent socket. Detection is never permission.

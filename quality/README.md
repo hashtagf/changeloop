@@ -5,7 +5,7 @@ automated dashboard mutation gate that `.github/workflows/release.yml` runs
 before publishing. It is separate from Foundation's consumer-facing quality
 feature; for gates installed into consumer projects, use
 `cloop quality …` and see
-[`docs/consumer-quality.md`](../docs/consumer-quality.md).
+[Consumer quality gates](https://changeloop.ai/docs/consumer-quality/).
 
 ## Commands
 

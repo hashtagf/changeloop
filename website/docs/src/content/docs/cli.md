@@ -42,11 +42,11 @@ its own read-only HTML file.
 | Command | Purpose |
 |---|---|
 | `changes` | List active changes, lifecycle status, and each one's next useful action |
-| `current` | Print the single active change with its status and next command; with none or several, list the candidates and exit non-zero. While exactly one change is active, `advance`, `packet`, `metrics`, `feedback`, and `package` may omit `<change>`; Land and approval flags always need the explicit id |
+| `current` | Print the single active change and its next command; with none or several, list candidates and exit non-zero. With one active change, read commands and `advance` may omit `<change>` |
 | `doctor [--stage change\|build\|prove] [--change <id>]` | Diagnose project, provider, and lifecycle readiness |
 | `packet <change> [--phase <phase>] [--repo <id>] [--task <id>]` | Read the bounded machine handoff for the current operation |
 | `metrics <change>` | Inspect measured usage, semantic-intake effectiveness, active budget, cost, and execution timing |
-| `package <change> [--pretty]` | Print the change's approval data as JSON (risk level with reasons, technical domains, artifacts by approver role with proof/preview/none labels, the summary lines, the surfaces the approval page must show and which the prototype covers, whether the page was edited or its facts are stale, suggested previews for High/Critical); writes no file and never changes lifecycle state. The approval page itself is written by hand by the agent or the user; no skill ships for it |
+| `package <change> [--pretty]` | Print the change's approval data as JSON (risk, domains, artifacts with proof/preview/none labels, the surfaces the approval page owes); writes no file. See [Human approval](/docs/approval/) |
 | `feedback <change>` | Explain reviewer, evidenced repair, human-wait, and unattributed timing; show reuse and the next action |
 | `change audit <change>` | Audit scenario, claim, task, and provider traceability |
 | `handoff status <change>` | Inspect permission-bound operations and their Land disposition |

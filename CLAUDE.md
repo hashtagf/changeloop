@@ -99,6 +99,7 @@ the explicit contracts they test, not every claim's truth.
 | `.claude/harness/CONSUMER-QUALITY.md` | Installed consumer quality operation and policy | Quality discovery, enforcement, or reports change | Repository-only performance experiments |
 | `.claude/tests/README.md` | Check selection, suite ownership, fixtures, execution controls | Suite registration, ownership, or runner behavior changes | Another lifecycle specification |
 | `RELEASING.md` | Release preparation, verification, publication and recovery procedure | Release machinery or authority requirements change | A claim that an old candidate proves the current source |
+| `CHANGELOG.md`, `docs/changelog-history.md` | Release notes from 3.6.0 on (`[Unreleased]` is the release workflow's input); notes for 3.5.30 and earlier, unchanged | Every user-visible change adds to `[Unreleased]`; the history file changes only to fix a link | Design rationale and investigation detail |
 | `docs/reports/README.md` | Index of current operating documents and dated evidence | A report is added or a document's current/historical status changes | Full report content or user tutorials |
 | `docs/reports/user-scenario-release-status.md` | Current release assurance and known gaps | New candidate or release evidence is available | Fabricated pass, cost, or completion claims |
 | `docs/reports/user-scenario-test-plan.md` | Scenario portfolio and acceptance requirements | Scenario scope or acceptance contract changes | Results presented as requirements |
