@@ -1,7 +1,7 @@
 {
   "version": 1,
   "execution": {
-    "maxParallelAgents": 3,
+    "maxParallelAgents": 64,
     "maxParallelProviders": 4,
     "maxParallelSetups": 3,
     "packetBytes": {

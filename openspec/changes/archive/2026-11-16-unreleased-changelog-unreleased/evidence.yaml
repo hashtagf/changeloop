@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "changelog-unreleased",
+      "requirementKey": "changelog-unreleased",
+      "scenario": "รายการอยู่ใต้ Unreleased",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    }
+  ],
+  "providers": {
+    "static-analysis": {
+      "adapter": "command",
+      "capability": "static-analysis",
+      "command": [
+        "sh",
+        "-c",
+        "node -e \"const t=require('fs').readFileSync('CHANGELOG.md','utf8');const u=t.indexOf('## [Unreleased]'),a=t.indexOf('maxParallelAgents'),p=t.indexOf('Pi guards'),r=t.indexOf('## [3.7.4]');if(!(u<a&&a<r&&p<r))process.exit(1)\""
+      ],
+      "claims": "declared"
+    }
+  }
+}

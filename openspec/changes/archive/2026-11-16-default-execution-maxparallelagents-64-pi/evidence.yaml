@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "agents-default-64-harness-policy",
+      "requirementKey": "agents-default-64",
+      "scenario": "ไม่กำหนดค่าได้ 64",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "agents-default-64-foundation-json-maxparallelagents-64",
+      "requirementKey": "agents-default-64",
+      "scenario": "ค่า 64 ผ่าน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "agents-default-64-foundation-json-maxparallelagents-65",
+      "requirementKey": "agents-default-64",
+      "scenario": "ค่า 65 ถูกปฏิเสธ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "agents-default-64-foundation-json-maxparallelproviders-17",
+      "requirementKey": "agents-default-64",
+      "scenario": "provider ยังจำกัด 16",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node .claude/tests/harness/run-runtime-environment-policy-tests.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

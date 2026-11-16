@@ -11,6 +11,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- `execution.maxParallelAgents` defaults to 64, matching Pi's
+  `maxActiveWorkers`, and accepts 1 to 64; `maxParallelProviders` and
+  `maxParallelSetups` keep 1 to 16. Existing `foundation.json` values are
+  unchanged.
 - Pi guards `background_bash` like bash (secrets, phase, shell route,
   Land/Deliver, detached authority) and starts it in the Build workspace;
   `authority run` through it is refused. Other custom/MCP tools stay outside

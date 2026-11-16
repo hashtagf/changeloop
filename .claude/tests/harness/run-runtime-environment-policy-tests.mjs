@@ -123,6 +123,8 @@ test("policy defaults and legacy execution values normalize deterministically", 
   assert.equal(policy({ execution: { packetBytes: { task: 8192 } } })
     .execution.packetBytes.task, 8192, "a configured budget overrides the default");
   assert.equal(defaults.execution.maxContinuationWindows, 3);
+  assert.equal(defaults.execution.maxParallelAgents, 64, "agents default matches Pi maxActiveWorkers");
+  assert.equal(policy({ execution: { maxParallelAgents: 64 } }).execution.maxParallelAgents, 64);
   assert.equal(defaults.quality.changeGate, "off");
   assert.equal(defaults.workflow.reviewPolicy, "risk-tiered");
   assert.equal(defaults.workflow.reviewCircuit, "full-delta");
@@ -178,8 +180,9 @@ test("execution validation rejects every bounded numeric class", () => {
     [{ execution: { maxContinuationWindows: 0 } }, /maxContinuationWindows/],
     [{ execution: { maxContinuationWindows: 21 } }, /maxContinuationWindows/],
     [{ execution: { maxParallelAgents: 0 } }, /maxParallelAgents/],
-    [{ execution: { maxParallelAgents: 17 } }, /maxParallelAgents/],
+    [{ execution: { maxParallelAgents: 65 } }, /maxParallelAgents/],
     [{ execution: { maxParallelProviders: 0 } }, /maxParallelProviders/],
+    [{ execution: { maxParallelProviders: 17 } }, /maxParallelProviders/],
     [{ execution: { maxParallelSetups: 17 } }, /maxParallelSetups/],
     [{ execution: { leaseMinutes: 0 } }, /leaseMinutes/],
     [{ execution: { leaseMinutes: 1441 } }, /leaseMinutes/]

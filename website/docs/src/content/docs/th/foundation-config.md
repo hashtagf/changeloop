@@ -20,7 +20,7 @@ Change Loop ว่า agent ทำงานอัตโนมัติได้�
 | ให้ AI คนละ provider มารีวิว | `review.diversity: "required"` และ `review.defaultReviewer: "codex-sol"` (หรือ `claude-opus` ถ้า Codex เป็นผู้ implement) | ถ้า reviewer ตรงกับผู้ implement จะ fail closed ดูหัวข้อ `review` |
 | รันคำสั่ง setup ของโปรเจกต์ในทุก workspace ใหม่ | `sandbox.setupCommand` (และ `sandbox.setupTimeoutMs`) | harness ติดตั้ง dependency จาก lockfile ให้อัตโนมัติ; ตั้ง `sandbox.installDependencies: false` เพื่อปิด |
 | จำกัดค่าใช้จ่ายของหนึ่ง autonomous run | `execution.tokenBudgets.rapid/standard`, `execution.requestBudgets.rapid/standard` | เป็นเพดาน ไม่ใช่เป้าหมาย ตั้ง `execution.budgetWatchdog: true` เพื่อให้ packet มีคำเตือนและขีดจำกัดการใช้จ่าย |
-| ลดจำนวน agent หรือ check ที่รันพร้อมกัน | `execution.maxParallelAgents`, `maxParallelProviders`, `maxParallelSetups` | จำนวนเต็ม 1 ถึง 16 |
+| ลดจำนวน agent หรือ check ที่รันพร้อมกัน | `execution.maxParallelAgents`, `maxParallelProviders`, `maxParallelSetups` | จำนวนเต็ม 1 ถึง 64 สำหรับ agent; 1 ถึง 16 สำหรับ provider และ setup |
 | ให้ build ที่ช้ามีเวลามากขึ้น | `execution.leaseMinutes` | 1 ถึง 1440 นาที |
 | ให้บทบาทที่ระบุต้องอนุมัติ spec | `approval.roles` | เช่น `["tech-lead", "qa"]` ดูหัวข้อ `approval` |
 | บังคับหลักฐาน coverage และ mutation ใน change เสี่ยงสูง | `quality.changeGate: "warn"` หรือ `"enforce-high-risk"` | ต้องมี [quality configuration](/docs/th/consumer-quality/) |
@@ -92,7 +92,7 @@ independent หรือ diverse receipt จะบันทึก `independence-
 ```json
 {
   "execution": {
-    "maxParallelAgents": 3,
+    "maxParallelAgents": 64,
     "maxParallelProviders": 4,
     "maxParallelSetups": 3,
     "packetBytes": {
@@ -112,7 +112,7 @@ independent หรือ diverse receipt จะบันทึก `independence-
 
 | Field | ค่าที่ใช้ได้ | ปรับเมื่อไร |
 |---|---|---|
-| `maxParallelAgents` | จำนวนเต็ม `1..16` | ลดเมื่อเครื่องจำกัดหรืองานผูกกันแน่น เพิ่มเฉพาะเมื่อแยก task ได้ปลอดภัย |
+| `maxParallelAgents` | จำนวนเต็ม `1..64` (default 64) | ลดเมื่อเครื่องจำกัดหรืองานผูกกันแน่น เพิ่มเฉพาะเมื่อแยก task ได้ปลอดภัย |
 | `maxParallelProviders` | จำนวนเต็ม `1..16` | จำกัด provider หลักฐานและ service startup ที่เป็นอิสระต่อกัน |
 | `maxParallelSetups` | จำนวนเต็ม `1..16` | จำกัด setup command ของ repository ที่รันพร้อมกันระหว่างเตรียม Build |
 | `packetBytes.*` | จำนวนเต็ม `2048..65536` byte | เพิ่มเมื่อ task, review, repository description หรือ packet ทั้งก้อนถูกตัดจริง ๆ การอัปเกรดจะแทนค่าเริ่มต้นเดิมแบบตรงตัว (`8192/8192/12288/16384`) ด้วยค่าปัจจุบัน และคงค่าที่ปรับเองไว้ |

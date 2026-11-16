@@ -21,7 +21,7 @@ behavior to be different.
 | Require a different AI provider to review | `review.diversity: "required"` and `review.defaultReviewer: "codex-sol"` (or `claude-opus` if Codex implements) | Fails closed if the reviewer matches the implementer. See [`review`](#review-choose-convenience-or-separation-of-duties) |
 | Run a project setup command in every new workspace | `sandbox.setupCommand` (and `sandbox.setupTimeoutMs`) | Dependencies are installed from the lockfile automatically; set `sandbox.installDependencies: false` to opt out |
 | Cap spend on one autonomous run | `execution.tokenBudgets.rapid/standard`, `execution.requestBudgets.rapid/standard` | Ceilings, not targets. Set `execution.budgetWatchdog: true` for spend warnings and limits in packets |
-| Run fewer agents or checks at once | `execution.maxParallelAgents`, `maxParallelProviders`, `maxParallelSetups` | Integers 1 to 16 |
+| Run fewer agents or checks at once | `execution.maxParallelAgents`, `maxParallelProviders`, `maxParallelSetups` | Integers 1 to 64 for agents; 1 to 16 for providers and setups |
 | Allow slow builds more time | `execution.leaseMinutes` | 1 to 1440 minutes |
 | Require named roles to approve a spec | `approval.roles` | For example `["tech-lead", "qa"]`. See [`approval`](#approval-role-approval-lanes) |
 | Require coverage and mutation evidence on risky changes | `quality.changeGate: "warn"` or `"enforce-high-risk"` | Needs the [quality configuration](/docs/consumer-quality/) |
@@ -96,7 +96,7 @@ Re-run readiness and Prove rather than editing receipts.
 ```json
 {
   "execution": {
-    "maxParallelAgents": 3,
+    "maxParallelAgents": 64,
     "maxParallelProviders": 4,
     "maxParallelSetups": 3,
     "packetBytes": {
@@ -116,7 +116,7 @@ Re-run readiness and Prove rather than editing receipts.
 
 | Field | Valid value | What to change it for |
 |---|---|---|
-| `maxParallelAgents` | Integer `1..16` | Lower it for constrained machines or tightly coupled work; raise it only when tasks can be separated safely |
+| `maxParallelAgents` | Integer `1..64` (default 64) | Lower it for constrained machines or tightly coupled work; raise it only when tasks can be separated safely |
 | `maxParallelProviders` | Integer `1..16` | Bound independent evidence providers and required service startups |
 | `maxParallelSetups` | Integer `1..16` | Bound independent repository setup commands during Build preparation |
 | `packetBytes.*` | Integer `2048..65536` bytes | Increase only when a bounded task, review, repository description, or whole packet is being truncated. Upgrades replace the exact former defaults (`8192/8192/12288/16384`) with the current ones and keep tuned values |

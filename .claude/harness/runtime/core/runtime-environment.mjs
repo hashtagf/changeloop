@@ -5,7 +5,7 @@ import { APPROVAL_ROLES } from "../contracts/scratch-router.mjs";
 const DEFAULT_POLICY = {
   version: 1,
   execution: {
-    maxParallelAgents: 3,
+    maxParallelAgents: 64,
     maxParallelProviders: 4,
     maxParallelSetups: 3,
     packetBytes: { task: 20480, review: 20480, repository: 24576, global: 32768 },
@@ -237,14 +237,15 @@ export function createRuntimeEnvironment({
       fail("foundation.json execution.maxContinuationWindows must be 1..20");
   }
 
-  function validateParallelLimit(policy, field) {
+  function validateParallelLimit(policy, field, max = 16) {
     const parallel = Number(policy.execution[field]);
-    if (!Number.isInteger(parallel) || parallel < 1 || parallel > 16)
-      fail(`foundation.json execution.${field} must be an integer from 1 to 16`);
+    if (!Number.isInteger(parallel) || parallel < 1 || parallel > max)
+      fail(`foundation.json execution.${field} must be an integer from 1 to ${max}`);
   }
 
   function validateExecutionLimits(policy) {
-    for (const field of ["maxParallelAgents", "maxParallelProviders", "maxParallelSetups"])
+    validateParallelLimit(policy, "maxParallelAgents", 64);
+    for (const field of ["maxParallelProviders", "maxParallelSetups"])
       validateParallelLimit(policy, field);
     const leaseMinutes = Number(policy.execution.leaseMinutes);
     if (!Number.isFinite(leaseMinutes) || leaseMinutes < 1 || leaseMinutes > 1440)
