@@ -258,7 +258,7 @@ export function evidenceCandidateRows(
   if (capability === "browser")
     return browserCandidates(tooling, repository, repositoryCount, declaredSurface);
   if (capability === "dependency-supply-chain")
-    return npmLockfileCandidates(tooling, repository, repositoryCount, declaredSurface);
+    return npmLockfileCandidates(tooling, repository, repositoryCount);
   if (capability === "discovery") return [];
   return scriptCandidates(capability, tooling, repository, repositoryCount, declaredSurface);
 }

@@ -255,7 +255,7 @@ installed runtime.
 5. When an agent repeats a mistake, encode the fix as a lint rule in
    `scripts/lint/plugin.mjs` (message names the root-cause fix), a test, or an
    API change, not another line of prose. `scripts/lint/ratchet.mjs` keeps
-   harness findings and large-file sizes, including `foundation.mjs`, from
+   harness lint and `tsc --checkJs` type findings (`types/TS<code>`) and large-file sizes, including `foundation.mjs`, from
    growing; run `--tighten` after cleanup and commit the lowered baseline.
    Timers go through `runtime/core/timing.mjs` and deliberately ignored
    failures through `runtime/core/best-effort.mjs`; lint allows neither

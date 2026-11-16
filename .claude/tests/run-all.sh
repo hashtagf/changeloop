@@ -523,8 +523,10 @@ suite_timeout_seconds() {
       echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-1200}" ;;
     # The sibling topology fixture walks a real change to archived on its own.
     # Each upgrade-from-3.7.0 row drives a published release and the current
-    # one through every lifecycle stage on real Git.
-    'pull request delivery'|'proof loop end to end'|'apply conflict'|'concurrent repositories seam'|'installer smoke'|'harness contracts (topology siblings)'|'upgrade from 3.7.0'|'upgrade from 3.7.0 (legacy review)')
+    # one through every lifecycle stage on real Git. Evidence binding mutation
+    # reruns the evidence suites per fault: about 115s alone, over 300s when
+    # it shares the pool with the rest of the full tier.
+    'evidence binding mutation'|'pull request delivery'|'proof loop end to end'|'apply conflict'|'concurrent repositories seam'|'installer smoke'|'harness contracts (topology siblings)'|'upgrade from 3.7.0'|'upgrade from 3.7.0 (legacy review)')
       echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-600}" ;;
     *) echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-300}" ;;
   esac

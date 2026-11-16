@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import {
-  COMPOSITION_ROOT, DEFAULT_BASELINE, collect, compare, initialBaseline, main, tighten
+  COMPOSITION_ROOT, DEFAULT_BASELINE, TYPE_CONFIG, collect, compare, initialBaseline, main, tighten
 } from "../ratchet.mjs";
 
 const RUNTIME = ".claude/harness/runtime/core/sample.mjs";
@@ -35,6 +35,23 @@ async function initialize(root) {
 function lines(count) {
   return Array.from({ length: count }, (_, index) => `export const v${index} = ${index};`).join("\n") + "\n";
 }
+
+test("type errors ratchet per file under types/TS<code> rules", async (t) => {
+  const { root, write } = fixture(t);
+  write(TYPE_CONFIG, JSON.stringify({
+    compilerOptions: { allowJs: true, checkJs: true, noEmit: true, module: "nodenext",
+      moduleResolution: "nodenext", target: "esnext", types: [], pretty: false },
+    include: ["../../.claude/harness/runtime/**/*.mjs"]
+  }));
+  write(RUNTIME, "export function run() {\n  const count = 1;\n  return count.length;\n}\n");
+  await initialize(root);
+  assert.equal(await main(["--root", root], capture().out), 0);
+  write(RUNTIME, "export function run() {\n  const count = 1;\n  const name = \"x\";\n  return count.length + name.size;\n}\n");
+  const log = capture();
+  assert.equal(await main(["--root", root], log.out), 1);
+  assert.match(log.text(), /core\/sample\.mjs: types\/TS2339 2 \(baseline 1\)/);
+  assert.match(log.text(), /line 4: Property 'size' does not exist/);
+});
 
 test("unchanged code exits 0 against its own baseline", async (t) => {
   const { root } = fixture(t);
