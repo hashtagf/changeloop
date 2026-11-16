@@ -1,6 +1,6 @@
 # Change Loop agent contract
 
-Harness checks Change Loop 3.7.2/runtime API `42`, repairs setup.
+Harness checks Change Loop 3.7.3/runtime API `42`, repairs setup.
 `single-model` retains identity.
 
 ## Every phase
