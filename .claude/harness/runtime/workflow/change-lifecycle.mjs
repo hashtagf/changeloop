@@ -75,6 +75,11 @@ import {
   renderDraftDesign, renderDraftProposal, renderDraftTask, renderDraftTasks, repositoryDraftGuidance,
   reviewRouteLabel, semanticDraftKeepsDesign, synchronizeProposalClassification
 } from "./draft-packet-render.mjs";
+import {
+  amendedReport, amendmentCoverageChanges, amendmentHistoryRow, formatApprovalDelta
+} from "./amendment-record.mjs";
+// Moved to amendment-record.mjs; re-exported so importers are unchanged.
+export { formatApprovalDelta, formatInvalidatedWaivers, invalidatedWaivers } from "./amendment-record.mjs";
 // Packet rendering moved to draft-packet-render.mjs; re-exported so importers are unchanged.
 export {
   approvalPackageLine, draftBullets, draftChangeId, draftDomainRows, draftNeedsDesign, groupDraftSpecs,
@@ -343,29 +348,6 @@ export function mergeApprovalDelta(prior, next) {
 // A waiver bound to an earlier contract revision stops applying when an
 // amendment moves the revision; the amendment says which ones, so the gate
 // does not silently reappear.
-export function invalidatedWaivers(waivers, contractRevision) {
-  return (Array.isArray(waivers) ? waivers : [])
-    .filter((row) => row?.binding &&
-      Number(row.binding.contractRevision) !== Number(contractRevision || 0))
-    .map((row) => row.capability).filter(Boolean).sort();
-}
-
-export function formatInvalidatedWaivers(id, waivers, contractRevision) {
-  const capabilities = invalidatedWaivers(waivers, contractRevision);
-  return capabilities.length
-    ? `  waivers no longer apply: ${capabilities.join(", ")} (bound to an earlier contract ` +
-      `revision; now ${Number(contractRevision || 0)}); if still intended, ask the user and ` +
-      `record each again: claude-foundation change waive ${id} --capability <capability> ` +
-      "--reason <why> --decision-ref <user-decision>\n"
-    : "";
-}
-
-export function formatApprovalDelta(delta) {
-  const list = (values) => values?.length ? values.join(", ") : "none";
-  return `  added: ${list(delta.added)}\n  revised: ${list(delta.revised)}\n` +
-    `  removed: ${list(delta.removed)}`;
-}
-
 export function priorChangeResidue(root, id) {
   return [
     join(root, ".foundation", "runtime", `${id}.json`),
@@ -2609,22 +2591,7 @@ export function createChangeLifecycle({
     });
     if (compiled.issues.length)
       fail(`semantic amendment validation failed:\n  - ${compiled.issues.join("\n  - ")}`);
-    const coverageChanges = [...(compiled.discovery?.coverage || []).map((row) => ({
-      dimension: row.dimension,
-      claimIds: compiled.claims.filter((claim) =>
-        (row.covers || []).includes(claim.requirementKey)).map((claim) => claim.id)
-    })),
-    // A changed task verify command invalidates the evidence for that task's
-    // claims (every claim when the task binds none), so Prove reruns it.
-    ...(compiled.taskContractChanges.length
-      ? [{ dimension: "task-verify", claimIds: compiled.taskContractClaimIds }] : []),
-    // A withdrawn task's claims are now proven by the tasks that keep them.
-    ...(compiled.removedTasks?.length
-      ? [{ dimension: "task-removal", claimIds: compiled.removedTaskClaimIds }] : []),
-    // An added task's claims are proven again with it, even for a requirement
-    // the agreement already had.
-    ...(compiled.addedTaskClaimIds?.length
-      ? [{ dimension: "task-addition", claimIds: compiled.addedTaskClaimIds }] : [])];
+    const coverageChanges = amendmentCoverageChanges(compiled);
     const configuredProviderNames = requiredProviders(id);
     const providerEntries = new Map(Object.entries(compiled.providers || {}));
     for (const name of configuredProviderNames) {
@@ -2777,32 +2744,11 @@ export function createChangeLifecycle({
       const amendedPacket = amendedWorkspace
         ? snapshotAmendedPacket(root, amendedWorkspace, id, nextState.contractRevision)
         : { identity: packetIdentity(basePath) };
-      nextState.amendments = [...(nextState.amendments || []), {
-        version: 1,
-        revision: nextState.contractRevision,
-        ...amendedPacket,
-        reason: String(amendment.reason || "Agreement expanded during Build"),
-        requirementKeys: compiled.addedRequirementKeys,
-        revisedRequirementKeys: compiled.revisedRequirementKeys,
-        removedRequirementKeys: compiled.removedRequirementKeys,
-        removedClaims: compiled.removedClaimIds,
-        invalidatedClaims: compiled.invalidatedClaims,
-        ...(compiled.taskContractChanges.length
-          ? { taskContractChanges: compiled.taskContractChanges } : {}),
-        ...(compiled.removedTasks?.length ? { removedTasks: compiled.removedTasks } : {}),
-        invalidation: {
-          affectedTasks: invalidation.affectedTasks,
-          affectedProviders: invalidation.affectedProviders,
-          preservedProviders: invalidation.preservedProviders,
-          approval: invalidation.approval,
-          proof: invalidation.proof,
-          proofRecovery,
-          rebindAudits
-        },
-        ...(completedAmendmentIntakeEffectiveness
-          ? { semanticIntakeEffectiveness: completedAmendmentIntakeEffectiveness } : {}),
+      nextState.amendments = [...(nextState.amendments || []), amendmentHistoryRow({
+        revision: nextState.contractRevision, amendedPacket, amendment, compiled, invalidation,
+        proofRecovery, rebindAudits, intakeEffectiveness: completedAmendmentIntakeEffectiveness,
         appliedAt: now()
-      }];
+      })];
       const amendmentDelta = {
         added: compiled.addedRequirementKeys,
         revised: compiled.revisedRequirementKeys,
@@ -2871,26 +2817,7 @@ export function createChangeLifecycle({
     const amended = loadRuntime(id);
     const gate = decisionGateNotice(id);
     try { recordPrototypeSync(id); } catch { /* advisory */ }
-    console.log(`AMENDED ${id}\n  revision: ${amended.contractRevision}\n` +
-      `  invalidated claims: ${[...compiled.invalidatedClaims, ...compiled.removedClaimIds.map((claim) =>
-        `${claim} (removed)`)].join(", ") || "none"}\n` +
-      (compiled.removedTasks?.length ? `  removed tasks: ${compiled.removedTasks.map((task) =>
-        task.key ? `${task.id} (${task.key})` : task.id).join(", ")}\n` : "") +
-      (compiled.taskContractChanges.some((task) => task.reopened)
-        ? `  reopened tasks: ${compiled.taskContractChanges.filter((task) => task.reopened)
-          .map((task) => task.id).join(", ")} (verified again before they count as done)\n` : "") +
-      `  proof: ${compiled.invalidation.proofRecovery?.recovery?.instruction ||
-        "re-enter Prove so receipt bindings are recomputed"}\n` +
-      formatInvalidatedWaivers(id, amended.waivers, amended.contractRevision) +
-      (amended.pendingApprovalDelta
-        ? `  requirement delta awaiting approval:\n${formatApprovalDelta(amended.pendingApprovalDelta)}\n`
-        : `  requirement delta (covered by the current approval):\n${formatApprovalDelta({
-          added: compiled.addedRequirementKeys, revised: compiled.revisedRequirementKeys,
-          removed: compiled.removedRequirementKeys })}\n`) +
-      (gate ? `  decision required: the final AI review failed before this amendment, so Land needs a locked Decision Sheet revision first: ${gate.command}\n` : "") +
-      `  proof command: ${compiled.invalidation.proofRecovery?.recovery?.command ||
-        `claude-foundation advance ${id} --through proven`}\n` +
-      `  next: claude-foundation advance ${id}`);
+    console.log(amendedReport(id, amended, compiled, gate));
     return compiled;
   }
 

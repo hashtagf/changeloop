@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "amendment-record-module",
+      "requirementKey": "amendment-record-module",
+      "scenario": "Report text unchanged",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/amendment-record.test.mjs .claude/harness/tests/amendment-invalidation.test.mjs .claude/harness/tests/amendment-approval-survival.test.mjs) && (env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/amendment-record.test.mjs .claude/harness/tests/amendment-invalidation.test.mjs .claude/harness/tests/amendment-approval-survival.test.mjs",
+        "env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}
