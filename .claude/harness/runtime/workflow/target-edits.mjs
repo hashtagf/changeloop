@@ -71,7 +71,14 @@ export function targetEditIssues({ root, state, dirtyNow, landOutput = {}, proje
   const paths = targetEditPaths(snapshot, dirtyNow, landOutput);
   if (!paths.length) return { issues: [], notices: [] };
   const list = (values) => values.slice(0, 10).join(", ") + (values.length > 10 ? ", ..." : "");
-  const accepted = state.targetEditsAccepted?.digest === targetEditDigest(paths, dirtyNow);
+  // Acceptance is per path and bytes: the decision may cover more dirty paths
+  // than the gate now counts, and other sessions' files come and go. A later
+  // edit to an accepted path is a new question.
+  const acceptedRows = new Set(String(state.targetEditsAccepted?.digest || "")
+    .split("\n").filter(Boolean));
+  const covers = (values) => values.length > 0 &&
+    values.every((path) => acceptedRows.has(targetEditDigest([path], dirtyNow)));
+  const accepted = covers(paths);
   const audited = shellAuditCount(root, state.id);
   if (accepted || !audited) return {
     issues: [],
@@ -86,6 +93,8 @@ export function targetEditIssues({ root, state, dirtyNow, landOutput = {}, proje
   const notices = outside.length ? [`target checkout changed outside the sandbox and outside ` +
     `this change's Land projection (reported only): ${list(outside)}`] : [];
   if (!inside.length) return { issues: [], notices };
+  if (covers(inside)) return { issues: [], notices: [...notices,
+    `target checkout changed outside the sandbox since isolation (accepted by user decision): ${list(inside)}`] };
   return {
     issues: [`TARGET_EDITED_OUTSIDE_SANDBOX: ${audited} unverified shell mutation(s) ran during ` +
       `this change and the target checkout changed outside the sandbox at: ${list(inside)}. Move ` +

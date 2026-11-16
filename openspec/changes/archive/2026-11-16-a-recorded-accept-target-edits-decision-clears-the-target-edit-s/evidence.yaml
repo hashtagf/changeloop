@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "acceptance-per-path-the-gate-re-checks-with-only-the-blocking-pa",
+      "requirementKey": "acceptance-per-path",
+      "scenario": "Wider acceptance clears the stop",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "acceptance-per-path-that-path-s-bytes-change-afterwards",
+      "requirementKey": "acceptance-per-path",
+      "scenario": "Changed bytes need a new decision",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/target-edits.test.mjs) && (env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/target-edits.test.mjs",
+        "env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

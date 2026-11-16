@@ -69,6 +69,23 @@ test("target edits block only after unverified shell mutations", (t) => {
     state: { id: "demo", workspace: { mode: "current" } } }), { issues: [], notices: [] });
 });
 
+// 2026-11-16: an acceptance recorded over every dirty path never matched the
+// gate's narrower, landed-output-filtered set, so the same stop repeated.
+test("an acceptance covers each blocking path by its bytes, not the whole dirty set", (t) => {
+  const root = project(t, [{ outcome: "shell-audit", changeId: "demo" }]);
+  const recorded = { "keep.md": "a", "src/leak.js": "x", "other/session.js": "o" };
+  const accepted = targetEditDigest(["other/session.js", "src/leak.js"], recorded);
+  const projectionPaths = () => new Set(["src/leak.js"]);
+  const now = { ...recorded, "other/session.js": "o2", "another/new.js": "n" };
+  const cleared = targetEditIssues({ root, dirtyNow: now, projectionPaths,
+    state: isolated({ targetEditsAccepted: { digest: accepted } }) });
+  assert.deepEqual(cleared.issues, []);
+  assert.match(cleared.notices.join("\n"), /accepted by user decision/);
+  const changed = targetEditIssues({ root, dirtyNow: { ...now, "src/leak.js": "y" }, projectionPaths,
+    state: isolated({ targetEditsAccepted: { digest: accepted } }) });
+  assert.match(changed.issues[0], /^TARGET_EDITED_OUTSIDE_SANDBOX/);
+});
+
 // Land's own Apply writes the proven files into the target. Re-checking
 // readiness after that Apply must see them as Land output, not as edits made
 // outside the sandbox, while any other content still blocks.
