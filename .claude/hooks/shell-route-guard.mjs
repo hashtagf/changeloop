@@ -189,9 +189,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
     const projectRoot = resolve(process.env.CLAUDE_PROJECT_DIR || process.cwd());
     const route = shellRoute(String(event.tool_input?.command || ""), projectContext(event, projectRoot));
     if (!route) process.exit(0);
-    // Audit mode records instead of refusing; here that means advice only.
-    process.stdout.write(JSON.stringify(mode === "audit"
-      ? { hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: route.reason } }
-      : { decision: "block", reason: route.reason }));
+    // The route is advice; only a strict mode refuses the call. An unknown
+    // mode fails closed, like the phase guard.
+    const strict = !["auto", "audit"].includes(mode) ||
+      (process.env.FOUNDATION_SHELL_GUARD || "").toLowerCase() === "block";
+    process.stdout.write(JSON.stringify(strict
+      ? { decision: "block", reason: route.reason }
+      : { hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: route.reason } }));
   } catch { /* a broken guide never stops the agent */ }
 }

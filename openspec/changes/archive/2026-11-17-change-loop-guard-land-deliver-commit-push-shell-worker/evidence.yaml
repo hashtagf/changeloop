@@ -1,0 +1,312 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "worker-no-land",
+      "requirementKey": "worker-no-land",
+      "scenario": "Worker cannot land",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "archive-word-not-land-the-agent-runs-git-add-openspec-changes-ar",
+      "requirementKey": "archive-word-not-land",
+      "scenario": "Git on an archived change path runs",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "archive-word-not-land-the-agent-runs-node-claude-harness-foundat",
+      "requirementKey": "archive-word-not-land",
+      "scenario": "CLI archive still needs Land",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-background-bash-cat-env",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "อ่านไฟล์ลับถูกกัน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-land",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "Land โดยไม่ได้รับสิทธิ์ถูกปฏิเสธ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-authority-run-background",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "authority run แบบ background ถูกปฏิเสธ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-workspace-build",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "เขียนนอก workspace ตอน Build ถูกกัน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-background-bash",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "Build เริ่มใน workspace",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-background-bash-2",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "guard ใช้ไม่ได้ปิดตาย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-background-bash-cloop-advance-id-through",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "Land โดยไม่ได้รับสิทธิ์ได้คำเตือน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-background-bash-cloop-authority-run-id",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "authority run แบบ background ได้คำเตือน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-background-bash-main-checkout-path",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "เขียนนอก workspace ตอน Build ได้คำเตือน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "detached-authority-bash-authority-run-detach",
+      "requirementKey": "detached-authority-bash",
+      "scenario": "authority run แบบ detach ถูกปฏิเสธ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "detached-authority-bash-bash-cloop-authority-run-demo-help-detac",
+      "requirementKey": "detached-authority-bash",
+      "scenario": "authority run ปกติผ่าน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "detached-authority-bash-bash-cloop-authority-run-demo",
+      "requirementKey": "detached-authority-bash",
+      "scenario": "authority run แบบ detach ถูกรันแบบ foreground",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "team-limits",
+      "requirementKey": "team-limits",
+      "scenario": "Project cap",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "guide-mode-runs-bash-git-commit-m-x-main-checkout",
+      "requirementKey": "guide-mode-runs",
+      "scenario": "commit ระหว่าง Build รันได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "guide-mode-runs-bash-cloop-deliver-advance-demo",
+      "requirementKey": "guide-mode-runs",
+      "scenario": "Deliver ไม่มี /deliver รันได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "shell-route-advice-hook-bash-cd-repo-git-status-env-block",
+      "requirementKey": "shell-route-advice",
+      "scenario": "cd ต่อด้วย git ได้คำแนะนำ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "shell-route-advice-hook-bash-cd-repo-git-status",
+      "requirementKey": "shell-route-advice",
+      "scenario": "โหมด block ยังปฏิเสธ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "detached-authority-advice-hook-authority-run-detach",
+      "requirementKey": "detached-authority-advice",
+      "scenario": "เขียนใหม่ไม่ได้ได้แค่คำเตือน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "detached-authority-advice-hook-cloop-authority-run-demo",
+      "requirementKey": "detached-authority-advice",
+      "scenario": "โหมด block ยังปฏิเสธ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "secrets-still-redacted",
+      "requirementKey": "secrets-still-redacted",
+      "scenario": "อ่าน .env บน Pi ยังได้สำเนาที่ปิดค่า",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "advisory-docs",
+      "requirementKey": "advisory-docs",
+      "scenario": "เอกสารสอดคล้อง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pi-advisory-mode-bash-cloop-advance-pi-case-through-archived",
+      "requirementKey": "pi-advisory-mode",
+      "scenario": "Land โดยไม่มีคำอนุมัติรันต่อ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pi-advisory-mode-bash-cloop-deliver-advance-pi-case-deliver",
+      "requirementKey": "pi-advisory-mode",
+      "scenario": "Deliver โดยไม่มี /deliver รันต่อ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pi-advisory-mode-write-src-main-js",
+      "requirementKey": "pi-advisory-mode",
+      "scenario": "แก้ไฟล์นอกงานรันต่อ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pi-advisory-mode-background-bash-cloop-authority-run-demo",
+      "requirementKey": "pi-advisory-mode",
+      "scenario": "authority run ใน background รันต่อ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pi-advisory-mode-write-src-main-js-2",
+      "requirementKey": "pi-advisory-mode",
+      "scenario": "ผู้ใช้เลือกโหมด block เอง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "worker-phase-inheritance-the-parent-session-is-in-build-and-a-wo",
+      "requirementKey": "worker-phase-inheritance",
+      "scenario": "Worker writes in the parent's workspace",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "worker-phase-inheritance-the-same-worker-writes-a-file-in-the-ma",
+      "requirementKey": "worker-phase-inheritance",
+      "scenario": "Worker stays out of the main checkout",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "worker-phase-inheritance-a-session-without-foundation-parent-ses",
+      "requirementKey": "worker-phase-inheritance",
+      "scenario": "Unrelated session gains nothing",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(bash .claude/tests/hooks/run-phase-mutation-guard-tests.sh && node --test .claude/tests/hooks/shell-route-guard.test.mjs .claude/tests/hooks/no-detached-authority.test.mjs && bash .claude/tests/hooks/run-hook-tests.sh) && (FOUNDATION_UPDATE_CHECK=0 node --test .claude/harness/tests/pi-extension.test.mjs) && (node --test pi-extensions/agent-team/roles.test.cjs) && (bash .claude/tests/docs/run-doc-consistency.sh && node --test .claude/tests/docs/advisory-guards-docs.test.mjs)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "bash .claude/tests/hooks/run-phase-mutation-guard-tests.sh && node --test .claude/tests/hooks/shell-route-guard.test.mjs .claude/tests/hooks/no-detached-authority.test.mjs && bash .claude/tests/hooks/run-hook-tests.sh",
+        "FOUNDATION_UPDATE_CHECK=0 node --test .claude/harness/tests/pi-extension.test.mjs",
+        "node --test pi-extensions/agent-team/roles.test.cjs",
+        "bash .claude/tests/docs/run-doc-consistency.sh && node --test .claude/tests/docs/advisory-guards-docs.test.mjs"
+      ]
+    }
+  }
+}

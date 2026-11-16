@@ -434,9 +434,9 @@ for cli in "npx claude-foundation" "npx --no-install claude-foundation" \
     "$out" '"command":"cloop advance delivery-change --through archived"'
   out="$(printf '%s' "$(bash_event "$cli deliver advance delivery-change")" |
     CLAUDE_PROJECT_DIR="$TMP/project" node "$HOOK")"
-  assert_contains "'$cli deliver advance' becomes the question for the user" \
-    "$out" 'ASK_USER: delivering delivery-change'
-  assert_not_contains "'$cli deliver advance' never runs delivery without /deliver" \
+  assert_contains "'$cli deliver advance' runs with a warning" \
+    "$out" 'It ran without /deliver'
+  assert_not_contains "'$cli deliver advance' is not rewritten without /deliver" \
     "$out" '"command":"'"$cli"' deliver advance'
 done
 
@@ -568,9 +568,9 @@ assert_eq "event transcript remains authoritative for /deliver" "" "$out"
 forged_deliver_event="{\"transcript_path\":\"$TMP/dev-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"cloop deliver advance delivery-change\"}}"
 out="$(printf '%s' "$forged_deliver_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   FOUNDATION_GUARDRAIL_MODE=auto node "$HOOK")"
-assert_contains "/dev Deliver becomes the question for the user" "$out" \
-  'ASK_USER: delivering delivery-change'
-assert_not_contains "/dev never runs delivery through the trusted wrapper" "$out" \
+assert_contains "/dev Deliver runs with a warning" "$out" \
+  'It ran without /deliver'
+assert_not_contains "/dev delivery is not rewritten" "$out" \
   '"command":"cloop deliver advance'
 
 chained_deliver_event="{\"transcript_path\":\"$TMP/deliver-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"cloop deliver advance delivery-change && git push --force\"}}"
@@ -580,7 +580,7 @@ assert_contains "Deliver wrapper authority cannot cover a chained force push" "$
   'decision":"block'
 
 # A natural request to open a PR is the user's /deliver for the one composite
-# command; a negated request, or none, stays the question.
+# command; a negated request, or none, runs with a warning.
 prompt_transcript() {
   printf '{"type":"last-prompt","lastPrompt":"%s"}\n' "$2" > "$TMP/$1.jsonl"
 }
@@ -593,11 +593,11 @@ assert_eq "'เปิด PR ให้เลย' counts as /deliver" "" "$(delive
 prompt_transcript english-deliver "looks good, open a PR for it"
 assert_eq "'open a PR' counts as /deliver" "" "$(deliver_with english-deliver)"
 prompt_transcript negated-deliver "don't open a PR yet"
-assert_contains "a negated PR request stays the question" "$(deliver_with negated-deliver)" \
-  'ASK_USER: delivering delivery-change'
+assert_contains "a negated PR request runs with a warning" "$(deliver_with negated-deliver)" \
+  'It ran without /deliver'
 prompt_transcript urgent-deliver "ด่วน รีบ demo"
 assert_contains "urgency alone is not delivery authority" "$(deliver_with urgent-deliver)" \
-  'ASK_USER: delivering delivery-change'
+  'It ran without /deliver'
 {
   printf '%s\n' '{"type":"user","message":{"role":"user","content":"finish the change"}}'
   printf '%s\n' '{"type":"user","message":{"role":"user","content":[{"type":"tool_result","content":"ASK_USER: delivering delivery-change commits, pushes, and opens a pull request."}]}}'
@@ -616,10 +616,10 @@ assert_eq "/dev --through delivered counts as /deliver after an approval reply" 
   "$(deliver_with dev-through-delivered)"
 prompt_transcript dev-through-archived "/dev --through archived add search"
 assert_contains "/dev --through archived is not delivery authority" \
-  "$(deliver_with dev-through-archived)" 'ASK_USER: delivering delivery-change'
+  "$(deliver_with dev-through-archived)" 'It ran without /deliver'
 prompt_transcript dev-resume-other "/dev --resume other-change --through delivered"
 assert_contains "/dev --through delivered never covers another change" \
-  "$(deliver_with dev-resume-other)" 'ASK_USER: delivering delivery-change'
+  "$(deliver_with dev-resume-other)" 'It ran without /deliver'
 prompt_transcript dev-resume-same "/dev --resume delivery-change --through delivered"
 assert_eq "/dev --resume <id> --through delivered covers that change" "" \
   "$(deliver_with dev-resume-same)"
@@ -628,7 +628,7 @@ assert_eq "/dev --resume <id> --through delivered covers that change" "" \
   printf '%s\n' '{"type":"last-prompt","lastPrompt":"/change another thing"}'
 } > "$TMP/dev-superseded.jsonl"
 assert_contains "a later slash command ends /dev delivery authority" \
-  "$(deliver_with dev-superseded)" 'ASK_USER: delivering delivery-change'
+  "$(deliver_with dev-superseded)" 'It ran without /deliver'
 pi_deliver_with() {
   printf '{"tool_name":"Bash","tool_input":{"command":"cloop deliver advance delivery-change"}}' |
     CLAUDE_PROJECT_DIR="$TMP/pre" FOUNDATION_GUARDRAIL_MODE=auto FOUNDATION_HOST=pi \
@@ -636,12 +636,12 @@ pi_deliver_with() {
 }
 assert_eq "Pi /dev --through delivered counts as /deliver" "" \
   "$(pi_deliver_with dev '--through delivered add search')"
-assert_contains "Pi /dev without a delivered target stays the question" \
-  "$(pi_deliver_with dev 'add search')" 'ASK_USER: delivering delivery-change'
+assert_contains "Pi /dev without a delivered target runs with a warning" \
+  "$(pi_deliver_with dev 'add search')" 'It ran without /deliver'
 
-# git commit/push from the main checkout during Build or Prove does not run
-# unless the user's latest prompt asked for it; otherwise it becomes the
-# question. Inside the isolated workspace it is ordinary Build work.
+# git commit/push from the main checkout during Build or Prove runs silently
+# when the user's latest prompt asked for it; otherwise it runs with a warning
+# (block mode refuses it). Inside the isolated workspace it is ordinary Build work.
 git_with() {
   printf '{"transcript_path":"%s","cwd":"%s","tool_name":"Bash","tool_input":{"command":"%s"}}' \
     "$TMP/$1.jsonl" "$2" "$3" | CLAUDE_PROJECT_DIR="$TMP/project" FOUNDATION_ACTIVE_PHASE="$4" \
@@ -649,12 +649,12 @@ git_with() {
 }
 prompt_transcript no-git-request "fix the booking bug"
 out="$(git_with no-git-request "$TMP/project" "git commit -am wip" build)"
-assert_contains "Build main-checkout commit becomes the question" "$out" \
-  'ASK_USER: git commit from the main checkout during build was not run'
-assert_not_contains "Build main-checkout commit does not run" "$out" '"command":"git commit'
+assert_contains "Build main-checkout commit runs with a warning" "$out" \
+  'git commit from the main checkout during build ran'
+assert_not_contains "Build main-checkout commit is not rewritten" "$out" '"command":"git commit'
 out="$(git_with no-git-request "$TMP/project" "git push origin feature" prove)"
-assert_contains "Prove main-checkout push becomes the question" "$out" \
-  'ASK_USER: git push from the main checkout during prove was not run'
+assert_contains "Prove main-checkout push runs with a warning" "$out" \
+  'git push from the main checkout during prove ran'
 out="$(printf '%s' "$(bash_event 'git commit -am wip')" | CLAUDE_PROJECT_DIR="$TMP/project" \
   FOUNDATION_ACTIVE_PHASE=build FOUNDATION_WORKSPACE_ROOT="$TMP/workspace" \
   FOUNDATION_GUARDRAIL_MODE=block node "$HOOK")"
@@ -667,10 +667,10 @@ assert_eq "a direct push instruction covers commit and push" "" \
   "$(git_with thai-push-request "$TMP/project" "git commit -am wip && git push" build)"
 assert_contains "a commit instruction never covers a push" \
   "$(git_with commit-request "$TMP/project" "git commit -am wip && git push" build)" \
-  'ASK_USER: git commit and git push from the main checkout'
+  'git commit and git push from the main checkout during build ran'
 prompt_transcript negated-push "commit locally but don't push"
-assert_contains "a negated push instruction stays the question" \
-  "$(git_with negated-push "$TMP/project" "git push" build)" 'ASK_USER: git push'
+assert_contains "a negated push instruction runs with a warning" \
+  "$(git_with negated-push "$TMP/project" "git push" build)" 'git push from the main checkout during build ran'
 {
   printf '%s\n' '{"type":"user","message":{"role":"user","content":"fix the booking bug"}}'
   printf '%s\n' '{"type":"user","message":{"role":"user","content":[{"type":"tool_result","content":"ASK_USER: git commit from the main checkout during build was not run."}]}}'
@@ -680,13 +680,17 @@ assert_eq "a yes to the commit question lets the commit run" "" \
   "$(git_with answered-git "$TMP/project" "git commit -am wip" build)"
 assert_contains "a yes to the commit question never covers a push" \
   "$(git_with answered-git "$TMP/project" "git commit -am wip && git push" build)" \
-  'ASK_USER: git commit and git push from the main checkout'
+  'git commit and git push from the main checkout during build ran'
 assert_contains "a yes to a Build question does not carry into Prove" \
   "$(git_with answered-git "$TMP/project" "git commit -am wip" prove)" \
-  'ASK_USER: git commit from the main checkout during prove'
+  'git commit from the main checkout during prove ran'
 out="$(git_with no-git-request "$TMP/workspace" "git commit -am wip" build)"
-assert_not_contains "a commit inside the isolated workspace is not a main-checkout question" \
-  "$out" 'ASK_USER'
+assert_not_contains "a commit inside the isolated workspace gets no main-checkout warning" \
+  "$out" 'from the main checkout'
+out="$(git_with no-git-request "$TMP/project" "echo x > src/a.js && git commit -am wip" build)"
+assert_contains "a compound commit still warns about the commit" "$out" \
+  'git commit from the main checkout during build ran'
+assert_contains "a compound commit also reports its shell edit outside the workspace" "$out" 'Also:'
 
 out="$(pre block "" "$(write_event "$TMP/pre/src/app.js")")"
 assert_contains "block mode delegates even when no phase is recorded" \

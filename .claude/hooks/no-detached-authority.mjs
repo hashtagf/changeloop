@@ -37,12 +37,15 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
   if (event.tool_name !== "Bash" ||
       !detachedAuthorityCommand(event.tool_input?.command)) process.exit(0);
   const attached = attachedAuthorityCommand(event.tool_input.command);
-  if ((process.env.FOUNDATION_GUARDRAIL_MODE || "").toLowerCase() === "block" ||
-      detachedAuthorityCommand(attached)) {
-    process.stdout.write(JSON.stringify({
-      decision: "block",
-      reason: "BLOCKED: authority run owns a synchronous reviewer and must stay in the foreground. Run it without &, nohup, setsid, or disown; wait for its durable completion before replying."
-    }));
+  const reason = "authority run owns a synchronous reviewer and must stay in the foreground. " +
+    "Run it without &, nohup, setsid, or disown; wait for its durable completion before replying.";
+  // Unset means auto; an unknown value fails closed, like the phase guard.
+  if (!["", "auto", "audit", "off"].includes((process.env.FOUNDATION_GUARDRAIL_MODE || "").toLowerCase())) {
+    process.stdout.write(JSON.stringify({ decision: "block", reason: `BLOCKED: ${reason}` }));
+  } else if (detachedAuthorityCommand(attached)) {
+    // Not safely rewritable: it runs as written with the warning.
+    process.stdout.write(JSON.stringify({ hookSpecificOutput: {
+      hookEventName: "PreToolUse", additionalContext: `WARNING: ${reason}` } }));
   } else {
     process.stdout.write(JSON.stringify({ hookSpecificOutput: {
       hookEventName: "PreToolUse",

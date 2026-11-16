@@ -317,7 +317,8 @@ EXPECTED_RUNTIME_API`, `.claude/harness/foundation.mjs RUNTIME_API_VERSION`,
   external-side-effect authority. Agent work stays with the agent and
   deterministic workflow/setup/permission/recovery work stays with the harness.
 - Before Land, only user decisions stop the flow; Land is the single hard gate
-  ([WORKFLOW.md § Blocking policy](WORKFLOW.md#blocking-policy)).
+  ([WORKFLOW.md § Blocking policy](WORKFLOW.md#blocking-policy)). Live guards
+  advise rather than refuse; only secret redaction is enforced by default.
 - Optimize for delivery: reuse identity-valid work and run only dependency-
   invalidated Build, Review, and Prove work across all selected repositories.
 - Preserve fail-closed isolation and unknown-as-unavailable measurement semantics.

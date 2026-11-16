@@ -78,7 +78,9 @@ cloop init /path/to/your-project --host cursor    # หรือ opencode, codex
 ของ OpenSpec กับ state ที่สร้างใน `.foundation` โปรเจกต์ถัดไปใช้ `/changeloop init`
 ใน Pi แล้ว `/reload` ได้ การติดตั้งแบบเดิมยังใช้ต่อได้ คำสั่งนี้ไม่ลบหรือย้ายไฟล์เดิม
 ใช้ `/land <change>` เพื่อสั่ง Land โดยชัดเจน ส่วน `/build` และ `/prove` ไม่ให้สิทธิ์ Land
-การ reload หรือข้อความใหม่จากผู้ใช้จะยกเลิกสิทธิ์ Land จากคำสั่งก่อนหน้า
+guard ของ Pi แนะนำเป็นค่าเริ่มต้น: Land, Deliver, การแก้ไฟล์นอกงาน, รูปแบบ shell และ `authority run`
+ผ่าน background รันต่อพร้อมคำเตือนในผลของ tool แทนการปฏิเสธ การปิดค่าลับยังบังคับเหมือนเดิม
+และตั้ง `FOUNDATION_GUARDRAIL_MODE=block` ก่อนเปิด Pi เพื่อให้ปฏิเสธแบบเดิม
 guard ของ Pi ครอบคลุมบางส่วน: tool ในตัวและ `background_bash` ผ่าน guard ส่วน custom/MCP
 tools อื่นอยู่นอกขอบเขต live guard และได้คำเตือนครั้งเดียวระหว่างทำงาน มี session digest
 ตอนเริ่มและหลัง compact และ `/dev` เตือนเมื่อหยุดก่อน proof ผ่าน การวิเคราะห์ shell ใช้นโยบายร่วมของ runtime

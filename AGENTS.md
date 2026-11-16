@@ -39,6 +39,8 @@ agreement source of truth.
   consequential semantics, explicit Land, final diff review, and separate Git
   or external-side-effect authority.
 - Product repair has no fixed retry count while progress changes.
+- Live guards advise rather than refuse; only secret redaction is enforced by
+  default. `FOUNDATION_GUARDRAIL_MODE=block` restores refusals.
 - Before Land, stop only for a user decision; Land is the single hard gate
   ([WORKFLOW.md § Blocking policy](WORKFLOW.md#blocking-policy)). Preserve state
   and return an exact resume route.

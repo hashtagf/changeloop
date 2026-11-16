@@ -70,17 +70,23 @@ for every host, and the phase guard enforces its Git and Deliver parts.
   ("commit this", "push it") commits or pushes; a push instruction covers the
   commit it publishes. Land never commits. During Build or Prove, a
   `git commit` or `git push` from the main checkout that the user's latest
-  prompt did not ask for does not run: the phase guard replaces it with the
-  question for the user, and a yes reply lets the same command run. Inside the
-  isolated workspace it is ordinary Build work.
+  prompt did not ask for still runs; the phase guard attaches a warning that
+  publication is the user's call. Inside the isolated workspace it is ordinary
+  Build work.
 - **Pull requests.** A direct request to open a PR or deliver ("เปิด PR ให้เลย",
-  "open a PR") is `/deliver` for that one composite command, as is a yes to the
-  delivery question the guard asked.
+  "open a PR") is `/deliver` for that one composite command. A Deliver command
+  run without it proceeds with a warning.
+- **Guards advise.** These authority rules are guidance for the agent. The
+  live guards never refuse Land, Deliver, commit, push, edits, or shell shapes
+  by default: the call runs, redirected into the workspace where that applies,
+  with a warning naming the rule and route. Secret redaction is the exception
+  and stays enforced. `FOUNDATION_GUARDRAIL_MODE=block` restores the refusals.
 
 ### Blocking policy
 
 The user decides, the agent codes and documents, and the harness automates.
-The harness never blocks the user or the agent before Land: it performs a step
+The harness never blocks the user or the agent before Land, and its live guards
+advise rather than refuse: it performs a step
 itself or routes it to its owner (`EDIT` or `REPAIR` for the agent, `WORKING`
 or a harness `WAIT` for its own work, `WAIT` for a named external owner). Land
 is the single hard gate: it requires a still-valid spec approval, a `proven`

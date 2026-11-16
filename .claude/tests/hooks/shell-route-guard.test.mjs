@@ -94,7 +94,7 @@ test("Claude Code Bash allow rules match exact, prefix, and glob forms", () => {
   assert.ok(!bashRuleAllows("Read(//work/**)", "npm test"));
 });
 
-test("the wired hook denies with the route, advises in audit mode, and passes through when off", () => {
+test("the wired hook advises with the route, denies only in strict modes, and passes through when off", () => {
   const dir = mkdtempSync(join(tmpdir(), "shell-route-"));
   try {
     const sandbox = join(dir, ".foundation", "repository-sandboxes", change, "users");
@@ -116,12 +116,19 @@ test("the wired hook denies with the route, advises in audit mode, and passes th
       assert.equal(result.status, 0, result.stderr);
       return result.stdout;
     };
-    const denied = JSON.parse(run("npm test"));
-    assert.equal(denied.decision, "block");
-    assert.match(denied.reason, /cloop exec api-keys --repo users -- npm test/);
-    assert.equal(JSON.parse(run(`cd ${sandbox} && git status`)).decision, "block");
+    const routed = JSON.parse(run("npm test"));
+    assert.equal(routed.decision, undefined, "auto mode never refuses");
+    assert.match(routed.hookSpecificOutput.additionalContext, /cloop exec api-keys --repo users -- npm test/);
+    const cdGit = JSON.parse(run(`cd ${sandbox} && git status`));
+    assert.equal(cdGit.decision, undefined);
+    assert.match(cdGit.hookSpecificOutput.additionalContext, /git -C/);
     const advised = JSON.parse(run("npm test", { FOUNDATION_GUARDRAIL_MODE: "audit" }));
     assert.match(advised.hookSpecificOutput.additionalContext, /cloop exec/);
+    const strict = JSON.parse(run(`cd ${sandbox} && git status`, { FOUNDATION_SHELL_GUARD: "block" }));
+    assert.equal(strict.decision, "block");
+    assert.equal(JSON.parse(run("npm test", { FOUNDATION_GUARDRAIL_MODE: "block" })).decision, "block");
+    assert.equal(JSON.parse(run("npm test", { FOUNDATION_GUARDRAIL_MODE: "strict" })).decision, "block",
+      "an unknown mode fails closed");
     assert.equal(run("npm test", { FOUNDATION_GUARDRAIL_MODE: "off" }), "");
     assert.equal(run("npm test", {}, { permission_mode: "bypassPermissions" }), "");
     assert.equal(run("ls src"), "");

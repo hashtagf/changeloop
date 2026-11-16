@@ -20,7 +20,7 @@
 
 ### `agent_spawn`
 
-Start an independent Pi worker; returns its ID immediately and reports settled results automatically. Inherits cwd/model/thinking, not chat history. Workers share files in the same cwd and survive parent exit. role (explorer/executor/reviewer/verifier) picks a model tier, read-only tools and a SUMMARY/CHANGES/CHECKS/BLOCKERS report. For a Change Loop execution.mode parallel envelope, spawn one worker per lease with changeLoopTask {change, task, tier?}. Limits: maxActiveWorkers (default 64), the project's execution.maxParallelAgents in Change Loop projects, depth 3.
+Start an independent Pi worker; returns its ID immediately and reports settled results automatically. Inherits cwd/model/thinking, not chat history. Workers share files in the same cwd and survive parent exit. role (explorer/executor/reviewer/verifier) picks a model tier, read-only tools and a SUMMARY/CHANGES/CHECKS/BLOCKERS report. For a Change Loop execution.mode parallel envelope, spawn one worker per lease with changeLoopTask {change, task, tier?}. Limits: maxActiveWorkers (default 64) and depth 3; above the project's execution.maxParallelAgents in Change Loop projects the worker starts with a warning.
 
 | Parameter | Type | Required | Notes |
 |---|---|---|---|

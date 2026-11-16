@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-// Phase-aware PreToolUse guard. The default auto mode blocks whenever an
-// active Foundation phase is known and stays out of adoption-only sessions.
-// Hosts may still select explicit audit/block/off behavior.
+// Phase-aware PreToolUse guard. The default auto mode never refuses: with an
+// active Foundation phase it redirects, routes, or warns, and it stays out of
+// adoption-only sessions. Hosts may still select explicit audit/block/off.
 
 import {
   appendFileSync, closeSync, existsSync, mkdirSync, openSync, readSync,
@@ -263,24 +263,26 @@ function guide() {
     return;
   }
   if (gitAuthorityQuestion) {
-    // A commit or push from the main checkout during Build or Prove is the
-    // user's call, not the agent's: it does not run, and becomes the question.
-    const message = `ASK_USER: ${gitAuthorityQuestion} from the main checkout during ${phase} was not run. ` +
-      "Commit and push happen through /deliver or on the user's direct instruction; " +
-      "ask the user, and on their yes run the same command again.";
-    recordAudit({ phase, tool, mode, outcome: "routed",
+    // Guidance, not refusal: the commit or push runs as written, and the
+    // agent is reminded that publication is the user's call.
+    recordAudit({ phase, tool, mode, outcome: "advised",
       reason: violations.join("; "), command: String(input.command || "") });
-    respond({ ...input, command: `printf '%s\\n' '${message.replaceAll("'", "")}'` }, message);
+    const also = [...violations.filter((violation) => !violation.startsWith(gitAuthorityQuestion)),
+      ...(shellAudit ? [shellAudit] : [])];
+    if (shellAudit) recordAudit({ phase, tool, mode, changeId: recorded?.changeId || null,
+      outcome: "shell-audit", reason: shellAudit, command: String(input.command || "") });
+    respond(null, `phase guard: ${gitAuthorityQuestion} from the main checkout during ${phase} ran. ` +
+      "Commit and push are the user's call; make sure the user asked for it." +
+      (also.length ? ` Also: ${also.join("; ")}.` : ""));
     return;
   }
   if (deliverAuthorityCommand && !deliverSession) {
-    // Delivery commits, pushes, and opens a pull request: that is the user's
-    // call. The command becomes the question the agent must ask.
-    const message = `ASK_USER: delivering '${changeArgument}' commits, pushes, and opens a pull request. ` +
-      `Ask the user; on their explicit yes they run /deliver ${changeArgument}.`;
-    recordAudit({ phase: phase || "unknown", tool, mode, outcome: "routed",
+    // Delivery commits, pushes, and opens a pull request. It runs as written;
+    // the agent is reminded that publication is the user's call.
+    recordAudit({ phase: phase || "unknown", tool, mode, outcome: "advised",
       reason: violations.join("; "), command: String(input.command || "") });
-    respond({ ...input, command: `printf '%s\\n' '${message.replaceAll("'", "")}'` }, message);
+    respond(null, `phase guard: delivering '${changeArgument}' commits, pushes, and opens a pull request. ` +
+      "It ran without /deliver; publication is the user's call, so make sure the user asked for it.");
     return;
   }
   const redirected = mutatingTools.has(tool) ? redirectToWorkspace(input) : null;
@@ -486,7 +488,10 @@ function inspectBash(command) {
     canonicalTarget: (target) => canonicalTarget(target, workspace),
     contains: (target, root) => isWithin(target, canonical(root))
   } : null;
-  if (gitPublicationFromMainCheckout(command, workspace, environment, inspection)) return;
+  // In auto mode an uninstructed commit/push still runs, so the rest of the
+  // command is inspected too and its findings ride on the same warning.
+  if (gitPublicationFromMainCheckout(command, workspace, environment, inspection) &&
+      !(gitAuthorityQuestion && configuredMode === "auto")) return;
   const violation = shellMutationViolation(phase, environment, command, inspection);
   if (!violation) return;
   const pinned = phase === "build" && mode === "block" && workspace
@@ -498,10 +503,10 @@ function inspectBash(command) {
 }
 
 // `git commit` / `git push` during Build or Prove outside the isolated
-// workspace targets the user's checkout or remote. It runs only when the
-// user's latest prompt asked for it directly, or answered yes to the question
-// this hook asked; otherwise it becomes that question. Returns true when the
-// command is settled here.
+// workspace targets the user's checkout or remote. When the user's latest
+// prompt asked for it directly it runs silently; otherwise auto mode lets it
+// run with a warning and block mode refuses it. Returns true when the
+// command is classified here.
 function gitPublicationFromMainCheckout(command, workspace, environment, inspection) {
   if (!["build", "prove"].includes(phase)) return false;
   const operations = gitPublicationOperations(command);

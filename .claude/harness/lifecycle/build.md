@@ -43,8 +43,8 @@ The live guards never refuse the agent by default; they automate or route
 product edit aimed at the main checkout while a workspace exists is redirected
 to the same path in the workspace. Internal Land commands run as `advance
 <change> --through archived` (a raw `land advance` is rewritten to it in every
-session, `/land` included), and a delivery outside `/deliver` becomes the
-question for the user. Everything else runs with guidance naming the rule and
+session, `/land` included), and a delivery or a main-checkout commit/push
+outside `/deliver` or a user instruction runs with a warning. Everything else runs with guidance naming the rule and
 the route: shell findings (path escapes, copies from outside the workspace),
 edits before a change exists, and edits outside the phase's surface. Land
 reports target edits made outside the sandbox, and the host still owns process

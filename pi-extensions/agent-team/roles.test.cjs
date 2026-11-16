@@ -61,7 +61,7 @@ test('a leased-task brief runs from the project and names the packet and ledger 
   const brief = roles.changeLoopTaskBrief(roles.changeLoopProject(dir), 'c1', 'T002', 'focus on parser');
   assert.equal(brief.cwd, dir);
   assert.equal(brief.workspace, workspace);
-  assert.match(brief.task, /claude-foundation packet c1 --task T002/);
+  assert.match(brief.task, /cloop packet c1 --task T002/);
   assert.match(brief.task, /Do not edit openspec\/changes\/c1\/tasks\.md, acquire or release leases/);
   assert.match(brief.task, /Coordinator notes: focus on parser/);
 });
@@ -74,14 +74,14 @@ test('a leased-task brief refuses unknown changes, bad ids and non-projects', ()
   assert.throws(() => roles.changeLoopTaskBrief(undefined, 'c1', 'T001'), /Change Loop project/);
 });
 
-test('active workers are capped by configuration and the project maxParallelAgents', () => {
+test('maxActiveWorkers caps workers; the project maxParallelAgents only warns', () => {
   const dir = project({ maxParallelAgents: 3 });
   const settings = roles.projectSettings(dir);
   assert.equal(settings.maxParallelAgents, 3);
   const inProject = [{ cwd: dir }, { cwd: path.join(dir, '.foundation/sandboxes/c1') }, { cwd: dir }];
-  assert.throws(() => roles.admitWorker(inProject, { project: dir, projectCap: settings.maxParallelAgents }), /maxParallelAgents/);
-  assert.doesNotThrow(() => roles.admitWorker(inProject.slice(0, 2), { project: dir, projectCap: 3 }));
-  assert.doesNotThrow(() => roles.admitWorker([{ cwd: os.tmpdir() }, { cwd: os.tmpdir() }, { cwd: os.tmpdir() }], { project: dir, projectCap: 3 }));
+  assert.match(roles.admitWorker(inProject, { project: dir, projectCap: settings.maxParallelAgents }), /maxParallelAgents/);
+  assert.equal(roles.admitWorker(inProject.slice(0, 2), { project: dir, projectCap: 3 }), undefined);
+  assert.equal(roles.admitWorker([{ cwd: os.tmpdir() }, { cwd: os.tmpdir() }, { cwd: os.tmpdir() }], { project: dir, projectCap: 3 }), undefined);
   assert.throws(() => roles.admitWorker([{}, {}], { maxActive: 2 }), /maxActiveWorkers/);
   assert.doesNotThrow(() => roles.admitWorker(Array(63).fill({})));
   assert.throws(() => roles.admitWorker(Array(64).fill({})), /64/);

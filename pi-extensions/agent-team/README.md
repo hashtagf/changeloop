@@ -87,8 +87,9 @@ Land or Deliver. Workers do not get their own worktree: Change Loop serializes
 writers per workspace.
 
 Active managed workers are capped by `maxActiveWorkers` in `config.json`
-(default 64) and, inside a Change Loop project, by `execution.maxParallelAgents`
-from `foundation.json`. Verify with `rtk proxy node --test roles.test.cjs`.
+(default 64). Inside a Change Loop project, `execution.maxParallelAgents` from
+`foundation.json` is advice: a spawn above it still starts and its result
+carries a `warning`. Verify with `rtk proxy node --test roles.test.cjs`.
 
 Optional CLI: `/agents` returns to Main (lists JSON in RPC); `/agents view` opens
 the shared picker including offline sessions; `/agents spawn <task>`,

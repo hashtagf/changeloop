@@ -554,13 +554,19 @@ such as an unverified shell-mutation warning, is appended to the tool result.
 
 A Pi worker tool starts each worker with `FOUNDATION_PARENT_SESSION_ID` set to
 the coordinating session. The worker's guards then resolve that session's
-phase, so a parallel Build worker may write inside the change workspace and
-nowhere else, as a native subagent does. A worker session refuses `/land`,
-`/deliver`, and natural Land or Deliver requests; only the coordinating session
-lands or delivers.
+phase, so a parallel Build worker's main-checkout write is redirected into the
+change workspace, as a native subagent's is. A worker session does not turn
+`/land`, `/deliver`, or natural Land or Deliver requests into instructions; the
+coordinating session lands or delivers.
 
-`/land <change>` grants only that change's Land in the current session; reload,
-session replacement, or new user input revokes it. `/deliver <change>` separately
+Pi guards advise by default: the adapter runs the hooks in `auto` mode (or the
+user's exported `FOUNDATION_GUARDRAIL_MODE`), and a Land or Deliver command
+without the matching consent, an edit outside a change, a shell shape, or a
+background `authority run` proceeds with a warning on the tool result. Secret
+redaction stays enforced; `FOUNDATION_GUARDRAIL_MODE=block` restores refusals.
+
+`/land <change>` marks that change's Land as user-requested in the current
+session; reload, session replacement, or new user input clears it. `/deliver <change>` separately
 authorizes the matching publication workflow. Whole interactive requests such
 as `เปิด PR ให้เลย`, `deliver ได้เลย`, or `open a PR` act as `/deliver` for the
 session's single proven, applied, or archived change (several open a selection
@@ -569,7 +575,7 @@ acts as `/investigate <topic>`. Questions, refusals, and extension or RPC text
 never route. Runtime proof and Land gates remain
 authoritative. `background_bash` gets the same guards as bash (secrets, phase,
 shell route, Land/Deliver, detached authority), starts in the Build workspace
-when no cwd is given, and never runs `authority run`. Other custom/MCP tools
+when no cwd is given, and warns that `authority run` belongs in the foreground. Other custom/MCP tools
 are outside this partial live boundary: they are never blocked, and while a
 change phase is enforced the first call of each one per session carries a
 warning. PowerShell is refused. The session digest is injected into the first

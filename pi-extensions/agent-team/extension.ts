@@ -103,6 +103,7 @@ export default function agentTeam(pi: ExtensionAPI) {
     const tier = params.changeLoopTask?.tier as Tier | undefined;
     const tiered = tier ? resolveTierModel(tier, tierOptions) : role;
     const maxActive = Number.isInteger(config.maxActiveWorkers) && config.maxActiveWorkers > 0 ? config.maxActiveWorkers : undefined;
+    let warning: string | undefined;
     const child = await store.spawnAgent(root, { parentId: requireSelf(), name: params.name,
       task, cwd,
       provider: params.provider ?? tiered?.provider ?? ctx.model?.provider,
@@ -111,8 +112,8 @@ export default function agentTeam(pi: ExtensionAPI) {
       role: roleName, excludeTools: role?.excludeTools, appendSystemPrompt: role?.appendSystemPrompt,
       changeLoopTask: params.changeLoopTask,
       env: parentSessionEnv(process.env, ctx.sessionManager.getSessionId()),
-      admit: (active: any[]) => admitWorker(active, { maxActive, project, projectCap: settings.maxParallelAgents }) });
-    return publicMember(child);
+      admit: (active: any[]) => { warning = admitWorker(active, { maxActive, project, projectCap: settings.maxParallelAgents }); } });
+    return warning ? { ...publicMember(child), warning } : publicMember(child);
   };
   const send = (to: string, message: string, mode?: string) => {
     const target = store.resolve(root, to, requireSelf());
@@ -151,7 +152,7 @@ export default function agentTeam(pi: ExtensionAPI) {
     description: 'Start an independent Pi worker; returns its ID immediately and reports settled results automatically. Inherits cwd/model/thinking, not chat history. Workers share files in the same cwd and survive parent exit. ' +
       `role (${Object.keys(ROLES).join('/')}) picks a model tier, read-only tools and a SUMMARY/CHANGES/CHECKS/BLOCKERS report. ` +
       'For a Change Loop execution.mode parallel envelope, spawn one worker per lease with changeLoopTask {change, task, tier?}. ' +
-      'Limits: maxActiveWorkers (default 64), the project\'s execution.maxParallelAgents in Change Loop projects, depth 3.',
+      'Limits: maxActiveWorkers (default 64) and depth 3; above the project\'s execution.maxParallelAgents in Change Loop projects the worker starts with a warning.',
     parameters: Type.Object({ task: Type.Optional(Type.String({ minLength: 1, maxLength: 65536 })),
       name: Type.Optional(Type.String({ maxLength: 80 })), cwd: Type.Optional(Type.String()),
       provider: Type.Optional(Type.String()), model: Type.Optional(Type.String()),

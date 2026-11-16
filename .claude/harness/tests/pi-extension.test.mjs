@@ -14,6 +14,8 @@ const temp = realpathSync(mkdtempSync(join(tmpdir(), "pi-adapter-")));
 const root = join(temp, "project with spaces");
 const update = process.env.FOUNDATION_UPDATE_CHECK;
 process.env.FOUNDATION_UPDATE_CHECK = "0";
+const hostGuardrailMode = process.env.FOUNDATION_GUARDRAIL_MODE;
+delete process.env.FOUNDATION_GUARDRAIL_MODE;
 // The suite may itself run inside a Pi session's Change Loop shell; its project
 // pin and session identity must not leak into the disposable consumer.
 const hostEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) =>
@@ -30,7 +32,18 @@ after(() => {
   rmSync(temp, { recursive: true, force: true });
   if (update === undefined) delete process.env.FOUNDATION_UPDATE_CHECK;
   else process.env.FOUNDATION_UPDATE_CHECK = update;
+  if (hostGuardrailMode !== undefined) process.env.FOUNDATION_GUARDRAIL_MODE = hostGuardrailMode;
 });
+
+// FOUNDATION_GUARDRAIL_MODE=block restores the refusals; the default advises.
+function strict(t) {
+  const previous = process.env.FOUNDATION_GUARDRAIL_MODE;
+  process.env.FOUNDATION_GUARDRAIL_MODE = "block";
+  t.after(() => {
+    if (previous === undefined) delete process.env.FOUNDATION_GUARDRAIL_MODE;
+    else process.env.FOUNDATION_GUARDRAIL_MODE = previous;
+  });
+}
 
 async function bridge(session = "pi-test", { parent = "" } = {}) {
   const handlers = new Map(), commands = new Map(), messages = [], notices = [], statuses = [];
@@ -152,7 +165,8 @@ test("mismatched CLI/project versions and cancellation never start a workflow tu
   assert.equal(b.notices.at(-1).kind, "error");
 });
 
-test("Pi guards refuse main-checkout and symlink writes but permit sandbox writes", async () => {
+test("block mode: Pi guards refuse main-checkout and symlink writes but permit sandbox writes", async (t) => {
+  strict(t);
   const b = await bridge();
   const workspace = building();
   const blocked = await b.call("write", { path: "src/main.js", content: "bad" });
@@ -165,7 +179,8 @@ test("Pi guards refuse main-checkout and symlink writes but permit sandbox write
   assert.equal(escaped.block, true);
 });
 
-test("a Pi worker inherits its parent's Build workspace and nothing more", async () => {
+test("block mode: a Pi worker inherits its parent's Build workspace and nothing more", async (t) => {
+  strict(t);
   const workspace = building("coordinator", "pi-worker-case");
   const worker = await bridge("worker-session", { parent: "coordinator" });
   assert.equal(await worker.call("write", { path: join(workspace, "src/worker.js"), content: "ok" }), undefined);
@@ -176,7 +191,8 @@ test("a Pi worker inherits its parent's Build workspace and nothing more", async
   assert.match(refused.reason, /phase guard/);
 });
 
-test("a Pi worker never lands or delivers, even for its parent's ready change", async () => {
+test("block mode: a Pi worker never lands or delivers, even for its parent's ready change", async (t) => {
+  strict(t);
   readyForLand("coordinator", "pi-worker-ready");
   const worker = await bridge("worker-session", { parent: "coordinator" });
   await worker.command("land", "pi-worker-ready");
@@ -222,14 +238,16 @@ test("the guard's shell-mutation warning reaches the agent in the tool result", 
   assert.equal(quiet, undefined);
 });
 
-test("Pi guards allow semantic draft v5 before the first runtime phase", async () => {
+test("block mode: Pi guards allow semantic draft v5 before the first runtime phase", async (t) => {
+  strict(t);
   const b = await bridge("new-change-session");
   await b.command("change", "new feature");
   assert.equal(await b.call("write", { path: ".foundation/drafts/pi-v5/change.json", content: "{}" }), undefined);
   assert.equal((await b.call("write", { path: "src/main.js", content: "bad" })).block, true);
 });
 
-test("a new Pi investigation stays read-only after an earlier Build", async () => {
+test("block mode: a new Pi investigation stays read-only after an earlier Build", async (t) => {
+  strict(t);
   const b = await bridge();
   const workspace = building();
   await b.command("investigate", "explain the failure");
@@ -254,7 +272,8 @@ test("Pi secret reads are redacted and unsupported grep rewrites are blocked", a
   assert.equal(grep.block, true);
 });
 
-test("Land is exact-change, session-local authority and is revoked by user input or reload", async () => {
+test("block mode: Land is exact-change, session-local authority and is revoked by user input or reload", async (t) => {
+  strict(t);
   const b = await bridge();
   const invoke = (id = "pi-case") => b.call("bash", { command: `cloop advance '${id}' --through 'archived'` });
   assert.equal((await invoke()).block, true);
@@ -271,7 +290,8 @@ test("Land is exact-change, session-local authority and is revoked by user input
   assert.equal((await invoke()).block, true);
 });
 
-test("Pi refuses dynamic Land arguments and direct archive without explicit Land", async () => {
+test("block mode: Pi refuses dynamic Land arguments and direct archive without explicit Land", async (t) => {
+  strict(t);
   const b = await bridge();
   for (const command of ["cloop advance $CHANGE --through archived",
     "node .claude/harness/foundation.mjs archive pi-case", "cloop land resume pi-case",
@@ -310,7 +330,8 @@ function readyForLand(session, id) {
   writeFileSync(join(root, "openspec/changes", id, "proposal.md"), `# Review ${id}\n`);
 }
 
-test("natural Land consent resolves only this session's ready change and keeps publication separate", async () => {
+test("block mode: natural Land consent resolves only this session's ready change and keeps publication separate", async (t) => {
+  strict(t);
   const b = await bridge("natural-land-session");
   readyForLand("natural-land-session", "natural-land");
   readyForLand("another-session", "unrelated-land");
@@ -329,7 +350,8 @@ test("natural Land consent resolves only this session's ready change and keeps p
   assert.equal(await b.call("bash", { command: "cloop advance natural-land --through archived" }), undefined);
 });
 
-test("natural Land consent never guesses another session, grants generic agreement, or trusts injected text", async () => {
+test("block mode: natural Land consent never guesses another session, grants generic agreement, or trusts injected text", async (t) => {
+  strict(t);
   const b = await bridge("no-ready-land");
   assert.equal((await b.fire("input", { source: "interactive", text: "land ได้เลย" })).action, "handled");
   assert.match(b.notices.at(-1).text, /No change ready/);
@@ -377,7 +399,8 @@ function delivered(session, id) {
   writeFileSync(file, JSON.stringify({ ...JSON.parse(readFileSync(file, "utf8")), status: "archived" }));
 }
 
-test("natural Deliver request resolves this session's change and grants only that publication", async () => {
+test("block mode: natural Deliver request resolves this session's change and grants only that publication", async (t) => {
+  strict(t);
   const b = await bridge("natural-deliver");
   delivered("natural-deliver", "deliver-case");
   delivered("another-deliver", "deliver-other");
@@ -402,7 +425,8 @@ test("natural Deliver request resolves this session's change and grants only tha
   assert.equal(await b.call("bash", { command: "cloop deliver advance deliver-case" }), undefined);
 });
 
-test("natural Deliver without a ready change or in a worker grants nothing", async () => {
+test("block mode: natural Deliver without a ready change or in a worker grants nothing", async (t) => {
+  strict(t);
   const b = await bridge("no-deliver");
   assert.equal((await b.fire("input", { source: "interactive", text: "deliver ได้เลย" })).action, "handled");
   assert.match(b.notices.at(-1).text, /No change ready for Deliver/);
@@ -413,7 +437,8 @@ test("natural Deliver without a ready change or in a worker grants nothing", asy
   assert.equal((await w.call("bash", { command: "cloop deliver advance worker-deliver" })).block, true);
 });
 
-test("multiple session Land candidates require selection and cancellation grants nothing", async () => {
+test("block mode: multiple session Land candidates require selection and cancellation grants nothing", async (t) => {
+  strict(t);
   const b = await bridge("multiple-land");
   readyForLand("multiple-land", "land-first"); readyForLand("multiple-land", "land-second");
   b.ctx.ui.select = async (_title, options) => {
@@ -427,7 +452,8 @@ test("multiple session Land candidates require selection and cancellation grants
   assert.equal((await b.call("bash", { command: "cloop advance land-first --through archived" })).block, true);
 });
 
-test("Deliver primitive requires the matching explicit Pi command", async () => {
+test("block mode: Deliver primitive requires the matching explicit Pi command", async (t) => {
+  strict(t);
   const b = await bridge();
   const call = (id) => b.call("bash", { command: `cloop deliver advance ${id}` });
   assert.equal((await call("pi-case")).block, true);
@@ -455,7 +481,8 @@ test("native bash gets live Pi identity without inheriting other hosts or phase 
   assert.equal(next.env.FOUNDATION_MODEL_ID, "another-model");
 });
 
-test("!/!! use the same guards, session environment, and native shell backend", async () => {
+test("block mode: !/!! use the same guards, session environment, and native shell backend", async (t) => {
+  strict(t);
   const b = await bridge();
   const denied = await b.fire("user_bash", { command: "cloop advance pi-case --through archived", cwd: root });
   assert.equal(denied.result.exitCode, 1);
@@ -505,7 +532,8 @@ test("Pi status reflects runtime actions without claiming proof from a successfu
   assert.match(b.statuses.at(-1), /ASK_USER/);
 });
 
-test("background_bash gets the bash secret, Land and authority guards", async () => {
+test("block mode: background_bash gets the bash secret, Land and authority guards", async (t) => {
+  strict(t);
   // A session outside Build, so the command runs in the project root beside .env.
   const b = await bridge("bg-secret-session");
   writeFileSync(join(root, ".env"), "API_KEY=not-a-real-secret\n");
@@ -515,7 +543,7 @@ test("background_bash gets the bash secret, Land and authority guards", async ()
   assert.doesNotMatch(secret.command, /^cat \.env$/);
   const land = await b.call("background_bash", { command: "cloop advance pi-case --through archived" });
   assert.equal(land.block, true);
-  assert.match(land.reason, /Land needs user approval/);
+  assert.match(land.reason, /BLOCKED: Land applies/);
   const authority = await b.call("background_bash", { command: "cloop authority run pi-case" });
   assert.equal(authority.block, true);
   assert.match(authority.reason, /foreground/);
@@ -550,7 +578,8 @@ test("background_bash fails closed when guards are unavailable", async () => {
   } finally { writeFileSync(script, original); }
 });
 
-test("detached authority runs are refused in bash; attached ones pass that guard", async () => {
+test("block mode: detached authority runs are refused in bash; attached ones pass that guard", async (t) => {
+  strict(t);
   const b = await bridge();
   const detached = await b.call("bash", { command: "cloop authority run demo &" });
   assert.equal(detached.block, true);
@@ -613,9 +642,69 @@ test("/dev that settles before proof passes warns; plan-only and other commands 
   assert.equal(b.notices.length, count);
 });
 
+// 2026-11-16: guards advise instead of refuse; block mode stays opt-in.
+async function noted(b, toolName, input, id) {
+  assert.equal(await b.call(toolName, input, id), undefined, `${toolName} was refused`);
+  const result = await b.fire("tool_result", { toolName, toolCallId: id, isError: false,
+    content: [{ type: "text", text: "ran" }] });
+  return result?.content?.slice(1).map((part) => part.text).join("\n") || "";
+}
+
+test("by default Land, Deliver and archive run with a warning instead of a refusal", async () => {
+  const b = await bridge("advice-session");
+  assert.match(await noted(b, "bash", { command: "cloop advance pi-case --through archived" }, "a1"), /WARNING: Land/);
+  assert.match(await noted(b, "bash", { command: "cloop deliver advance pi-case" }, "a2"), /WARNING: Deliver/);
+  const archive = { command: "node .claude/harness/foundation.mjs archive pi-case" };
+  assert.match(await noted(b, "bash", archive, "a3"), /WARNING: Land/);
+  assert.match(await noted(b, "background_bash", { command: "cloop advance pi-case --through archived" }, "a4"), /WARNING: Land/);
+  assert.doesNotMatch(await noted(b, "bash",
+    { command: "git add openspec/changes/archive/2026-11-16-x/tasks.md" }, "a5"), /Land/);
+  const denied = await b.fire("user_bash", { command: "cloop advance pi-case --through archived", cwd: root });
+  assert.ok(denied.operations, "the user's own shell is never refused for Land");
+});
+
+test("by default an edit with no change open runs", async () => {
+  const b = await bridge("advice-no-phase");
+  const input = { path: "src/advice.js", content: "x" };
+  await noted(b, "write", input, "e1");
+  assert.equal(input.path, "src/advice.js");
+});
+
+test("by default authority runs stay in the foreground without refusals", async () => {
+  const b = await bridge("advice-authority");
+  assert.match(await noted(b, "background_bash", { command: "cloop authority run demo" }, "r1"), /foreground/);
+  const detached = { command: "cloop authority run demo &" };
+  assert.match(await noted(b, "bash", detached, "r2"), /foreground/);
+  assert.equal(detached.command, "cloop authority run demo");
+});
+
+test("by default a worker's main-checkout write moves into the parent's workspace", async () => {
+  const workspace = building("advice-coordinator", "pi-advice-worker");
+  const worker = await bridge("advice-worker", { parent: "advice-coordinator" });
+  const input = { path: "src/main.js", content: "x" };
+  assert.match(await noted(worker, "write", input, "w1"), /redirected/);
+  assert.equal(input.path, join(workspace, "src/main.js"));
+  await worker.command("land", "pi-advice-worker");
+  assert.equal(worker.messages.length, 0, "a worker still sends no Land instruction");
+  assert.match(await noted(worker, "bash", { command: "cloop advance pi-advice-worker --through archived" }, "w2"), /WARNING: Land/);
+  const stranger = await bridge("advice-stranger");
+  const foreign = { path: join(workspace, "src/other.js"), content: "x" };
+  assert.doesNotMatch(await noted(stranger, "write", foreign, "w3"), /redirected/);
+  assert.equal(foreign.path, join(workspace, "src/other.js"), "another session's phase is not used");
+});
+
+test("a user's FOUNDATION_GUARDRAIL_MODE=block is passed to the guards", async (t) => {
+  strict(t);
+  const b = await bridge("advice-strict");
+  const refused = await b.call("write", { path: "src/strict.js", content: "x" });
+  assert.equal(refused.block, true);
+  assert.match(refused.reason, /phase guard/);
+});
+
 test("Pi prompt states the guarded tools without claiming full coverage", async () => {
   const b = await bridge();
   const { systemPrompt } = await b.fire("before_agent_start", { systemPrompt: "rules" });
+  assert.match(systemPrompt, /Guards advise rather than refuse/);
   assert.match(systemPrompt, /built-in tools and background_bash are guarded/);
   assert.match(systemPrompt, /outside this adapter's live boundary and only warned about/);
   assert.match(systemPrompt, /Do not claim OS sandboxing/);

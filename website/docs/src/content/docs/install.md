@@ -82,7 +82,10 @@ artifacts, and generated `.foundation` state in the project. Later projects can
 use `/changeloop init` in Pi and `/reload`. Existing local installations are kept;
 shared initialization does not remove or migrate their files.
 Use `/land <change>` for explicit Land; `/build` and `/prove` never authorize it.
-Reload or a new user message revokes the previous command's Land authority.
+Pi guards advise by default: Land, Deliver, edits outside a change, shell
+shapes, and background `authority run` proceed with a warning on the tool
+result instead of a refusal. Secret redaction stays enforced, and exporting
+`FOUNDATION_GUARDRAIL_MODE=block` before starting Pi restores the refusals.
 Pi guard coverage is partial: built-in tools and `background_bash` are guarded;
 other custom/MCP tools are outside the live boundary and get a one-time warning
 during a change. The session digest is injected at start and after compaction,

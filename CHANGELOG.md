@@ -9,6 +9,20 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Changed
+
+- Guards advise instead of refuse. On Pi the adapter runs guards in `auto`
+  mode (or the user's `FOUNDATION_GUARDRAIL_MODE`): Land and Deliver without
+  explicit consent, edits outside a change, shell shapes, and a background
+  `authority run` proceed with a warning on the tool result. In every host,
+  an uninstructed main-checkout commit/push during Build or Prove and a
+  Deliver outside `/deliver` run with a warning instead of becoming a
+  question; `shell-route-guard` and `no-detached-authority` advise unless a
+  block mode is set. agent-team starts a worker above the project's
+  `maxParallelAgents` with a `warning`; `maxActiveWorkers` still caps.
+  Secret redaction is unchanged, and `FOUNDATION_GUARDRAIL_MODE=block`
+  restores every refusal.
+
 ### Added
 
 - `execution.maxParallelAgents` defaults to 64, matching Pi's

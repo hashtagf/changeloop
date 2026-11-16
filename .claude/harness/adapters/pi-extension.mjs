@@ -97,7 +97,8 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       CLAUDE_FOUNDATION_PROJECT: root, FOUNDATION_HOST: "pi",
       FOUNDATION_SESSION_ID: ctx.sessionManager.getSessionId(),
       FOUNDATION_MAIN_IDENTITY: "pi-main-session",
-      FOUNDATION_GUARDRAIL_MODE: "block",
+      // Guards advise by default; a user who wants refusals exports block.
+      FOUNDATION_GUARDRAIL_MODE: base.FOUNDATION_GUARDRAIL_MODE || "auto",
       FOUNDATION_HOST_COMMAND: invocation?.command || "",
       FOUNDATION_HOST_ARGUMENTS: invocation?.args || "" };
     if (isSharedProject(root)) env.PATH = `${join(runtimeRoot, 'bin')}${process.platform === 'win32' ? ';' : ':'}${env.PATH || ''}`;
@@ -150,8 +151,13 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   const guard = async (name, input, ctx, cwd = ctx.cwd) => {
     const tool = TOOLS[name];
     if (!tool) return;
+    const notes = [];
+    // Unset means auto; an unknown value fails closed, like the phase guard.
+    const strict = !["", "auto", "audit", "off"].includes(String(process.env.FOUNDATION_GUARDRAIL_MODE || "").toLowerCase());
+    // Advice by default: the call runs and the note explains the preferred route.
+    const advise = (message) => { if (strict) throw new Error(`BLOCKED: ${message}`); notes.push(`WARNING: ${message}`); };
     if (name === "background_bash" && AUTHORITY_RUN.test(normalizeHarnessCliInvocations(String(input.command))))
-      throw new Error("BLOCKED: authority run owns a synchronous reviewer and must stay in the foreground. Run it with bash, not background_bash, and wait for its completion.");
+      advise("authority run owns a synchronous reviewer and should stay in the foreground. Run it with bash, not background_bash, and wait for its completion.");
     const toolInput = () => tool === "Bash" ? { command: input.command }
       : tool === "Grep" ? { pattern: input.pattern, path: input.path ? resolve(cwd, input.path) : cwd,
         glob: input.glob || "", output_mode: "content" }
@@ -171,16 +177,15 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
         new RegExp(`${cli}${landWords}\\b`).test(normalized);
       if (landOperation && !(grants.length && invocation?.command === "land" &&
           grants.every((grant) => invocation.args === grant[1])))
-        throw new Error('Land needs user approval in this session. Ask the user to say "land ได้เลย" or use /land; do not retry the same blocked command or switch hosts.');
+        advise('Land applies proven work to the main checkout; run it when the user asked to land ("land ได้เลย" or /land).');
       const deliveries = [...normalized.matchAll(/\b(?:deliver\s+advance|delivery-advance)\s+([a-z0-9-]+)/g)];
       if (/\b(?:deliver\s+advance|delivery-advance)\b/.test(normalized) &&
           !(deliveries.length && invocation?.command === "deliver" &&
             deliveries.every((delivery) => invocation.args === delivery[1])))
-        throw new Error(`Publication requires an explicit /deliver ${deliveries[0]?.[1] || "<change>"} in this Pi session.`);
+        advise(`Deliver commits, pushes and opens a pull request; run it when the user asked for /deliver ${deliveries[0]?.[1] || "<change>"}.`);
     }
     const event = () => ({ tool_name: tool, tool_input: toolInput(), cwd,
       session_id: parent || ctx.sessionManager.getSessionId() });
-    const notes = [];
     const apply = (output) => {
       if (typeof output.additionalContext === "string" && output.additionalContext.trim())
         notes.push(output.additionalContext.trim());
@@ -284,6 +289,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       "Follow runtime resume routes; /build and /prove never authorize Land. " +
       'For the single ready change in this session, explicit user consent such as "land ได้เลย" or /land resolves the change automatically; "เปิด PR ให้เลย" or /deliver does the same for Deliver, and "investigate <topic>" runs /investigate. ' +
       "Do not ask users to copy change IDs when session context resolves them. /deliver <change> separately authorizes publication. " +
+      "Guards advise rather than refuse (except secret redaction): a warning on a tool result names the preferred route; follow it. " +
       "Guard coverage is partial: built-in tools and background_bash are guarded; other custom/MCP tools are outside this adapter's live boundary and only warned about. " +
       "Do not claim OS sandboxing or unattended authority.", ...(message ? { message } : {}) };
   });

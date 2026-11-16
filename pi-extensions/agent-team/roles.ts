@@ -114,15 +114,20 @@ export function changeLoopTaskBrief(project: string | undefined, change: string,
   ].filter(Boolean).join('\n') };
 }
 
-/** Throws when another active worker would exceed the configured or project limit. */
+/**
+ * Throws when another active worker would exceed the user's maxActiveWorkers.
+ * The Change Loop project cap is advice: it returns a warning and the worker starts.
+ */
 export function admitWorker(active: { cwd?: string }[], { maxActive = DEFAULT_MAX_ACTIVE, project, projectCap }:
-  { maxActive?: number; project?: string; projectCap?: number } = {}) {
+  { maxActive?: number; project?: string; projectCap?: number } = {}): string | undefined {
   if (active.length >= maxActive) throw new Error(`Maximum ${maxActive} active managed agents (maxActiveWorkers)`);
   if (project && projectCap) {
     const inProject = active.filter(member => member.cwd && changeLoopProject(member.cwd) === project).length;
     if (inProject >= projectCap)
-      throw new Error(`Change Loop project allows ${projectCap} active workers (execution.maxParallelAgents in foundation.json)`);
+      return `Change Loop project suggests at most ${projectCap} active workers (execution.maxParallelAgents in foundation.json); ` +
+        `this is worker ${inProject + 1}.`;
   }
+  return undefined;
 }
 
 /** The coordinating session every descendant worker reports its phase through. */
