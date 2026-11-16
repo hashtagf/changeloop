@@ -404,8 +404,15 @@ assert_contains "amended work reaches archived after base movement" "$amendment_
 assert_eq "amended Land preserves target HEAD" "$head_before" "$(git rev-parse HEAD)"
 assert_eq "amended Land preserves target index" "$index_before" "$(git ls-files --stage | shasum)"
 assert_file_contains "amended Land applies verified product bytes" app.txt 'v2'
+# Land adds verification.md to the archived packet; every other byte is kept.
+assert_file_exists "archive gains the Land verification record" \
+  openspec/changes/archive/selective-amendment/verification.md
+archived_packet_copy="$TMP/archived-packet-without-verification"
+rm -rf "$archived_packet_copy"
+cp -R openspec/changes/archive/selective-amendment "$archived_packet_copy"
+rm -f "$archived_packet_copy/verification.md"
 assert_eq "archive retains the exact amended packet" "$packet_before" \
-  "$(packet_hash openspec/changes/archive/selective-amendment)"
+  "$(packet_hash "$archived_packet_copy")"
 
 cd "$TMP/review-waiver"
 printf 'operator work must survive\n' > operator-staged.txt
