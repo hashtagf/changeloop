@@ -6,7 +6,7 @@ argument-hint: <change>
 Deliver **$ARGUMENTS**. A direct request ("เปิด PR ให้เลย", "open a PR")
 is this command.
 
-Run `claude-foundation deliver advance <change>` once; a proven change Lands
+Run `cloop deliver advance <change>` once; a proven change Lands
 first. It grants only Land, isolation, committing the proven projection,
 pushing its feature branch, and opening or updating a pull request—never
 force-push, default-branch push, or deploy; it merges only under

@@ -91,7 +91,7 @@ if command -v jq >/dev/null 2>&1; then
   linked="$(secret_event Read "{\"file_path\":\"$SECRET_DIR/.env\"}" | bash "$linked_hooks/protect-secrets.sh")"
   assert_contains "secret hook redacts through a symlinked project path" "$linked" 'claude-foundation-redacted'
   assert_not_contains "secret hook never refuses through a symlinked project path" "$linked" '"decision"'
-  detached='{"tool_name":"Bash","tool_input":{"command":"claude-foundation authority run demo &"}}'
+  detached='{"tool_name":"Bash","tool_input":{"command":"cloop authority run demo &"}}'
   for hook in no-detached-authority.mjs shell-route-guard.mjs; do
     assert_eq "$hook runs as an entry point through a symlinked project path" \
       "$(printf '%s' "$detached" | node "$ROOT/.claude/hooks/$hook")" \
@@ -155,16 +155,16 @@ assert_file_contains "session hook preserves transcript paths with spaces" \
 assert_file_not_contains "session hook adds no PATH entry without an installed CLI shim" \
   "$ENV_FILE" "export PATH="
 
-# A source-checkout install has no global `claude-foundation`; the hook puts
+# A source-checkout install has no global `cloop`; the hook puts
 # the installer's project-local shim on PATH, and only when nothing resolves.
 SHIM_PROJECT="$(mktemp -d)"
 trap 'rm -f "$ENV_FILE"; rm -rf "$SHIM_PROJECT"' EXIT HUP INT TERM
 mkdir -p "$SHIM_PROJECT/.foundation/bin" "$SHIM_PROJECT/global" "$SHIM_PROJECT/stale" "$SHIM_PROJECT/empty"
-touch "$SHIM_PROJECT/.foundation/bin/claude-foundation" "$SHIM_PROJECT/global/claude-foundation" \
-  "$SHIM_PROJECT/stale/claude-foundation"
-chmod +x "$SHIM_PROJECT/global/claude-foundation"
+touch "$SHIM_PROJECT/.foundation/bin/cloop" "$SHIM_PROJECT/global/cloop" \
+  "$SHIM_PROJECT/stale/cloop"
+chmod +x "$SHIM_PROJECT/global/cloop"
 # Invoke Node by its absolute path: its directory may also contain a real
-# Homebrew claude-foundation, which would invalidate the no-global-CLI fixture.
+# Homebrew cloop, which would invalidate the no-global-CLI fixture.
 NODE_EXECUTABLE="$(command -v node)"
 : > "$ENV_FILE"
 printf '%s' "$session" | CLAUDE_PROJECT_DIR="$SHIM_PROJECT" CLAUDE_ENV_FILE="$ENV_FILE" \

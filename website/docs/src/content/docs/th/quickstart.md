@@ -17,7 +17,7 @@ Agent ดูแล setup การตรวจ และการกู้คื
 ## 0. เช็คก่อนว่าโปรเจกต์พร้อม
 
 ให้ agent ตรวจว่า Change Loop พร้อมใช้งาน โดย agent เรียก
-`claude-foundation doctor --stage change` และแก้ setup ได้เอง
+`cloop doctor --stage change` และแก้ setup ได้เอง
 ตัวอย่างแรกนี้ยังไม่ต้องตั้งค่า quality gate ที่เป็นตัวเลือก
 
 ถ้ายังไม่รู้สาเหตุหรือพฤติกรรมที่ต้องการ ให้เริ่มด้วย

@@ -101,7 +101,7 @@ Change Loop ปฏิเสธ dependency ที่ไม่ใช่ Git เพ
 ตรวจก่อนสร้าง change:
 
 ```bash
-claude-foundation repos
+cloop repos
 ```
 
 ## 2. เลือก Scope ของ Change
@@ -131,7 +131,7 @@ archive แบบ single-root
 ตรวจ selection ที่ resolve แล้ว:
 
 ```bash
-claude-foundation repos <change>
+cloop repos <change>
 ```
 
 ## 3. ผูก Task กับ Repository
@@ -153,7 +153,7 @@ execution graph ให้เอง ไม่ต้องสร้างไฟล
 คำสั่งปกติของ agent สร้าง workspace ที่เลือกพร้อมกัน:
 
 ```bash
-claude-foundation advance <change> --through build
+cloop advance <change> --through build
 ```
 
 `sandbox create --all` และ `sandbox inspect` ยังเป็น operator diagnostic ใต้
@@ -218,7 +218,7 @@ checkout เป็น sibling อยู่ในทุกเครื่อง
 วางแผน worker ขนานหลัง scope กับ dependency นิ่งแล้วเท่านั้น:
 
 ```bash
-claude-foundation agents plan <change>
+cloop agents plan <change>
 ```
 
 ถ้า change อื่นทำให้ repository ที่เลือกขยับ `advance` จะ sync sandbox เองก่อน Prove
@@ -229,7 +229,7 @@ change ไว้ใน read workspace readiness จะ fail closed
 ## 7. Prove Graph ทั้งชุด
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 `proof readiness` และ `proof run` เป็น primitive ภายในที่ `advance` ทำให้ Prove รัน branch อิสระขนานกันได้และรักษา branch ที่เสร็จแล้วเมื่ออีก branch ล้ม

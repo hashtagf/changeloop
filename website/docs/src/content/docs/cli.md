@@ -6,11 +6,11 @@ description: The commands your agent runs, grouped by what they do and what auth
 <!-- docs-audience: agents-integrators -->
 **Audience:** coding agents and integration operators. CLI commands and schemas below are system reference, not a user checklist. Users can follow [Quickstart](/docs/quickstart/).
 
-**In plain words:** this page lists every `claude-foundation` command (people may type the short alias `cloop`), grouped by whether it only reads, changes a change in progress, or needs your explicit authority. It is for agents, integrators, and anyone who wants to read what the agent is doing. You need Change Loop [installed](/docs/install/); you get the exact command, its purpose, and the protocol versions it speaks. Unfamiliar words (change, claim, receipt, provider, capability) are in the [glossary](/docs/glossary/).
+**In plain words:** this page lists every `cloop` command, grouped by whether it only reads, changes a change in progress, or needs your explicit authority. It is for agents, integrators, and anyone who wants to read what the agent is doing. You need Change Loop [installed](/docs/install/); you get the exact command, its purpose, and the protocol versions it speaks. Unfamiliar words (change, claim, receipt, provider, capability) are in the [glossary](/docs/glossary/).
 
 Your agent runs these; you rarely need to. They are documented so you can read what the agent is doing, and drive it yourself when you want to.
 
-Every command answers `--help`, and `claude-foundation describe [command] [--json]` describes the surface — including the optional `/deliver` command, `/changes`, and the `/feature` compatibility alias, resolvable by bare word or `/slash` spelling, read from the shipped command files so there is no second copy to drift.
+Every command answers `--help`, and `cloop describe [command] [--json]` describes the surface — including the optional `/deliver` command, `/changes`, and the `/feature` compatibility alias, resolvable by bare word or `/slash` spelling, read from the shipped command files so there is no second copy to drift.
 
 ## Primary agent surface
 
@@ -31,7 +31,7 @@ surface is:
 | `changes` | Read active state and the next useful route |
 | `doctor …` | Diagnose a route only when the coordinator asks for it |
 
-`claude-foundation help` shows this small surface. `help --all` adds the
+`cloop help` shows this small surface. `help --all` adds the
 recovery, administration, and host-integration commands below.
 
 ## Read-only

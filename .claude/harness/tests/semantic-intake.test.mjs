@@ -685,7 +685,7 @@ test("a v5 folder at high impact without operability coverage returns EDIT namin
     assert.equal(result.owner, "agent");
     assert.match(result.intake.issues.join("\n"), /missing required dimension 'operability'/);
     assert.doesNotMatch(result.intake.issues.join("\n"), /dimension 'recoverability'/);
-    assert.equal(result.resume, `claude-foundation change start ${path} --inspect`);
+    assert.equal(result.resume, `cloop change start ${path} --inspect`);
   }
   assert.equal(existsSync(join(changes, "refund-api")), false);
 });
@@ -708,7 +708,7 @@ test("compliance enabled without an approver asks the user one question with a r
     assert.equal(result.action, "ASK_USER");
     assert.equal(result.owner, "user");
     assert.deepEqual(result.decision.items.map((item) => item.key), ["compliance.approver"]);
-    assert.equal(result.resume, `claude-foundation change start ${path} --inspect`);
+    assert.equal(result.resume, `cloop change start ${path} --inspect`);
   }
   assert.equal(existsSync(join(changes, "refund-api")), false);
 });

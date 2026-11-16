@@ -44,7 +44,7 @@ transaction
 คำสั่ง `change start --template` แสดงรูปแบบนี้เป็นอันดับแรกในชื่อ `minimalDraft`
 โดยมี field `save` นำหน้า: agent เขียน folder ของ draft v5 `.foundation/drafts/<id>/`
 (ดูด้านล่าง) ด้วย Write tool เพราะ host ปฏิเสธ shell heredoc และ `.foundation/drafts/`
-เป็น path ที่อนุญาตไว้ล่วงหน้า จากนั้นรัน `claude-foundation change start .foundation/drafts/<id>`
+เป็น path ที่อนุญาตไว้ล่วงหน้า จากนั้นรัน `cloop change start .foundation/drafts/<id>`
 `change.json` ประกาศ `version: 5` และ `workType` ซึ่งเป็นตัวเลือกหัวข้อบังคับ ส่วน
 `proposal.md` เก็บเหตุผลเป็นเนื้อความ
 
@@ -102,7 +102,7 @@ harness จะ derive row `covered` ที่ระบุว่า derived ไ�
 `integrations` ที่มีเอกสาร ถ้าไม่มีเนื้อหารองรับมิตินั้นจะยังขาดอยู่ และ row ที่ agent
 เขียนเองชนะเสมอ ดังนั้น row `needs-user-decision` ยังถูกถามผู้ใช้เหมือนเดิม
 ตัวอย่างโครงสร้างเต็มดูได้
-จาก `claude-foundation change start --template`
+จาก `cloop change start --template`
 
 Agent ใช้ key ที่มีความหมาย Compiler สร้าง claim/task ID ที่ stable และผูก
 spec → claim → task → provider ให้อัตโนมัติ รวมปัญหา draft ที่เป็นอิสระทั้งหมดใน
@@ -120,8 +120,8 @@ Spec เขียนให้คนอ่าน แต่ละ scenario คื�
 และ `AND` คงเป็นภาษาอังกฤษเพื่อให้ OpenSpec parse ได้
 
 ```bash
-claude-foundation change start .foundation/drafts/<id>.json
-claude-foundation change start .foundation/drafts/<id>   # folder ของ draft v5
+cloop change start .foundation/drafts/<id>.json
+cloop change start .foundation/drafts/<id>   # folder ของ draft v5
 ```
 
 ## Folder ของ draft v5
@@ -146,7 +146,7 @@ impact และ risk, decision ที่รอ ratify และวิธี ver
 quality, rollout ไปจนถึง test `EDIT` เดียวระบุ section ที่ outline ไม่รู้จัก, ที่ harness
 derive เอง, ที่ผิดลำดับ, ที่ว่าง หรือที่มี `TODO`/`TBD` คำสั่ง `change start --template`
 แสดงหัวข้อที่รับได้ใน `draftFolderV5` ส่วน status, approver, ความสดของ evidence และ
-review record ไม่แสดงก่อน Land ให้อ่านด้วย `claude-foundation changes` ลำดับและกฎ
+review record ไม่แสดงก่อน Land ให้อ่านด้วย `cloop changes` ลำดับและกฎ
 ฉบับเต็มอยู่ใน `WORKFLOW.md` หัวข้อ "Draft v5 folder and outline"
 
 ## ชนิดงาน
@@ -285,7 +285,7 @@ metrics แบบย่อแต่ไม่เก็บ transcript
 abandon:
 
 ```bash
-claude-foundation change revise <change> <draft.json>
+cloop change revise <change> <draft.json>
 ```
 
 Draft ฉบับแก้ใช้ id เดิมและผ่าน intake gate เดียวกับ `change start` ในคำสั่งเดียว
@@ -304,7 +304,7 @@ requirement และขอ approve ใหม่เฉพาะ delta ที่�
 และ `removeRequirements` ลบ requirement พร้อม `migration`:
 
 ```bash
-claude-foundation change amend <change> <amendment.json> --consume-amendment
+cloop change amend <change> <amendment.json> --consume-amendment
 ```
 
 มันรักษา task ที่เสร็จแล้ว prose/diagram/section ที่ไม่เกี่ยวข้อง เพิ่ม link แบบ
@@ -322,4 +322,4 @@ Receipt ที่ผ่านและไม่ affected จะคงไว้�
 fingerprint ตรงครบ ส่วน binding ที่ affected หรือคลุมเครือต้อง rerun ผ่าน Prove route
 
 `/change` ที่สำเร็จ validate และแยก workspace แล้ว ทำต่อด้วย
-`claude-foundation advance <change> --through build`
+`cloop advance <change> --through build`

@@ -171,7 +171,7 @@ export function createFeedbackRuntime({
       resolvedNextAction = {
         version: 1, changeId: id, action: "UNAVAILABLE",
         boundary: "inspection", reason: "next-action-unavailable",
-        command: `claude-foundation doctor --change ${id}`
+        command: `cloop doctor --change ${id}`
       };
     }
     let readiness;

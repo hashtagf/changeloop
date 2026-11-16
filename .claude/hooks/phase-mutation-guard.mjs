@@ -67,13 +67,13 @@ const investigateSession = currentTranscriptIsInvestigate(transcriptPath);
 const tool = String(event.tool_name || "");
 const input = event.tool_input || {};
 const mutatingTools = new Set(["Edit", "Write", "MultiEdit", "NotebookEdit"]);
-// `npx claude-foundation …` and bin-path spellings match exactly as the bare CLI.
+// Path, `npx`, and retired-name spellings normalize to the bare `cloop` CLI.
 const harnessCommand = normalizeHarnessCliInvocations(String(input.command || ""));
 const landAuthorityCommand = tool === "Bash" &&
-  /^\s*(?:claude-foundation|node\s+(?:"[^"]*foundation\.mjs"|'[^']*foundation\.mjs'|\S*foundation\.mjs))\s+(?:(?:land(?:-|\s+)advance)|archive|sandbox\s+apply)\s+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\s*$/
+  /^\s*(?:cloop|node\s+(?:"[^"]*foundation\.mjs"|'[^']*foundation\.mjs'|\S*foundation\.mjs))\s+(?:(?:land(?:-|\s+)advance)|archive|sandbox\s+apply)\s+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\s*$/
     .test(harnessCommand);
 const deliverAuthorityCommand = tool === "Bash" &&
-  /^\s*(?:claude-foundation\s+deliver\s+advance|node\s+(?:"[^"]*foundation\.mjs"|'[^']*foundation\.mjs'|\S*foundation\.mjs)\s+delivery-advance)\s+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\s*$/
+  /^\s*(?:cloop\s+deliver\s+advance|node\s+(?:"[^"]*foundation\.mjs"|'[^']*foundation\.mjs'|\S*foundation\.mjs)\s+delivery-advance)\s+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\s*$/
     .test(harnessCommand);
 if (!mutatingTools.has(tool) && tool !== "Bash") process.exit(0);
 if (tool === "Bash" && !landAuthorityCommand && !deliverAuthorityCommand &&
@@ -124,7 +124,7 @@ const mode = devSession || landAuthorityCommand || deliverAuthorityCommand ||
 // spelling reaches Land by a path other than `advance --through archived`.
 if (landAuthorityCommand && /\sland(?:-|\s+)advance\s/.test(harnessCommand)) {
   const changeArgument = harnessCommand.trim().match(/([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\s*$/)?.[1];
-  const routed = `claude-foundation advance ${changeArgument} --through archived`;
+  const routed = `cloop advance ${changeArgument} --through archived`;
   recordAudit({ phase: phase || "unknown", tool, mode, outcome: "routed",
     reason: "land advance is an alias of advance --through archived",
     command: String(input.command || "") });
@@ -192,7 +192,7 @@ if (!phase && prePhaseDraftMutationAllowed()) {
   process.exit(0);
 } else if (!phase) {
   violations.push("active phase is unavailable; write the semantic draft to " +
-    ".foundation/drafts/<change-id>.json and run 'claude-foundation change start " +
+    ".foundation/drafts/<change-id>.json and run 'cloop change start " +
     "<draft> --inspect' before editing product files");
 } else if (!new Set(["investigate", "change", "build", "prove", "land", "deliver"])
   .has(phase)) {
@@ -255,7 +255,7 @@ function guide() {
   if (landAuthorityCommand && !landSession) {
     // The internal Land routes become the public one, which owns the grant,
     // readiness, recovery, and the exact Land boundary.
-    const routed = `claude-foundation advance ${changeArgument} --through archived`;
+    const routed = `cloop advance ${changeArgument} --through archived`;
     recordAudit({ phase: phase || "unknown", tool, mode, outcome: "routed",
       reason: violations.join("; "), command: String(input.command || "") });
     respond({ ...input, command: routed },
@@ -300,14 +300,14 @@ function guide() {
 function route() {
   const id = recorded?.changeId || "<change>";
   if (!phase) return "To make this a tracked change, write .foundation/drafts/<change-id>.json and run " +
-    "'claude-foundation change start <draft>'; edits made now become part of that change's starting surface.";
+    "'cloop change start <draft>'; edits made now become part of that change's starting surface.";
   if (phase === "investigate") return "Investigate records findings; turn them into a change with /change.";
   if (phase === "change") return `Product work belongs to Build: get spec approval, then run ` +
-    `'claude-foundation advance ${id} --through build' and edit in the workspace it returns.`;
+    `'cloop advance ${id} --through build' and edit in the workspace it returns.`;
   if (phase === "build" || phase === "prove") return `Keep product edits in the isolated workspace` +
     `${recordedWorkspace ? ` (${recordedWorkspace})` : ""}; Land reports main-checkout edits made outside it.`;
   return "Land and Deliver own the main checkout; repair in the isolated workspace and resume " +
-    `'claude-foundation advance ${id} --through archived', or start a new change for new work.`;
+    `'cloop advance ${id} --through archived', or start a new change for new work.`;
 }
 
 function respond(updatedInput, context) {
@@ -374,7 +374,7 @@ function inspectPath(rawPath) {
     if (!isWithin(target, join(projectRoot, ".foundation")) &&
         !isWithin(target, join(projectRoot, "openspec", "changes")))
       violations.push("the Build workspace has not been created yet; run " +
-        `'claude-foundation advance ${recorded.changeId} --through build' to create it, then edit inside it`);
+        `'cloop advance ${recorded.changeId} --through build' to create it, then edit inside it`);
     return;
   }
   const workspace = process.env.FOUNDATION_WORKSPACE_ROOT || recordedWorkspace;

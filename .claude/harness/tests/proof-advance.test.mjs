@@ -504,7 +504,7 @@ assert.ok(Array.isArray(rejectedAgain.next[0].findings),
 assert.deepEqual(rejectedAgain.cursor.next, rejectedAgain.next,
   "the durable cursor preserves the exact resume choices");
 assert.equal(rejectedAgain.next[0].command,
-  "claude-foundation packet change-a --phase build",
+  "cloop packet change-a --phase build",
   "an unchanged rejected review returns to Build with a different strategy");
 
 // Two overlapping advances (issue #42): B decided to run proof from the cursor
@@ -581,7 +581,7 @@ assert.equal(failedTestAgain.progressed, false,
   "unchanged failed evidence asks for a different strategy instead of repeating an identical repair");
 assert.equal(failedTestAgain.next[0].kind, "change-strategy");
 assert.equal(failedTestAgain.next[0].command,
-  "claude-foundation packet change-a --phase build");
+  "cloop packet change-a --phase build");
 
 const productiveRepairs = fixture({
   receiptOverrides: { review: "fail" },
@@ -1118,7 +1118,7 @@ function concurrentFixture(options = {}) {
     "review and test providers both start before either finishes");
   assert.equal(run.reviewCommands.length, 1);
   assert.match(run.reviewCommands[0].command,
-    /^claude-foundation authority run change-a --request review-1 --subject-actor implementation-agent$/);
+    /^cloop authority run change-a --request review-1 --subject-actor implementation-agent$/);
   assert.equal(run.reviewCommands[0].workspaceHash, "workspace-a",
     "the review binds to the same workspace hash as the providers");
 }

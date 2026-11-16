@@ -78,7 +78,7 @@ newest version (numeric order; snapshot dates only break ties; aliases last) of 
 
 For a Change Loop `execution.mode: parallel` envelope, spawn one worker per lease
 with `changeLoopTask: {change, task, tier?}`. The worker runs from the project
-root, first runs `claude-foundation packet <change> --task <task>`, implements
+root, first runs `cloop packet <change> --task <task>`, implements
 only that task in the change workspace, and never edits `tasks.md` or leases;
 the coordinator resumes `advance`. Every worker carries
 `FOUNDATION_PARENT_SESSION_ID` (the root coordinating session), so Change Loop

@@ -22,7 +22,7 @@ test("a running proof's WORKING action carries its progress to the caller", () =
 });
 test("exhausted AI review asks the user; a review no reviewer can start keeps waiting", () => {
   const requests = [{ type: "review", status: "requested", requestId: "r1" }];
-  const template = "claude-foundation authority status change-a --request r1 --template";
+  const template = "cloop authority status change-a --request r1 --template";
   const asked = proofOperationAction("change-a", {
     status: "WAITING_EXTERNAL", requests,
     next: [{ requestId: "r1", command: template,
@@ -103,7 +103,7 @@ test("advance returns bounded Build work without invoking a model", () => {
   assert.equal(value.action, "EDIT");
   assert.equal(value.legacyAction, "EXECUTE_TASK");
   assert.equal(value.boundary, "host-execution");
-  assert.equal(value.resume, "claude-foundation advance change-a");
+  assert.equal(value.resume, "cloop advance change-a");
   assert.equal("resumeCommand" in value, false, "advance protocol 7 names one resume route");
 });
 
@@ -135,17 +135,17 @@ test("each Build task carries its focused check in the pre-allowed harness exec 
     }
   });
   const [plain, shell, none] = value.tasks;
-  // The installed allowlist grants `Bash(claude-foundation *)`; a bare
+  // The installed allowlist grants `Bash(cloop *)`; a bare
   // `node --test` would cost a host approval prompt on every Build.
-  assert.equal(plain.checkCommand, "claude-foundation exec change-a --task T001 -- node --test");
+  assert.equal(plain.checkCommand, "cloop exec change-a --task T001 -- node --test");
   // Shell text stays one quoted `sh -c` operand: the host shell hands exec
   // exactly the verify string advance itself runs.
-  const prefix = "claude-foundation exec change-a --task T002 -- sh -c ";
+  const prefix = "cloop exec change-a --task T002 -- sh -c ";
   assert.ok(shell.checkCommand.startsWith(prefix));
   assert.equal(spawnSync("sh", ["-c", `printf %s ${shell.checkCommand.slice(prefix.length)}`],
     { encoding: "utf8" }).stdout, "npm test -- --grep 'it isn''t' | tail -5");
   assert.equal(none.checkCommand, undefined);
-  for (const task of [plain, shell]) assert.match(task.checkCommand, /^claude-foundation /);
+  for (const task of [plain, shell]) assert.match(task.checkCommand, /^cloop /);
   assert.deepEqual(value.verification, ["node --test", "npm test -- --grep 'it isn''t' | tail -5"]);
   assert.match(value.instructions.join(" "), /checkCommand/);
 });
@@ -163,7 +163,7 @@ test("a verify that starts with an environment assignment runs through sh -c", (
     }
   });
   const [assigned] = value.tasks;
-  const prefix = "claude-foundation exec change-a --task T001 -- ";
+  const prefix = "cloop exec change-a --task T001 -- ";
   assert.ok(assigned.checkCommand.startsWith(prefix));
   // The host shell splits the tail into exec's argv: a leading `NAME=value`
   // word must not become the program exec spawns.
@@ -259,7 +259,7 @@ test("changed repair workspace routes to invalidated evidence", () => {
   assert.equal(value.action, "RUN_EXTERNAL");
   assert.equal(value.legacyAction, "RUN_INVALIDATED_EVIDENCE");
   assert.equal(value.boundary, null);
-  assert.equal(value.command, "claude-foundation advance change-a --through proven");
+  assert.equal(value.command, "cloop advance change-a --through proven");
 });
 
 test("advance returns configured review and user authority boundaries", () => {
@@ -270,7 +270,7 @@ test("advance returns configured review and user authority boundaries", () => {
     }],
     authorityActions: [{
       requestId: "review-1",
-      command: "claude-foundation authority run change-a --request review-1 --subject-actor implementation-agent"
+      command: "cloop authority run change-a --request review-1 --subject-actor implementation-agent"
     }]
   });
   assert.equal(review.action, "RUN_EXTERNAL");
@@ -289,7 +289,7 @@ test("advance returns configured review and user authority boundaries", () => {
 });
 
 test("a contract decision boundary names the command that opens the decision revision", () => {
-  const command = "claude-foundation advance change-a --approve-spec --decision-ref <ref>";
+  const command = "cloop advance change-a --approve-spec --decision-ref <ref>";
   const value = coordinatorAction({
     ...base,
     proofCursor: {
@@ -310,7 +310,7 @@ test("Land readiness forbids implicit delivery authority", () => {
   assert.equal(value.action, "ASK_USER");
   assert.equal(value.legacyAction, "LAND_READY");
   assert.deepEqual(value.forbidden, ["commit", "push", "publish", "open-pr", "waive"]);
-  assert.equal(value.command, "claude-foundation advance change-a --through archived",
+  assert.equal(value.command, "cloop advance change-a --through archived",
     "Land readiness names the public advance route, never `land advance`");
 });
 
@@ -331,7 +331,7 @@ test("a shared resource another change holds queues Build as a harness wait", ()
   assert.equal(value.wait.kind, "cross-change-resource");
   assert.deepEqual(value.wait.holders, ["other"]);
   assert.match(value.wait.condition, /other lands/);
-  assert.equal(value.wait.checkCommand, "claude-foundation advance change-a");
+  assert.equal(value.wait.checkCommand, "cloop advance change-a");
   assert.equal(value.userState, "WORKING", "a queued change never reaches the user");
 });
 
@@ -346,7 +346,7 @@ test("a held lease resource is a harness wait, not a runtime repair", () => {
   assert.equal(value.legacyAction, "WAIT_RESOURCE");
   assert.equal(value.owner, "harness");
   assert.equal(value.wait.holder.changeId, "other");
-  assert.equal(value.wait.checkCommand, "claude-foundation advance change-a --through build");
+  assert.equal(value.wait.checkCommand, "cloop advance change-a --through build");
 });
 
 test("successful proof and current review request supersede stale review failure", () => {
@@ -366,7 +366,7 @@ test("successful proof and current review request supersede stale review failure
     authorityRequests: [{ requestId: "review-2", type: "review", status: "requested" }],
     authorityActions: [{
       requestId: "review-2",
-      command: "claude-foundation authority run change-a --request review-2 --subject-actor implementation-agent"
+      command: "cloop authority run change-a --request review-2 --subject-actor implementation-agent"
     }]
   });
   assert.equal(requested.action, "RUN_EXTERNAL");
@@ -385,7 +385,7 @@ test("advance rejects stale proof and stops when bounded review needs an externa
   const capped = coordinatorAction({
     ...base,
     authorityRequests: [{ requestId: "review-3", type: "review", status: "requested" }],
-    authorityActions: [{ requestId: "review-3", command: "claude-foundation authority status change-a --request review-3 --template" }]
+    authorityActions: [{ requestId: "review-3", command: "cloop authority status change-a --request review-3 --template" }]
   });
   assert.equal(capped.action, "WAIT");
   assert.equal(capped.legacyAction, "WAIT_EXTERNAL");
@@ -406,7 +406,7 @@ test("exhausted review infrastructure names the supported reset (issue #39)", ()
   assert.equal(exhausted.action, "REPAIR");
   assert.equal(exhausted.legacyAction, "REPAIR_REVIEW_INFRASTRUCTURE");
   const guidance = JSON.stringify(exhausted);
-  assert.match(guidance, /claude-foundation authority reset-infra change-a --decision-ref <user-decision>/);
+  assert.match(guidance, /cloop authority reset-infra change-a --decision-ref <user-decision>/);
   assert.match(guidance, /reviewer process exited 127/);
 });
 
@@ -416,7 +416,7 @@ test("advance stops on proof preflight before starting expensive evidence", () =
     proofPreflight: {
       status: "INFRASTRUCTURE_ERROR",
       unavailableProviders: ["browser"],
-      next: [{ command: "claude-foundation doctor --stage prove --change change-a" }]
+      next: [{ command: "cloop doctor --stage prove --change change-a" }]
     }
   });
   assert.equal(unavailable.action, "REPAIR");
@@ -454,7 +454,7 @@ test("advance uses proof readiness hash and does not hash failed infrastructure 
       repositoryIssues: ["selected repository 'api' isolated workspace is missing"],
       unavailableProviders: [],
       next: [{
-        command: "claude-foundation sandbox create change-a --all"
+        command: "cloop sandbox create change-a --all"
       }]
     }),
     relevantHash: assert.fail,
@@ -465,7 +465,7 @@ test("advance uses proof readiness hash and does not hash failed infrastructure 
   assert.equal(value.action, "REPAIR");
   assert.equal(value.legacyAction, "REPAIR_PROVIDER_ENVIRONMENT");
   assert.equal(value.command,
-    "claude-foundation advance change-a");
+    "cloop advance change-a");
 });
 
 test("a reached target reports the latest AI review's spec gaps without changing the outcome", async () => {
@@ -622,7 +622,7 @@ test("advance --through build stops before proof and preserves one resume route"
   assert.equal(value.action, "DONE");
   assert.equal(value.reached, "build");
   assert.equal(value.resume, null);
-  assert.equal(value.next, "claude-foundation advance change-a --through proven");
+  assert.equal(value.next, "cloop advance change-a --through proven");
 });
 
 test("advance records the furthest requested target once, never lowering it", async () => {
@@ -729,7 +729,7 @@ test("a planning failure still reaches dispatch, which reports it", () => {
 });
 
 test("advance preserves exact runtime failures in a repair envelope", () => {
-  const reason = "isolated runtime state is missing repository 'api'; repair it with 'claude-foundation sandbox create change-a --all'";
+  const reason = "isolated runtime state is missing repository 'api'; repair it with 'cloop sandbox create change-a --all'";
   const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "building" }),
     agentDispatchValue: () => { throw new Error(reason); },
@@ -744,8 +744,8 @@ test("advance preserves exact runtime failures in a repair envelope", () => {
   assert.equal(value.reason, reason.replace("sandbox create change-a --all", "advance change-a"),
     "a primitive named in diagnostic text is routed through advance");
   assert.equal(value.command,
-    "claude-foundation advance change-a");
-  assert.equal(value.resume, "claude-foundation advance change-a");
+    "cloop advance change-a");
+  assert.equal(value.resume, "cloop advance change-a");
 });
 
 test("advance --through converts prepare and Land failures without rejecting", async () => {
@@ -763,7 +763,7 @@ test("advance --through converts prepare and Land failures without rejecting", a
   assert.equal(prepare.legacyAction, "REPAIR_BUILD_RUNTIME");
   assert.equal(prepare.reason, "root sandbox unavailable");
   assert.equal(prepare.resume,
-    "claude-foundation advance change-a --through archived");
+    "cloop advance change-a --through archived");
 
   const landing = { status: "proven" };
   const landRuntime = createAdvanceRuntime(advanceRuntimeDeps({
@@ -781,7 +781,7 @@ test("advance --through converts prepare and Land failures without rejecting", a
   assert.equal(land.legacyAction, "REPAIR_LAND_RUNTIME");
   assert.equal(land.reason, "land conflict route");
   // Land's fallback is the Land route itself, never the internal `land check`.
-  assert.equal(land.command, "claude-foundation advance change-a --through archived");
+  assert.equal(land.command, "cloop advance change-a --through archived");
   assert.doesNotMatch(JSON.stringify(land), /land check/);
 });
 
@@ -844,7 +844,7 @@ test("advance convergence stops only after repeated unchanged automation", async
     runProof: async () => {
       proofRuns += 1;
       return { progressed: false, issues: ["provider 'test' has no command in execution.yaml"],
-        next: [{ reason: "wire the test provider", command: "claude-foundation evidence init change-a --write" }] };
+        next: [{ reason: "wire the test provider", command: "cloop evidence init change-a --write" }] };
     }
   }));
   const value = await runtime.advanceThrough("change-a", "proven");
@@ -859,7 +859,7 @@ test("advance convergence stops only after repeated unchanged automation", async
   assert.match(value.instruction, /provider 'test' has no command in execution\.yaml/);
   assert.match(value.instruction, /wire the test provider/);
   assert.match(value.step.output, /no command in execution\.yaml/);
-  assert.doesNotMatch(value.instruction, /claude-foundation evidence init/,
+  assert.doesNotMatch(value.instruction, /cloop evidence init/,
     "a primitive the step named is routed through advance");
   assert.equal(proofRuns, 2);
 });
@@ -901,7 +901,7 @@ test("a weak host can finish by reading one action and calling its resume", asyn
   assert.equal(first.action, "EDIT");
   assert.deepEqual(first.allowedPaths, ["src/**"]);
   assert.deepEqual(first.verification, ["npm test"]);
-  assert.equal(first.resume, "claude-foundation advance change-a --through archived");
+  assert.equal(first.resume, "cloop advance change-a --through archived");
   assert.ok(JSON.stringify(first).length < 8192, "action stays within the bounded host context");
   edited = true;
   const second = await runtime.advanceThrough("change-a", "archived");
@@ -1041,15 +1041,15 @@ function selfDrivingRuntime(overrides = {}) {
 test("automatic review accepts only an exact harness-generated authority run route", async () => {
   const { automaticReviewRun } = await import("../runtime/workflow/advance-recovery.mjs");
   assert.deepEqual(automaticReviewRun("change-a",
-    "claude-foundation authority run change-a --request review-1 --subject-actor implementation-agent"),
+    "cloop authority run change-a --request review-1 --subject-actor implementation-agent"),
   { request: "review-1", "subject-actor": "implementation-agent" });
   for (const route of [
-    "claude-foundation authority run change-a --request review-1 --subject-actor <original-implementer>",
-    "claude-foundation authority run change-a --request review-1 --subject-actor x --main-session-model <model>",
-    "claude-foundation authority run other --request review-1 --subject-actor x",
-    "claude-foundation authority run change-a --request review-1",
-    "claude-foundation authority status change-a --request review-1 --template",
-    "claude-foundation authority run change-a --request r1 --subject-actor x; rm -rf /"
+    "cloop authority run change-a --request review-1 --subject-actor <original-implementer>",
+    "cloop authority run change-a --request review-1 --subject-actor x --main-session-model <model>",
+    "cloop authority run other --request review-1 --subject-actor x",
+    "cloop authority run change-a --request review-1",
+    "cloop authority status change-a --request review-1 --template",
+    "cloop authority run change-a --request r1 --subject-actor x; rm -rf /"
   ]) assert.equal(automaticReviewRun("change-a", route), null, route);
 });
 
@@ -1060,7 +1060,7 @@ test("advance wires detected evidence itself, then proves without an agent comma
       status: "NEEDS_USER_DECISION", workspaceHash: "workspace-a",
       authorityPreflight: { status: "READY" },
       next: [{ provider: "test", kind: "user-decision",
-        wiring: { kind: "configure-provider", command: "claude-foundation evidence init change-a --write" },
+        wiring: { kind: "configure-provider", command: "cloop evidence init change-a --write" },
         decision: { kind: "external-evidence", summary: "wire test", options: [] } }]
     },
     wireEvidence: async (id, wiring) => { wired += 1; assert.deepEqual(wiring.providers, ["test"]); }
@@ -1099,7 +1099,7 @@ test("advance runs an agent-runnable configured reviewer inline and keeps placeh
   const { runtime, calls } = selfDrivingRuntime(() => ({
     authorityStatusValue: () => ({ requests: request.status === "requested" ? [request] : [] }),
     authorityNext: () => [{ requestId: "review-1",
-      command: "claude-foundation authority run change-a --request review-1 --subject-actor implementation-agent" }],
+      command: "cloop authority run change-a --request review-1 --subject-actor implementation-agent" }],
     runReview: async (id, flags) => { reviews.push([id, flags]); request.status = "completed"; }
   }));
   const value = await runtime.advanceThrough("change-a", "proven");
@@ -1111,7 +1111,7 @@ test("advance runs an agent-runnable configured reviewer inline and keeps placeh
   const handoff = selfDrivingRuntime(() => ({
     authorityStatusValue: () => ({ requests: [fallback] }),
     authorityNext: () => [{ requestId: "review-2",
-      command: "claude-foundation authority run change-a --request review-2 --subject-actor x --main-session-model <model>" }],
+      command: "cloop authority run change-a --request review-2 --subject-actor x --main-session-model <model>" }],
     runReview: async () => { throw new Error("placeholder routes must not run"); }
   }));
   const stopped = await handoff.runtime.advanceThrough("change-a", "proven");
@@ -1126,7 +1126,7 @@ test("a reviewer run that changes nothing stops at the no-progress boundary", as
   const { runtime } = selfDrivingRuntime(() => ({
     authorityStatusValue: () => ({ requests: [request] }),
     authorityNext: () => [{ requestId: "review-1",
-      command: "claude-foundation authority run change-a --request review-1 --subject-actor implementation-agent" }],
+      command: "cloop authority run change-a --request review-1 --subject-actor implementation-agent" }],
     runReview: async () => { runs += 1; }
   }));
   const value = await runtime.advanceThrough("change-a", "proven");

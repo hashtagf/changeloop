@@ -391,7 +391,7 @@ function fixture(id) {
   (error) => {
     assert.match(error.message, /still dispatched/);
     assert.match(error.message,
-      /claude-foundation authority abort case-inflight-reset --request request-1 --reason <why>/,
+      /cloop authority abort case-inflight-reset --request request-1 --reason <why>/,
       "the refusal names the live request instead of a status lookup");
     assert.doesNotMatch(error.message, /authority status/);
     return true;

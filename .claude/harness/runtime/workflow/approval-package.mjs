@@ -109,7 +109,7 @@ export function previewSuggestions(route, providers, id) {
         providers: matches.map((provider) => ({
           name: provider.name,
           external: provider.external,
-          command: `claude-foundation preview ${id} --provider ${provider.name}` +
+          command: `cloop preview ${id} --provider ${provider.name}` +
             (provider.external ? " --decision-ref <user-decision>" : "")
         }))
       };

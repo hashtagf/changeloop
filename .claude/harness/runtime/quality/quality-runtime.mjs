@@ -233,7 +233,7 @@ export function createQualityRuntime({
 
   function configured() {
     if (!existsSync(configPath))
-      fail(`missing ${QUALITY_CONFIG_RELATIVE}; run 'claude-foundation quality init --write'`);
+      fail(`missing ${QUALITY_CONFIG_RELATIVE}; run 'cloop quality init --write'`);
     const value = readJson(configPath);
     validateConsumerQualityConfig(value, new Set(repositoryCatalog().repositories.map((row) => row.id)));
     return value;
@@ -412,7 +412,7 @@ export function createQualityRuntime({
 
   function report() {
     const path = join(root, QUALITY_RESULT_RELATIVE, "summary.json");
-    if (!existsSync(path)) fail("no consumer quality result; run 'claude-foundation quality run'");
+    if (!existsSync(path)) fail("no consumer quality result; run 'cloop quality run'");
     const value = readJson(path);
     log(JSON.stringify(value, null, 2));
     return value;
@@ -462,7 +462,7 @@ export function createQualityRuntime({
 
   function debt() {
     const summaryPath = join(root, QUALITY_RESULT_RELATIVE, "summary.json");
-    if (!existsSync(summaryPath)) fail("no consumer quality result; run 'claude-foundation quality run'");
+    if (!existsSync(summaryPath)) fail("no consumer quality result; run 'cloop quality run'");
     const summary = readJson(summaryPath);
     const changedFindings = summary.lanes.flatMap((lane) => {
       const functions = lane.evaluation?.changedFunctions || [];

@@ -80,7 +80,7 @@ test("a delta review template is recordable as given and names dispatch when nee
   assert.deepEqual(evidence.verifiedFindingIds, ["F1"]);
   const context = { protocolVersion: 2, expandList: (value) => value || [], listCount: () => 0 };
   const template = authorityResponseTemplate(context, delta);
-  assert.match(template.dispatchFirst, /claude-foundation authority dispatch c --request r-1/);
+  assert.match(template.dispatchFirst, /cloop authority dispatch c --request r-1/);
   const dispatched = authorityResponseTemplate(context, { ...delta, status: "dispatched" });
   assert.equal("dispatchFirst" in dispatched, false);
 });

@@ -35,7 +35,7 @@ export function investigationRecordTemplate() {
     save: "Write this record with the Write tool to openspec/investigations/<id>.json " +
       "and keep it there; that path is pre-allowed and the tool creates the folder. Do not save it through the shell " +
       "(heredoc, cat >, echo >): the host refuses those. After each evidence batch run " +
-      "claude-foundation investigate openspec/investigations/<id>.json.",
+      "cloop investigate openspec/investigations/<id>.json.",
     version: 2,
     ...intakeTemplate(),
     id: "replace-with-investigation-id",
@@ -489,7 +489,7 @@ export function createInvestigationRuntime({
       setOperationChangeId(workspace.binding.changeId);
     issues.push(...workspace.issues);
     const sourceRoot = workspace.root;
-    const resume = `claude-foundation investigate ${recordPath}`;
+    const resume = `cloop investigate ${recordPath}`;
     const relativeRecord = relative(projectRoot, absolute).replaceAll("\\", "/");
     const relativeState = `.foundation/investigations/${id}.json`;
     const paths = sourceRoot

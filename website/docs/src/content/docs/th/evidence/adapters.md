@@ -56,7 +56,7 @@ readiness หรือ config เฉพาะ project การเปลี่�
 
 ถ้าไม่ตั้ง `timeoutMs` คำสั่งได้เวลาสิบนาที เมื่อหมดเวลาจะล้มเป็น `error` ที่ระบุ provider
 เวลาที่จำกัด และ `timeoutMs` ที่ต้องเพิ่ม คำสั่งของ provider ไม่ได้รับตัวแปรของ session ของ agent
-test ที่รัน `claude-foundation` ใน fixture จึงทำงานเหมือนกันทั้งในและนอก Prove
+test ที่รัน `cloop` ใน fixture จึงทำงานเหมือนกันทั้งในและนอก Prove
 
 ### test-discovery
 
@@ -187,8 +187,8 @@ harness รันคำสั่งสลับกันระหว่าง ba
 เมื่อ change ประกาศ claim แล้วแต่ derived หรือ custom wiring ยังไม่ลงตัว
 
 ```bash
-claude-foundation advance <change> --through proven   # ตรวจหาและต่อสาย
-claude-foundation doctor --stage prove --change <change>   # อธิบายสิ่งที่ยังไม่ลงตัว
+cloop advance <change> --through proven   # ตรวจหาและต่อสาย
+cloop doctor --stage prove --change <change>   # อธิบายสิ่งที่ยังไม่ลงตัว
 ```
 
 `advance` รัน primitive ภายใน `evidence detect` และ `evidence init --write` เอง

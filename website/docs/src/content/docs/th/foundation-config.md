@@ -78,10 +78,10 @@ independent หรือ diverse receipt จะบันทึก `independence-
 ## ขั้นตอนแก้ที่ปลอดภัย
 
 1. แก้ `foundation.json` ที่ root และคง `version` เป็น `1`
-2. รัน `claude-foundation doctor --stage change` เพื่อตรวจ policy ทั่วไป
-3. ถ้าแก้ review ให้รัน `claude-foundation doctor --stage prove` เพื่อตรวจ CLI,
+2. รัน `cloop doctor --stage change` เพื่อตรวจ policy ทั่วไป
+3. ถ้าแก้ review ให้รัน `cloop doctor --stage prove` เพื่อตรวจ CLI,
    authentication และ read-only mode ของ reviewer
-4. ดู model routing ด้วย `claude-foundation models`
+4. ดู model routing ด้วย `cloop models`
 5. commit policy ก่อนสร้าง evidence ภายใต้นโยบายใหม่
 
 การเปลี่ยน policy อาจทำให้ review หรือ proof ที่สร้างด้วย contract เก่า stale
@@ -287,7 +287,7 @@ login CLI ตามปกติ แล้วใช้ `doctor --stage prove` ต
 
 เมื่อตั้งค่าแล้ว change ต้องได้รับอนุมัติจาก role ที่ตั้งไว้ซึ่ง router เลือกสำหรับ
 change นั้น แต่ละ role อนุมัติด้วย
-`claude-foundation advance <change> --approve-spec --role <role> --decision-ref <ref>`
+`cloop advance <change> --approve-spec --role <role> --decision-ref <ref>`
 (หรือ `change resolve … --approve-spec --role <role>`) จนกว่าทุก lane ที่ต้องมีจะ
 อนุมัติ revision และ packet ปัจจุบันครบ `advance` จะหยุดด้วย `ASK_USER` พร้อมระบุ
 role ที่ยังขาด และไม่สร้าง sandbox การอนุมัติที่ไม่มี `--role` ครอบคลุมทุก lane
@@ -342,7 +342,7 @@ frozen-lockfile ของ pnpm, yarn, bun) ตั้ง `"installDependencies": 
 - `reviewPolicy` รับเฉพาะ `risk-tiered` (ค่า default)
 
 ค่า `legacy` ของทั้งสอง key ถูกยกเลิกแล้วและ runtime จะปฏิเสธ ให้รัน
-`claude-foundation init` อีกครั้ง การ upgrade จะเขียนทั้งสอง key เป็นค่าที่ ship มา
+`cloop init` อีกครั้ง การ upgrade จะเขียนทั้งสอง key เป็นค่าที่ ship มา
 `optional` แปลว่า semantic compiler สร้าง `grounding.yaml` เฉพาะเมื่อมี material
 non-derived decision จริง ตั้งเป็น `required` เมื่อ policy ของ project ต้องมี
 decision ledger ทุก change เท่านั้น เพราะ grounding ว่างไม่ได้เพิ่มคุณภาพ
@@ -423,7 +423,7 @@ wait แบบ `delivery-policy`
 หลังแก้ทุกครั้ง ชุดตรวจที่สั้นและเชื่อถือได้คือ:
 
 ```bash
-claude-foundation doctor --stage change
-claude-foundation doctor --stage prove
-claude-foundation models
+cloop doctor --stage change
+cloop doctor --stage prove
+cloop models
 ```

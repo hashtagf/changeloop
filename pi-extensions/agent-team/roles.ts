@@ -105,7 +105,7 @@ export function changeLoopTaskBrief(project: string | undefined, change: string,
     throw new Error(`Change '${change}' has no Build workspace; resume advance in the coordinating session first`);
   return { cwd: project, workspace, task: [
     `Change Loop leased task ${task} of change ${change}. Workspace: ${workspace}`,
-    `First run: cd ${workspace} && claude-foundation packet ${change} --task ${task}`,
+    `First run: cd ${workspace} && cloop packet ${change} --task ${task}`,
     'Follow its workerContract: implement only that task inside its allowed paths and run its focused checks.',
     `Every bash call starts in ${project}; cd to the absolute workspace in each call and use absolute file paths.`,
     `Do not edit openspec/changes/${change}/tasks.md, acquire or release leases, run advance, land, or work on other tasks.`,

@@ -233,7 +233,7 @@ export function planSelectiveProofRecovery({
     required.includes(provider)));
   const preservedProviders = sortedUnique(preserved.filter((provider) =>
     !rerun.has(provider) && required.includes(provider)));
-  const command = id ? `claude-foundation advance ${id} --through proven` : null;
+  const command = id ? `cloop advance ${id} --through proven` : null;
   const sortedFindings = findings.sort((left, right) =>
     `${left.path}\0${left.code}\0${left.message}`.localeCompare(
       `${right.path}\0${right.code}\0${right.message}`));

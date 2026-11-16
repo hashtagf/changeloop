@@ -1161,7 +1161,7 @@ test("the amendment template leads with the verify-only form", () => {
   assert.match(template.save, /Write tool to \.foundation\/drafts\/<change>-amendment\.json/);
   assert.match(template.save, /not save it through the shell \(heredoc/);
   assert.match(template.save,
-    /claude-foundation change amend <change> \.foundation\/drafts\/<change>-amendment\.json/);
+    /cloop change amend <change> \.foundation\/drafts\/<change>-amendment\.json/);
   assert.equal(taskContractOnlyAmendment(template.verifyOnly), true);
   assert.equal(taskContractOnlyAmendment(template.reopenCompleted), true);
   assert.equal(taskContractOnlyAmendment(template.removeUnfinished), true);

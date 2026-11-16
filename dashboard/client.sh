@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# claude-foundation dashboard — presence client.
+# cloop dashboard — presence client.
 #
 # Modes (the installer maps subcommands to these):
-#   run     foreground heartbeat loop   ← `claude-foundation dashboard`
-#   up      start heartbeat in background ← `claude-foundation dashboard-up`
-#   down    stop the background heartbeat ← `claude-foundation dashboard-down`
-#   status  is the background heartbeat running? ← `claude-foundation dashboard-status`
+#   run     foreground heartbeat loop   ← `cloop dashboard`
+#   up      start heartbeat in background ← `cloop dashboard-up`
+#   down    stop the background heartbeat ← `cloop dashboard-down`
+#   status  is the background heartbeat running? ← `cloop dashboard-status`
 #
 # The background daemon binds NO port — it only sends outbound heartbeats and is
 # controlled via a PID file — so it never collides with your other dev servers.
@@ -31,13 +31,13 @@ fail() { printf "%s\n" "${R}✗${N} $*" >&2; exit 1; }
 
 usage() {
   cat <<EOF
-claude-foundation dashboard — report this machine's presence to the team dashboard
+cloop dashboard — report this machine's presence to the team dashboard
 
 Usage:
-  claude-foundation dashboard-up --key <key> [options]   start in the background
-  claude-foundation dashboard-down                       stop the background client
-  claude-foundation dashboard-status                     show whether it's running
-  claude-foundation dashboard --key <key> [options]      run in the foreground
+  cloop dashboard-up --key <key> [options]   start in the background
+  cloop dashboard-down                       stop the background client
+  cloop dashboard-status                     show whether it's running
+  cloop dashboard --key <key> [options]      run in the foreground
 
 Options:
   --key <key>          Shared dashboard key (or env CLAUDE_FOUNDATION_DASHBOARD_KEY)
@@ -968,7 +968,7 @@ case "$MODE" in
     if is_running; then
       ok "dashboard client started in background ${D}(pid $child)${N}"
       info "server: ${SERVER}"
-      info "stop with: ${B}claude-foundation dashboard-down${N}   ·   log: $LOGFILE"
+      info "stop with: ${B}cloop dashboard-down${N}   ·   log: $LOGFILE"
     else
       warn "client exited immediately — last log lines:"
       tail -n 3 "$LOGFILE" >&2 || true

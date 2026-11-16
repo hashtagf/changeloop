@@ -29,7 +29,7 @@ class ClaudeFoundation < Formula
                     "foundation.json", "install.sh", "install-cursor.sh",
                     "install-opencode.sh", "install-codex.sh", "install-pi.sh", "cli.sh", "dashboard"
 
-    # VERSION is cli.sh's source of truth for `claude-foundation version`.
+    # VERSION is cli.sh's source of truth for `cloop version`.
     # Ship the repo file when present (HEAD builds, and tags cut after it was
     # added); otherwise synthesize it from the formula version so older stable
     # tarballs that predate the file still report correctly. The repo file wins
@@ -42,34 +42,31 @@ class ClaudeFoundation < Formula
 
     # cli.sh routes install/dashboard commands and forwards native workflow
     # commands to the runtime installed in the current project.
-    (bin/"claude-foundation").write <<~EOS
+    # `cloop` is the one command for people and agents.
+    (bin/"cloop").write <<~EOS
       #!/usr/bin/env bash
       exec "#{libexec}/cli.sh" "$@"
     EOS
-    chmod 0755, bin/"claude-foundation"
-    # `cloop` is the short command for people. `claude-foundation` stays the
-    # compatibility name that agents, permission allowlists, and scripts use.
-    bin.install_symlink bin/"claude-foundation" => "cloop"
+    chmod 0755, bin/"cloop"
   end
 
   test do
-    help = shell_output("#{bin}/claude-foundation --help")
+    help = shell_output("#{bin}/cloop --help")
     assert_match "change start", help
     assert_match "advance", help
 
-    full_help = shell_output("#{bin}/claude-foundation help --all")
+    full_help = shell_output("#{bin}/cloop help --all")
     assert_match "proof readiness", full_help
     assert_match "land check", full_help
-    assert_match version.to_s, shell_output("#{bin}/claude-foundation version")
     assert_match version.to_s, shell_output("#{bin}/cloop version")
 
-    instruction = JSON.parse(shell_output("#{bin}/claude-foundation host instruction changes"))
+    instruction = JSON.parse(shell_output("#{bin}/cloop host instruction changes"))
     assert_equal 1, instruction.fetch("protocol")
     assert_equal "changes", instruction.fetch("command")
 
     project = testpath/"project"
     project.mkpath
-    system bin/"claude-foundation", "init", project, "--yes"
+    system bin/"cloop", "init", project, "--yes"
     assert_path_exists project/"foundation.json"
   end
 end

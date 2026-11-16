@@ -76,7 +76,7 @@ export function landVerificationMessage(id, findings, { preflight = false } = {}
     "Move work written into a shared-sandbox placeholder into that repository's sandbox " +
     "(.foundation/repository-sandboxes/<change>/<repository>), make the target checkout a " +
     "real repository where its binding is wrong, then resume with " +
-    `'claude-foundation advance ${id} --through archived'.`;
+    `'cloop advance ${id} --through archived'.`;
 }
 
 // A declared nested repository's gitlink is that repository's own pointer, so
@@ -116,7 +116,7 @@ export function rootPointerRepairMessage({ changeId, rootSandbox, moves }) {
   });
   return `the root sandbox moves the pointer of selected repository path(s); a pointer is ` +
     `never root content, and that repository's own sandbox carries its commits:\n${
-      steps.join("\n")}\nThen resume with 'claude-foundation advance ${changeId} --through ` +
+      steps.join("\n")}\nThen resume with 'cloop advance ${changeId} --through ` +
     "archived'; it proves what changed, lands the repository work, and '/deliver' sets the " +
     "root pointer to the delivered commit.";
 }
@@ -139,11 +139,11 @@ export function repositoryPointerStop({ changeId, moves }) {
           "repository: select that repository for this change (a semantic amendment that " +
           "widens its scope), bring the target commit into its repository sandbox " +
           "(.foundation/repository-sandboxes/<change>/<repository>), restore the root pointer " +
-          `to its base, then 'claude-foundation advance ${changeId} --through archived'. ` +
+          `to its base, then 'cloop advance ${changeId} --through archived'. ` +
           "'/deliver' sets the root pointer to the delivered repository commit." },
         { id: "restore-pointer", outcome: "Drop the pointer move: restore each listed path " +
           "to its base pointer in the root sandbox and land the remaining work with " +
-          `'claude-foundation advance ${changeId} --through archived'.` },
+          `'cloop advance ${changeId} --through archived'.` },
         { id: "pause", outcome: "Change nothing and leave the sandbox and target as they are." }
       ],
       recommended: "deliver-through-repository"

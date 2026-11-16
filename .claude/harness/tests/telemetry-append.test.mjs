@@ -181,7 +181,7 @@ test("blocked command telemetry carries bounded cause and recovery without raw e
     phase: "prove; echo SECRET-456 /private/path"
   });
   assert.equal(hostilePhase.recovery,
-    "claude-foundation packet change-a --phase build");
+    "cloop packet change-a --phase build");
   assert.equal(JSON.stringify(hostilePhase).includes("SECRET-456"), false);
   assert.equal(commandTelemetryRow(commandContext(), 0).blocker, null);
 });
@@ -203,7 +203,7 @@ test("unmatched blocker text keeps the policy guard but records its reason", () 
   });
   assert.equal(blocker.code, "policy-guard");
   assert.equal(blocker.reason, "unclassified stop");
-  assert.equal(blocker.recovery, "claude-foundation packet change-a --phase prove");
+  assert.equal(blocker.recovery, "cloop packet change-a --phase prove");
   assert.equal(blockerTelemetryValue("", {}).reason, null);
 });
 
@@ -215,9 +215,9 @@ test("a declared blocker code wins over message text", () => {
   assert.equal(decision.code, "decision-required");
   assert.equal(decision.classification, "decision");
   assert.equal(decision.reason, "choose workspace strategy");
-  assert.equal(decision.recovery, "claude-foundation packet change-a --phase prove");
+  assert.equal(decision.recovery, "cloop packet change-a --phase prove");
   assert.equal(blockerTelemetryValue({ code: "execution-indeterminate", reason: "x" },
-    { changeId: "change-a" }).recovery, "claude-foundation advance change-a --through proven");
+    { changeId: "change-a" }).recovery, "cloop advance change-a --through proven");
   assert.equal(blockerTelemetryValue({ code: "unknown-code", reason: "budget hit" }, {}).code,
     "budget-exhausted");
 });

@@ -21,7 +21,7 @@ Build ไม่ส่งอะไรเข้าโปรเจกต์ขอ�
 Build ใช้คำสั่งหลักของ agent เพียงคำสั่งเดียว:
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 Coordinator ตรวจ agreement สร้างหรือ sync workspace แยก compile dependency ของ
@@ -36,7 +36,7 @@ task ตรวจ lease ที่ยังทำงาน แล้วคืน 
 | Action | ความหมาย |
 |---|---|
 | `WORKING` | งานของ harness ยังทำอยู่ (proof หรือ transaction ของ Land) ให้รอแทนการเริ่มรอบใหม่ |
-| `EDIT` | ทำเฉพาะ task, workspace และ path ที่คืนมา (ใช้ `workspace` ของแต่ละ task; task ของ submodule ชี้ไปที่ repository sandbox ของมัน) เปิดเฉพาะไฟล์ใน `contextFiles` สร้างไฟล์ใน `newFiles` แล้วรัน `checkCommand` ของแต่ละ task (verify ที่รันผ่าน `claude-foundation exec`) |
+| `EDIT` | ทำเฉพาะ task, workspace และ path ที่คืนมา (ใช้ `workspace` ของแต่ละ task; task ของ submodule ชี้ไปที่ repository sandbox ของมัน) เปิดเฉพาะไฟล์ใน `contextFiles` สร้างไฟล์ใน `newFiles` แล้วรัน `checkCommand` ของแต่ละ task (verify ที่รันผ่าน `cloop exec`) |
 | `REPAIR` | แก้ repair batch ที่เรียงตาม dependency ให้ครบแล้ว resume |
 | `RUN_EXTERNAL` | รัน boundary operation ที่ตั้งค่าไว้หนึ่งตัว |
 | `WAIT` | รอ resource ที่ task หรือ change อื่นถืออยู่ หรือรอเจ้าของภายนอก harness จะ resume เอง และ state ถูกเก็บไว้ |
@@ -68,7 +68,7 @@ frozen-lockfile ของ pnpm, yarn, bun) ตั้ง `sandbox.installDependen
 `package.json` หรือ lockfile, harness จะรัน setup ใหม่ก่อนการตรวจครั้งถัดไป ส่วนการ link หรือ copy
 `node_modules` ของ checkout เข้า workspace จะถูกปฏิเสธ
 
-Phase hook และ `claude-foundation exec` ใช้ containment policy เดียวกัน ทั้งคู่
+Phase hook และ `cloop exec` ใช้ containment policy เดียวกัน ทั้งคู่
 ปฏิเสธ absolute operand ที่อยู่นอก workspace, การเปลี่ยน directory ออกภายหลัง และ
 การเขียนผ่าน symlink ออกนอก workspace ส่วน `exec` derive phase จาก runtime state
 และเริ่ม child process ของ Build ใน canonical workspace สำหรับ change แบบหลาย
@@ -89,7 +89,7 @@ operator และ host integration
 อย่าแก้ OpenSpec หลาย ledger ด้วยมือ ให้ส่ง semantic amendment หนึ่งชุด:
 
 ```bash
-claude-foundation change amend <change> <amendment.json> --consume-amendment
+cloop change amend <change> <amendment.json> --consume-amendment
 ```
 
 Compiler รักษา task ที่เสร็จและ manual section ตรวจ agreement ใหม่แบบ transaction
@@ -98,7 +98,7 @@ Compiler รักษา task ที่เสร็จและ manual section �
 `reopen: true` (`--reopen`) ซึ่งเอาเครื่องหมายเสร็จออกให้ต้องผ่านใหม่ และ `removeTasks`
 ถอน task ที่ยังไม่เสร็จซึ่งไม่มี task อื่นพึ่งพาได้
 verify command ที่ผิดของ task ที่ยังไม่เสร็จแก้ได้ตรง ๆ โดยคง approval ไว้:
-`claude-foundation change amend <change> --task <task> --verify <command>` task จะถูก
+`cloop change amend <change> --task <task> --verify <command>` task จะถูก
 รับเมื่อคำสั่งใหม่ผ่านใน workspace เท่านั้น และคำสั่งที่ผ่านเสมอจะถูกปฏิเสธ
 `reviseRequirements` และ `removeRequirements` แก้หรือลบ requirement เดิมใน
 amendment เดียวกัน จึงไม่ต้อง abandon change เพียงเพราะการตัดสินใจเปลี่ยน งาน cloud,

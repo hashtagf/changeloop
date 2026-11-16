@@ -63,7 +63,7 @@ export function taskNodeProof({ root, fileDigest, taskPacketWasPrecompleted,
     compatibility: authority.compatibility
   };
   fail(`task node '${node.id}' requires current Build verification: ${authority.reason}; ` +
-    `next: claude-foundation advance ${id} --through proven`);
+    `next: cloop advance ${id} --through proven`);
 }
 
 export function createProofRuntime({
@@ -101,7 +101,7 @@ export function createProofRuntime({
       fail(`${summary} — the workspace hash changed while providers ran (${
         executedHash.slice(0, 12)} to ${hash.slice(0, 12)}), so a provider wrote inside the hashed surface. Reports and artifacts must be written to a directory excluded from the surface, such as test-results/`);
     if (blockers.every((row) => row.validity === "missing"))
-      fail(`${summary} — no evidence has been executed for this workspace; next: claude-foundation advance ${id} --through proven`);
+      fail(`${summary} — no evidence has been executed for this workspace; next: cloop advance ${id} --through proven`);
     fail(`${summary}\n${blockers.map((row) =>
       `  ${row.provider}: ${validityRecovery(row.validity, id, row.provider)}`).join("\n")}`);
   }
@@ -250,7 +250,7 @@ export function createProofRuntime({
     if (!checks.length)
       fail(`missing-receipt-manifest: change '${id}' has no required evidence left, so its proof ` +
         "would carry no receipts and Land would refuse it. A recorded waiver may have withdrawn " +
-        `every required capability: revoke it with claude-foundation change waive ${id} ` +
+        `every required capability: revoke it with cloop change waive ${id} ` +
         "--capability <capability> --revoke --decision-ref <ref>, or amend the agreement");
     const proofRunId = requestedProofRunId || state.activeProofRun?.id || `proof-${Date.now()}`;
     const runRoot = proofRunRoot(id, proofRunId);

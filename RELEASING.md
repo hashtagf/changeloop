@@ -1,6 +1,6 @@
 # Releasing
 
-How to cut a new version of claude-foundation and update the Homebrew formula.
+How to cut a new version of cloop and update the Homebrew formula.
 
 For the current backend simplification, start with the concise
 [release status](docs/reports/user-scenario-release-status.md) and
@@ -125,7 +125,7 @@ the local source-artifact checks but does not replace the macOS bottle dry run.
 Use this if the workflow is unavailable or you're releasing by hand. Replace `X.Y.Z` with the new version throughout.
 
 1. **Bump the version + changelog.**
-   - Write the bare version (no `v` prefix) into `VERSION`, e.g. `echo "X.Y.Z" > VERSION`. This is the source of truth for `claude-foundation version`; keep it in lockstep with the tag below.
+   - Write the bare version (no `v` prefix) into `VERSION`, e.g. `echo "X.Y.Z" > VERSION`. This is the source of truth for `cloop version`; keep it in lockstep with the tag below.
    - Update every surface that states the release. `run-doc-consistency.sh` derives its expectations from `VERSION`, so a surface left behind fails the suite rather than drifting quietly:
      - `**Version X.Y.Z**` in `WORKFLOW.md`, `README.md`, and `README.th.md`
      - `<b>vX.Y.Z</b>` in `website/index.html`

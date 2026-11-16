@@ -511,7 +511,7 @@ test("an approved change keeps its approval across an additive revision", (t) =>
   const output = value.control.output.join("\n");
   assert.match(output, /requirement delta \(covered by the current approval\):\n  added: outbox/);
   assert.doesNotMatch(output, /awaiting approval/);
-  assert.match(output, /next: claude-foundation advance revisable-change --through proven/);
+  assert.match(output, /next: cloop advance revisable-change --through proven/);
 });
 
 function approveLane(value, role, decisionRef) {
@@ -681,7 +681,7 @@ test(`an approved ${initialStatus} change keeps its approval across an additive 
 }
 
 for (const [label, notice, expected] of [
-  ["a failed final review", () => ({ command: "claude-foundation advance revisable-change --approve-spec --decision-ref <ref>" }), true],
+  ["a failed final review", () => ({ command: "cloop advance revisable-change --approve-spec --decision-ref <ref>" }), true],
   ["no failed final review", () => null, false]
 ]) {
 test(`change amend ${expected ? "names" : "omits"} the decision revision route with ${label}`, (t) => {
@@ -762,7 +762,7 @@ test("approval without a pending delta keeps its prior output", (t) => {
     });
   } finally { console.log = log; }
   assert.equal(value.control.output.join("\n"),
-    "DECISION RECORDED revisable-change\n  next: claude-foundation advance revisable-change --through proven");
+    "DECISION RECORDED revisable-change\n  next: cloop advance revisable-change --through proven");
 });
 
 test("unapproved revisions accumulate into one approval delta", () => {

@@ -10,7 +10,7 @@
 # available for older Codex clients, and
 # Codex only reads them from its home directory ($CODEX_HOME/prompts, default
 # ~/.codex/prompts) — there is no per-project prompt directory. That is safe
-# for these prompts: their bodies drive the `claude-foundation` CLI, which
+# for these prompts: their bodies drive the `cloop` CLI, which
 # resolves whichever project the session is in.
 #
 # Codex has no tool-call hook system, so the shipped guards
@@ -153,7 +153,7 @@ printf '  guards:         Codex has no tool hooks; live guards are inert here.\n
 printf '                  Land gates still enforce; opt in to no-direct-main-commit.sh for git.\n'
 adapter_capability_summary \
   "$SOURCE_PATH/.claude/harness/adapters/host-capabilities.json" codex
-printf '  telemetry:      claude-foundation telemetry import --format codex\n'
+printf '  telemetry:      cloop telemetry import --format codex\n'
 if ! command -v codex >/dev/null 2>&1; then
   printf '  reviewer setup: npm install -g @openai/codex && codex login\n'
 else

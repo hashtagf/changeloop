@@ -43,12 +43,12 @@ const INSTRUCTIONS = [
 
 test("every harness command the phase instructions teach is pre-allowed", () => {
   const commands = INSTRUCTIONS.flatMap((path) =>
-    [...read(path).replace(/\s*\n\s*/g, " ").matchAll(/`(claude-foundation [^`]+)`/g)]
+    [...read(path).replace(/\s*\n\s*/g, " ").matchAll(/`(cloop [^`]+)`/g)]
       .map((match) => ({ path, command: match[1] })));
   assert.ok(commands.length >= 7, "the instructions still name the harness CLI");
   for (const { path, command } of commands)
     assert.ok(bashAllowed(command), `${path}: \`${command}\` needs a host approval prompt`);
-  for (const form of [".foundation/bin/claude-foundation advance c --through build",
+  for (const form of [".foundation/bin/cloop advance c --through build",
     "node .claude/harness/foundation.mjs advance c"])
     assert.ok(bashAllowed(form), `${form} is the installed CLI shim or entry`);
 });
@@ -97,7 +97,7 @@ test("the taught draft save route is a pre-allowed file-tool write, not shell", 
   }
   const target = `${folder}change.json`;
   assert.match(template.save, /Write tool/);
-  for (const command of [...template.save.matchAll(/claude-foundation [^\s,;:]+(?: [^\s,;:]+)*/g)])
+  for (const command of [...template.save.matchAll(/cloop [^\s,;:]+(?: [^\s,;:]+)*/g)])
     assert.ok(bashAllowed(command[0]), `${command[0]} is pre-allowed`);
   for (const shell of [`mkdir -p .foundation/drafts && cat > ${target} <<'EOF'`,
     `cat > ${target}`, `echo '{}' > ${target}`])
@@ -119,7 +119,7 @@ test("amend and investigate templates teach a file-tool save and a pre-allowed c
     assert.ok(value.save.includes(`Write tool to ${path}`), `${command} names ${path}`);
     assert.ok(editAllowed(path.replace(/<[^>]+>/g, "demo")), `${path} is pre-allowed`);
     assert.match(value.save, /pre-allowed/);
-    const commands = [...value.save.matchAll(/claude-foundation [^\s,;:]+(?: [^\s,;:]+)*/g)];
+    const commands = [...value.save.matchAll(/cloop [^\s,;:]+(?: [^\s,;:]+)*/g)];
     assert.ok(commands.length, `${command} names its consuming command`);
     for (const match of commands)
       assert.ok(bashAllowed(match[0]), `${match[0]} is pre-allowed`);
@@ -179,7 +179,7 @@ test("the seeded allowlist grants no user-authority or destructive operation", (
     assert.ok(!bashAllowed(command), `${command} must not be pre-allowed`);
   // Read-only exploration is pre-allowed; `cat` is not, because a prefix rule
   // would also match `cat > file`, the shell write route the harness refuses.
-  assert.ok(ALLOW.every((rule) => /^(?:Bash\((?:claude-foundation|\.foundation\/bin\/claude-foundation|node \.claude\/harness\/foundation\.mjs) \*\)|Edit\(\/\.foundation\/(?:sandboxes|repository-sandboxes|drafts)\/\*\*\)|Edit\(\/openspec\/investigations\/\*\*\)|Bash\((?:find|grep|ls|head|wc|rtk ls|rtk grep) \*\)|Bash\(git (?:status|diff|log|show)(?: \*)?\))$/.test(rule)),
+  assert.ok(ALLOW.every((rule) => /^(?:Bash\((?:cloop|\.foundation\/bin\/cloop|node \.claude\/harness\/foundation\.mjs) \*\)|Edit\(\/\.foundation\/(?:sandboxes|repository-sandboxes|drafts)\/\*\*\)|Edit\(\/openspec\/investigations\/\*\*\)|Bash\((?:find|grep|ls|head|wc|rtk ls|rtk grep) \*\)|Bash\(git (?:status|diff|log|show)(?: \*)?\))$/.test(rule)),
     `unexpected shipped rule in ${JSON.stringify(ALLOW)}`);
   for (const read of ["find . -name x", "grep -rn foo src", "ls -la", "git diff --stat", "git status --short"])
     assert.ok(bashAllowed(read), `${read} is read-only and pre-allowed`);

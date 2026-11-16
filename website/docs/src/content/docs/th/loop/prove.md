@@ -22,7 +22,7 @@ description: ใช้และรัน evidence ที่ผูกกับเ
 รัน:
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 Coordinator ตรวจ agreement/workspace ปัจจุบัน ใช้ receipt ที่ input ยังตรงซ้ำ รัน

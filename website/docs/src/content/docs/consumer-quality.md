@@ -59,10 +59,10 @@ Change Loop recomputes the score rather than trusting a provider-supplied value.
 Discovery reads manifests and filenames but executes no project command:
 
 ```bash
-claude-foundation quality discover
-claude-foundation quality init
-claude-foundation quality init --write --ci github
-claude-foundation quality doctor
+cloop quality discover
+cloop quality init
+cloop quality init --write --ci github
+cloop quality doctor
 ```
 
 `quality init` only previews until `--write`. It creates `quality/foundation-quality.json`. With `--ci github`, it also installs:
@@ -78,9 +78,9 @@ The reusable workflow is not a `pull_request` trigger by itself. Call it from th
 Run a pilot against the isolated workspace for a Change:
 
 ```bash
-claude-foundation quality run --change <change-id>
-claude-foundation quality report
-claude-foundation quality run --change <change-id> --enforce
+cloop quality run --change <change-id>
+cloop quality report
+cloop quality run --change <change-id> --enforce
 ```
 
 Once the committed quality config exists, evidence bootstrap can wire the enforced run as a `static-analysis` provider. Its receipt records the aggregate assurance and retains the per-repository report in the command log.
@@ -119,8 +119,8 @@ CRAP and mutation reports bind the repository ID, commit, workspace digest, lang
 Review pilot findings before creating a baseline:
 
 ```bash
-claude-foundation quality baseline
-claude-foundation quality baseline --write \
+cloop quality baseline
+cloop quality baseline --write \
   --decision-ref ADR-42 --reason "approved pilot baseline"
 ```
 
@@ -129,8 +129,8 @@ Baselines are versioned per repository and capability. Mutation comparison scope
 Run the inventory and render debt without widening the active Change:
 
 ```bash
-claude-foundation quality run --full
-claude-foundation quality debt
+cloop quality run --full
+cloop quality debt
 ```
 
 Large inventories accept `--shard-index <zero-based>` and `--shard-count <n>`. Each lane is assigned deterministically; failed repositories are never hidden by an average.

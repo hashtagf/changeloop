@@ -1276,7 +1276,7 @@ export function createPullRequestRuntime({
       return deliveryEnvelope(id, landed?.action && landed.action !== "DONE" ? landed.action : "WAIT", {
         completed: false, boundary: landed?.boundary || "land",
         reason: landed?.reason || "Land has not reached archived yet.",
-        land: landed || null, resumeCommand: `claude-foundation deliver advance ${id}`
+        land: landed || null, resumeCommand: `cloop deliver advance ${id}`
       });
     const delivered = await advance(id);
     return { ...delivered, land: { reached: "archived", authority: "explicit-deliver-command" } };
@@ -1290,8 +1290,8 @@ export function createPullRequestRuntime({
         boundary: "change-not-proven",
         reason: `Deliver needs a proven change; '${id}' is ${lifecycle.status || "not started"}.`,
         options: [["finish-build-and-prove-then-deliver",
-          `Finish Build and Prove with 'claude-foundation advance ${id} --through archived', then run Deliver again.`]],
-        resumeCommand: `claude-foundation deliver advance ${id}`
+          `Finish Build and Prove with 'cloop advance ${id} --through archived', then run Deliver again.`]],
+        resumeCommand: `cloop deliver advance ${id}`
       });
     }
     let delivery = loadDelivery(id);
@@ -1414,7 +1414,7 @@ export function createPullRequestRuntime({
       delivery.lastError = { message: error.message, code: error.code || "DELIVERY_FAILED", at: now() };
       saveDelivery(delivery);
       appendEvent(id, { status: "failed", code: delivery.lastError.code, at: delivery.lastError.at });
-      const resumeCommand = `claude-foundation deliver advance ${id}`;
+      const resumeCommand = `cloop deliver advance ${id}`;
       if (error.stage === "delivery-workspace" && !delivery.repositories &&
           UNPUBLISHED.includes(delivery.status) && !delivery.workspaceRebuilt) {
         rebuildWorkspace(delivery, error.message);

@@ -18,7 +18,7 @@ description: ความหมายของคำที่ Change Loop ใช
 | **Rapid / standard** | ระดับพิธีการของ change: rapid สำหรับงานเล็กที่แยกอิสระและเสี่ยงต่ำ standard สำหรับที่เหลือ | `foundation-rapid`, `foundation-standard` | [Change](/docs/th/loop/change/) |
 | **Sandbox** (worktree) | สำเนาที่แยกขาดของโปรเจกต์ที่ใช้ทำงาน เพื่อให้ main checkout ของคุณไม่ถูกแตะจนกว่าจะ Land | sandbox, workspace ใน `.foundation/` | [Build](/docs/th/loop/build/) |
 | **Advance** (coordinator) | คำสั่งเดียวที่ทำต่อได้ ซึ่ง agent ใช้ผลัก change ไปข้างหน้า มัน reuse งานที่ใช้ได้ หยุดเฉพาะที่ต้องตัดสินใจจริง และบอกวิธี resume ที่แน่นอน | `advance <change> --through build\|proven\|archived` | [CLI reference](/docs/th/cli/) |
-| **Harness** | โปรแกรม deterministic ที่เป็นเจ้าของกฎ: isolation, การรัน check, การบันทึกผล, budget และ Land มันไม่ใช่ AI และไม่เดา | `claude-foundation`, `.claude/harness/` | [ติดตั้ง](/docs/th/install/) |
+| **Harness** | โปรแกรม deterministic ที่เป็นเจ้าของกฎ: isolation, การรัน check, การบันทึกผล, budget และ Land มันไม่ใช่ AI และไม่เดา | `cloop`, `.claude/harness/` | [ติดตั้ง](/docs/th/install/) |
 
 ## การตรวจสอบ
 

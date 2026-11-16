@@ -119,7 +119,7 @@ export function recordRepairClosureAttemptOperation(context, id, details) {
 export function assertBaseMoveResetAllowed(history, move, reference, fail) {
   if (!move) fail("no sandbox sync base move is recorded for this change");
   if (move.preDiffIdentity && move.preDiffIdentity === move.postDiffIdentity)
-    fail("the last base move left the change's diff unchanged; the review receipt rebinds on 'claude-foundation advance <change> --through proven' and no reset is needed");
+    fail("the last base move left the change's diff unchanged; the review receipt rebinds on 'cloop advance <change> --through proven' and no reset is needed");
   if ((history.baseMoveResets || []).some((row) =>
     row.movementKey === move.movementKey))
     fail("this base move already released a review attempt");
@@ -133,7 +133,7 @@ export function baseMoveResetRecovery(state, id) {
       move.preDiffIdentity === move.postDiffIdentity) return "";
   return " If the passing verdict expired because this recorded sandbox sync changed the diff, " +
     "that is not a quality round: the harness releases that attempt on the next dispatch once no " +
-    `review is live, so dispatch the review again (manual route: 'claude-foundation authority reset-base-move ${id} --decision-ref <ref>').`;
+    `review is live, so dispatch the review again (manual route: 'cloop authority reset-base-move ${id} --decision-ref <ref>').`;
 }
 
 // The live attempt already records its request, so the refusal names the exact
@@ -141,9 +141,9 @@ export function baseMoveResetRecovery(state, id) {
 export function liveReviewAbortCommand(id, attempt) {
   const requestId = String(attempt?.requestId || "").trim();
   return requestId
-    ? `claude-foundation authority abort ${id} --request ${requestId} --reason <why>`
-    : `find the open request with 'claude-foundation authority status ${id}', then ` +
-      `claude-foundation authority abort ${id} --request <requestId> --reason <why>`;
+    ? `cloop authority abort ${id} --request ${requestId} --reason <why>`
+    : `find the open request with 'cloop authority status ${id}', then ` +
+      `cloop authority abort ${id} --request <requestId> --reason <why>`;
 }
 
 export function assertNoLiveBaseMoveReview(attempts, id, fail) {
@@ -907,7 +907,7 @@ export function createReviewAttemptStore({
       "Do not ask the user to choose redesign/split/pause and do not dispatch another open-ended AI review. " +
       "Continue when proof is satisfied; otherwise route a remaining item as AUTO_REPAIR inside the locked contract, " +
       "CONTRACT_DECISION_REQUIRED only for changed behavior/security/data/rollout, or EXTERNAL_WAIT for missing authority." +
-      ` If repair cannot progress, report attempted remedies and remaining risks; ask the user for a human verdict, one more AI wave (claude-foundation authority extend-review ${id} --decision-ref <user-decision>), or a pause.` +
+      ` If repair cannot progress, report attempted remedies and remaining risks; ask the user for a human verdict, one more AI wave (cloop authority extend-review ${id} --decision-ref <user-decision>), or a pause.` +
       baseMoveRecovery);
   }
 

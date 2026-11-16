@@ -22,7 +22,7 @@ const fail = (message) => { throw new Error(message); };
 
 function entry(name, overrides = {}) {
   return {
-    name, usage: `claude-foundation ${name}`, description: `${name} description`,
+    name, usage: `cloop ${name}`, description: `${name} description`,
     audience: "agent", kind: "read", idempotent: true, ...overrides
   };
 }

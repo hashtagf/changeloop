@@ -140,7 +140,7 @@ function hostWithDetachedLifecycle(project, runtime, statuses, { reportResult = 
     "#!/usr/bin/env node",
     'import { spawn } from "node:child_process";',
     "const say = (row) => process.stdout.write(`${JSON.stringify(row)}\\n`);",
-    'say({ type: "assistant", message: { id: "msg-1", content: [{ type: "tool_use", id: "tool-advance", name: "Bash", input: { command: "claude-foundation advance todo --through archived" } }] } });',
+    'say({ type: "assistant", message: { id: "msg-1", content: [{ type: "tool_use", id: "tool-advance", name: "Bash", input: { command: "cloop advance todo --through archived" } }] } });',
     `const child = spawn(process.execPath, ["--input-type=module", "-e", ${JSON.stringify(
       'import { writeFileSync } from "node:fs";\n' + lifecycle)}], { cwd: ${JSON.stringify(project)}, detached: true, stdio: "ignore" });`,
     reportResult
@@ -324,9 +324,9 @@ test("runner uses the registered internal Land operation", () => {
 test("oracle repair verifies only through pre-allowed harness commands", () => {
   const prompt = oracleRepairPrompt("change-a", ["boundary-zero", "no-collateral"]);
   assert.match(prompt, /oracle failed: boundary-zero, no-collateral\./);
-  assert.match(prompt, /claude-foundation advance change-a --through build/);
-  assert.match(prompt, /claude-foundation exec change-a --task <task> -- <verify>/);
-  assert.match(prompt, /claude-foundation advance change-a --through proven/);
+  assert.match(prompt, /cloop advance change-a --through build/);
+  assert.match(prompt, /cloop exec change-a --task <task> -- <verify>/);
+  assert.match(prompt, /cloop advance change-a --through proven/);
   assert.match(prompt, /Never run a test runner .* directly/);
   assert.doesNotMatch(prompt, /canonical project test/);
   assert.match(prompt, /Do not Land/);
@@ -348,7 +348,7 @@ test("oracle repair verifies only through pre-allowed harness commands", () => {
 test("initial benchmark authority keeps projectCommand as verify and runs checks via the harness", () => {
   assert.match(BENCHMARK_VERIFY_AUTHORITY, /projectCommand as each draft task's verify value/);
   assert.match(BENCHMARK_VERIFY_AUTHORITY, /only through each Build task's returned checkCommand/);
-  assert.match(BENCHMARK_VERIFY_AUTHORITY, /claude-foundation advance/);
+  assert.match(BENCHMARK_VERIFY_AUTHORITY, /cloop advance/);
   assert.match(BENCHMARK_VERIFY_AUTHORITY, /never a raw test runner/);
   assert.doesNotMatch(BENCHMARK_VERIFY_AUTHORITY, /canonical project test command/);
 });

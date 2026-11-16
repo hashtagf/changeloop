@@ -50,7 +50,7 @@ test("shell mutation detection covers formatters, package scripts, and script ru
     assert.equal(looksMutatingShellCommand(command), false, command);
 });
 
-test("harness CLI spellings classify exactly like bare claude-foundation", () => {
+test("harness CLI spellings classify exactly like bare cloop", () => {
   const spellings = [
     "npx claude-foundation", "npx --no-install claude-foundation",
     "npx -y claude-foundation", "npx --yes claude-foundation",
@@ -60,7 +60,7 @@ test("harness CLI spellings classify exactly like bare claude-foundation", () =>
   for (const spelling of spellings) {
     const command = `${spelling} change start --template`;
     assert.equal(normalizeHarnessCliInvocations(command),
-      "claude-foundation change start --template", command);
+      "cloop change start --template", command);
     assert.equal(looksMutatingShellCommand(command), false, command);
     // Normalization never hides a mutation chained after the CLI.
     assert.deepEqual(mutatingShellOperations(`${command} && rm -rf src`), ["rm"], command);

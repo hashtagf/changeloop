@@ -225,8 +225,8 @@ export function approvedDecisionRevision(state, currentContractFingerprint) {
 // contract: a grounding reopen for grounding changes, a spec approval otherwise.
 export function decisionRevisionCommand(id, state) {
   return state?.groundingRequired === true
-    ? `claude-foundation change resolve ${id} --reopen-grounding --decision-ref <ref> --reopen-reason <why>`
-    : `claude-foundation advance ${id} --approve-spec --decision-ref <ref>`;
+    ? `cloop change resolve ${id} --reopen-grounding --decision-ref <ref> --reopen-reason <why>`
+    : `cloop advance ${id} --approve-spec --decision-ref <ref>`;
 }
 
 // Whether the contract now differs from the one a failed final AI delta judged,

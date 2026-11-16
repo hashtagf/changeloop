@@ -10,7 +10,7 @@ export function archivedResumeSource({
     historicalWorkspaceHash: state.preArchiveWorkspaceHash || null,
     pendingTaskCount: tasks.filter((task) => !task.done).length,
     references, providers: [], evidenceAvailability: "retained-archive",
-    evidenceReference: `claude-foundation proof audit ${id}`,
+    evidenceReference: `cloop proof audit ${id}`,
     externalOperations
   };
   return { ...value, packetDigest: stableHash(value) };
@@ -65,17 +65,17 @@ export function resumePacketValue({ packet, action, tasks, leases, stableHash, l
     // Preserve identities and exact artifact routes; oversized prose is fetched
     // from its owner instead of silently losing it or widening packet budgets.
     value.evidence = { count: Array.isArray(packet.providers) ? packet.providers.length :
-      packet.providers?.count || 0, reference: `claude-foundation packet ${packet.changeId}` };
+      packet.providers?.count || 0, reference: `cloop packet ${packet.changeId}` };
     value.findings = packet.repairContext ? {
       attemptDigest: packet.repairContext.attemptDigest,
       findingDigest: packet.repairContext.findingDigest,
-      reference: `claude-foundation packet ${packet.changeId}`, truncated: true
+      reference: `cloop packet ${packet.changeId}`, truncated: true
     } : null;
     value.decisions.pending = action.decision ? {
-      reference: `claude-foundation advance ${packet.changeId} --inspect`, truncated: true
+      reference: `cloop advance ${packet.changeId} --inspect`, truncated: true
     } : null;
     value.externalOperations = {
-      reference: `claude-foundation handoff status ${packet.changeId}`, truncated: true
+      reference: `cloop handoff status ${packet.changeId}`, truncated: true
     };
   }
   value.packetDigest = stableHash(value);

@@ -105,7 +105,7 @@ test("proof execution advance represents valid and invalid audits", () => {
   assert.equal(valid.command, "proof execute");
   assert.deepEqual(valid.executedProviders, ["test", "lint"]);
   assert.deepEqual(valid.next, [{
-    kind: "land", command: "claude-foundation advance change-a --through archived"
+    kind: "land", command: "cloop advance change-a --through archived"
   }]);
 
   const withoutProviders = proofExecutionAdvanceValue(

@@ -166,7 +166,7 @@ assert_not_contains "an excluded report path draws no warning" \
 implement report-excluded
 premature="$({ node .claude/harness/foundation.mjs prove report-excluded; } 2>&1 || true)"
 assert_contains "finalizing before execution names the operation that executes" \
-  "$premature" "claude-foundation advance report-excluded --through proven"
+  "$premature" "cloop advance report-excluded --through proven"
 
 # --- The same loop, completed. ----------------------------------------------
 assert_cmd_zero "readiness clears once the implementation is complete" \
@@ -309,7 +309,7 @@ assert_contains "amendment reaches the resumable DONE gate" \
 amended="$(node .claude/harness/foundation.mjs amend selective-amendment amendment.json \
   --consume-amendment)"
 assert_contains "amendment prints the exact proof recovery command" "$amended" \
-  'claude-foundation advance selective-amendment --through proven'
+  'cloop advance selective-amendment --through proven'
 assert_not_contains "unaffected lint receipt is rebound rather than left byte-identical" \
   "$(shasum .foundation/receipts/selective-amendment/lint.json)" "$lint_before"
 assert_eq "affected test receipt remains stale until Prove reruns it" "$test_before" \
@@ -432,7 +432,7 @@ import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 const [cli, project] = process.argv.slice(2);
 const instruction = readFileSync(`${project}/.claude/commands/land.md`, "utf8");
-const command = instruction.match(/Run `claude-foundation ([^`]+)`/)?.[1];
+const command = instruction.match(/Run `cloop ([^`]+)`/)?.[1];
 if (!command) throw new Error("installed Land instruction has no executable route");
 const args = command.split(/\s+/).map((arg) => arg === "<change>" ? "review-waiver" : arg);
 const result = spawnSync("bash", [cli, "--project", project, ...args], {
@@ -528,7 +528,7 @@ node .claude/harness/foundation.mjs advance revise-before-build --through build 
 printf '{"version":4}\n' > late.json
 late="$({ node .claude/harness/foundation.mjs revise revise-before-build late.json; } 2>&1 || true)"
 assert_contains "revision after Build routes to amendment" "$late" \
-  "claude-foundation change amend revise-before-build"
+  "cloop change amend revise-before-build"
 
 # During Build the same change revises and removes requirements through one
 # v4 amendment instead of being abandoned and rewritten.

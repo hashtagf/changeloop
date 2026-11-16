@@ -13,8 +13,8 @@ test("a task with no change in its paths names why and every route forward", () 
   assert.match(issue, /nothing changed in its declared paths \(src\/api\/\*\*\)/);
   assert.match(issue, /updateTasks amendment \(\{ key, verify, paths \}\)/);
   assert.match(issue, /removeTasks amendment/);
-  assert.match(issue, /claude-foundation change amend --template/);
-  assert.match(issue, /claude-foundation change amend change-a <amendment\.json>/);
+  assert.match(issue, /cloop change amend --template/);
+  assert.match(issue, /cloop change amend change-a <amendment\.json>/);
 });
 
 test("a task that changed its paths, or light work, completes on its verify", () => {

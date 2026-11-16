@@ -132,13 +132,13 @@ export function agentPlanGroupSummaries(groups, stableHash) {
 export function agentPlanNext(output, id) {
   if (!output.dispatchable && !output.blockingReasons?.length && output.resourceWaits?.length)
     return `queued behind ${[...new Set(output.resourceWaits.map((row) => row.changeId))].join(", ")}; ` +
-      `claude-foundation advance ${id} resumes once the shared resource is released`;
+      `cloop advance ${id} resumes once the shared resource is released`;
   if (!output.dispatchable) return "resolve blockingReasons before dispatch";
   if (output.recommendedExecution === "proof-ready")
-    return `claude-foundation advance ${id} --through proven`;
+    return `cloop advance ${id} --through proven`;
   if (output.recommendedExecution === "single-agent")
-    return `claude-foundation packet ${id} --task ${output.groups?.[0]?.[0] || output.tasks[0].id}`;
-  return `claude-foundation agents plan ${id} --group 1`;
+    return `cloop packet ${id} --task ${output.groups?.[0]?.[0] || output.tasks[0].id}`;
+  return `cloop agents plan ${id} --group 1`;
 }
 
 export function agentPlanSummaryView(context, id, path, output) {
@@ -305,7 +305,7 @@ export function enrichAgentTasks(context, id, allTasks, repositories, selectedPo
     task.resources = [...new Set([`workspace:${task.repository}`, ...task.resources])].sort();
     task.leaseKeys = conflictKeysForTask(task);
     task.model = context.modelForTask(id, task, selectedPolicy);
-    task.packetCommand = `claude-foundation packet ${id} --task ${task.id}`;
+    task.packetCommand = `cloop packet ${id} --task ${task.id}`;
   }
   return { tasks, completed };
 }

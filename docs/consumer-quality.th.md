@@ -27,10 +27,10 @@ CRAP = complexity² × (1 − coverage/100)³ + complexity
 Discovery อ่าน manifest และชื่อไฟล์โดยไม่รัน command ของ project:
 
 ```bash
-claude-foundation quality discover
-claude-foundation quality init
-claude-foundation quality init --write --ci github
-claude-foundation quality doctor
+cloop quality discover
+cloop quality init
+cloop quality init --write --ci github
+cloop quality doctor
 ```
 
 `quality init` เป็น preview จนกว่าจะใส่ `--write` และสร้าง `quality/foundation-quality.json` ส่วน `--ci github` จะคัดลอก workflow template แบบ reusable/manual changed-code, nightly สี่ shard และ full release ตัว changed-code template ต้องถูกเรียกจาก PR workflow เดิม เพราะไม่มี `pull_request` trigger ในตัว
@@ -40,9 +40,9 @@ claude-foundation quality doctor
 รันกับ isolated workspace ของ Change:
 
 ```bash
-claude-foundation quality run --change <change-id>
-claude-foundation quality report
-claude-foundation quality run --change <change-id> --enforce
+cloop quality run --change <change-id>
+cloop quality report
+cloop quality run --change <change-id> --enforce
 ```
 
 เมื่อ commit config แล้ว evidence bootstrap สามารถต่อ enforced run เป็น `static-analysis` evidence ผลอยู่ใต้ `.foundation/quality/results/` และห้าม commit
@@ -79,8 +79,8 @@ Report ผูก `repository`, `repositoryCommit`, `workspaceDigest`, `language`
 หลัง pilot อย่างน้อยสามรอบที่เป็นตัวแทน ให้ตรวจ finding ก่อนสร้าง baseline:
 
 ```bash
-claude-foundation quality baseline
-claude-foundation quality baseline --write \
+cloop quality baseline
+cloop quality baseline --write \
   --decision-ref ADR-42 --reason "approved pilot baseline"
 ```
 
@@ -89,8 +89,8 @@ Baseline แยก repository/capability และ compatible เฉพาะเ
 Nightly inventory ใช้:
 
 ```bash
-claude-foundation quality run --full
-claude-foundation quality debt
+cloop quality run --full
+cloop quality debt
 ```
 
 งานใหญ่แบ่งด้วย `--shard-index <เริ่มจากศูนย์>` และ `--shard-count <n>` Exception ต้องระบุ function หรือ mutant เดียว ห้าม glob และต้องมี reason, risk, compensating evidence, owner, approver, tracking issue กับวันหมดอายุไม่เกิน 90 วัน

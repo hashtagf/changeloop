@@ -114,7 +114,7 @@ try {
   assert.equal(isolatedList.errors[0].changeId, brokenChangeId);
   assert.equal(captureCalls, 3,
     "aggregate readiness must cross the injected failure trap for every change");
-  assert.equal(JSON.stringify(initialPacket).includes("claude-foundation"), false,
+  assert.equal(JSON.stringify(initialPacket).includes("cloop "), false,
     "a user-facing recovery packet must never require the user to type a command");
 
   writeJson(join(change, "handoffs.yaml"), {

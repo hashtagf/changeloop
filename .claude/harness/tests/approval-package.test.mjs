@@ -121,7 +121,7 @@ test("a Critical change suggests the matching provider with its preview command"
     providers: { race: { capability: "concurrency" }, sandbox: { capability: "browser", external: true } }
   });
   const commands = runtime.packageData(id).suggestions.flatMap((row) => row.providers.map((provider) => provider.command));
-  assert.ok(commands.includes("claude-foundation preview demo --provider race"));
+  assert.ok(commands.includes("cloop preview demo --provider race"));
   assert.ok(commands.some((command) => /--provider sandbox --decision-ref/.test(command)));
 });
 

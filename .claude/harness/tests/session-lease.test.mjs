@@ -83,12 +83,12 @@ test("a scope refusal routes back to advance; release owns stale-authority renew
     "settle never composes acquire-then-release itself");
 
   const scoped = fakeLeases(root, [{ taskId: "T002", owner, leaseId: "l1" }], {
-    releaseError: ["task 'T002' changed outside granted scope: tests/b.spec.js; result and proof were not accepted. Revert ... 'claude-foundation agents acquire demo T002 --owner x'"]
+    releaseError: ["task 'T002' changed outside granted scope: tests/b.spec.js; result and proof were not accepted. Revert ... 'cloop agents acquire demo T002 --owner x'"]
   });
   assert.throws(() => scoped.runtime.settle("demo"), (error) => {
     assert.equal(error.owner, "agent");
     assert.match(error.message, /outside granted scope: tests\/b\.spec\.js\. Revert/);
-    assert.match(error.message, /'claude-foundation advance demo --through build'$/);
+    assert.match(error.message, /'cloop advance demo --through build'$/);
     assert.doesNotMatch(error.message, /agents acquire/);
     return true;
   });
@@ -102,7 +102,7 @@ test("a scope refusal resumes toward the target already requested, never a short
     state: { requestedThrough: "archived" }
   });
   assert.throws(() => scoped.runtime.settle("demo"), (error) => {
-    assert.match(error.message, /'claude-foundation advance demo --through archived'$/);
+    assert.match(error.message, /'cloop advance demo --through archived'$/);
     return true;
   });
 });
@@ -294,13 +294,13 @@ test("a parallel group runs on harness-held leases; the parent only spawns and w
     action: "EDIT", workspace: "/sandbox", tasks: [{ id: "T001" }, { id: "T002" }],
     execution: { mode: "parallel", leases: [
       { taskId: "T001", repository: "api", owner: "dispatch-t001-x",
-        acquireCommand: "claude-foundation agents acquire demo T001 --owner dispatch-t001-x",
-        packetCommand: "claude-foundation packet demo --task T001",
-        releaseCommand: "claude-foundation agents release demo T001 --owner dispatch-t001-x" },
+        acquireCommand: "cloop agents acquire demo T001 --owner dispatch-t001-x",
+        packetCommand: "cloop packet demo --task T001",
+        releaseCommand: "cloop agents release demo T001 --owner dispatch-t001-x" },
       { taskId: "T002", repository: "web", owner: "dispatch-t002-x",
-        acquireCommand: "claude-foundation agents acquire demo T002 --owner dispatch-t002-x",
-        packetCommand: "claude-foundation packet demo --task T002",
-        releaseCommand: "claude-foundation agents release demo T002 --owner dispatch-t002-x" }
+        acquireCommand: "cloop agents acquire demo T002 --owner dispatch-t002-x",
+        packetCommand: "cloop packet demo --task T002",
+        releaseCommand: "cloop agents release demo T002 --owner dispatch-t002-x" }
     ] }
   };
   const issued = runtime.issue("demo", group);
@@ -310,7 +310,7 @@ test("a parallel group runs on harness-held leases; the parent only spawns and w
   ], "the harness acquires every lease with its own owner");
   assert.deepEqual(issued.execution.leases, []);
   assert.deepEqual(issued.execution.workers.map((worker) => worker.packetCommand), [
-    "claude-foundation packet demo --task T001", "claude-foundation packet demo --task T002"
+    "cloop packet demo --task T001", "cloop packet demo --task T002"
   ]);
   assert.ok(issued.execution.managedLeases.every((lease) => lease.managedBy === "harness"));
   const text = JSON.stringify(issued);

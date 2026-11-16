@@ -238,7 +238,7 @@ assert_file_contains "change trusts the printed packet" \
 assert_file_contains "change records spec approval through advance" \
   "$ROOT/.claude/commands/change.md" 'advance <id> --approve-spec --decision-ref'
 assert_file_contains "change uses atomic start" \
-  "$ROOT/.claude/commands/change.md" 'claude-foundation change start'
+  "$ROOT/.claude/commands/change.md" 'cloop change start'
 assert_file_contains "build loads its policy only on triggers" \
   "$ROOT/.claude/commands/build.md" 'Read `references/build-policy.md` for a new user request'
 assert_file_contains "build implements a whole single-session batch" \
@@ -248,18 +248,18 @@ assert_file_contains "prove keeps review in-session" \
 assert_file_contains "prove owns the no-progress gate" \
   "$ROOT/.claude/commands/prove.md" 'Gate: no progress'
 assert_file_contains "land uses the same advance route as /dev" \
-  "$ROOT/.claude/commands/land.md" 'Run `claude-foundation advance <change> --through archived`'
+  "$ROOT/.claude/commands/land.md" 'Run `cloop advance <change> --through archived`'
 assert_file_not_contains "land never teaches the internal land advance route" \
-  "$ROOT/.claude/commands/land.md" 'Run `claude-foundation land'
+  "$ROOT/.claude/commands/land.md" 'Run `cloop land'
 assert_file_contains "agent contract forbids preflight" \
   "$ROOT/.claude/harness/AGENT.md" 'No preflight (`doctor`'
 assert_cmd_zero "phase commands use only change start, advance, and exec" \
-  sh -c '! cat "$@" | grep -oE "claude-foundation [a-z-]+( [a-z-]+)?" |
-    grep -vE "^claude-foundation (change start|advance|exec)( |$)"' \
+  sh -c '! cat "$@" | grep -oE "cloop [a-z-]+( [a-z-]+)?" |
+    grep -vE "^cloop (change start|advance|exec)( |$)"' \
   sh "$ROOT/.claude/commands/dev.md" "$ROOT/.claude/commands/change.md" \
   "$ROOT/.claude/commands/build.md" "$ROOT/.claude/commands/prove.md" \
   "$ROOT/.claude/commands/land.md"
-if grep -En 'change resolve [^ ]* ?--approve-spec|--consume-draft|mark it complete|claude-foundation (evidence init|evidence upgrade|sandbox sync|authority run)' \
+if grep -En 'change resolve [^ ]* ?--approve-spec|--consume-draft|mark it complete|cloop (evidence init|evidence upgrade|sandbox sync|authority run)' \
     "$ROOT/.claude/commands/dev.md" "$ROOT/.claude/commands/change.md" \
     "$ROOT/.claude/commands/build.md" "$ROOT/.claude/commands/prove.md" \
     "$ROOT/.claude/commands/land.md" >/dev/null; then

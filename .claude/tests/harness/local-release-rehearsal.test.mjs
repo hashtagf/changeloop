@@ -35,10 +35,10 @@ test("rehearsal checks compact intent help and full compatibility help separatel
 
 test("Homebrew test checks compact and full CLI help at their owning surfaces", () => {
   const formula = readFileSync(resolve("Formula/claude-foundation.rb"), "utf8");
-  assert.match(formula, /help = shell_output\("#\{bin\}\/claude-foundation --help"\)/);
+  assert.match(formula, /help = shell_output\("#\{bin\}\/cloop --help"\)/);
   assert.match(formula, /assert_match "change start", help/);
   assert.match(formula, /assert_match "advance", help/);
-  assert.match(formula, /full_help = shell_output\("#\{bin\}\/claude-foundation help --all"\)/);
+  assert.match(formula, /full_help = shell_output\("#\{bin\}\/cloop help --all"\)/);
   assert.match(formula, /assert_match "proof readiness", full_help/);
   assert.match(formula, /assert_match "land check", full_help/);
 });

@@ -35,31 +35,31 @@ const BLOCKER_KINDS = Object.freeze([
     code: "budget-exhausted", classification: "budget",
     pattern: /\bbudget\b|request limit|allowance/i,
     summary: "A measured execution budget checkpoint stopped the operation",
-    recovery: (id) => `claude-foundation advance ${id} --inspect`
+    recovery: (id) => `cloop advance ${id} --inspect`
   },
   {
     code: "authority-required", classification: "authority",
     pattern: /authority|approval|acceptance|review receipt|decision-ref/i,
     summary: "Required external authority has not been recorded",
-    recovery: (id) => `claude-foundation authority status ${id}`
+    recovery: (id) => `cloop authority status ${id}`
   },
   {
     code: "resource-conflict", classification: "resource-conflict",
     pattern: /conflict|lease|already active|scope path|resource/i,
     summary: "Another active operation owns a conflicting resource",
-    recovery: (id) => `claude-foundation agents plan ${id} --pretty`
+    recovery: (id) => `cloop agents plan ${id} --pretty`
   },
   {
     code: "workspace-boundary", classification: "workspace",
     pattern: /workspace|sandbox|base move|outside.*scope|undeclared path/i,
     summary: "The isolated workspace or declared write boundary is not ready",
-    recovery: (id) => `claude-foundation advance ${id}`
+    recovery: (id) => `cloop advance ${id}`
   },
   {
     code: "contract-invalid", classification: "contract",
     pattern: /protocol|provider|adapter|criticalcase|critical case|evidence|claim|contract/i,
     summary: "The executable change or evidence contract is incomplete",
-    recovery: (id) => `claude-foundation change validate ${id}`
+    recovery: (id) => `cloop change validate ${id}`
   }
 ]);
 
@@ -68,19 +68,19 @@ const DECLARED_BLOCKER_KINDS = Object.freeze([
   {
     code: "decision-required", classification: "decision",
     summary: "A recorded decision is required before the operation can continue",
-    recovery: (id, phase) => `claude-foundation packet ${id} --phase ${phase}`
+    recovery: (id, phase) => `cloop packet ${id} --phase ${phase}`
   },
   {
     code: "execution-indeterminate", classification: "recovery",
     summary: "Provider execution stopped before its receipt; inspect side effects before retrying",
-    recovery: (id) => `claude-foundation advance ${id} --through proven`
+    recovery: (id) => `cloop advance ${id} --through proven`
   }
 ]);
 
 const POLICY_GUARD_KIND = Object.freeze({
   code: "policy-guard", classification: "policy",
   summary: "A Change Loop policy guard stopped the operation",
-  recovery: (id, phase) => `claude-foundation packet ${id} --phase ${phase}`
+  recovery: (id, phase) => `cloop packet ${id} --phase ${phase}`
 });
 
 const BLOCKER_REASON_LIMIT = 200;

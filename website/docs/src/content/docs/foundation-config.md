@@ -82,10 +82,10 @@ trade-off remains visible.
 ## Safe editing loop
 
 1. Edit the root `foundation.json` and keep `version` at `1`.
-2. Run `claude-foundation doctor --stage change` for general policy validation.
-3. If review settings changed, run `claude-foundation doctor --stage prove` to
+2. Run `cloop doctor --stage change` for general policy validation.
+3. If review settings changed, run `cloop doctor --stage prove` to
    check the selected reviewer CLI, authentication, and read-only mode.
-4. Inspect model routing with `claude-foundation models`.
+4. Inspect model routing with `cloop models`.
 5. Commit the policy change before producing evidence under it.
 
 A policy change can invalidate review or proof created under the old contract.
@@ -295,7 +295,7 @@ Optional. Require separate spec approval from named roles:
 
 When set, a change requires the configured roles that its router selects for
 that change. Each role approves with
-`claude-foundation advance <change> --approve-spec --role <role> --decision-ref <ref>`
+`cloop advance <change> --approve-spec --role <role> --decision-ref <ref>`
 (or `change resolve … --approve-spec --role <role>`). Until every required lane
 has approved the current revision and packet, `advance` stops with `ASK_USER`
 naming the missing roles, and no sandbox is created. An approval without
@@ -352,7 +352,7 @@ them in that order in the [multi-repository workflow](/docs/multi-repository/).
 - `reviewPolicy` accepts only `risk-tiered` (the default).
 
 The `legacy` value of either key was retired and is refused at runtime. Rerun
-`claude-foundation init`; the upgrade rewrites both keys to the shipped values.
+`cloop init`; the upgrade rewrites both keys to the shipped values.
 `optional` means the semantic compiler creates `grounding.yaml` only when a
 material non-derived decision exists. Set `required` when project policy truly
 requires a decision ledger for every change; it does not make empty grounding
@@ -435,7 +435,7 @@ Where and how the pull request is opened:
 After any edit, the shortest reliable check is:
 
 ```bash
-claude-foundation doctor --stage change
-claude-foundation doctor --stage prove
-claude-foundation models
+cloop doctor --stage change
+cloop doctor --stage prove
+cloop models
 ```

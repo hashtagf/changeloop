@@ -12,7 +12,7 @@ Create or update **$ARGUMENTS**. Shared rules: `.claude/harness/AGENT.md`.
    `tasks[{outcome, verify, paths}]`; `proposal.md` `## Why`. `verify` fails
    on wrong behavior. Prose: the requested language, else the request's.
    `impact` medium/high also needs `scratch{get, asIs, toBe, ifFail}`.
-3. Run `claude-foundation change start .foundation/drafts/<id>`; if the
+3. Run `cloop change start .foundation/drafts/<id>`; if the
    request approved the spec, append `--approve-spec --decision-ref <ref>`
    (`/dev`: `--through proven` too).
    - `EDIT`: fix every named field via Edit, rerun.
@@ -35,5 +35,5 @@ Unless approved, link the packet; explain scope, behavior, criteria, and
 open questions in ordinary words. Ask through the host's structured question
 tool: approve, edit, details, reject. "ลุยเลย" or
 "approve" is the approval. Record it with
-`claude-foundation advance <id> --approve-spec --decision-ref <ref>` or step
+`cloop advance <id> --approve-spec --decision-ref <ref>` or step
 3's flags. Change stops here. Report in the user's language.

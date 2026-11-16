@@ -7,7 +7,7 @@ is the upstream repository's instruction manual, not a template that replaces
 a consumer project's `CLAUDE.md`. Installed file ownership and writer rules
 live in [the harness reference](.claude/harness/README.md#file-ownership-and-writers).
 
-This is the upstream source of `claude-foundation`, not a consumer project.
+This is the upstream source of Change Loop (`cloop`), not a consumer project.
 Change Loop is an installable, OpenSpec-native control plane for AI-assisted
 software changes:
 

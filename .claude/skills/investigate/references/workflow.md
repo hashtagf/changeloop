@@ -6,9 +6,9 @@ facts; ask users only for consequential choices evidence cannot settle.
 For features, bugs, improvements, or PoCs, read [intent continuity](intent-continuity.md);
 see the [record contract](../../../harness/README.md#investigation-intake-records).
 
-Start with `claude-foundation investigate --template`; keep the record at
+Start with `cloop investigate --template`; keep the record at
 `openspec/investigations/<id>.json`. After each evidence batch run
-`claude-foundation investigate <record.json>`. Sources are hashed; facts cite
+`cloop investigate <record.json>`. Sources are hashed; facts cite
 them. Set status only for `not-worth-changing`; the harness derives the rest.
 Follow `EDIT`, `ASK_USER`, or `DONE` and its resume route. For Change, copy
 `handoff` into draft `investigation`, reject stale bindings, and map material

@@ -131,7 +131,7 @@ an unambiguous single npm repository, Change Loop also activates its built-in
 A provider that executed and failed leaves three exits, and the `fail` verdict prints all of them: fix the code, rewire the provider, or withdraw that one capability's enforcement on an explicit recorded decision:
 
 ```bash
-claude-foundation change waive <change> --capability <c> --reason <why> --decision-ref <ref>
+cloop change waive <change> --capability <c> --reason <why> --decision-ref <ref>
 ```
 
 The waiver travels as a `user-waived` advisory into readiness, the proof record, the archive, and the `LAND READY` line; `--revoke` restores the requirement. It is deliberately subtractive: it cannot change what any other provider attested, receipts already earned stay valid, and there is no route that lands a failing proof. `review` and `acceptance` cannot be waived here — they have their own declared waiver routes in `foundation.json`.

@@ -6,7 +6,7 @@ argument-hint: <change>
 Land **$ARGUMENTS** explicitly. Shared rules: `.claude/harness/AGENT.md`.
 
 Land requires Land authority.
-Run `claude-foundation advance <change> --through archived`. It creates the
+Run `cloop advance <change> --through archived`. It creates the
 session-bound grant, applies the proven outcome uncommitted, archives, and
 owns recovery and cleanup. Without authority, stop at `proven`, which is not
 delivery.

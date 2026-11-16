@@ -427,7 +427,7 @@ export function visualDriftDecision(id, drift) {
     options: [
       { id: "repair-more", outcome: "Grant 2 more visual repair rounds on your decision; the agent repairs the listed differences." },
       { id: "accept", outcome: "Accept the listed differences with your reason; visual is recorded as a mismatch you accepted, never as a pass." },
-      { id: "amend-agreement", outcome: `Amend the agreement so it matches the built UI (claude-foundation change amend ${id} <amendment.json>); visual is checked again against it.` },
+      { id: "amend-agreement", outcome: `Amend the agreement so it matches the built UI (cloop change amend ${id} <amendment.json>); visual is checked again against it.` },
       { id: "pause", outcome: "Preserve the change and all completed work." }
     ],
     recommended: "repair-more"

@@ -167,7 +167,7 @@ if (RUNTIME_MODULE_API !== RUNTIME_API_VERSION) {
   console.error(
     `BLOCKED: harness entrypoint API ${RUNTIME_API_VERSION} does not match ` +
     `runtime modules API ${RUNTIME_MODULE_API}; the installed .claude/harness ` +
-    "is a mixture of two revisions. Reinstall it with 'claude-foundation init <project>'.");
+    "is a mixture of two revisions. Reinstall it with 'cloop init <project>'.");
   process.exit(1);
 }
 const PROVIDER_PROTOCOL_VERSION = "13";

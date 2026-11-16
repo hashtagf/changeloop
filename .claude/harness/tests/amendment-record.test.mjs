@@ -47,8 +47,8 @@ test("the AMENDED report reads as before", () => {
     "  proof: re-enter Prove so receipt bindings are recomputed",
     "  requirement delta (covered by the current approval):",
     "  added: r2", "  revised: none", "  removed: none",
-    "  proof command: claude-foundation advance demo --through proven",
-    "  next: claude-foundation advance demo"
+    "  proof command: cloop advance demo --through proven",
+    "  next: cloop advance demo"
   ].join("\n"));
 });
 

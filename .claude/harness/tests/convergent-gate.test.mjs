@@ -83,7 +83,7 @@ const decision = noProgressDecision({
   progress: same,
   findings,
   attemptedStrategies: [{ id: "normalize-input", result: "same-findings" }],
-  resumeCommand: "claude-foundation packet change-a --phase build"
+  resumeCommand: "cloop packet change-a --phase build"
 });
 assert.equal(decision.status, "NEEDS_USER_DECISION");
 assert.equal(decision.reason, "NO_PROGRESS");
@@ -94,7 +94,7 @@ assert.ok(decision.decision.options.some((option) => option.id === "pause"));
 assert.ok(decision.decision.options.length >= 4,
   "the user receives supported alternatives instead of raw failure");
 assert.equal(decision.next[0].command,
-  "claude-foundation packet change-a --phase build");
+  "cloop packet change-a --phase build");
 
 // A coding stall is agent work: an automatic repair whose next step is a
 // different strategy carrying what the gate returned, never a user decision.
@@ -105,7 +105,7 @@ const stall = noProgressRepair({
   progress: same,
   findings,
   attemptedStrategies: [{ id: "normalize-input", result: "same-findings" }],
-  resumeCommand: "claude-foundation packet change-a --phase build"
+  resumeCommand: "cloop packet change-a --phase build"
 });
 assert.equal(stall.status, "ACTION_REQUIRED");
 assert.equal(stall.route, "AUTO_REPAIR");
@@ -120,4 +120,4 @@ assert.deepEqual(stall.next[0].findingIds.sort(), ["F-1", "F-2"]);
 assert.deepEqual(stall.next[0].attemptedStrategies,
   [{ id: "normalize-input", result: "same-findings" }]);
 assert.match(stall.next[0].reason, /different in-scope repair/);
-assert.equal(stall.next[0].command, "claude-foundation packet change-a --phase build");
+assert.equal(stall.next[0].command, "cloop packet change-a --phase build");

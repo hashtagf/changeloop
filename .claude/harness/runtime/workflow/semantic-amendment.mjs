@@ -133,7 +133,7 @@ export function semanticAmendmentTemplate() {
     save: "Write one form below (its value, without the form name) with the Write tool to " +
       ".foundation/drafts/<change>-amendment.json; that path is pre-allowed and the tool " +
       "creates the folder. Do not save it through the shell (heredoc, cat >, echo >): the " +
-      "host refuses those. Then run claude-foundation change amend <change> " +
+      "host refuses those. Then run cloop change amend <change> " +
       ".foundation/drafts/<change>-amendment.json.",
     verifyOnly: {
       version: 1,

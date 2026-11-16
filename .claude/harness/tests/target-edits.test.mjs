@@ -129,7 +129,7 @@ test("a conflict only on clean-at-isolation artifacts is an agent REPAIR with th
   assert.equal(action.action, "REPAIR");
   assert.equal(action.actor, "agent");
   assert.equal(action.command,
-    "claude-foundation advance demo --through archived --restore-target __pycache__/a.pyc");
+    "cloop advance demo --through archived --restore-target __pycache__/a.pyc");
 });
 
 // Keeping target edits loses nothing, so it is the automatic route: the agent
@@ -155,7 +155,7 @@ test("a conflict on user work keeps the target edits and hands reconciliation to
   assert.equal(action.actor, "agent");
   assert.equal(action.legacyAction, "RECONCILE_TARGET_EDITS");
   assert.deepEqual(action.paths, ["src/app.py", "a.pyc"]);
-  assert.equal(action.command, "claude-foundation advance demo --through archived");
+  assert.equal(action.command, "cloop advance demo --through archived");
 
   const preexisting = targetConflictStop({ changeId: "demo", paths: ["a.pyc"],
     snapshot: { "a.pyc": "dirty" }, cause: "sandbox diff conflicts with target" });
@@ -373,8 +373,8 @@ test("the landed-conflict stop names the sandbox copies and the resolve route", 
   assert.deepEqual(action.conflicts, [
     { repository: "backend", path: "server.mjs" }, { repository: "backend", path: "store.mjs" }]);
   assert.match(action.instruction, /sandbox sync --resolve/);
-  assert.equal(action.resolveCommand, "claude-foundation sandbox sync demo --resolve server.mjs,store.mjs");
-  assert.equal(action.resume, "claude-foundation advance demo --through archived");
+  assert.equal(action.resolveCommand, "cloop sandbox sync demo --resolve server.mjs,store.mjs");
+  assert.equal(action.resume, "cloop advance demo --through archived");
   const root = landedConflictStop({ changeId: "demo", paths: ["x.txt"] });
   assert.doesNotMatch(root.decision.summary, /repository/);
 });

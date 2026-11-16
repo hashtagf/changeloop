@@ -103,8 +103,8 @@ test("a stale authority request is re-requested by the harness, never recorded",
   assert.notEqual(result.status, 0, "a verdict on a superseded workspace is never recorded");
   const fresh = result.stderr.match(/re-requested review as '([^']+)'/)?.[1];
   assert.ok(fresh && fresh !== requestId, result.stderr);
-  assert.match(result.stderr, /Resume with 'claude-foundation advance stale-probe'/);
-  assert.doesNotMatch(result.stderr, /then re-request: claude-foundation authority request/);
+  assert.match(result.stderr, /Resume with 'cloop advance stale-probe'/);
+  assert.doesNotMatch(result.stderr, /then re-request: cloop authority request/);
   const status = JSON.parse(cli(fixture, "authority-status", "stale-probe").stdout);
   const replacement = status.requests.find((row) => row.requestId === fresh);
   assert.equal(replacement.status, "requested", "the replacement is bound to the current workspace");

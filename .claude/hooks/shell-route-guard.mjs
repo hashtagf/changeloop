@@ -3,7 +3,7 @@
 // Two shell shapes always end in a host permission prompt, which an unattended
 // run turns into a denied call. Refuse them with the runnable equivalent:
 //   cd <dir> && git …          → git -C <dir> …
-//   npm test (direct, Build)   → claude-foundation exec <change> [--repo <id>] -- npm test
+//   npm test (direct, Build)   → cloop exec <change> [--repo <id>] -- npm test
 // A matching Bash allow rule, bypassPermissions, or an unparseable command
 // passes through.
 
@@ -131,7 +131,7 @@ function testRoute(commandText, directory, context) {
   if (!change && !context.ambiguousChanges?.length) return null;
   const repository = (change?.repositories || []).find((row) => row.id !== "root" &&
     [row.path, row.targetPath].some((root) => typeof root === "string" && within(directory, root)))?.id;
-  const suggestion = `claude-foundation exec ${change?.id || "<change>"}` +
+  const suggestion = `cloop exec ${change?.id || "<change>"}` +
     `${repository ? ` --repo ${repository}` : ""} -- ${commandText}`;
   const choose = change ? "" : ` (<change> is one of: ${context.ambiguousChanges.join(", ")})`;
   return { shape: "direct-test", reason: "Shell route: a direct test run asks the host for approval; " +

@@ -25,13 +25,13 @@ export function changeListingRow(id, {
   else {
     state = readJsonOrNull(runtimePath(id));
     if (state === null)
-      return `${id}\tinvalid-runtime-json\tunknown\tclaude-foundation change abandon ${id} --reason <reason> --decision-ref <ref>`;
+      return `${id}\tinvalid-runtime-json\tunknown\tcloop change abandon ${id} --reason <reason> --decision-ref <ref>`;
   }
 
   // A change stuck in the retired commit-based Land saga is never projected;
   // its inspect route returns the recovery decision.
   if (legacyLandSagaMarkers(state).length)
-    return `${id}\tlegacy-land-saga\t${state.schema || "unknown"}\tclaude-foundation advance ${id} --inspect`;
+    return `${id}\tlegacy-land-saga\t${state.schema || "unknown"}\tcloop advance ${id} --inspect`;
   const proof = pathExists(proofPath(id)) ? readJson(proofPath(id), {}) : null;
   let current = null;
   if (state.status !== "untracked") {
@@ -39,7 +39,7 @@ export function changeListingRow(id, {
       current = relevantHash(id);
     } catch (error) {
       if (error.code !== "FOUNDATION_WORKSPACE_MISSING") throw error;
-      return `${id}\tworkspace-missing\t${state.schema || "unknown"}\tclaude-foundation sandbox create ${id} --all`;
+      return `${id}\tworkspace-missing\t${state.schema || "unknown"}\tcloop sandbox create ${id} --all`;
     }
   }
 
@@ -180,7 +180,7 @@ export function createDiagnosticsRuntime({
       }));
       return;
     }
-    if (!ids.length) fail("no active change; start one with `claude-foundation change start`");
+    if (!ids.length) fail("no active change; start one with `cloop change start`");
     fail(`${ids.length} active changes; pass one explicitly:\n` +
       ids.map((id) => `  ${changeListingRow(id, {
         runtimePath, proofPath, readJson, readJsonOrNull, relevantHash
@@ -342,7 +342,7 @@ export function createDiagnosticsRuntime({
       level: orphanRuntimes.length ? "warn" : "ok",
       name: "runtime-state",
       detail: orphanRuntimes.length
-        ? `orphan runtime(s): ${orphanRuntimes.map((item) => `${item.id}:${item.reason}`).join(", ")}; restore the active change or retire it with 'claude-foundation change abandon <change> --reason <reason> --decision-ref <ref>'`
+        ? `orphan runtime(s): ${orphanRuntimes.map((item) => `${item.id}:${item.reason}`).join(", ")}; restore the active change or retire it with 'cloop change abandon <change> --reason <reason> --decision-ref <ref>'`
         : "no orphan active runtime state"
     });
     const requestedOrphan = requestedChange
@@ -352,7 +352,7 @@ export function createDiagnosticsRuntime({
       checks.push({
         level: "error",
         name: `change:${requestedChange}`,
-        detail: `${requestedOrphan.reason}; restore openspec/changes/${requestedChange} or retire it with 'claude-foundation change abandon ${requestedChange} --reason <reason> --decision-ref <ref>', which quarantines the runtime state for you`
+        detail: `${requestedOrphan.reason}; restore openspec/changes/${requestedChange} or retire it with 'cloop change abandon ${requestedChange} --reason <reason> --decision-ref <ref>', which quarantines the runtime state for you`
       });
     } else if (requestedChange &&
         legacyLandSagaMarkers(readJsonOrNull(runtimePath(requestedChange))).length) {
@@ -381,7 +381,7 @@ export function createDiagnosticsRuntime({
           level: "warn",
           name: "out-of-band-delivery",
           detail: `change bytes or a recorded delivery reference are present while lifecycle=${
-            state.status}; this is not Proof or archive completion; recover with 'claude-foundation sandbox sync ${
+            state.status}; this is not Proof or archive completion; recover with 'cloop sandbox sync ${
               requestedChange}', then re-prove and Land until archived`,
           delivery: { authoritative: false, proofStatus: "unchanged", ...delivery }
         });
@@ -538,8 +538,8 @@ export function createDiagnosticsRuntime({
         level: qualityMode === "enforce-high-risk" && highRisk ? "error" : "warn",
         name: "consumer-quality",
         detail: "QUALITY_NOT_CONFIGURED: missing quality/foundation-quality.json; " +
-          "CRAP_NOT_MEASURED; run 'claude-foundation quality discover' and " +
-          "'claude-foundation quality init --write' after configuring project-owned providers"
+          "CRAP_NOT_MEASURED; run 'cloop quality discover' and " +
+          "'cloop quality init --write' after configuring project-owned providers"
       });
       const configuredCapabilities = new Set(Object.entries(contract.providers || {})
         .map(([provider, config]) => providerCapability(provider, config)));

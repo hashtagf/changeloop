@@ -11,7 +11,7 @@ import { normalizeTelemetryBatch } from "../runtime/observability/telemetry-runt
 test("tool calls map to a closed set of overhead categories", () => {
   const cases = [
     ["Bash", { command: "node .claude/harness/foundation.mjs advance c1" }, "harnessCli"],
-    ["Bash", { command: "claude-foundation change start c1 --draft d.json" }, "harnessCli"],
+    ["Bash", { command: "cloop change start c1 --draft d.json" }, "harnessCli"],
     ["Bash", { command: "bash .claude/harness/cli.sh changes" }, "harnessCli"],
     ["Bash", { command: "cd /tmp/x && node --test" }, "testRuns"],
     ["Bash", { command: "node --experimental-vm-modules --test test/" }, "testRuns"],
@@ -97,7 +97,7 @@ test("metrics expose host tool calls only when the transcript observed them", ()
     type: "assistant", message: {
       role: "assistant", id: "m1", usage: { input_tokens: 1 },
       content: [{ type: "tool_use", id: "t1", name: "Bash",
-        input: { command: "claude-foundation advance c1" } }]
+        input: { command: "cloop advance c1" } }]
     }
   }, "claude");
   const measured = hostToolProfile([claude]);

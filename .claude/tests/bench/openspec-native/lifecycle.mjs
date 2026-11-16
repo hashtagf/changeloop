@@ -56,9 +56,9 @@ export function amendmentPrompt(changeId, file) {
   return [
     `Resume existing change ${changeId}. The previous host session ended unexpectedly in the middle of Build.`,
     `The product owner has since approved requirement update 1, written in ${file} at the project root. Read it.`,
-    "Apply it to this same change with claude-foundation change amend (change amend --template is the schema contract); do not start a new change.",
-    "Keep every still-valid completed task and its evidence, build the remainder, add meaningful tests for the new and revised behavior, and verify each task only through its returned checkCommand (claude-foundation exec ...).",
-    `Then run claude-foundation advance ${changeId} --through proven. Never run a test runner (npm test, node --test, pytest) directly; it is not pre-allowed. Do not Land.`,
+    "Apply it to this same change with cloop change amend (change amend --template is the schema contract); do not start a new change.",
+    "Keep every still-valid completed task and its evidence, build the remainder, add meaningful tests for the new and revised behavior, and verify each task only through its returned checkCommand (cloop exec ...).",
+    `Then run cloop advance ${changeId} --through proven. Never run a test runner (npm test, node --test, pytest) directly; it is not pre-allowed. Do not Land.`,
     "If Prove's reviewer stops on an infrastructure error and the only offered fix is authority reset-infra, this disposable benchmark's main-session self-review waiver is the user decision: run it with --decision-ref user-prompt:main-session-self-review-waiver and continue."
   ].join(" ");
 }
@@ -85,7 +85,7 @@ export function describeLandRoute(stdout) {
 export function landPrompt(changeId, landedChangeId, landRoute) {
   return [
     `Land existing change ${changeId}. Change ${landedChangeId} has already landed (uncommitted) in the target repositories; its landed edits are part of the target and must be kept.`,
-    `Run claude-foundation advance ${changeId} --through archived. A previous attempt returned: ${landRoute}`,
+    `Run cloop advance ${changeId} --through archived. A previous attempt returned: ${landRoute}`,
     "If Land returns a repair route, follow it inside the approved agreement: reconcile your sandbox copy with the landed target content (keep the landed content and apply your change's behavior on top of it), re-verify each task only through its returned checkCommand, then resume the same advance command until the change is archived.",
     `Never run a test runner directly. Do not modify, undo or re-land ${landedChangeId}.`
   ].join(" ");

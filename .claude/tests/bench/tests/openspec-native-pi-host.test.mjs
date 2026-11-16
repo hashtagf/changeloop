@@ -43,7 +43,7 @@ function runShim(args, { auth, record, mode = "session", afterFirstAssistant = n
 test("Claude CLI arguments map to a prompt, model and budget; unknown flags fail", () => {
   const parsed = parseClaudeArgs(["-p", "/dev x", "--output-format", "stream-json", "--verbose",
     "--setting-sources", "project,local", "--strict-mcp-config", "--permission-mode", "acceptEdits",
-    "--allowedTools", "Bash(claude-foundation *)", "Edit(/**)", "--model", "m-1", "--max-budget-usd", "10"]);
+    "--allowedTools", "Bash(cloop *)", "Edit(/**)", "--model", "m-1", "--max-budget-usd", "10"]);
   assert.deepEqual(parsed, { prompt: "/dev x", model: "m-1", maxBudgetUsd: 10 });
   assert.throws(() => parseClaudeArgs(["-p", "x", "--dangerously-skip-permissions"]), /unsupported host argument/);
   assert.throws(() => parseClaudeArgs(["--model", "m"]), /-p <prompt> is required/);

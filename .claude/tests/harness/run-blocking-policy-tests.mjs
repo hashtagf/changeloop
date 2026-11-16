@@ -77,7 +77,7 @@ test("rung 3 returns repeated agent work to the agent, never the user", () => {
   const repair = { changeId: "change-a", action: "REPAIR", actor: "agent", owner: "agent",
     legacyAction: "REPAIR_PROOF_RESULT", boundary: "conflict",
     reason: "test api.spec failed: expected 200", instruction: "Fix the failing test",
-    resume: "claude-foundation advance change-a --through proven" };
+    resume: "cloop advance change-a --through proven" };
   assert.equal(observe(repair, 1).legacyAction, "REPAIR_PROOF_RESULT");
   const second = ladder()(repair, ALTERNATE_AFTER_ROUNDS);
   assert.equal(second.action, "REPAIR");
@@ -101,7 +101,7 @@ test("rung 3 keeps harness work with the harness and its own command", () => {
   const repair = { changeId: "change-a", action: "REPAIR", actor: "harness", owner: "harness",
     legacyAction: "REPAIR_SETUP", boundary: "host-execution",
     reason: "npm ci exited 1", command: "npm ci",
-    resume: "claude-foundation advance change-a --through proven" };
+    resume: "cloop advance change-a --through proven" };
   const third = ladder()(repair, STRATEGY_AFTER_ROUNDS);
   assert.equal(third.action, "REPAIR");
   assert.equal(third.owner, "harness");
@@ -125,7 +125,7 @@ test("only a user-owned boundary becomes a question at rung 3", () => {
   for (const boundary of USER_AUTHORITY_BOUNDARIES) {
     const repair = { changeId: "change-a", action: "REPAIR", actor: "agent", owner: "agent",
       legacyAction: "REPAIR_LAND_INPUT", boundary, reason: `blocked at ${boundary}`,
-      instruction: "Resolve the input", resume: "claude-foundation advance change-a" };
+      instruction: "Resolve the input", resume: "cloop advance change-a" };
     const third = ladder()(repair, STRATEGY_AFTER_ROUNDS);
     assert.equal(third.action, "ASK_USER", boundary);
     assert.equal(third.boundary, boundary);
@@ -139,7 +139,7 @@ test("waits are never counted as repeated repair", () => {
     legacyAction: "WAIT_RESOURCE", boundary: "resource",
     reason: "queued behind change-b",
     wait: { owner: "harness", condition: "change-b releases resource:db",
-      checkCommand: "claude-foundation advance change-a" } };
+      checkCommand: "cloop advance change-a" } };
   const later = ladder()(wait, 10);
   assert.equal(later.action, "WAIT");
   assert.equal(later.legacyAction, "WAIT_RESOURCE");

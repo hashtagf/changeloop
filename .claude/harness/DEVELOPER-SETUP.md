@@ -24,7 +24,7 @@ workflow adds:
 Before the first Change Loop packet on a developer machine:
 
 1. Install Node.js 20.19 or later.
-2. Verify `claude-foundation version` is `3.7.3` and the repository runtime API
+2. Verify `cloop version` is `3.7.3` and the repository runtime API
 is `42`. A delta between the two is advisory while both doctors still pass:
    the CLI forwards to the runtime installed in the project, so an older CLI
    prints `warning: project runtime API … differs from CLI API …` and keeps
@@ -34,11 +34,11 @@ is `42`. A delta between the two is advisory while both doctors still pass:
    `hashtagf/changeloop` into
    `~/.local/share/claude-foundation/3.7.3`.
 4. Install or refresh the runtime inside the project with
-   `claude-foundation init <project-path>`. The equivalent entrypoint inside a
+   `cloop init <project-path>`. The equivalent entrypoint inside a
    source checkout is `bash /path/to/claude-foundation/install.sh
    <project-path> --yes`.
 5. Add `~/.local/bin` to `PATH`, then run
-   `claude-foundation doctor --stage change`.
+   `cloop doctor --stage change`.
 6. Install and authenticate the reviewer CLI your project selects:
    - Codex: `npm install -g @openai/codex && codex login`. A Codex that runs on
      `OPENAI_API_KEY`, `CODEX_API_KEY`, `OPENROUTER_API_KEY` or a non-OpenAI
@@ -62,7 +62,7 @@ is `42`. A delta between the two is advisory while both doctors still pass:
    provider/model family, also set `diversity: "single-model"`, but keep
    `independence: "required"` so Change Loop still requires a distinct reviewer
    identity and fresh session.
-8. Run `claude-foundation doctor --stage prove`. It checks the selected CLI,
+8. Run `cloop doctor --stage prove`. It checks the selected CLI,
    authentication and required headless/read-only flags and prints the exact
    install, login or upgrade command when the machine is not ready.
 
@@ -106,7 +106,7 @@ Codex-only or Claude-Code-only operation.
 Developers do not need AWS, secret-store, cluster-admin, Terraform-apply, or
 production-deploy credentials merely to complete Build and Prove. `/change`
 records those operations in `handoffs.yaml`; send
-`claude-foundation handoff packet <change> --id <H00n>` to the named owner.
+`cloop handoff packet <change> --id <H00n>` to the named owner.
 After the operator accepts or completes it, record only their name, ticket/run,
 and evidence reference with `handoff record`—never copy a secret value into the
 change or record.

@@ -165,14 +165,14 @@ export function assertSpecApproval(root, id, state, { workspace = true } = {}) {
       [
         ...missingLanes.map((role) => ({
           id: `approve-${role}`, outcome: `Record the ${role} approval for this spec`,
-          command: `claude-foundation advance ${id} --approve-spec --role ${role} --decision-ref <user-decision>`
+          command: `cloop advance ${id} --approve-spec --role ${role} --decision-ref <user-decision>`
         })),
         { id: "revise", outcome: "Revise the spec before implementation" }
       ], `approve-${missingLanes[0]}`);
   throw userDecisionError("SPEC_APPROVAL_REQUIRED",
     "Inspect the compiled spec with the user and obtain approval before Build.", [
       { id: "approve", outcome: "Approve this exact spec, then begin Build",
-        command: `claude-foundation advance ${id} --approve-spec --decision-ref <user-decision> --through proven` },
+        command: `cloop advance ${id} --approve-spec --decision-ref <user-decision> --through proven` },
       { id: "revise", outcome: "Revise the spec before implementation" }
     ], "approve");
 }
@@ -324,7 +324,7 @@ export function agreementRestoredNotice(id, restored) {
   return `NOTICE: the isolated agreement for '${id}' was edited outside a semantic amendment; ` +
     `the harness restored the approved text and saved the edit at ${saved}. ` +
     `${files.length ? `Restored: ${files.join(", ")}. ` : ""}If that edit ` +
-    `changes intent, express it with 'claude-foundation change amend ${id} <amendment.json>'.`;
+    `changes intent, express it with 'cloop change amend ${id} <amendment.json>'.`;
 }
 
 // Harness snapshots of amended packets, keyed by the amendment's revision.
@@ -414,7 +414,7 @@ export function agreementDriftError(id, workspacePath) {
     `isolated agreement for '${id}' at ${workspacePath}/openspec/changes/${id} was edited outside a ` +
     "semantic amendment and no longer matches the target packet. Checkbox and `[paths:]` " +
     "edits are bookkeeping; revert any other edit there and express semantic changes with " +
-    `'claude-foundation change amend ${id} <amendment.json>'. See the edit with ` +
+    `'cloop change amend ${id} <amendment.json>'. See the edit with ` +
     `\`diff -r openspec/changes/${id} ${workspacePath}/openspec/changes/${id}\` from the project root. Never ask the user to copy agreement files.`);
   error.code = "AGREEMENT_DRIFT";
   error.owner = "agent";

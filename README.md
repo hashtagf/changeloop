@@ -13,7 +13,7 @@ Investigate? → Change → Build → Prove → Land
 Your coding agent implements it; the harness manages state, isolation,
 evidence, and recovery. Keep using your existing test framework, Git, and CI.
 
-**Version 3.7.3** · Command: `cloop` (alias `claude-foundation`, used by the agent).
+**Version 3.7.3** · Command: `cloop`.
 
 ## Principles
 
@@ -61,7 +61,7 @@ project. The installer does not grant commit authority to the agent.
 
 For source installation, prerequisites, host differences, headless/CI trust,
 and upgrades, follow the [installation guide](https://changeloop.ai/docs/install/).
-The agent can check readiness with `claude-foundation doctor --stage change`.
+The agent can check readiness with `cloop doctor --stage change`.
 
 ## Your first change
 

@@ -57,7 +57,7 @@ wiring change invalidates only the affected provider fingerprints.
 Without `timeoutMs` a command gets ten minutes. A timeout fails as an `error`
 that names the provider, the limit, and the `timeoutMs` to raise. Provider
 commands do not inherit the agent session's own variables, so a test that runs
-`claude-foundation` in a fixture works the same inside and outside Prove.
+`cloop` in a fixture works the same inside and outside Prove.
 
 ### test-discovery
 
@@ -191,8 +191,8 @@ For CI, a reviewer, or another system Change Loop must not execute locally.
 When a change declares claims but derived or custom wiring is unresolved:
 
 ```bash
-claude-foundation advance <change> --through proven   # detects and wires
-claude-foundation doctor --stage prove --change <change>   # explains what is unresolved
+cloop advance <change> --through proven   # detects and wires
+cloop doctor --stage prove --change <change>   # explains what is unresolved
 ```
 
 `advance` runs the internal `evidence detect` and `evidence init --write`

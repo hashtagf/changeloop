@@ -36,5 +36,5 @@ export function taskChangeIssue({ workTypes, task, changedPaths, changeId = "<ch
     "Implement the task's change in those paths, then resume; if the change lives in other " +
     "paths, correct them with an updateTasks amendment ({ key, verify, paths }); if the task is " +
     "no longer needed, withdraw it with a removeTasks amendment. Print both with " +
-    `claude-foundation change amend --template and apply with claude-foundation change amend ${changeId} <amendment.json>.`;
+    `cloop change amend --template and apply with cloop change amend ${changeId} <amendment.json>.`;
 }

@@ -32,9 +32,9 @@ export function requestSummary(id, request) {
     attemptDigest: request.dispatch?.attemptDigest || null,
     scopeMode: request.dispatch?.scope?.mode || null,
     packetCommand: requestId
-      ? `claude-foundation authority status ${id} --request ${requestId}` : null,
+      ? `cloop authority status ${id} --request ${requestId}` : null,
     statusCommand: requestId
-      ? `claude-foundation authority status ${id} --request ${requestId} --template` : null
+      ? `cloop authority status ${id} --request ${requestId} --template` : null
   };
 }
 
@@ -92,7 +92,7 @@ export function proofExecutionAdvanceValue(id, options, snapshot, proofRunId, no
     executedProviders: nodes.map((node) => node.provider),
     next: audit.valid ? [{
       kind: "land",
-      command: `claude-foundation advance ${id} --through archived`
+      command: `cloop advance ${id} --through archived`
     }] : []
   };
 }
@@ -447,7 +447,7 @@ export function createProofExecutionRuntime({
         next: [{
           kind: "decide-indeterminate-execution",
           reason: "A prior command stopped after reserving provider execution but before proving its receipt. Inspect side effects before retrying.",
-          command: `claude-foundation advance ${id} --through proven`
+          command: `cloop advance ${id} --through proven`
         }]
       });
       markBlocked(blockedOutcomeStop(outcome));
@@ -665,7 +665,7 @@ export function createProofExecutionRuntime({
         repairPlanDigest: repairPlan.digest,
         result: "same-findings-and-inputs"
       }],
-      resumeCommand: `claude-foundation packet ${id} --phase build`
+      resumeCommand: `cloop packet ${id} --phase build`
     }) : null;
     const written = writeAdvance(id, {
       version: 1,
@@ -701,7 +701,7 @@ export function createProofExecutionRuntime({
         reason: [nextReason, (findings.find((finding) => finding?.message || finding?.reason) || {})
           .message || (findings.find((finding) => finding?.reason) || {}).reason]
           .filter(Boolean).join(": "),
-        command: `claude-foundation packet ${id} --phase build`
+        command: `cloop packet ${id} --phase build`
       }]
     });
     return noProgress ? { ...written, progressed: false } : written;
@@ -1130,7 +1130,7 @@ export function createProofExecutionRuntime({
         next: [{
           kind: "decide-indeterminate-execution",
           reason: "A prior controller stopped after reserving provider execution but before proving its receipt. Inspect side effects before retrying.",
-          command: `claude-foundation advance ${id} --through proven`
+          command: `cloop advance ${id} --through proven`
         }]
       });
       return { outcome: stopProofAdvance(outcome) };
@@ -1230,7 +1230,7 @@ export function createProofExecutionRuntime({
         requests: [],
         executedProviders,
         reused: false,
-        next: [{ kind: "land", command: `claude-foundation advance ${id} --through archived` }]
+        next: [{ kind: "land", command: `cloop advance ${id} --through archived` }]
       }));
     }
 
@@ -1299,7 +1299,7 @@ export function createProofExecutionRuntime({
           next: [{
             kind: "revise-after-acceptance",
             reason: "Acceptance failed, was inconclusive, or errored for this workspace. Revise the result before another request.",
-            command: `claude-foundation packet ${id} --phase build`
+            command: `cloop packet ${id} --phase build`
           }]
         });
         return stopProofAdvance(outcome);
@@ -1353,11 +1353,11 @@ export function createProofExecutionRuntime({
       options: [{
         id: "human-verdict",
         outcome: "A person reviews the final repair; request a review, dispatch it to them, then record the verdict they gave.",
-        command: `claude-foundation authority request ${id} --type review`
+        command: `cloop authority request ${id} --type review`
       }, {
         id: "one-more-ai-attempt",
         outcome: "Allow one more AI review wave on the user's recorded decision; advance then runs it.",
-        command: `claude-foundation authority extend-review ${id} --decision-ref <user-decision>`
+        command: `cloop authority extend-review ${id} --decision-ref <user-decision>`
       }, {
         id: "revise-agreement",
         outcome: "Amend the agreement to declare a critical case that proves the repaired findings, then resume."
@@ -1365,7 +1365,7 @@ export function createProofExecutionRuntime({
         id: "pause",
         outcome: "Preserve the change and all completed work."
       }],
-      resumeCommand: `claude-foundation advance ${id} --through proven`
+      resumeCommand: `cloop advance ${id} --through proven`
     });
     return writeAdvance(id, {
       version: 1,
@@ -1389,7 +1389,7 @@ export function createProofExecutionRuntime({
       next: [{
         kind: "review-route-exhausted",
         reason: "Report the repaired findings, passing checks, and the unreviewed final repair; let the user choose a human verdict, one more AI wave, a revised agreement, or a pause.",
-        command: `claude-foundation authority extend-review ${id} --decision-ref <user-decision>`
+        command: `cloop authority extend-review ${id} --decision-ref <user-decision>`
       }, ...decision.next]
     });
   }
@@ -1454,7 +1454,7 @@ export function createProofExecutionRuntime({
           reason: ["Repair the final finding batch inside the locked contract; do not dispatch another AI or open a generic choice interview",
             ...new Set(blockedClosures.map((row) => row.reason).filter(Boolean))]
             .join(": "),
-          command: `claude-foundation packet ${id} --phase build`
+          command: `cloop packet ${id} --phase build`
         }]
       });
       return { outcome: stopProofAdvance(outcome) };
@@ -1522,7 +1522,7 @@ export function createProofExecutionRuntime({
               next: [{
                 kind: "revise-after-acceptance",
                 reason: "Acceptance evidence is terminal or invalid for this workspace. Resolve the behavior decision, then resume the same change.",
-                command: `claude-foundation packet ${id} --phase build`
+                command: `cloop packet ${id} --phase build`
               }]
             })
           : writeEvidenceRepairStop(id, readiness, advanceStart, failedEvidence);
@@ -1558,7 +1558,7 @@ export function createProofExecutionRuntime({
         next: [{
           kind: "revise-after-acceptance",
           reason: "Acceptance is terminal or its receipt is invalid for this workspace. Revise the result before another request.",
-          command: `claude-foundation packet ${id} --phase build`
+          command: `cloop packet ${id} --phase build`
         }]
       })) };
     }

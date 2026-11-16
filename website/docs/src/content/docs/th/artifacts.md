@@ -101,7 +101,7 @@ openspec/
 
 `lessons.md` คือรายการบทเรียนถาวรของโปรเจกต์ แต่ละข้อลิงก์ไปยังบันทึก incident
 เมื่อมีไฟล์นี้ investigation และ change intake จะอ่านเป็นแหล่งข้อมูลอ้างอิง (grounding)
-ไฟล์นี้ไม่เกี่ยวกับคำสั่ง `claude-foundation lessons` ซึ่งรวบรวมรหัส blocker และ review ที่เกิดซ้ำ
+ไฟล์นี้ไม่เกี่ยวกับคำสั่ง `cloop lessons` ซึ่งรวบรวมรหัส blocker และ review ที่เกิดซ้ำ
 
 `REVIEW.md` ที่ root ของ repository เก็บกฎ review แบบแนะนำของโปรเจกต์ AI reviewer
 ได้รับไฟล์นี้เป็นแนวทาง แต่ไม่เปลี่ยนผลผ่านหรือไม่ผ่านของ review คัดลอกให้เฉพาะตอนที่ยังไม่มี

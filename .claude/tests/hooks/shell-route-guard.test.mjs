@@ -55,11 +55,11 @@ test("cd chained into git routes to git -C with the directory", () => {
 test("a direct test run during Build routes through exec with the change and repository", () => {
   const piped = shellRoute(`cd ${users} && npm test 2>&1 | tail -40`, context());
   assert.equal(piped.shape, "direct-test");
-  assert.match(piped.reason, /`claude-foundation exec api-keys --repo users -- npm test 2>&1 \| tail -40`/);
+  assert.match(piped.reason, /`cloop exec api-keys --repo users -- npm test 2>&1 \| tail -40`/);
   const plain = shellRoute("npm test", context({ cwd: users }));
-  assert.match(plain.reason, /`claude-foundation exec api-keys --repo users -- npm test`/);
+  assert.match(plain.reason, /`cloop exec api-keys --repo users -- npm test`/);
   const shared = shellRoute("node --test test/", context({ cwd: building.workspace }));
-  assert.match(shared.reason, /`claude-foundation exec api-keys -- node --test test\/`/);
+  assert.match(shared.reason, /`cloop exec api-keys -- node --test test\/`/);
   for (const command of ["pytest -q", "go test ./...", "npm run test:unit", "pnpm test", "npm test | grep FAIL"])
     assert.equal(shellRoute(command, context())?.shape, "direct-test", command);
   const ambiguous = shellRoute("npm test", context({ change: null, ambiguousChanges: ["a", "b"] }));
@@ -78,7 +78,7 @@ test("test commands pass through without a change in Build or when the host allo
 test("ordinary, unparseable, and already-routed commands pass through untouched", () => {
   for (const command of [
     "git status --short", `git -C ${sdk} status`, "ls src test", `cd ${users}`,
-    `cd ${users} && ls -la src`, "claude-foundation exec api-keys -- npm test",
+    `cd ${users} && ls -la src`, "cloop exec api-keys -- npm test",
     "npx claude-foundation exec api-keys --task T1 -- npm test 2>&1 | tail -30",
     "cd \"$DIR\" && git status", "cd ~/x && git status", "echo 'npm test'", "ls ../sdk",
     "python3 -c 'print(1)'", "node -e 'console.log(1)'", `cd ${sdk} && npm test <<'EOF'\nx\nEOF`
@@ -118,10 +118,10 @@ test("the wired hook denies with the route, advises in audit mode, and passes th
     };
     const denied = JSON.parse(run("npm test"));
     assert.equal(denied.decision, "block");
-    assert.match(denied.reason, /claude-foundation exec api-keys --repo users -- npm test/);
+    assert.match(denied.reason, /cloop exec api-keys --repo users -- npm test/);
     assert.equal(JSON.parse(run(`cd ${sandbox} && git status`)).decision, "block");
     const advised = JSON.parse(run("npm test", { FOUNDATION_GUARDRAIL_MODE: "audit" }));
-    assert.match(advised.hookSpecificOutput.additionalContext, /claude-foundation exec/);
+    assert.match(advised.hookSpecificOutput.additionalContext, /cloop exec/);
     assert.equal(run("npm test", { FOUNDATION_GUARDRAIL_MODE: "off" }), "");
     assert.equal(run("npm test", {}, { permission_mode: "bypassPermissions" }), "");
     assert.equal(run("ls src"), "");

@@ -26,7 +26,7 @@ import { basename, isAbsolute, join, resolve } from "node:path";
 
 export const ADVANCE_PROTOCOL_VERSION = 7;
 
-const command = (value) => `claude-foundation ${value}`;
+const command = (value) => `cloop ${value}`;
 
 const THROUGH_ORDER = ["build", "proven", "archived"];
 const resume = (id, through = null) => command(
@@ -194,7 +194,7 @@ function taskVerification(text) {
 }
 
 // A task's focused check in the harness-owned form the installed allowlist
-// already grants (`Bash(claude-foundation *)`). Run bare, the project's test
+// already grants (`Bash(cloop *)`). Run bare, the project's test
 // runner costs a host approval prompt on every Build; `exec --task` runs the
 // same command in that task's sandbox, the way advance's own verify does
 // (`sh -c` whenever the text needs a shell), and records its duration. A
@@ -243,7 +243,7 @@ function compactPreflight(value) {
 
 function exactRecoveryCommand(message) {
   const text = String(message || "");
-  return text.match(/[\'\"`](claude-foundation\s+[^\'\"`\n]+)[\'\"`]/)?.[1] || null;
+  return text.match(/[\'\"`](cloop\s+[^\'\"`\n]+)[\'\"`]/)?.[1] || null;
 }
 
 // Without an exact command, name what to change: the offending field, the
@@ -575,7 +575,7 @@ export function proofOperationAction(id, result) {
       request.type === "review" && request.status === "requested");
     const next = review && (result.next || []).find((row) =>
       row.requestId === review.requestId &&
-      /^claude-foundation authority run\s/.test(row.command || ""));
+      /^cloop authority run\s/.test(row.command || ""));
     if (next) return envelope(id, "RUN_EXTERNAL", {
       legacyAction: "RUN_CONFIGURED_REVIEW",
       actor: "configured-reviewer",
@@ -927,7 +927,7 @@ export function coordinatorAction({
       alternatives: reviewInfrastructureAlternatives(id)
     });
     const configuredReview = open.type === "review" && open.status === "requested" &&
-      /^claude-foundation authority run\s/.test(authorityCommand || "");
+      /^cloop authority run\s/.test(authorityCommand || "");
     if (open.type === "review" && open.status === "requested" &&
         authorityAction?.aiReviewExhausted)
       return exhaustedReviewDecision(id, open.requestId, authorityAction.aiReviewExhausted);

@@ -12,9 +12,9 @@ A portfolio that claims CRAP or changed-quality measurements must onboard each
 disposable consumer before starting any paid `claude -p` session:
 
 ```sh
-claude-foundation quality discover > quality-discovery.json
-claude-foundation quality init --write
-claude-foundation quality doctor --enforce > quality-doctor.json
+cloop quality discover > quality-discovery.json
+cloop quality init --write
+cloop quality doctor --enforce > quality-doctor.json
 jq -e '.repositories[] | select(.profiles | index("application-js-ts")) |
   .capabilities.crap.status == "available"' quality-discovery.json
 jq -e '.status == "pass"' quality-doctor.json

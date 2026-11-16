@@ -37,7 +37,7 @@ export function packetOverflowSummary(value, bytes, limit, largestFields = []) {
     display: { status: "truncated", bytes, limit, largestFields },
     durableAuthorityRequest: {
       status: "not-requested",
-      next: `claude-foundation authority request ${value.changeId} --type review`,
+      next: `cloop authority request ${value.changeId} --type review`,
       note: "The display budget does not invalidate the packet. The authority request persists the complete bounded packet."
     },
     references: value.references || null
@@ -711,7 +711,7 @@ export function createPacketRuntime({
     if (flags.phase === "build") {
       const state = loadRuntime(id);
       if (!["worktree", "copy"].includes(state.workspace?.mode))
-        die(`build packet requires an isolated workspace; run claude-foundation sandbox create ${id}`);
+        die(`build packet requires an isolated workspace; run cloop sandbox create ${id}`);
     }
   }
 

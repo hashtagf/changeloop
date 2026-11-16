@@ -62,7 +62,7 @@ test("runtime routes never name an internal primitive that advance performs", ()
   for (const file of walk(resolve(root, ".claude/harness/runtime"))) {
     const source = readFileSync(file, "utf8");
     for (const name of internal)
-      if (new RegExp(`claude-foundation ${name}\\b`).test(source))
+      if (new RegExp(`cloop ${name}\\b`).test(source))
         offenders.push(`${file.slice(root.length + 1)}: ${name}`);
   }
   assert.deepEqual(offenders, []);

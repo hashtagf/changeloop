@@ -693,7 +693,7 @@ try {
     }));
     const next = await advance.advanceThrough(id, "proven");
     assert.equal(next.action, "RUN_EXTERNAL");
-    assert.equal(next.command, `claude-foundation authority run ${id} --request ${request.requestId} --subject-actor human-implementer`);
+    assert.equal(next.command, `cloop authority run ${id} --request ${request.requestId} --subject-actor human-implementer`);
     // Decode the concrete fixture's command exactly as the host does; all
     // fixture arguments are simple tokens, with no shell expansion needed.
     const args = next.command.split(" ").slice(4);
@@ -971,13 +971,13 @@ try {
   assert(missingHandback.missing.includes("sessionId"));
   assert(missingHandback.missing.includes("modelId"));
   assert.match(missingHandback.next.command,
-    new RegExp(`^claude-foundation authority run change-fallback-missing --request ${missingRequest.requestId} --subject-actor human-implementer --main-session-identity <main-session-identity>`),
+    new RegExp(`^cloop authority run change-fallback-missing --request ${missingRequest.requestId} --subject-actor human-implementer --main-session-identity <main-session-identity>`),
     "a blocked fallback prints the concrete command, not a bare action");
   assert(missingHandback.next.placeholders.includes("main-session-model"),
     "unknowable values are named explicitly");
   assert.throws(() => quiet(() => authority.runAuthorityReviewer(
     "change-fallback-missing", { request: missingRequest.requestId })),
-  /requires --subject-actor\. Next: claude-foundation authority run change-fallback-missing --request /,
+  /requires --subject-actor\. Next: cloop authority run change-fallback-missing --request /,
   "a bare failure carries the next command");
   const missingAuthority = authorityStore.list("change-fallback-missing")
     .find((row) => row.value.requestId === missingRequest.requestId).value;
@@ -1209,7 +1209,7 @@ try {
     request: bindingRequest.requestId, "subject-actor": "human-implementer"
   }));
   assert.equal(bindingResult.status, "configured-reviewer-infrastructure-exhausted");
-  assert.match(bindingResult.next.command, /^claude-foundation authority status .* --template$/,
+  assert.match(bindingResult.next.command, /^cloop authority status .* --template$/,
     "an exhausted outcome names the next command");
   assert.equal(attemptStore.reviewAttempts("change-invalid-binding", state.reviewHistory).length, 1,
     "deterministic binding failures must not spend another full review on fallback");
@@ -1252,7 +1252,7 @@ try {
     authorityStatusValue: () => ({ requests: authorityStore.list(recoveryId).map((row) => row.value) }),
     authorityNext: (_id, _type, requests) => requests.map((request) => ({
       requestId: request.requestId,
-      command: `claude-foundation authority run ${recoveryId} --request ${request.requestId} --subject-actor implementation-agent`
+      command: `cloop authority run ${recoveryId} --request ${request.requestId} --subject-actor implementation-agent`
     })),
     readJson: () => ({}), proofAdvancePath: () => "/unused-proof.json", stableHash,
     recoverReviewBindings: authority.recoverReviewBindings
@@ -1477,7 +1477,7 @@ try {
   recordRejected({}, /superseded workspace.*re-requested review/);
   workspaceHash = "workspace-record-validation";
   recordRejected({ status: "completed" }, /is completed/);
-  recordRejected({}, /dispatch the request first: claude-foundation authority dispatch/);
+  recordRejected({}, /dispatch the request first: cloop authority dispatch/);
   // A request persisted by the retired legacy circuit is not exempt from
   // dispatch; it was never dispatched, so advance requests a current review.
   recordRejected({ reviewCircuit: "legacy" },
@@ -2250,7 +2250,7 @@ try {
   // `scripts/install-foundation-runtime.mjs` was named here for four releases
   // and has never existed in the repository, so a version-mismatched machine
   // was handed a dead end.
-  assert.match(developerSetup, /`claude-foundation init <project-path>`/);
+  assert.match(developerSetup, /`cloop init <project-path>`/);
   assert.doesNotMatch(developerSetup, /install-foundation-runtime/);
   assert.match(developerSetup, /Node\.js 20\.19 or later/);
   const policy = readJson(join(root, "foundation.json"));

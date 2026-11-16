@@ -26,7 +26,7 @@ reached your project.
 This slash command is the explicit Land authority boundary. It runs:
 
 ```bash
-claude-foundation advance <change> --through archived
+cloop advance <change> --through archived
 ```
 
 The coordinator records current proof and external-operation assurance,

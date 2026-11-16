@@ -128,7 +128,7 @@ test("task write scope is bookkeeping and packet drift is agent repair", (t) => 
   const action = advanceFailureAction("demo", drift, { through: "build" });
   assert.equal(action.action, "REPAIR");
   assert.equal(action.actor, "agent");
-  assert.match(action.command, /^claude-foundation change amend demo /);
+  assert.match(action.command, /^cloop change amend demo /);
 });
 
 test("legacy in-flight state needs no invented approval", () => {

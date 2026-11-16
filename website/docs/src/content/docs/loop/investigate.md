@@ -68,8 +68,8 @@ not worth changing
 
 `not worth changing` is a legitimate, useful outcome.
 
-The agent starts from `claude-foundation investigate --template`, keeps the
-record at `openspec/investigations/<id>.json`, and runs `claude-foundation
+The agent starts from `cloop investigate --template`, keeps the
+record at `openspec/investigations/<id>.json`, and runs `cloop
 investigate <record.json>` after each evidence batch. The harness discovers and
 hashes relevant sources, validates fact, hypothesis, and recommendation links,
 persists compact metrics and no-progress state, and returns `EDIT`, `ASK_USER`,

@@ -400,7 +400,7 @@ for cli in "npx claude-foundation" "npx --no-install claude-foundation" \
   out="$(printf '%s' "$(bash_event "$cli land advance delivery-change")" |
     CLAUDE_PROJECT_DIR="$TMP/project" node "$HOOK")"
   assert_contains "'$cli land advance' is routed to the public Land route" \
-    "$out" '"command":"claude-foundation advance delivery-change --through archived"'
+    "$out" '"command":"cloop advance delivery-change --through archived"'
   out="$(printf '%s' "$(bash_event "$cli deliver advance delivery-change")" |
     CLAUDE_PROJECT_DIR="$TMP/project" node "$HOOK")"
   assert_contains "'$cli deliver advance' becomes the question for the user" \
@@ -463,22 +463,22 @@ assert_eq "explicit audit mode records without speaking" "" "$out"
 # mutations still require the transaction marker and target capability.
 printf '%s\n' '{"type":"last-prompt","lastPrompt":"/land delivery-change"}' \
   > "$TMP/land-transcript.jsonl"
-land_event="{\"transcript_path\":\"$TMP/land-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"claude-foundation land advance delivery-change\"}}"
+land_event="{\"transcript_path\":\"$TMP/land-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"cloop land advance delivery-change\"}}"
 out="$(printf '%s' "$land_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   FOUNDATION_GUARDRAIL_MODE=auto node "$HOOK")"
 assert_contains "current /land routes the land advance alias to the public route" "$out" \
-  '"command":"claude-foundation advance delivery-change --through archived"'
+  '"command":"cloop advance delivery-change --through archived"'
 npx_land_event="{\"transcript_path\":\"$TMP/land-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"npx --no-install claude-foundation land advance delivery-change\"}}"
 out="$(printf '%s' "$npx_land_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   FOUNDATION_GUARDRAIL_MODE=auto node "$HOOK")"
 assert_contains "current /land routes the npx land advance alias to the public route" "$out" \
-  '"command":"claude-foundation advance delivery-change --through archived"'
+  '"command":"cloop advance delivery-change --through archived"'
 
-dev_land_event="{\"transcript_path\":\"$TMP/dev-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"claude-foundation land advance delivery-change\"}}"
+dev_land_event="{\"transcript_path\":\"$TMP/dev-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"cloop land advance delivery-change\"}}"
 out="$(printf '%s' "$dev_land_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   FOUNDATION_GUARDRAIL_MODE=auto node "$HOOK")"
 assert_contains "/dev Land through the internal wrapper is routed to advance" "$out" \
-  '"command":"claude-foundation advance delivery-change --through archived"'
+  '"command":"cloop advance delivery-change --through archived"'
 
 # Claude Code writes the `last-prompt` row late. A /land typed after /dev is
 # already in the transcript as its own user row before that row lands.
@@ -486,28 +486,28 @@ assert_contains "/dev Land through the internal wrapper is routed to advance" "$
   printf '%s\n' '{"type":"last-prompt","lastPrompt":"/dev build it"}'
   printf '%s\n' '{"type":"user","message":{"role":"user","content":"<command-message>land</command-message>\n<command-name>/land</command-name>\n<command-args>delivery-change</command-args>"}}'
 } > "$TMP/late-land-transcript.jsonl"
-late_land_event="{\"transcript_path\":\"$TMP/late-land-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"claude-foundation land advance delivery-change\"}}"
+late_land_event="{\"transcript_path\":\"$TMP/late-land-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"cloop land advance delivery-change\"}}"
 out="$(printf '%s' "$late_land_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   FOUNDATION_GUARDRAIL_MODE=auto node "$HOOK")"
 assert_contains "a typed /land still routes the land advance alias to the public route" "$out" \
-  '"command":"claude-foundation advance delivery-change --through archived"'
+  '"command":"cloop advance delivery-change --through archived"'
 {
   printf '%s\n' '{"type":"user","message":{"role":"user","content":"<command-name>/land</command-name>"}}'
   printf '%s\n' '{"type":"last-prompt","lastPrompt":"/dev next thing"}'
 } > "$TMP/stale-land-transcript.jsonl"
-stale_land_event="{\"transcript_path\":\"$TMP/stale-land-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"claude-foundation land advance delivery-change\"}}"
+stale_land_event="{\"transcript_path\":\"$TMP/stale-land-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"cloop land advance delivery-change\"}}"
 out="$(printf '%s' "$stale_land_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   FOUNDATION_GUARDRAIL_MODE=auto node "$HOOK")"
 assert_contains "an earlier /land does not let a later /dev turn use the internal wrapper" "$out" \
-  '"command":"claude-foundation advance delivery-change --through archived"'
+  '"command":"cloop advance delivery-change --through archived"'
 
 out="$(printf '%s' "$land_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   FOUNDATION_GUARDRAIL_MODE=block node "$HOOK")"
 assert_contains "block mode also routes the land advance alias to the public route" "$out" \
-  '"command":"claude-foundation advance delivery-change --through archived"'
+  '"command":"cloop advance delivery-change --through archived"'
 assert_not_contains "the land advance alias is rewritten, never refused" "$out" '"decision":"block"'
 
-chained_land_event="{\"transcript_path\":\"$TMP/land-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"claude-foundation land advance delivery-change && git commit -am bad\"}}"
+chained_land_event="{\"transcript_path\":\"$TMP/land-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"cloop land advance delivery-change && git commit -am bad\"}}"
 out="$(printf '%s' "$chained_land_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   FOUNDATION_GUARDRAIL_MODE=block FOUNDATION_ACTIVE_PHASE=land node "$HOOK")"
 assert_contains "Land wrapper authority cannot cover a chained commit" "$out" \
@@ -518,7 +518,7 @@ assert_contains "Land wrapper authority cannot cover a chained commit" "$out" \
 # remain blocked even when a recent Land phase is still recorded.
 printf '%s\n' '{"type":"last-prompt","lastPrompt":"/deliver delivery-change"}' \
   > "$TMP/deliver-transcript.jsonl"
-deliver_event="{\"transcript_path\":\"$TMP/deliver-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"claude-foundation deliver advance delivery-change\"}}"
+deliver_event="{\"transcript_path\":\"$TMP/deliver-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"cloop deliver advance delivery-change\"}}"
 out="$(printf '%s' "$deliver_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   FOUNDATION_GUARDRAIL_MODE=auto node "$HOOK")"
 assert_eq "current /deliver may invoke only its composite wrapper" "" "$out"
@@ -534,15 +534,15 @@ out="$(printf '%s' "$deliver_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   node "$HOOK")"
 assert_eq "event transcript remains authoritative for /deliver" "" "$out"
 
-forged_deliver_event="{\"transcript_path\":\"$TMP/dev-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"claude-foundation deliver advance delivery-change\"}}"
+forged_deliver_event="{\"transcript_path\":\"$TMP/dev-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"cloop deliver advance delivery-change\"}}"
 out="$(printf '%s' "$forged_deliver_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   FOUNDATION_GUARDRAIL_MODE=auto node "$HOOK")"
 assert_contains "/dev Deliver becomes the question for the user" "$out" \
   'ASK_USER: delivering delivery-change'
 assert_not_contains "/dev never runs delivery through the trusted wrapper" "$out" \
-  '"command":"claude-foundation deliver advance'
+  '"command":"cloop deliver advance'
 
-chained_deliver_event="{\"transcript_path\":\"$TMP/deliver-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"claude-foundation deliver advance delivery-change && git push --force\"}}"
+chained_deliver_event="{\"transcript_path\":\"$TMP/deliver-transcript.jsonl\",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"cloop deliver advance delivery-change && git push --force\"}}"
 out="$(printf '%s' "$chained_deliver_event" | CLAUDE_PROJECT_DIR="$TMP/pre" \
   FOUNDATION_GUARDRAIL_MODE=block node "$HOOK")"
 assert_contains "Deliver wrapper authority cannot cover a chained force push" "$out" \
@@ -554,7 +554,7 @@ prompt_transcript() {
   printf '{"type":"last-prompt","lastPrompt":"%s"}\n' "$2" > "$TMP/$1.jsonl"
 }
 deliver_with() {
-  printf '{"transcript_path":"%s","tool_name":"Bash","tool_input":{"command":"claude-foundation deliver advance delivery-change"}}' \
+  printf '{"transcript_path":"%s","tool_name":"Bash","tool_input":{"command":"cloop deliver advance delivery-change"}}' \
     "$TMP/$1.jsonl" | CLAUDE_PROJECT_DIR="$TMP/pre" FOUNDATION_GUARDRAIL_MODE=auto node "$HOOK"
 }
 prompt_transcript natural-deliver "เปิด PR ให้เลย"
@@ -599,7 +599,7 @@ assert_eq "/dev --resume <id> --through delivered covers that change" "" \
 assert_contains "a later slash command ends /dev delivery authority" \
   "$(deliver_with dev-superseded)" 'ASK_USER: delivering delivery-change'
 pi_deliver_with() {
-  printf '{"tool_name":"Bash","tool_input":{"command":"claude-foundation deliver advance delivery-change"}}' |
+  printf '{"tool_name":"Bash","tool_input":{"command":"cloop deliver advance delivery-change"}}' |
     CLAUDE_PROJECT_DIR="$TMP/pre" FOUNDATION_GUARDRAIL_MODE=auto FOUNDATION_HOST=pi \
     FOUNDATION_HOST_COMMAND="$1" FOUNDATION_HOST_ARGUMENTS="$2" node "$HOOK"
 }

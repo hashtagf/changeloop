@@ -9,7 +9,7 @@ import {
   SEMANTIC_INTAKE_STATE_VERSION
 } from "../runtime/workflow/semantic-intake-state.mjs";
 
-const route = "claude-foundation change start .foundation/drafts/contact.json --inspect";
+const route = "cloop change start .foundation/drafts/contact.json --inspect";
 const inventory = (digest = "a".repeat(64)) => ({
   version: 1, algorithm: "sha256", sources: [], digest: `sha256:${digest}`
 });

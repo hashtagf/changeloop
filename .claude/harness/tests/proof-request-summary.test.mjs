@@ -42,8 +42,8 @@ test("proof request summary retains durable identity and emits recovery commands
     packetDigest: "packet",
     attemptDigest: "attempt",
     scopeMode: "delta",
-    packetCommand: "claude-foundation authority status change-a --request review-123",
-    statusCommand: "claude-foundation authority status change-a --request review-123 --template"
+    packetCommand: "cloop authority status change-a --request review-123",
+    statusCommand: "cloop authority status change-a --request review-123 --template"
   });
 });
 

@@ -4,7 +4,7 @@ This directory holds the repository-internal policy and baseline for the
 automated dashboard mutation gate that `.github/workflows/release.yml` runs
 before publishing. It is separate from Foundation's consumer-facing quality
 feature; for gates installed into consumer projects, use
-`claude-foundation quality …` and see
+`cloop quality …` and see
 [`docs/consumer-quality.md`](../docs/consumer-quality.md).
 
 ## Commands

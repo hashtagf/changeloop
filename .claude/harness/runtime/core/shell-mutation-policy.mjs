@@ -332,14 +332,15 @@ const IN_PLACE_EDIT = /(^|[;&|`()]|\b(?:then|do)\b)\s*(?:sudo\s+|env\s+)*(?:sed|
 // Output sent to the terminal's own streams is not a file write.
 const REDIRECT = /(?:^|[^<])(?:>>?|2>>?)\s*(?!&)(?!\/dev\/(?:null|stdout|stderr)(?:[\s;&|)]|$))\S/m;
 
-// The harness CLI is one program however the host spells it: through `npx`
-// (optionally `--no-install`, `--no`, `-y`, `--yes`) or by a path to its bin.
-// Every spelling at a command position is rewritten to bare `claude-foundation`
-// so classification — including authority patterns — cannot differ by spelling.
-const HARNESS_CLI_SPELLING = /((?:^|[;&|`()]|\b(?:then|do)\b)\s*(?:sudo\s+|env\s+)*)(?:npx(?:\s+(?:--no-install|--no|--yes|-y))*\s+|[^\s;&|()`'"<>]*\/)claude-foundation(?=[\s;&|()`]|$)/gm;
+// The harness CLI is `cloop`. Every spelling at a command position — a path to
+// its bin, `npx`, or the retired `claude-foundation` name an older install may
+// still carry — is rewritten to bare `cloop`, so classification (authority
+// patterns included) cannot differ by spelling and a leftover binary is never
+// an unguarded route.
+const HARNESS_CLI_SPELLING = /((?:^|[;&|`()]|\b(?:then|do)\b)\s*(?:sudo\s+|env\s+)*)(?:(?:npx(?:\s+(?:--no-install|--no|--yes|-y))*\s+|[^\s;&|()`'"<>]*\/)?(?:claude-foundation|cloop))(?=[\s;&|()`]|$)/gm;
 
 export function normalizeHarnessCliInvocations(command) {
-  return String(command || "").replace(HARNESS_CLI_SPELLING, "$1claude-foundation");
+  return String(command || "").replace(HARNESS_CLI_SPELLING, "$1cloop");
 }
 
 // The matched command words, not merely whether one exists: a phase rule that

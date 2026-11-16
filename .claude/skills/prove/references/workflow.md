@@ -1,6 +1,6 @@
 # Prove workflow
 
-Run `claude-foundation advance <change> --through proven`. It establishes fresh
+Run `cloop advance <change> --through proven`. It establishes fresh
 Prove context, reuses valid receipts, executes eligible providers, routes review
 before acceptance, and never polls. An automatic in-contract repair returns a
 bounded dependency-ordered batch; repair it in Build and resume. There is no

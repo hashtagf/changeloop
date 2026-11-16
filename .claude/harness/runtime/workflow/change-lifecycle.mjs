@@ -193,7 +193,7 @@ export function apiContractErrorIssues(draft) {
 export function retiredDraftIssue(version) {
   return [1, 2, 3, undefined, null].includes(version)
     ? `draft version ${version ?? "(none)"} is no longer supported; author a v5 draft folder ` +
-      "(claude-foundation change start --template) or a v4 JSON draft"
+      "(cloop change start --template) or a v4 JSON draft"
     : "semantic draft version must be 4 or 5";
 }
 
@@ -1229,7 +1229,7 @@ export function createChangeLifecycle({
         ".foundation/drafts/<id>/ (change.json with version 5, then proposal.md); that path " +
         "is pre-allowed and the tool creates the folder. Do not save it through the shell " +
         "(heredoc, cat >, echo >, mkdir chains): the host refuses those. Then run " +
-        "claude-foundation change start .foundation/drafts/<id>; when the request already " +
+        "cloop change start .foundation/drafts/<id>; when the request already " +
         "approved the spec, add --approve-spec --decision-ref <ref> and any --through stage " +
         "to that same call.",
       minimalDraft: minimalDraftFolderTemplate(),
@@ -1428,7 +1428,7 @@ export function createChangeLifecycle({
   }
 
   function startResume(draftPath) {
-    return `claude-foundation change start ${draftPath} --inspect`;
+    return `cloop change start ${draftPath} --inspect`;
   }
 
   function folderRepairAction(draftPath, folderIssues) {
@@ -1503,7 +1503,7 @@ export function createChangeLifecycle({
     if (!isSemanticVersion(active.semanticDraftVersion))
       fail(`change amend --inspect requires a semantic-draft v4 or v5 change; '${id}' is version ${
         active.semanticDraftVersion || "legacy"}${isRecordedSemanticVersion(active.semanticDraftVersion)
-        ? `; a v3 change has no amendment intake: apply it directly with claude-foundation change amend ${id} ${amendmentPath}`
+        ? `; a v3 change has no amendment intake: apply it directly with cloop change amend ${id} ${amendmentPath}`
         : ""}`);
     const path = resolve(root, amendmentPath);
     if (!pathInside(root, path) || !existsSync(path))
@@ -1515,7 +1515,7 @@ export function createChangeLifecycle({
     const tasksPath = join(activeChangePath(id, active), "tasks.md");
     return inspectSemanticIntakeSource(amendmentIntakeSource(amendment), {
       statePath: semanticIntakeStatePath(amendmentPath, `amend:${id}`),
-      resume: `claude-foundation change amend ${id} ${amendmentPath} --inspect`,
+      resume: `cloop change amend ${id} ${amendmentPath} --inspect`,
       quiet: options.quiet,
       validateCompiledDraft: false,
       excludedSourcePath: relative(root, path).replaceAll("\\", "/"),
@@ -1877,7 +1877,7 @@ export function createChangeLifecycle({
         (role !== null ? `  approval lane: ${role}\n` : "") +
         (pendingLanes.length ? `  approval lanes still needed: ${pendingLanes.join(", ")}\n` : "") +
         (approvedDelta ? `  approved requirement delta:\n${formatApprovalDelta(approvedDelta)}\n` : "") +
-        `  next: claude-foundation advance ${id} --through ${flags["approve-spec"]
+        `  next: cloop advance ${id} --through ${flags["approve-spec"]
           ? resumeThrough(loadRuntime(id))
           : flags["accept-target-edits"] ? "archived" : "proven"}`);
       return;
@@ -2117,8 +2117,8 @@ export function createChangeLifecycle({
           openQuestionLines(openQuestions) +
           designWarningLines(draft, loadRuntime(id).schema, source) +
           `  next: ${openQuestions.length
-            ? `ask these with the approval, record the answers in the draft, then claude-foundation change revise ${id} ${draftPath} --approve-spec --decision-ref <user-decision> --through proven`
-            : `claude-foundation advance ${id} --approve-spec --decision-ref <user-decision> --through proven`}`);
+            ? `ask these with the approval, record the answers in the draft, then cloop change revise ${id} ${draftPath} --approve-spec --decision-ref <user-decision> --through proven`
+            : `cloop advance ${id} --approve-spec --decision-ref <user-decision> --through proven`}`);
       });
     } catch (error) {
       let rollbackIssues;
@@ -2243,7 +2243,7 @@ export function createChangeLifecycle({
       fail(`change revise requires an existing active change; '${id}' was not found`);
     if (!isRecordedSemanticVersion(state.semanticDraftVersion))
       fail(`change revise requires a semantic-draft change; '${id}' is not one`);
-    const amend = `claude-foundation change amend ${id} <amendment.json> --inspect`;
+    const amend = `cloop change amend ${id} <amendment.json> --inspect`;
     const receipts = join(root, ".foundation", "receipts", id);
     const built = (state.workspace && (state.workspace.mode !== "current" ||
         resolve(state.workspace.path || root) !== resolve(root))) ||
@@ -2333,7 +2333,7 @@ export function createChangeLifecycle({
   }
 
   function reviseRoute(id, draftPath, merge) {
-    return `claude-foundation change revise ${id} ${draftPath}${merge ? " --merge" : ""}`;
+    return `cloop change revise ${id} ${draftPath}${merge ? " --merge" : ""}`;
   }
 
   function revisionIntakeOptions(id, draftPath, source, { merge = false } = {}) {
@@ -2491,8 +2491,8 @@ export function createChangeLifecycle({
       `  next: ${openQuestions.length
         ? `ask these with the approval, record the answers in the draft, then ${reviseRoute(id, draftPath, merge)} --approve-spec --decision-ref <user-decision> --through proven`
         : pending || !state.specApproval?.identity
-          ? `claude-foundation advance ${id} --approve-spec --decision-ref <user-decision> --through proven`
-          : `claude-foundation advance ${id} --through ${resumeThrough(state)}`}`);
+          ? `cloop advance ${id} --approve-spec --decision-ref <user-decision> --through proven`
+          : `cloop advance ${id} --through ${resumeThrough(state)}`}`);
     return delta;
   }
 
@@ -2533,7 +2533,7 @@ export function createChangeLifecycle({
     const sectionsOnly = sectionsOnlyAmendment(amendment);
     if (isSemanticVersion(state.semanticDraftVersion) && !taskContractOnlyAmendment(amendment) &&
         !sectionsOnly) {
-      const resume = `claude-foundation change amend ${id} ${amendmentPath} --inspect`;
+      const resume = `cloop change amend ${id} ${amendmentPath} --inspect`;
       let intakeState = null;
       if (existsSync(amendmentStatePath)) {
         try { intakeState = JSON.parse(readFileSync(amendmentStatePath, "utf8")); }

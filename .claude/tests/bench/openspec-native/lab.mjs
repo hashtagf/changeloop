@@ -59,13 +59,13 @@ function commandResult(command, args, cwd, env = process.env) {
   return spawnSync(command, args, { cwd, encoding: "utf8", env });
 }
 
-// A source-checkout install puts no `claude-foundation` on PATH, but every
+// A source-checkout install puts no `cloop` on PATH, but every
 // command the agent follows names it. Give the run the same CLI a Homebrew
 // install provides, pointing at this checkout's cli.sh.
 function cliShimEnv(runDir) {
   const bin = join(runDir, "bin");
   mkdirSync(bin, { recursive: true });
-  const shim = join(bin, "claude-foundation");
+  const shim = join(bin, "cloop");
   writeFileSync(shim, `#!/bin/sh\nexec "${join(ROOT, "cli.sh")}" "$@"\n`);
   chmodSync(shim, 0o755);
   return { ...process.env, PATH: `${bin}:${process.env.PATH || ""}` };
@@ -336,16 +336,16 @@ export function preserveLabEvidence({
 // disposable consumer is untrusted, so headless Claude ignores it. Hand the
 // host exactly those installed rules so a measured permission prompt is one
 // the shipped install would raise, not one the lab caused by granting less
-// (for example `.foundation/bin/claude-foundation`, the installed CLI shim).
+// (for example `.foundation/bin/cloop`, the installed CLI shim).
 export function installedAllowedTools(project) {
   try {
     const allow = JSON.parse(readFileSync(join(project, ".claude/settings.json"), "utf8"))
       ?.permissions?.allow;
     const rules = Array.isArray(allow)
       ? allow.filter((rule) => typeof rule === "string" && rule.trim()) : [];
-    return rules.length ? rules : ["Bash(claude-foundation *)"];
+    return rules.length ? rules : ["Bash(cloop *)"];
   } catch {
-    return ["Bash(claude-foundation *)"];
+    return ["Bash(cloop *)"];
   }
 }
 
@@ -439,7 +439,7 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
   const source = sourceRevision();
   let result;
   try {
-    // The baseline gets no `claude-foundation` shim: nothing of the harness
+    // The baseline gets no `cloop` shim: nothing of the harness
     // is reachable from its PATH.
     result = commandResult(process.execPath, args, ROOT,
       baseline ? process.env : cliShimEnv(runDir));

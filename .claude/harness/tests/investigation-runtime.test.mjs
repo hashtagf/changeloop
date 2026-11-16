@@ -97,7 +97,7 @@ test("the record template leads with the file-tool save route and tolerates it s
   assert.match(template.save, /Write tool to openspec\/investigations\/<id>\.json/);
   assert.match(template.save, /not save it through the shell \(heredoc/);
   assert.match(template.save,
-    /claude-foundation investigate openspec\/investigations\/<id>\.json/);
+    /cloop investigate openspec\/investigations\/<id>\.json/);
   const value = fixture(t);
   writeFileSync(value.recordPath,
     `${JSON.stringify({ save: template.save, ...value.record }, null, 2)}\n`);
@@ -281,7 +281,7 @@ test("an active-change investigation reads and binds the isolated Build sandbox"
   assert.equal(blocked.boundary, "investigation-workspace");
   assert.equal(blocked.investigation.kind, "repair-harness");
   assert.equal(blocked.resume,
-    "claude-foundation investigate openspec/investigations/retry-race.json");
+    "cloop investigate openspec/investigations/retry-race.json");
   assert.match(blocked.investigation.issues.join("\n"), /sandbox is missing or unsafe/);
   assert.deepEqual(value.readJson(join(value.root, blocked.state.path)).repository.selectedSources, []);
 });
@@ -431,7 +431,7 @@ test("repeated unchanged work records a bounded no-progress recovery route", (t)
   value.record.hypotheses[0].status = "open";
   value.record.hypotheses[0].factKeys = [];
   writeFileSync(value.recordPath, `${JSON.stringify(value.record, null, 2)}\n`);
-  const route = "claude-foundation investigate openspec/investigations/retry-race.json";
+  const route = "cloop investigate openspec/investigations/retry-race.json";
   let result;
   for (let attempt = 0; attempt < 3; attempt += 1)
     result = quiet(() => value.runtime.inspectInvestigation(

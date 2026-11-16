@@ -109,7 +109,7 @@ test("the user amends the agreement: advance routes to change amend and visual i
   const routed = await f.runtime().showAdvance("demo", answer(asked, "amend-agreement"));
   assert.equal(routed.action, "EDIT");
   assert.equal(routed.legacyAction, "AMEND_AGREEMENT");
-  assert.match(routed.command, /^claude-foundation change amend demo /);
+  assert.match(routed.command, /^cloop change amend demo /);
   // The visual provider carries the bound prototype digest, so an amended
   // prototype changes its fingerprint and the old receipt no longer counts.
   const config = (sha256) => visualProviderConfig({ changeId: "demo", packetPath: "/p",

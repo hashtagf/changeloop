@@ -70,7 +70,7 @@ test("correlated Codex usage remains unavailable with supported recovery", () =>
   assert.equal(value.reason, "correlation-without-usage-events");
   assert.deepEqual(value.correlatedHosts, ["codex"]);
   assert(value.recoveryActions.some((action) =>
-    action.command === "claude-foundation telemetry import change-id <events.jsonl> --format codex"));
+    action.command === "cloop telemetry import change-id <events.jsonl> --format codex"));
 });
 
 test("missing host context names generic supported recovery", () => {
@@ -139,7 +139,7 @@ test("Claude transcript tokens without the result-envelope cost stay partial", (
   assert.equal(value.classification, "partial-measurement");
   assert.equal(value.reason, "partial-measurement");
   assert(value.recoveryActions.some((action) =>
-    action.command === "claude-foundation telemetry host-import change-id <claude-result.json>"));
+    action.command === "cloop telemetry host-import change-id <claude-result.json>"));
 });
 
 test("explicit zero usage is distinguished from missing usage", () => {
@@ -211,7 +211,7 @@ test("oversized review display stays valid and names durable persistence", () =>
   assert.equal(value.display.bytes, 12_000);
   assert.equal(value.durableAuthorityRequest.status, "not-requested");
   assert.equal(value.durableAuthorityRequest.next,
-    "claude-foundation authority request wide-review --type review");
+    "cloop authority request wide-review --type review");
   assert.deepEqual(value.references, { tasks: { path: "tasks.md" } });
 });
 

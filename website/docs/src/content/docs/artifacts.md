@@ -104,7 +104,7 @@ overwrite:
 
 `lessons.md` is your project's list of durable lessons, each linked to an
 incident record. When it exists, investigation and change intake read it as a
-grounding source. It is unrelated to the `claude-foundation lessons` command,
+grounding source. It is unrelated to the `cloop lessons` command,
 which groups recurring blocker and review codes.
 
 `REVIEW.md` at the repository root holds your advisory review rules. The AI

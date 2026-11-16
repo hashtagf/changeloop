@@ -112,20 +112,20 @@ export function resolveExecWorkspace({
   id, state, root = null, callerCwd = null, repository = null, task = null,
   tasks = [], fail
 }) {
-  const route = `claude-foundation exec ${id} --repo <repository> -- <command…>`;
+  const route = `cloop exec ${id} --repo <repository> -- <command…>`;
   const shared = canonicalDirectory(state.workspace?.path);
   if (!shared) {
     if (repository || task)
       execRefusal(fail, `exec --${repository ? "repo" : "task"} needs the change's ` +
         `isolated Build workspace, which does not exist in state '${state.status}'; ` +
-        `run 'claude-foundation advance ${id} --through ${resumeThrough(state)}' first`,
+        `run 'cloop advance ${id} --through ${resumeThrough(state)}' first`,
       "EXEC_WORKSPACE_MISSING");
     return null;
   }
   const checkout = canonicalDirectory(root);
   if (checkout && isWithin(checkout, shared))
     execRefusal(fail, "exec never runs in the main checkout, and the change's workspace " +
-      `resolves to it; run 'claude-foundation advance ${id} --through ${resumeThrough(state)}' to ` +
+      `resolves to it; run 'cloop advance ${id} --through ${resumeThrough(state)}' to ` +
       "create the isolated workspace", "EXEC_WORKSPACE_NOT_ISOLATED");
   const sandboxes = new Map([["root", { path: shared, target: checkout, mirror: null }]]);
   for (const [name, record] of Object.entries(state.repositories || {})) {
@@ -153,7 +153,7 @@ export function resolveExecWorkspace({
     const row = tasks.find((candidate) => String(candidate.id || "").toUpperCase() === wanted);
     if (!row)
       execRefusal(fail, `exec --task names '${task}', which is not a task of change ` +
-        `'${id}'; run \`claude-foundation exec ${id} --task <task-id> -- <command…>\` ` +
+        `'${id}'; run \`cloop exec ${id} --task <task-id> -- <command…>\` ` +
         "with a task id from its tasks.md", "EXEC_TASK_UNKNOWN");
     const owner = named(row.repository || "root", `--task ${row.id}`);
     if (explicit && explicit.repository !== owner.repository)

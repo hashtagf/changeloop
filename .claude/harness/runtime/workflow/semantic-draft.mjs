@@ -356,7 +356,7 @@ function semanticDraftIssues(source, { defaultTestEvidence = false, requireScrat
   if (!isSemanticVersion(source?.version))
     issues.push([1, 2, 3].includes(source?.version)
       ? `draft version ${source.version} is no longer supported; author a v5 draft folder ` +
-        "(claude-foundation change start --template) or a v4 JSON draft"
+        "(cloop change start --template) or a v4 JSON draft"
       : "semantic draft version must be 4 or 5");
   if (!text(source?.intent)) issues.push("semantic draft requires non-empty 'intent'");
   if (!Array.isArray(source?.requirements) || source.requirements.length === 0)
@@ -2035,7 +2035,7 @@ function workTypeExamples() {
 function draftFolderV5() {
   return {
     layout: "A folder .foundation/drafts/<id>/ with change.json (typed fields, version 5), " +
-      "proposal.md, and design.md; start it with claude-foundation change start " +
+      "proposal.md, and design.md; start it with cloop change start " +
       ".foundation/drafts/<id>",
     headings: "Use only '## ' headings from the outline, in outline order, in English or Thai. " +
       "Never write a heading the harness derives (Change, Capabilities, Acceptance traceability, " +

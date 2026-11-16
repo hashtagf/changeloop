@@ -130,7 +130,7 @@ test("missing required sections reach change start as an agent EDIT with a resum
   const sectionIssues = issues.filter((issue) => /^dev document/.test(issue));
   assert.equal(sectionIssues.length, 1);
   assert.match(sectionIssues[0], /needs 'infraPlan'/);
-  const resume = "claude-foundation change start draft.json --inspect";
+  const resume = "cloop change start draft.json --inspect";
   const action = semanticIntakeAction(draft, { resume, additionalIssues: issues });
   assert.equal(action.action, "EDIT");
   assert.equal(action.owner, "agent");

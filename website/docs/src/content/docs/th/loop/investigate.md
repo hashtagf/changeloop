@@ -65,8 +65,8 @@ not worth changing
 
 `not worth changing` เป็นผลลัพธ์ที่ถูกต้องและมีประโยชน์
 
-Agent เริ่มจาก `claude-foundation investigate --template` เก็บ record ที่
-`openspec/investigations/<id>.json` และเรียก `claude-foundation investigate
+Agent เริ่มจาก `cloop investigate --template` เก็บ record ที่
+`openspec/investigations/<id>.json` และเรียก `cloop investigate
 <record.json>` หลังอ่านหลักฐานแต่ละ batch Harness จะค้นและ hash source ที่
 เกี่ยวข้อง ตรวจ link ของ fact, hypothesis และ recommendation เก็บ metrics กับ
 no-progress state แล้วคืน `EDIT`, `ASK_USER` หรือ `DONE` พร้อม resume route

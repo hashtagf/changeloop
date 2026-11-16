@@ -279,11 +279,11 @@ export function createRuntimeEnvironment({
     // The legacy review routing was retired: review always routes by risk
     // tier through a dispatched full-delta circuit.
     if (policy.workflow.reviewCircuit === "legacy")
-      fail("foundation.json workflow.reviewCircuit \"legacy\" was retired; rerun `claude-foundation init` to upgrade it to \"full-delta\"");
+      fail("foundation.json workflow.reviewCircuit \"legacy\" was retired; rerun `cloop init` to upgrade it to \"full-delta\"");
     if (policy.workflow.reviewCircuit !== "full-delta")
       fail("foundation.json workflow.reviewCircuit must be full-delta");
     if (policy.workflow.reviewPolicy === "legacy")
-      fail("foundation.json workflow.reviewPolicy \"legacy\" was retired; rerun `claude-foundation init` to upgrade it to \"risk-tiered\"");
+      fail("foundation.json workflow.reviewPolicy \"legacy\" was retired; rerun `cloop init` to upgrade it to \"risk-tiered\"");
     if (policy.workflow.reviewPolicy !== "risk-tiered")
       fail("foundation.json workflow.reviewPolicy must be risk-tiered");
     if (typeof policy.workflow.handoffDefaultOwner !== "string" ||

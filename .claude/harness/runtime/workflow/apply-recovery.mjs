@@ -45,8 +45,8 @@ export function targetHeadMovedDecision({
     options: [
       {
         id: "sync",
-        outcome: `Replay ${multiRepository ? "every moved repository sandbox" : "the sandbox"} onto the current commit and re-prove it: 'claude-foundation sandbox sync ${
-          changeId}', then 'claude-foundation advance ${changeId} --through proven'.`
+        outcome: `Replay ${multiRepository ? "every moved repository sandbox" : "the sandbox"} onto the current commit and re-prove it: 'cloop sandbox sync ${
+          changeId}', then 'cloop advance ${changeId} --through proven'.`
       },
       {
         id: "inspect",
@@ -97,7 +97,7 @@ export function manualRecoveryDecision(transactionRoot, {
       {
         id: "restore-backup",
         outcome: "Replace the divergent target files with the recorded pre-apply backup" + (changeId
-          ? `: 'claude-foundation advance ${changeId} --through archived --recover-apply restore-backup --decision-ref <user-decision>'.`
+          ? `: 'cloop advance ${changeId} --through archived --recover-apply restore-backup --decision-ref <user-decision>'.`
           : ".")
       },
       { id: "pause", outcome: "Leave the journal pending and make no further changes." }

@@ -303,7 +303,7 @@ test("exec refuses unknown repositories and tasks and never runs in the main che
   const command = [process.execPath, "-e",
     `require('node:fs').writeFileSync(${JSON.stringify(marker)}, '')`];
   assert.throws(() => fixture.runtime.execObserved("change", command, { repository: "web" }),
-    /repository 'web', which has no sandbox in change 'change' \(known: root, api\); run `claude-foundation exec change --repo <repository>/);
+    /repository 'web', which has no sandbox in change 'change' \(known: root, api\); run `cloop exec change --repo <repository>/);
   assert.throws(() => fixture.runtime.execObserved("change", command, { task: "T404" }),
     /'T404', which is not a task of change 'change'/);
   assert.throws(() => fixture.runtime.execObserved("change", command, {

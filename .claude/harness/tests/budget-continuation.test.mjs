@@ -172,7 +172,7 @@ test("checkpoint always resumes: an exhausted window is advisory, never a user d
   assert.notEqual(value.forecast.status, "USER_DECISION_REQUIRED");
   assert.deepEqual(value.remainingWork.pendingTasks, ["T1"]);
   assert.equal(value.checkpoint.resumeCommand,
-    "claude-foundation packet change --phase build");
+    "cloop packet change --phase build");
   assert.equal(value.checkpoint.sequence, 4);
   assert.equal("userPrompt" in value, false);
 });
@@ -190,7 +190,7 @@ test("checkpoint routes deterministic proof without asking for more model budget
   assert.equal(value.status, "READY_TO_RESUME");
   assert.equal(value.forecast.status, "NO_ADDITIONAL_MODEL_BUDGET_NEEDED");
   assert.equal(value.checkpoint.resumeCommand,
-    "claude-foundation advance change --through proven");
+    "cloop advance change --through proven");
 });
 
 test("eligible continuation passes and ineligible readiness produces a typed stop", () => {

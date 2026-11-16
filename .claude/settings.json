@@ -1,8 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(claude-foundation *)",
-      "Bash(.foundation/bin/claude-foundation *)",
+      "Bash(cloop *)",
+      "Bash(.foundation/bin/cloop *)",
       "Bash(node .claude/harness/foundation.mjs *)",
       "Edit(/.foundation/sandboxes/**)",
       "Edit(/.foundation/repository-sandboxes/**)",

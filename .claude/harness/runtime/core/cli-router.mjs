@@ -129,7 +129,7 @@ export async function routeRuntimeCommand(command, values, api) {
       // approval flags; the refusal names the one call that works when the
       // user approved, and never approves on its own.
       if (stray.length) die(`${command} --${stray.join(", --")} requires --approve-spec; ` +
-        `when the user approved the spec, rerun as \`claude-foundation ${command} <same arguments> ` +
+        `when the user approved the spec, rerun as \`cloop ${command} <same arguments> ` +
         "--approve-spec --decision-ref <ref> --through build|proven|archived`, otherwise " +
         "drop those flags and ask for approval");
       return null;
@@ -524,7 +524,7 @@ export async function routeRuntimeCommand(command, values, api) {
         const restore = recordTargetRestore(rest[0], flags["restore-target"], flags["decision-ref"]);
         if (!flags.through) {
           console.log(`TARGET RESTORE RECORDED ${rest[0]}\n  paths: ${restore.paths.join(", ")}` +
-            `\n  next: claude-foundation advance ${rest[0]} --through archived`);
+            `\n  next: cloop advance ${rest[0]} --through archived`);
           return;
         }
         delete flags["restore-target"];
@@ -559,7 +559,7 @@ export async function routeRuntimeCommand(command, values, api) {
       if (flags.inspect && (flags.through || flags["host-result"] || flags.decision ||
           flags["decision-fingerprint"] || flags["decision-ref"] || flags.reason))
         die(`advance --inspect is read-only and cannot be combined with --through, --host-result, or decision flags; ` +
-          `run 'claude-foundation advance ${rest[0]} --inspect' alone, or drop --inspect to execute`);
+          `run 'cloop advance ${rest[0]} --inspect' alone, or drop --inspect to execute`);
       if (!flags.decision && (flags["decision-fingerprint"] || flags["decision-ref"] || flags.reason))
         die("advance decision metadata requires --decision");
       if (flags.through && !["build", "proven", "archived"].includes(flags.through))

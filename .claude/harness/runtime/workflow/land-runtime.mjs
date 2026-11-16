@@ -350,12 +350,12 @@ export function createLandRuntime({
     if (!["proven", "applied"].includes(status))
       fail(`Land requires current passing proof for '${id}' (assurance: ${
         assurance?.status || "unknown"}; lifecycle is '${status}', not proven)\n` +
-        `  next: claude-foundation advance ${id} --through archived`);
+        `  next: cloop advance ${id} --through archived`);
     if (assurance?.status === "passed" && assurance.proofWorkspaceHash &&
         assurance.proofWorkspaceHash === assurance.workspaceHash) return;
     fail(`Land requires current passing proof for '${id}' (assurance: ${
       assurance?.status || "unknown"}${assurance?.reason ? `; ${assurance.reason}` : ""})\n` +
-      `  next: claude-foundation advance ${id} --through archived`);
+      `  next: cloop advance ${id} --through archived`);
   }
 
   function assertLandTargetReady(id, state) {
@@ -399,7 +399,7 @@ export function createLandRuntime({
           { id: "keep-current", outcome: "Keep the current target files (nothing is overwritten), " +
             "then synchronize the sandbox onto them and prove again before Land continues." },
           { id: "restore-backup", outcome: "Replace the divergent target files with the recorded " +
-            `pre-apply backup: 'claude-foundation advance ${id} --through archived --recover-apply ` +
+            `pre-apply backup: 'cloop advance ${id} --through archived --recover-apply ` +
             "restore-backup --decision-ref <user-decision>'." },
           { id: "pause", outcome: "Leave the transaction pending and make no change." }
         ] : [
@@ -443,8 +443,8 @@ export function createLandRuntime({
       const runtime = state.repositories?.[repository.id] || {};
       if (runtime.mode !== "worktree")
         fail(`read-only dependency '${repository.id}' is not isolated in a Git worktree, so Land cannot ` +
-          `prove it unchanged; run claude-foundation doctor --stage build --change ${id} to see why, ` +
-          `then resume with claude-foundation advance ${id} --through archived`);
+          `prove it unchanged; run cloop doctor --stage build --change ${id} to see why, ` +
+          `then resume with cloop advance ${id} --through archived`);
       const dirty = git(["status", "--porcelain"], runtime.path);
       if (dirty.status !== 0 || dirty.stdout.trim())
         fail(`read-only dependency '${repository.id}' changed inside its sandbox: ${
@@ -556,7 +556,7 @@ export function createLandRuntime({
         (provider) => receiptPath(id, provider), readJson);
       if (!ciProvider)
         throw new Error(`risk policy requires signed CI evidence before Land. Configure an external ` +
-          `provider with ci.issuer and ci.publicKey, then run: claude-foundation evidence ` +
+          `provider with ci.issuer and ci.publicKey, then run: cloop evidence ` +
           `verify-ci ${id} <provider> <signed.json>`);
     }
   }
@@ -643,7 +643,7 @@ export function createLandRuntime({
     const decisionRef = String(flags["decision-ref"] || "").trim();
     if (!decisionRef)
       fail("settling an interrupted apply requires --decision-ref <user-decision>; ask the user, then run " +
-        `'claude-foundation advance ${id} --through archived --recover-apply settle --decision-ref <user-decision>'`);
+        `'cloop advance ${id} --through archived --recover-apply settle --decision-ref <user-decision>'`);
     const pending = pendingApplyTransactions(id);
     if (!pending.length) {
       console.log(`NOTHING TO RECOVER ${id}\n  no unresolved apply transaction`);
@@ -655,7 +655,7 @@ export function createLandRuntime({
     const resolution = String(flags.resolution || "").trim();
     if (manual && !["keep-current", "restore-backup"].includes(resolution))
       fail("this interrupted apply needs a manual resolution: ask the user, then run " +
-        `'claude-foundation advance ${id} --through archived --recover-apply keep-current|restore-backup ` +
+        `'cloop advance ${id} --through archived --recover-apply keep-current|restore-backup ` +
         "--decision-ref <user-decision>'");
     for (const transaction of pending)
       console.log(`RECOVERING ${transaction.transactionId}\n  status: ${
@@ -664,7 +664,7 @@ export function createLandRuntime({
     recoverPendingApply(id, loadRuntime(id), { resolution, decisionRef });
     const remaining = pendingApplyTransactions(id);
     console.log(`RECOVERED ${id}\n  settled: ${
-      pending.length - remaining.length}/${pending.length}\n  next: claude-foundation advance ${id} --through archived`);
+      pending.length - remaining.length}/${pending.length}\n  next: cloop advance ${id} --through archived`);
   }
 
   function orderedRepositories(id, state = loadRuntime(id)) {
@@ -803,7 +803,7 @@ export function createLandRuntime({
     const prepared = existsSync(path) ? readJson(path, {}) : null;
     if (!landPreparationMatches(prepared, current))
       fail(`Land preparation changed before mutation (${current.incomplete.join(", ") || "identity drift"}); ` +
-        `resolve it, then resume with claude-foundation advance ${id} --through archived`);
+        `resolve it, then resume with cloop advance ${id} --through archived`);
     return current;
   }
 

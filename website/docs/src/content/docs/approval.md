@@ -103,7 +103,7 @@ and the agent uses the skill; you can still approve from the packet. When you as
 for a change on the page, the agent updates the agreement in the same turn, so the
 page and the agreement do not drift apart. If your tool has a design canvas, the
 agent builds the page there as numbered frames, one per screen or state, and also
-keeps the exported file. Agents read the same facts with `claude-foundation package
+keeps the exported file. Agents read the same facts with `cloop package
 <change>`, which prints them as JSON and writes nothing.
 
 **What the page must show.** Each kind of work owes its own surface, plus before
@@ -276,10 +276,10 @@ nothing here asks you to run a command. Each boundary has a different owner:
 
 ```bash
 # Nothing subjective to sign off — the deterministic checks are the whole story
-claude-foundation change resolve <change> --acceptance-not-required
+cloop change resolve <change> --acceptance-not-required
 
 # Somebody has to look at it and say yes
-claude-foundation change resolve <change> \
+cloop change resolve <change> \
   --acceptance-required --acceptance-reason "<why a person must judge this>"
 ```
 
@@ -345,7 +345,7 @@ records and validates them through this mechanism.
 The normal entry point is one resumable command:
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 The coordinator invokes the compatible proof primitive, creates or reuses the

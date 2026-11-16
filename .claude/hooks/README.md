@@ -36,7 +36,7 @@ the active transcript's prompt starts with `/dev`.
 - **Route a host-refused shell shape** (default): `shell-route-guard.sh` denies
   only a Bash call the host would stop on an approval prompt anyway. Its
   reason is the command to run instead: `cd <dir> && git …` → `git -C <dir> …`;
-  a direct test run while a change is in Build → `claude-foundation exec
+  a direct test run while a change is in Build → `cloop exec
   <change> [--repo <id>] -- <command>`. A matching Bash allow rule,
   `bypassPermissions`, or a command it cannot parse lets the call through.
   `FOUNDATION_GUARDRAIL_MODE=audit` turns the denial into advice, and `off`
@@ -71,7 +71,7 @@ repository and read-selected sandboxes are not. Shell analysis reads command tex
 are recorded and explained, never refused, unless a host opts into strict mode.
 
 Hooks guide mutations; they do not own lifecycle completion. Guidance (and a
-strict-mode refusal) must preserve state and point back to `claude-foundation
+strict-mode refusal) must preserve state and point back to `cloop
 advance <change>` (or its exact typed recovery), so an unavailable live hook or
 stale phase row cannot become an artificial dead end.
 

@@ -5,7 +5,7 @@ argument-hint: <change>
 
 Prove **$ARGUMENTS**. Shared rules: `.claude/harness/AGENT.md`.
 
-Run `claude-foundation advance <change> --through proven`: no-op `DONE`
+Run `cloop advance <change> --through proven`: no-op `DONE`
 when proof is current (Build runs it). Else the coordinator reuses fresh receipts
 and refreshes stale proof.
 

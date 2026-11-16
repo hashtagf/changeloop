@@ -1,4 +1,4 @@
-// `claude-foundation host pi-runtime`: install this CLI's own package as Pi's
+// `cloop host pi-runtime`: install this CLI's own package as Pi's
 // current shared Change Loop bundle. The shared Pi loader calls it when the
 // machine's cloop version differs from Pi's bundle; it is content-addressed,
 // so repeating it changes nothing.

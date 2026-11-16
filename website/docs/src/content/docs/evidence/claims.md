@@ -119,7 +119,7 @@ If the command passes but no deterministic count is available, test evidence may
 ## Traceability
 
 ```bash
-claude-foundation change audit <change>
+cloop change audit <change>
 ```
 
 Audits scenario → claim → task → provider traceability. Every observable scenario should reach a claim, and every claim a provider that can demonstrate it. A scenario with no claim is a promise nobody is checking.

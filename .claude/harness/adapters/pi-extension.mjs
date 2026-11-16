@@ -47,7 +47,7 @@ function execute(command, args, { cwd, env, input, signal, timeout = 10000 } = {
 }
 
 export default function install(pi, { createBashTool, createLocalBashOperations, projectRoot = ROOT,
-  runtimeRoot = projectRoot, hostExecutable = "claude-foundation", hostPrefixArgs = [],
+  runtimeRoot = projectRoot, hostExecutable = "cloop", hostPrefixArgs = [],
   parentSessionId = process.env.FOUNDATION_PARENT_SESSION_ID }) {
   const root = projectRoot;
   // A worker started by a coordinating Pi session resolves that session's
@@ -142,9 +142,9 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
         .replace(/(['"])([a-z0-9-]+)\1/g, "$2");
       // Public advance grants Land; it is not a harmless Build continuation.
       // Land subcommands exist only on the Change Loop CLI, so they count only
-      // after `claude-foundation` or `foundation.mjs`; the word archive in a
+      // after `cloop` or `foundation.mjs`; the word archive in a
       // path or message (git add openspec/changes/archive/...) is data.
-      const cli = String.raw`(?:\bclaude-foundation|foundation\.mjs)\s+`;
+      const cli = String.raw`(?:\bcloop|foundation\.mjs)\s+`;
       const landWords = String.raw`(?:land(?:-|\s+)(?:advance|archive|resume|recover|record|pointers|plan)|archive|sandbox(?:-|\s+)apply)`;
       const grants = [...normalized.matchAll(/\badvance\s+([a-z0-9-]+)[^;&|\n]*?--through(?:=|\s+)archived\b/g),
         ...normalized.matchAll(new RegExp(`${cli}${landWords}\\s+([a-z0-9-]+)`, "g"))];

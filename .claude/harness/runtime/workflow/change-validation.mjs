@@ -277,7 +277,7 @@ export function validationPreflightIssues(id, state, missing = []) {
   if (missing.length)
     issues.push(`missing change artifacts: ${missing.join(", ")}`);
   if (state.resolutionRequired === true && !state.resolvedAt)
-    issues.push(`resolve decisions for '${id}' before validation: claude-foundation change resolve ${id} --impact <low|medium|high> --coupling <isolated|coupled> --acceptance-required|--acceptance-not-required`);
+    issues.push(`resolve decisions for '${id}' before validation: cloop change resolve ${id} --impact <low|medium|high> --coupling <isolated|coupled> --acceptance-required|--acceptance-not-required`);
   if (!["low", "medium", "high"].includes(state.impact || ""))
     issues.push(`resolve impact for '${id}'`);
   if (!["isolated", "coupled"].includes(state.coupling || ""))
@@ -357,7 +357,7 @@ export function normalizeValidationAcceptance(id, state, claims, acceptance,
     } else {
       fail(`change '${id}' requires acceptance but nothing is in scope. Either name the ` +
         "claims a person is accepting:\n" +
-        `  claude-foundation change resolve ${id} --impact <impact> --coupling <coupling> ` +
+        `  cloop change resolve ${id} --impact <impact> --coupling <coupling> ` +
         "--acceptance-required --acceptance-reason <why> --acceptance-claims <ids>\n" +
         "or declare capability 'acceptance' on a claim in evidence.yaml. To withdraw the " +
         "requirement instead, re-resolve with --acceptance-not-required.");
@@ -419,8 +419,8 @@ export function reportDeclaredSurfaceForecast(id, state, quiet, covered,
     .filter((capability) => !covered.has(capability));
   if (!missing.length) return;
   warn(`WARNING: declared surface forecasts ${missing.join(", ")} with no provider`);
-  warn("  advance wires detected project-owned commands at Prove: claude-foundation advance " + id + " --through proven");
-  warn("  inspect first: claude-foundation doctor --stage prove --change " + id);
+  warn("  advance wires detected project-owned commands at Prove: cloop advance " + id + " --through proven");
+  warn("  inspect first: cloop doctor --stage prove --change " + id);
   if (missing.includes("review"))
     warn("  review needs a configured fresh reviewer at Prove; a one-family project selects codex-sol or claude-opus and commits review.diversity='single-model' while keeping independence required");
   warn("  anything left unwired is carried as a non-blocking advisory, not a gate");
@@ -454,13 +454,13 @@ export function revokeGateWaiver(context, id, state, waivers, request) {
     context.fail(`capability '${request.capability}' has no recorded waiver to revoke`);
   state.waivers = waivers.filter((row) => row.capability !== request.capability);
   context.saveRuntime(state);
-  context.log(`WAIVER REVOKED ${id}/${request.capability}\n  the capability is required again\n  next: claude-foundation advance ${id} --through proven`);
+  context.log(`WAIVER REVOKED ${id}/${request.capability}\n  the capability is required again\n  next: cloop advance ${id} --through proven`);
 }
 
 export function assertWaivableCapability(context, id, request, waivers) {
   if (!request.reason) context.fail("change waive requires --reason <why>");
   if (request.capability === "acceptance")
-    context.fail(`acceptance cannot be waived here; withdraw the requirement instead: claude-foundation change resolve ${id} --acceptance-not-required`);
+    context.fail(`acceptance cannot be waived here; withdraw the requirement instead: cloop change resolve ${id} --acceptance-not-required`);
   if (waivers.some((row) => row.capability === request.capability))
     context.fail(`capability '${request.capability}' is already waived`);
   const required = context.requiredProviders(id);
@@ -475,7 +475,7 @@ export function assertWaivableCapability(context, id, request, waivers) {
   if (required.every((provider) => withdrawn.has(capabilityOf(provider))))
     context.fail(`waiving '${request.capability}' would leave change '${id}' with no required ` +
       "evidence: its proof would have no receipt manifest and Land refuses that proof. " +
-      `Repair the failing provider, or amend the agreement: claude-foundation change amend ${id} <amendment.json>`);
+      `Repair the failing provider, or amend the agreement: cloop change amend ${id} <amendment.json>`);
 }
 
 export function waiveGateOperation(context, id, flags = {}) {
@@ -499,7 +499,7 @@ export function waiveGateOperation(context, id, flags = {}) {
       contractRevision: Number(state.contractRevision || 0) } } : {})
   }];
   context.saveRuntime(state);
-  context.log(`GATE WAIVED ${id}/${request.capability}\n  reason: ${request.reason}\n  decision: ${request.decisionRef}\n  recorded in proof advisories; the claim keeps declaring it\n  next: claude-foundation advance ${id} --through proven`);
+  context.log(`GATE WAIVED ${id}/${request.capability}\n  reason: ${request.reason}\n  decision: ${request.decisionRef}\n  recorded in proof advisories; the claim keeps declaring it\n  next: cloop advance ${id} --through proven`);
 }
 
 // The user's "accept" answer to a pending visual drift: the visual gate is
@@ -2063,7 +2063,7 @@ export function createChangeValidationRuntime({
       authority: row.authority,
       recordedAt: row.recordedAt,
       ...(Array.isArray(row.acceptedFindings) ? { acceptedFindings: row.acceptedFindings } : {}),
-      next: `restore it: claude-foundation change waive ${id} --capability ${
+      next: `restore it: cloop change waive ${id} --capability ${
         row.capability} --revoke --decision-ref <ref>`
     }));
     if (!changedSurfaceResolvable(id)) return [...providerSetupRows(id, waived), ...waived];
@@ -2205,7 +2205,7 @@ export function createChangeValidationRuntime({
     for (const row of detection.warnings)
       console.log(`  WARNING  ${row.source}: ${row.reason}; ${row.detail}`);
     if (detection.candidates.some((row) => row.recommended))
-      console.log(`  next: claude-foundation advance ${id} --through proven (wires the recommended candidates)`);
+      console.log(`  next: cloop advance ${id} --through proven (wires the recommended candidates)`);
   }
 
   return {

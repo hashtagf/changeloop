@@ -151,25 +151,25 @@ export function eventUsageRecoveryActions(classification, correlatedHosts, chang
   if (["correlation-missing", "partial-measurement"].includes(classification)) {
     if (correlatedHosts.includes("codex")) recoveryActions.push({
       type: "import-codex-events",
-      command: `claude-foundation telemetry import ${changeId} <events.jsonl> --format codex`
+      command: `cloop telemetry import ${changeId} <events.jsonl> --format codex`
     });
     if (correlatedHosts.includes("claude-code")) recoveryActions.push({
       type: "sync-claude-transcript",
-      command: `claude-foundation telemetry sync ${changeId} [transcript.jsonl]`
+      command: `cloop telemetry sync ${changeId} [transcript.jsonl]`
     });
     if (correlatedHosts.includes("generic-host")) recoveryActions.push({
       type: "import-generic-events",
-      command: `claude-foundation telemetry import ${changeId} <events.jsonl> --format generic`
+      command: `cloop telemetry import ${changeId} <events.jsonl> --format generic`
     });
   }
   if (classification === "partial-measurement" &&
       correlatedHosts.includes("claude-code")) recoveryActions.push({
     type: "import-host-execution",
-    command: `claude-foundation telemetry host-import ${changeId} <claude-result.json>`
+    command: `cloop telemetry host-import ${changeId} <claude-result.json>`
   });
   if (classification === "source-unsupported") recoveryActions.push({
     type: "import-generic-events",
-    command: `claude-foundation telemetry import ${changeId} <events.jsonl> --format generic`
+    command: `cloop telemetry import ${changeId} <events.jsonl> --format generic`
   });
   return recoveryActions;
 }
@@ -235,19 +235,19 @@ export function usageAvailability(events = [], phaseContextRows = [], changeId =
   const recoveryActions = [];
   if (correlatedHosts.includes("codex")) recoveryActions.push({
     type: "import-codex-events",
-    command: `claude-foundation telemetry import ${changeId} <events.jsonl> --format codex`
+    command: `cloop telemetry import ${changeId} <events.jsonl> --format codex`
   });
   if (correlatedHosts.includes("claude-code")) recoveryActions.push({
     type: "sync-claude-transcript",
-    command: `claude-foundation telemetry sync ${changeId} [transcript.jsonl]`
+    command: `cloop telemetry sync ${changeId} [transcript.jsonl]`
   });
   recoveryActions.push({
     type: "import-host-execution",
-    command: `claude-foundation telemetry host-import ${changeId} <result.json>`
+    command: `cloop telemetry host-import ${changeId} <result.json>`
   });
   if (!correlatedHosts.includes("codex")) recoveryActions.push({
     type: "import-generic-events",
-    command: `claude-foundation telemetry import ${changeId} <events.jsonl> --format generic`
+    command: `cloop telemetry import ${changeId} <events.jsonl> --format generic`
   });
   return {
     status: "unavailable",

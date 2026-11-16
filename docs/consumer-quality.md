@@ -27,10 +27,10 @@ Default changed-code gates require unit coverage of 80%, integration coverage of
 Discovery reads manifests and filenames without executing project commands:
 
 ```bash
-claude-foundation quality discover
-claude-foundation quality init
-claude-foundation quality init --write --ci github
-claude-foundation quality doctor
+cloop quality discover
+cloop quality init
+cloop quality init --write --ci github
+cloop quality doctor
 ```
 
 `quality init` is preview-only until `--write`. It creates `quality/foundation-quality.json`. `--ci github` additionally copies reusable/manual changed-code, four-shard nightly, and full-release workflow templates. The changed-code template must be called by the repository's existing PR workflow; it does not register a `pull_request` trigger itself.
@@ -40,9 +40,9 @@ For JavaScript/TypeScript, discovery recognizes the project-owned package script
 Run against the isolated workspace selected by a Change:
 
 ```bash
-claude-foundation quality run --change <change-id>
-claude-foundation quality report
-claude-foundation quality run --change <change-id> --enforce
+cloop quality run --change <change-id>
+cloop quality report
+cloop quality run --change <change-id> --enforce
 ```
 
 Once the config is committed, evidence bootstrap can wire the enforced run as `static-analysis` evidence. Results are written under `.foundation/quality/results/` and must not be committed.
@@ -96,8 +96,8 @@ Example provider:
 After at least three representative pilot runs, review the findings before explicitly creating a baseline:
 
 ```bash
-claude-foundation quality baseline
-claude-foundation quality baseline --write \
+cloop quality baseline
+cloop quality baseline --write \
   --decision-ref ADR-42 --reason "approved pilot baseline"
 ```
 
@@ -106,8 +106,8 @@ Baselines are separate per repository/capability and remain compatible only whil
 Nightly inventory uses:
 
 ```bash
-claude-foundation quality run --full
-claude-foundation quality debt
+cloop quality run --full
+cloop quality debt
 ```
 
 Large runs accept `--shard-index <zero-based>` and `--shard-count <n>`. An exception identifies exactly one function or mutant—never a glob—and requires reason, risk, compensating evidence, owner, approver, tracking issue, and expiry within 90 days.

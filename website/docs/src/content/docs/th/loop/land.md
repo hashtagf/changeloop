@@ -23,7 +23,7 @@ harness ตรวจอีกครั้งว่าการอนุมัต
 Slash command นี้คือ boundary ที่ให้อำนาจ Land อย่างชัดเจน และรัน:
 
 ```bash
-claude-foundation advance <change> --through archived
+cloop advance <change> --through archived
 ```
 
 Coordinator บันทึก proof และ external-operation assurance ปัจจุบัน เตรียม apply

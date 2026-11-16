@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# claude-foundation — top-level CLI router.
+# cloop — top-level Change Loop CLI router.
 #
 # Keeps each command single-purpose: this file only routes, install.sh only
 # installs, dashboard/client.sh only does presence. New subcommands slot in
@@ -19,8 +19,8 @@ EXPECTED_RUNTIME_API=42
 PROJECT_START="${CLAUDE_FOUNDATION_PROJECT:-$PWD}"
 PROJECT_EXPLICIT=""
 
-fail() { printf 'claude-foundation: %s\n' "$*" >&2; exit 1; }
-warn() { printf 'claude-foundation: warning: %s\n' "$*" >&2; }
+fail() { printf 'cloop: %s\n' "$*" >&2; exit 1; }
+warn() { printf 'cloop: warning: %s\n' "$*" >&2; }
 
 installed_version() {
   if [ -f "$SCRIPT_DIR/VERSION" ]; then
@@ -68,7 +68,7 @@ find_project_root() {
     [ "$cursor" != "/" ] || break
     cursor="$(dirname "$cursor")"
   done
-  fail "not inside a Foundation project; run 'claude-foundation init <path>' first"
+  fail "not inside a Foundation project; run 'cloop init <path>' first"
 }
 
 # CLAUDE_FOUNDATION_PROJECT is a host-session export, so it reaches commands
@@ -102,9 +102,9 @@ run_runtime() {
   actual_api="$(node "$runtime" api-version 2>/dev/null || true)"
   if [ "$actual_api" != "$EXPECTED_RUNTIME_API" ]; then
     if [ "$access" = "write" ]; then
-      fail "project runtime API '${actual_api:-unknown}' is incompatible with CLI API '$EXPECTED_RUNTIME_API'; run 'claude-foundation init \"$root\"' to update it"
+      fail "project runtime API '${actual_api:-unknown}' is incompatible with CLI API '$EXPECTED_RUNTIME_API'; run 'cloop init \"$root\"' to update it"
     fi
-    printf "claude-foundation: warning: project runtime API '%s' differs from CLI API '%s'\n" \
+    printf "cloop: warning: project runtime API '%s' differs from CLI API '%s'\n" \
       "${actual_api:-unknown}" "$EXPECTED_RUNTIME_API" >&2
   fi
   local phase=""
@@ -130,7 +130,7 @@ need_arg() {
 }
 
 deprecated_install() {
-  printf "claude-foundation: warning: implicit installation is deprecated; use 'claude-foundation init ...'\n" >&2
+  printf "cloop: warning: implicit installation is deprecated; use 'cloop init ...'\n" >&2
   exec bash "$SCRIPT_DIR/install.sh" "$@" --source "$SCRIPT_DIR"
 }
 
@@ -155,7 +155,7 @@ print_version() {
       v="$v+source.$describe"
     fi
   fi
-  printf 'claude-foundation %s\n' "${v:-unknown}"
+  printf 'cloop %s\n' "${v:-unknown}"
 }
 
 usage() {
@@ -172,7 +172,7 @@ const groups = [["Workflow", "agent"], ["Conditional recovery", "conditional"],
 // is recovery or operator surface behind `help --all`.
 const primaryOrder = ["change start", "change amend", "advance", "changes"];
 const primary = new Set(primaryOrder);
-console.log("claude-foundation — OpenSpec-native software-change harness\n");
+console.log("cloop — OpenSpec-native software-change harness\n");
 for (const [title, audience] of groups) {
   const rows = registry.commands.filter((command) => command.audience === audience &&
     (showAll || primary.has(command.name)));
@@ -182,7 +182,7 @@ for (const [title, audience] of groups) {
   console.log(`${title}:`);
   for (const command of rows) {
     const deprecated = command.deprecated ? " [deprecated]" : "";
-    console.log(`  claude-foundation ${command.usage}${deprecated}`);
+    console.log(`  cloop ${command.usage}${deprecated}`);
     console.log(`    ${command.description}`);
   }
   console.log("");
@@ -190,7 +190,7 @@ for (const [title, audience] of groups) {
 console.log("Global options: --project <path>, -C <path>");
 console.log("Workflow: /investigate → /change → /build → /prove → /land; optional: /deliver");
 console.log("Normal use: describe the outcome to your coding agent; it runs recovery and CLI details for you.");
-if (!showAll) console.log("Run `claude-foundation help --all` for primitive, recovery, host, and compatibility commands.");
+if (!showAll) console.log("Run `cloop help --all` for primitive, recovery, host, and compatibility commands.");
 NODE
 }
 
@@ -236,7 +236,7 @@ case "${1:-}" in
         command -v node >/dev/null 2>&1 || fail "Node.js is required to resolve the host agent contract"
         if [ "${1:-}" = "--help" ] && [ "$#" -eq 1 ]; then
           printf '%s\n' \
-            'claude-foundation host agent-contract [--protocol 1] [--format json]' \
+            'cloop host agent-contract [--protocol 1] [--format json]' \
             'Return the package-owned Foundation agent contract as protocol-1 JSON.'
           exit 0
         fi
@@ -245,7 +245,7 @@ case "${1:-}" in
         command -v node >/dev/null 2>&1 || fail "Node.js is required to resolve host instructions"
         if [ "${1:-}" = "--help" ] && [ "$#" -eq 1 ]; then
           printf '%s\n' \
-            'claude-foundation host instruction <command> [--protocol 1] [--format json] [--arguments <text>]' \
+            'cloop host instruction <command> [--protocol 1] [--format json] [--arguments <text>]' \
             'Return a package-owned Foundation workflow instruction as protocol-1 JSON.'
           exit 0
         fi
@@ -254,7 +254,7 @@ case "${1:-}" in
         command -v node >/dev/null 2>&1 || fail "Node.js is required to install the Pi runtime bundle"
         if [ "${1:-}" = "--help" ] && [ "$#" -eq 1 ]; then
           printf '%s\n' \
-            'claude-foundation host pi-runtime [--protocol 1] [--format json] [--agent-dir <path>]' \
+            'cloop host pi-runtime [--protocol 1] [--format json] [--agent-dir <path>]' \
             "Install this CLI's runtime as Pi's current shared Change Loop bundle and print protocol-1 JSON."
           exit 0
         fi
@@ -292,7 +292,7 @@ case "${1:-}" in
     [ "${1:-}" = "check" ] || fail "update requires 'check'"
     if [ "${2:-}" = "--help" ] && [ "$#" -eq 2 ]; then
       printf '%s\n' \
-        'claude-foundation update check [--refresh] [--json]' \
+        'cloop update check [--refresh] [--json]' \
         'Inspect the latest stable release advisory without applying an update.'
       exit 0
     fi
@@ -541,7 +541,7 @@ case "${1:-}" in
     if [ "$sub" = "advance" ]; then
       shift
     elif [ -n "$sub" ]; then
-      # Public convenience form: `claude-foundation deliver <change>`.
+      # Public convenience form: `cloop deliver <change>`.
       :
     fi
     need_arg "deliver" "${1:-}"
@@ -571,6 +571,6 @@ case "${1:-}" in
     deprecated_install "$@" ;;
   *)
     if [ -d "$1" ]; then deprecated_install "$@"
-    else fail "unknown command '$1'; run 'claude-foundation help'"
+    else fail "unknown command '$1'; run 'cloop help'"
     fi ;;
 esac

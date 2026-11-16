@@ -16,7 +16,7 @@ ok() { printf '✓ %s\n' "$*"; }
 
 usage() {
   cat <<'EOF'
-claude-foundation init [target-path] [options]
+cloop init [target-path] [options]
 
 Options:
   --source <path>  Change Loop source checkout
@@ -439,7 +439,7 @@ SETTINGS_DST="$TARGET_PATH/.claude/settings.json"
 # the isolated Build workspaces, the Change draft directory, and Investigate's
 # record directory (openspec/investigations); PreToolUse
 # guards still run before them. Project checks need no rule: Build hands each
-# task's verify back as a `claude-foundation exec` command. With
+# task's verify back as a `cloop exec` command. With
 # the opt-out, merge from a copy of the template that carries no allow rules, so
 # the user's own permissions stay exactly as they were.
 if [ "$PERMISSION_ALLOWLIST" = no ]; then
@@ -561,7 +561,7 @@ AGENTS_BLOCK="$(cat <<'EOF'
 
 Read `.claude/harness/AGENT.md` before Foundation workflow work. Use
 `investigate → change → build → prove → land`; start each phase from
-`claude-foundation packet <change>`.
+`cloop packet <change>`.
 <!-- claude-foundation:portable-agent:end -->
 EOF
 )"
@@ -612,19 +612,19 @@ if command -v node >/dev/null 2>&1; then
 fi
 
 INSTALL_COMMITTED=yes
-# Every next step the harness prints names `claude-foundation`, which a source
-# checkout does not put on PATH. This ignored, project-local shim points at the
-# CLI that ran this install; the SessionStart hook adds it to PATH only when no
-# other `claude-foundation` resolves.
-cli_shim="$TARGET_PATH/.foundation/bin/claude-foundation"
+# Every next step the harness prints names `cloop`, which a source checkout does
+# not put on PATH. This ignored, project-local shim points at the CLI that ran
+# this install; the SessionStart hook adds it to PATH only when no other `cloop`
+# resolves.
+cli_shim="$TARGET_PATH/.foundation/bin/cloop"
 cli_quoted="'$(printf '%s' "$SOURCE_PATH/cli.sh" | sed "s/'/'\\\\''/g")'"
 mkdir -p "$(dirname "$cli_shim")"
 {
   printf '#!/usr/bin/env sh\n'
-  printf '# Written by claude-foundation init; rerun init if the CLI source moves.\n'
+  printf '# Written by cloop init; rerun init if the CLI source moves.\n'
   printf 'cli=%s\n' "$cli_quoted"
   printf '[ -f "$cli" ] || { printf %s "$cli" >&2; exit 127; }\n' \
-    "'claude-foundation: CLI source %s is gone; rerun claude-foundation init\\n'"
+    "'cloop: CLI source %s is gone; rerun cloop init\\n'"
   printf 'exec bash "$cli" "$@"\n'
 } > "$cli_shim"
 chmod +x "$cli_shim"
@@ -657,4 +657,4 @@ if command -v git >/dev/null 2>&1 &&
 fi
 printf 'Next: describe the outcome with /change <intent>; the agent handles the workflow details.\n'
 printf 'Headless (claude -p): trust the workspace by running claude once interactively, or grant exactly the installed allowlist:\n'
-printf '  claude -p "/change <intent>" --allowedTools "Bash(claude-foundation *)" "Bash(.foundation/bin/claude-foundation *)" "Bash(node .claude/harness/foundation.mjs *)" "Edit(/.foundation/drafts/**)" "Edit(/.foundation/sandboxes/**)" "Edit(/.foundation/repository-sandboxes/**)" "Edit(/openspec/investigations/**)" "Bash(find *)" "Bash(grep *)" "Bash(ls *)" "Bash(head *)" "Bash(wc *)" "Bash(rtk ls *)" "Bash(rtk grep *)" "Bash(git status)" "Bash(git status *)" "Bash(git diff)" "Bash(git diff *)" "Bash(git log)" "Bash(git log *)" "Bash(git show)" "Bash(git show *)"\n'
+printf '  claude -p "/change <intent>" --allowedTools "Bash(cloop *)" "Bash(.foundation/bin/cloop *)" "Bash(node .claude/harness/foundation.mjs *)" "Edit(/.foundation/drafts/**)" "Edit(/.foundation/sandboxes/**)" "Edit(/.foundation/repository-sandboxes/**)" "Edit(/openspec/investigations/**)" "Bash(find *)" "Bash(grep *)" "Bash(ls *)" "Bash(head *)" "Bash(wc *)" "Bash(rtk ls *)" "Bash(rtk grep *)" "Bash(git status)" "Bash(git status *)" "Bash(git diff)" "Bash(git diff *)" "Bash(git log)" "Bash(git log *)" "Bash(git show)" "Bash(git show *)"\n'

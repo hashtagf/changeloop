@@ -85,7 +85,7 @@ export function outOfBandDeliveryDriftValue({
     currentHead: currentHead || null,
     observation,
     summary: "The control target moved outside this Land transaction. A commit, merge, or deployment may have happened, but it is not Change Loop proof or lifecycle completion.",
-    recoveryCommand: `claude-foundation sandbox sync ${changeId}`,
+    recoveryCommand: `cloop sandbox sync ${changeId}`,
     completionRequirement: `re-prove if invalidated, then Land until ${changeId} is archived`
   };
 }
@@ -126,10 +126,10 @@ export function authorityPreflightValue({
     summary: "Risk policy requires signed CI but no trusted external CI provider is configured.",
     required: ["external adapter", "ci.issuer", "ci.publicKey"],
     next: `configure signed CI in openspec/changes/${changeId}/execution.yaml; or, as the ` +
-      "user's decision, record a waiver with claude-foundation change resolve " +
+      "user's decision, record a waiver with cloop change resolve " +
       `${changeId} --ci-not-required --decision-ref <ref>, or set land.riskBasedCi to ` +
-      `false in foundation.json and rerun claude-foundation change resolve ${changeId}; ` +
-      `then run claude-foundation change validate ${changeId}`
+      `false in foundation.json and rerun cloop change resolve ${changeId}; ` +
+      `then run cloop change validate ${changeId}`
   });
   const binding = {
     changeId,
@@ -188,7 +188,7 @@ export function authorityPreflightValue({
         locked: grounding?.locked === true,
         reopenPending: grounding?.reopenPending === true,
         recoveryCommand: grounding?.reopenPending
-          ? `claude-foundation change validate ${changeId}` : null
+          ? `cloop change validate ${changeId}` : null
       },
       handoffs: {
         status: handoffs?.status || "COMPLETE",
@@ -200,7 +200,7 @@ export function authorityPreflightValue({
           timing: operation.timing || null,
           status: operation.status || "pending",
           landBlocking: operation.landBlocking === true,
-          recoveryCommand: `claude-foundation handoff packet ${changeId} --operation ${operation.id}`
+          recoveryCommand: `cloop handoff packet ${changeId} --operation ${operation.id}`
         })).sort((left, right) => left.id.localeCompare(right.id))
       }
     },

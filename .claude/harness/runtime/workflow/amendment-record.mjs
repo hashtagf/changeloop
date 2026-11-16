@@ -14,7 +14,7 @@ export function formatInvalidatedWaivers(id, waivers, contractRevision) {
   return capabilities.length
     ? `  waivers no longer apply: ${capabilities.join(", ")} (bound to an earlier contract ` +
       `revision; now ${Number(contractRevision || 0)}); if still intended, ask the user and ` +
-      `record each again: claude-foundation change waive ${id} --capability <capability> ` +
+      `record each again: cloop change waive ${id} --capability <capability> ` +
       "--reason <why> --decision-ref <user-decision>\n"
     : "";
 }
@@ -94,6 +94,6 @@ export function amendedReport(id, amended, compiled, gate) {
         removed: compiled.removedRequirementKeys })}\n`) +
     (gate ? `  decision required: the final AI review failed before this amendment, so Land needs a locked Decision Sheet revision first: ${gate.command}\n` : "") +
     `  proof command: ${compiled.invalidation.proofRecovery?.recovery?.command ||
-      `claude-foundation advance ${id} --through proven`}\n` +
-    `  next: claude-foundation advance ${id}`;
+      `cloop advance ${id} --through proven`}\n` +
+    `  next: cloop advance ${id}`;
 }

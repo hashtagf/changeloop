@@ -105,7 +105,7 @@ export function createPreviewRuntime({
       console.log(`PREVIEW ${id} ${result.receipt.provider}: ${result.receipt.status}`);
       console.log(`  receipt: ${result.path} (preview only; never proof)`);
       console.log(`  workspace: ${result.workspace}`);
-      console.log(`  next: claude-foundation package ${id}`);
+      console.log(`  next: cloop package ${id}`);
     }
     return result;
   }

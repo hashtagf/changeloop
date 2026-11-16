@@ -74,10 +74,10 @@ test('shared Pi uses central hooks and commands while retaining isolation and ex
   const call = async (toolName, input) => handlers.get('tool_call')({ toolName, input, toolCallId: 'call' }, ctx);
   assert.equal((await call('write', { path: 'product.js', content: 'not allowed' })).block, true);
   assert.equal(await call('write', { path: '.foundation/drafts/shared/change.json', content: '{}' }), undefined);
-  assert.equal((await call('bash', { command: 'claude-foundation advance shared-case --through archived' })).block, true);
+  assert.equal((await call('bash', { command: 'cloop advance shared-case --through archived' })).block, true);
   await commands.get('land').handler('shared-case', ctx);
-  assert.equal(await call('bash', { command: 'claude-foundation advance shared-case --through archived' }), undefined);
-  assert.equal((await call('bash', { command: 'claude-foundation advance other-case --through archived' })).block, true);
+  assert.equal(await call('bash', { command: 'cloop advance shared-case --through archived' }), undefined);
+  assert.equal((await call('bash', { command: 'cloop advance other-case --through archived' })).block, true);
   writeFileSync(join(root, '.env'), 'TOKEN=fixture-secret\n');
   const input = { path: '.env' };
   assert.equal(await call('read', input), undefined);
@@ -224,7 +224,7 @@ function fakeMachine(name, realBundle) {
   writeFileSync(cli, `#!/usr/bin/env bash
 printf '%s\\n' "$*" >> '${calls}'
 case "$1" in
-  version) [ "$FAKE_BROKEN" = 1 ] && exit 3; printf 'claude-foundation %s\\n' "$FAKE_VERSION" ;;
+  version) [ "$FAKE_BROKEN" = 1 ] && exit 3; printf 'cloop %s\\n' "$FAKE_VERSION" ;;
   host) [ "$FAKE_BROKEN_INSTALL" = 1 ] && { echo boom >&2; exit 4; }
     b="$FAKE_VERSION-api42-fedcba9876543210"; mkdir -p "$PI_CODING_AGENT_DIR/changeloop/releases"
     rm -rf "$PI_CODING_AGENT_DIR/changeloop/releases/$b"; cp -R '${realBundle}' "$PI_CODING_AGENT_DIR/changeloop/releases/$b"
@@ -257,10 +257,13 @@ test('Pi follows the machine CLI version and a broken CLI only warns', () => {
   const before = readFileSync(machine.calls, 'utf8');
   assert.equal(followMachine(base, agent, { ...process.env, CHANGELOOP_MACHINE_CLI: 'none' }), undefined);
   assert.equal(readFileSync(machine.calls, 'utf8'), before, 'none disables the machine check');
-  // PATH lookup prefers cloop and never picks a CLI inside a Pi bundle.
+  // PATH lookup finds only cloop and never picks a CLI inside a Pi bundle.
   const bin = join(temporary, 'machine-bin'); mkdirSync(bin, { recursive: true });
   for (const name of ['cloop', 'claude-foundation']) { writeFileSync(join(bin, name), '#!/bin/sh\n'); chmodSync(join(bin, name), 0o755); }
   assert.equal(machineCli(base, { PATH: [join(installed.path, 'bin'), bin].join(':') }), join(bin, 'cloop'));
+  const legacy = join(temporary, 'legacy-bin'); mkdirSync(legacy, { recursive: true });
+  writeFileSync(join(legacy, 'claude-foundation'), '#!/bin/sh\n'); chmodSync(join(legacy, 'claude-foundation'), 0o755);
+  assert.equal(machineCli(base, { PATH: legacy }), undefined, 'the retired name is not the machine CLI');
   assert.equal(machineCli(base, { PATH: join(installed.path, 'bin') }), undefined);
 });
 

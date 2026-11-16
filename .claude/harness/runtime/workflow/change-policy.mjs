@@ -116,8 +116,8 @@ export function workTypeProviderSetupActions(id, workTypes, configuredCapabiliti
       trigger: triggers[capability][0],
       instruction: `Configure a project-owned ${capability} provider in openspec/changes/${
         id}/execution.yaml; advance wires a detected project-owned command itself.`,
-      command: `claude-foundation advance ${id} --through proven`,
-      resume: `claude-foundation advance ${id} --through proven`
+      command: `cloop advance ${id} --through proven`,
+      resume: `cloop advance ${id} --through proven`
     }));
 }
 

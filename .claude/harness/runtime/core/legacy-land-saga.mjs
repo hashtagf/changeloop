@@ -32,13 +32,13 @@ export function legacyLandSagaMarkers(state) {
 
 export function legacyLandSagaRecovery(id) {
   const runtimeFile = `.foundation/runtime/${id}.json`;
-  const abandon = `claude-foundation change abandon ${id} --reason <reason> --decision-ref <ref>`;
+  const abandon = `cloop change abandon ${id} --reason <reason> --decision-ref <ref>`;
   return {
     runtimeFile,
     abandonCommand: abandon,
     finish: `Reinstall Change Loop ${LEGACY_LAND_SAGA_RELEASE} into this project ` +
       `(bash install.sh <project> --source <changeloop-${LEGACY_LAND_SAGA_RELEASE} checkout> --yes), ` +
-      `finish the change there with 'claude-foundation advance ${id} --through archived', ` +
+      `finish the change there with 'cloop advance ${id} --through archived', ` +
       "then upgrade again.",
     summary: `Change '${id}' is mid-way through the commit-based multi-repository Land saga ` +
       `that Change Loop ${LEGACY_LAND_SAGA_RELEASE} and earlier used (land record / land pointers). ` +

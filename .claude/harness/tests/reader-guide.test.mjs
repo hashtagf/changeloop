@@ -261,7 +261,7 @@ test("every proposal header states only stable facts: id, lane and one reason, r
   const rapid = renderDraftProposal(compiled, RAPID);
   assert.match(rapid, /^- \*\*Change:\*\* `format-money` · \*\*Lane:\*\* rapid \(low risk\)$/m);
   assert.match(rapid, /^- \*\*Owner:\*\* unassigned · \*\*Created:\*\* 2026-10-07$/m);
-  // Status changes after approval; `claude-foundation changes` reports it, the packet does not.
+  // Status changes after approval; `cloop changes` reports it, the packet does not.
   assert.doesNotMatch(rapid, /Status:/);
   const standard = renderDraftProposal({ ...compiled, impact: "medium", securityTriggers: ["authentication"] },
     { ...RAPID, schema: "foundation-standard" }, { reviewLabel: "risk-tiered AI review (high tier, fast model)" });

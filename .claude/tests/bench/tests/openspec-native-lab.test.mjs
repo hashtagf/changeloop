@@ -199,20 +199,20 @@ test("clean-room contract bounds execution and reports missing tools as unavaila
   assert.equal(result.reason, "command-unavailable");
 });
 
-// The paid lab passed only `Bash(claude-foundation *)`, so the installed CLI
-// shim `.foundation/bin/claude-foundation` was scored as a product prompt even
+// The paid lab passed only `Bash(cloop *)`, so the installed CLI
+// shim `.foundation/bin/cloop` was scored as a product prompt even
 // though the shipped install pre-allows it in a trusted workspace.
 test("paid lab grants exactly the allowlist the installer seeded", () => {
   const project = mkdtempSync(join(tmpdir(), "bench-lab-allow-"));
   try {
-    assert.deepEqual(installedAllowedTools(project), ["Bash(claude-foundation *)"]);
+    assert.deepEqual(installedAllowedTools(project), ["Bash(cloop *)"]);
     const shipped = JSON.parse(readFileSync(new URL("../../../settings.json", import.meta.url),
       "utf8")).permissions.allow;
     write(join(project, ".claude/settings.json"), JSON.stringify({
       permissions: { allow: [...shipped, "", 7] }
     }));
     assert.deepEqual(installedAllowedTools(project), shipped);
-    assert.ok(installedAllowedTools(project).includes("Bash(.foundation/bin/claude-foundation *)"));
+    assert.ok(installedAllowedTools(project).includes("Bash(.foundation/bin/cloop *)"));
   } finally {
     rmSync(project, { recursive: true, force: true });
   }
@@ -257,7 +257,7 @@ writeFileSync(value("--output"), '{"fixture":true}\\n');
     assert.deepEqual(readdirSync(tempParent), [], "the disposable baseline project is removed");
     const seen = JSON.parse(readFileSync(observed, "utf8"));
     assert.deepEqual(seen.entries, [".foundation-benchmark.json", ".git", "package.json", "src"]);
-    assert.doesNotMatch(seen.path, /baseline-1\/bin/, "no claude-foundation shim on PATH");
+    assert.doesNotMatch(seen.path, /baseline-1\/bin/, "no cloop shim on PATH");
     const flag = (name) => seen.args[seen.args.indexOf(name) + 1];
     assert.equal(flag("--arm"), "baseline");
     assert.equal(flag("--max-cost-usd"), "1", "the matrix budget is shared by both arms");

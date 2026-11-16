@@ -105,7 +105,7 @@ export function installSharedPi(source, agentDir) {
     mkdirSync(join(stage, '.data/openspec'), { recursive: true });
     cpSync(join(stage, 'openspec/schemas'), join(stage, '.data/openspec/schemas'), { recursive: true });
     mkdirSync(join(stage, 'bin'), { recursive: true });
-    writeFileSync(join(stage, 'bin/claude-foundation'), '#!/usr/bin/env bash\nexec bash "$(cd "$(dirname "$0")/.." && pwd)/cli.sh" "$@"\n', { mode: 0o755 });
+    writeFileSync(join(stage, 'bin', 'cloop'), '#!/usr/bin/env bash\nexec bash "$(cd "$(dirname "$0")/.." && pwd)/cli.sh" "$@"\n', { mode: 0o755 });
     writeFileSync(join(stage, 'bin/openspec'), '#!/usr/bin/env bash\nHERE="$(cd "$(dirname "$0")" && pwd)"\nIFS=: read -ra paths <<< "$PATH"\nfor path in "${paths[@]}"; do\n  if [ "$path" != "$HERE" ] && [ -x "$path/openspec" ]; then\n    exec env XDG_DATA_HOME="$HERE/../.data" "$path/openspec" "$@"\n  fi\ndone\nprintf "OpenSpec CLI unavailable; run Change Loop tool preparation.\\n" >&2\nexit 127\n', { mode: 0o755 });
     const protocol = JSON.parse(readFileSync(join(stage, '.claude/harness/protocol.json'), 'utf8'));
     const digest = digestTree(stage), bundle = `${protocol.runtime}-api${protocol.runtimeApi}-${digest.slice(0, 16)}`;

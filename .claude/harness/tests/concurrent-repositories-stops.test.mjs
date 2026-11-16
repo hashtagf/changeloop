@@ -31,7 +31,7 @@ test("two changes that create the same new file end in a stop or a landing, neve
     assert.equal(stop.actor, "agent");
     assert.deepEqual(stop.conflicts, [{ repository: "backend", path: "fresh.txt" }]);
     assert.match(stop.reason, /repository 'backend' still holds unresolved conflicts .* fresh\.txt/);
-    assert.equal(stop.resolveCommand, `claude-foundation sandbox sync ${w.ids.bravo} --resolve fresh.txt`);
+    assert.equal(stop.resolveCommand, `cloop sandbox sync ${w.ids.bravo} --resolve fresh.txt`);
     assert.equal(w.read("backend/fresh.txt"), "alpha fresh\n", "the landed file is untouched");
     // Resolved by the agent, the next landing archives with the merged file.
     editRepositorySandbox(sandboxes.bravo, "bravo", { "fresh.txt": () => "alpha fresh\nbravo fresh\n" });

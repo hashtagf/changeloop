@@ -81,9 +81,9 @@ test("parallel decision is bounded and requires acquire before packet", () => {
     acquireOnlyImmediatelySpawnable: true
   });
   for (const worker of value.workers) {
-    assert.match(worker.acquireCommand, /^claude-foundation agents acquire /);
-    assert.match(worker.packetCommand, /^claude-foundation packet .* --task T/);
-    assert.match(worker.releaseCommand, /^claude-foundation agents release /);
+    assert.match(worker.acquireCommand, /^cloop agents acquire /);
+    assert.match(worker.packetCommand, /^cloop packet .* --task T/);
+    assert.match(worker.releaseCommand, /^cloop agents release /);
   }
 });
 
@@ -110,11 +110,11 @@ test("a singleton planned frontier stays in the current session under a lease", 
   assert.deepEqual(first.task.model, { tier: "standard", family: "sonnet" });
   assert.equal(first.task.owner, second.task.owner);
   assert.match(first.task.acquireCommand,
-    /^claude-foundation agents acquire dispatch-change T001 --owner /);
+    /^cloop agents acquire dispatch-change T001 --owner /);
   assert.match(first.task.packetCommand,
-    /^claude-foundation packet dispatch-change --task T001$/);
+    /^cloop packet dispatch-change --task T001$/);
   assert.match(first.task.releaseCommand,
-    /^claude-foundation agents release dispatch-change T001 --owner /);
+    /^cloop agents release dispatch-change T001 --owner /);
   assert.match(first.task.releaseCommand, /--lease-id '<lease-id-from-acquire>'$/);
   assert.deepEqual(first.contextPolicy, {
     source: "leased-task-packet",
@@ -349,7 +349,7 @@ test("single-agent and completed plans preserve the cheap path", () => {
   })).dispatchValue("dispatch-change");
   assert.equal(complete.action, "build-complete");
   assert.equal(complete.nextCommand,
-    "claude-foundation advance dispatch-change --through proven");
+    "cloop advance dispatch-change --through proven");
 });
 
 test("a non-dispatchable plan returns its existing blockers", () => {
@@ -374,7 +374,7 @@ test("a shared resource another active change holds queues dispatch instead of b
   assert.equal(value.waitKind, "cross-change-resource");
   assert.deepEqual(value.holders, ["other-change"]);
   assert.match(value.reason, /queued behind active change other-change/);
-  assert.equal(value.nextCommand, "claude-foundation advance dispatch-change");
+  assert.equal(value.nextCommand, "cloop advance dispatch-change");
   assert.equal("reasons" in value, false, "a queue is not reported as plan blockers");
 
   const defective = runtime(plan({ dispatchable: false, blockingReasons: ["ambiguity requires /investigate"],

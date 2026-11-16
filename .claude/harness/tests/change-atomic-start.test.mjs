@@ -217,7 +217,7 @@ test("bare start inspects and starts a correct v4 draft in one command", (t) => 
   writeJson(value.draftPath, minimalRapidV4());
   const { output } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
   assert.match(output, /^AGREED single-shot-change/m);
-  assert.match(output, /next: claude-foundation advance single-shot-change --approve-spec/);
+  assert.match(output, /next: cloop advance single-shot-change --approve-spec/);
   // The compiled files are listed so the agent never guesses artifact paths.
   assert.match(output, /\n  file: openspec\/changes\/single-shot-change\/proposal\.md\n/);
   assert.match(output, /\n  file: openspec\/changes\/single-shot-change\/tasks\.md\n/);
@@ -231,7 +231,7 @@ test("bare start inspects and starts a correct v4 draft in one command", (t) => 
   // One authoritative next step: no per-step `next` from CREATED/RESOLVED.
   assert.doesNotMatch(output, /complete artifacts, validate, then \/build/);
   assert.equal((output.match(/\n  next: /g) || []).length, 1);
-  assert.match(output, /next: claude-foundation advance single-shot-change --approve-spec --decision-ref <user-decision> --through proven/);
+  assert.match(output, /next: cloop advance single-shot-change --approve-spec --decision-ref <user-decision> --through proven/);
   assert.equal(existsSync(join(value.changes, "single-shot-change")), true);
   const runtime = JSON.parse(readFileSync(join(value.runtime, "single-shot-change.json"), "utf8"));
   assert.equal(runtime.status, "change");
@@ -1075,7 +1075,7 @@ test("the start template leads with the pre-allowed file-tool save route to a v5
   assert.match(template.save, /Write tool/);
   assert.match(template.save, /\.foundation\/drafts\/<id>\/ \(change\.json with version 5, then proposal\.md\)/);
   assert.match(template.save, /not .*shell.*heredoc/);
-  assert.match(template.save, /claude-foundation change start \.foundation\/drafts\/<id>;/);
+  assert.match(template.save, /cloop change start \.foundation\/drafts\/<id>;/);
   // An approved request carries approval on that same call, not a second one.
   assert.match(template.save, /approved the spec, add --approve-spec --decision-ref <ref> .*same call\.$/);
   assert.doesNotMatch(template.save, /<id>\.json/);
@@ -1281,7 +1281,7 @@ test("open questions are listed with the approval packet", (t) => {
   const { result, output } = captureLog(() => value.lifecycle.startAtomic(value.draftPath));
   assert.equal(result, "single-shot-change");
   assert.match(output, /open questions \(ask with the approval\):\n {4}- How long are results retained\?/);
-  assert.match(output, /next: ask these with the approval, record the answers in the draft, then claude-foundation change revise single-shot-change .*draft\.json --approve-spec --decision-ref <user-decision> --through proven/);
+  assert.match(output, /next: ask these with the approval, record the answers in the draft, then cloop change revise single-shot-change .*draft\.json --approve-spec --decision-ref <user-decision> --through proven/);
   assert.equal((output.match(/\n  next: /g) || []).length, 1);
 });
 

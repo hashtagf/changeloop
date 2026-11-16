@@ -100,7 +100,7 @@ export function targetEditIssues({ root, state, dirtyNow, landOutput = {}, proje
       `this change and the target checkout changed outside the sandbox at: ${list(inside)}. Move ` +
       `edits that belong to this change into ${state.workspace.path} and restore those target ` +
       "files, then rerun. If a listed file is the user's own work, ask the user and record it " +
-      `with 'claude-foundation change resolve ${state.id} --accept-target-edits --decision-ref <user-decision>'`],
+      `with 'cloop change resolve ${state.id} --accept-target-edits --decision-ref <user-decision>'`],
     notices
   };
 }
@@ -129,7 +129,7 @@ export function parseRestoreTargetPaths(value) {
 }
 
 export function restoreTargetCommand(changeId, paths, decisionRef = null) {
-  return `claude-foundation advance ${changeId} --through archived --restore-target ${
+  return `cloop advance ${changeId} --through archived --restore-target ${
     shellDisplayArgument(paths.join(","))}${decisionRef ? ` --decision-ref ${decisionRef}` : ""}`;
 }
 
@@ -155,7 +155,7 @@ export function landedChangeSyncStop({ changeId, landedBy }) {
       landedBy,
       options: [
         { id: "sync", outcome: "Merge the landed content into the sandbox copies, prove what " +
-          `changed, and continue Land: 'claude-foundation advance ${changeId} --through archived'.` },
+          `changed, and continue Land: 'cloop advance ${changeId} --through archived'.` },
         { id: "pause", outcome: "Change nothing and leave both workspaces as they are." }
       ],
       recommended: "sync",
@@ -183,7 +183,7 @@ export function targetEditSyncStop({ changeId, paths, conflicts = [] }) {
       ...(conflicts.length ? { conflicts } : {}),
       options: [
         { id: "sync", outcome: "Merge the target edits into the sandbox copies, prove " +
-          `what changed, and continue Land: 'claude-foundation advance ${changeId} --through archived'.` },
+          `what changed, and continue Land: 'cloop advance ${changeId} --through archived'.` },
         { id: "pause", outcome: "Change nothing and leave both workspaces as they are." }
       ],
       recommended: "sync",
@@ -221,7 +221,7 @@ export function targetConflictStop({ changeId, paths, snapshot = {}, cause, land
       options: [
         { id: "keep-target", outcome: "Keep the target edits: the agent merges each one into the " +
           "sandbox copy of the same path, then " +
-          `'claude-foundation advance ${changeId} --through archived' proves the merged files and lands them.` },
+          `'cloop advance ${changeId} --through archived' proves the merged files and lands them.` },
         ...(discardable.length ? [{ id: "restore-target", outcome: "Discard the target edits at " +
           `${discardable.length === paths.length ? "the listed paths" : listPaths(discardable)} ` +
           `and land the proven projection: '${restoreTargetCommand(changeId, discardable,
@@ -325,11 +325,11 @@ export function landedConflictStop({ changeId, repository = null, paths, landedB
       landedBy,
       // Structured so hosts that rewrite prose commands to the advance route
       // still carry the exact resolve primitive.
-      resolveCommand: `claude-foundation sandbox sync ${changeId} --resolve ${sorted.join(",")}`,
+      resolveCommand: `cloop sandbox sync ${changeId} --resolve ${sorted.join(",")}`,
       options: [
         { id: "resolve", outcome: "Edit the sandbox copies to the intended merge, then record it: " +
-          `'claude-foundation sandbox sync ${changeId} --resolve ${sorted.join(",")}' and resume ` +
-          `'claude-foundation advance ${changeId} --through archived'.` },
+          `'cloop sandbox sync ${changeId} --resolve ${sorted.join(",")}' and resume ` +
+          `'cloop advance ${changeId} --through archived'.` },
         { id: "pause", outcome: "Change nothing and leave both workspaces as they are." }
       ],
       recommended: "resolve"

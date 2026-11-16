@@ -93,7 +93,7 @@ or user-decision boundary.
 For defect behavior, include adjacent input partitions and source-language representation/coercion boundaries,
 not only the reported reproduction; declare `input-domain` when behavior uses caller-supplied values.
 
-`claude-foundation change start .foundation/drafts/<id>` (folder or `.json`)
+`cloop change start .foundation/drafts/<id>` (folder or `.json`)
 inspects and starts in one call when clean; otherwise follow the returned intake action.
 Never inspect managed `.claude/harness/**` merely to reconstruct this schema.
 The compiler owns classification, the intake responsibilities in

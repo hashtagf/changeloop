@@ -116,7 +116,7 @@ duration      8.42s
 ## ความเชื่อมโยง
 
 ```bash
-claude-foundation change audit <change>
+cloop change audit <change>
 ```
 
 ตรวจความเชื่อมโยง scenario → claim → task → provider ทุก scenario ที่สังเกตได้ควรไปถึง claim และทุก claim ควรไปถึง provider ที่พิสูจน์มันได้ scenario ที่ไม่มี claim คือคำสัญญาที่ไม่มีใครตรวจ

@@ -9,7 +9,7 @@ What the default does with a call that leaves the active phase's rules:
 
 - A product edit aimed at the main checkout while an isolated workspace exists
   is redirected to the same path in that workspace (`updatedInput`).
-- `land advance` runs as `claude-foundation advance <change> --through
+- `land advance` runs as `cloop advance <change> --through
   archived` in every session and mode, `/land` included, and `archive` or
   `sandbox apply` outside `/land` runs the same way. That route owns the grant,
   readiness, and recovery, and lands only proven work.
@@ -122,7 +122,7 @@ link whose source lies outside the workspace (`cp ../x .`,
 names a manifest or lockfile edit, which the harness reinstalls before the next
 check, and an in-workspace install as the routes: a workspace never borrows the
 checkout's files. The
-`claude-foundation exec` runtime uses the same policy, derives its phase from
+`cloop exec` runtime uses the same policy, derives its phase from
 change state, and starts Build children in the canonical workspace. Use
 structured Edit/Write operations where possible.
 A heredoc body behind a quoted delimiter and the inside of a single-quoted

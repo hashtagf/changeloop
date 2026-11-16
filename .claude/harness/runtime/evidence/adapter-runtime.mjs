@@ -204,7 +204,7 @@ export function mutationReceiptClassification(protocol, legacyResult, configured
 
 // The harness's own session state: the agent's workspace pin, caller cwd,
 // host session, public operation, and phase. A provider command is a project
-// tool, and a test that runs claude-foundation in its own fixture must not
+// tool, and a test that runs cloop in its own fixture must not
 // inherit them, or it acts on the outer session. The provider contract
 // (FOUNDATION_CHANGE_ID, FOUNDATION_REPOSITORIES_FILE, …) is added afterwards.
 export const PROVIDER_SESSION_ENV = Object.freeze([

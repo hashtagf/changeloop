@@ -17,7 +17,7 @@ picture first, see [One change, start to finish](/docs/journey/).
 ## 0. Check the project is ready
 
 Ask the agent to check that Change Loop is ready. It can run
-`claude-foundation doctor --stage change` and resolve setup problems.
+`cloop doctor --stage change` and resolve setup problems.
 You do not need to configure optional quality gates for this first example.
 
 If the cause or desired behavior is unclear, start with

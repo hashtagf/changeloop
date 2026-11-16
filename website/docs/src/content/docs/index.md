@@ -16,9 +16,7 @@ Investigate? → Change → Build → Prove → Land
 
 It is not an AI, and it does not write code. It is a deterministic control plane *around* your coding agent. It does not replace your agent, test framework, CI system, or Git workflow either — it drives the tools your repository already owns.
 
-The workflow is called **Change Loop**. You type `cloop`; the original
-name `claude-foundation` remains a permanent alias that the agent, permission
-rules, and existing integrations keep using.
+The workflow is called **Change Loop**. You and the agent both type `cloop`.
 
 Users keep seven intent-level commands: `/investigate`, `/change`, `/build`,
 `/prove`, `/land`, optional `/deliver`, and `/dev`. The agent compiles one semantic draft and drives

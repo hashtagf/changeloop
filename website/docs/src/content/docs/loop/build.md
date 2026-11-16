@@ -24,7 +24,7 @@ does.
 Build uses one model-facing command:
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 The coordinator validates the agreement, creates or synchronizes the isolated
@@ -40,7 +40,7 @@ Lands. `--through build` still stops at Build when that is all you want.
 | Action | Meaning |
 |---|---|
 | `WORKING` | Harness work is still running (a proof or a Land transaction); wait for it instead of starting another |
-| `EDIT` | Implement only the returned task(s), workspace, and allowed paths (each task's own `workspace`; a submodule task names its repository sandbox); open the listed `contextFiles`, create `newFiles`; run each task's `checkCommand` (its verify through `claude-foundation exec`) |
+| `EDIT` | Implement only the returned task(s), workspace, and allowed paths (each task's own `workspace`; a submodule task names its repository sandbox); open the listed `contextFiles`, create `newFiles`; run each task's `checkCommand` (its verify through `cloop exec`) |
 | `REPAIR` | Apply one complete dependency-ordered repair batch, then resume |
 | `RUN_EXTERNAL` | Run the one configured boundary operation |
 | `WAIT` | A resource another task or change holds, or an external owner, must finish; the harness resumes and state is preserved |
@@ -78,7 +78,7 @@ to finish it. When Build changes `package.json` or the lockfile, the harness
 reruns the setup before the next check. Linking or copying the checkout's
 `node_modules` into the workspace is refused.
 
-The phase hook and `claude-foundation exec` use the same containment policy.
+The phase hook and `cloop exec` use the same containment policy.
 They reject absolute outside operands, later directory escapes, and writes
 through symlinks outside the workspace; `exec` derives the phase from runtime
 state and starts Build children in the canonical workspace; for a
@@ -100,7 +100,7 @@ operator diagnostics and host integrations.
 Do not edit several OpenSpec ledgers by hand. Submit one semantic amendment:
 
 ```bash
-claude-foundation change amend <change> <amendment.json> --consume-amendment
+cloop change amend <change> <amendment.json> --consume-amendment
 ```
 
 The compiler preserves completed tasks and manual sections, validates the new
@@ -110,7 +110,7 @@ contract changes. A completed task's verify changes only with `reopen: true`
 (`--reopen`), which unticks it so it must pass again, and `removeTasks`
 withdraws an unfinished task no remaining task depends on. A wrong verify
 command on an unfinished task is corrected directly, keeping the approval:
-`claude-foundation change amend <change> --task <task> --verify <command>`. The
+`cloop change amend <change> --task <task> --verify <command>`. The
 task is accepted only when the new command passes in the workspace, and a
 command that always passes is refused. `reviseRequirements` and
 `removeRequirements` change or drop an existing requirement in the same

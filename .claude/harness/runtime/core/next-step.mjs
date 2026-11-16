@@ -44,11 +44,11 @@ export function nextCommand(status, id, state = null) {
   const through = state && (floor || status === "proven")
     ? resumeThrough(state, floor || "proven") : null;
   if (through && operation && (floor || through === "archived"))
-    return `claude-foundation advance ${id} --through ${through}`;
+    return `cloop advance ${id} --through ${through}`;
   const [name, ...args] = operation ? operation.split(" ") : [];
   return operation
-    ? `claude-foundation ${name} ${id}${args.length ? ` ${args.join(" ")}` : ""}`
-    : `claude-foundation doctor --change ${id}`;
+    ? `cloop ${name} ${id}${args.length ? ` ${args.join(" ")}` : ""}`
+    : `cloop doctor --change ${id}`;
 }
 
 // `validate` has just performed the operation the canonical map recommends for

@@ -47,7 +47,7 @@ behavior, and the tasks. `change start --template` prints this form first as
 `minimalDraft`, preceded by a `save` field: the agent writes a draft v5 folder,
 `.foundation/drafts/<id>/` (see below), with its Write tool, because the host
 refuses a shell heredoc and `.foundation/drafts/` is a pre-allowed path. Then it
-runs `claude-foundation change start .foundation/drafts/<id>`. `change.json`
+runs `cloop change start .foundation/drafts/<id>`. `change.json`
 declares `version: 5` and `workType`, which selects the required sections;
 `proposal.md` holds the reason as prose:
 
@@ -220,7 +220,7 @@ and architecture through contracts, work-type sections, decisions, quality,
 rollout, and tests. One `EDIT` names any unknown, derived, out-of-order, empty,
 or `TODO`/`TBD` section. `change start --template` prints the accepted headings
 as `draftFolderV5`. Status, approvers, evidence freshness, and the review
-record never render before Land; read them with `claude-foundation changes`.
+record never render before Land; read them with `cloop changes`.
 The full order and rules live in `WORKFLOW.md` under "Draft v5 folder and
 outline".
 
@@ -341,7 +341,7 @@ To change an agreed change before Build starts, revise the same change instead
 of abandoning it:
 
 ```bash
-claude-foundation change revise <change> <draft.json>
+cloop change revise <change> <draft.json>
 ```
 
 The revised draft keeps the change id and passes the same intake gate as
@@ -361,7 +361,7 @@ amendment. `reviseRequirements` replaces an existing requirement (an open task
 must cover it) and `removeRequirements` drops one with a `migration`:
 
 ```bash
-claude-foundation change amend <change> <amendment.json> --consume-amendment
+cloop change amend <change> <amendment.json> --consume-amendment
 ```
 
 It preserves completed tasks, custom prose, diagrams, and unrelated sections;
@@ -381,4 +381,4 @@ input fingerprints remain exact; affected or ambiguous bindings rerun through
 the returned Prove route.
 
 A successful `/change` is already validated and isolated. Continue with
-`claude-foundation advance <change> --through build`.
+`cloop advance <change> --through build`.

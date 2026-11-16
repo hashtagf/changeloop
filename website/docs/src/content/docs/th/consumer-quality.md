@@ -55,10 +55,10 @@ Change Loop คำนวณคะแนนใหม่เอง ไม่เช�
 Discovery อ่าน manifest กับชื่อไฟล์ แต่ไม่รัน command ของโปรเจกต์:
 
 ```bash
-claude-foundation quality discover
-claude-foundation quality init
-claude-foundation quality init --write --ci github
-claude-foundation quality doctor
+cloop quality discover
+cloop quality init
+cloop quality init --write --ci github
+cloop quality doctor
 ```
 
 `quality init` เป็น preview จนกว่าจะใส่ `--write` และจะสร้าง `quality/foundation-quality.json` เมื่อใช้ `--ci github` จะติดตั้ง:
@@ -74,9 +74,9 @@ Reusable workflow ไม่ได้มี `pull_request` trigger ในตั�
 รัน pilot ใน isolated workspace ของ Change:
 
 ```bash
-claude-foundation quality run --change <change-id>
-claude-foundation quality report
-claude-foundation quality run --change <change-id> --enforce
+cloop quality run --change <change-id>
+cloop quality report
+cloop quality run --change <change-id> --enforce
 ```
 
 เมื่อ commit quality config แล้ว evidence bootstrap สามารถต่อ enforced run เป็น provider `static-analysis` Receipt จะบันทึก aggregate assurance และเก็บ per-repository report ไว้ใน command log
@@ -115,8 +115,8 @@ CRAP และ mutation report ผูกกับ repository ID, commit, workspa
 ตรวจ pilot finding ก่อนสร้าง baseline:
 
 ```bash
-claude-foundation quality baseline
-claude-foundation quality baseline --write \
+cloop quality baseline
+cloop quality baseline --write \
   --decision-ref ADR-42 --reason "approved pilot baseline"
 ```
 
@@ -125,8 +125,8 @@ Baseline แยก version ตาม repository และ capability การ�
 สร้าง full inventory และ debt โดยไม่ขยาย Change ปัจจุบัน:
 
 ```bash
-claude-foundation quality run --full
-claude-foundation quality debt
+cloop quality run --full
+cloop quality debt
 ```
 
 Inventory ใหญ่แบ่งด้วย `--shard-index <เริ่มจากศูนย์>` และ `--shard-count <n>` Lane ถูกเลือกแบบ deterministic และ failed repository จะไม่ถูกค่าเฉลี่ยกลบ

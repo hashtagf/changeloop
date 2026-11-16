@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * claude-foundation dashboard — central presence server.
+ * cloop dashboard — central presence server.
  *
- * Every installed agent runs `claude-foundation dashboard --key=…` which POSTs
+ * Every installed agent runs `cloop dashboard --key=…` which POSTs
  * a heartbeat here every few seconds. This server keeps an in-memory map of
  * agents and reports who has been seen within ONLINE_TTL_MS as "online". It
  * also serves the static web dashboard from ./public.
@@ -1042,7 +1042,7 @@ const server = http.createServer(handleRequest);
 function startServer(port = PORT) {
   return server.listen(port, () => {
     const address = server.address();
-    console.log(`claude-foundation dashboard listening on :${address && address.port}  (online window ${ONLINE_TTL_MS}ms)`);
+    console.log(`cloop dashboard listening on :${address && address.port}  (online window ${ONLINE_TTL_MS}ms)`);
   });
 }
 

@@ -31,16 +31,16 @@ for (const status of LIFECYCLE_STATUSES)
     `status '${status}' must name the operation that moves it`));
 
 check(() => assert.equal(nextCommand("proven", "demo"),
-  "claude-foundation advance demo",
+  "cloop advance demo",
   "the coordinator rechecks proof freshness without implying Land authority"));
 check(() => assert.equal(nextCommand("building", "demo"),
-  "claude-foundation advance demo --through build",
+  "cloop advance demo --through build",
   "Build status names the exact bounded target"));
 check(() => assert.equal(nextCommand("stale-proof", "demo"),
-  "claude-foundation advance demo --through proven",
+  "cloop advance demo --through proven",
   "stale proof returns to the exact proof target"));
 check(() => assert.equal(nextCommand("applied", "demo"),
-  "claude-foundation advance demo --through archived",
+  "cloop advance demo --through archived",
   "an authorized in-flight Land resumes to archived"));
 check(() => assert.ok(!LIFECYCLE_STATUSES.includes("landing"),
   "no writer produces 'landing'; the map names only reachable statuses"));
@@ -53,34 +53,34 @@ check(() => assert.match(nextCommand("no-such-status", "demo"), /doctor --change
 // pointed at archived (Land itself stays behind its own grant).
 const approved = { specApproval: { identity: "id", decisionRef: "request" } };
 check(() => assert.equal(nextCommand("building", "demo", {}),
-  "claude-foundation advance demo --through build",
+  "cloop advance demo --through build",
   "no approval and no request keeps the bounded Build route"));
 check(() => assert.equal(nextCommand("building", "demo", approved),
-  "claude-foundation advance demo --through proven",
+  "cloop advance demo --through proven",
   "an approved spec makes Build-only a bounce"));
 check(() => assert.equal(nextCommand("change", "demo", { ...approved, requestedThrough: "archived" }),
-  "claude-foundation advance demo --through archived"));
+  "cloop advance demo --through archived"));
 check(() => assert.equal(nextCommand("building", "demo", { requestedThrough: "proven" }),
-  "claude-foundation advance demo --through proven"));
+  "cloop advance demo --through proven"));
 check(() => assert.equal(nextCommand("building", "demo", { requestedThrough: "build" }),
-  "claude-foundation advance demo --through build",
+  "cloop advance demo --through build",
   "a recorded Build request never raises authority by itself"));
 check(() => assert.equal(nextCommand("stale-proof", "demo", { requestedThrough: "archived" }),
-  "claude-foundation advance demo --through archived",
+  "cloop advance demo --through archived",
   "re-proving continues to the requested Land target"));
 check(() => assert.equal(nextCommand("stale-proof", "demo", { requestedThrough: "build" }),
-  "claude-foundation advance demo --through proven"));
+  "cloop advance demo --through proven"));
 check(() => assert.equal(nextCommand("proven", "demo", { requestedThrough: "archived" }),
-  "claude-foundation advance demo --through archived"));
+  "cloop advance demo --through archived"));
 check(() => assert.equal(nextCommand("proven", "demo", { requestedThrough: "proven" }),
-  "claude-foundation advance demo",
+  "cloop advance demo",
   "a proven change keeps the freshness-checking plain route"));
 check(() => assert.equal(nextCommand("building", "demo", { requestedThrough: "bogus" }),
-  "claude-foundation advance demo --through build",
+  "cloop advance demo --through build",
   "an unknown recorded target is ignored"));
 check(() => assert.equal(resumeThrough({ requestedThrough: "archived" }), "archived"));
 check(() => assert.equal(nextAfterValidate("building", "demo", approved),
-  "claude-foundation advance demo --through proven"));
+  "cloop advance demo --through proven"));
 
 // The circular-advice regression: validate recommending validate.
 check(() => assert.equal(nextAfterValidate("change", "demo"), "/build demo"));
@@ -144,22 +144,22 @@ try {
 
   const active = digest(fixture);
   check(() => assert.match(active, /demo-change \[building\]/));
-  check(() => assert.match(active, /next: claude-foundation advance demo-change --through build\n/));
+  check(() => assert.match(active, /next: cloop advance demo-change --through build\n/));
   writeFileSync(join(fixture, ".foundation", "runtime", "demo-change.json"),
     JSON.stringify({ id: "demo-change", status: "building", schema: "foundation-rapid",
       requestedThrough: "archived" }));
   check(() => assert.match(digest(fixture),
-    /demo-change \[building\] next: claude-foundation advance demo-change --through archived/,
+    /demo-change \[building\] next: cloop advance demo-change --through archived/,
     "a resumed session continues toward the target already requested"));
   writeFileSync(join(fixture, ".foundation", "runtime", "demo-change.json"),
     JSON.stringify({ id: "demo-change", status: "building", schema: "foundation-rapid" }));
-  check(() => assert.match(active, /next: claude-foundation advance demo-change/));
+  check(() => assert.match(active, /next: cloop advance demo-change/));
   check(() => assert.match(active, /orphan runtime state/,
     "state with no active change is how a stuck project stays stuck unnoticed"));
   check(() => assert.match(active, /left-behind/));
   // Freshness needs a workspace hash this hook deliberately does not compute.
   // Claiming readiness it never checked would be worse than staying silent.
-  check(() => assert.match(active, /claude-foundation changes/));
+  check(() => assert.match(active, /cloop changes/));
   check(() => assert.doesNotMatch(active, /ready-to-land/));
 
   // A building change names its exact anchor prefix in the digest, quoted the

@@ -20,7 +20,7 @@ function hostSession(env) {
 }
 
 export function authorityStatusCommand(id, requestId) {
-  return `claude-foundation authority status ${id} --request ${requestId} --template`;
+  return `cloop authority status ${id} --request ${requestId} --template`;
 }
 
 // Returns { command, placeholders, unresolved }: placeholders names every
@@ -93,7 +93,7 @@ export function authorityRunCommand(id, request, env = process.env) {
       placeholders.push("host-session (export FOUNDATION_SESSION_ID or run inside the host session)");
   }
   return {
-    command: `claude-foundation authority run ${id} --request ${request.requestId} ${flags.join(" ")}`,
+    command: `cloop authority run ${id} --request ${request.requestId} ${flags.join(" ")}`,
     placeholders,
     unresolved
   };

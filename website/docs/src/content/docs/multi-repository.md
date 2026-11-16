@@ -103,7 +103,7 @@ moving directory honestly.
 Check the result before creating a change:
 
 ```bash
-claude-foundation repos
+cloop repos
 ```
 
 ## 2. Select the change scope
@@ -133,7 +133,7 @@ downgraded to the single-root Apply or archive path.
 Then inspect the resolved selection:
 
 ```bash
-claude-foundation repos <change>
+cloop repos <change>
 ```
 
 ## 3. Bind tasks to repositories
@@ -155,7 +155,7 @@ the execution graph. Do not create a second graph file.
 The normal agent command creates the selected workspaces together:
 
 ```bash
-claude-foundation advance <change> --through build
+cloop advance <change> --through build
 ```
 
 `sandbox create --all` and `sandbox inspect` remain operator diagnostics under
@@ -223,7 +223,7 @@ receipt records its complete `repositoryIds`.
 Plan parallel workers only after scope and dependencies are stable:
 
 ```bash
-claude-foundation agents plan <change>
+cloop agents plan <change>
 ```
 
 If another change advances a selected repository, `advance` synchronizes the
@@ -235,7 +235,7 @@ provider leaves a tracked change in a read workspace, readiness fails closed.
 ## 7. Prove the complete graph
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 `proof readiness` and `proof run` are internal primitives behind `advance`. Prove may run independent branches concurrently and preserve completed branches

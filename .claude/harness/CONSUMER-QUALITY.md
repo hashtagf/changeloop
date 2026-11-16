@@ -6,12 +6,12 @@ project-tool-owned, multi-repository aware, and report-only by default.
 ## Operator flow
 
 ```bash
-claude-foundation quality discover [--change <id>]
-claude-foundation quality init [--change <id>]
-claude-foundation quality init --write [--ci github]
-claude-foundation quality doctor [--change <id>] [--enforce]
-claude-foundation quality run --change <id> [--enforce]
-claude-foundation quality report
+cloop quality discover [--change <id>]
+cloop quality init [--change <id>]
+cloop quality init --write [--ci github]
+cloop quality doctor [--change <id>] [--enforce]
+cloop quality run --change <id> [--enforce]
+cloop quality report
 ```
 
 Discovery is read-only. Initialization previews unless `--write`; it refuses to
@@ -68,12 +68,12 @@ state-identity controls.
 ## Baseline and debt authority
 
 ```bash
-claude-foundation quality baseline
-claude-foundation quality baseline --write \
+cloop quality baseline
+cloop quality baseline --write \
   --decision-ref <ref> --reason <why>
-claude-foundation quality run --full \
+cloop quality run --full \
   [--shard-index <zero-based> --shard-count <n>]
-claude-foundation quality debt
+cloop quality debt
 ```
 
 Baseline writes require explicit decision provenance. Exceptions identify one

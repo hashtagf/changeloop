@@ -13,7 +13,7 @@ Investigate? → Change → Build → Prove → Land
 Coding agent เขียนโค้ด ส่วน harness ดูแลสถานะ พื้นที่ทำงาน หลักฐาน และการกู้คืน
 คุณยังใช้ test framework, Git และ CI เดิมได้
 
-**Version 3.7.3** · คำสั่ง: `cloop` (alias `claude-foundation` ที่ agent ใช้)
+**Version 3.7.3** · คำสั่ง: `cloop`
 
 ## หลักการ
 
@@ -61,7 +61,7 @@ Claude Code ใช้ได้โดยไม่ต้องเพิ่ม adap
 
 วิธีติดตั้งจาก source, ข้อกำหนด, ความต่างของ host, การใช้ headless/CI และการ
 upgrade อยู่ใน [คู่มือติดตั้ง](https://changeloop.ai/docs/th/install/)
-Agent ตรวจความพร้อมได้ด้วย `claude-foundation doctor --stage change`
+Agent ตรวจความพร้อมได้ด้วย `cloop doctor --stage change`
 
 ## สอนทำ Change แรก
 

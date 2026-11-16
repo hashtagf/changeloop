@@ -1,4 +1,4 @@
-# claude-foundation dashboard
+# cloop dashboard
 
 A **team awareness + usage dashboard** for everyone using the claude-foundation
 `/dev` flow. Each machine runs a small background client that heartbeats to one
@@ -65,7 +65,7 @@ machine already has.
 | **Client scanning** | `git`, `awk`, `find`, `sed` | `git diff`/`log`; `awk` parses hunk headers **and** streams the Claude transcripts. |
 | **Auth** | `x-cf-key` bearer header | Constant-time compare; `SHARED_KEY` to write, `VIEW_KEY` to read. |
 | **Hosting** | Railway (NIXPACKS) | `railway.json` + `/api/health`; Node 24 pinned via `.nvmrc` + `engines`. |
-| **Distribution** | Homebrew formula + `cli.sh` router | `claude-foundation dashboard-up …` on each machine. |
+| **Distribution** | Homebrew formula + `cli.sh` router | `cloop dashboard-up …` on each machine. |
 
 ---
 
@@ -116,7 +116,7 @@ the scan roots (bounded by `SCAN_DEPTH` and repo/file caps; `find` prunes
   detection is also upserted into `conflict_log` (history) and every reported
   file into `file_edits` (hotspots).
 - **Foundation changes** — for projects with `.foundation/runtime/`, the client
-  calls the stable, read-only `claude-foundation dashboard snapshot --json`
+  calls the stable, read-only `cloop dashboard snapshot --json`
   projection. It emits whitelisted lifecycle, blocker, budget, and evidence
   metadata only—never prompts, tool payloads, or provider output. A malformed
   runtime record is isolated so it cannot break the machine scan. Legacy
@@ -252,11 +252,11 @@ Server env: `SHARED_KEY` (required), `VIEW_KEY` (defaults to `SHARED_KEY`),
 
 | Command | What it does |
 |---|---|
-| `claude-foundation dashboard-up --key <k>` | Start the daemon (nohup + PID file). |
-| `claude-foundation dashboard-down` | Stop it (sends an offline beat first). |
-| `claude-foundation dashboard-status` | Is it running? |
-| `claude-foundation dashboard --key <k>` | Foreground loop; `--once` = single beat (debugging). |
-| `claude-foundation dashboard snapshot --json` | Print the current project's versioned, read-only runtime projection. |
+| `cloop dashboard-up --key <k>` | Start the daemon (nohup + PID file). |
+| `cloop dashboard-down` | Stop it (sends an offline beat first). |
+| `cloop dashboard-status` | Is it running? |
+| `cloop dashboard --key <k>` | Foreground loop; `--once` = single beat (debugging). |
+| `cloop dashboard snapshot --json` | Print the current project's versioned, read-only runtime projection. |
 
 ### Options
 
@@ -314,7 +314,7 @@ Point clients at it:
 
 ```bash
 export CLAUDE_FOUNDATION_DASHBOARD_URL=https://your-app.up.railway.app
-claude-foundation dashboard-up --key=<SHARED_KEY>
+cloop dashboard-up --key=<SHARED_KEY>
 ```
 
 ---
@@ -367,4 +367,4 @@ Routing lives in `/cli.sh` (top-level): `dashboard*` subcommands →
 (`Formula/claude-foundation.rb`) installs `cli.sh` + the `dashboard/` dir into
 libexec and the `claude-foundation` bin execs `cli.sh`. `DEFAULT_SERVER` in
 `client.sh` points at the deployed Railway URL, so teammates only need
-`brew install … && claude-foundation dashboard-up --key=<key>`.
+`brew install … && cloop dashboard-up --key=<key>`.

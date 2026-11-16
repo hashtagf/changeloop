@@ -5,7 +5,7 @@ function taskById(plan, id) {
 }
 
 function command(value) {
-  return `claude-foundation ${value}`;
+  return `cloop ${value}`;
 }
 
 function leasedTask(changeId, plan, task, stableHash) {

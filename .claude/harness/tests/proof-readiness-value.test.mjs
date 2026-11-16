@@ -114,8 +114,8 @@ test("readiness recovery routes every typed status", () => {
   }), [{
     kind: "repair-repository-binding",
     reason: "api missing",
-    command: "claude-foundation sandbox create c --all",
-    inspectCommand: "claude-foundation sandbox inspect c"
+    command: "cloop sandbox create c --all",
+    inspectCommand: "cloop sandbox inspect c"
   }, "x1", "x2"]);
   assert.deepEqual(readinessNext(context, { ...input, status: "READY" }), []);
   assert.ok(calls.some(([kind]) => kind === "external"));
@@ -212,7 +212,7 @@ test("repository health is read before hashing and returns typed recovery", () =
   assert.deepEqual(value.repositoryIssues,
     ["selected repository 'api' isolated workspace is missing"]);
   assert.equal(value.next[0].command,
-    "claude-foundation sandbox create change --all");
+    "cloop sandbox create change --all");
   assert.equal(value.issues[0], "workspace missing before hash");
 });
 
@@ -223,9 +223,9 @@ test("repository recovery exposes repair and inspection commands", () => {
     unavailable: [], repositoryIssues: ["api binding missing"]
   });
   assert.equal(next[0].command,
-    "claude-foundation sandbox create change --all");
+    "cloop sandbox create change --all");
   assert.equal(next[0].inspectCommand,
-    "claude-foundation sandbox inspect change");
+    "cloop sandbox inspect change");
 });
 
 test("product changes in every repository require an isolated workspace", () => {
@@ -356,7 +356,7 @@ test("an edit outside task paths is recorded into the change surface, not refuse
     assert.equal(repair.kind, "ignore-generated-output");
     assert.deepEqual(repair.patterns, ["/build/"]);
     assert.equal(repair.command, "printf '%s\\n' '/build/' >> '.gitignore'");
-    assert.equal(repair.verify, "claude-foundation advance demo --inspect");
+    assert.equal(repair.verify, "cloop advance demo --inspect");
     assert.equal(repair.agentCommand, "/change demo");
   } finally {
     rmSync(root, { recursive: true, force: true });

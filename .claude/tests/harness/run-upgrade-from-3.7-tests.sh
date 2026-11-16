@@ -243,7 +243,7 @@ printf '%s\n' '{"version":1,"reason":"Add the extra fixture",
   "evidence":{"extra":{"capabilities":["test"]}}}' > "$A/.foundation/amend-v3.json"
 assert_contains "amend --inspect on a v3 change names the direct amend route" \
   "$($CLI change amend v3-building .foundation/amend-v3.json --inspect 2>&1 || true)" \
-  "apply it directly with claude-foundation change amend v3-building .foundation/amend-v3.json"
+  "apply it directly with cloop change amend v3-building .foundation/amend-v3.json"
 assert_cmd_zero "a 3.7.0 change started from a v3 draft accepts an amendment" \
   $CLI change amend v3-building .foundation/amend-v3.json \
     --approve-spec --decision-ref fixture://user/amend

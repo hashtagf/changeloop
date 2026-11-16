@@ -18,8 +18,9 @@ for project tooling. OpenSpec owns the agreement, the native coding agent owns
 the implementation, and project-owned providers such as test runners,
 Playwright, linters, or security scanners produce evidence.
 
-The product and workflow are called **Change Loop**. The package and CLI remain
-`claude-foundation`, so existing commands do not change.
+The product and workflow are called **Change Loop**; its CLI is `cloop`, used
+by people and agents alike. The Homebrew formula keeps the package name
+`claude-foundation` (`brew upgrade claude-foundation`).
 
 ## Using Change Loop
 
@@ -268,8 +269,8 @@ recreated from the pinned runtime contract, and never part of a change packet.
 Check a project before starting:
 
 ```bash
-claude-foundation doctor --stage change
-claude-foundation update check
+cloop doctor --stage change
+cloop update check
 ```
 
 Update discovery runs only at Investigate entry, Change entry, and Build
@@ -295,7 +296,7 @@ decision.
 Check both the project and one change's executable evidence:
 
 ```bash
-claude-foundation doctor --stage prove --change <change>
+cloop doctor --stage prove --change <change>
 ```
 
 ## Primary agent commands
@@ -471,7 +472,7 @@ renaming a provider cannot reset the circuit. Acceptance is revalidated against 
 identity, criteria, observation, provenance, durable evidence, contract reason,
 and workspace hash.
 
-Run `claude-foundation help` for command syntax and installer options.
+Run `cloop help` for command syntax and installer options.
 Low-level `runtime` commands are reserved for installed slash commands and
 diagnostics.
 
@@ -499,9 +500,9 @@ editing them.
 Host integrations resolve canonical instructions from the installed release:
 
 ```bash
-claude-foundation host instruction <command> \
+cloop host instruction <command> \
   --protocol 1 --format json --arguments <text>
-claude-foundation host agent-contract --protocol 1 --format json
+cloop host agent-contract --protocol 1 --format json
 ```
 
 Instruction protocol 1 supports `investigate`, `change`, `build`, `prove`,
@@ -519,14 +520,14 @@ bundle its own copy.
 
 ### Pi adapter
 
-`claude-foundation init <target> --host pi` adds the project-local
+`cloop init <target> --host pi` adds the project-local
 `.pi/extensions/changeloop.ts` for Pi ≥1.5.2 (`@earendil-works/pi-coding-agent`).
 Trust the project and start a new Pi session or `/reload`. The extension calls
 the package-owned host endpoints above and requires matching CLI/project
 versions and jq. It preserves the user's prompt, adds the agent contract, and
 exposes all canonical commands. It never copies workflow prose into the adapter.
 
-For a settings-only consumer, use `claude-foundation init <target> --host pi
+For a settings-only consumer, use `cloop init <target> --host pi
 --shared-runtime`. The runtime, hooks, skills, commands and OpenSpec schemas live
 in a content-addressed bundle under Pi's agent directory. The consumer contains
 only `.changeloop.json` (runtime mode), `foundation.json`, OpenSpec settings
@@ -538,9 +539,9 @@ deleted or migrated by this command. Their original installation mode remains
 supported. Project settings survive repeated shared initialization.
 
 Pi follows the machine's Change Loop. At startup and `/reload` the global loader
-runs `cloop version` (else `claude-foundation`, or `CHANGELOOP_MACHINE_CLI`;
+runs `cloop version` (or `CHANGELOOP_MACHINE_CLI`;
 `none` disables it); when that version differs from Pi's current bundle it runs
-`claude-foundation host pi-runtime --protocol 1 --format json`, which installs
+`cloop host pi-runtime --protocol 1 --format json`, which installs
 that CLI's own package as the current bundle (content-addressed, offline,
 repeatable) and refreshes the loader. A missing or failing CLI keeps the
 existing bundle and shows a warning. `.changeloop.json` either follows the
@@ -761,7 +762,7 @@ change had written it.
 If Build reveals a new requirement, revise the same change and synchronize it:
 
 ```bash
-claude-foundation sandbox sync <change>
+cloop sandbox sync <change>
 ```
 
 Synchronization increments the change revision and invalidates receipts or
@@ -910,7 +911,7 @@ is missing, the contribution changed, or the review agreement changed.
 Use metrics to inspect the actual cost of a run:
 
 ```bash
-claude-foundation metrics <change>
+cloop metrics <change>
 ```
 
 `hostToolProfile` (`measurement`, `total`, `byTool`, `byCategory`) counts
@@ -1009,7 +1010,7 @@ unknown usage remains `null` rather than being fabricated as zero.
 Use an explicit sync when the lifecycle hook was not active:
 
 ```bash
-claude-foundation telemetry sync <change> ~/.claude/projects/.../session.jsonl
+cloop telemetry sync <change> ~/.claude/projects/.../session.jsonl
 ```
 
 Use `telemetry import --format generic|codex|cursor|otel|claude` for other hosts
@@ -1087,13 +1088,13 @@ project. Skipped annotated tests do not satisfy claims or critical cases.
 The source installer manages this entire directory, including this README:
 
 ```bash
-claude-foundation init /path/to/project
+cloop init /path/to/project
 ```
 
 For a packaged installation:
 
 ```bash
-claude-foundation init /path/to/project --yes
+cloop init /path/to/project --yes
 ```
 
 The installer records `.foundation/install-manifest.txt`, removes only stale
@@ -1103,7 +1104,7 @@ Change Loop-owned files, preserves project files and managed blocks in
 
 ## Troubleshooting
 
-- **`permission denied` running the installer** — run `claude-foundation init <target>` or
+- **`permission denied` running the installer** — run `cloop init <target>` or
   add executable permission intentionally.
 - **Playwright is unavailable** — install and lock `@playwright/test` plus the
   required browser in the application repository.

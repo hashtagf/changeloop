@@ -295,13 +295,13 @@ test("unapproved contract change names the decision-revision command by change k
   assert.equal(spec.closed, false);
   assert.equal(spec.route, "CONTRACT_DECISION_REQUIRED");
   assert.equal(spec.command,
-    "claude-foundation advance change-a --approve-spec --decision-ref <ref>");
+    "cloop advance change-a --approve-spec --decision-ref <ref>");
   const grounding = recordDeterministicReviewClosureOperation(operationContext({
     ...stale, loadRuntime: () => ({ groundingRequired: true })
   }).context, "change-a", "review", "workspace-new");
   assert.equal(grounding.route, "CONTRACT_DECISION_REQUIRED");
   assert.equal(grounding.command,
-    "claude-foundation change resolve change-a --reopen-grounding --decision-ref <ref> --reopen-reason <why>");
+    "cloop change resolve change-a --reopen-grounding --decision-ref <ref> --reopen-reason <why>");
 });
 
 test("decision gate notice fires only for a failed final delta and a changed contract", () => {
@@ -309,11 +309,11 @@ test("decision gate notice fires only for a failed final delta and a changed con
     operationContext(overrides).context, "change-a");
   const stale = { readJson: () => ({ status: "fail", contractFingerprint: "contract-old" }) };
   assert.equal(notice(stale).command,
-    "claude-foundation advance change-a --approve-spec --decision-ref <ref>");
+    "cloop advance change-a --approve-spec --decision-ref <ref>");
   assert.equal(notice({
     ...stale, loadRuntime: () => ({ groundingRequired: true })
   }).command,
-  "claude-foundation change resolve change-a --reopen-grounding --decision-ref <ref> --reopen-reason <why>");
+  "cloop change resolve change-a --reopen-grounding --decision-ref <ref> --reopen-reason <why>");
   assert.equal(notice({ ...stale, deliveredAiAttempts: () => [] }), null,
     "no failed final delta means no notice");
   assert.equal(notice({}), null, "an unchanged contract means no notice");

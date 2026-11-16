@@ -44,7 +44,7 @@ test("preserves only unchanged declared-input bindings across one revision", () 
   assert.equal(result.decisions.find((row) => row.provider === "lint").reason,
     "unchanged-declared-binding");
   assert.equal(result.recovery.command,
-    "claude-foundation advance profile-edit --through proven");
+    "cloop advance profile-edit --through proven");
   assert.equal(result.recovery.mode, "selective-rerun");
 });
 

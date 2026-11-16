@@ -19,7 +19,7 @@ decisions, and the machinery.
 | **Rapid / standard** | How much ceremony a change gets: rapid for small isolated low-risk work, standard for everything else | `foundation-rapid`, `foundation-standard` | [Change](/docs/loop/change/) |
 | **Sandbox** (worktree) | An isolated copy of your project where the work happens, so your main checkout stays untouched until Land | sandbox, `.foundation/` workspaces | [Build](/docs/loop/build/) |
 | **Advance** (coordinator) | The one resumable command the agent uses to move a change forward. It runs, reuses valid work, stops only at real decisions, and gives the exact way to resume | `advance <change> --through build\|proven\|archived` | [CLI reference](/docs/cli/) |
-| **Harness** | The deterministic program that owns the rules: isolation, running checks, recording results, budgets, and Land. It is not an AI and does not guess | `claude-foundation`, `.claude/harness/` | [Install](/docs/install/) |
+| **Harness** | The deterministic program that owns the rules: isolation, running checks, recording results, budgets, and Land. It is not an AI and does not guess | `cloop`, `.claude/harness/` | [Install](/docs/install/) |
 
 ## The checking
 

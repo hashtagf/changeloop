@@ -40,7 +40,7 @@ export function authorityRequestDisplayValue(request, limit = 8192) {
     },
     requestedAt: request.requestedAt,
     expiresAt: request.expiresAt,
-    next: `claude-foundation authority status ${request.changeId} --request ${
+    next: `cloop authority status ${request.changeId} --request ${
       request.requestId}`
   };
 }
@@ -205,7 +205,7 @@ export function abortAuthorityOperation(context, id, flags = {}) {
       context.unrecordedRequestResult?.(id, request))
     context.fail(`authority request '${requestId}' already has a completed AI review result ` +
       "without a receipt; aborting it would block every later review. Record it instead: " +
-      `claude-foundation advance ${id} --through proven (or claude-foundation authority record ${id} ` +
+      `cloop advance ${id} --through proven (or cloop authority record ${id} ` +
       `--request ${requestId} --response <saved response>)`);
   if (attemptIsCurrent) {
     context.completeReviewAttempt(id, dispatchedAttempt.digest, {
@@ -248,7 +248,7 @@ export function extendReviewAuthorityOperation(context, id, flags = {}) {
   const result = context.grantExtraAiWave(id, decisionRef, maxAiAttempts);
   context.output.log(`AUTHORITY ${id}: one more AI review wave\n  waves: ${
     result.delivered}/${result.maxAiAttempts}\n  decision: ${decisionRef
-    }\n  next: ${`claude-foundation advance ${id} --through proven`}`);
+    }\n  next: ${`cloop advance ${id} --through proven`}`);
   return result;
 }
 
@@ -379,7 +379,7 @@ export function authorityResponsePreflightIssues({ request, response, undispatch
   referenceExists = () => true }) {
   const issues = [];
   if (undispatched)
-    issues.push(`dispatch the request first: claude-foundation authority dispatch ${request.changeId} ` +
+    issues.push(`dispatch the request first: cloop authority dispatch ${request.changeId} ` +
       `--request ${request.requestId} --scope full|delta --reviewer-type human|ai --reviewer-identity <id>`);
   if (request.type !== "review") return issues;
   const evidence = response?.evidence && typeof response.evidence === "object" ? response.evidence : {};
@@ -431,7 +431,7 @@ export function authorityResponseTemplate(context, request) {
   const acceptanceEvidence = acceptanceResponseEvidence(context, request);
   // A full-delta review is recorded only after dispatch; say so up front.
   const dispatchFirst = request.type === "review" && request.status !== "dispatched"
-    ? `claude-foundation authority dispatch ${request.changeId} --request ${request.requestId} ` +
+    ? `cloop authority dispatch ${request.changeId} --request ${request.requestId} ` +
       "--scope full|delta --reviewer-type human|ai --reviewer-identity <id>"
     : null;
   return {
@@ -1088,7 +1088,7 @@ export function createAuthorityRuntime({
       packet: mainDispatched.packet,
       responseTemplate: template,
       next: {
-        record: `claude-foundation authority record ${id} --request ${requestId} --response <response.json>`
+        record: `cloop authority record ${id} --request ${requestId} --response <response.json>`
       }
     };
   }
@@ -1957,13 +1957,13 @@ export function createAuthorityRuntime({
       }, { quiet: true });
       fail(`authority request '${requestId}' judged a superseded workspace, so its response was not recorded; ` +
         `the harness re-requested ${request.type} as '${fresh.requestId}' bound to the current workspace. ` +
-        `Resume with 'claude-foundation advance ${id}'.`, 1,
+        `Resume with 'cloop advance ${id}'.`, 1,
       { owner: "harness", boundary: "stale-authority-request", code: "AUTHORITY_REREQUESTED" });
     }
     if (retiredCircuitReviewRequest(entry.value))
       fail(`authority request '${requestId}' used the retired legacy review circuit and was never ` +
         "dispatched, so its response cannot be recorded; resume with " +
-        `'claude-foundation advance ${id} --through proven', which requests a current review`);
+        `'cloop advance ${id} --through proven', which requests a current review`);
     if (!authorityStore.isOpen(request.status))
       fail(`authority request '${requestId}' is ${request.status}`);
     const undispatched = request.type === "review" && request.status !== "dispatched";

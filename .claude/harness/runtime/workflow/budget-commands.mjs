@@ -83,10 +83,10 @@ export function budgetContinuationUnblock(readiness) {
 
 function checkpointNextCommand(id, readiness) {
   if (readiness.status === "NEEDS_CODE_CHANGE")
-    return `claude-foundation packet ${id} --phase build`;
+    return `cloop packet ${id} --phase build`;
   if (readiness.status === "CONFIGURATION_ERROR")
-    return `claude-foundation change validate ${id}`;
-  return `claude-foundation advance ${id} --through proven`;
+    return `cloop change validate ${id}`;
+  return `cloop advance ${id} --through proven`;
 }
 
 function checkpointForecast(decision, readiness) {
@@ -118,7 +118,7 @@ function checkpointRoute(id, readiness, budget) {
     windowId: budget.window.id,
     sequence: Number(budget.window.sequence || 0),
     extensionNumber: Number(budget.window.extensionNumber || 0),
-    inspectCommand: `claude-foundation advance ${id} --inspect`,
+    inspectCommand: `cloop advance ${id} --inspect`,
     resumeCommand: checkpointNextCommand(id, readiness)
   };
 }

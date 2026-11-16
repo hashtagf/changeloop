@@ -72,7 +72,7 @@ test("unrecordable recovery state is a harness repair carrying the original valu
   assert.match(value.reason, /recovery state could not be retained: disk full/);
   assert.equal(value.details.error, "disk full");
   assert.ok(value.details.original?.action, "the original outcome is preserved");
-  assert.equal(value.command, "claude-foundation advance demo --through proven");
+  assert.equal(value.command, "cloop advance demo --through proven");
   assert.equal(value.decision, undefined);
 });
 
@@ -82,7 +82,7 @@ test("typed automatic sync stays harness-owned and arbitrary commands never beco
   assert.equal(value.action, "REPAIR");
   assert.equal(value.owner, "harness");
   assert.equal(value.recovery.type, "AUTO_RECOVER");
-  assert.equal(value.command, "claude-foundation advance demo --through archived",
+  assert.equal(value.command, "cloop advance demo --through archived",
     "the agent is never handed the sandbox sync primitive; advance performs the sync");
   assert.equal(value.automaticRecovery.kind, "sandbox-sync");
   const unknown = advanceFailureAction("demo", { decision: {
@@ -224,7 +224,7 @@ test("a repeated user-owned boundary asks once and persists across runtime recre
   assert.deepEqual(f.state(), state, "inspection must not count as an attempt");
   const resumed = await f.runtime().showAdvance("demo", answer(stopped));
   assert.equal(resumed.action, "REPAIR");
-  assert.equal(resumed.resume, "claude-foundation advance demo --through archived");
+  assert.equal(resumed.resume, "cloop advance demo --through archived");
   assert.equal(f.state().advanceRecovery.answers.length, 1);
 });
 
@@ -247,7 +247,7 @@ test("a proof gate's no-progress question is answered through advance and resume
   const gate = noProgressDecision({
     changeId: "demo", phase: "prove", gate: "test",
     findings: [{ id: "f1", message: "test failed" }],
-    resumeCommand: "claude-foundation packet demo --phase build"
+    resumeCommand: "cloop packet demo --phase build"
   });
   const flagsSeen = [];
   const f = fixture({ runProof: async (_id, flags = null) => {
@@ -264,7 +264,7 @@ test("a proof gate's no-progress question is answered through advance and resume
   assert.deepEqual(asked.decision.options.map((row) => row.id),
     gate.decision.options.map((row) => row.id), "every option the gate offered stays answerable");
   for (const row of asked.decision.options)
-    assert.match(row.command, new RegExp(`^claude-foundation advance demo --decision ${row.id} `));
+    assert.match(row.command, new RegExp(`^cloop advance demo --decision ${row.id} `));
   assert.doesNotMatch(JSON.stringify(asked.next || []), /packet/);
 
   const calls = flagsSeen.length;
@@ -284,7 +284,7 @@ test("a proof gate's no-progress question is answered through advance and resume
 test("a pause answer keeps a proof gate question paused, and gate options with commands stay as written", () => {
   const h = recoveryHarness();
   const gate = noProgressDecision({ changeId: "demo", phase: "prove", gate: "test",
-    findings: [{ id: "f1" }], resumeCommand: "claude-foundation packet demo --phase build" });
+    findings: [{ id: "f1" }], resumeCommand: "cloop packet demo --phase build" });
   const asked = h.recovery.observe("demo", { action: "ASK_USER", changeId: "demo",
     reason: gate.decision.summary, decision: gate.decision, next: gate.next });
   h.recovery.resolve("demo", { decision: "pause", "decision-fingerprint": asked.decision.fingerprint,
@@ -294,12 +294,12 @@ test("a pause answer keeps a proof gate question paused, and gate options with c
   const exhausted = recoveryHarness();
   const review = noProgressDecision({ changeId: "demo", phase: "prove", gate: "review",
     options: [{ id: "accept-review-risk", outcome: "Accept",
-      command: "claude-foundation change waive demo --capability review" },
+      command: "cloop change waive demo --capability review" },
     { id: "pause", outcome: "Keep" }] });
   const value = { action: "ASK_USER", changeId: "demo", decision: review.decision };
   const observed = exhausted.recovery.observe("demo", value);
   assert.equal(observed.decision.fingerprint, undefined);
-  assert.equal(observed.decision.options[0].command, "claude-foundation change waive demo --capability review");
+  assert.equal(observed.decision.options[0].command, "cloop change waive demo --capability review");
   assert.equal(exhausted.recovery.pending("demo"), null);
 });
 
@@ -497,7 +497,7 @@ test("stopped configured reviewers return the bounded run route with retained su
       assert.equal(value.action, "RUN_EXTERNAL");
       assert.equal(value.legacyAction, "RUN_CONFIGURED_REVIEW");
       assert.equal(value.requestId, "r1");
-      assert.match(value.command, /^claude-foundation authority run demo --request r1 /);
+      assert.match(value.command, /^cloop authority run demo --request r1 /);
       assert.match(value.command, /--subject-session original-session/);
       assert.match(value.command, /--subject-model model/);
     }
@@ -597,7 +597,7 @@ test("separate CLI host processes retain decisions, protect inspection, and resu
     assert.match(run({ through: "archived" }).reason, /paused/);
     const resumed = run(answer(stopped, "retry", "user:retry-after-pause"));
     assert.equal(resumed.action, "REPAIR");
-    assert.equal(resumed.resume, "claude-foundation advance demo --through archived");
+    assert.equal(resumed.resume, "cloop advance demo --through archived");
     const saved = JSON.parse(readFileSync(statePath, "utf8"));
     assert.equal(saved.advanceRecovery.answers.length, 2);
     assert.equal(saved.version, 2, "legacy runtime schema is accepted without a migration");
@@ -684,7 +684,7 @@ test("REPAIR outcomes require an actionable command or instruction", () => {
   assert.throws(() => lifecycleOutcome({ action: "REPAIR", actor: "agent", command: " " }), /actionable/);
   assert.equal(lifecycleOutcome({ action: "REPAIR", actor: "agent", instruction: "Fix x" }).action, "REPAIR");
   const filled = actionableGuidance({ action: "REPAIR", legacyAction: "REPAIR_PROOF_RESULT", reason: "test failed",
-    next: [{ command: "claude-foundation proof readiness demo" }] });
+    next: [{ command: "cloop proof readiness demo" }] });
   assert.match(filled.instruction, /test failed/);
   assert.match(filled.instruction, /proof readiness demo/);
 });
@@ -702,12 +702,12 @@ test("every coordinator legacyAction and readiness status yields an actionable r
     buildTask: { dispatch: { action: "run-in-session", task: { taskId: "T001" } }, plan },
     buildWait: { dispatch: { action: "wait", reason: "lease held" } },
     buildBlocked: { dispatch: { action: "blocked", reason: "graph cycle" } },
-    buildBlockedCommand: { dispatch: { action: "blocked", reason: "x", nextCommand: "claude-foundation change validate demo" } },
+    buildBlockedCommand: { dispatch: { action: "blocked", reason: "x", nextCommand: "cloop change validate demo" } },
     staleProof: { state: { status: "proven" }, proofIsCurrent: false },
     landReady: { state: { status: "proven" }, proofCursor: { status: "PASS", workspaceHash: "w1" } },
     reviewExhausted: { authorityRequests: [{ requestId: "r1", type: "review", status: "infrastructure-exhausted" }] },
     reviewReady: { authorityRequests: [{ requestId: "r1", type: "review", status: "requested" }],
-      authorityActions: [{ requestId: "r1", command: "claude-foundation authority run demo --request r1" }] },
+      authorityActions: [{ requestId: "r1", command: "cloop authority run demo --request r1" }] },
     externalPending: { authorityRequests: [{ requestId: "r1", type: "acceptance", status: "pending" }] },
     repairBatch: { latestReview: failedReview },
     invalidated: { latestReview: failedReview, workspaceHash: "w2" },
@@ -718,7 +718,7 @@ test("every coordinator legacyAction and readiness status yields an actionable r
     "INFRASTRUCTURE_ERROR", "NEEDS_USER_DECISION", "UNKNOWN_STATUS"]) {
     scenarios[`readiness:${status}`] = { proofPreflight: { status, issues: [`${status} issue`], next: [] } };
     scenarios[`readiness:${status}:next`] = { proofPreflight: { status, issues: ["x"],
-      next: [{ reason: "wire provider", command: "claude-foundation evidence init demo --write" }] } };
+      next: [{ reason: "wire provider", command: "cloop evidence init demo --write" }] } };
   }
   scenarios["readiness:READY"] = { proofPreflight: { status: "READY", issues: [], next: [] } };
   const seen = new Set();
@@ -750,8 +750,8 @@ test("runtime failures without an exact command name the field and expected shap
   const typed = advanceFailureAction("demo", Object.assign(new Error("bad"),
     { details: { field: "evidence.test.minimum", value: 0, expected: "an integer >= 1" } }));
   assert.deepEqual(typed.repairTarget, { field: "evidence.test.minimum", value: 0, expected: "an integer >= 1" });
-  const exact = advanceFailureAction("demo", new Error("fix with 'claude-foundation sandbox create demo --all'"));
-  assert.equal(exact.command, "claude-foundation advance demo",
+  const exact = advanceFailureAction("demo", new Error("fix with 'cloop sandbox create demo --all'"));
+  assert.equal(exact.command, "cloop advance demo",
     "an exact primitive named by an error is routed through advance");
   assert.equal(exact.instruction, undefined);
   const unknown = advanceFailureAction("demo", new Error("root sandbox unavailable"));
@@ -783,7 +783,7 @@ function pendingApplyDecision(kind, resolution, divergentPaths = []) {
 test("interrupted apply resolutions are typed automatic routes; restore-backup never is", () => {
   const settle = automaticRecoveryAction("demo", pendingApplyDecision("apply-pending-recovery", "settle"));
   assert.deepEqual([settle.kind, settle.resolution, settle.command],
-    ["apply-recovery", "settle", "claude-foundation advance demo --through archived"]);
+    ["apply-recovery", "settle", "cloop advance demo --through archived"]);
   const keep = automaticRecoveryAction("demo",
     pendingApplyDecision("manual-recovery", "keep-current", ["src/a.js"]));
   assert.equal(keep.resolution, "keep-current");
@@ -850,7 +850,7 @@ test("an automatic apply recovery that cannot finish goes to the agent, not the 
 
 // --- User-only causes, loop cap, forbidden routes, typed advance decisions ---
 
-const FORBIDDEN = /claude-foundation (?:proof (?:run|advance)|land (?:check|advance)|sandbox sync|sandbox create)/;
+const FORBIDDEN = /cloop (?:proof (?:run|advance)|land (?:check|advance)|sandbox sync|sandbox create)/;
 
 test("a cause only the user can clear asks on the first observation with the fix and resume", async () => {
   const disk = fixture({ prepareBuild: async () => {
@@ -861,7 +861,7 @@ test("a cause only the user can clear asks on the first observation with the fix
   assert.equal(full.boundary, "user-environment");
   assert.equal(full.decision.cause, "disk-full");
   assert.match(full.decision.fix, /Free disk space/);
-  assert.equal(full.decision.options[0].command, "claude-foundation advance demo --through build");
+  assert.equal(full.decision.options[0].command, "cloop advance demo --through build");
   assert.equal(disk.state().advanceRecovery?.attempts?.length || 0, 0, "nothing is counted or pending");
 
   const login = fixture({ prepareBuild: async () => {
@@ -872,7 +872,7 @@ test("a cause only the user can clear asks on the first observation with the fix
   assert.equal(reviewer.action, "ASK_USER");
   assert.equal(reviewer.decision.cause, "reviewer-login");
   assert.match(reviewer.reason, /claude \/login/);
-  assert.equal(reviewer.resume, "claude-foundation advance demo --through proven");
+  assert.equal(reviewer.resume, "cloop advance demo --through proven");
 
   const cases = [
     [{ action: "REPAIR", legacyAction: "REPAIR_BUILD_RUNTIME", reason: "npm ERR! code E401 Unable to authenticate" }, "registry-auth"],
@@ -907,7 +907,7 @@ test("a queued resource wait is never counted by the recovery ladder", () => {
   const h = recoveryHarness();
   const wait = { action: "WAIT", changeId: "demo", actor: "harness", legacyAction: "WAIT_RESOURCE",
     boundary: "resource", reason: "queued behind active change other",
-    wait: { owner: "harness", condition: "other lands", checkCommand: "claude-foundation advance demo" } };
+    wait: { owner: "harness", condition: "other lands", checkCommand: "cloop advance demo" } };
   for (let index = 0; index < 6; index++)
     assert.equal(h.recovery.observe("demo", wait).action, "WAIT");
   assert.deepEqual(h.state().advanceRecovery?.attempts || [], []);
@@ -917,7 +917,7 @@ test("a queued resource wait is never counted by the recovery ladder", () => {
 test("a Build verify that keeps failing identically is counted; changed output or content resets", () => {
   const h = recoveryHarness();
   const edit = (output, ms = 12) => ({ action: "EDIT", changeId: "demo", legacyAction: "EXECUTE_TASK",
-    reason: "implement T001", resume: "claude-foundation advance demo --through build",
+    reason: "implement T001", resume: "cloop advance demo --through build",
     verificationFailures: [{ taskId: "T001", command: "npm test", exitCode: 1,
       output: `${output} (${ms}ms) at 2026-10-0${ms % 9}T01:02:03.000Z` }] });
   assert.equal(h.recovery.observe("demo", edit("expected 2 got 3", 10)).action, "EDIT");
@@ -948,7 +948,7 @@ test("a Build verify that keeps failing identically is counted; changed output o
 test("budget windows that keep reopening without progress ask with the evidence; an answer resets the count", () => {
   const h = recoveryHarness({ budget: { autoContinuation: { count: 1 } } });
   const working = { action: "EDIT", changeId: "demo", reason: "implement T001",
-    resume: "claude-foundation advance demo --through build" };
+    resume: "cloop advance demo --through build" };
   assert.equal(h.recovery.observe("demo", working).action, "EDIT");
   h.set({ budget: { autoContinuation: { count: 3, at: "2026-10-06T00:00:00.000Z" } } });
   assert.equal(h.recovery.observe("demo", working).action, "EDIT", "two reopened windows still continue");
@@ -957,7 +957,7 @@ test("budget windows that keep reopening without progress ask with the evidence;
   assert.equal(asked.action, "ASK_USER");
   assert.equal(asked.boundary, "budget-no-progress");
   assert.equal(asked.decision.repetition.rounds, 3);
-  assert.match(asked.decision.options[0].command, /^claude-foundation advance demo --decision retry /);
+  assert.match(asked.decision.options[0].command, /^cloop advance demo --decision retry /);
   const answer = h.recovery.resolve("demo", { decision: "retry", "decision-fingerprint": asked.decision.fingerprint,
     "decision-ref": "user:keep-going", reason: "narrow the scope" });
   assert.equal(answer.through, "build");
@@ -972,28 +972,28 @@ test("budget windows that keep reopening without progress ask with the evidence;
 
 test("no agent-facing route names a forbidden lifecycle primitive", () => {
   const routed = agentSafeRoutes({ changeId: "demo", action: "REPAIR",
-    resume: "claude-foundation advance demo --through archived",
-    command: "claude-foundation sandbox sync demo --resolve openspec/changes/demo",
-    reason: "run 'claude-foundation land check demo' after repair",
-    next: [{ kind: "land", command: "claude-foundation land check demo" },
-      { kind: "retry", command: "claude-foundation proof advance demo --retry-indeterminate --decision-ref <ref>" }],
-    decision: { kind: "x", summary: "then 'claude-foundation proof run demo'",
-      options: [{ id: "sync", outcome: "replay: 'claude-foundation sandbox sync demo'" }] } });
+    resume: "cloop advance demo --through archived",
+    command: "cloop sandbox sync demo --resolve openspec/changes/demo",
+    reason: "run 'cloop land check demo' after repair",
+    next: [{ kind: "land", command: "cloop land check demo" },
+      { kind: "retry", command: "cloop proof advance demo --retry-indeterminate --decision-ref <ref>" }],
+    decision: { kind: "x", summary: "then 'cloop proof run demo'",
+      options: [{ id: "sync", outcome: "replay: 'cloop sandbox sync demo'" }] } });
   assert.doesNotMatch(JSON.stringify(routed), FORBIDDEN);
-  assert.equal(routed.command, "claude-foundation advance demo --through archived");
-  assert.equal(routed.next[1].command, "claude-foundation advance demo --through archived");
+  assert.equal(routed.command, "cloop advance demo --through archived");
+  assert.equal(routed.next[1].command, "cloop advance demo --through archived");
   const building = agentSafeRoutes({ changeId: "demo", action: "REPAIR",
-    resume: "claude-foundation advance demo --through build",
-    command: "claude-foundation proof run demo", reason: "rerun 'claude-foundation sandbox sync demo'" });
-  assert.equal(building.command, "claude-foundation advance demo --through proven");
-  assert.match(building.reason, /claude-foundation advance demo --through build/,
+    resume: "cloop advance demo --through build",
+    command: "cloop proof run demo", reason: "rerun 'cloop sandbox sync demo'" });
+  assert.equal(building.command, "cloop advance demo --through proven");
+  assert.match(building.reason, /cloop advance demo --through build/,
     "a sandbox primitive never widens the route to Land");
   const inspect = agentSafeRoutes({ changeId: "demo", action: "ASK_USER",
-    command: "claude-foundation land advance demo" });
-  assert.equal(inspect.command, "claude-foundation advance demo --through archived");
+    command: "cloop land advance demo" });
+  assert.equal(inspect.command, "cloop advance demo --through archived");
   const authority = agentSafeRoutes({ changeId: "demo", action: "RUN_EXTERNAL",
-    command: "claude-foundation authority run demo --request r1 --subject-actor a" });
-  assert.equal(authority.command, "claude-foundation authority run demo --request r1 --subject-actor a",
+    command: "cloop authority run demo --request r1 --subject-actor a" });
+  assert.equal(authority.command, "cloop authority run demo --request r1 --subject-actor a",
     "harness-runnable reviewer routes are unchanged");
 });
 
@@ -1005,7 +1005,7 @@ test("an indeterminate provider run is a recorded advance decision whose retry r
     if (indeterminate) return { status: "ACTION_REQUIRED", stage: "execution-indeterminate",
       providers: ["test"], next: [{ kind: "decide-indeterminate-execution",
         reason: "A prior controller stopped after reserving provider execution.",
-        command: "claude-foundation advance demo --through proven" }] };
+        command: "cloop advance demo --through proven" }] };
     f.setState({ status: "proven" });
     return { status: "PASS" };
   } });
@@ -1014,7 +1014,7 @@ test("an indeterminate provider run is a recorded advance decision whose retry r
   assert.equal(asked.legacyAction, "DECIDE_INDETERMINATE_EXECUTION");
   assert.doesNotMatch(JSON.stringify(asked), FORBIDDEN);
   assert.match(asked.decision.options.find((row) => row.id === "retry").command,
-    /^claude-foundation advance demo --decision retry --decision-fingerprint /);
+    /^cloop advance demo --decision retry --decision-fingerprint /);
   assert.equal((await f.runtime().advanceThrough("demo", "proven")).decision.fingerprint,
     asked.decision.fingerprint, "the question stays pending until answered");
   assert.equal(flags.length, 1, "a pending decision never re-runs provider side effects");
@@ -1034,8 +1034,8 @@ test("an amended-agreement conflict is answered through advance and resolves the
   const f = fixture({
     prepareBuild: async () => {
       if (conflict) throw userDecisionError("AMENDED_AGREEMENT_CONFLICT", "The target agreement changed.", [
-        { id: "merge", outcome: "Merge, approve, then synchronize.", command: "claude-foundation sandbox sync demo --resolve openspec/changes/demo" },
-        { id: "retain", outcome: "Keep the isolated agreement.", command: "claude-foundation sandbox sync demo --resolve openspec/changes/demo" },
+        { id: "merge", outcome: "Merge, approve, then synchronize.", command: "cloop sandbox sync demo --resolve openspec/changes/demo" },
+        { id: "retain", outcome: "Keep the isolated agreement.", command: "cloop sandbox sync demo --resolve openspec/changes/demo" },
         { id: "pause", outcome: "Pause." }], "merge");
     },
     synchronizeAgreement: async (id, flags) => { synchronized.push([id, flags]); conflict = false; return true; }
@@ -1064,7 +1064,7 @@ test("a full disk in a harness handoff asks the user at the source, even on insp
   assert.equal(value.decision.category, "resource");
   assert.doesNotMatch(value.instruction || "", /foundation\.json/,
     "no repair of workspace or foundation.json is handed out for a full disk");
-  assert.equal(value.decision.options[0].command, "claude-foundation advance demo --through build");
+  assert.equal(value.decision.options[0].command, "cloop advance demo --through build");
   assert.equal(value.userState, "NEEDS_DECISION");
 
   const typed = advanceFailureAction("demo", Object.assign(new Error("write failed"), {
@@ -1153,7 +1153,7 @@ test("visual drift is an advance-owned decision whose answer carries the user's 
   });
   assert.equal(asked.legacyAction, "DECIDE_VISUAL_DRIFT");
   assert.match(asked.decision.options.find((row) => row.id === "accept").command,
-    /^claude-foundation advance demo --decision accept --decision-fingerprint /);
+    /^cloop advance demo --decision accept --decision-fingerprint /);
   const resolved = recovery.resolve("demo", { decision: "accept",
     "decision-fingerprint": asked.decision.fingerprint, "decision-ref": "user:accept",
     reason: "intended" });

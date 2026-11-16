@@ -32,41 +32,41 @@ function providerReuse(packet) {
 function phasePlan(changeId, phase, pendingTaskCount) {
   if (phase === "change") return {
     boundary: "change-complete",
-    command: `claude-foundation change validate ${changeId}`,
+    command: `cloop change validate ${changeId}`,
     includes: ["contract", "traceability", "provider-wiring", "risk-policy"],
     avoidBefore: []
   };
   if (phase === "build") return {
     boundary: "build-complete",
-    command: pendingTaskCount > 0 ? null : `claude-foundation advance ${changeId} --inspect`,
+    command: pendingTaskCount > 0 ? null : `cloop advance ${changeId} --inspect`,
     deferredCommand: pendingTaskCount > 0
-      ? `claude-foundation advance ${changeId} --inspect` : null,
+      ? `cloop advance ${changeId} --inspect` : null,
     includes: [
       "change-validation", "topology", "changed-surface", "critical-cases",
       "leases", "provider-availability"
     ],
     avoidBefore: [
-      `claude-foundation change validate ${changeId}`
+      `cloop change validate ${changeId}`
     ]
   };
   if (phase === "prove") return {
     boundary: "prove",
-    command: `claude-foundation advance ${changeId} --through proven`,
+    command: `cloop advance ${changeId} --through proven`,
     includes: [
       "change-validation", "readiness", "provider-dag", "receipt-reuse",
       "review-routing", "acceptance-routing", "proof-finalization"
     ],
     avoidBefore: [
-      `claude-foundation change validate ${changeId}`,
-      `claude-foundation advance ${changeId} --inspect`
+      `cloop change validate ${changeId}`,
+      `cloop advance ${changeId} --inspect`
     ]
   };
   if (phase === "land") return {
     boundary: "land",
-    command: `claude-foundation advance ${changeId} --through archived`,
+    command: `cloop advance ${changeId} --through archived`,
     includes: ["proof-freshness", "handoffs", "apply-recovery", "archive"],
     avoidBefore: [
-      `claude-foundation handoff status ${changeId}`
+      `cloop handoff status ${changeId}`
     ]
   };
   return {

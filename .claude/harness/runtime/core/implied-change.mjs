@@ -59,6 +59,6 @@ export function impliedChangeValues(command, values, listActive, fail) {
       `${active.length ? `\n  active: ${active.join(", ")}` : ""}`);
   if (active.length > 1)
     fail(`${command} needs a change id; ${active.length} changes are active: ${active.join(", ")}\n` +
-      "  pass one, or run `claude-foundation current` to see which is active");
+      "  pass one, or run `cloop current` to see which is active");
   return [active[0], ...values];
 }

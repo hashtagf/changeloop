@@ -628,7 +628,7 @@ assert_file_exists "the review receipt is written" ".foundation/receipts/$C/revi
 # first word left the reader with a true statement and no way forward.
 two_word="$($F proof run 2>&1 || true)"
 assert_contains "a public two-word form names its internal command" "$two_word" "internal name: proof-run"
-assert_contains "a public two-word form names the CLI that accepts it" "$two_word" "claude-foundation proof run"
+assert_contains "a public two-word form names the CLI that accepts it" "$two_word" "cloop proof run"
 bare_second="$($F change new x 2>&1 || true)"
 assert_contains "a public form whose internal name is the second word resolves too" \
   "$bare_second" "internal name: new"

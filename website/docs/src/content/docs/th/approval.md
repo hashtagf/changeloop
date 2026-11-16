@@ -92,7 +92,7 @@ harness ไม่เขียนหน้านี้ แต่คำนวณ�
 packet ได้ เมื่อคุณขอให้แก้หน้า agent จะแก้ agreement ในรอบเดียวกัน หน้ากับ agreement จึงไม่แยกจากกัน
 ถ้าเครื่องมือของคุณมี design canvas agent จะสร้างหน้าบน canvas เป็นเฟรมที่มีเลขลำดับ
 หนึ่งเฟรมต่อหน้าจอหรือสถานะ และเก็บไฟล์ที่ส่งออกไว้ด้วย agent อ่านข้อเท็จจริงชุดเดียวกัน
-ได้ด้วย `claude-foundation package <change>` ซึ่งพิมพ์เป็น JSON และไม่เขียนไฟล์
+ได้ด้วย `cloop package <change>` ซึ่งพิมพ์เป็น JSON และไม่เขียนไฟล์
 
 **สิ่งที่หน้าต้องแสดง** งานแต่ละชนิดมีสิ่งที่ต้องแสดงของตัวเอง บวกก่อนและหลัง และถ้างาน
 พลาดได้ก็ต้องมีกรณีพลาดพร้อมวิธีกู้คืน:
@@ -246,10 +246,10 @@ change นั้นใช้ และทุกอย่างที่ข้อ
 
 ```bash
 # ไม่มีอะไรเชิงอัตวิสัยต้องเซ็น — การตรวจแบบ deterministic คือทั้งหมดแล้ว
-claude-foundation change resolve <change> --acceptance-not-required
+cloop change resolve <change> --acceptance-not-required
 
 # ต้องมีคนดูแล้วบอกว่าใช่
-claude-foundation change resolve <change> \
+cloop change resolve <change> \
   --acceptance-required --acceptance-reason "<ทำไมต้องให้คนตัดสิน>"
 ```
 
@@ -309,7 +309,7 @@ Acceptance ถูกปฏิเสธที่นั่น ให้ถอน�
 ทางปกติเริ่มด้วยคำสั่งที่ทำต่อได้คำสั่งเดียว
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 Coordinator เรียก compatible proof primitive แล้วสร้างหรือ reuse request และไม่

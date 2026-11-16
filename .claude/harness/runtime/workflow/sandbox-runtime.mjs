@@ -207,7 +207,7 @@ export function showSandboxInspection(context, id, flags = {}) {
     if (result.workspaceIsolation.drift === "target-moved")
       context.output.log(`  target drift: base ${
         String(result.workspaceIsolation.baseHead).slice(0, 8)} -> target ${
-        String(result.workspaceIsolation.targetHead).slice(0, 8)}; run 'claude-foundation sandbox sync ${id}' to replay onto it`);
+        String(result.workspaceIsolation.targetHead).slice(0, 8)}; run 'cloop sandbox sync ${id}' to replay onto it`);
     if (result.workspaceIsolation.selectionError)
       context.output.log(`  repository selection: invalid (${result.workspaceIsolation.selectionError})`);
     for (const repository of result.workspaceIsolation.repositories || [])
@@ -387,7 +387,7 @@ export function assertSandboxGroundingPortable(context, id, state) {
   if (portability.length)
     context.fail(`grounding readSet is not sandbox-portable: ${
       portability.map((entry) => `${entry.repository}:${entry.path} (${entry.reason})`).join(", ")
-    } — move the cited decision or evidence into openspec/changes/${id}/ or refresh its readSet digest through one semantic amendment, then resume with 'claude-foundation advance ${id} --through ${resumeThrough(state)}'`);
+    } — move the cited decision or evidence into openspec/changes/${id}/ or refresh its readSet digest through one semantic amendment, then resume with 'cloop advance ${id} --through ${resumeThrough(state)}'`);
 }
 
 export function plannedGroundingPortabilityStatus(source, pathExists) {
@@ -754,11 +754,11 @@ export function reportSandboxSync({ id, state, movement, forwarded, conflicts,
     forwarded ? `\n  fast-forwarded: ${forwarded} file(s) the target moved and the sandbox left alone` : ""
   }`);
   for (const rel of conflicts)
-    log(`CONFLICT ${rel}: the target and the sandbox both changed this file since the baseline; merge the target's version into the sandbox copy (no conflict markers), then resume with 'claude-foundation advance ${id} --through <stage>'; the copy settles once it provably contains the target's edit. Land stays blocked until every conflict is resolved.`);
+    log(`CONFLICT ${rel}: the target and the sandbox both changed this file since the baseline; merge the target's version into the sandbox copy (no conflict markers), then resume with 'cloop advance ${id} --through <stage>'; the copy settles once it provably contains the target's edit. Land stays blocked until every conflict is resolved.`);
   for (const conflict of movement?.conflicts || [])
     log(`CONFLICT ${movement.multiRepository ? `${conflict.repository}:` : ""}${conflict.path}: the sandbox diff no longer applies to the moved target; merge the target's version into the named repository sandbox worktree, then rerun sandbox sync. Land stays blocked until every repository sandbox replays onto its current commit.`);
   if (movement && !movement.rebased && !movement.conflicts.length)
-    log(`TARGET MOVED ${id}: rerun 'claude-foundation sandbox sync ${id}' after repairing the named repository replay.`);
+    log(`TARGET MOVED ${id}: rerun 'cloop sandbox sync ${id}' after repairing the named repository replay.`);
 }
 
 export function sandboxCreatePreflight(context, id, flags = {}) {
@@ -919,7 +919,7 @@ export function repairSelectedRepositories(context, id, state, repositories) {
       delete records[record.id];
     }
     context.saveRuntime(state);
-    context.fail(`${error.message}; existing work was preserved — inspect it with 'claude-foundation sandbox inspect ${id}', retry repair with 'claude-foundation sandbox create ${id} --all', or retire the change with 'claude-foundation change abandon ${id} --reason <reason> --decision-ref <ref>'`);
+    context.fail(`${error.message}; existing work was preserved — inspect it with 'cloop sandbox inspect ${id}', retry repair with 'cloop sandbox create ${id} --all', or retire the change with 'cloop change abandon ${id} --reason <reason> --decision-ref <ref>'`);
   }
 }
 
@@ -2246,9 +2246,9 @@ export function createSandboxRuntime({
       `The target agreement for '${id}' changed after isolation; sandbox sync would overwrite the active amended agreement. ` +
       "Compare both packets and resolve the intended agreement before continuing.", [
         { id: "merge", outcome: "Merge the intended target changes into the isolated agreement, approve it, then synchronize.",
-          command: `claude-foundation sandbox sync ${id} --resolve ${packet}` },
+          command: `cloop sandbox sync ${id} --resolve ${packet}` },
         { id: "retain", outcome: "Explicitly keep the approved isolated agreement instead of the competing target edits, then synchronize.",
-          command: `claude-foundation sandbox sync ${id} --resolve ${packet}` },
+          command: `cloop sandbox sync ${id} --resolve ${packet}` },
         { id: "pause", outcome: "Preserve both packets and pause until their intended content is decided." }
       ], "merge");
     error.decision.paths = [changePath(id), join(state.workspace.path, packet)];

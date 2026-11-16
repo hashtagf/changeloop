@@ -7,10 +7,11 @@
 
 import { realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { normalizeHarnessCliInvocations } from "../harness/runtime/core/shell-mutation-policy.mjs";
 
 export function detachedAuthorityCommand(command) {
-  const stripped = String(command || "").replace(/(['"])(?:\\.|(?!\1).)*\1/g, " ");
-  if (!/\b(?:claude-foundation|foundation\.mjs)\s+authority(?:-|\s+)run\b/.test(stripped))
+  const stripped = normalizeHarnessCliInvocations(String(command || "")).replace(/(['"])(?:\\.|(?!\1).)*\1/g, " ");
+  if (!/\b(?:cloop|foundation\.mjs)\s+authority(?:-|\s+)run\b/.test(stripped))
     return false;
   return /(^|[;&|()]\s*)nohup\b/.test(stripped) ||
     /&\s*(?:[;)]|$)/m.test(stripped) ||

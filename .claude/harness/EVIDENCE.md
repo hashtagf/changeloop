@@ -115,7 +115,7 @@ command never inherits the harness's own session state
 (`CLAUDE_FOUNDATION_PROJECT`, `FOUNDATION_WORKSPACE_ROOT`,
 `FOUNDATION_CALLER_CWD`, `FOUNDATION_CLAUDE_SESSION_ID`,
 `FOUNDATION_CLAUDE_TRANSCRIPT_PATH`, `FOUNDATION_PUBLIC_OPERATION`,
-`FOUNDATION_ACTIVE_PHASE`), so a test that runs `claude-foundation` in its
+`FOUNDATION_ACTIVE_PHASE`), so a test that runs `cloop` in its
 own fixture acts on that fixture; the provider contract variables such as
 `FOUNDATION_CHANGE_ID` and `FOUNDATION_REPOSITORIES_FILE` are still set, and a
 value the provider declares in `env` or `envFrom` still reaches it.
@@ -171,9 +171,9 @@ primitives (`evidence detect`, `evidence init --write`) itself;
 primitives remain dispatchable for diagnosis:
 
 ```bash
-claude-foundation evidence detect <change>
-claude-foundation evidence init <change>
-claude-foundation evidence doctor <change>
+cloop evidence detect <change>
+cloop evidence init <change>
+cloop evidence doctor <change>
 ```
 
 `detect` reads repository-owned manifests and configuration without executing
@@ -260,13 +260,13 @@ An external provider may declare `ci.issuer` and an Ed25519 `ci.publicKey` in
 `execution.yaml`. Import only its signed, workspace-bound envelope:
 
 ```bash
-claude-foundation evidence verify-ci <change> <provider> signed-result.json
+cloop evidence verify-ci <change> <provider> signed-result.json
 ```
 
 The envelope binds the change, provider, workspace hash, optional Git commit,
 run URL, status, observation, and artifact SHA-256 digests. The hash it must
 carry is the one that provider binds, which
-`claude-foundation hash <change> <provider>` prints; without a provider the same
+`cloop hash <change> <provider>` prints; without a provider the same
 command prints the change's workspace hash. An invalid signature,
 stale workspace, wrong issuer, or unsigned passing artifact is rejected before
 a receipt is written.
@@ -294,7 +294,7 @@ agent packet. The integration records that envelope through the existing
 command surface:
 
 ```bash
-claude-foundation evidence record <change> semantic-acceptance \
+cloop evidence record <change> semantic-acceptance \
   --envelope signed-semantic-result.json
 ```
 
@@ -307,7 +307,7 @@ source critical-case receipt invalidate it and block Proof and Land.
 Use unified `advance` as the normal resumable path:
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 It invokes the compatible `proof advance` primitive internally, executes
@@ -387,7 +387,7 @@ other adapter produces a discovered count.
 Configured commands run from the active workspace. The normal path is:
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 `advance <change> --inspect` reads the next action without running anything.
@@ -401,7 +401,7 @@ all: it appears under `advisories` in readiness, the internal `proof-plan` diagn
 record, and does not block.
 
 When `quality/foundation-quality.json` is committed, evidence bootstrap can
-wire `claude-foundation quality run --enforce` as the change's static-analysis
+wire `cloop quality run --enforce` as the change's static-analysis
 provider. It resolves `FOUNDATION_CHANGE_ID`, runs in selected repository
 workspaces, and emits one non-averaged lane per repository. Missing quality
 capabilities remain explicit `unsupported` or `unavailable` assurance and are
@@ -415,7 +415,7 @@ to the change is copied into the packet and serves only as the reference the
 [visual](#visual) provider compares screenshots against; it never proves a
 claim.
 
-Preview runs (`claude-foundation preview`) are equally non-authoritative. Their
+Preview runs (`cloop preview`) are equally non-authoritative. Their
 receipts carry `kind: "preview"`, live under `.foundation/previews/<change>/`,
 and are refused as `preview-evidence` wherever they appear, including when
 copied into the receipt store; artifacts and references under
@@ -770,7 +770,7 @@ Every review outcome that stops short of a verdict (`configured-reviewer-
 infrastructure-exhausted`, `main-session-provenance-unavailable`, and bare
 `authority run` refusals) carries `next.command`, and `authority run` routes in
 `advance` output are built from the stored request and these variables, e.g.
-`claude-foundation authority run <id> --request <rid> --subject-actor
+`cloop authority run <id> --request <rid> --subject-actor
 claude-main-session --subject-session <sid> --subject-provider-family anthropic
 --subject-model-family <family> --subject-model <model>` with every value
 filled when known. A value neither the request nor the environment knows stays a
@@ -1027,7 +1027,7 @@ has exactly three honest exits, and the blocker output prints all three:
 - withdraw the gate on record — right when the user decides to land without it:
 
 ```sh
-claude-foundation change waive <change> --capability <capability> \
+cloop change waive <change> --capability <capability> \
   --reason <why> --decision-ref <host-user-decision>
 ```
 

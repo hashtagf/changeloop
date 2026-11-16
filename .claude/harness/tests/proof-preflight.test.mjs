@@ -40,19 +40,19 @@ test("preflight blockers preserve every blocker category", () => {
 test("preflight failure renders recovery and full-detail route", () => {
   const value = readiness({ status: "NEEDS_USER_DECISION" });
   assert.equal(proofPreflightFailure("change", value, ["review required"], [
-    "    claude-foundation authority request change --type review"
+    "    cloop authority request change --type review"
   ]), "proof preflight failed: review required\n\nhow to clear this (NEEDS_USER_DECISION):\n" +
-    "    claude-foundation authority request change --type review\n\n" +
-    "full detail: claude-foundation advance change --inspect");
+    "    cloop authority request change --type review\n\n" +
+    "full detail: cloop advance change --inspect");
   assert.equal(proofPreflightFailure("change", value, ["review required"], []),
-    "proof preflight failed: review required\n\nfull detail: claude-foundation advance change --inspect");
+    "proof preflight failed: review required\n\nfull detail: cloop advance change --inspect");
 });
 
 test("preflight operation rejects blockers with rendered recovery", () => {
   const value = readiness({
     status: "CONFIGURATION_ERROR",
     issues: ["configuration drift"],
-    next: [{ verify: "claude-foundation change validate change" }]
+    next: [{ verify: "cloop change validate change" }]
   });
   assert.throws(() => proofPreflightOperation({
     proofReadinessValue: (id, stage) => {
@@ -60,7 +60,7 @@ test("preflight operation rejects blockers with rendered recovery", () => {
       assert.equal(stage, "land");
       return value;
     },
-    recoveryLines: () => ["    claude-foundation change validate change"],
+    recoveryLines: () => ["    cloop change validate change"],
     fail: (message) => { throw new Error(message); }
   }, "change", "land"), /how to clear this \(CONFIGURATION_ERROR\):[\s\S]*change validate/);
 });

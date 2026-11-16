@@ -509,7 +509,7 @@ passing `visual` receipt. In `visual-prototype-drift` the prototype shows a
 banner the issue forbids, so after two repair rounds `advance` asks the
 `visual-drift` decision; the runner stops there as `needs-user-decision`
 (kind `visual-drift`). Run it with `--keep-project`, answer with the printed
-`claude-foundation advance <change> --decision accept ...` command in the kept
+`cloop advance <change> --decision accept ...` command in the kept
 project, then continue with `--resume-project <path>`. Both rows set
 `baseline_arm: false`: their prompts are harness-specific and the no-harness
 arm refuses a seed containing `.foundation/`. The `visual` reviewer is a

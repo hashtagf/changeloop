@@ -145,4 +145,4 @@ Use your real name and a reachable email address.
 
 Use the issue templates. For bugs, include your Foundation `VERSION`, host
 (Claude Code, Cursor, OpenCode, Codex, Pi), and the output of
-`claude-foundation doctor` where relevant — they shortcut most round trips.
+`cloop doctor` where relevant — they shortcut most round trips.

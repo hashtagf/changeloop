@@ -7,14 +7,13 @@ import { delimiter, join } from 'node:path';
 
 export const BUNDLE = /^\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?-api\d+-[a-f0-9]{16}$/;
 
-// CHANGELOOP_MACHINE_CLI ("none" disables), else cloop, else claude-foundation
-// on PATH. A CLI inside a Pi bundle is not the machine's.
+// CHANGELOOP_MACHINE_CLI ("none" disables), else cloop on PATH. A CLI inside a Pi bundle is not the machine's.
 export function machineCli(base, env = process.env) {
   const configured = env.CHANGELOOP_MACHINE_CLI;
   if (configured === 'none') return undefined;
   if (configured) return configured;
   const releases = join(base, 'releases');
-  for (const name of ['cloop', 'claude-foundation'])
+  for (const name of ['cloop'])
     for (const directory of (env.PATH || '').split(delimiter).filter(Boolean)) {
       const candidate = join(directory, name);
       try {

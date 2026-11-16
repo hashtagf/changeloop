@@ -35,7 +35,7 @@ export function landUndoPlan({
   const unavailable = [];
   if (state?.status !== "archived")
     refusals.push(`change '${state?.id}' is not archived; an unfinished Land is resumed or ` +
-      `settled with 'claude-foundation advance ${state?.id} --through archived'`);
+      `settled with 'cloop advance ${state?.id} --through archived'`);
   if (Object.keys(state?.repositories || {}).some((repository) => repository !== "root"))
     refusals.push("Land undo covers a single-repository projection; this change landed into " +
       "several repositories");

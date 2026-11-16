@@ -88,7 +88,7 @@ function updateActions(status) {
   if (["project-refresh-required", "both-outdated"].includes(status))
     actions.push({
       type: "refresh-project",
-      command: "claude-foundation init . --yes"
+      command: "cloop init . --yes"
     });
   return actions;
 }
@@ -384,8 +384,8 @@ export function upgradeCompatibilityDiagnostics({
           "state-and-agreement-preserved",
           "receipts-revalidated-against-current-protocols"
         ],
-        recovery: "claude-foundation change validate " + change.id + " && " +
-          "claude-foundation advance " + change.id + " --inspect"
+        recovery: "cloop change validate " + change.id + " && " +
+          "cloop advance " + change.id + " --inspect"
       };
     });
   return {
@@ -482,7 +482,7 @@ async function main() {
     return;
   }
   if (operation !== "check" || args.some((arg) => !["--json", "--refresh"].includes(arg))) {
-    console.error("usage: claude-foundation update check [--refresh] [--json]");
+    console.error("usage: cloop update check [--refresh] [--json]");
     process.exitCode = 1;
     return;
   }

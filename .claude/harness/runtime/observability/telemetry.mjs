@@ -99,7 +99,7 @@ export const TOOL_CALL_CATEGORIES = Object.freeze([
   "productWrites", "testRuns", "other"
 ]);
 
-const HARNESS_CLI = /(?:^|[\s;&|(/"'])(?:claude-foundation|foundation\.mjs|\.claude\/harness\/cli\.sh)\b/;
+const HARNESS_CLI = /(?:^|[\s;&|(/"'])(?:cloop|claude-foundation|foundation\.mjs|\.claude\/harness\/cli\.sh)\b/;
 const TEST_RUN = /(?:^|[\s;&|(])(?:node\s+(?:--[\w-]+(?:=\S+)?\s+)*--test|(?:npm|pnpm|yarn|bun)\s+(?:run\s+)?test\b|npx\s+(?:vitest|jest|mocha)|vitest|jest|mocha|pytest|python3?\s+-m\s+(?:pytest|unittest)|go\s+test|cargo\s+test)\b/;
 const HARNESS_DOC_PATH = /(?:^|[\s/"'=])(?:\.claude\/|WORKFLOW\.md\b)/;
 const STATE_PATH = /(?:^|[\s/"'=])(?:\.foundation\/|openspec\/)/;

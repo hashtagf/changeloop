@@ -275,9 +275,9 @@ test("land check phases preserve every refusal and ready route", () => {
     .commands.find((row) => row.name === "doctor").usage;
   const doctorStages = doctorUsage.match(/--stage ([a-z|]+)/)[1].split("|");
   assert.throws(() => unisolated.runtime.landCheck(unisolated.id), (error) => {
-    const stage = error.message.match(/claude-foundation doctor --stage (\S+) --change /)?.[1];
+    const stage = error.message.match(/cloop doctor --stage (\S+) --change /)?.[1];
     return doctorStages.includes(stage) &&
-      /claude-foundation advance .* --through archived/.test(error.message) &&
+      /cloop advance .* --through archived/.test(error.message) &&
       !/recreate the sandbox/.test(error.message);
   });
     const dirty = make({
@@ -482,7 +482,7 @@ test("land check phases preserve every refusal and ready route", () => {
       }] },
       telemetry: {
         classification: "complete",
-        recoveryActions: [{ command: "claude-foundation telemetry sync" }]
+        recoveryActions: [{ command: "cloop telemetry sync" }]
       }
     });
     assert.equal(rich.runtime.landCheck(rich.id).telemetry.classification, "complete");

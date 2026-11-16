@@ -25,7 +25,7 @@ function exportSessionIdentity(input) {
     `export FOUNDATION_CLAUDE_TRANSCRIPT_PATH=${shellQuote(input.transcript_path)}\n`);
 }
 
-// A source-checkout install leaves no `claude-foundation` on PATH, yet every
+// A source-checkout install leaves no `cloop` on PATH, yet every
 // next step the harness prints names it. The installer writes a project-local
 // shim; this puts it on the session's PATH only when nothing already resolves,
 // so a Homebrew or other global CLI keeps precedence. A non-executable file
@@ -38,9 +38,9 @@ function executableFile(path) {
 function exportCliPath() {
   const envFile = process.env.CLAUDE_ENV_FILE;
   const bin = join(ROOT, ".foundation", "bin");
-  if (!envFile || !existsSync(join(bin, "claude-foundation"))) return;
+  if (!envFile || !existsSync(join(bin, "cloop"))) return;
   const resolves = (process.env.PATH || "").split(delimiter)
-    .some((dir) => dir && executableFile(join(dir, "claude-foundation")));
+    .some((dir) => dir && executableFile(join(dir, "cloop")));
   if (!resolves) appendFileSync(envFile, `export PATH=${shellQuote(bin)}:"$PATH"\n`);
 }
 
@@ -104,7 +104,7 @@ function workflowDigest() {
         lines.push(`    Build shell: run \`cd ${
           shellDisplayArgument(state.workspace.path)}\` once, then plain commands; the shell stays there.`);
     }
-    lines.push("  Proof freshness is not checked here; run `claude-foundation changes` for readiness.");
+    lines.push("  Proof freshness is not checked here; run `cloop changes` for readiness.");
   }
 
   // Shapes the host refuses as permission prompts in every phase, named once
@@ -131,7 +131,7 @@ function workflowDigest() {
     const preview = orphans.slice(0, ORPHAN_PREVIEW).join(", ");
     const rest = orphans.length > ORPHAN_PREVIEW
       ? ` (+${orphans.length - ORPHAN_PREVIEW} more)` : "";
-    lines.push(`  orphan runtime state, no active change: ${preview}${rest}; run \`claude-foundation changes\`.`);
+    lines.push(`  orphan runtime state, no active change: ${preview}${rest}; run \`cloop changes\`.`);
   }
   return lines.join("\n");
 }

@@ -22,7 +22,7 @@ export const USER_AUTHORITY_BOUNDARIES = new Set([
 // Lifecycle primitives AGENT.md does not let the agent run. A route that names
 // one is rewritten to the `advance` route that performs the same step.
 const PRIMITIVE_COMMAND =
-  /claude-foundation\s+(proof|land|sandbox|evidence)\s+(?:run|advance|execute|collect|finalize|check|apply|recover|archive|sync|create|copy-path|init|upgrade)\b[^'"`\n;]*/g;
+  /cloop\s+(proof|land|sandbox|evidence)\s+(?:run|advance|execute|collect|finalize|check|apply|recover|archive|sync|create|copy-path|init|upgrade)\b[^'"`\n;]*/g;
 
 function routeThrough(value) {
   return String(value?.resume || "")
@@ -35,11 +35,11 @@ export function agentLifecycleRoute(id, family, through = null) {
   const target = family === "land" ? "archived"
     : family === "proof" ? (through === "archived" ? "archived" : "proven")
       : through;
-  return `claude-foundation advance ${id}${target ? ` --through ${target}` : ""}`;
+  return `cloop advance ${id}${target ? ` --through ${target}` : ""}`;
 }
 
 function routeText(id, through, input) {
-  if (typeof input !== "string" || !input.includes("claude-foundation")) return input;
+  if (typeof input !== "string" || !input.includes("cloop")) return input;
   return input.replace(PRIMITIVE_COMMAND, (match, family) =>
     agentLifecycleRoute(id, family, through));
 }
@@ -156,7 +156,7 @@ export function userEnvironmentAction(id, input, found) {
   // The agent repair the route carried (edit the workspace or foundation.json,
   // set a field) is not the fix and must not survive into the question.
   const { instruction, instructions, repairTarget, ...value } = input;
-  const resumeCommand = value.resume || `claude-foundation advance ${id}`;
+  const resumeCommand = value.resume || `cloop advance ${id}`;
   const summary = `${found.fix}. Only the user can clear this (${found.cause}): ${value.reason}`;
   return { ...value, action: "ASK_USER", actor: "user", owner: "user",
     legacyAction: "USER_ENVIRONMENT_REQUIRED", boundary: "user-environment",
@@ -228,7 +228,7 @@ const REPAIR_INSTRUCTIONS = {
   REPAIR_PROOF_RESULT: "Fix the findings listed in next[] (and repairGraph when present) inside the Build workspace",
   EXECUTE_REPAIR_BATCH: "Apply the dependency-ordered repairGraph.nodes batch inside the Build workspace, touching only each node's paths",
   REPAIR_BUILD_PLAN: "Give every task in openspec/changes/<change>/tasks.md a stable ID (T001) and a [paths: ...] scope through a semantic amendment",
-  REPAIR_REVIEW_INFRASTRUCTURE: "Repair or switch the configured reviewer named in requests[] (see its infrastructureError), then acknowledge its consumed attempts with `claude-foundation authority reset-infra <change> --decision-ref <user-decision>`",
+  REPAIR_REVIEW_INFRASTRUCTURE: "Repair or switch the configured reviewer named in requests[] (see its infrastructureError), then acknowledge its consumed attempts with `cloop authority reset-infra <change> --decision-ref <user-decision>`",
   TRY_ALTERNATE_APPROACH: "Apply a materially different repair than attemptedStrategies[] inside the approved agreement",
   REPAIR_SYNC_CONFLICT: "Resolve the conflicting paths in details.conflicts inside the Build workspace to the intended result",
   NO_PROGRESS_BOUNDARY: "Change the input that keeps the operation idempotent (code, agreement, or evidence wiring)"
@@ -297,7 +297,7 @@ export function automaticRecoveryAction(id, decision) {
     return {
       kind: "apply-recovery",
       resolution: decision.automaticRecovery,
-      command: `claude-foundation advance ${id} --through archived`,
+      command: `cloop advance ${id} --through archived`,
       reason: decision.summary,
       divergentPaths: Array.isArray(decision.divergentPaths) ? decision.divergentPaths : []
     };
@@ -306,7 +306,7 @@ export function automaticRecoveryAction(id, decision) {
   if (decision?.kind === "landed-conflict")
     return {
       kind: "resolve-landed-conflict",
-      command: `claude-foundation advance ${id} --through archived`,
+      command: `cloop advance ${id} --through archived`,
       reason: decision.summary,
       paths: Array.isArray(decision.paths) ? decision.paths : [],
       repository: decision.repository || "root"
@@ -316,7 +316,7 @@ export function automaticRecoveryAction(id, decision) {
   if (decision?.kind === "target-edit-conflict" && decision.automaticRecovery === "keep-target")
     return {
       kind: "reconcile-target-edits",
-      command: `claude-foundation advance ${id} --through archived`,
+      command: `cloop advance ${id} --through archived`,
       reason: decision.summary,
       paths: Array.isArray(decision.paths) ? decision.paths : []
     };
@@ -330,7 +330,7 @@ export function automaticRecoveryAction(id, decision) {
       decision.automaticRecovery !== "sync") return null;
   return {
     kind: "sandbox-sync",
-    command: `claude-foundation sandbox sync ${id}`,
+    command: `cloop sandbox sync ${id}`,
     reason: decision.summary
   };
 }
@@ -404,7 +404,7 @@ export function proofGateDecision(decision) {
 }
 
 const decisionCommand = (id, option, fingerprint) =>
-  `claude-foundation advance ${id} --decision ${option} --decision-fingerprint ${fingerprint} ` +
+  `cloop advance ${id} --decision ${option} --decision-fingerprint ${fingerprint} ` +
   "--decision-ref <user-answer> --reason <chosen-approach>";
 
 export function createAdvanceRecovery({ loadRuntime, saveRuntime, subject, now = () => new Date().toISOString() }) {
@@ -654,7 +654,7 @@ const REVIEW_RUN_FLAGS = new Set([
 
 export function automaticReviewRun(id, commandText) {
   const tokens = String(commandText || "").trim().split(/\s+/);
-  if (tokens[0] !== "claude-foundation" || tokens[1] !== "authority" ||
+  if (tokens[0] !== "cloop" || tokens[1] !== "authority" ||
       tokens[2] !== "run" || tokens[3] !== id || (tokens.length - 4) % 2 !== 0) return null;
   const flags = {};
   for (let index = 4; index < tokens.length; index += 2) {
@@ -680,6 +680,6 @@ export function automaticEvidenceWiring(id, preflight) {
   return {
     kind: "evidence-wiring",
     providers,
-    command: `claude-foundation advance ${id} --through proven`
+    command: `cloop advance ${id} --through proven`
   };
 }

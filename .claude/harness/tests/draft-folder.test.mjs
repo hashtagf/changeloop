@@ -411,7 +411,7 @@ for (const [name, files, pattern] of [
       assert.equal(result.owner, "agent");
       assert.equal(result.intake.kind, "repair-draft");
       assert.match(result.intake.issues.join("\n"), pattern);
-      assert.equal(result.resume, `claude-foundation change start ${path} --inspect`);
+      assert.equal(result.resume, `cloop change start ${path} --inspect`);
     }
     assert.equal(existsSync(join(changes, "refund-api")), false);
     assert.equal(existsSync(join(root, ".foundation", "runtime", "refund-api.json")), false);

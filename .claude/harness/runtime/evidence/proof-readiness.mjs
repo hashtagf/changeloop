@@ -130,7 +130,7 @@ export function proofPreflightBlockers(value) {
 export function proofPreflightFailure(id, value, blockers, recovery) {
   return `proof preflight failed: ${blockers.join("; ")}${
     recovery.length ? `\n\nhow to clear this (${value.status}):\n${recovery.join("\n")}` : ""
-  }\n\nfull detail: claude-foundation advance ${id} --inspect`;
+  }\n\nfull detail: cloop advance ${id} --inspect`;
 }
 
 export function proofPreflightAdvisory(advisory) {
@@ -160,7 +160,7 @@ export function workspaceIsolationIssuesValue(state, surface = []) {
   if (!productPaths.length) return [];
   return [`ISOLATION_REQUIRED: product files changed while workspace mode is '${
     state?.workspace?.mode || "current"}': ${productPaths.map((row) =>
-    `${row.repositoryId}/${row.path}`).join(", ")}; run claude-foundation sandbox create ${
+    `${row.repositoryId}/${row.path}`).join(", ")}; run cloop sandbox create ${
     state?.id || "<change>"} and rebuild inside the isolated workspace`];
 }
 
@@ -187,8 +187,8 @@ export function reviewEvidenceRecovery(id, provider) {
     provider,
     kind: "user-decision",
     request: {
-      command: `claude-foundation authority request ${id} --type review`,
-      packet: `claude-foundation packet ${id} --phase review`
+      command: `cloop authority request ${id} --type review`,
+      packet: `cloop packet ${id} --phase review`
     },
     decision: {
       kind: "independent-review",
@@ -209,12 +209,12 @@ export function acceptanceEvidenceRecovery(id, provider, acceptance = {}) {
   const claimIds = acceptance.claimIds || [];
   const origin = acceptance.scopeOrigin || "explicit";
   const withdrawal = origin === "claim-capability"
-    ? `Drop capability 'acceptance' from claim(s) ${claimIds.join(", ") || "in evidence.yaml"}, then re-run 'claude-foundation change validate ${id}'. Clearing the resolve flag alone will not lift this gate while the claim declares it.`
-    : `Withdraw the requirement: claude-foundation change resolve ${id} --acceptance-not-required`;
+    ? `Drop capability 'acceptance' from claim(s) ${claimIds.join(", ") || "in evidence.yaml"}, then re-run 'cloop change validate ${id}'. Clearing the resolve flag alone will not lift this gate while the claim declares it.`
+    : `Withdraw the requirement: cloop change resolve ${id} --acceptance-not-required`;
   return {
     provider,
     kind: "user-decision",
-    request: { command: `claude-foundation authority request ${id} --type acceptance` },
+    request: { command: `cloop authority request ${id} --type acceptance` },
     decision: {
       kind: "human-acceptance",
       summary: `A named person must inspect the final result and decide whether the declared acceptance criteria are satisfied${
@@ -513,8 +513,8 @@ export function readinessNext(context, input) {
       ...(repositoryIssues.length ? [{
         kind: "repair-repository-binding",
         reason: repositoryIssues.join("; "),
-        command: `claude-foundation sandbox create ${id} --all`,
-        inspectCommand: `claude-foundation sandbox inspect ${id}`
+        command: `cloop sandbox create ${id} --all`,
+        inspectCommand: `cloop sandbox inspect ${id}`
       }] : []),
       ...unavailable.map((provider) => context.unavailableProviderRecovery(id, provider))
     ];
@@ -653,11 +653,11 @@ export function wiringChoiceOperation({ evidenceDetectionValue }, id, provider) 
   if (!candidate) return null;
   return {
     kind: "configure-provider",
-    command: `claude-foundation advance ${id} --through proven`,
+    command: `cloop advance ${id} --through proven`,
     source: candidate.source,
     instruction: `Wire provider '${provider}' from the project-owned command detected at ${
       candidate.source}, then re-run proof.`,
-    verify: `claude-foundation advance ${id} --inspect`
+    verify: `cloop advance ${id} --inspect`
   };
 }
 
@@ -921,11 +921,11 @@ export function createProofReadinessRuntime({
       choices: [
         {
           kind: "diagnose",
-          command: `claude-foundation doctor --stage prove --change ${id}`
+          command: `cloop doctor --stage prove --change ${id}`
         },
         {
           kind: "retry",
-          command: `claude-foundation advance ${id} --through proven`
+          command: `cloop advance ${id} --through proven`
         },
         {
           kind: "external-evidence",
@@ -935,7 +935,7 @@ export function createProofReadinessRuntime({
           kind: "reconfigure",
           file: `openspec/changes/${id}/execution.yaml`,
           instruction: `Configure provider '${provider}' with an available project-owned command that proves the same declared claims.`,
-          verify: `claude-foundation advance ${id} --inspect`
+          verify: `cloop advance ${id} --inspect`
         }
       ]
     };
@@ -945,13 +945,13 @@ export function createProofReadinessRuntime({
     return [{
       kind: "resume-build",
       agentCommand: `/build ${id}`,
-      inspect: `claude-foundation agents plan ${id} --pretty`,
+      inspect: `cloop agents plan ${id} --pretty`,
       pendingTasks: pending.map((task) => task.id || task.text)
     }];
   }
 
   function surfaceRepair(id, fixit) {
-    const verify = `claude-foundation advance ${id} --inspect`;
+    const verify = `cloop advance ${id} --inspect`;
     if (fixit.reason === "misplaced-sandbox") {
       const targets = fixit.targets || [];
       const destination = targets.length
@@ -1008,7 +1008,7 @@ export function createProofReadinessRuntime({
       }] : []),
       {
         kind: "diagnose",
-        command: `claude-foundation doctor --stage prove --change ${id}`
+        command: `cloop doctor --stage prove --change ${id}`
       },
       {
         kind: "revise-configuration",
@@ -1019,7 +1019,7 @@ export function createProofReadinessRuntime({
           `openspec/changes/${id}/repositories.yaml`
         ],
         issues,
-        verify: `claude-foundation change validate ${id}`
+        verify: `cloop change validate ${id}`
       }
     ];
   }
@@ -1047,10 +1047,10 @@ export function createProofReadinessRuntime({
         kind: "release-stale-lease",
         taskId: lease.taskId,
         expiresAt: lease.expiresAt || null,
-        command: `claude-foundation agents release ${id} ${lease.taskId} --owner ${lease.owner} --force`,
+        command: `cloop agents release ${id} ${lease.taskId} --owner ${lease.owner} --force`,
         note: "A lease that has not expired also requires --decision-ref, because the worker holding it may still be running."
       })),
-      verify: `claude-foundation advance ${id} --inspect`
+      verify: `cloop advance ${id} --inspect`
     }];
   }
 

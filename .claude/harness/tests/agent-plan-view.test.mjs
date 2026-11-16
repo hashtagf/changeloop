@@ -73,7 +73,7 @@ test("task enrichment applies precise and repository dependency policy", () => {
   assert.deepEqual(result.tasks[1].resources, ["workspace:api"]);
   assert.equal(result.tasks[0].model.tier, "deep");
   assert.equal(result.tasks[0].packetCommand,
-    "claude-foundation packet change --task T1");
+    "cloop packet change --task T1");
   assert.ok(result.tasks.every((value) => value.leaseKeys.length > 0));
 });
 
@@ -301,7 +301,7 @@ test("blocking reasons name only this plan's defects; held shared resources are 
     reason: "shared resource resource:staging-db <> resource:staging-db is held by active change other"
   }]);
   assert.match(agentPlanNext({ dispatchable: false, blockingReasons: [],
-    resourceWaits: [{ changeId: "other" }] }, "demo"), /queued behind other; claude-foundation advance demo/);
+    resourceWaits: [{ changeId: "other" }] }, "demo"), /queued behind other; cloop advance demo/);
 });
 
 test("blocking reasons stop dispatch before unavailable authority spends model budget", () => {
@@ -448,11 +448,11 @@ test("next command covers blocked, proof, single, and planned routes", () => {
   assert.equal(agentPlanNext(plan({ dispatchable: false }), "change"),
     "resolve blockingReasons before dispatch");
   assert.equal(agentPlanNext(plan({ recommendedExecution: "proof-ready" }), "change"),
-    "claude-foundation advance change --through proven");
+    "cloop advance change --through proven");
   assert.equal(agentPlanNext(plan({ recommendedExecution: "single-agent" }), "change"),
-    "claude-foundation packet change --task T1");
+    "cloop packet change --task T1");
   assert.equal(agentPlanNext(plan(), "change"),
-    "claude-foundation agents plan change --group 1");
+    "cloop agents plan change --group 1");
 });
 
 function summaryContext(root = "/repo") {
@@ -473,7 +473,7 @@ test("summary view counts models and keeps bounded collections inline", () => {
   assert.equal(view.planPath, "plans/change.json");
   assert.deepEqual(view.modelCounts, { sonnet: 2, opus: 1 });
   assert.deepEqual(view.invalidatedTasks, ["T1"]);
-  assert.equal(view.next, "claude-foundation agents plan change --group 1");
+  assert.equal(view.next, "cloop agents plan change --group 1");
 });
 
 test("summary view compacts oversized group and invalidation collections", () => {

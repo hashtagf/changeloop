@@ -124,7 +124,7 @@ provider ที่รันแล้ว fail ทิ้งทางออกไ�
 ด้วยการตัดสินใจชัดเจนที่ถูกบันทึกไว้:
 
 ```bash
-claude-foundation change waive <change> --capability <c> --reason <why> --decision-ref <ref>
+cloop change waive <change> --capability <c> --reason <why> --decision-ref <ref>
 ```
 
 waiver เดินทางเป็น advisory `user-waived` เข้าไปใน readiness, บันทึก proof,

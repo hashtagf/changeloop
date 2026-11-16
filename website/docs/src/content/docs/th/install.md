@@ -7,8 +7,7 @@ description: requirement และวิธีติดตั้ง Change Loop 
 **ผู้อ่าน:** ผู้ดูแลโปรเจกต์และ agent ที่ได้รับอนุญาตให้ตั้งค่า หากต้องการใช้งานตามปกติ เริ่มที่ [เริ่มใช้งาน](/docs/th/quickstart/)
 
 ติดตั้ง CLI `cloop` ครั้งเดียวในเครื่อง แล้ว initialize Change Loop
-ในแต่ละโปรเจกต์ `cloop` คือชื่อสั้นของ `claude-foundation` ทั้งสองชื่อรันโปรแกรมเดียวกัน
-และ agent ยังใช้ `claude-foundation` ต่อไป การรัน `init` ซ้ำคือการอัปเกรดไฟล์ที่ระบบดูแล ใช้กับรีโปที่มีของ
+ในแต่ละโปรเจกต์ ทั้งคุณและ agent ใช้คำสั่ง `cloop` การรัน `init` ซ้ำคือการอัปเกรดไฟล์ที่ระบบดูแล ใช้กับรีโปที่มีของ
 อยู่แล้วได้: ระบบเติมสิ่งที่ขาด รีเฟรชเฉพาะไฟล์ของตัวเอง และไม่แตะไฟล์ของโปรเจกต์
 
 ## สิ่งที่จำเป็นและเครื่องมือที่แนะนำ
@@ -134,15 +133,15 @@ interactive ปกติข้ามส่วนนี้ได้
 
 ### Permission allowlist
 
-`.claude/settings.json` ยังเป็นของ project Installer จะ merge hook ที่ ship มา และต่อท้าย `permissions.allow` แบบแคบ เพื่อไม่ให้ Claude Code ขออนุมัติทุกขั้นของ harness ได้แก่ `Bash(claude-foundation *)`, `Bash(.foundation/bin/claude-foundation *)`, `Bash(node .claude/harness/foundation.mjs *)`, `Edit(/.foundation/sandboxes/**)`, `Edit(/.foundation/repository-sandboxes/**)`, `Edit(/.foundation/drafts/**)` (draft ของ Change), `Edit(/openspec/investigations/**)` (record ของ Investigate) และคำสั่งอ่านอย่างเดียว ได้แก่ `Bash(find *)`, `Bash(grep *)`, `Bash(ls *)`, `Bash(head *)`, `Bash(wc *)` รวมถึงรูปแบบที่ `rtk ls` / `rtk grep` แปลงให้ และ Git แบบอ่านอย่างเดียว (`Bash(git status)`, `Bash(git status *)` และคู่เดียวกันสำหรับ `diff`, `log`, `show`) `cat` ไม่ได้รับ rule (rule แบบ prefix จะปล่อย `cat > file` ด้วย ให้อ่านไฟล์ผ่าน Read tool แทน) และไม่มี rule ใดให้สิทธิ์เขียน ลบ หรือ Git ที่เปลี่ยน state test runner ของโปรเจกต์ไม่ได้รับ rule: Build task แต่ละงานคืน verify เป็น `checkCommand` (`claude-foundation exec <change> --task <id> -- <verify>`) ซึ่ง rule ของ CLI ครอบคลุมอยู่แล้ว โดยเพิ่มเฉพาะ rule ที่ยังไม่มีต่อจาก rule ของผู้ใช้ ไม่ลบหรือสลับลำดับ entry เดิม และการรันซ้ำไม่เพิ่มอะไร guard ของ PreToolUse ยังทำงานก่อน rule เหล่านี้ ให้ใส่ `--no-permission-allowlist` ทุกครั้งที่ install หรือ upgrade หากไม่ต้องการให้แตะ `permissions.allow`
+`.claude/settings.json` ยังเป็นของ project Installer จะ merge hook ที่ ship มา และต่อท้าย `permissions.allow` แบบแคบ เพื่อไม่ให้ Claude Code ขออนุมัติทุกขั้นของ harness ได้แก่ `Bash(cloop *)`, `Bash(.foundation/bin/cloop *)`, `Bash(node .claude/harness/foundation.mjs *)`, `Edit(/.foundation/sandboxes/**)`, `Edit(/.foundation/repository-sandboxes/**)`, `Edit(/.foundation/drafts/**)` (draft ของ Change), `Edit(/openspec/investigations/**)` (record ของ Investigate) และคำสั่งอ่านอย่างเดียว ได้แก่ `Bash(find *)`, `Bash(grep *)`, `Bash(ls *)`, `Bash(head *)`, `Bash(wc *)` รวมถึงรูปแบบที่ `rtk ls` / `rtk grep` แปลงให้ และ Git แบบอ่านอย่างเดียว (`Bash(git status)`, `Bash(git status *)` และคู่เดียวกันสำหรับ `diff`, `log`, `show`) `cat` ไม่ได้รับ rule (rule แบบ prefix จะปล่อย `cat > file` ด้วย ให้อ่านไฟล์ผ่าน Read tool แทน) และไม่มี rule ใดให้สิทธิ์เขียน ลบ หรือ Git ที่เปลี่ยน state test runner ของโปรเจกต์ไม่ได้รับ rule: Build task แต่ละงานคืน verify เป็น `checkCommand` (`cloop exec <change> --task <id> -- <verify>`) ซึ่ง rule ของ CLI ครอบคลุมอยู่แล้ว โดยเพิ่มเฉพาะ rule ที่ยังไม่มีต่อจาก rule ของผู้ใช้ ไม่ลบหรือสลับลำดับ entry เดิม และการรันซ้ำไม่เพิ่มอะไร guard ของ PreToolUse ยังทำงานก่อน rule เหล่านี้ ให้ใส่ `--no-permission-allowlist` ทุกครั้งที่ install หรือ upgrade หากไม่ต้องการให้แตะ `permissions.allow`
 
 ### Headless / CI (`claude -p`)
 
-Claude Code จะไม่ใช้ `permissions.allow` ของโปรเจกต์จนกว่า workspace จะถูก trust ใน checkout ใหม่ การรัน `claude -p` แบบ headless จะแสดง `Ignoring ... permissions.allow entry ... this workspace has not been trusted` ทำให้ rule `Bash(claude-foundation *)` ที่ installer ใส่ไว้ไม่มีผล และทุกคำสั่ง harness ถูกปฏิเสธ ให้รัน `claude` แบบ interactive ในโปรเจกต์หนึ่งครั้งแล้วยอมรับ trust prompt หรือให้สิทธิ์ตาม allowlist ที่ installer ใส่ไว้เท่านั้นทุกครั้งที่รัน headless (rule `Edit` ครอบคลุม `Write` ด้วย และการแก้ไฟล์อื่นในโปรเจกต์ยังถูกปฏิเสธ):
+Claude Code จะไม่ใช้ `permissions.allow` ของโปรเจกต์จนกว่า workspace จะถูก trust ใน checkout ใหม่ การรัน `claude -p` แบบ headless จะแสดง `Ignoring ... permissions.allow entry ... this workspace has not been trusted` ทำให้ rule `Bash(cloop *)` ที่ installer ใส่ไว้ไม่มีผล และทุกคำสั่ง harness ถูกปฏิเสธ ให้รัน `claude` แบบ interactive ในโปรเจกต์หนึ่งครั้งแล้วยอมรับ trust prompt หรือให้สิทธิ์ตาม allowlist ที่ installer ใส่ไว้เท่านั้นทุกครั้งที่รัน headless (rule `Edit` ครอบคลุม `Write` ด้วย และการแก้ไฟล์อื่นในโปรเจกต์ยังถูกปฏิเสธ):
 
 ```bash
 claude -p "/change <intent>" --allowedTools \
-  "Bash(claude-foundation *)" "Bash(.foundation/bin/claude-foundation *)" \
+  "Bash(cloop *)" "Bash(.foundation/bin/cloop *)" \
   "Bash(node .claude/harness/foundation.mjs *)" "Edit(/.foundation/drafts/**)" \
   "Edit(/.foundation/sandboxes/**)" "Edit(/.foundation/repository-sandboxes/**)" \
   "Edit(/openspec/investigations/**)" \
@@ -152,7 +151,7 @@ claude -p "/change <intent>" --allowedTools \
   "Bash(git log)" "Bash(git log *)" "Bash(git show)" "Bash(git show *)"
 ```
 
-check ของ Build รันผ่าน `claude-foundation exec` จึงไม่ต้องให้สิทธิ์ test runner เพิ่ม tool อื่นของโปรเจกต์เฉพาะเมื่อการรันต้องใช้ Claude Code ถือว่า path ใต้ `~/.claude/` เป็น sensitive path จึงควรวาง consumer project ไว้นอก directory นั้นเมื่อรันแบบไม่มีคนเฝ้า
+check ของ Build รันผ่าน `cloop exec` จึงไม่ต้องให้สิทธิ์ test runner เพิ่ม tool อื่นของโปรเจกต์เฉพาะเมื่อการรันต้องใช้ Claude Code ถือว่า path ใต้ `~/.claude/` เป็น sensitive path จึงควรวาง consumer project ไว้นอก directory นั้นเมื่อรันแบบไม่มีคนเฝ้า
 
 ## installer เป็นเจ้าของอะไรบ้าง
 

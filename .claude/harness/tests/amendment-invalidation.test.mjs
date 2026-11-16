@@ -36,7 +36,7 @@ test("an amendment names the waivers its new contract revision invalidates", () 
   assert.deepEqual(invalidatedWaivers(waivers, 3), ["review", "test"]);
   const line = formatInvalidatedWaivers("demo", waivers, 3);
   assert.match(line, /^ {2}waivers no longer apply: review, test \(.*now 3\)/);
-  assert.match(line, /claude-foundation change waive demo --capability <capability>/);
+  assert.match(line, /cloop change waive demo --capability <capability>/);
   assert.equal(formatInvalidatedWaivers("demo", [], 3), "");
   assert.equal(formatInvalidatedWaivers("demo", undefined, 3), "");
   assert.equal(formatInvalidatedWaivers("demo", waivers.slice(2), 3), "");

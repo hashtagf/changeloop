@@ -989,7 +989,7 @@ export function createApplyRuntime({
       fail(`--restore-target would discard the landed, uncommitted work of ${
         [...new Set(Object.values(landed))].sort().join(", ")} at: ${Object.keys(landed).sort()
         .join(", ")}; Land never overwrites an earlier landed change. Resume with ` +
-        `'claude-foundation advance ${id} --through archived' and it merges that work instead.`);
+        `'cloop advance ${id} --through archived' and it merges that work instead.`);
     const snapshot = state.workspace.targetDirty || state.workspace.preexisting || {};
     const needsDecision = paths.filter((path) =>
       !restorableTargetPaths([path], snapshot).length);
@@ -1256,7 +1256,7 @@ export function createApplyRuntime({
       .map((violation) => `  ${violation.capability}/${violation.requirement || "-"}: ${
         violation.detail}`).join("\n")}\nRepair each listed delta in openspec/changes/${id}/specs ` +
       "against the current openspec/specs/<capability>/spec.md, prove again, and resume with " +
-      `'claude-foundation advance ${id} --through archived'.`,
+      `'cloop advance ${id} --through archived'.`,
     1, { owner: "agent", boundary: "spec-sync", code: "SPEC_SYNC_VIOLATION" });
   }
 
@@ -1727,7 +1727,7 @@ export function createApplyRuntime({
     if (["failed", "refused"].includes(state.workspace.cleanup.status))
       console.error(`WARNING: sandbox cleanup ${state.workspace.cleanup.status}: ${state.workspace.cleanup.reason}`);
     if (!telemetry && !modelUsageRecorded(id))
-      console.error(`WARNING: no model usage was imported for this change; cost and token columns stay empty — claude-foundation telemetry sync ${id} [transcript.jsonl]`);
+      console.error(`WARNING: no model usage was imported for this change; cost and token columns stay empty — cloop telemetry sync ${id} [transcript.jsonl]`);
     console.log(cli.stdout.trim());
     const assurance = state.land?.assurance?.status || "legacy-unknown";
     console.log(`LANDED ${id}\n  assurance: ${assurance}\n  lifecycle: archived`);
@@ -1767,7 +1767,7 @@ export function createApplyRuntime({
     // repeats the gate at the last point before any target mutation.
     if (readiness.assurance?.status !== "passed")
       fail(`Land requires current passing proof for '${id}' (assurance: ${
-        readiness.assurance?.status || "unknown"})\n  next: claude-foundation advance ${id} --through archived`);
+        readiness.assurance?.status || "unknown"})\n  next: cloop advance ${id} --through archived`);
     archiveCheckpoint("before-evidence-snapshot", readiness.state);
     snapshotArchiveEvidence(id, readiness);
     archiveCheckpoint("after-evidence-snapshot", readiness.state);

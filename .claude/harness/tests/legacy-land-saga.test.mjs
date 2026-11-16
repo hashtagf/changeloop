@@ -84,7 +84,7 @@ test("advance refuses a change stuck in the retired saga with the recovery decis
     assert.match(value.decision.options[0].outcome,
       /Reinstall Change Loop 3\.7\.0.*advance split-api --through archived/);
     assert.equal(value.decision.options[1].command,
-      "claude-foundation change abandon split-api --reason <reason> --decision-ref <ref>");
+      "cloop change abandon split-api --reason <reason> --decision-ref <ref>");
     assert.deepEqual(f.calls, [], "nothing builds, proves, lands, or rewrites state");
     assert.deepEqual(f.stored(), legacyState(), "the legacy state is kept unchanged");
   }
@@ -100,7 +100,7 @@ test("changes and the upgrade report name the stuck change and its recovery", ()
     pathExists: (path) => path === "runtime.json"
   });
   assert.equal(row,
-    "split-api\tlegacy-land-saga\tfoundation-standard\tclaude-foundation advance split-api --inspect");
+    "split-api\tlegacy-land-saga\tfoundation-standard\tcloop advance split-api --inspect");
 
   const report = upgradeCompatibilityDiagnostics({
     activeChanges: [legacyState(), { id: "current", status: "building" }]

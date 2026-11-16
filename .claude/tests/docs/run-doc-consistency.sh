@@ -310,7 +310,7 @@ assert_file_contains "English Land continues through one coordinator" \
 assert_file_contains "Thai Land continues through one coordinator" \
   "$DOCS/th/loop/land.md" 'advance <change> --through archived'
 assert_file_contains "landing demonstrates unified lifecycle advance" \
-  "$SITE" 'claude-foundation advance profile-auth --through proven'
+  "$SITE" 'cloop advance profile-auth --through proven'
 
 quality_capabilities_protocol="$(jq -r '.qualityCapabilitiesProtocol' \
   "$ROOT/.claude/harness/protocol.json")"
@@ -500,7 +500,7 @@ const prose = (file) => read(file).replace(/\s+/g, " ");
 const land = prose(".claude/commands/land.md");
 const route = land.match(/Run `([^`]+)`/)?.[1];
 // /land and /dev share one guard-free route (N1 structure B, 2026-10-01).
-assert.equal(route, "claude-foundation advance <change> --through archived");
+assert.equal(route, "cloop advance <change> --through archived");
 assert.ok(read("WORKFLOW.md").includes(route));
 for (const boundary of ["Authority", "resource", "conflict", "external dependency", "repeated no-progress"])
   assert.ok(land.includes(boundary), `Land omits ${boundary}`);

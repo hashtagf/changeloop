@@ -41,15 +41,15 @@ Per-change telemetry lives in `.foundation/logs/<id>/`:
 | Tokens and cost per request/model | `events.jsonl` — `modelId`, input/output/cache tokens; group by `operationId` for per-phase totals; aggregates in `operations.jsonl` (`requests`, `cost`) |
 | Phase transitions, model tier, context mode | `phase-context.jsonl` |
 | Human wait time | `user-transitions.jsonl` |
-| Cause-aware timing, blocker coverage, reuse, next action | `claude-foundation feedback <change>` |
-| Exact runtime source cohort | `claude-foundation metrics <change>` — `sourceCohort.runtimeVersion`, `sourceCohort.protocolBundle`, and `sourceCohort.contentDigest` |
+| Cause-aware timing, blocker coverage, reuse, next action | `cloop feedback <change>` |
+| Exact runtime source cohort | `cloop metrics <change>` — `sourceCohort.runtimeVersion`, `sourceCohort.protocolBundle`, and `sourceCohort.contentDigest` |
 | Command duration per evidence run | receipt `observed` field (e.g. `exit 0; 19425ms`) |
 | Quality / defects | `review.json` verdicts and findings, `review-attempts/` retry count, failed test claims |
 
 Derived figures (compute, do not store):
 
 - **Source cohort** = runtime semantic version + the complete protocol bundle +
-  the content digest emitted by `claude-foundation metrics`. Show all three in
+  the content digest emitted by `cloop metrics`. Show all three in
   the report. If two reports have different source cohorts, label any KPI
   comparison as cross-cohort and do not attribute the delta solely to product
   behavior.

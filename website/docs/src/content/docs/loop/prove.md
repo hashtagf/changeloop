@@ -24,7 +24,7 @@ means done.
 Run:
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 The coordinator validates the current agreement and workspace, reuses receipts

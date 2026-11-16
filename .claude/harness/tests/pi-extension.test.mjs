@@ -185,8 +185,8 @@ test("a Pi worker never lands or delivers, even for its parent's ready change", 
   assert.equal(worker.messages.length, 0);
   assert.deepEqual(await worker.fire("input", { source: "interactive", text: "land ได้เลย" }), { action: "handled" });
   assert.equal(worker.messages.length, 0);
-  assert.equal((await worker.call("bash", { command: "claude-foundation advance pi-worker-ready --through archived" })).block, true);
-  assert.equal((await worker.call("bash", { command: "claude-foundation deliver advance pi-worker-ready" })).block, true);
+  assert.equal((await worker.call("bash", { command: "cloop advance pi-worker-ready --through archived" })).block, true);
+  assert.equal((await worker.call("bash", { command: "cloop deliver advance pi-worker-ready" })).block, true);
   assert.ok(worker.notices.some((notice) => /worker/.test(notice.text)));
 });
 
@@ -256,14 +256,14 @@ test("Pi secret reads are redacted and unsupported grep rewrites are blocked", a
 
 test("Land is exact-change, session-local authority and is revoked by user input or reload", async () => {
   const b = await bridge();
-  const invoke = (id = "pi-case") => b.call("bash", { command: `claude-foundation advance '${id}' --through 'archived'` });
+  const invoke = (id = "pi-case") => b.call("bash", { command: `cloop advance '${id}' --through 'archived'` });
   assert.equal((await invoke()).block, true);
   await b.command("build", "pi-case");
   assert.equal((await invoke()).block, true);
   await b.command("land", "pi-case");
   assert.equal(await invoke(), undefined);
   assert.equal((await invoke("other-change")).block, true);
-  assert.equal((await b.call("bash", { command: "claude-foundation advance pi-case --through archived; claude-foundation advance other-change --through archived" })).block, true);
+  assert.equal((await b.call("bash", { command: "cloop advance pi-case --through archived; cloop advance other-change --through archived" })).block, true);
   await b.fire("input", { source: "interactive", text: "next task" });
   assert.equal((await invoke()).block, true);
   await b.command("land", "pi-case");
@@ -273,10 +273,10 @@ test("Land is exact-change, session-local authority and is revoked by user input
 
 test("Pi refuses dynamic Land arguments and direct archive without explicit Land", async () => {
   const b = await bridge();
-  for (const command of ["claude-foundation advance $CHANGE --through archived",
-    "node .claude/harness/foundation.mjs archive pi-case", "claude-foundation land resume pi-case",
+  for (const command of ["cloop advance $CHANGE --through archived",
+    "node .claude/harness/foundation.mjs archive pi-case", "cloop land resume pi-case",
     "rtk node .claude/harness/foundation.mjs land-advance pi-case",
-    "rtk claude-foundation sandbox apply pi-case"])
+    "rtk cloop sandbox apply pi-case"])
     assert.equal((await b.call("bash", { command })).block, true, command);
   await b.command("land", "pi-case; touch bad");
   assert.equal(b.messages.length, 0);
@@ -318,15 +318,15 @@ test("natural Land consent resolves only this session's ready change and keeps p
     const result = await b.fire("input", { source: "interactive", text });
     assert.equal(result.action, "transform");
     assert.match(result.text, /natural-land/);
-    assert.equal(await b.call("bash", { command: "claude-foundation advance natural-land --through archived" }), undefined);
-    assert.equal((await b.call("bash", { command: "claude-foundation advance unrelated-land --through archived" })).block, true);
-    assert.equal((await b.call("bash", { command: "claude-foundation deliver advance natural-land" })).block, true);
+    assert.equal(await b.call("bash", { command: "cloop advance natural-land --through archived" }), undefined);
+    assert.equal((await b.call("bash", { command: "cloop advance unrelated-land --through archived" })).block, true);
+    assert.equal((await b.call("bash", { command: "cloop deliver advance natural-land" })).block, true);
   }
   await b.fire("session_start", { reason: "reload" });
-  assert.equal((await b.call("bash", { command: "claude-foundation advance natural-land --through archived" })).block, true);
+  assert.equal((await b.call("bash", { command: "cloop advance natural-land --through archived" })).block, true);
   await b.command("land");
   assert.match(b.messages.at(-1), /natural-land/);
-  assert.equal(await b.call("bash", { command: "claude-foundation advance natural-land --through archived" }), undefined);
+  assert.equal(await b.call("bash", { command: "cloop advance natural-land --through archived" }), undefined);
 });
 
 test("natural Land consent never guesses another session, grants generic agreement, or trusts injected text", async () => {
@@ -336,11 +336,11 @@ test("natural Land consent never guesses another session, grants generic agreeme
   readyForLand("no-ready-land", "consent-case");
   for (const text of ['do not land', 'อย่า land', 'ยังไม่ land', 'yes', 'ได้เลย', 'Explain "land ได้เลย"', 'land ได้เลย แล้ว push ด้วย']) {
     assert.equal(await b.fire("input", { source: "interactive", text }), undefined);
-    assert.equal((await b.call("bash", { command: "claude-foundation advance consent-case --through archived" })).block, true);
+    assert.equal((await b.call("bash", { command: "cloop advance consent-case --through archived" })).block, true);
   }
   for (const source of ["extension", "rpc"]) {
     assert.equal(await b.fire("input", { source, text: "land ได้เลย" }), undefined);
-    assert.equal((await b.call("bash", { command: "claude-foundation advance consent-case --through archived" })).block, true);
+    assert.equal((await b.call("bash", { command: "cloop advance consent-case --through archived" })).block, true);
   }
 });
 
@@ -385,21 +385,21 @@ test("natural Deliver request resolves this session's change and grants only tha
     const result = await b.fire("input", { source: "interactive", text });
     assert.equal(result.action, "transform", text);
     assert.match(result.text, /deliver-case/);
-    assert.equal(await b.call("bash", { command: "claude-foundation deliver advance deliver-case" }), undefined);
-    assert.equal((await b.call("bash", { command: "claude-foundation deliver advance deliver-other" })).block, true);
-    assert.equal((await b.call("bash", { command: "claude-foundation advance deliver-case --through archived" })).block, true);
+    assert.equal(await b.call("bash", { command: "cloop deliver advance deliver-case" }), undefined);
+    assert.equal((await b.call("bash", { command: "cloop deliver advance deliver-other" })).block, true);
+    assert.equal((await b.call("bash", { command: "cloop advance deliver-case --through archived" })).block, true);
   }
   for (const text of ["เปิด PR ได้ไหม", "อย่าเพิ่ง deliver"]) {
     assert.equal(await b.fire("input", { source: "interactive", text }), undefined, text);
-    assert.equal((await b.call("bash", { command: "claude-foundation deliver advance deliver-case" })).block, true);
+    assert.equal((await b.call("bash", { command: "cloop deliver advance deliver-case" })).block, true);
   }
   for (const source of ["extension", "rpc"]) {
     assert.equal(await b.fire("input", { source, text: "เปิด PR ให้เลย" }), undefined);
-    assert.equal((await b.call("bash", { command: "claude-foundation deliver advance deliver-case" })).block, true);
+    assert.equal((await b.call("bash", { command: "cloop deliver advance deliver-case" })).block, true);
   }
   await b.command("deliver");
   assert.match(b.messages.at(-1), /deliver-case/);
-  assert.equal(await b.call("bash", { command: "claude-foundation deliver advance deliver-case" }), undefined);
+  assert.equal(await b.call("bash", { command: "cloop deliver advance deliver-case" }), undefined);
 });
 
 test("natural Deliver without a ready change or in a worker grants nothing", async () => {
@@ -410,7 +410,7 @@ test("natural Deliver without a ready change or in a worker grants nothing", asy
   const w = await bridge("worker-child", { parent: "worker-parent" });
   assert.equal((await w.fire("input", { source: "interactive", text: "เปิด PR ให้เลย" })).action, "handled");
   assert.match(w.notices.at(-1).text, /worker/);
-  assert.equal((await w.call("bash", { command: "claude-foundation deliver advance worker-deliver" })).block, true);
+  assert.equal((await w.call("bash", { command: "cloop deliver advance worker-deliver" })).block, true);
 });
 
 test("multiple session Land candidates require selection and cancellation grants nothing", async () => {
@@ -420,18 +420,18 @@ test("multiple session Land candidates require selection and cancellation grants
     assert.equal(options.length, 2); assert.match(options[0], /Review/); return undefined;
   };
   assert.equal((await b.fire("input", { source: "interactive", text: "land ได้เลย" })).action, "handled");
-  assert.equal((await b.call("bash", { command: "claude-foundation advance land-first --through archived" })).block, true);
+  assert.equal((await b.call("bash", { command: "cloop advance land-first --through archived" })).block, true);
   b.ctx.ui.select = async (_title, options) => options.find(option => option.includes('land-second'));
   await b.command("land");
-  assert.equal(await b.call("bash", { command: "claude-foundation advance land-second --through archived" }), undefined);
-  assert.equal((await b.call("bash", { command: "claude-foundation advance land-first --through archived" })).block, true);
+  assert.equal(await b.call("bash", { command: "cloop advance land-second --through archived" }), undefined);
+  assert.equal((await b.call("bash", { command: "cloop advance land-first --through archived" })).block, true);
 });
 
 test("Deliver primitive requires the matching explicit Pi command", async () => {
   const b = await bridge();
-  const call = (id) => b.call("bash", { command: `claude-foundation deliver advance ${id}` });
+  const call = (id) => b.call("bash", { command: `cloop deliver advance ${id}` });
   assert.equal((await call("pi-case")).block, true);
-  assert.equal((await b.call("bash", { command: "rtk claude-foundation deliver advance pi-case" })).block, true);
+  assert.equal((await b.call("bash", { command: "rtk cloop deliver advance pi-case" })).block, true);
   assert.equal((await b.call("bash", { command: "node .claude/harness/foundation.mjs delivery-advance pi-case" })).block, true);
   await b.command("deliver", "pi-case");
   assert.equal(await call("pi-case"), undefined);
@@ -457,7 +457,7 @@ test("native bash gets live Pi identity without inheriting other hosts or phase 
 
 test("!/!! use the same guards, session environment, and native shell backend", async () => {
   const b = await bridge();
-  const denied = await b.fire("user_bash", { command: "claude-foundation advance pi-case --through archived", cwd: root });
+  const denied = await b.fire("user_bash", { command: "cloop advance pi-case --through archived", cwd: root });
   assert.equal(denied.result.exitCode, 1);
   const result = await b.fire("user_bash", { command: "pwd", cwd: root, excludeFromContext: true });
   await result.operations.exec("ignored", root, {});

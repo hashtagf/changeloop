@@ -206,9 +206,9 @@ test("workflow, sandbox and boolean controls fail closed", () => {
     [{ workflow: { reviewPolicy: "unknown" } }, /reviewPolicy/],
     // The retired legacy routing is refused with the upgrade route, not ignored.
     [{ workflow: { reviewCircuit: "legacy" } },
-      /reviewCircuit "legacy" was retired; rerun `claude-foundation init`/],
+      /reviewCircuit "legacy" was retired; rerun `cloop init`/],
     [{ workflow: { reviewPolicy: "legacy" } },
-      /reviewPolicy "legacy" was retired; rerun `claude-foundation init`/],
+      /reviewPolicy "legacy" was retired; rerun `cloop init`/],
     [{ workflow: { handoffDefaultOwner: "" } }, /handoffDefaultOwner/],
     [{ telemetry: { requireUsage: "yes" } }, /requireUsage/],
     [{ land: { riskBasedCi: "yes" } }, /riskBasedCi/]

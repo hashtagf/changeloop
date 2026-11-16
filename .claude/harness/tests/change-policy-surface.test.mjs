@@ -406,7 +406,7 @@ test("infra without a plan-check provider yields an agent-owned setup action wit
   assert.notEqual(action.action, "ASK_USER");
   assert.equal(action.kind, "configure-provider");
   assert.equal(action.trigger, "work-type:infra");
-  assert.match(action.resume, /^claude-foundation advance c --through proven$/);
+  assert.match(action.resume, /^cloop advance c --through proven$/);
   assert.match(action.instruction, /plan-check provider/);
   assert.deepEqual(policy.policyProviderSetupActions("c", ["deployment", "plan-check"]), []);
 });

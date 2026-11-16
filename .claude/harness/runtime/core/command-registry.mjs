@@ -248,7 +248,7 @@ export function createCommandRegistry({ path, readJson, fail }) {
       : null;
     if (internal)
       fail(`runtime command '${command}' is not registered\n` +
-        `  '${publicForm}' is the CLI form: claude-foundation ${publicForm}\n` +
+        `  '${publicForm}' is the CLI form: cloop ${publicForm}\n` +
         `  this entrypoint takes the internal name: ${internal}`);
     fail(`runtime command '${command}' is not registered`);
   }

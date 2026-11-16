@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** the CLI is `cloop` only. Homebrew installs `bin/cloop` and no
+  longer a `claude-foundation` command; commands, next steps, recovery routes,
+  guard messages, Pi, and docs name `cloop`. `init` writes the
+  `.foundation/bin/cloop` shim and the `Bash(cloop *)` and
+  `Bash(.foundation/bin/cloop *)` allowlist rules (earlier rules stay until you
+  remove them). Rerun `cloop init` in projects installed from a source checkout.
+  Guards still treat a leftover `claude-foundation` binary as the same CLI, so
+  it is never an unguarded route. The Homebrew formula keeps its name
+  (`brew upgrade claude-foundation`).
+
 ## [3.7.3] - 2026-11-16
 
 ### Added

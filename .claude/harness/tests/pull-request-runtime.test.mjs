@@ -580,7 +580,7 @@ test(`delivery verifies publication boundaries: ${scenario}`, async (t) => {
     assert.equal(interrupted.action, "WAIT");
     assert.equal(interrupted.boundary, "delivery-policy");
     assert.match(interrupted.reason, /unknown placeholder \{summary\}.*foundation\.json/);
-    assert.equal(interrupted.resumeCommand, `claude-foundation deliver advance ${id}`);
+    assert.equal(interrupted.resumeCommand, `cloop deliver advance ${id}`);
     assert.equal(existsSync(runtime.workspacePath(id)), false);
     assert.equal(commit, null);
     assert.equal(pushes, 0);
@@ -641,7 +641,7 @@ test(`delivery verifies publication boundaries: ${scenario}`, async (t) => {
     assert.equal(interrupted.action, "ASK_USER");
     assert.equal(interrupted.boundary, "delivery-workspace");
     assert.equal(interrupted.options.some((option) => /new-change/.test(option)), false);
-    assert.equal(interrupted.resumeCommand, `claude-foundation deliver advance ${id}`);
+    assert.equal(interrupted.resumeCommand, `cloop deliver advance ${id}`);
     assert.equal(pushes, 0);
     assert.equal(creates, 0);
     assert.equal(checkedGit(["rev-parse", "HEAD"], root), originalHead);
@@ -670,7 +670,7 @@ test(`delivery verifies publication boundaries: ${scenario}`, async (t) => {
     assert.equal(interrupted.decision.category, "credential");
     assert.equal(interrupted.decision.cause, "remote-permission");
     assert.match(interrupted.reason, /returned error: 403/);
-    assert.equal(interrupted.decision.options[0].command, `claude-foundation deliver advance ${id}`);
+    assert.equal(interrupted.decision.options[0].command, `cloop deliver advance ${id}`);
     assert.equal(pushes, 1);
     assert.equal(creates, 0);
     return;
@@ -678,7 +678,7 @@ test(`delivery verifies publication boundaries: ${scenario}`, async (t) => {
   assert.equal(interrupted.action, "WAIT");
   assert.equal(interrupted.wait.owner, "repository-operator");
   assert.match(interrupted.wait.condition, /authentication temporarily unavailable/);
-  assert.equal(interrupted.wait.checkCommand, `claude-foundation deliver advance ${id}`);
+  assert.equal(interrupted.wait.checkCommand, `cloop deliver advance ${id}`);
   assert.equal(readJson(runtime.statePath(id)).status, "commit-created");
   if (scenario === "conversion-resume") {
     checkedGit(["config", "core.autocrlf", "input"], root);
@@ -729,7 +729,7 @@ test(`delivery verifies publication boundaries: ${scenario}`, async (t) => {
     if (scenario === "merge-pending") {
       assert.equal(first.action, "WAIT");
       assert.equal(first.boundary, "ci-checks");
-      assert.equal(first.resumeCommand, `claude-foundation deliver advance ${id}`);
+      assert.equal(first.resumeCommand, `cloop deliver advance ${id}`);
       assert.equal(merges, 0);
       checkRows = [{ name: "test", bucket: "pass" }];
     }
@@ -964,7 +964,7 @@ test("Deliver on a proven change lands first, then continues delivery", async (t
   assert.deepEqual(landed, ["booking"]);
   assert.equal(blocked.action, "ASK_USER");
   assert.equal(blocked.land.reason, "a real Land decision");
-  assert.equal(blocked.resumeCommand, "claude-foundation deliver advance booking");
+  assert.equal(blocked.resumeCommand, "cloop deliver advance booking");
   assert.equal(blocked.options, undefined, "no authorize-land question");
 
   // Landed: delivery continues in the same call. Without a remote that is the

@@ -284,7 +284,7 @@ export function observedLeaseWrites(context, id, taskLease, force) {
   if (force) return [];
   if (leaseAuthorityIsStale(context.agentPlanValue(id), taskLease))
     context.fail(`stale result authority for '${id}/${taskLease.taskId}': graph or contract changed after lease acquisition; ` +
-      `re-acquire with 'claude-foundation agents acquire ${id} ${taskLease.taskId} --owner ${taskLease.owner}', then release again`);
+      `re-acquire with 'cloop agents acquire ${id} ${taskLease.taskId} --owner ${taskLease.owner}', then release again`);
   const baseline = new Map();
   for (const row of taskLease.baselineSurface || []) baseline.set(row.path, row.identity);
   const current = new Map();

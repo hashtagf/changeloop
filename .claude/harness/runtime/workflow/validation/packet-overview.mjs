@@ -59,7 +59,7 @@ export function reviewTier(label) {
 
 // Only facts that stay true after approval: change id, lane and its reason,
 // review tier, owner, and created date. Status, approvers, and evidence
-// freshness change after approval, so `claude-foundation changes` reports
+// freshness change after approval, so `cloop changes` reports
 // them instead of the packet. Absent facts are left out; an unknown owner
 // says so.
 export function renderPacketHeader(draft, state = {}, { reviewLabel = "" } = {}) {
@@ -198,7 +198,7 @@ function governingDecisions(draft, key) {
 // Grouped by requirement: its title and its check (evidence capabilities and
 // test files) appear once on the group's first row; each scenario is named,
 // never shown by claim id. Evidence freshness is volatile and stays in
-// `claude-foundation changes`, not here.
+// `cloop changes`, not here.
 export function renderTraceability(draft, { language = draft?.language } = {}) {
   const rows = traceabilityRows(draft);
   if (!rows.length) return "";

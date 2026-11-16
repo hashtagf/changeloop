@@ -1152,7 +1152,7 @@ export function backendLandArgs(changeId) {
 export const BENCHMARK_VERIFY_AUTHORITY = "Use .foundation-benchmark.json projectCommand " +
   "as each draft task's verify value; do not probe alternate runner paths, globs, or " +
   "reporters. Run verification only through each Build task's returned checkCommand " +
-  "(claude-foundation exec ...) and claude-foundation advance, never a raw test runner " +
+  "(cloop exec ...) and cloop advance, never a raw test runner " +
   "(npm test, node --test, pytest), which is not pre-allowed.";
 
 // With a task oracle the backend owns the pre-Land oracle and Land, so the
@@ -1164,7 +1164,7 @@ export function benchmarkLandAuthority({ landAuthorized = false, oracleConfigure
   return oracleConfigured
     ? "This disposable benchmark does not grant Land authority to this session: the " +
       "backend runs a pre-Land oracle and then lands. Carry the change to proven with " +
-      "claude-foundation advance <change> --through proven and stop there; do not Land."
+      "cloop advance <change> --through proven and stop there; do not Land."
     : "This disposable benchmark explicitly authorizes Land; continue until the change is landed and archived.";
 }
 
@@ -1178,19 +1178,19 @@ export function oracleRepairPrompt(changeId, failedCases) {
   const cases = failedCases.join(", ");
   return `Resume existing change ${changeId}. The deterministic pre-Land oracle failed: ` +
     `${cases}. This failure is a real product defect the harness cannot see: ` +
-    `claude-foundation advance ${changeId} --through build will report its target reached ` +
+    `cloop advance ${changeId} --through build will report its target reached ` +
     "and hand you no task, because every task's own verify passed. Do not stop there. " +
     `Read the change's specs and the code paths behind ${cases}, find the root cause in the ` +
     "Build workspace (the sandbox, or the repository sandbox owning that behavior), fix it " +
     "there, and add a test that fails on the old code for that case and its adjacent " +
-    "partitions. Verify only through claude-foundation exec " +
+    "partitions. Verify only through cloop exec " +
     `${changeId} --task <task> -- <verify> (or --repo <repository> -- <verify>), then run ` +
-    `claude-foundation advance ${changeId} --through proven so the harness re-proves the ` +
+    `cloop advance ${changeId} --through proven so the harness re-proves the ` +
     "edited workspace. Finish with code changed, not a report that nothing was required. " +
     "Never run a test runner (npm test, node --test, pytest) directly; it is not pre-allowed. " +
     "If that advance returns the review-exhausted decision (every AI review wave is delivered " +
     "and the request still needs a verdict), the user reporting this defect grants exactly one " +
-    `more AI wave: run claude-foundation authority extend-review ${changeId} ` +
+    `more AI wave: run cloop authority extend-review ${changeId} ` +
     "--decision-ref user-prompt:oracle-repair-review-wave and rerun the same advance. Never " +
     "record a human verdict yourself. " +
     "Do not Land; the backend owns the oracle and Land boundary.";

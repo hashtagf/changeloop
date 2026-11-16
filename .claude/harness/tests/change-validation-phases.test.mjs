@@ -227,9 +227,9 @@ test("an infra change without a plan-check provider gets an agent-owned setup ad
   assert.equal(row.action, "EDIT");
   assert.equal(row.reason, "work-type-provider-missing");
   assert.equal(row.trigger, "work-type:infra");
-  assert.equal(row.command, "claude-foundation advance change-a --through proven");
-  assert.equal(row.resume, "claude-foundation advance change-a --through proven");
-  assert.match(row.next, /Resume: claude-foundation advance change-a --through proven/);
+  assert.equal(row.command, "cloop advance change-a --through proven");
+  assert.equal(row.resume, "cloop advance change-a --through proven");
+  assert.match(row.next, /Resume: cloop advance change-a --through proven/);
   assert.doesNotMatch(JSON.stringify(row), /ASK_USER|"owner":"user"/);
 
   // Once the provider is configured the setup step disappears.
@@ -244,7 +244,7 @@ test("validation preflight reports every unresolved prerequisite", () => {
     impact: "", coupling: "", acceptance: { decision: "undecided" }
   }, ["design.md", "tasks.md"]), [
     "missing change artifacts: design.md, tasks.md",
-    "resolve decisions for 'change-a' before validation: claude-foundation change resolve change-a --impact <low|medium|high> --coupling <isolated|coupled> --acceptance-required|--acceptance-not-required",
+    "resolve decisions for 'change-a' before validation: cloop change resolve change-a --impact <low|medium|high> --coupling <isolated|coupled> --acceptance-required|--acceptance-not-required",
     "resolve impact for 'change-a'",
     "resolve coupling for 'change-a'",
     "acceptance decision is unresolved for 'change-a'; ask the user whether subjective human acceptance is required, then resolve with --acceptance-required or --acceptance-not-required"
@@ -403,7 +403,7 @@ test("declared surface forecast reports wiring actions and review consequence", 
     new Set(), () => ({ capabilities: ["test", "review"] }),
     (message) => warnings.push(message));
   assert.equal(warnings.length, 5);
-  assert.match(warnings[1], /claude-foundation advance change-a --through proven/);
+  assert.match(warnings[1], /cloop advance change-a --through proven/);
   assert.doesNotMatch(warnings.join("\n"), /evidence (init|doctor)/);
   assert.match(warnings[3], /fresh reviewer/);
 });

@@ -140,7 +140,7 @@ assert_cmd_zero "advance repairs a partial binding before returning Build work" 
     .action == "EDIT" and
     .legacyAction == "EXECUTE_TASK" and
     .tasks[0].repository == "api" and
-    .resume == "claude-foundation advance cross-repository-profile --through proven"'\'' \
+    .resume == "cloop advance cross-repository-profile --through proven"'\'' \
     >/dev/null' sh "$partial_action"
 api_sandbox="$(cd .foundation/repository-sandboxes/cross-repository-profile/api && pwd -P)"
 assert_cmd_zero "advance names the task repository's sandbox as the one place to write" \
@@ -238,9 +238,9 @@ assert_contains "leased inline dispatch retains the parent transcript" \
 assert_contains "native-host dispatch requires lease before packet" \
   "$dispatch_plan" '"acquireBeforePacket":true'
 assert_contains "leased inline dispatch returns an acquire command" \
-  "$dispatch_plan" '"acquireCommand":"claude-foundation agents acquire '
+  "$dispatch_plan" '"acquireCommand":"cloop agents acquire '
 assert_contains "leased inline dispatch returns a release command" \
-  "$dispatch_plan" '"releaseCommand":"claude-foundation agents release '
+  "$dispatch_plan" '"releaseCommand":"cloop agents release '
 agent_task="$(node .claude/harness/foundation.mjs agent-task \
   cross-repository-profile T001)"
 assert_contains "inventory task packet routes to Haiku tier" \

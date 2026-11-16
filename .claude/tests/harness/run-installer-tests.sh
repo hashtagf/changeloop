@@ -62,7 +62,7 @@ git -C "$TMP/unrelated-git" init -q
 cp "$ROOT/cli.sh" "$ROOT/VERSION" "$TMP/unrelated-git/package/"
 packaged_version="$(bash "$TMP/unrelated-git/package/cli.sh" version)"
 assert_eq "packaged CLI ignores unrelated ancestor Git metadata" \
-  "claude-foundation $(tr -d '[:space:]' < "$ROOT/VERSION")" "$packaged_version"
+  "cloop $(tr -d '[:space:]' < "$ROOT/VERSION")" "$packaged_version"
 TARGET="$TMP/project with space"
 mkdir -p "$TARGET/.workflow/0001-legacy" "$TARGET/.claude/agents" \
   "$TARGET/.claude/harness/runtime/workflow" "$TARGET/.foundation"
@@ -149,10 +149,10 @@ done
 assert_file_contains "retiring a grid skill preserves a colocated consumer note" \
   "$TARGET/.claude/skills/gridgeist/custom-note.md" "consumer note"
 assert_file_exists "consumer UX skill survives managed upgrade" "$TARGET/.claude/skills/custom-ux/SKILL.md"
-# Harness next steps name `claude-foundation`; a source-checkout install must
+# Harness next steps name `cloop`; a source-checkout install must
 # still give the session that command, from a path with a space.
 assert_contains "installer writes a working project-local CLI shim" \
-  "$(cd "$TARGET" && "$TARGET/.foundation/bin/claude-foundation" version)" "claude-foundation "
+  "$(cd "$TARGET" && "$TARGET/.foundation/bin/cloop" version)" "cloop "
 assert_file_exists "change command installed" "$TARGET/.claude/commands/change.md"
 assert_file_contains "installed change command accepts explicit prototype handoff" \
   "$TARGET/.claude/commands/change.md" "--prototype-selection <path>"
@@ -535,7 +535,7 @@ else
 fi
 assert_file_contains "user hook wiring preserved" "$TARGET/.claude/settings.json" "user-hook.sh"
 assert_cmd_zero "stable lifecycle wrapper permission is installed" \
-  jq -e '.permissions.allow | index("Bash(claude-foundation *)") != null' \
+  jq -e '.permissions.allow | index("Bash(cloop *)") != null' \
     "$TARGET/.claude/settings.json"
 assert_cmd_zero "user permission is preserved during permission merge" \
   jq -e '.permissions.allow | index("Bash(user-tool *)") != null' \
@@ -548,7 +548,7 @@ assert_cmd_zero "user permission is preserved during permission merge" \
 # on a rerun.
 SHIPPED_ALLOW="$(jq -c '.permissions.allow' "$ROOT/.claude/settings.json")"
 assert_eq "shipped allowlist is exactly the harness CLI, Build workspaces, drafts, investigation records, and read-only commands" \
-  '["Bash(claude-foundation *)","Bash(.foundation/bin/claude-foundation *)","Bash(node .claude/harness/foundation.mjs *)","Edit(/.foundation/sandboxes/**)","Edit(/.foundation/repository-sandboxes/**)","Edit(/.foundation/drafts/**)","Edit(/openspec/investigations/**)","Bash(find *)","Bash(grep *)","Bash(ls *)","Bash(head *)","Bash(wc *)","Bash(rtk ls *)","Bash(rtk grep *)","Bash(git status)","Bash(git status *)","Bash(git diff)","Bash(git diff *)","Bash(git log)","Bash(git log *)","Bash(git show)","Bash(git show *)"]' \
+  '["Bash(cloop *)","Bash(.foundation/bin/cloop *)","Bash(node .claude/harness/foundation.mjs *)","Edit(/.foundation/sandboxes/**)","Edit(/.foundation/repository-sandboxes/**)","Edit(/.foundation/drafts/**)","Edit(/openspec/investigations/**)","Bash(find *)","Bash(grep *)","Bash(ls *)","Bash(head *)","Bash(wc *)","Bash(rtk ls *)","Bash(rtk grep *)","Bash(git status)","Bash(git status *)","Bash(git diff)","Bash(git diff *)","Bash(git log)","Bash(git log *)","Bash(git show)","Bash(git show *)"]' \
   "$SHIPPED_ALLOW"
 # Read-only means read-only: no rule may grant a write, a delete, or Git that
 # moves state.
@@ -694,13 +694,13 @@ atomic_intake="$(bash "$ROOT/cli.sh" --project "$TARGET" change start \
 assert_contains "atomic start inspection returns a typed ready action" \
   "$atomic_intake" '"action": "DONE"'
 assert_contains "atomic start inspection returns an exact resume route" \
-  "$atomic_intake" '"resume": "claude-foundation change start .foundation/atomic-draft.json --inspect"'
+  "$atomic_intake" '"resume": "cloop change start .foundation/atomic-draft.json --inspect"'
 assert_file_exists "atomic start inspection does not consume its draft" \
   "$TARGET/.foundation/atomic-draft.json"
 atomic_start="$(bash "$ROOT/cli.sh" --project "$TARGET" change start \
   .foundation/atomic-draft.json --consume-draft)"
 assert_contains "atomic start requires spec approval" "$atomic_start" \
-  'claude-foundation advance atomic-start --approve-spec'
+  'cloop advance atomic-start --approve-spec'
 assert_file_absent "successful atomic start consumes its transient draft" \
   "$TARGET/.foundation/atomic-draft.json"
 assert_eq "atomic start remains agreement-only" "change" \
@@ -727,7 +727,7 @@ assert_in "first Build advance creates isolation" \
   "worktree copy"
 active_changes="$(bash "$ROOT/cli.sh" --project "$TARGET" changes)"
 assert_contains "changes returns a canonical next action" "$active_changes" \
-  "claude-foundation advance atomic-start --through proven"
+  "cloop advance atomic-start --through proven"
 sed -i.bak 's/- \[ \]/- [x]/' \
   "$atomic_workspace/openspec/changes/atomic-start/tasks.md"
 rm "$atomic_workspace/openspec/changes/atomic-start/tasks.md.bak"
@@ -778,7 +778,7 @@ jq -n '{version:4, id:"atomic-migration", intent:"Payment ledger migration",
 standard_start="$(bash "$ROOT/cli.sh" --project "$TARGET" change start \
   .foundation/atomic-migration-draft.json)"
 assert_contains "atomic standard start requires spec approval" "$standard_start" \
-  'claude-foundation advance atomic-migration --approve-spec'
+  'cloop advance atomic-migration --approve-spec'
 assert_eq "atomic standard start selects standard schema" "foundation-standard" \
   "$(jq -r '.schema' "$TARGET/.foundation/runtime/atomic-migration.json")"
 assert_eq "atomic standard start preserves required review" "true" \
@@ -1187,7 +1187,7 @@ assert_eq "a fresh install seeds the shipped allowlist" \
 # user's own; the upgrade keeps both where they were and adds only the rest.
 ALLOW_UPGRADE="$TMP/allowlist-upgrade-project"
 mkdir -p "$ALLOW_UPGRADE/.claude"
-printf '%s\n' '{"permissions":{"allow":["Bash(user-tool *)","Bash(claude-foundation *)"],"deny":["Bash(rm *)"]},"model":"user-choice"}' \
+printf '%s\n' '{"permissions":{"allow":["Bash(user-tool *)","Bash(cloop *)"],"deny":["Bash(rm *)"]},"model":"user-choice"}' \
   > "$ALLOW_UPGRADE/.claude/settings.json"
 assert_cmd_zero "installer upgrades a pre-allowlist settings file" \
   bash "$ROOT/install.sh" "$ALLOW_UPGRADE" --source "$ROOT" --yes
@@ -1203,7 +1203,7 @@ assert_cmd_zero "allowlist merge keeps unrelated user settings" \
 # shipped order; nothing moves or duplicates.
 DRAFT_UPGRADE="$TMP/allowlist-draft-upgrade-project"
 mkdir -p "$DRAFT_UPGRADE/.claude"
-printf '%s\n' '{"permissions":{"allow":["Bash(claude-foundation *)","Bash(user-tool *)","Bash(.foundation/bin/claude-foundation *)","Bash(node .claude/harness/foundation.mjs *)","Edit(/.foundation/sandboxes/**)","Edit(/.foundation/repository-sandboxes/**)"]}}' \
+printf '%s\n' '{"permissions":{"allow":["Bash(cloop *)","Bash(user-tool *)","Bash(.foundation/bin/cloop *)","Bash(node .claude/harness/foundation.mjs *)","Edit(/.foundation/sandboxes/**)","Edit(/.foundation/repository-sandboxes/**)"]}}' \
   > "$DRAFT_UPGRADE/.claude/settings.json"
 assert_cmd_zero "installer upgrades a previous-release allowlist" \
   bash "$ROOT/install.sh" "$DRAFT_UPGRADE" --source "$ROOT" --yes
@@ -1215,7 +1215,7 @@ assert_eq "earlier-release upgrade appends only the missing rules" \
 # investigation rule after the user's own.
 RECORD_UPGRADE="$TMP/allowlist-record-upgrade-project"
 mkdir -p "$RECORD_UPGRADE/.claude"
-printf '%s\n' '{"permissions":{"allow":["Bash(claude-foundation *)","Bash(.foundation/bin/claude-foundation *)","Bash(node .claude/harness/foundation.mjs *)","Edit(/.foundation/sandboxes/**)","Edit(/.foundation/repository-sandboxes/**)","Edit(/.foundation/drafts/**)","Bash(user-tool *)"]}}' \
+printf '%s\n' '{"permissions":{"allow":["Bash(cloop *)","Bash(.foundation/bin/cloop *)","Bash(node .claude/harness/foundation.mjs *)","Edit(/.foundation/sandboxes/**)","Edit(/.foundation/repository-sandboxes/**)","Edit(/.foundation/drafts/**)","Bash(user-tool *)"]}}' \
   > "$RECORD_UPGRADE/.claude/settings.json"
 assert_cmd_zero "installer upgrades a six-rule allowlist" \
   bash "$ROOT/install.sh" "$RECORD_UPGRADE" --source "$ROOT" --yes

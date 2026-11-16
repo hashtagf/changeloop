@@ -66,7 +66,7 @@ export function untickTaskLine(content, taskId) {
 // renewed by resuming, so the repair names that route instead.
 function sessionScopeError(id, detail, through = "build") {
   const error = new Error(`${detail}. Revert edits that belong to another active task, ` +
-    `then resume with 'claude-foundation advance ${id} --through ${through}'`);
+    `then resume with 'cloop advance ${id} --through ${through}'`);
   error.owner = "agent";
   error.boundary = "task-scope";
   return error;

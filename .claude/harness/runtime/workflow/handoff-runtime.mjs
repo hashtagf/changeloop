@@ -201,7 +201,7 @@ export function recordHandoffOperation(context, id, flags = {}) {
   const record = handoffRecordValue(context, id, operation, input, previous,
     context.loadRuntime(id));
   context.writeJson(path, record);
-  context.output.log(`HANDOFF ${operation.id} ${input.status.toUpperCase()}\n  owner: ${operation.owner}\n  actor: ${input.actor}\n  reference: ${input.reference}\n  next: claude-foundation handoff status ${id}`);
+  context.output.log(`HANDOFF ${operation.id} ${input.status.toUpperCase()}\n  owner: ${operation.owner}\n  actor: ${input.actor}\n  reference: ${input.reference}\n  next: cloop handoff status ${id}`);
   return record;
 }
 

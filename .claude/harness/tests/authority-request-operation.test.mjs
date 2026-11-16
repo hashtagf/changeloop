@@ -284,7 +284,7 @@ test("authority abort refuses a request whose AI result completed without a rece
   stranded.unrecordedRequestResult = (_id, row) => row.requestId === "request-c";
   assert.throws(() => abortAuthorityOperation(stranded, "c", {
     request: "request-c", reason: "looks stuck"
-  }), /already has a completed AI review result without a receipt; aborting it would block every later review\. Record it instead: claude-foundation advance c --through proven/);
+  }), /already has a completed AI review result without a receipt; aborting it would block every later review\. Record it instead: cloop advance c --through proven/);
   assert.equal(stranded.replaced.length, 0, "the request is left dispatched");
   assert.equal(stranded.completed.length, 0, "attempt history is untouched");
 

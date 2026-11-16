@@ -236,7 +236,7 @@ test("archived resume uses retained references after sandbox cleanup, never fres
   assert.equal(value.workspacePath, null);
   assert.equal(value.historicalWorkspaceHash, "old-hash");
   assert.equal(value.evidenceAvailability, "retained-archive");
-  assert.equal(value.evidenceReference, "claude-foundation proof audit change-a");
+  assert.equal(value.evidenceReference, "cloop proof audit change-a");
   assert.equal(value.frontier.count, 0);
   assert.equal(value.nextAction.reached, "archived");
   assert.equal(JSON.stringify(value).includes("/removed-sandbox"), false);
@@ -317,7 +317,7 @@ test("target completion is not delivery and never runs beyond the requested targ
     assert.equal(result.user.delivered, target === "archived");
     assert.equal(result.user.reached, target);
     assert.equal(result.next, target === "archived" ? null :
-      `claude-foundation advance change-a --through ${target === "build" ? "proven" : "archived"}`);
+      `cloop advance change-a --through ${target === "build" ? "proven" : "archived"}`);
   }
   assert.equal(proofCalls, 0);
   assert.equal(landCalls, 0);
@@ -366,7 +366,7 @@ test("review preparation stays internal and preserves actual preflight decisions
   }
   let runs = 0;
   const requests = [];
-  const command = "claude-foundation authority run change-a --request review-1";
+  const command = "cloop authority run change-a --request review-1";
   const runtime = createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => base.state,
     agentDispatchValue: () => base.dispatch,
@@ -579,7 +579,7 @@ test("advance preserves a proof decision returned by a quiet operation", async (
   assert.deepEqual(value.decision.options.map(({ id, outcome }) => ({ id, outcome })),
     decision.options);
   for (const option of value.decision.options)
-    assert.equal(option.command, "claude-foundation advance change-a --decision " +
+    assert.equal(option.command, "cloop advance change-a --decision " +
       `${option.id} --decision-fingerprint ${value.decision.fingerprint} ` +
       "--decision-ref <user-answer> --reason <chosen-approach>");
   assert.deepEqual(value.user.decision.options.map(({ id, outcome }) => ({ id, outcome })),
@@ -594,7 +594,7 @@ test("an unchanged proof repair cycle stays agent work, not a user question", as
       next: [{
         kind: "change-strategy", reason: "choose a different in-scope repair",
         unchanged: true, progressFingerprint: "fp-same", findingIds: ["F-1"],
-        command: "claude-foundation packet change-a --phase build"
+        command: "cloop packet change-a --phase build"
       }]
     })
   });

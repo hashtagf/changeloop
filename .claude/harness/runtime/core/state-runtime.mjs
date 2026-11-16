@@ -151,7 +151,7 @@ export function createStateRuntime({
       if (restored) return restored;
       if (!recoverable)
         fail(`invalid JSON: ${runtimeRelativePath(id)} (${error.message}); ` +
-          `retire it with 'claude-foundation change abandon ${id} --reason <reason> --decision-ref <ref>'`);
+          `retire it with 'cloop change abandon ${id} --reason <reason> --decision-ref <ref>'`);
       return { version: 2, id, status: "unknown", schema: null, recoveredState: "corrupt" };
     }
   }
@@ -487,8 +487,8 @@ export function createStateRuntime({
     const workspace = canonicalPath(workspaceOverride || state.workspace?.path || root);
     if (!existsSync(workspace)) {
       const error = new Error(`workspace '${workspace}' for change '${id}' no longer exists; ` +
-        `recreate or repair it with 'claude-foundation sandbox create ${id} --all' or run ` +
-        `'claude-foundation change abandon ${id} --reason <reason> --decision-ref <ref>'`);
+        `recreate or repair it with 'cloop sandbox create ${id} --all' or run ` +
+        `'cloop change abandon ${id} --reason <reason> --decision-ref <ref>'`);
       error.code = "FOUNDATION_WORKSPACE_MISSING";
       throw error;
     }

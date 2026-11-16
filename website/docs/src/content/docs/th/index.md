@@ -16,8 +16,7 @@ Investigate? → Change → Build → Prove → Land
 
 Change Loop ไม่ใช่ AI และไม่ได้เขียนโค้ดเอง มันเป็น control plane แบบ deterministic ที่ครอบ coding agent ของคุณอีกที และไม่ได้มาแทน agent, test framework, CI หรือ Git workflow เดิม — มันสั่งเครื่องมือที่รีโปคุณมีอยู่แล้ว
 
-ชื่อ workflow คือ **Change Loop** คำสั่งที่คุณพิมพ์คือ `cloop` ส่วนชื่อเดิม
-`claude-foundation` ยังเป็น alias ถาวรที่ agent, permission rule และ integration เดิมใช้ต่อ
+ชื่อ workflow คือ **Change Loop** ทั้งคุณและ agent ใช้คำสั่ง `cloop`
 
 ผู้ใช้มีเจ็ดคำสั่งระดับ intent คือ `/investigate`, `/change`, `/build`, `/prove`,
 `/land`, `/deliver` ซึ่งเป็นทางเลือก และ `/dev` Agent compile semantic draft หนึ่งชุดแล้วขับ coordinator

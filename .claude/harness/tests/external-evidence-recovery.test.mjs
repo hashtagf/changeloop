@@ -10,8 +10,8 @@ import {
 const review = reviewEvidenceRecovery("c", "reviewer");
 assert.equal(review.provider, "reviewer");
 assert.equal(review.kind, "user-decision");
-assert.equal(review.request.command, "claude-foundation authority request c --type review");
-assert.equal(review.request.packet, "claude-foundation packet c --phase review");
+assert.equal(review.request.command, "cloop authority request c --type review");
+assert.equal(review.request.packet, "cloop packet c --phase review");
 assert.equal(review.decision.kind, "independent-review");
 assert.equal(review.decision.recommended, "prepare-for-reviewer");
 assert.deepEqual(review.decision.options.map((option) => option.id), [
@@ -95,8 +95,8 @@ assert.deepEqual(wiringChoiceOperation({
   ] })
 }, "c", "security"), {
   kind: "configure-provider",
-  command: "claude-foundation advance c --through proven",
+  command: "cloop advance c --through proven",
   source: "package.json",
   instruction: "Wire provider 'security' from the project-owned command detected at package.json, then re-run proof.",
-  verify: "claude-foundation advance c --inspect"
+  verify: "cloop advance c --inspect"
 });

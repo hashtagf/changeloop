@@ -175,7 +175,7 @@ When the project has `openspec/lessons.md` (durable lessons linked to records in
 `openspec/incidents/`), investigation and change intake add it to their
 grounding seed sources, so the agent reads project lessons first; editing it
 while a change is in flight returns the usual `refresh-source-coverage` EDIT.
-This file is unrelated to `claude-foundation lessons`, which groups recurring
+This file is unrelated to `cloop lessons`, which groups recurring
 blocker and review codes.
 
 Set the optional `activeChange` field to an existing change ID when the question
@@ -235,7 +235,7 @@ agreement, and installs it. `change start` creates no sandbox: the first
 
 #### Draft v5 folder and outline
 
-A draft v5 is a folder, started with `claude-foundation change start <folder>`
+A draft v5 is a folder, started with `cloop change start <folder>`
 (`new --draft` accepts it too). `change.json` declares `version: 5` and holds every typed field;
 `proposal.md` and `design.md` hold the author's prose under `## ` headings from
 the outline, in English or Thai. One versioned outline contract
@@ -255,7 +255,7 @@ section of `proposal.md` or `design.md` in place (`sections: [{document, key,
 body | value}]`), and a section key the outline does not have is refused with
 the packet unchanged. Volatile data (status, approvers, evidence freshness,
 review record) never renders in the packet before Land, because the approval
-identity covers every packet file; read it with `claude-foundation changes`.
+identity covers every packet file; read it with `cloop changes`.
 
 Proposal order: header, Summary, Why, User stories, Success criteria, Scope,
 Capabilities (derived, more than one capability), Impact and risk, Decisions to
@@ -393,7 +393,7 @@ reason, and lists recorded `decisions` (defaults the agent chose without
 asking, `decidedBy: agent`) under Decisions. Every packet is a dev document
 and each fact has one home. Every proposal, rapid or standard, opens with a
 harness-rendered header (change id, lane and why, owner, created date, status
-via `claude-foundation changes`; an unknown owner reads `unassigned`) and
+via `cloop changes`; an unknown owner reads `unassigned`) and
 states Scope (in scope: the behavior each requirement adds; out of scope:
 the task `paths` allow-list, unselected repositories, or the authored
 `nonGoals`, and never an empty section), an acceptance traceability table
@@ -572,7 +572,7 @@ carry optional `skills`: at most four skill names chosen only from the change's
 work types, risk signals, and security triggers (never prose), limited to skills
 installed under `.claude/skills/`, with a matching load instruction as the
 first instruction; absent when none applies. Each EDIT task with a verify
-also carries `checkCommand`, that verify run through `claude-foundation exec
+also carries `checkCommand`, that verify run through `cloop exec
 <change> --task <id>`, which the installed allowlist already permits. Each EDIT task carries its own
 `workspace`: a non-root repository's task names
 `.foundation/repository-sandboxes/<change>/<repository>`, never the shared
@@ -581,7 +581,7 @@ sandbox's path for that submodule, and the top-level `workspace` (plus a
 The `tasks.md` in `contextFiles` is the isolated ledger the harness ticks. When
 the handed work depends on finished tasks, or other repositories hold finished
 tasks, the EDIT lists them in `completed` (`id`, `repository`, `workspace`).
-`claude-foundation exec <change> --repo <id>` (or `--task <id>`) runs a check in
+`cloop exec <change> --repo <id>` (or `--task <id>`) runs a check in
 that same sandbox; without either, the caller's directory or a single pending
 task repository selects it, and nothing runs in the main checkout. Unauthorized external work enters
 `handoffs.yaml` only through a semantic amendment, and grounding reads belong in
@@ -737,7 +737,7 @@ To change an agreement that has not started Build, revise it in place instead
 of abandoning it and writing a new draft:
 
 ```bash
-claude-foundation change revise <change> <draft.json>
+cloop change revise <change> <draft.json>
 ```
 
 The revised semantic draft keeps the change id (a different `id` is refused)
@@ -840,7 +840,7 @@ When Build discovers new behavior, or the user adds requirements to a `proven`
 candidate before Land starts, amend the same agreement before continuing:
 
 ```bash
-claude-foundation change amend <change> <amendment.json>
+cloop change amend <change> <amendment.json>
 ```
 
 A successful amendment of a `proven` candidate returns it to `building` and
@@ -904,7 +904,7 @@ affected, missing, or ambiguous is rerun through the returned Prove route.
 A change that cannot be proven is retired explicitly, never deleted by hand:
 
 ```bash
-claude-foundation change abandon <change> --reason <reason> --decision-ref <ref>
+cloop change abandon <change> --reason <reason> --decision-ref <ref>
 ```
 
 Abandon releases leases, cleans up isolation, and moves the packet, runtime
@@ -1000,7 +1000,7 @@ is compared against.
 The normal entrypoint is:
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 The coordinator validates the agreement, prepares or synchronizes isolation,
@@ -1086,8 +1086,8 @@ command for the user.
 Unattended Build requires a trusted host-owned attestation:
 
 ```bash
-claude-foundation sandbox challenge <change>
-claude-foundation sandbox create <change> --unattended --attestation <file>
+cloop sandbox challenge <change>
+cloop sandbox create <change> --unattended --attestation <file>
 ```
 
 `--unattended` is presence-only; valued or duplicate forms are rejected before
@@ -1243,7 +1243,7 @@ audited batched amendment. `advance` synchronizes any amended agreement or
 moved target itself; the operator primitive behind it is:
 
 ```bash
-claude-foundation sandbox sync <change>
+cloop sandbox sync <change>
 ```
 
 Sync increments the agreement revision and invalidates proof that no longer
@@ -1303,7 +1303,7 @@ completion ticks merge back automatically.
 The normal resumable entrypoint is:
 
 ```bash
-claude-foundation advance <change> --through proven
+cloop advance <change> --through proven
 ```
 
 Proof validates the agreement, hashes relevant inputs, resolves claims to
@@ -1389,7 +1389,7 @@ next action. Direct authority commands remain integration surfaces.
 `/land` runs the same route `/dev` uses:
 
 ```bash
-claude-foundation advance <change> --through archived
+cloop advance <change> --through archived
 ```
 
 This explicit invocation supplies Land authority. Any other explicit user
@@ -1649,7 +1649,7 @@ evidence, prompt, or gate exists unless the user explicitly invokes
 `/deliver <change>` or directly asks to open a PR or deliver ("เปิด PR ให้เลย"),
 which is the same invocation.
 
-The agent runs one composition command, `claude-foundation deliver advance
+The agent runs one composition command, `cloop deliver advance
 <change>`, and executes its automatic recovery internally. The user never
 assembles readiness, preparation, commit, push, provider, or resume commands.
 Invoking `/deliver` on a proven change that is not yet archived is also the
@@ -1827,7 +1827,7 @@ affects budgets and slicing only; it never weakens assurance.
 `evidence.yaml` is the stable behavioral contract; `execution.yaml` holds
 replaceable commands, reports, services, resources, and environment-variable
 names. Provider names describe what is proven, not which tool runs. Run
-`claude-foundation providers` for the installed catalog and use
+`cloop providers` for the installed catalog and use
 `.claude/harness/EVIDENCE.md` for adapters, receipts, resource locks, signed
 envelopes, Playwright annotations, and reuse rules.
 
@@ -1927,7 +1927,7 @@ deterministic evidence alone, no reviewer runs, and `RESOLVED` prints
 tier is recomputed from the built diff at every Prove, so an inferred security
 or contract capability restores review. Every review is recorded against an
 `authority dispatch` attempt (`workflow.reviewCircuit: "full-delta"`). The
-retired `legacy` value of either key is refused; rerun `claude-foundation init`
+retired `legacy` value of either key is refused; rerun `cloop init`
 to upgrade it. The review reads the change's diff and
 the agreement's requirements, not whole files. Low risk runs one diff-only
 review on the fast model tier at medium effort (`review.lowRiskModel:
@@ -2151,7 +2151,7 @@ The agent records an explicit recovery answer using the fingerprint returned
 with the decision:
 
 ```bash
-claude-foundation advance <change> --decision <offered-option> \
+cloop advance <change> --decision <offered-option> \
   --decision-fingerprint <hash> --decision-ref <user-answer> --reason <approach>
 ```
 
@@ -2297,7 +2297,7 @@ the public reads. It never guesses future model demand.
 
 ## Compatibility and operator references
 
-`claude-foundation` is the stable public control surface. It finds the project
+`cloop` is the stable public control surface. It finds the project
 from the current directory or `--project <path>` and routes to the installed
 runtime so schemas and behavior stay aligned. Use `change start|amend` and
 `advance --through build|proven|archived` for normal work. Operator,
