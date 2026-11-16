@@ -17,6 +17,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Several changes can run at once. A copy sandbox no longer claims files it
+  copied from another session's uncommitted work and never edited: such a
+  file is not part of the change's surface, and sandbox sync fast-forwards it
+  instead of reporting a conflict. An edited copy still conflicts.
+- A Land that stops before applying anything returns the session to the
+  prove phase, so the main checkout is no longer held under Land rules for the
+  12-hour phase window and a user-instructed `git commit` runs again.
+- `change resolve --accept-target-edits` is checked per path and bytes: an
+  accepted, unchanged blocking path clears the stop even when other sessions'
+  dirty files come and go. A later edit to an accepted path is a new question.
+- Pi treats a command as Land only when the Change Loop CLI runs a Land
+  subcommand (`claude-foundation` or `foundation.mjs`), so `git add
+  openspec/changes/archive/...` and other commands that mention archive run.
+- Pi natural Land consent also accepts short affirmatives such as `land ได้`,
+  `ลง land ได้`, and `land ได้ครับ`; questions and refusals (`land ได้ไหม`,
+  `ยังไม่ต้อง land`, `don't land`) still grant nothing.
 - Pi Build shell calls start in the change workspace. Every Pi bash call used
   to start in the project root, so a relative shell write during Build landed
   in the main checkout and Land refused the change. Agent bash calls now start
@@ -28,6 +44,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   workspace. A worker started with `FOUNDATION_PARENT_SESSION_ID` now resolves
   the coordinating session's phase and may write only inside that workspace.
   Worker sessions refuse `/land`, `/deliver`, and natural Land consent.
+
+### Internal
+
+- Behavior-preserving refactors of the largest runtime files: packet
+  rendering, amendment record shaping, sandbox setup, and delta-review scope
+  now live in their own modules (`draft-packet-render.mjs`,
+  `amendment-record.mjs`, `sandbox-setup.mjs`, `review-delta-scope.mjs`), with
+  every moved symbol still exported from its original module.
 
 ## [3.7.2] - 2026-11-15
 

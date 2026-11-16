@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "changelog-concurrency",
+      "requirementKey": "changelog-concurrency",
+      "scenario": "Fixes are listed",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "status-3-7-3",
+      "requirementKey": "status-3-7-3",
+      "scenario": "Exception recorded",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    }
+  ],
+  "providers": {
+    "static-analysis": {
+      "adapter": "command",
+      "capability": "static-analysis",
+      "command": [
+        "sh",
+        "-c",
+        "(awk '/^## \\[Unreleased\\]/{f=1;next} /^## \\[/{f=0} f' CHANGELOG.md | grep -q 'accept-target-edits' && awk '/^## \\[Unreleased\\]/{f=1;next} /^## \\[/{f=0} f' CHANGELOG.md | grep -q 'land ได้') && (grep -q 'v3.7.3' docs/reports/user-scenario-release-status.md && bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "claims": "declared"
+    }
+  }
+}

@@ -18,6 +18,16 @@ comparison: 2026-10-08, no-harness/v3.6.0/v3.6.1/v3.6.2.
 
 ## Current scenario checkpoint
 
+### v3.7.3 candidate — 2026-11-16 (no paid smoke, owner exception)
+
+Source fixes four blockers for running several changes at once, broadens Pi
+natural Land consent, ships model-tier routing on for new installations, and
+refactors the largest runtime files without behavior change (see the
+changelog). No paid scenario smoke ran for this candidate and no paid evidence
+is claimed. Each fix has a failing-first deterministic regression and the
+default gate passed locally on every slice. The maintainer authorized
+publication as an explicit exception. Repeated assurance is not claimed.
+
 ### v3.7.2 candidate — 2026-11-16 (no paid smoke, owner exception)
 
 Source adds opt-in Deliver merge after passing checks (`deliver.merge`). No
