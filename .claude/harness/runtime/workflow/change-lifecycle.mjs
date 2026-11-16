@@ -761,17 +761,44 @@ export function createChangeLifecycle({
     });
   }
 
-  function repositoryGitPaths() {
-    const tracked = git(["ls-files", "-z"], root);
+  function gitVisiblePaths(directory) {
+    const tracked = git(["ls-files", "-z"], directory);
     const included = git([
       "ls-files", "-z", "--cached", "--others", "--exclude-standard"
-    ], root);
-    if (tracked.status !== 0 || included.status !== 0)
-      return { includedPaths: null, trackedPaths: [] };
+    ], directory);
+    if (tracked.status !== 0 || included.status !== 0) return null;
     return {
       trackedPaths: tracked.stdout.split("\0").filter(Boolean),
       includedPaths: included.stdout.split("\0").filter(Boolean)
     };
+  }
+
+  // A root that is not a Git repository (a folder that gathers many
+  // repositories) is scanned through the repositories it declares, restricted
+  // to the draft's selection, plus the seeds that live at the root. Walking the
+  // whole folder would reach every unrelated repository and exhaust the scan
+  // limits. Without declared repositories the whole-tree walk remains.
+  function repositoryGitPaths(source = {}, seeds = []) {
+    const rootPaths = gitVisiblePaths(root);
+    if (rootPaths) return rootPaths;
+    const selected = new Set((Array.isArray(source.repositories) ? source.repositories : [])
+      .map((entry) => typeof entry === "string" ? entry : entry?.id).filter(Boolean));
+    const repositories = declaredRepositories().filter((row) =>
+      ["git", "submodule"].includes(row.type) && (!selected.size || selected.has(row.id)));
+    const trackedPaths = [];
+    const includedPaths = [];
+    for (const repository of repositories) {
+      const prefix = String(repository.relativePath || "").replaceAll("\\", "/");
+      if (!prefix || prefix === "." || prefix.startsWith("../") || !repository.path) continue;
+      const paths = existsSync(repository.path) ? gitVisiblePaths(repository.path) : null;
+      if (!paths) continue;
+      trackedPaths.push(...paths.trackedPaths.map((path) => `${prefix}/${path}`));
+      includedPaths.push(...paths.includedPaths.map((path) => `${prefix}/${path}`));
+    }
+    if (!includedPaths.length) return { includedPaths: null, trackedPaths: [] };
+    for (const seed of [...seeds, ...lessonsSourcePaths()])
+      if (existsSync(join(root, seed))) includedPaths.push(seed);
+    return { trackedPaths, includedPaths: [...new Set(includedPaths)] };
   }
 
   // "skipped" (rapid-shaped change) is usable like "ready"; only "blocked" is not.
@@ -788,7 +815,7 @@ export function createChangeLifecycle({
       ...(source.requirements || []).flatMap((row) => [
         row?.key, row?.requirement, row?.description, row?.outcome
       ])];
-    const repositoryPaths = repositoryGitPaths();
+    const repositoryPaths = repositoryGitPaths(source, semanticSourcePaths(source));
     const excluded = new Set(excludedPaths.map((path) =>
       String(path || "").replaceAll("\\", "/")));
     const repository = inspectRepositoryIntelligence({

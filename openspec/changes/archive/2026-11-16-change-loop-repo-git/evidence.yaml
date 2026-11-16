@@ -1,0 +1,131 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "non-git-root-scan-scope-change-start-repository-intelligence",
+      "requirementKey": "non-git-root-scan-scope",
+      "scenario": "สแกนเฉพาะ repo ที่ประกาศ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "non-git-root-scan-scope-draft-repositories-app",
+      "requirementKey": "non-git-root-scan-scope",
+      "scenario": "draft เลือก repo บางตัว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "non-git-root-scan-scope-3",
+      "requirementKey": "non-git-root-scan-scope",
+      "scenario": "ไฟล์ seed ที่ root ยังถูกอ่าน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "non-git-root-scan-scope-4",
+      "requirementKey": "non-git-root-scan-scope",
+      "scenario": "ไฟล์ที่ repo ignore ไม่ถูกสแกน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "non-git-root-scan-scope-root-entries",
+      "requirementKey": "non-git-root-scan-scope",
+      "scenario": "ไม่ได้ประกาศ repo",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "non-git-root-scan-scope-6",
+      "requirementKey": "non-git-root-scan-scope",
+      "scenario": "root เป็น git",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pre-change-config-writes-write-foundation-drafts-fix-change-json",
+      "requirementKey": "pre-change-config-writes",
+      "scenario": "Write draft โฟลเดอร์ก่อนมี phase",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pre-change-config-writes-write-openspec-repositories-yaml",
+      "requirementKey": "pre-change-config-writes",
+      "scenario": "Write repositories.yaml ก่อนมี phase",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pre-change-config-writes-edit-openspec-repositories-yaml",
+      "requirementKey": "pre-change-config-writes",
+      "scenario": "Write repositories.yaml ใน Change",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pre-change-config-writes-write-openspec-config-yaml-src-app-js",
+      "requirementKey": "pre-change-config-writes",
+      "scenario": "ไฟล์อื่นก่อนมี phase ยังถูก block",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pre-change-config-writes-write-foundation-drafts-fix-src-app-js",
+      "requirementKey": "pre-change-config-writes",
+      "scenario": "path หลุดออกจากโฟลเดอร์ draft",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pre-change-config-writes-write-openspec-repositories-yaml-main-c",
+      "requirementKey": "pre-change-config-writes",
+      "scenario": "repositories.yaml ใน Build",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/repository-intelligence.test.mjs) && (sh .claude/tests/hooks/run-phase-mutation-guard-tests.sh) && (bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/repository-intelligence.test.mjs",
+        "sh .claude/tests/hooks/run-phase-mutation-guard-tests.sh",
+        "bash .claude/tests/docs/run-doc-consistency.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

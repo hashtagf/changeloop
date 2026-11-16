@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import {
@@ -318,6 +319,106 @@ test("rapid draft inspection skips the repository scan; medium impact runs it", 
   const medium = inspect("medium");
   assert.ok(scans > 0);
   assert.equal(medium.intelligence.repository.status, "ready");
+});
+
+// A folder that gathers many repositories without being one itself: two
+// declared repositories and an undeclared sibling. `siblingEntries` makes the
+// sibling large enough to exhaust the scan entry limit if it were walked.
+function gatheringRoot(t, { declare = true, siblingEntries = 0 } = {}) {
+  const root = mkdtempSync(join(tmpdir(), "repository-intelligence-gathering-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const write = (path, text) => {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), text);
+  };
+  const gitInit = (path) => spawnSync("git", ["init", "-q"], { cwd: join(root, path) });
+  write("services/app/src/login.ts", "export const login = 'administrator login';\n");
+  write("services/app/.gitignore", "generated/\n");
+  write("services/app/generated/login.ts", "export const ignored = 'administrator login';\n");
+  write("services/lib/src/login.ts", "export const lib = 'administrator login';\n");
+  gitInit("services/app");
+  gitInit("services/lib");
+  write("archive/unrelated/login.ts", "export const sibling = 'administrator login';\n");
+  for (let index = 0; index < siblingEntries; index += 1)
+    writeFileSync(join(root, "archive/unrelated", `f${index}.txt`), "");
+  write("openspec/lessons.md", "# Lessons\n");
+  mkdirSync(join(root, "openspec", "specs"), { recursive: true });
+  const repositories = declare ? [
+    { id: "app", type: "git", path: join(root, "services/app"), relativePath: "services/app" },
+    { id: "lib", type: "git", path: join(root, "services/lib"), relativePath: "services/lib" }
+  ] : [];
+  const lifecycle = createChangeLifecycle(changeLifecycleDeps({
+    root, policy: () => ({ workflow: { grounding: "optional" } }), securityTerms: [],
+    fail: (message) => { throw new Error(message); },
+    pathInside: () => true,
+    readJson: (path) => JSON.parse(readFileSync(path, "utf8")),
+    writeJson: (path, value) => {
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, `${JSON.stringify(value)}\n`);
+    },
+    slugify: (value) => String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    measureStage: (_stage, operation) => operation(),
+    git: (args, cwd) => {
+      const result = spawnSync("git", args, { cwd, encoding: "utf8" });
+      return { status: result.status, stdout: result.stdout || "", stderr: result.stderr || "" };
+    },
+    repositoryCatalog: () => ({ repositories: [
+      { id: "root", type: "root", path: root, relativePath: "." }, ...repositories
+    ] }),
+    changePath: (id) => join(root, "openspec", "changes", id),
+    loadRuntime: () => ({}), saveRuntime: () => {}, setOperationChangeId: () => {},
+    initialBudget: () => ({}), gitHead: () => "head", preexistingDirty: () => [],
+    now: () => "2026-09-30T00:00:00.000Z", bindClaudeSession: () => {},
+    validate: () => {}, rollbackStart: () => []
+  }));
+  let drafts = 0;
+  const inspect = (extra = {}) => {
+    drafts += 1;
+    const draftPath = `draft-${drafts}.json`;
+    writeFileSync(join(root, draftPath), JSON.stringify({
+      version: 4, intent: "Fix administrator login", impact: "medium", coupling: "isolated",
+      securityTriggers: [], acceptance: { required: false }, ...extra
+    }));
+    return lifecycle.inspectDraft(draftPath, { quiet: true, }).intelligence.repository;
+  };
+  return { root, inspect };
+}
+
+test("a non-Git root scans only its declared repositories and root seeds", (t) => {
+  // The undeclared sibling alone exceeds the 12,000-entry scan limit.
+  const { inspect } = gatheringRoot(t, { siblingEntries: 12_050 });
+  const value = inspect();
+  assert.equal(value.status, "ready", JSON.stringify(value.findings));
+  assert.equal(value.findings.some((row) => row.code === "scan-entry-limit"), false);
+  assert.ok(value.selectedSources.length > 0);
+  assert.equal(value.selectedSources.every((path) =>
+    /^services\/(?:app|lib)\//.test(path) || path === "openspec/lessons.md"), true,
+  JSON.stringify(value.selectedSources));
+  assert.ok(value.scan.entries < 12_000, `scan entries ${value.scan.entries}`);
+  assert.ok(value.selectedSources.includes("openspec/lessons.md"), "root seed is read");
+  assert.equal(value.findings.some((row) => row.code === "seed-not-discovered"), false);
+  // A file the repository ignores is never part of the scan.
+  assert.equal(value.selectedSources.some((path) => path.includes("/generated/")), false);
+  // app and lib: src/login.ts; root: lessons. The undeclared sibling and the
+  // ignored file are never read.
+  assert.equal(value.scan.files, 3);
+});
+
+test("a draft's repository selection narrows the non-Git root scan", (t) => {
+  const { inspect } = gatheringRoot(t);
+  const value = inspect({ repositories: [{ id: "app", mode: "write" }] });
+  assert.equal(value.status, "ready", JSON.stringify(value.findings));
+  assert.equal(value.selectedSources.some((path) => path.startsWith("services/lib/")), false);
+  assert.equal(value.selectedSources.every((path) =>
+    path.startsWith("services/app/") || path === "openspec/lessons.md"), true);
+  assert.equal(value.scan.files, 2);
+});
+
+test("a non-Git root without declared repositories keeps the whole-tree scan", (t) => {
+  const { inspect } = gatheringRoot(t, { declare: false, siblingEntries: 12_050 });
+  const value = inspect();
+  assert.equal(value.status, "blocked");
+  assert.equal(value.findings.some((row) => row.code === "scan-entry-limit"), true);
 });
 
 test("a project's openspec/lessons.md always joins the declared seeds when present", async (t) => {

@@ -356,6 +356,37 @@ done
 out="$(printf '%s' "$(write_event "$TMP/project/src/app.js")" |
   CLAUDE_PROJECT_DIR="$TMP/project" FOUNDATION_GUARDRAIL_MODE=block node "$HOOK")"
 assert_contains "pre-phase refusal names the draft route" "$out" 'change start'
+assert_contains "pre-phase refusal names the v5 draft folder" "$out" \
+  "cloop change start .foundation/drafts/<change-id>'"
+assert_not_contains "pre-phase refusal drops the retired --inspect flag" "$out" '--inspect'
+
+# The v5 draft is a folder, and a draft may select only declared repositories,
+# so both are written with Write/Edit before a phase exists and during Change.
+for target in \
+  "$TMP/project/.foundation/drafts/fix/change.json" \
+  "$TMP/project/.foundation/drafts/fix/proposal.md" \
+  "$TMP/project/.foundation/drafts/fix/design.md" \
+  "$TMP/project/openspec/repositories.yaml"; do
+  out="$(printf '%s' "$(write_event "$target")" |
+    CLAUDE_PROJECT_DIR="$TMP/project" FOUNDATION_GUARDRAIL_MODE=block node "$HOOK")"
+  assert_eq "pre-phase write is allowed: $target" "" "$out"
+done
+for target in \
+  "$TMP/project/openspec/config.yaml" \
+  "$TMP/project/.foundation/drafts/fix/sub/x.md" \
+  "$TMP/project/.foundation/drafts/fix/../../src/app.js" \
+  "$TMP/project/.foundation/drafts/fix/.hidden.md" \
+  "$TMP/project/.foundation/drafts/fix/run.sh"; do
+  out="$(printf '%s' "$(write_event "$target")" |
+    CLAUDE_PROJECT_DIR="$TMP/project" FOUNDATION_GUARDRAIL_MODE=block node "$HOOK")"
+  assert_contains "pre-phase write stays refused: $target" "$out" 'active phase is unavailable'
+done
+out="$(invoke change block "" "$(write_event "$TMP/project/openspec/repositories.yaml")")"
+assert_eq "Change may register repositories" "" "$out"
+out="$(invoke change block "" "$(write_event "$TMP/project/openspec/config.yaml")")"
+assert_contains "Change still refuses other project configuration" "$out" '"decision":"block"'
+out="$(invoke build block "$TMP/workspace" "$(write_event "$TMP/project/openspec/repositories.yaml")")"
+assert_contains "Build still refuses the main-checkout repository catalog" "$out" '"decision":"block"'
 
 mkdir -p "$TMP/scratch"
 out="$(printf '%s' "$(write_event "$TMP/scratch/notes.md")" |

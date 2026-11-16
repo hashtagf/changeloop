@@ -43,6 +43,12 @@ The phase comes from one of two places, in this order:
    share the same authority without a preparatory `packet` command. A row older
    than 12 hours is treated as no phase: the loop is not running.
 
+Before any phase exists, block mode (a `/dev` session) still lets Write/Edit
+create the change draft — a `.foundation/drafts/<id>.json` file or the files
+directly inside a `.foundation/drafts/<id>/` folder (`.json`/`.md`) — and
+`openspec/repositories.yaml`, because a draft may select only declared
+repositories. Change keeps the catalog writable; Build, Prove, and Land do not.
+
 A recorded row governs only while its change is still an active OpenSpec
 change — `openspec/changes/<id>` exists. Logs outlive their change, so an
 archived, abandoned, deleted, or fixture change leaves its last row behind;

@@ -100,6 +100,14 @@ What matters:
 Change Loop refuses a non-Git dependency because it cannot pin or isolate a
 moving directory honestly.
 
+The control root itself need not be a Git repository. A folder that only
+gathers many repositories works once the ones a change needs are declared
+here: change intake then scans only the files each declared repository's Git
+sees (narrowed to the draft's `repositories` selection, plus root seeds such
+as `openspec/lessons.md`) instead of walking every sibling. Write this file
+and the draft folder with the editor tools; the phase guard allows both before
+the change starts and during Change, but not during Build, Prove, or Land.
+
 Check the result before creating a change:
 
 ```bash

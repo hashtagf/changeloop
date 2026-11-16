@@ -191,9 +191,9 @@ if (!phase && prePhaseDraftMutationAllowed()) {
     reason: "no active phase", command: String(input.command || "") });
   process.exit(0);
 } else if (!phase) {
-  violations.push("active phase is unavailable; write the semantic draft to " +
-    ".foundation/drafts/<change-id>.json and run 'cloop change start " +
-    "<draft> --inspect' before editing product files");
+  violations.push("active phase is unavailable; write the semantic draft folder " +
+    ".foundation/drafts/<change-id>/ (change.json, proposal.md) and run " +
+    "'cloop change start .foundation/drafts/<change-id>' before editing product files");
 } else if (!new Set(["investigate", "change", "build", "prove", "land", "deliver"])
   .has(phase)) {
   violations.push(`unsupported active phase: ${phase}`);
@@ -299,8 +299,8 @@ function guide() {
 
 function route() {
   const id = recorded?.changeId || "<change>";
-  if (!phase) return "To make this a tracked change, write .foundation/drafts/<change-id>.json and run " +
-    "'cloop change start <draft>'; edits made now become part of that change's starting surface.";
+  if (!phase) return "To make this a tracked change, write the draft folder .foundation/drafts/<change-id>/ and run " +
+    "'cloop change start .foundation/drafts/<change-id>'; edits made now become part of that change's starting surface.";
   if (phase === "investigate") return "Investigate records findings; turn them into a change with /change.";
   if (phase === "change") return `Product work belongs to Build: get spec approval, then run ` +
     `'cloop advance ${id} --through build' and edit in the workspace it returns.`;
@@ -363,6 +363,11 @@ function inspectPath(rawPath) {
     return;
   }
   if (scratchTarget(target)) return;
+  // A change can select only repositories the project declares, so Change
+  // registers them before or while drafting; sandbox preflight re-checks the
+  // topology. Build, Prove, and Land never edit the catalog in place.
+  if (phase === "change" && target ===
+      canonicalTarget(join(projectRoot, "openspec", "repositories.yaml"), projectRoot)) return;
 
   const investigations = join(projectRoot, "openspec", "investigations");
   const prototypes = join(projectRoot, ".foundation", "prototypes");
@@ -716,7 +721,10 @@ function prePhaseDraftMutationAllowed() {
     // it is the only other place an agent can think on disk.
     if (!pathInside(projectRoot, target)) return true;
     const rel = relative(projectRoot, target).split(sep).join("/");
-    return /^(?:\.foundation\/change-start-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.json|\.foundation\/drafts\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.json)$/.test(rel);
+    // The v5 draft folder holds one level of files (change.json, proposal.md,
+    // design.md); openspec/repositories.yaml declares the repositories a draft
+    // may select. Nested or dot-prefixed names stay denied.
+    return /^(?:\.foundation\/change-start-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.json|\.foundation\/drafts\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.json|\.foundation\/drafts\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\/[a-z0-9][a-z0-9_-]*\.(?:json|md)|openspec\/repositories\.yaml)$/.test(rel);
   });
 }
 

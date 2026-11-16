@@ -98,6 +98,14 @@ repository ที่อยู่นอกการประกาศนี้
 Change Loop ปฏิเสธ dependency ที่ไม่ใช่ Git เพราะมันล็อก commit และแยก directory
 ที่กำลังขยับอย่างตรงไปตรงมาไม่ได้
 
+ตัว control root เองไม่จำเป็นต้องเป็น Git โฟลเดอร์ที่แค่รวมหลาย repository
+ไว้ใช้ได้เมื่อประกาศ repository ที่ change ต้องใช้ไว้ที่นี่ ตอนรับ draft
+ระบบจะสแกนเฉพาะไฟล์ที่ Git ของ repository ที่ประกาศมองเห็น (จำกัดตาม
+`repositories` ที่ draft เลือก และรวมไฟล์ seed ที่ root เช่น `openspec/lessons.md`)
+แทนการเดินทุกโฟลเดอร์ข้างเคียง ให้เขียนไฟล์นี้และโฟลเดอร์ draft ด้วยเครื่องมือแก้ไฟล์
+phase guard อนุญาตทั้งสองอย่างก่อนเริ่ม change และระหว่าง Change แต่ไม่อนุญาตใน
+Build, Prove หรือ Land
+
 ตรวจก่อนสร้าง change:
 
 ```bash

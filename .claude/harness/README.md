@@ -614,6 +614,10 @@ plain-language report of what was read, written, proven, and still waiting.
 The committed `openspec/repositories.yaml` describes root, submodule, Git, and
 external nodes. A monorepo remains one Git repository and uses task path scopes
 rather than pretending packages are independently landable remotes.
+The control root need not be Git: for a folder that only gathers repositories,
+change intake scans the Git-visible files of the declared (and draft-selected)
+repositories plus root seeds, and the phase guard lets Write/Edit register
+them in `openspec/repositories.yaml` before the change starts and during Change.
 Per-change `repositories.yaml` selects access
 and dependency scope. The runtime creates child worktrees under
 `.foundation/repository-sandboxes/`, hashes them into one composite snapshot,
