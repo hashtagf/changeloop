@@ -47,6 +47,16 @@ test("no-workaround-comment reports TODO, HACK, and workaround comments", async 
   assert.match(hits[0].message, /Fix the root cause now, or encode the constraint as a test or lint rule/);
 });
 
+test("no-workaround-comment ignores prose that names a marker", async () => {
+  const code = [
+    "// Drafts are rejected when a section still holds TODO or TBD.",
+    "// Playwright reports test.fixme tests as skipped.",
+    "export const value = 1;",
+    ""
+  ].join("\n");
+  assert.deepEqual(await ruleHits(code, "no-workaround-comment"), []);
+});
+
 test("no-silent-catch reports catch blocks without statements", async () => {
   const code = [
     "export function read(load) {",

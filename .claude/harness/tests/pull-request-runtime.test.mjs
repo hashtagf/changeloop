@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { deliveryTreeEntries } from "../runtime/workflow/delivery-integrity.mjs";
+import { deliveryTreeEntries } from "../runtime/workflow/transaction/delivery-integrity.mjs";
 
 import {
   classifyPullRequest,
@@ -26,7 +26,7 @@ import {
   pullRequestNarrative,
   repositoryDeliveryProjection,
   renderPullRequestBody
-} from "../runtime/workflow/pull-request-runtime.mjs";
+} from "../runtime/workflow/delivery/pull-request-runtime.mjs";
 
 function hash(value) {
   return createHash("sha256").update(value).digest("hex");

@@ -24,7 +24,7 @@ import {
   selectedRepository,
   selectedRepositoryRow,
   selectedRepositoryRuntimeIssue
-} from "../runtime/workflow/repository-topology.mjs";
+} from "../runtime/workflow/repository/repository-topology.mjs";
 import { worktreeOwnedByTarget } from "../runtime/core/repository-binding.mjs";
 
 const fail = (message) => { throw new Error(message); };

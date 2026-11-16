@@ -1,8 +1,9 @@
-import { leasePathIsAllowed } from "../lease-runtime.mjs";
+import { leasePathIsAllowed } from "../../core/graph-execution.mjs";
 import { BEHAVIOR_NEUTRAL_WORK, LIGHT_WORK, OBJECT_FIELDS, draftWorkTypes } from "./design-blueprints.mjs";
 import { isSemanticVersion } from "./draft-version.mjs";
 import { REQUIRED_ANSWERS } from "./work-type-fields.mjs";
-import { hasAuthoredProposalProse } from "../draft-folder.mjs";
+import { hasAuthoredProposalProse } from "./outline-contract.mjs";
+import { bestEffort } from "../../core/best-effort.mjs";
 
 // The dev document: what a Change hands to Build and to the person approving
 // it. Readers need to see what they get, what changes, and how it will be
@@ -565,11 +566,11 @@ export function withNewPaths(draft, exists) {
     for (const scope of strings(task?.paths)) {
       const path = scopePath(scope);
       if (!path || /[*?[]/.test(path) || path.startsWith("../") || path.startsWith("/")) continue;
-      try {
+      bestEffort(() => {
         const bare = path.replace(/\/$/, "");
         const present = repository === ROOT_REPOSITORY ? exists(bare) : exists(bare, repository);
         if (!present) fresh.add(pathKey(repository, path));
-      } catch { /* unknown is never reported as an addition */ }
+      }); // unknown is never reported as an addition
     }
   }
   return fresh.size ? { ...draft, _newPaths: [...fresh] } : draft;

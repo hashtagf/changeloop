@@ -10,7 +10,7 @@ package loads them by relative path; nothing is fetched at runtime.
 - **Tarball integrity:** `sha512-Mb01JT/x6CKDWaxigwfZYuYmDZ6xtrNwNlidKZwkSrDaY9n90tdrJTV5Umk+wP1fZscGptmKFXHsXMDEVZ+Q6A==`
   (sha1 `577fad5c31a01a06d9f793e298d411f1379eecc8`), matching `npm view mermaid@11.4.1 dist.integrity`
 - **File sha256:** `a43bc1afd446f9c4cc66ac5dd45d02e8d65e26fc5344ec0ef787f88d6ddb6f9e`
-- **Used by:** `.claude/harness/runtime/workflow/approval-package.mjs` to render diagrams
+- **Used by:** `.claude/harness/runtime/workflow/change/approval-package.mjs` to render diagrams
 - **Rollback:** delete the file; diagrams then show as readable Mermaid text
 - **License:** MIT
 

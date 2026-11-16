@@ -12,11 +12,11 @@ import {
 } from "../runtime/core/lifecycle-outcome.mjs";
 import {
   coordinatorAction, createAdvanceRuntime
-} from "../runtime/workflow/advance-runtime.mjs";
+} from "../runtime/workflow/advance/advance-runtime.mjs";
 import { diagnosticExport } from "../runtime/observability/diagnostic-export.mjs";
 import { createFeedbackRuntime, readinessProjection } from "../runtime/observability/feedback-runtime.mjs";
-import { archivedResumeSource, resumePacketValue } from "../runtime/workflow/resume-packet.mjs";
-import { createPacketRuntime } from "../runtime/workflow/packet-runtime.mjs";
+import { archivedResumeSource, resumePacketValue } from "../runtime/workflow/packet/resume-packet.mjs";
+import { createPacketRuntime } from "../runtime/workflow/packet/packet-runtime.mjs";
 import { createReceiptValidity } from "../runtime/evidence/receipt-validity.mjs";
 import { reviewEvidenceRecovery } from "../runtime/evidence/proof-readiness.mjs";
 import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";

@@ -11,6 +11,7 @@
 
 import { absenceKind, bareAbsenceIssue } from "./explicit-absence.mjs";
 import { isObject, localized, objectList, present, requireFields, text } from "./field-helpers.mjs";
+import { bestEffort } from "../../core/best-effort.mjs";
 
 const LABELS = Object.freeze({
   en: {
@@ -337,7 +338,7 @@ function validateDocs(value, path, issues) {
   if (!source) issues.push(`${path}.source is required`);
   else {
     let url = null;
-    try { url = new URL(source); } catch { /* reported below */ }
+    url = bestEffort(() => new URL(source), url); // reported below
     if (!url || url.protocol !== "https:") issues.push(`${path}.source must be an HTTPS URL`);
   }
   const version = String(value.version ?? "").trim();

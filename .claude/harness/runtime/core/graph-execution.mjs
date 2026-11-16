@@ -335,6 +335,10 @@ export function conflictKeysOverlap(left, right) {
 
 // A task scope is a directory prefix (`src`, `src/**`) or a glob with `*`,
 // `**`, or `?` — the same forms change validation accepts for `[paths:]`.
+export function leasePathIsAllowed(path, allowed) {
+  return allowed.some((scope) => scopeAllowsPath(scope, path));
+}
+
 export function scopeAllowsPath(scope, path) {
   const raw = String(scope).replace(/^\.\//, "");
   if (raw === "*") return true;

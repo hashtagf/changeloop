@@ -5,8 +5,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
 
-import { createPreviewRuntime, previewReceiptPath } from "../runtime/workflow/preview-runtime.mjs";
-import { createApprovalPackageRuntime } from "../runtime/workflow/approval-package.mjs";
+import { createPreviewRuntime, previewReceiptPath } from "../runtime/workflow/prototype/preview-runtime.mjs";
+import { createApprovalPackageRuntime } from "../runtime/workflow/change/approval-package.mjs";
 import { assertSpecApproval } from "../runtime/core/user-decisions.mjs";
 
 function write(path, value) {

@@ -13,6 +13,7 @@ import { isAbsolute, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { recordedPhaseContext } from "./phase-state.mjs";
 import { pathInside } from "../harness/runtime/core/paths.mjs";
+import { bestEffort } from "../harness/runtime/core/best-effort.mjs";
 
 const SAFE_ARGUMENT = /^[A-Za-z0-9_./:@%+=,-]+$/;
 const display = (value) => SAFE_ARGUMENT.test(value) ? value : `'${value.replaceAll("'", "'\\''")}'`;
@@ -182,7 +183,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
   const mode = (process.env.FOUNDATION_GUARDRAIL_MODE || "auto").toLowerCase();
   let raw = "";
   for await (const chunk of process.stdin) raw += chunk;
-  try {
+  bestEffort(() => {
     const event = JSON.parse(raw);
     if (mode === "off" || event.tool_name !== "Bash" || event.permission_mode === "bypassPermissions")
       process.exit(0);
@@ -196,5 +197,5 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
     process.stdout.write(JSON.stringify(strict
       ? { decision: "block", reason: route.reason }
       : { hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: route.reason } }));
-  } catch { /* a broken guide never stops the agent */ }
+  }); // a broken guide never stops the agent
 }

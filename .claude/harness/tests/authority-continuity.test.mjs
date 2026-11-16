@@ -4,13 +4,13 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createChangeLifecycle } from "../runtime/workflow/change-lifecycle.mjs";
+import { createChangeLifecycle } from "../runtime/workflow/change/change-lifecycle.mjs";
 import {
   agreementIdentity, assertSpecApproval, carryApprovalAcrossBookkeeping, currentWaivers,
   laneApproved
 } from "../runtime/core/user-decisions.mjs";
 import { leaseAuthorityIsStale, leaseContractChanged, sameLeaseRenewalAuthority }
-  from "../runtime/workflow/lease-runtime.mjs";
+  from "../runtime/workflow/authority/lease-runtime.mjs";
 import { approvedDecisionRevision } from "../runtime/evidence/receipt-runtime.mjs";
 import { workspaceCapabilityValue } from "../runtime/core/execution-contract.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";

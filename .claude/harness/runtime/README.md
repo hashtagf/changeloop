@@ -10,6 +10,7 @@ implementation is grouped by domain:
   acceptance, and provider execution.
 - `workflow/` — change, agent, repository, sandbox, authority, Land, and archive state machines.
 - `observability/` — telemetry ingestion, normalization, and read-only metrics reporting.
+- `quality/` — consumer quality discovery, policy, adapters, and evaluation.
 - `contracts/` — portable schemas for instruction provenance and host execution results.
 
 ## Dependency rules
@@ -25,14 +26,41 @@ implementation is grouped by domain:
 These rules keep subsystem tests bounded and prevent the compatibility entrypoint from
 growing back into a monolith.
 
-The deterministic architecture suite enforces this graph:
+The deterministic architecture suite enforces this graph and fails on any
+runtime folder that is not a declared domain:
 
 ```text
-   contracts / core
-            ^
- evidence / observability
-            ^
+          contracts / core
+                   ^
+ evidence / observability / quality
+                   ^
          workflow
             ^
        composition root
 ```
+
+## Workflow groups
+
+Every workflow module lives in a feature folder. A group imports only itself
+and the groups below it, so the tree is a layered map; the architecture suite
+fails on an upward import, a module left at `workflow/`, or an undeclared group.
+
+| Group | Owns |
+|---|---|
+| `land/` | Land readiness, Apply, archive, undo, and post-apply verification |
+| `sandbox/` | Isolated workspace creation, copy, replay, inspection, sync, setup, cleanup |
+| `delivery/` | Multi-repository delivery saga, merge, and pull requests |
+| `advance/` | The `advance` driver: envelopes, phase actions, recovery |
+| `change/` | Change start, materialize, resolve, revise, amend, validate, abandon, approval page |
+| `authority/` | Authority requests, budgets, leases, agent planning and dispatch, handoff |
+| `draft/` | Semantic draft and amendment compilers, draft folders, packet rendering |
+| `packet/` | Task and review packets, review delta scope, resume packet, verification plan |
+| `investigation/` | Investigation records and reports |
+| `prototype/` | Prototype binding, checklist, sync, and previews |
+| `repository/` | Repository topology, snapshots, and projections |
+| `transaction/` | Target-edit records, Land journal, undo plan, delivery integrity, copy base |
+| `validation/` | Pure draft and field validators |
+
+Order (top may import below): land → sandbox → delivery → advance → change →
+authority → draft → packet → investigation → prototype → repository →
+transaction → validation.

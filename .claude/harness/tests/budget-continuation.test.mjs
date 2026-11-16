@@ -12,7 +12,7 @@ import {
   createBudgetReporter,
   nextBudgetContinuationWindow,
   persistBudgetContinuation
-} from "../runtime/workflow/budget-commands.mjs";
+} from "../runtime/workflow/authority/budget-commands.mjs";
 import { drainSignals } from "../runtime/core/signals.mjs";
 
 const fail = (message) => { throw new Error(message); };

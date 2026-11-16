@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 
-import { VERIFICATION_RECORD_FILE, createApplyRuntime } from "../runtime/workflow/apply-runtime.mjs";
+import { VERIFICATION_RECORD_FILE, createApplyRuntime } from "../runtime/workflow/land/apply-runtime.mjs";
 import { renderVerificationRecord } from "../runtime/workflow/validation/process-fields.mjs";
 
 const ID = "ship-widget";

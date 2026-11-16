@@ -5,11 +5,13 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { HOST_COMMANDS } from "../runtime/core/host-instruction.mjs";
+import { deadline } from "../runtime/core/timing.mjs";
 import { normalizeHarnessCliInvocations } from "../runtime/core/shell-mutation-policy.mjs";
 import { assertSharedInstallation, isSharedProject } from '../runtime/core/project-installation.mjs';
 import { deliverRequest, investigateRequest, isLandConsent, resolveSessionDeliver,
   resolveSessionLand } from '../runtime/core/pi-land-context.mjs';
 import { recordedPhaseContext } from '../../hooks/phase-state.mjs';
+import { bestEffort, bestEffortAsync } from "../runtime/core/best-effort.mjs";
 
 const PHASE_FRESHNESS_MS = 12 * 60 * 60 * 1000;
 
@@ -32,7 +34,7 @@ function execute(command, args, { cwd, env, input, signal, timeout = 10000 } = {
   return new Promise((done, reject) => {
     const child = spawn(command, args, { cwd, env, signal, stdio: ["pipe", "pipe", "pipe"] });
     let stdout = "", stderr = "", failure;
-    const timer = setTimeout(() => { failure = new Error("Change Loop host operation timed out"); child.kill("SIGKILL"); }, timeout);
+    const cancelTimeout = deadline(timeout, () => { failure = new Error("Change Loop host operation timed out"); child.kill("SIGKILL"); });
     const capture = (key, chunk) => {
       if (key === "stdout") stdout += chunk; else stderr += chunk;
       if (stdout.length + stderr.length > 1024 * 1024) {
@@ -44,12 +46,12 @@ function execute(command, args, { cwd, env, input, signal, timeout = 10000 } = {
     child.stderr.on("data", (chunk) => capture("stderr", chunk));
     child.stdin.on("error", () => {}); // process may refuse before reading stdin
     child.on("error", (error) => {
-      clearTimeout(timer);
+      cancelTimeout();
       if (child.pid) child.kill("SIGKILL");
       reject(error);
     });
     child.on("close", (code) => {
-      clearTimeout(timer);
+      cancelTimeout();
       if (failure) reject(failure); else done({ code, stdout, stderr });
     });
     child.stdin.end(input || "");
@@ -215,10 +217,10 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   // best-effort: a failing digest never blocks the session.
   const refreshDigest = async (ctx) => {
     digest = "";
-    try {
+    await bestEffortAsync(async () => {
       const output = await hook("session-context.mjs", { session_id: parent || ctx.sessionManager.getSessionId() }, ctx);
       if (typeof output.additionalContext === "string") digest = output.additionalContext.trim();
-    } catch { /* best-effort */ }
+    });
   };
 
   pi.on("session_start", async (_event, ctx) => {
@@ -246,11 +248,12 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   // Code's Stop hook this only records the verdict and warns; it never loops.
   pi.on("agent_settled", async (event, ctx) => {
     if (!ready || event?.aborted || invocation?.command !== "dev") return;
-    try {
+    // Terminal truth stays with runtime proof; the warning is advisory.
+    await bestEffortAsync(async () => {
       const output = await hook("dev-terminal-guard.mjs", { session_id: parent || ctx.sessionManager.getSessionId(),
         host_prompt: `/dev ${invocation.args}`.trim(), host_session_start_ms: devStartMs }, ctx);
       if (output.systemMessage) ctx.ui.notify(output.systemMessage, "warning");
-    } catch { /* terminal truth stays with runtime proof; the warning is advisory */ }
+    });
   });
 
   // Only whole interactive user utterances route: extension, RPC and worker
@@ -354,11 +357,11 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     if (event.toolName === "bash" && !event.isError) {
       for (const part of event.content) {
         if (part.type !== "text") continue;
-        try {
+        bestEffort(() => {
           const result = JSON.parse(part.text);
           if (typeof result.action === "string") status(ctx,
             [result.changeId || result.change, result.phase, result.action].filter((v) => typeof v === "string").join(" · "));
-        } catch { /* ordinary shell output is not a lifecycle envelope */ }
+        }); // ordinary shell output is not a lifecycle envelope
       }
     }
     const note = guardNotes.get(event.toolCallId); guardNotes.delete(event.toolCallId);

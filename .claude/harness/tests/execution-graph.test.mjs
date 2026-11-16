@@ -11,7 +11,7 @@ import {
   schemasCompatible, scheduleReadyBatch, sequentialSessionEligible, singleAgentExecutionEligible
 } from "../runtime/core/graph-execution.mjs";
 
-import { createLeaseRuntime } from "../runtime/workflow/lease-runtime.mjs";
+import { createLeaseRuntime } from "../runtime/workflow/authority/lease-runtime.mjs";
 
 const stableHash = (value) => createHash("sha256")
   .update(JSON.stringify(value)).digest("hex");

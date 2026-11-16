@@ -2,7 +2,7 @@ import { scopeAllowsPath } from "../../core/graph-execution.mjs";
 import { renderInvestigationContext } from "./investigation-coverage.mjs";
 import { lightweightDraft } from "./design-blueprints.mjs";
 import { isSemanticVersion } from "./draft-version.mjs";
-import { hasAuthoredProposalProse } from "../draft-folder.mjs";
+import { hasAuthoredProposalProse } from "./outline-contract.mjs";
 
 // Reader guide: the parts of a compiled packet written for a human reviewer
 // rather than for the harness. Every field is optional and renders only when

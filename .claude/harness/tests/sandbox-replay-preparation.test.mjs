@@ -17,7 +17,7 @@ import {
   replayContext,
   replayStagingCleanup,
   stageReplayWorkspace
-} from "../runtime/workflow/sandbox-runtime.mjs";
+} from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 
 const fail = (message) => { throw new Error(message); };
 const ok = { status: 0, stdout: "", stderr: "" };

@@ -17,19 +17,19 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
 
-import { createAbandonRuntime } from "../runtime/workflow/abandon-runtime.mjs";
-import { createApplyRuntime } from "../runtime/workflow/apply-runtime.mjs";
-import { captureCopyBase, fileSource } from "../runtime/workflow/copy-base.mjs";
-import { advanceFailureAction } from "../runtime/workflow/advance-runtime.mjs";
+import { createAbandonRuntime } from "../runtime/workflow/change/abandon-runtime.mjs";
+import { createApplyRuntime } from "../runtime/workflow/land/apply-runtime.mjs";
+import { captureCopyBase, fileSource } from "../runtime/workflow/transaction/copy-base.mjs";
+import { advanceFailureAction } from "../runtime/workflow/advance/advance-runtime.mjs";
 import {
   createLandJournal, transactionJournals
-} from "../runtime/workflow/land-journal.mjs";
+} from "../runtime/workflow/transaction/land-journal.mjs";
 import {
   LAND_PROJECTION_MISSING, REPOSITORY_POINTER_CHANGE, ROOT_POINTER_MOVED, assertLandedProjection,
   landedProjectionFindings, repositoryPointerStop, rootPointerMoves
-} from "../runtime/workflow/land-verification.mjs";
-import { createSandboxCleanup } from "../runtime/workflow/sandbox-cleanup.mjs";
-import { assessSandbox, guardSandboxRemoval } from "../runtime/workflow/sandbox-preservation.mjs";
+} from "../runtime/workflow/land/land-verification.mjs";
+import { createSandboxCleanup } from "../runtime/workflow/sandbox/sandbox-cleanup.mjs";
+import { assessSandbox, guardSandboxRemoval } from "../runtime/workflow/sandbox/sandbox-preservation.mjs";
 
 const ID = "hook-change";
 const SUBMODULE = "services/hook/sub";

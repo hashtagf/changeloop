@@ -11,8 +11,8 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { createStateRuntime } from "../runtime/core/state-runtime.mjs";
 import { EXCLUDED_WORKSPACE_DIRS } from "../runtime/core/workspace-policy.mjs";
-import { copyApplyCodePaths } from "../runtime/workflow/apply-runtime.mjs";
-import { copySandboxEntries, sandboxCopyPlan } from "../runtime/workflow/sandbox-runtime.mjs";
+import { copyApplyCodePaths } from "../runtime/workflow/land/apply-runtime.mjs";
+import { copySandboxEntries, sandboxCopyPlan } from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 
 const ID = "demo";
 const noGit = () => ({ status: 128, stdout: "", stderr: "not a git repository" });

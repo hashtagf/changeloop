@@ -34,6 +34,7 @@ import childProcess from "node:child_process";
 import { syncBuiltinESMExports } from "node:module";
 import { promisify } from "node:util";
 import { basename, dirname, relative, resolve, sep } from "node:path";
+import { bestEffort } from "./best-effort.mjs";
 import { pathInside } from "./paths.mjs";
 
 // Exact argument lists that may be remembered. Anything else runs every time.
@@ -61,7 +62,8 @@ const stats = { hits: 0, misses: 0, invalidations: 0 };
 
 function realOrResolved(path) {
   const absolute = resolve(String(path));
-  try { return original.realpath(absolute); } catch {}
+  const real = bestEffort(() => original.realpath(absolute), null);
+  if (real !== null) return real;
   // A path about to be created: resolve its nearest existing parent.
   const tail = [basename(absolute)];
   let parent = dirname(absolute);

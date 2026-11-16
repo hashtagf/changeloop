@@ -8,7 +8,7 @@ import {
   providersForCapability,
   requiredProvidersOperation,
   reviewCoveredAdvisories
-} from "../runtime/workflow/change-validation.mjs";
+} from "../runtime/workflow/change/change-validation.mjs";
 import { providerCapability as catalogCapability, proofRolloutGates } from
   "../runtime/evidence/provider-catalog.mjs";
 

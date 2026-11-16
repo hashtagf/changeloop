@@ -4,9 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { syncChildOnlyPacket, syncChildOnlyTaskProgress } from "../runtime/workflow/apply-runtime.mjs";
+import { syncChildOnlyPacket, syncChildOnlyTaskProgress } from "../runtime/workflow/land/apply-runtime.mjs";
 import { taskBlocks } from "../runtime/contracts/change-artifacts.mjs";
-import { createSandboxRuntime } from "../runtime/workflow/sandbox-runtime.mjs";
+import { createSandboxRuntime } from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 
 // The same tick rule sync uses from root into the sandbox.
 const { mergeTaskProgress } = createSandboxRuntime({ taskBlocks });

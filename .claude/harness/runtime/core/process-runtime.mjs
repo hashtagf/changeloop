@@ -3,6 +3,7 @@ import { createServer } from "node:http";
 import { spawn } from "node:child_process";
 import { dirname, join, relative, resolve } from "node:path";
 import { pathInside } from "./paths.mjs";
+import { deadline, delay, terminateWithGrace } from "./timing.mjs";
 
 export { pathInside };
 
@@ -147,7 +148,7 @@ export function serviceEnvironment(config, id, root, proofRunId, name) {
 export async function startSpawnedService({
   id, name, config, proofRunId, cwd, root, logs, now,
   readinessCheck = readinessMatches, spawnProcess = spawn,
-  wait = () => new Promise((complete) => setTimeout(complete, 100))
+  wait = () => delay(100)
 }) {
   const [command, ...args] = config.command;
   let stdout = "";
@@ -173,8 +174,8 @@ export async function startSpawnedService({
       );
     return null;
   };
-  const deadline = Date.now() + Number(config.timeoutMs || 30000);
-  while (Date.now() < deadline) {
+  const readyBy = Date.now() + Number(config.timeoutMs || 30000);
+  while (Date.now() < readyBy) {
     const early = failure();
     if (early) throw early;
     if (await readinessCheck(config.readiness)) {
@@ -213,15 +214,15 @@ export function createProcessRuntime({ root, logs, now, resolveServiceCwd }) {
       let stderr = "";
       let timedOut = false;
       let readinessObserved = !options.readiness?.url;
-      let readinessTimer = null;
       let closed = false;
       const observeReadiness = async () => {
-        if (closed || readinessObserved) return;
-        if (await readinessMatches(options.readiness)) {
-          readinessObserved = true;
-          return;
+        while (!closed && !readinessObserved) {
+          if (await readinessMatches(options.readiness)) {
+            readinessObserved = true;
+            return;
+          }
+          if (!closed) await delay(100, { unref: true });
         }
-        if (!closed) readinessTimer = setTimeout(observeReadiness, 100);
       };
       const child = spawn(command, args, {
         cwd: options.cwd, env: options.env, stdio: ["ignore", "pipe", "pipe"]
@@ -234,8 +235,7 @@ export function createProcessRuntime({ root, logs, now, resolveServiceCwd }) {
       // the timeout timer pinned the event loop after the result was known.
       child.on("error", (error) => {
         closed = true;
-        clearTimeout(timer);
-        if (readinessTimer) clearTimeout(readinessTimer);
+        cancelTimeout();
         complete({
           status: null, signal: null, error, stdout, stderr,
           timedOut, readinessObserved,
@@ -243,15 +243,13 @@ export function createProcessRuntime({ root, logs, now, resolveServiceCwd }) {
         });
       });
       const timeoutMs = Number(options.timeoutMs || 120000);
-      const timer = setTimeout(() => {
+      const cancelTimeout = deadline(timeoutMs, () => {
         timedOut = true;
-        child.kill("SIGTERM");
-        setTimeout(() => child.kill("SIGKILL"), 2000).unref();
-      }, timeoutMs);
+        terminateWithGrace(child);
+      });
       child.on("close", (status, signal) => {
         closed = true;
-        clearTimeout(timer);
-        if (readinessTimer) clearTimeout(readinessTimer);
+        cancelTimeout();
         complete({
           status, signal, error: null, stdout, stderr,
           timedOut, readinessObserved,

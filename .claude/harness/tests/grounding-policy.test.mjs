@@ -8,8 +8,8 @@ import { tmpdir } from "node:os";
 import {
   createChangeValidationRuntime, durableDecisionMetadataIssues,
   groundingInteractionRequirements, semanticInvariantIssues
-} from "../runtime/workflow/change-validation.mjs";
-import { renderDraftDecisions } from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-validation.mjs";
+import { renderDraftDecisions } from "../runtime/workflow/change/change-lifecycle.mjs";
 
 const fixture = mkdtempSync(join(tmpdir(), "foundation-grounding-policy-"));
 const packet = join(fixture, "change");

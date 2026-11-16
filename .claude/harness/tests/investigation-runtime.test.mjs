@@ -9,7 +9,7 @@ import { join } from "node:path";
 import test from "node:test";
 import {
   createInvestigationRuntime, investigationRecordTemplate, validateInvestigationBinding
-} from "../runtime/workflow/investigation-runtime.mjs";
+} from "../runtime/workflow/investigation/investigation-runtime.mjs";
 
 function fixture(t, options = {}) {
   const root = mkdtempSync(join(tmpdir(), "investigation-runtime-"));

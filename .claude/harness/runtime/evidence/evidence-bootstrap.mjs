@@ -201,7 +201,7 @@ export function scriptCandidates(capability, tooling, repository, repositoryCoun
   safe.length > 1 ? `alternatives detected: ${safe.join(", ")}` : "project-owned package script"));
 }
 
-export function npmLockfileCandidates(tooling, repository, repositoryCount, declaredSurface) {
+export function npmLockfileCandidates(tooling, repository, repositoryCount) {
   if (!tooling || tooling.manager !== "npm" ||
       !existsSync(join(repository.workspacePath, "package-lock.json")) ||
       !existsSync(projectResource(repository.workspacePath, ".claude", "harness", "runtime",

@@ -12,7 +12,7 @@ import {
   readRuntimeDirectory,
   repositoryConflictRows,
   runtimeEntryIsJsonFile
-} from "../runtime/workflow/agent-planning.mjs";
+} from "../runtime/workflow/authority/agent-planning.mjs";
 
 function entry(name, file = true) {
   return { name, isFile: () => file };

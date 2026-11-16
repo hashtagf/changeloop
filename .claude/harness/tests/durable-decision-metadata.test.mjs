@@ -6,10 +6,10 @@ import test from "node:test";
 
 import {
   materializeDraftSpecs, renderDraftDesign, renderDraftProposal
-} from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
 import {
   normalizeSemanticDraft, renderRequirementMarkdown
-} from "../runtime/workflow/semantic-draft.mjs";
+} from "../runtime/workflow/draft/semantic-draft.mjs";
 
 import {
   durableDecisionBlockIssues,
@@ -22,7 +22,7 @@ import {
   durableDecisionValues,
   localDecisionReference,
   parseDurableDecisions
-} from "../runtime/workflow/change-validation.mjs";
+} from "../runtime/workflow/change/change-validation.mjs";
 
 const fields = [
   "Status", "Decision", "Why", "Rejected", "Consequences",

@@ -222,7 +222,7 @@
       "stack": "foundation-runtime",
       "size": "small",
       "fixture": ".claude/harness/tests/budget-continuation.test.mjs",
-      "fixture_digest": "sha256:0044dad7b6b35f71ba59e2ae8de248d026ec7cdb7a84ce83a7c42fb8ea51460c",
+      "fixture_digest": "sha256:472192b4a8ced7de461c3cfa1a3765a018653824affb27a5b8863a3b948bddb8",
       "prompt": "/dev continue until the deterministic request budget pauses",
       "host": "foundation-runtime",
       "risk": "low",

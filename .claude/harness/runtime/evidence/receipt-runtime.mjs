@@ -894,7 +894,7 @@ export function createReceiptRuntime({
     return { blockers, verified, findingRows, unresolvedIds, verifiedFindingIds };
   }
 
-  function dispatchedReviewScope(id, flags, identity) {
+  function dispatchedReviewScope(id, flags) {
     const history = reviewHistoryState(id);
     // Every review runs the full-delta circuit: evidence binds to a
     // dispatched (or deterministic repair-closure) attempt.

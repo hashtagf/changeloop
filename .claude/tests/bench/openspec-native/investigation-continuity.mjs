@@ -16,11 +16,11 @@ const digest = (v) => createHash('sha256').update(v).digest('hex');
 
 export async function runContinuityScenario(sourceRoot, sourceRef) {
   const runtimeModule = await import(pathToFileURL(join(sourceRoot,
-    '.claude/harness/runtime/workflow/investigation-runtime.mjs')));
+    '.claude/harness/runtime/workflow/investigation/investigation-runtime.mjs')));
   const semantic = await import(pathToFileURL(join(sourceRoot,
-    '.claude/harness/runtime/workflow/semantic-draft.mjs')));
+    '.claude/harness/runtime/workflow/draft/semantic-draft.mjs')));
   const lifecycle = await import(pathToFileURL(join(sourceRoot,
-    '.claude/harness/runtime/workflow/change-lifecycle.mjs')));
+    '.claude/harness/runtime/workflow/change/change-lifecycle.mjs')));
   const root = mkdtempSync(join(tmpdir(), 'continuity-scenario-'));
   const checks = [];
   const observations = [];

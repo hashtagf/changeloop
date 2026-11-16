@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   amendedReport, amendmentCoverageChanges, amendmentHistoryRow
-} from "../runtime/workflow/amendment-record.mjs";
-import * as lifecycle from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/amendment-record.mjs";
+import * as lifecycle from "../runtime/workflow/change/change-lifecycle.mjs";
 
 const compiled = {
   claims: [{ id: "c1", requirementKey: "r1" }, { id: "c2", requirementKey: "r2" }],

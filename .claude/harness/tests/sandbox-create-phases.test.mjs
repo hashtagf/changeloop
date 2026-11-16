@@ -40,8 +40,8 @@ import {
   showSandboxInspection,
   setupSelectedRepositories,
   unrelatedSandboxTargetChanges
-} from "../runtime/workflow/sandbox-runtime.mjs";
-import { carriedLandedExcludes } from "../runtime/workflow/target-edits.mjs";
+} from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
+import { carriedLandedExcludes } from "../runtime/workflow/transaction/target-edits.mjs";
 import {
   isInvestigationPath, sandboxCodePathspec
 } from "../runtime/core/workspace-surface.mjs";

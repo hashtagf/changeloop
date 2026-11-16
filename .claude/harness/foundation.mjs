@@ -9,7 +9,7 @@ import {
   appendFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync
 } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { delimiter, dirname, join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   createMetricsRuntime, createSourceCohortProvider
@@ -17,7 +17,7 @@ import {
 import { createExecRuntime } from "./runtime/observability/exec-runtime.mjs";
 import { createOutcomesRuntime } from "./runtime/observability/outcomes-runtime.mjs";
 import { createLessonsRuntime } from "./runtime/observability/lessons-runtime.mjs";
-import { createApprovalPackageRuntime, routeForState } from "./runtime/workflow/approval-package.mjs";
+import { createApprovalPackageRuntime, routeForState } from "./runtime/workflow/change/approval-package.mjs";
 import {
   createFeedbackRuntime, FEEDBACK_SCHEMA_VERSION
 } from "./runtime/observability/feedback-runtime.mjs";
@@ -32,11 +32,11 @@ import {
 } from "./runtime/observability/host-execution-contract.mjs";
 import { createHostAttestationRuntime } from "./runtime/evidence/attestation.mjs";
 import { validateSignedCiEnvelope } from "./runtime/evidence/signed-ci.mjs";
-import { createAuthorityStore } from "./runtime/workflow/authority.mjs";
-import { createBudgetRuntime } from "./runtime/workflow/budget.mjs";
+import { createAuthorityStore } from "./runtime/workflow/authority/authority.mjs";
+import { createBudgetRuntime } from "./runtime/workflow/authority/budget.mjs";
 import {
   createBudgetContinuation, createBudgetReporter
-} from "./runtime/workflow/budget-commands.mjs";
+} from "./runtime/workflow/authority/budget-commands.mjs";
 import {
   adapterResources as resultAdapterResources,
   configuredCommand,
@@ -58,44 +58,44 @@ import {
 } from "./runtime/core/lifecycle-phase.mjs";
 import { createProcessRuntime, serviceWorkspace } from "./runtime/core/process-runtime.mjs";
 import { createInstructionRecorder } from "./runtime/core/instruction-recorder.mjs";
-import { createAgentPlanner, createModelRouter } from "./runtime/workflow/agent-planning.mjs";
-import { createAgentDispatchRuntime } from "./runtime/workflow/agent-dispatch.mjs";
+import { createAgentPlanner, createModelRouter } from "./runtime/workflow/authority/agent-planning.mjs";
+import { createAgentDispatchRuntime } from "./runtime/workflow/authority/agent-dispatch.mjs";
 import {
   ADVANCE_PROTOCOL_VERSION, advanceFailureAction, createAdvanceRuntime, hasValidLandGrant,
   prepareAdvanceBuild, runAdvanceProof
-} from "./runtime/workflow/advance-runtime.mjs";
-import { automaticReviewRun, currentDeliveryProof } from "./runtime/workflow/advance-recovery.mjs";
+} from "./runtime/workflow/advance/advance-runtime.mjs";
+import { automaticReviewRun, currentDeliveryProof } from "./runtime/workflow/advance/advance-recovery.mjs";
 import {
   copySandboxEntries, createSandboxRuntime, sandboxCopyPlan
-} from "./runtime/workflow/sandbox-runtime.mjs";
-import { createPreviewRuntime } from "./runtime/workflow/preview-runtime.mjs";
-import { createSandboxCleanup } from "./runtime/workflow/sandbox-cleanup.mjs";
-import { rollbackAtomicStart as rollbackAtomicStartOperation } from "./runtime/workflow/atomic-start-rollback.mjs";
-import { assertLandedProjection } from "./runtime/workflow/land-verification.mjs";
+} from "./runtime/workflow/sandbox/sandbox-runtime.mjs";
+import { createPreviewRuntime } from "./runtime/workflow/prototype/preview-runtime.mjs";
+import { createSandboxCleanup } from "./runtime/workflow/sandbox/sandbox-cleanup.mjs";
+import { rollbackAtomicStart as rollbackAtomicStartOperation } from "./runtime/workflow/change/atomic-start-rollback.mjs";
+import { assertLandedProjection } from "./runtime/workflow/land/land-verification.mjs";
 import {
   createLandJournal, transactionJournals as readTransactionJournals
-} from "./runtime/workflow/land-journal.mjs";
+} from "./runtime/workflow/transaction/land-journal.mjs";
 import {
   createProofRuntime, taskPacketWasPrecompletedOperation
 } from "./runtime/evidence/proof-runtime.mjs";
-import { createRepositoryTopology } from "./runtime/workflow/repository-topology.mjs";
+import { createRepositoryTopology } from "./runtime/workflow/repository/repository-topology.mjs";
 import { nestedRepositoryRelativePaths } from "./runtime/core/repository-binding.mjs";
-import { createRepositorySnapshot } from "./runtime/workflow/repository-snapshot.mjs";
-import { createPacketRuntime } from "./runtime/workflow/packet-runtime.mjs";
-import { createChangePolicy } from "./runtime/workflow/change-policy.mjs";
+import { createRepositorySnapshot } from "./runtime/workflow/repository/repository-snapshot.mjs";
+import { createPacketRuntime } from "./runtime/workflow/packet/packet-runtime.mjs";
+import { createChangePolicy } from "./runtime/workflow/change/change-policy.mjs";
 import { taskBlocks, taskMetadata } from "./runtime/contracts/change-artifacts.mjs";
-import { createChangeLifecycle } from "./runtime/workflow/change-lifecycle.mjs";
-import { amendTaskVerifyOperation } from "./runtime/workflow/semantic-amendment.mjs";
-import { createInvestigationRuntime } from "./runtime/workflow/investigation-runtime.mjs";
-import { createLeaseRuntime } from "./runtime/workflow/lease-runtime.mjs";
-import { createAuthorityRuntime } from "./runtime/workflow/authority-runtime.mjs";
-import { createHandoffRuntime } from "./runtime/workflow/handoff-runtime.mjs";
+import { createChangeLifecycle } from "./runtime/workflow/change/change-lifecycle.mjs";
+import { amendTaskVerifyOperation } from "./runtime/workflow/draft/semantic-amendment.mjs";
+import { createInvestigationRuntime } from "./runtime/workflow/investigation/investigation-runtime.mjs";
+import { createLeaseRuntime } from "./runtime/workflow/authority/lease-runtime.mjs";
+import { createAuthorityRuntime } from "./runtime/workflow/authority/authority-runtime.mjs";
+import { createHandoffRuntime } from "./runtime/workflow/authority/handoff-runtime.mjs";
 import {
   advanceLandOperation, assertOpenSpecCli, createLandRuntime, openSpecCliStatus,
   recordedDeliveryReferences, targetProjectionObservationValue
-} from "./runtime/workflow/land-runtime.mjs";
-import { createApplyRuntime } from "./runtime/workflow/apply-runtime.mjs";
-import { createApplyRecovery } from "./runtime/workflow/apply-recovery.mjs";
+} from "./runtime/workflow/land/land-runtime.mjs";
+import { createApplyRuntime } from "./runtime/workflow/land/apply-runtime.mjs";
+import { createApplyRecovery } from "./runtime/workflow/transaction/apply-recovery.mjs";
 import { createDiagnosticsRuntime } from "./runtime/core/diagnostics-runtime.mjs";
 import { authorityPreflightValue } from "./runtime/core/authority-policy.mjs";
 import { compileExecutionContractValue } from "./runtime/core/execution-contract.mjs";
@@ -107,7 +107,7 @@ import {
 } from "./runtime/evidence/evidence-contract.mjs";
 import {
   createChangeValidationRuntime, postReleaseRolloutGates
-} from "./runtime/workflow/change-validation.mjs";
+} from "./runtime/workflow/change/change-validation.mjs";
 import { routeRuntimeCommand } from "./runtime/core/cli-router.mjs";
 import { impliedChangeValues } from "./runtime/core/implied-change.mjs";
 import { createProviderScheduler } from "./runtime/evidence/provider-scheduler.mjs";
@@ -128,7 +128,7 @@ import {
 import {
   createBenchmarkRuntime, receiptRegressionFinding
 } from "./runtime/evidence/benchmark-runtime.mjs";
-import { changeWorkTypes, taskChangeIssue } from "./runtime/workflow/task-change.mjs";
+import { changeWorkTypes, taskChangeIssue } from "./runtime/workflow/change/task-change.mjs";
 import { lightKind } from "./runtime/workflow/validation/dev-document.mjs";
 import { repositoryBaseHead } from "./runtime/core/repository-binding.mjs";
 import { createConfiguredReviewerRuntime } from "./runtime/evidence/configured-reviewer.mjs";
@@ -138,8 +138,8 @@ import {
   assertExecutionPreparationReady, ensureProjectOpenSpec,
   executionPreparationValue, prependFoundationToolPath
 } from "./runtime/core/tool-preparation.mjs";
-import { createAbandonRuntime } from "./runtime/workflow/abandon-runtime.mjs";
-import { createLandUndo } from "./runtime/workflow/land-undo.mjs";
+import { createAbandonRuntime } from "./runtime/workflow/change/abandon-runtime.mjs";
+import { createLandUndo } from "./runtime/workflow/land/land-undo.mjs";
 import { RUNTIME_MODULE_API } from "./runtime/version.mjs";
 import { createBootstrap } from "./runtime/composition/bootstrap.mjs";
 import {
@@ -148,15 +148,15 @@ import {
 import {
   ADAPTERS, INPUT_MODES, PROVIDER_CONTRACTS, PROVIDERS, providerCapability
 } from "./runtime/evidence/provider-catalog.mjs";
-import { SECURITY_TERMS } from "./runtime/workflow/security-policy.mjs";
-import { targetEditsForState } from "./runtime/workflow/target-edits.mjs";
+import { SECURITY_TERMS } from "./runtime/workflow/authority/security-policy.mjs";
+import { targetEditsForState } from "./runtime/workflow/transaction/target-edits.mjs";
 import {
   createSessionLeaseRuntime, isSessionOwner, runTaskCheck
-} from "./runtime/workflow/session-lease.mjs";
+} from "./runtime/workflow/authority/session-lease.mjs";
 import { createQualityRuntime } from "./runtime/quality/quality-runtime.mjs";
 import {
   createPullRequestRuntime, DELIVERY_PROTOCOL_VERSION, DELIVERY_RECEIPT_SCHEMA_VERSION
-} from "./runtime/workflow/pull-request-runtime.mjs";
+} from "./runtime/workflow/delivery/pull-request-runtime.mjs";
 
 const VERSION = "3.7.5";
 const RUNTIME_API_VERSION = "42";
@@ -236,7 +236,7 @@ async function trapFailuresAsync(operation) {
   finally { trappedFailureDepth -= 1; }
 }
 const { parseFlags, parseStrictCommandFlags } = createFlagParser({ fail: die });
-const { blockedDecisionValue, blockWithDecision } = createBlockedDecision({ fail: die });
+const { blockWithDecision } = createBlockedDecision({ fail: die });
 
 const {
   root: ROOT,
@@ -312,7 +312,6 @@ const commandPhaseRecorder = createCommandPhaseRecorder(() => ({
 process.on("exit", (code) => commandPhaseRecorder.finish(code));
 
 const {
-  commandRegistry,
   describeCommand,
   assertRegisteredRuntimeCommand
 } = createCommandRegistry({
@@ -456,14 +455,12 @@ const {
 const {
   reviewHistoryState,
   reviewAttemptByDigest,
-  reviewHistoryChainValid,
   assertReviewDispatchAllowed,
   dispatchReviewAttempt,
   completeReviewAttempt,
   recordRepairClosureAttempt,
   reviewAttempts,
   deliveredAiAttempts,
-  infrastructureAiAttempts,
   acknowledgeInfrastructureAttempts,
   grantExtraAiWave,
   acknowledgeBaseMoveAttempts,
@@ -500,13 +497,10 @@ const authorityStore = createAuthorityStore({
   now
 });
 const {
-  eventTokenCount,
   budgetWindow,
   initialBudget,
-  knownNumber,
   ensureBudgetState,
   calibrationForState,
-  activateBudgetWindow,
   budgetDecision,
   applyBudgetDecision,
   eventUsage,
@@ -564,7 +558,6 @@ const repositoryTopology = createRepositoryTopology({
 });
 const {
   catalog: repositoryCatalog,
-  changeSelection: changeRepositorySelection,
   selectionIdsAt: repositorySelectionIdsAt,
   selected: selectedRepositories,
   byId: repositoryById,
@@ -586,14 +579,11 @@ const { relevantSnapshot, relevantHash } = createRepositorySnapshot({
   now
 });
 const {
-  changedFilesInWorkspace,
-  changedFiles,
   canonicalChangedSurface,
   changedSurfaceResolvable,
   policyCapabilities,
   policyRolloutCapabilities,
   policyCapabilityTrigger,
-  capabilitiesForPaths,
   forecastCapabilities,
   policyProviderSetupActions,
   clearPolicyCache
@@ -642,7 +632,6 @@ const {
 const {
   appendTelemetryRows,
   bindClaudeSession,
-  claudeHostContext,
   importTelemetry,
   modelUsageRecorded,
   telemetryReadiness,
@@ -748,14 +737,11 @@ const {
   environmentDescriptor,
   adapterFingerprint,
   contractFingerprint,
-  normalizedAcceptance,
   resolvedAcceptance,
   reviewPolicy,
   executionFingerprint
 } = evidenceContract;
 const {
-  decodedEvidencePath,
-  evidenceInputTargetsPrototype,
   rejectPrototypeEvidenceInputs,
   receiptPrototypeEvidence,
   durableArtifact,
@@ -845,7 +831,6 @@ const {
   advisoryCapabilities,
   assertNoDroppedScenarios,
   changeArtifactGaps,
-  changeSpecScenarios,
   groundingValue,
   evidenceDetectionValue,
   initializeEvidence,
@@ -854,7 +839,6 @@ const {
   showEvidenceDetection,
   showEvidenceDoctor,
   showTraceabilityAudit,
-  traceabilityAuditValue,
   validate,
   waiveGate
 } = changeValidationRuntime;
@@ -1025,7 +1009,6 @@ const adapterRuntime = createAdapterRuntime({
 const {
   runProvider,
   startRequiredServices,
-  executionLog,
   adapterResources,
   executeAdapter
 } = adapterRuntime;
@@ -1109,13 +1092,10 @@ const packetRuntime = createPacketRuntime({
   fail: die
 });
 const {
-  packetValue,
   reviewPacketValue,
   showPacket
 } = packetRuntime;
 const {
-  authorityProvider,
-  authorityPacket,
   requestAuthority,
   dispatchAuthority,
   runAuthorityReviewer,
@@ -1250,7 +1230,6 @@ const {
   fail: die
 });
 const {
-  leasePath,
   acquire: acquireAgentLease,
   release: releaseAgentLease,
   discard: discardAgentLease,
@@ -1304,18 +1283,13 @@ const targetEditsFor = targetEditsForState.bind(null, {
 });
 
 const {
-  activeWorkRecovery,
   changedSurfaceIssues,
-  codeChangeRecovery,
-  configurationRecovery,
   externalEvidenceRecovery,
   proofPreflight,
   proofReadiness,
   proofReadinessValue,
   readinessBudgetPolicy,
-  recoveryLines,
   topologyIssues,
-  unavailableProviderRecovery,
   workspaceIsolationIssues
 } = createProofReadinessRuntime({
   root: ROOT,
@@ -1410,13 +1384,10 @@ const sandboxRuntime = createSandboxRuntime({
 });
 const {
   createChallenge: createAttestationChallenge,
-  workspaceInspection: workspaceIsolationInspection,
   inspect: isolationInspection,
   showInspection: showSandboxInspection,
-  createSingle: createSingleSandbox,
   create: createSandbox,
   prepareBuild: prepareBuildSandbox,
-  retryFailedSetups,
   mergeTaskProgress,
   sync: syncSandbox
 } = sandboxRuntime;
@@ -1472,10 +1443,6 @@ const preview = createPreviewRuntime({
   fail: die
 });
 const {
-  templateDir,
-  instantiate,
-  loadDraft,
-  materializeDraft,
   createChange,
   rapidStartTemplate,
   amendmentTemplate,
@@ -1821,9 +1788,6 @@ const modelDriftInspector = createModelDriftInspector({
 const {
   landCheck,
   recoverLand,
-  orderedRepositories,
-  repositoryCommitLanded,
-  rootGitlink,
   landPlanValue,
   showLandPlan,
   resumeLand,
@@ -1950,11 +1914,7 @@ const applyRuntime = createApplyRuntime({
   declaredRepositoryPaths
 });
 const {
-  gitApplyInputs,
   recordTargetRestore,
-  buildApplyEntries,
-  prepareApplyTransaction,
-  refreshAppliedProjection,
   applySandbox,
   archive
 } = applyRuntime;

@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import {
   advanceFailureAction, coordinatorAction, createAdvanceRuntime, envelopeContextFiles,
   hasValidLandGrant, noProgressOutput, prepareAdvanceBuild, proofOperationAction, runAdvanceProof
-} from "../runtime/workflow/advance-runtime.mjs";
+} from "../runtime/workflow/advance/advance-runtime.mjs";
 import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 test("a running proof's WORKING action carries its progress to the caller", () => {
@@ -1039,7 +1039,7 @@ function selfDrivingRuntime(overrides = {}) {
 }
 
 test("automatic review accepts only an exact harness-generated authority run route", async () => {
-  const { automaticReviewRun } = await import("../runtime/workflow/advance-recovery.mjs");
+  const { automaticReviewRun } = await import("../runtime/workflow/advance/advance-recovery.mjs");
   assert.deepEqual(automaticReviewRun("change-a",
     "cloop authority run change-a --request review-1 --subject-actor implementation-agent"),
   { request: "review-1", "subject-actor": "implementation-agent" });

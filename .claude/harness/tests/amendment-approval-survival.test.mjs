@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { createChangeLifecycle } from "../runtime/workflow/change-lifecycle.mjs";
+import { createChangeLifecycle } from "../runtime/workflow/change/change-lifecycle.mjs";
 import {
   agreementIdentity, amendedAgreementMatches, assertSpecApproval, snapshotAmendedPacket
 } from "../runtime/core/user-decisions.mjs";

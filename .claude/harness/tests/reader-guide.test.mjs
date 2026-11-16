@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { expandMinimalSemanticDraft, normalizeSemanticDraft } from "../runtime/workflow/semantic-draft.mjs";
+import { expandMinimalSemanticDraft, normalizeSemanticDraft } from "../runtime/workflow/draft/semantic-draft.mjs";
 import {
   draftNeedsDesign, renderDraftDesign, renderDraftProposal, reviewRouteLabel,
   synchronizeProposalClassification
-} from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
 import { coverageNoteLine, renderTraceability } from "../runtime/workflow/validation/packet-overview.mjs";
 import {
   durableDecisionMetadataIssues
-} from "../runtime/workflow/change-validation.mjs";
+} from "../runtime/workflow/change/change-validation.mjs";
 import {
   fileMapWithTasks, openQuestionItems, readerGuideWarnings
 } from "../runtime/workflow/validation/reader-guide.mjs";

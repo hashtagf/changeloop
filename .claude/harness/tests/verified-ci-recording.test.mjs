@@ -4,7 +4,7 @@ import {
   recordVerifiedCiOperation,
   requireExternalCiConfig,
   signedCiReceiptFlags
-} from "../runtime/workflow/authority-runtime.mjs";
+} from "../runtime/workflow/authority/authority-runtime.mjs";
 
 const fail = (message) => { throw new Error(message); };
 const config = {

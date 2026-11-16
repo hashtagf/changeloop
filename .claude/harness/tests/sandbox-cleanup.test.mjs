@@ -14,7 +14,7 @@ import {
   cleanupAppliedSandboxOperation,
   createSandboxCleanup,
   recognisedCopySandbox
-} from "../runtime/workflow/sandbox-cleanup.mjs";
+} from "../runtime/workflow/sandbox/sandbox-cleanup.mjs";
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "foundation-sandbox-cleanup-")));
 const canonicalPath = (path) => resolve(path);

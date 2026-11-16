@@ -8,12 +8,12 @@ import test from "node:test";
 import { spawnSync } from "node:child_process";
 import {
   apiContractErrorIssues, createChangeLifecycle, draftChangeId
-} from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
 import {
   amendmentTaskRepositoryIssues, amendmentVerifyPathIssues, taskRepositoryIssues,
   verifyDirectoryTargets, verifyPathIssues, verifyTestFileReferences
-} from "../runtime/workflow/semantic-amendment.mjs";
-import { verifySpecSync } from "../runtime/workflow/spec-sync-verify.mjs";
+} from "../runtime/workflow/draft/semantic-amendment.mjs";
+import { verifySpecSync } from "../runtime/workflow/land/spec-sync-verify.mjs";
 import { verifyCountAdvisories } from "../runtime/workflow/validation/design-blueprints.mjs";
 import {
   CORE_DISCOVERY_DIMENSIONS, riskSignalDimensions, semanticIntakeIssues
@@ -392,7 +392,7 @@ test("atomic start never rolls back a pre-existing change", (t) => {
 });
 
 test("a low-impact semantic draft with design content keeps the standard schema", async () => {
-  const { semanticDraftKeepsDesign } = await import("../runtime/workflow/change-lifecycle.mjs");
+  const { semanticDraftKeepsDesign } = await import("../runtime/workflow/change/change-lifecycle.mjs");
   const designed = { _semanticVersion: 4, dataModel: [{ entity: "Card", fields: ["id"], migration: "none" }] };
   // A descriptive section (file map) renders in the rapid proposal instead.
   assert.equal(semanticDraftKeepsDesign({ _semanticVersion: 4,

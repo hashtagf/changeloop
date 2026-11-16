@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   verifyRunsBehavior, verifySegmentKind, verifyShapeIssues
 } from "../runtime/workflow/validation/verify-shape.mjs";
-import { amendmentVerifyShapeIssues } from "../runtime/workflow/semantic-amendment.mjs";
+import { amendmentVerifyShapeIssues } from "../runtime/workflow/draft/semantic-amendment.mjs";
 
 // A product task is ticked by its verify, so that verify must run tests.
 

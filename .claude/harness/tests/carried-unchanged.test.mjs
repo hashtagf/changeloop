@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   carriedInUnchanged,
   unchangedManifestEntry
-} from "../runtime/workflow/change-policy.mjs";
+} from "../runtime/workflow/change/change-policy.mjs";
 
 test("unchanged manifest entries require an existing matching digest", () => {
   const workspace = mkdtempSync(join(tmpdir(), "foundation-unchanged-"));

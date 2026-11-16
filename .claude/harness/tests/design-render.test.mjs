@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { proposalOpenQuestions, renderDraftDesign } from "../runtime/workflow/change-lifecycle.mjs";
-import { normalizeSemanticDraft } from "../runtime/workflow/semantic-draft.mjs";
+import { proposalOpenQuestions, renderDraftDesign } from "../runtime/workflow/change/change-lifecycle.mjs";
+import { normalizeSemanticDraft } from "../runtime/workflow/draft/semantic-draft.mjs";
 import { designBlueprintIssues } from "../runtime/workflow/validation/design-blueprints.mjs";
 import { packetWorkTypes } from "../runtime/workflow/validation/dev-document.mjs";
 import { outlineSections, sectionHeading } from "../runtime/workflow/validation/outline-contract.mjs";
-import { durableDecisionMetadataIssues } from "../runtime/workflow/change-validation.mjs";
+import { durableDecisionMetadataIssues } from "../runtime/workflow/change/change-validation.mjs";
 
 const slugify = (value) => String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 

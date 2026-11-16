@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { normalizeSemanticDraft } from "../runtime/workflow/semantic-draft.mjs";
+import { normalizeSemanticDraft } from "../runtime/workflow/draft/semantic-draft.mjs";
 import { semanticIntakeAction } from "../runtime/workflow/validation/semantic-intake.mjs";
 import {
   devDocumentIssues, requiredDevSections

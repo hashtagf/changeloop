@@ -14,7 +14,7 @@ import {
   createChangeLifecycle,
   initialChangeState,
   priorChangeResidue
-} from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 const root = mkdtempSync(join(tmpdir(), "foundation-change-creation-"));

@@ -23,7 +23,7 @@ import {
   telemetryRowsForSession,
   resetInfrastructureAuthorityOperation,
   extendReviewAuthorityOperation
-} from "../runtime/workflow/authority-runtime.mjs";
+} from "../runtime/workflow/authority/authority-runtime.mjs";
 import { effectiveReviewAttemptLimit } from "../runtime/core/authority-policy.mjs";
 
 const fail = (message) => { throw new Error(message); };

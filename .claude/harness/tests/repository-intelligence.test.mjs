@@ -8,7 +8,7 @@ import test from "node:test";
 import {
   inspectRepositoryIntelligence, repositoryIntelligenceRequired, skippedRepositoryIntelligence
 } from "../runtime/workflow/validation/repository-intelligence.mjs";
-import { createChangeLifecycle } from "../runtime/workflow/change-lifecycle.mjs";
+import { createChangeLifecycle } from "../runtime/workflow/change/change-lifecycle.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 async function fixture(t) {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { AUTO_BUDGET_CONTINUATION_REF, createBudgetRuntime } from "../runtime/workflow/budget.mjs";
+import { AUTO_BUDGET_CONTINUATION_REF, createBudgetRuntime } from "../runtime/workflow/authority/budget.mjs";
 
 function fixture(execution = {}) {
   let ticks = 0;

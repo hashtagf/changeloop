@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createAdvanceRuntime } from "../runtime/workflow/advance-runtime.mjs";
+import { createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
 import {
   recordVisualDriftWaiver, requiredProvidersOperation
-} from "../runtime/workflow/change-validation.mjs";
+} from "../runtime/workflow/change/change-validation.mjs";
 import { gateDigest } from "../runtime/core/convergent-gate.mjs";
 import { proofPreflightAdvisory } from "../runtime/evidence/proof-readiness.mjs";
 import { providerCapability } from "../runtime/evidence/provider-catalog.mjs";

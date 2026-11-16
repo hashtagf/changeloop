@@ -257,6 +257,9 @@ installed runtime.
    API change, not another line of prose. `scripts/lint/ratchet.mjs` keeps
    harness findings and large-file sizes, including `foundation.mjs`, from
    growing; run `--tighten` after cleanup and commit the lowered baseline.
+   Timers go through `runtime/core/timing.mjs` and deliberately ignored
+   failures through `runtime/core/best-effort.mjs`; lint allows neither
+   anywhere else.
    A new or changed skill needs `.claude/skills/<name>/contract.json`
    (trigger, inputs, action, outputs, handoff, and who does or decides
    what); `scripts/lint/skill-contracts.mjs` checks it.

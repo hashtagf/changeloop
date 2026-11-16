@@ -7,7 +7,7 @@ import {
   semanticIntakeResumeProjection,
   semanticIntakeStateIssues,
   SEMANTIC_INTAKE_STATE_VERSION
-} from "../runtime/workflow/semantic-intake-state.mjs";
+} from "../runtime/workflow/draft/semantic-intake-state.mjs";
 
 const route = "cloop change start .foundation/drafts/contact.json --inspect";
 const inventory = (digest = "a".repeat(64)) => ({

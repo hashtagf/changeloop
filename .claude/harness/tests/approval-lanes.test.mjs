@@ -4,10 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { createChangeLifecycle } from "../runtime/workflow/change-lifecycle.mjs";
+import { createChangeLifecycle } from "../runtime/workflow/change/change-lifecycle.mjs";
 import { agreementIdentity, assertSpecApproval, missingApprovalLanes } from "../runtime/core/user-decisions.mjs";
 import { approvalPolicyIssue } from "../runtime/core/runtime-environment.mjs";
-import { routeForState } from "../runtime/workflow/approval-package.mjs";
+import { routeForState } from "../runtime/workflow/change/approval-package.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 // The lifecycle records consent; assertSpecApproval is the gate every Build,

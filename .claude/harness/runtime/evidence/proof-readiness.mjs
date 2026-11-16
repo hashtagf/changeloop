@@ -10,6 +10,7 @@ import {
 import { blockedOutcomeStop } from "../core/blocked-decision.mjs";
 import { requireDeps } from "../core/required-deps.mjs";
 import { visualWaiverSummary } from "./visual-review.mjs";
+import { bestEffort } from "../core/best-effort.mjs";
 
 const PREFLIGHT_SCAN_MAX_FILES = 20000;
 const PREFLIGHT_SCAN_MAX_BYTES = 1024 * 1024;
@@ -443,7 +444,7 @@ export function serviceResourceIssues(services = {}) {
   const owners = new Map();
   for (const [service, config] of Object.entries(services)) {
     let port = null;
-    try { port = new URL(config.readiness.url).port || null; } catch {}
+    port = bestEffort(() => new URL(config.readiness.url).port || null, port);
     const resources = [...(config.resources || []), ...(port ? [`port:${port}`] : [])];
     for (const resource of resources) {
       const owner = owners.get(resource);

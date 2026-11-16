@@ -8,7 +8,7 @@ import {
   copyDiffIdentity,
   combinedDiffIdentity,
   normalizedDiffDigest
-} from "../runtime/workflow/sandbox-runtime.mjs";
+} from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 
 const writable = {
   mode: "worktree", access: "write", baseHead: "base", path: "/box"

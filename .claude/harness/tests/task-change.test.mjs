@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { taskChangeIssue } from "../runtime/workflow/task-change.mjs";
+import { taskChangeIssue } from "../runtime/workflow/change/task-change.mjs";
 
 const task = { id: "T003", kind: "implementation", paths: ["src/api/**"] };
 

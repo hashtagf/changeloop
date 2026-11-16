@@ -19,13 +19,13 @@ import {
   validationDocumentBudgets,
   validationPreflightIssues,
   warnValidationDocumentBudgets
-} from "../runtime/workflow/change-validation.mjs";
+} from "../runtime/workflow/change/change-validation.mjs";
 import {
   createSpecDeltaValidator,
   existingCapabilityRequirementFindings
 } from "../runtime/workflow/validation/spec-delta.mjs";
 import { unobservedAliasConfig } from "../runtime/evidence/provider-catalog.mjs";
-import { workTypeProviderSetupActions } from "../runtime/workflow/change-policy.mjs";
+import { workTypeProviderSetupActions } from "../runtime/workflow/change/change-policy.mjs";
 
 const fail = (message) => { throw new Error(message); };
 
@@ -300,7 +300,7 @@ test("validation selects root or active packet without hiding state", () => {
 
 test("implementation task validation preserves IDs and rejects malformed gates", () => {
   const tasks = [
-    { id: "T001", done: false, text: "Implement runtime/workflow/land-runtime.mjs" },
+    { id: "T001", done: false, text: "Implement runtime/workflow/land/land-runtime.mjs" },
     { id: "T002", done: true, text: "Run /prove" }
   ];
   assert.deepEqual(validateImplementationTasks(tasks, fail), ["T001", "T002"]);

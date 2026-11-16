@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { EXAMPLE_TYPES, SCRATCH_TEXT_MAX, scratchFieldIssues } from "../runtime/workflow/scratch-fields.mjs";
-import { normalizeSemanticDraft, semanticDraftTemplate } from "../runtime/workflow/semantic-draft.mjs";
+import { EXAMPLE_TYPES, SCRATCH_TEXT_MAX, scratchFieldIssues } from "../runtime/workflow/draft/scratch-fields.mjs";
+import { normalizeSemanticDraft, semanticDraftTemplate } from "../runtime/workflow/draft/semantic-draft.mjs";
 
 const slug = (value) => String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-");
 

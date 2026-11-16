@@ -15,13 +15,13 @@ import {
   renderRequirementMarkdown, renderSpecHeading, semanticDraftTemplate,
   SEMANTIC_DRAFT_VERSIONS, isSemanticVersion,
   TASK_FIELDS, unknownTaskFieldWarnings
-} from "../runtime/workflow/semantic-draft.mjs";
-import { requiredProvidersOperation } from "../runtime/workflow/change-validation.mjs";
+} from "../runtime/workflow/draft/semantic-draft.mjs";
+import { requiredProvidersOperation } from "../runtime/workflow/change/change-validation.mjs";
 import { classifyReviewRisk } from "../runtime/evidence/review-routing.mjs";
 import {
   createChangeLifecycle, draftNeedsDesign, renderDraftProposal, renderDraftTask,
   semanticDraftKeepsDesign, synchronizeProposalClassification
-} from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
 import {
   declaredDraftRisk, deriveDraftRisk, riskLabel, withDerivedRisk
 } from "../runtime/workflow/validation/draft-risk.mjs";
@@ -30,16 +30,16 @@ import {
   compileSemanticAmendment,
   semanticAmendmentTemplate, taskContractOnlyAmendment, taskVerifyAmendment,
   updateTaskClaimAnnotation, verifyCannotFail, writeSemanticAmendment
-} from "../runtime/workflow/semantic-amendment.mjs";
-import { taskCheck } from "../runtime/workflow/session-lease.mjs";
-import { groupAgentTasks } from "../runtime/workflow/agent-planning.mjs";
+} from "../runtime/workflow/draft/semantic-amendment.mjs";
+import { taskCheck } from "../runtime/workflow/authority/session-lease.mjs";
+import { groupAgentTasks } from "../runtime/workflow/authority/agent-planning.mjs";
 import {
   LIGHT_WORK, WORK_TYPES, designBlueprintIssues, designBlueprintWarnings
 } from "../runtime/workflow/validation/design-blueprints.mjs";
 import {
   devDocumentIssues, devDocumentShapeIssues, requiredDevSections
 } from "../runtime/workflow/validation/dev-document.mjs";
-import { splitProse } from "../runtime/workflow/draft-folder.mjs";
+import { splitProse } from "../runtime/workflow/draft/draft-folder.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 const slugify = (value) => String(value).toLowerCase()
@@ -3500,7 +3500,7 @@ test("a minimal draft without a version still defaults to v4", () => {
 test("no literal semantic-version check remains outside the helper", () => {
   const runtime = new URL("../runtime/", import.meta.url);
   const files = [
-    "workflow/semantic-draft.mjs", "workflow/change-lifecycle.mjs",
+    "workflow/draft/semantic-draft.mjs", "workflow/change/change-lifecycle.mjs",
     ...readdirSync(new URL("workflow/validation/", runtime))
       .filter((name) => name.endsWith(".mjs") && name !== "draft-version.mjs")
       .map((name) => `workflow/validation/${name}`)

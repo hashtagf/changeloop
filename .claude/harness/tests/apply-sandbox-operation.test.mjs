@@ -6,7 +6,7 @@ import {
   projectionHash,
   projectionMismatch,
   reapplyProjection
-} from "../runtime/workflow/apply-runtime.mjs";
+} from "../runtime/workflow/land/apply-runtime.mjs";
 
 const priorLog = console.log;
 const priorMarker = process.env.FOUNDATION_LAND_TRANSACTION;

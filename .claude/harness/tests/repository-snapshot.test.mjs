@@ -8,7 +8,7 @@ import {
   createRepositorySnapshot,
   repositorySnapshotEntries,
   snapshotChildPaths
-} from "../runtime/workflow/repository-snapshot.mjs";
+} from "../runtime/workflow/repository/repository-snapshot.mjs";
 
 const root = mkdtempSync(join(tmpdir(), "foundation-repository-snapshot-"));
 const runtimeFile = join(root, "runtime.json");

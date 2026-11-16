@@ -7,10 +7,10 @@ import test from "node:test";
 
 import { spawnSync } from "node:child_process";
 
-import { createApplyRuntime } from "../runtime/workflow/apply-runtime.mjs";
-import { normalizeSemanticDraft, renderRequirementMarkdown } from "../runtime/workflow/semantic-draft.mjs";
+import { createApplyRuntime } from "../runtime/workflow/land/apply-runtime.mjs";
+import { normalizeSemanticDraft, renderRequirementMarkdown } from "../runtime/workflow/draft/semantic-draft.mjs";
 import { agreementIdentity } from "../runtime/core/user-decisions.mjs";
-import { deliveryTreeEntries } from "../runtime/workflow/delivery-integrity.mjs";
+import { deliveryTreeEntries } from "../runtime/workflow/transaction/delivery-integrity.mjs";
 
 const timestamp = "2026-08-26T00:00:00.000Z";
 const fail = (message) => { throw new Error(message); };

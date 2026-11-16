@@ -9,7 +9,7 @@ import { join } from "node:path";
 import {
   assertOpenSpecCli, createLandRuntime, openSpecCliStatus, openSpecVersionStatus,
   riskRequiresCi, signedCiProvider
-} from "../../harness/runtime/workflow/land-runtime.mjs";
+} from "../../harness/runtime/workflow/land/land-runtime.mjs";
 
 let assertions = 0;
 function check(actual, expected, message) {

@@ -5,7 +5,7 @@ import {
   assertRelocatedSandboxLayout,
   rebindRelocatedSandboxOperation,
   relocatedSandboxCandidate
-} from "../runtime/workflow/sandbox-runtime.mjs";
+} from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 
 const fail = (message) => { throw new Error(message); };
 const candidate = "/project/.foundation/sandboxes/change";

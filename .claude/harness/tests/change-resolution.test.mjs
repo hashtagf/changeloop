@@ -4,9 +4,9 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import {
   atomicStartPreflight, createChangeLifecycle, reviewRouteLabel
-} from "../runtime/workflow/change-lifecycle.mjs";
-import { SECURITY_TERMS } from "../runtime/workflow/security-policy.mjs";
-import { semanticRapidCandidate } from "../runtime/workflow/semantic-draft.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
+import { SECURITY_TERMS } from "../runtime/workflow/authority/security-policy.mjs";
+import { semanticRapidCandidate } from "../runtime/workflow/draft/semantic-draft.mjs";
 import { repositoryIntelligenceRequired } from "../runtime/workflow/validation/repository-intelligence.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 

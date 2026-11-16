@@ -594,7 +594,7 @@ elif ! openspec_source="$(cd "$TARGET_PATH" && node --input-type=module -e '
   const { spawnSync } = await import("node:child_process");
   const harness = (path) => import(pathToFileURL(`${process.cwd()}/.claude/harness/runtime/${path}`).href);
   const { ensureProjectOpenSpec } = await harness("core/tool-preparation.mjs");
-  const { openSpecCliStatus } = await harness("workflow/land-runtime.mjs");
+  const { openSpecCliStatus } = await harness("workflow/land/land-runtime.mjs");
   const prepared = ensureProjectOpenSpec({ root: process.cwd(), status: openSpecCliStatus, spawn: spawnSync });
   console.log(prepared.source);
 ' 2>/dev/null)"; then

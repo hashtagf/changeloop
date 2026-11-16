@@ -4,6 +4,7 @@ import {
   writeFileSync
 } from "node:fs";
 import { dirname } from "node:path";
+import { bestEffort } from "./best-effort.mjs";
 
 function safeReadJson(path) {
   try { return JSON.parse(readFileSync(path, "utf8")); }
@@ -32,13 +33,13 @@ export function acquireProcessLock(path, {
 
   const reapDeadLock = () => {
     const reaper = `${path}.reap`;
-    try {
+    bestEffort(() => {
       if (Date.now() - lstatSync(reaper).mtimeMs > reaperStaleMs) {
         const tombstone = `${reaper}.${process.pid}.stale`;
         renameSync(reaper, tombstone);
         rmSync(tombstone, { force: true });
       }
-    } catch {}
+    });
     let handle;
     try { handle = openSync(reaper, "wx", 0o600); }
     catch { return false; }
@@ -90,7 +91,7 @@ export function acquireProcessLock(path, {
       closeSync(descriptor);
       return true;
     } catch (error) {
-      if (descriptor !== undefined) try { closeSync(descriptor); } catch {}
+      if (descriptor !== undefined) bestEffort(() => closeSync(descriptor));
       if (error?.code !== "EEXIST") throw error;
       if (allowRecovery && reapDeadLock()) return acquire(false);
       return false;

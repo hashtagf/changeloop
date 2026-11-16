@@ -9,9 +9,9 @@ const root = fileURLToPath(new URL("../../..", import.meta.url));
 const fixture = mkdtempSync(join(tmpdir(), "foundation-authority-process-lock-"));
 const worker = join(fixture, "worker.mjs");
 const authorityUrl = pathToFileURL(join(root,
-  ".claude/harness/runtime/workflow/authority-runtime.mjs")).href;
+  ".claude/harness/runtime/workflow/authority/authority-runtime.mjs")).href;
 const storeUrl = pathToFileURL(join(root,
-  ".claude/harness/runtime/workflow/authority.mjs")).href;
+  ".claude/harness/runtime/workflow/authority/authority.mjs")).href;
 
 const workerSource = `
 import { createHash } from "node:crypto";

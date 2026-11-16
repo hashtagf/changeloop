@@ -25,7 +25,7 @@ export const SCREENSHOT_SKIPPED_DIRECTORIES = new Set([".git", "node_modules"]);
 
 const text = (value) => typeof value === "string" ? value.trim() : "";
 
-// The packet binding written at Change (workflow/prototype-binding.mjs). The
+// The packet binding written at Change (workflow/prototype/prototype-binding.mjs). The
 // evidence domain may not import workflow code, so the record is read here
 // with the same fail-closed rules: a copy whose digest drifted is not intact.
 const BINDING_RECOVERY = "run change revise before Build to write the binding again";

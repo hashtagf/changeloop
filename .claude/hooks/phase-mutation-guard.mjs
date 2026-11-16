@@ -24,6 +24,7 @@ import {
   workspaceCapabilityValue, workspaceMutationDecision
 } from "../harness/runtime/core/execution-contract.mjs";
 import { canonical, pathInside } from "../harness/runtime/core/paths.mjs";
+import { bestEffort } from "../harness/runtime/core/best-effort.mjs";
 
 // Large enough that a real audit trail survives a working session, small enough
 // that an unattended project never carries an unbounded file.
@@ -458,18 +459,21 @@ function approvedPrototypeTarget(target, investigations, prototypes) {
   if (!isWithin(target, prototypes) || !existsSync(investigations)) return null;
   for (const entry of readdirSync(investigations, { withFileTypes: true })) {
     if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
-    try {
+    // Malformed records grant no write capability.
+    const approved = bestEffort(() => {
       const record = JSON.parse(readFileSync(join(investigations, entry.name), "utf8"));
-      if (record?.mode !== "compare" || !Array.isArray(record.options)) continue;
+      if (record?.mode !== "compare" || !Array.isArray(record.options)) return null;
       for (const option of record.options) {
         for (const declared of Array.isArray(option?.prototypePaths)
           ? option.prototypePaths : []) {
-          const approved = canonicalTarget(declared, projectRoot);
-          if (approved === target && isWithin(approved, join(prototypes, String(record.id || ""))))
-            return approved;
+          const candidate = canonicalTarget(declared, projectRoot);
+          if (candidate === target && isWithin(candidate, join(prototypes, String(record.id || ""))))
+            return candidate;
         }
       }
-    } catch { /* malformed records grant no write capability */ }
+      return null;
+    }, null);
+    if (approved) return approved;
   }
   return null;
 }
@@ -597,13 +601,14 @@ function latestTypedPrompt(source) {
   let latest = "";
   for (const line of source.split("\n")) {
     if (!line.trim()) continue;
-    try {
+    // Tolerate a partially flushed final line.
+    bestEffort(() => {
       const row = JSON.parse(line);
       if (row.type === "last-prompt" && typeof row.lastPrompt === "string") {
         latest = row.lastPrompt.trim();
-        continue;
+        return;
       }
-      if (row.type !== "user" || row.isMeta) continue;
+      if (row.type !== "user" || row.isMeta) return;
       const content = row.message?.content;
       const text = typeof content === "string" ? content
         : Array.isArray(content) && !content.some((part) => part?.type === "tool_result")
@@ -616,7 +621,7 @@ function latestTypedPrompt(source) {
       } else if (text.trim() && !/^<(?:local-command|system-reminder)/.test(text.trim())) {
         latest = text.trim();
       }
-    } catch { /* tolerate a partially flushed final line */ }
+    });
   }
   return latest;
 }
@@ -651,11 +656,11 @@ function currentTranscriptIsDeliver(path) {
     let latest = "";
     for (const line of source.split("\n")) {
       if (!line.trim()) continue;
-      try {
+      bestEffort(() => {
         const row = JSON.parse(line);
         if (row.type === "last-prompt" && typeof row.lastPrompt === "string")
           latest = row.lastPrompt.trim();
-      } catch { /* tolerate a partially flushed final line */ }
+      }); // tolerate a partially flushed final line
     }
     return /^\/deliver(?:\s|$)/.test(latest);
   } catch { return false; }
@@ -668,11 +673,11 @@ function currentTranscriptIsInvestigate(path) {
     let latest = "";
     for (const line of source.split("\n")) {
       if (!line.trim()) continue;
-      try {
+      bestEffort(() => {
         const row = JSON.parse(line);
         if (row.type === "last-prompt" && typeof row.lastPrompt === "string")
           latest = row.lastPrompt.trim();
-      } catch { /* tolerate a partially flushed final line */ }
+      }); // tolerate a partially flushed final line
     }
     return {
       active: /^\/investigate(?:\s|$)/.test(latest),
@@ -773,7 +778,7 @@ function isWithin(target, root) {
 }
 
 function recordAudit(row) {
-  try {
+  bestEffort(() => {
     const logDir = join(projectRoot, ".foundation", "logs");
     mkdirSync(logDir, { recursive: true, mode: 0o700 });
     const auditPath = join(logDir, "guardrail-audit.jsonl");
@@ -783,9 +788,7 @@ function recordAudit(row) {
       timestamp: new Date().toISOString(),
       ...row,
     })}\n`, { mode: 0o600 });
-  } catch {
-    // Audit storage failure must not transform audit-only rollout into a block.
-  }
+  }); // Audit storage failure must not transform audit-only rollout into a block.
 }
 
 // An audit trail that deletes itself is not an audit trail, and one that grows
@@ -793,13 +796,12 @@ function recordAudit(row) {
 // repository and nothing in the runtime ever pruned it. One retained generation
 // bounds it at 2x the cap while keeping recent history readable.
 function rotateAudit(path) {
-  try {
+  // A failed rotation must not lose the row that triggered it.
+  bestEffort(() => {
     if (!existsSync(path)) return;
     if (statSync(path).size < AUDIT_MAX_BYTES) return;
     renameSync(path, `${path}.1`);
-  } catch {
-    // A failed rotation must not lose the row that triggered it.
-  }
+  });
 }
 
 async function readStdin() {

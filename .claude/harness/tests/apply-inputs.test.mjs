@@ -14,7 +14,7 @@ import {
   prepareApplyTransactionOperation,
   refreshAppliedProjectionOperation,
   sandboxDiffNamesOperation
-} from "../runtime/workflow/apply-runtime.mjs";
+} from "../runtime/workflow/land/apply-runtime.mjs";
 
 const fail = (message) => { throw new Error(message); };
 

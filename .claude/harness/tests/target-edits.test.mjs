@@ -9,8 +9,8 @@ import {
   replayCarriesLanded, replayLandedEdit, resolutionKeepsLanded, restorableTargetPaths,
   shellAuditCount, targetConflictStop, targetEditCarried, targetEditDigest, targetEditIssues,
   targetEditPaths, targetEditSyncStop
-} from "../runtime/workflow/target-edits.mjs";
-import { advanceFailureAction } from "../runtime/workflow/advance-runtime.mjs";
+} from "../runtime/workflow/transaction/target-edits.mjs";
+import { advanceFailureAction } from "../runtime/workflow/advance/advance-runtime.mjs";
 
 function project(t, rows = []) {
   const root = mkdtempSync(join(tmpdir(), "target-edits-"));

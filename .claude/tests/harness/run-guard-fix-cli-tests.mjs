@@ -17,7 +17,7 @@ import {
   hasObservableSecurityControl,
   plannedGroundingPathEligible,
   plannedGroundingPathRecovery
-} from "../../harness/runtime/workflow/change-validation.mjs";
+} from "../../harness/runtime/workflow/change/change-validation.mjs";
 
 const fail = (message) => { throw new Error(message); };
 const { parseFlags, parseStrictCommandFlags } = createFlagParser({ fail });

@@ -6,7 +6,7 @@ import {
   revokeGateWaiver,
   waiveGateOperation,
   waiverRequest
-} from "../runtime/workflow/change-validation.mjs";
+} from "../runtime/workflow/change/change-validation.mjs";
 
 const fail = (message) => { throw new Error(message); };
 

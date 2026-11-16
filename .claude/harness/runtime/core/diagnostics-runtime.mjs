@@ -104,7 +104,6 @@ export function createDiagnosticsRuntime({
   authorityPreflight = () => ({ status: "READY", blockers: [] }),
   executionContract = null,
   evidenceDetection = null,
-  parseFlags,
   fail
 }) {
   // A forecast is a prediction about files that do not exist. It warns, names

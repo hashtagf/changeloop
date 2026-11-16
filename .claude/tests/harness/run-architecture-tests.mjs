@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { dependencyFindings } from "./architecture-check.mjs";
+import { dependencyFindings, undeclaredDomains, workflowLayerFindings } from "./architecture-check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..", "..");
@@ -26,6 +26,30 @@ function walk(dir) {
 assert.deepEqual(dependencyFindings(RUNTIME), []);
 pass("shipped runtime imports follow the domain dependency graph");
 
+assert.deepEqual(undeclaredDomains(RUNTIME), []);
+pass("every runtime folder is a declared domain");
+
+assert.deepEqual(workflowLayerFindings(RUNTIME), []);
+pass("workflow modules live in declared groups that import only lower groups");
+
+{
+  const layered = mkdtempSync(join(tmpdir(), "foundation-workflow-layers-"));
+  try {
+    const workflow = join(layered, "workflow");
+    for (const group of ["change", "transaction", "misc"]) mkdirSync(join(workflow, group), { recursive: true });
+    writeFileSync(join(workflow, "change", "start.mjs"), 'export { edit } from "../transaction/edit.mjs";\n');
+    writeFileSync(join(workflow, "transaction", "edit.mjs"),
+      'import { start } from "../change/start.mjs";\nexport const edit = start;\n');
+    writeFileSync(join(workflow, "loose.mjs"), "export const loose = 1;\n");
+    writeFileSync(join(workflow, "misc", "thing.mjs"), "export const thing = 1;\n");
+    const findings = workflowLayerFindings(layered).map((finding) => finding.path).sort();
+    assert.deepEqual(findings, ["workflow/loose.mjs", "workflow/misc/thing.mjs", "workflow/transaction/edit.mjs"]);
+    pass("workflow layering reports upward imports, root files, and undeclared groups");
+  } finally {
+    rmSync(layered, { recursive: true, force: true });
+  }
+}
+
 const fixture = mkdtempSync(join(tmpdir(), "foundation-architecture-"));
 try {
   const runtime = join(fixture, ".claude", "harness", "runtime");
@@ -42,7 +66,24 @@ try {
     'import { createRequire } from "node:module";\n' +
     'const runtimeRequire = createRequire(import.meta.url);\n' +
     'export const task = runtimeRequire("../workflow/task.mjs");\n');
-  const findings = dependencyFindings(runtime);
+  mkdirSync(join(runtime, "quality"), { recursive: true });
+  writeFileSync(join(runtime, "quality", "bad-quality.mjs"),
+    'import { task } from "../workflow/task.mjs";\nexport { task };\n');
+  mkdirSync(join(runtime, "scratch"), { recursive: true });
+  writeFileSync(join(runtime, "scratch", "loose.mjs"),
+    'import { task } from "../workflow/task.mjs";\nexport { task };\n');
+  const all = dependencyFindings(runtime);
+  assert.ok(all.some((finding) => finding.sourceDomain === "quality" && finding.targetDomain === "workflow"));
+  assert.deepEqual(undeclaredDomains(runtime), ["scratch"]);
+  pass("quality is checked and an undeclared runtime folder is reported");
+  writeFileSync(join(runtime, "..", "foundation.mjs"), "export const root = true;\n");
+  writeFileSync(join(runtime, "workflow", "bad-root.mjs"),
+    'import { root } from "../../foundation.mjs";\nexport { root };\n');
+  assert.ok(dependencyFindings(runtime).some((finding) =>
+    finding.path === "workflow/bad-root.mjs" && finding.targetDomain === "composition root"));
+  rmSync(join(runtime, "workflow", "bad-root.mjs"));
+  pass("a domain module importing the composition root is reported");
+  const findings = all.filter((finding) => finding.sourceDomain === "core");
   assert.equal(findings.length, 4);
   assert.ok(findings.every((finding) => finding.sourceDomain === "core"));
   assert.ok(findings.every((finding) => finding.targetDomain === "workflow"));

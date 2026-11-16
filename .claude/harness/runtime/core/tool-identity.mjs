@@ -14,6 +14,7 @@ import {
   renameSync, statSync, writeFileSync
 } from "node:fs";
 import { delimiter, dirname, isAbsolute, join, resolve, sep } from "node:path";
+import { bestEffort } from "./best-effort.mjs";
 
 const MAX_HASHED_EXECUTABLE_BYTES = 8 * 1024 * 1024;
 const versionProbes = new Map();
@@ -45,7 +46,7 @@ function readPersistedProbes(projectRoot) {
 function persistProbe(projectRoot, key, value) {
   const file = probeCacheFile(projectRoot);
   if (!file) return;
-  try {
+  bestEffort(() => {
     const entries = readPersistedProbes(projectRoot);
     delete entries[key];
     entries[key] = value;
@@ -56,7 +57,7 @@ function persistProbe(projectRoot, key, value) {
     const temporary = `${file}.${process.pid}.tmp`;
     writeFileSync(temporary, `${JSON.stringify({ version: 1, entries })}\n`);
     renameSync(temporary, file);
-  } catch { /* a cache that cannot be written only costs the next probe */ }
+  }); // a cache that cannot be written only costs the next probe
 }
 
 function executableFile(path) {
@@ -168,8 +169,7 @@ export function openSpecLintInputDigest(projectRoot, id) {
   const openspec = join(projectRoot, "openspec");
   const rows = [];
   let entries = [];
-  try { entries = readdirSync(openspec, { withFileTypes: true }); }
-  catch { /* an absent tree hashes as empty */ }
+  entries = bestEffort(() => readdirSync(openspec, { withFileTypes: true }), entries); // an absent tree hashes as empty
   for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
     const absolute = join(openspec, entry.name);
     if (entry.name === "changes" && entry.isDirectory())

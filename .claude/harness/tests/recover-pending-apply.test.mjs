@@ -5,7 +5,7 @@ import {
   recoverApplyJournal,
   recoverPendingApplyOperation,
   settleCurrentApplyRecovery
-} from "../runtime/workflow/apply-recovery.mjs";
+} from "../runtime/workflow/transaction/apply-recovery.mjs";
 
 const fail = (message) => { throw new Error(message); };
 

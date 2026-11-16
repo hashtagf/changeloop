@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { nextCommand } from "../harness/runtime/core/next-step.mjs";
 import { shellDisplayArgument } from "../harness/runtime/core/shell-mutation-policy.mjs";
 import { pathInside } from "../harness/runtime/core/paths.mjs";
+import { bestEffort } from "../harness/runtime/core/best-effort.mjs";
 
 const HOOK_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(process.env.CLAUDE_PROJECT_DIR || join(HOOK_DIR, "..", ".."));
@@ -137,16 +138,15 @@ function workflowDigest() {
 }
 
 let input = {};
-try { input = JSON.parse(readFileSync(0, "utf8")); }
-catch { /* stdin shape is the host's contract, not this hook's to enforce */ }
+input = bestEffort(() => JSON.parse(readFileSync(0, "utf8")), input); // stdin shape is the host's contract, not this hook's to enforce
 // Each part is best-effort and independently guarded: no telemetry identity,
 // PATH entry, or workflow digest is worth blocking a Claude session over, and
 // one failing must not take another down with it.
-try { exportSessionIdentity(input); } catch { /* best-effort */ }
-try { exportCliPath(); } catch { /* best-effort */ }
-try {
+bestEffort(() => exportSessionIdentity(input)); // best-effort
+bestEffort(() => exportCliPath()); // best-effort
+bestEffort(() => {
   const digest = workflowDigest();
   if (digest) process.stdout.write(JSON.stringify({
     hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: digest }
   }));
-} catch { /* best-effort */ }
+}); // best-effort

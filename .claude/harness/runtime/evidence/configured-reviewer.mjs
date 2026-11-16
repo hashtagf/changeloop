@@ -11,6 +11,7 @@ import {
 } from "./review-diff.mjs";
 import { executableIdentity } from "../core/tool-identity.mjs";
 import { relativeInside } from "../core/paths.mjs";
+import { deadline, terminateWithGrace } from "../core/timing.mjs";
 
 // No `uniqueItems` anywhere in this schema: OpenAI structured output rejects
 // the keyword, failing every dispatch as an infrastructure error. `validReview`
@@ -629,7 +630,7 @@ export function spawnCapturedAsync(command, args, options = {}) {
     const finish = (status, signal) => {
       if (settled) return;
       settled = true;
-      clearTimeout(timer);
+      cancelTimeout();
       complete({ status, signal, error, stdout, stderr });
     };
     const collect = (append) => (chunk) => {
@@ -648,11 +649,10 @@ export function spawnCapturedAsync(command, args, options = {}) {
       finish(null, null);
     });
     child.on("close", (status, signal) => finish(error ? null : status, signal));
-    const timer = options.timeout ? setTimeout(() => {
+    const cancelTimeout = options.timeout ? deadline(Number(options.timeout), () => {
       error ||= Object.assign(new Error("spawn ETIMEDOUT"), { code: "ETIMEDOUT" });
-      child.kill("SIGTERM");
-      setTimeout(() => child.kill("SIGKILL"), 2000).unref();
-    }, Number(options.timeout)) : null;
+      terminateWithGrace(child);
+    }) : () => {};
     child.stdin.on("error", () => {});
     child.stdin.end(options.input === undefined ? undefined : options.input);
   });

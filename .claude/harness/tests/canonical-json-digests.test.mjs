@@ -6,7 +6,7 @@ import { canonicalJson as manifestJson } from "../runtime/core/instruction-manif
 import { canonicalJson, sortedJson } from "../runtime/core/trust.mjs";
 import { operationInputFingerprint } from "../runtime/observability/operation-profile.mjs";
 import { configDigest } from "../runtime/quality/quality-protocol.mjs";
-import { semanticDraftDigest } from "../runtime/workflow/semantic-intake-state.mjs";
+import { semanticDraftDigest } from "../runtime/workflow/draft/semantic-intake-state.mjs";
 
 // Persisted receipts, signatures, and fingerprints depend on these exact bytes.
 // The two serializer variants are not interchangeable: they order integer-like

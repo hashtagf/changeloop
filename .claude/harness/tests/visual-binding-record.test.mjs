@@ -8,7 +8,7 @@ import {
   readVisualBinding, runVisualReview, visualProviderConfig, withVisualRequirement
 } from "../runtime/evidence/visual-review.mjs";
 import { providerCapability } from "../runtime/evidence/provider-catalog.mjs";
-import { requiredProvidersOperation } from "../runtime/workflow/change-validation.mjs";
+import { requiredProvidersOperation } from "../runtime/workflow/change/change-validation.mjs";
 
 const CLAIMS = [
   { id: "C-a", requirementKey: "A", scenario: "a", capabilities: ["test"] },

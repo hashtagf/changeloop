@@ -16,8 +16,8 @@ import {
   renderDraftSpecDocument,
   renderDraftTask,
   renderDraftTasks
-} from "../runtime/workflow/change-lifecycle.mjs";
-import { loadDraftFolder } from "../runtime/workflow/draft-folder.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
+import { loadDraftFolder } from "../runtime/workflow/draft/draft-folder.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 const draft = () => ({

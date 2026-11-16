@@ -4,7 +4,7 @@ import { isAbsolute, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import {
   atomicStartPreflight, createChangeLifecycle, synchronizeProposalClassification
-} from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 // Draft loading boundaries that remain once only semantic drafts v4/v5 are

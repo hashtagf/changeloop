@@ -7,8 +7,8 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { createApprovalPackageRuntime, previewSuggestions } from "../runtime/workflow/approval-package.mjs";
-import { approvalPackageLine } from "../runtime/workflow/change-lifecycle.mjs";
+import { createApprovalPackageRuntime, previewSuggestions } from "../runtime/workflow/change/approval-package.mjs";
+import { approvalPackageLine } from "../runtime/workflow/change/change-lifecycle.mjs";
 import { routeChange } from "../runtime/contracts/scratch-router.mjs";
 
 function write(path, value) {

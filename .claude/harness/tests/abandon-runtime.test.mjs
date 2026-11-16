@@ -5,10 +5,10 @@ import {
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { createHash } from "node:crypto";
-import { createAbandonRuntime } from "../runtime/workflow/abandon-runtime.mjs";
+import { createAbandonRuntime } from "../runtime/workflow/change/abandon-runtime.mjs";
 import { createReviewAttemptStore } from "../runtime/evidence/review-attempt-store.mjs";
-import { createAuthorityStore } from "../runtime/workflow/authority.mjs";
-import { pendingAuthorityRequest } from "../runtime/workflow/authority-runtime.mjs";
+import { createAuthorityStore } from "../runtime/workflow/authority/authority.mjs";
+import { pendingAuthorityRequest } from "../runtime/workflow/authority/authority-runtime.mjs";
 import { createModelDriftInspector } from "../runtime/observability/host-execution-contract.mjs";
 
 const root = mkdtempSync(join(tmpdir(), "foundation-abandon-runtime-"));

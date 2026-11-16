@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { agreementDriftError, agreementIdentity, agreementRestoredNotice, assertSpecApproval,
   currentWaivers, repairWhitespaceDrift, restoreDriftedAgreement, REVIEW_DISPATCH_TIMEOUT_MS }
   from "../runtime/core/user-decisions.mjs";
-import { advanceFailureAction, createAdvanceRuntime } from "../runtime/workflow/advance-runtime.mjs";
+import { advanceFailureAction, createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
 import { drainSignals } from "../runtime/core/signals.mjs";
 import { workspaceCapabilityValue } from "../runtime/core/execution-contract.mjs";
 import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";

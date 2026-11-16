@@ -11,7 +11,7 @@ import {
 } from "../runtime/workflow/validation/quality-fields.mjs";
 import {
   NFR_CATEGORY_CAPABILITIES, createChangeValidationRuntime,
-} from "../runtime/workflow/change-validation.mjs";
+} from "../runtime/workflow/change/change-validation.mjs";
 
 const threatModel = {
   assets: ["session token (secret)", "member PII (personal)"],

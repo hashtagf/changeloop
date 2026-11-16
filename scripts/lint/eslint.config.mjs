@@ -17,7 +17,7 @@ export default [
     plugins: { changeloop },
     rules: {
       "no-undef": "error",
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_", caughtErrors: "none" }],
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_", caughtErrors: "none", ignoreRestSiblings: true }],
       "no-unreachable": "error",
       "no-dupe-keys": "error",
       "changeloop/no-timer-wait": "error",
@@ -25,5 +25,15 @@ export default [
       "changeloop/no-silent-catch": "error",
       "changeloop/no-bare-disable": "error"
     }
+  },
+  {
+    // The named timer primitives; every other module waits through them.
+    files: [".claude/harness/runtime/core/timing.mjs"],
+    rules: { "changeloop/no-timer-wait": "off" }
+  },
+  {
+    // The named ignore-on-failure primitive; every other catch handles the error.
+    files: [".claude/harness/runtime/core/best-effort.mjs"],
+    rules: { "changeloop/no-silent-catch": "off" }
   }
 ];

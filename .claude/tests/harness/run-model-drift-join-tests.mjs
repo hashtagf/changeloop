@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createModelDriftInspector } from "../../harness/runtime/observability/host-execution-contract.mjs";
 import { createMetricsRuntime } from "../../harness/runtime/observability/metrics-runtime.mjs";
-import { createChangeValidationRuntime } from "../../harness/runtime/workflow/change-validation.mjs";
+import { createChangeValidationRuntime } from "../../harness/runtime/workflow/change/change-validation.mjs";
 
 let assertions = 0;
 function check(actual, expected, message) {

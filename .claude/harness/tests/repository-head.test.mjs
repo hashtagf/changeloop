@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
-import { headOfRepository } from "../runtime/workflow/sandbox-runtime.mjs";
+import { headOfRepository } from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 
 const lower = "0123456789abcdef0123456789abcdef01234567";
 const upper = lower.toUpperCase();

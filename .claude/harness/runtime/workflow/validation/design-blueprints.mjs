@@ -1,4 +1,4 @@
-import { leasePathIsAllowed } from "../lease-runtime.mjs";
+import { leasePathIsAllowed } from "../../core/graph-execution.mjs";
 import { ARCHITECTURE_FIELDS } from "./architecture-fields.mjs";
 import { CONTRACT_FIELDS } from "./contract-fields.mjs";
 import { QUALITY_FIELDS } from "./quality-fields.mjs";

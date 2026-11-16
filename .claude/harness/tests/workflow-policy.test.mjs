@@ -10,8 +10,8 @@ import { fileURLToPath } from "node:url";
 import { createReviewAttemptStore } from "../runtime/evidence/review-attempt-store.mjs";
 import { createReviewProtocol } from "../runtime/evidence/review-protocol.mjs";
 import { reviewFindingIssues } from "../runtime/evidence/configured-reviewer.mjs";
-import { createAdvanceRuntime } from "../runtime/workflow/advance-runtime.mjs";
-import { createAuthorityStore } from "../runtime/workflow/authority.mjs";
+import { createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
+import { createAuthorityStore } from "../runtime/workflow/authority/authority.mjs";
 import {
   bindMainSession,
   createAuthorityRuntime,
@@ -20,7 +20,7 @@ import {
   mainSessionEnvironment,
   mainSessionFallbackValue,
   mainSessionProvenanceValue
-} from "../runtime/workflow/authority-runtime.mjs";
+} from "../runtime/workflow/authority/authority-runtime.mjs";
 import { reviewAssurancePosture } from "../runtime/core/runtime-environment.mjs";
 import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 

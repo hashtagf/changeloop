@@ -18,7 +18,7 @@ import {
   releaseLeaseUnderLock,
   sameLeaseRenewalAuthority,
   taskNodeOutputSchema
-} from "../runtime/workflow/lease-runtime.mjs";
+} from "../runtime/workflow/authority/lease-runtime.mjs";
 
 const owned = {
   changeId: "change-a", taskId: "T001", owner: "agent-a",

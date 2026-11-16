@@ -11,7 +11,7 @@ import {
   createChangePolicy,
   repositoryBaseHead,
   sortChangedSurface
-} from "../runtime/workflow/change-policy.mjs";
+} from "../runtime/workflow/change/change-policy.mjs";
 import {
   PROVIDER_CONTRACTS, PROVIDERS
 } from "../runtime/evidence/provider-catalog.mjs";

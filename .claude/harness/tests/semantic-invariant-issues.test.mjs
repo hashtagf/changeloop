@@ -7,7 +7,7 @@ import {
   semanticInvariantIdentityIssues,
   semanticInvariantIssues,
   semanticInvariantReferenceIssues
-} from "../runtime/workflow/change-validation.mjs";
+} from "../runtime/workflow/change/change-validation.mjs";
 
 test("semantic invariant identity validates stable unique IDs and statements", () => {
   const ids = new Set();

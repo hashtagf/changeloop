@@ -4,12 +4,12 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { isAbsolute, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { dirname } from "node:path";
-import { loadDraftFolder, withQualityGrounding } from "../runtime/workflow/draft-folder.mjs";
+import { loadDraftFolder, withQualityGrounding } from "../runtime/workflow/draft/draft-folder.mjs";
 import {
   createChangeLifecycle, renderDraftDesign, renderDraftProposal
-} from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
 import { groundingFromQuality } from "../runtime/workflow/validation/quality-fields.mjs";
-import { expandMinimalSemanticDraft, isMinimalSemanticDraft } from "../runtime/workflow/semantic-draft.mjs";
+import { expandMinimalSemanticDraft, isMinimalSemanticDraft } from "../runtime/workflow/draft/semantic-draft.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 function folder(files) {

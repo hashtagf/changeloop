@@ -3,7 +3,7 @@ import test from "node:test";
 
 import {
   SECURITY_TERMS, matchesSecurityTerm, materialSecurityTriggers
-} from "../runtime/workflow/security-policy.mjs";
+} from "../runtime/workflow/authority/security-policy.mjs";
 
 const matched = (intent) => SECURITY_TERMS.filter((term) => matchesSecurityTerm(intent, term));
 

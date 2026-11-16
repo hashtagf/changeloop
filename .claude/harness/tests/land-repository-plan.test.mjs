@@ -12,7 +12,7 @@ import {
   landRepositoryPlanRow,
   readRepositoryLandStatus,
   writeRepositoryLandStatus
-} from "../runtime/workflow/land-runtime.mjs";
+} from "../runtime/workflow/land/land-runtime.mjs";
 
 const fail = (message) => { throw new Error(message); };
 

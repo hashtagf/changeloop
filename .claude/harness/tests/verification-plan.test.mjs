@@ -3,7 +3,7 @@ import test from "node:test";
 
 import {
   convergencePlan, verificationPlanValue, verificationRisk
-} from "../runtime/workflow/verification-plan.mjs";
+} from "../runtime/workflow/packet/verification-plan.mjs";
 
 function packet(overrides = {}) {
   return {

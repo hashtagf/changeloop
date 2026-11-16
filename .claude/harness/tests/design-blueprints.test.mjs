@@ -6,7 +6,7 @@ import {
 } from "../runtime/workflow/validation/design-blueprints.mjs";
 import {
   draftNeedsDesign, renderDraftDesign, renderDraftProposal, semanticDraftKeepsDesign
-} from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
 import {
   derivedByHarness, derivedFailureMatrix, derivedFileMap, derivedTestMap, devDocumentIssues, devDocumentShapeIssues,
   docsOnlyDraft, inferWorkTypes,

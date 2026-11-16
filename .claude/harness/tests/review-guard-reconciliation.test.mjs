@@ -12,7 +12,7 @@ import {
   reviewHistoryChainValidOperation
 } from "../runtime/evidence/review-attempt-store.mjs";
 import { createReviewProtocol } from "../runtime/evidence/review-protocol.mjs";
-import { createAuthorityRuntime } from "../runtime/workflow/authority-runtime.mjs";
+import { createAuthorityRuntime } from "../runtime/workflow/authority/authority-runtime.mjs";
 
 const canonical = (value) => Array.isArray(value) ? value.map(canonical)
   : value && typeof value === "object"

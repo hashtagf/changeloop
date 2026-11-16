@@ -14,6 +14,7 @@ import { invalidateGitReads, memoizedGitRead } from "./git-read-memo.mjs";
 import { withoutGitIgnored } from "./git-ignore.mjs";
 import { taskBlocks, taskMetadata } from "../contracts/change-artifacts.mjs";
 import { normalizeLifecycleState } from "./lifecycle-reducer.mjs";
+import { bestEffort } from "./best-effort.mjs";
 
 // Read-only git subcommands that need a repository to answer at all.
 const NO_REPOSITORY_QUERIES = new Set([
@@ -185,13 +186,13 @@ export function createStateRuntime({
     // diverge from the proven one.
     const path = runtimePath(state.id);
     if (existsSync(path)) {
-      try {
+      bestEffort(() => {
         const stored = JSON.parse(readFileSync(path, "utf8"));
         copyFileSync(path, previousRuntimePath(state.id));
         const additions = stored.surfaceAdditions || [];
         if (additions.length || state.surfaceAdditions?.length) state.surfaceAdditions =
           mergeSurfaceAdditions(state.surfaceAdditions, additions);
-      } catch {}
+      });
     }
     state.updatedAt = now();
     writeJson(path, state);
@@ -708,12 +709,10 @@ export function createStateRuntime({
     for (const { path: rel } of porcelainStatusRecords(dirty.stdout)) {
       if (!rel) continue;
       const path = join(workspace, rel);
-      try {
-        if (!existsSync(path) || !lstatSync(path).isFile()) continue;
-        result[rel] = fileDigest(path);
-      } catch {
-        // A path that cannot be read now cannot be compared later either.
-      }
+      // A path that cannot be read now cannot be compared later either.
+      const digest = bestEffort(() => (existsSync(path) && lstatSync(path).isFile()
+        ? { value: fileDigest(path) } : null), null);
+      if (digest) result[rel] = digest.value;
     }
     return result;
   }

@@ -16,7 +16,7 @@ import {
   workspaceInspectionValue,
   workspaceIsolationKind,
   workspaceTargetDrift
-} from "../runtime/workflow/sandbox-runtime.mjs";
+} from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "foundation-workspace-inspection-")));
 const copyPath = join(root, "copy");

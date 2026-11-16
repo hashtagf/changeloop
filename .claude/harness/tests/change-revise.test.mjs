@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import test from "node:test";
 import {
   createChangeLifecycle, mergeApprovalDelta, requirementDelta, requirementFingerprints
-} from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
 import { acquireProcessLock } from "../runtime/core/process-lock.mjs";
 import { assertSpecApproval, missingApprovalLanes } from "../runtime/core/user-decisions.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";

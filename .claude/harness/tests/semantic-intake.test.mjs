@@ -5,8 +5,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import {
   createChangeLifecycle, documentSectionInvalidation, sectionsOnlyAmendment, v5QualityGrounding
-} from "../runtime/workflow/change-lifecycle.mjs";
-import { durableDecisionMetadataIssues } from "../runtime/workflow/change-validation.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
+import { durableDecisionMetadataIssues } from "../runtime/workflow/change/change-validation.mjs";
 import { groundingFromQuality } from "../runtime/workflow/validation/quality-fields.mjs";
 import {
   CORE_DISCOVERY_DIMENSIONS,

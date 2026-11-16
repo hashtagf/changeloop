@@ -14,6 +14,7 @@ import {
   visualProviderConfig, withVisualRequirement
 } from "./visual-review.mjs";
 import { relativeInside } from "../core/paths.mjs";
+import { bestEffort } from "../core/best-effort.mjs";
 
 const THAI_REQUIRED_SEMANTICS =
   thaiRiskPattern("concurrency", "money", "migration", "irreversible");
@@ -328,9 +329,9 @@ export function commandWorkspaceFiles(config, workspace) {
     // the file appears and would make the provider depend on its own output.
     if (rel === report) continue;
     const path = join(workspace, rel);
-    try {
+    bestEffort(() => {
       if (existsSync(path) && statSync(path).isFile()) files.push(rel);
-    } catch {}
+    });
   }
   return [...new Set(files)].sort();
 }
@@ -620,7 +621,7 @@ export function createEvidenceContract({
       die(`service '${name}' requires readiness.url`);
     if (staticRootValid) {
       let protocol;
-      try { protocol = new URL(service.readiness.url).protocol; } catch {}
+      protocol = bestEffort(() => new URL(service.readiness.url).protocol, protocol);
       if (protocol !== "http:")
         die(`service '${name}' staticRoot readiness.url must use http`);
     }
@@ -1107,8 +1108,7 @@ export function createEvidenceContract({
     if (provider === VISUAL_CAPABILITY) {
       const dir = activeChangePath(id);
       let claimIds = [];
-      try { claimIds = (readJson(join(dir, "evidence.yaml")).claims || []).map((claim) => claim.id); }
-      catch { /* an unreadable contract fails elsewhere; no extra claims are bound here */ }
+      claimIds = bestEffort(() => (readJson(join(dir, "evidence.yaml")).claims || []).map((claim) => claim.id), claimIds); // an unreadable contract fails elsewhere; no extra claims are bound here
       const binding = reconcileVisualBinding(readVisualBinding(dir), claimIds);
       return binding ? builtInVisualConfig(id, dir, binding) : null;
     }
