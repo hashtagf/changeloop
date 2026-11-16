@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "sandbox-setup-module",
+      "requirementKey": "sandbox-setup-module",
+      "scenario": "Importers keep working",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(test -f .claude/harness/runtime/workflow/sandbox-setup.mjs && ! grep -q '^export function runSandboxSetupCommand' .claude/harness/runtime/workflow/sandbox-runtime.mjs && node --test .claude/harness/tests/sandbox-runtime-sync.test.mjs) && (env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh)"
+      ],
+      "segments": [
+        "test -f .claude/harness/runtime/workflow/sandbox-setup.mjs && ! grep -q '^export function runSandboxSetupCommand' .claude/harness/runtime/workflow/sandbox-runtime.mjs && node --test .claude/harness/tests/sandbox-runtime-sync.test.mjs",
+        "env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

@@ -77,3 +77,12 @@ amendment-record.mjs SHALL own the amendment coverage changes, the amendment his
 
 - **WHEN** an amendment is applied
 - **THEN** the AMENDED report and the recorded amendment row are identical to the previous behavior and the default gate passes without changing any expectation
+
+### Requirement: sandbox-setup-module
+
+The sandbox setup functions SHALL live in .claude/harness/runtime/workflow/sandbox-setup.mjs and sandbox-runtime.mjs SHALL re-export them unchanged.
+
+#### Scenario: Importers keep working
+
+- **WHEN** existing code and tests import setup functions from sandbox-runtime.mjs
+- **THEN** the imports resolve and the default gate passes without editing any test expectation
