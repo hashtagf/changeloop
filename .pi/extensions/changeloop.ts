@@ -5,7 +5,9 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { importRevision } from '../lib/native-import.mjs';
+// native-import.mjs is cached for the life of the Pi process, so it only offers
+// the frozen importNative; the evolving loader is fetched by content revision.
+import { importNative } from '../lib/native-import.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const bin = join(root, ".pi/bin");
@@ -20,6 +22,11 @@ export default async function changeloop(pi: ExtensionAPI) {
   const adapter = join(root, '.claude/harness/adapters/pi-extension.mjs');
   const hash = createHash('sha256');
   for (const file of ["harness", "hooks"].flatMap((dir) => sources(join(root, ".claude", dir)))) hash.update(file).update('\0').update(readFileSync(file)).update('\0');
+  const loader = join(root, '.pi/lib/revision-import.mjs');
+  const loaderUrl = new URL(pathToFileURL(loader).href);
+  // Not 'pi-revision': the resolve hook would push the loader's hash onto the adapter graph.
+  loaderUrl.searchParams.set('pi-loader', createHash('sha256').update(readFileSync(loader)).digest('hex'));
+  const { importRevision } = await importNative(loaderUrl.href);
   const { default: install } = await importRevision(pathToFileURL(adapter).href, hash.digest('hex'), pathToFileURL(join(root, '.claude')).href);
   install(pi, {
     projectRoot: root,
