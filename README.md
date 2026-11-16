@@ -146,7 +146,10 @@ and merges only when `foundation.json` sets `deliver.merge` to `after-checks`
 | View active changes and next actions | `/changes` |
 | Drive the lifecycle with one entrypoint | `/dev <intent>` |
 
-`/dev` uses the same agreement and authority boundaries. Tell the agent when a
+`/dev` runs Investigate (when needed) through Change, Build, Prove, Land, and
+Deliver, stopping at `--through proven|archived|delivered`; when you do not
+say where to stop, it asks with the spec approval. It uses the same agreement
+and authority boundaries. Tell the agent when a
 requirement changes; it amends the existing change and rechecks affected work.
 For exact semantics, use [WORKFLOW.md](WORKFLOW.md).
 

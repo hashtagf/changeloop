@@ -559,9 +559,9 @@ packet so the user answers them with the approval. The normal agent path uses on
 sandbox, runs agent-runnable configured reviewers, and ticks a handed-off task
 in `tasks.md` when its verify passes (a failed check returns
 `verificationFailures`). Every REPAIR carries a command or instruction, so the
-agent never reads harness source to recover. `/dev` runs `/change` → `/build`
-→ `/prove` → `/land` (Land only with authority) exactly as the separate
-commands: shared agent rules live only in `.claude/harness/AGENT.md`, each phase
+agent never reads harness source to recover. `/dev` runs `/investigate` (only for an unknown cause or
+feasibility) → `/change` → `/build` → `/prove` → `/land` → `/deliver` up to
+the user's target, exactly as the separate commands: shared agent rules live only in `.claude/harness/AGENT.md`, each phase
 command is the single source for its phase, and the full Change, intake, and
 Build references load only on their triggers. A minimal draft (`intent`,
 `requirements[{description, scenarios[{when, then}]}]`,
@@ -1775,14 +1775,23 @@ changes and names the next command for each. Session start may report the same
 digest, but a hash-free digest never implies proof freshness. Orphaned runtime
 state is reported rather than hidden.
 
-`/dev` is compatibility composition:
+`/dev` is compatibility composition up to a stop target:
 
 ```text
-/change → /build → /prove
+/investigate? → /change → /build → /prove → /land? → /deliver?
 ```
 
-It never lands by implication. `--plan-only` stops after Change and
-`--resume <id>` resumes an active OpenSpec change.
+Investigate runs only when the cause, feasibility, or requirement is
+unknown. The target is `--through proven|archived|delivered`, else the
+request's words ("ทำจนจบ" means `archived`; "เปิด PR" means `delivered`).
+When neither states it, the agent asks once together with the spec-approval
+question, or at `proven` when that question is already answered; it never
+assumes one. `archived` and `delivered` grant Land; `delivered` also grants
+the one `/deliver` composite command for that change, which the phase guard
+binds to the governing `/dev` invocation (and its `--resume` id). A later
+slash command ends that authority. Without a target `/dev` never lands by
+implication. `--plan-only` stops after Change and `--resume <id>` resumes an
+active OpenSpec change.
 
 ## Agreement lanes
 

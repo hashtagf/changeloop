@@ -17,8 +17,8 @@ import {
 import { recordedPhaseContext } from "./phase-state.mjs";
 import { devPrompt } from "./dev-terminal-guard.mjs";
 import {
-  gitPublicationOperations, isApprovalReply, promptExchange, promptRequestsDelivery,
-  requestedGitPublication
+  devArgumentsRequestDelivery, gitPublicationOperations, governingDevArguments, isApprovalReply,
+  promptExchange, promptRequestsDelivery, requestedGitPublication
 } from "./prompt-authority.mjs";
 import {
   workspaceCapabilityValue, workspaceMutationDecision
@@ -103,10 +103,14 @@ const deliverInvocation = currentTranscriptIsDeliver(transcriptPath) || piComman
 // authorizes nothing else in the turn.
 const exchange = deliverAuthorityCommand || looksGitPublication()
   ? currentPromptExchange(transcriptPath) : { latest: "", previousTurn: "" };
-const deliverSession = deliverAuthorityCommand && (deliverInvocation ||
+// `/dev --through delivered` carries the same authority for its own change.
+const devDelivery = deliverAuthorityCommand && (piCommand
+  ? piCommand === "dev" && devArgumentsRequestDelivery(piArguments, piTarget)
+  : devArgumentsRequestDelivery(governingDevArgumentsAt(transcriptPath), piTarget));
+const deliverSession = deliverAuthorityCommand && (devDelivery || ((deliverInvocation ||
   promptRequestsDelivery(exchange.latest) ||
   (isApprovalReply(exchange.latest) && exchange.previousTurn.includes("ASK_USER: delivering "))) &&
-  (!piCommand || (piCommand === "deliver" && piArguments === piTarget));
+  (!piCommand || (piCommand === "deliver" && piArguments === piTarget))));
 let gitAuthorityQuestion = null;
 const phase = String(process.env.FOUNDATION_ACTIVE_PHASE ||
   (deliverInvocation ? "deliver" : recorded?.phase ||
@@ -622,6 +626,12 @@ function currentPromptExchange(path) {
   if (!path || !existsSync(path)) return { latest: "", previousTurn: "" };
   try { return promptExchange(readFileSync(path, "utf8")); }
   catch { return { latest: "", previousTurn: "" }; }
+}
+
+function governingDevArgumentsAt(path) {
+  if (!path || !existsSync(path)) return null;
+  try { return governingDevArguments(readFileSync(path, "utf8")); }
+  catch { return null; }
 }
 
 function currentTranscriptIsDeliver(path) {

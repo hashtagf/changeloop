@@ -152,6 +152,12 @@ assert_cmd_zero "dev references all four phase commands in order" \
   ' "$ROOT/.claude/commands/dev.md"
 assert_file_contains "dev reaches land only with Land authority" \
   "$ROOT/.claude/commands/dev.md" '`.claude/commands/land.md`, only with Land authority'
+assert_file_contains "dev starts with investigate only for an unknown cause" \
+  "$ROOT/.claude/commands/dev.md" '`.claude/commands/investigate.md` only for an unknown cause or feasibility'
+assert_file_contains "dev delivers only for the delivered target" \
+  "$ROOT/.claude/commands/dev.md" '`.claude/commands/deliver.md` for `delivered`'
+assert_file_contains "dev asks an unstated target with spec approval" \
+  "$ROOT/.claude/commands/dev.md" 'else ask with spec approval'
 dev_bundle_words="$(cat "$ROOT/.claude/harness/AGENT.md" \
   "$ROOT/.claude/commands/dev.md" "$ROOT/.claude/commands/change.md" \
   "$ROOT/.claude/commands/build.md" "$ROOT/.claude/commands/prove.md" \

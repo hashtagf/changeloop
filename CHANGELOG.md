@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `/dev` now runs from Investigate (only when the cause or feasibility is
+  unknown) through Change, Build, Prove, Land, and Deliver, stopping at
+  `--through proven|archived|delivered` or the request's words ("ทำจนจบ",
+  "เปิด PR"). When the target is unstated, the agent asks with the spec
+  approval instead of assuming. `/dev --through delivered` is Deliver
+  authority for that `/dev` run's change only, in Claude Code and Pi.
 - Pi routes plain-language requests into Change Loop. `investigate <topic>`
   runs `/investigate`, and short requests such as `เปิด PR ให้เลย`,
   `deliver ได้เลย`, or `open a PR` run `/deliver` for the session's change,

@@ -26,7 +26,7 @@ precedence over convenience.
 
 ## Harness
 
-With Change Loop: Land preserves HEAD/index and creates no commit; Land and /dev grant no commit, push, or PR authority; use `/deliver` or a direct user instruction.
+With Change Loop: Land preserves HEAD/index and creates no commit; Land and /dev grant no commit, push, or PR authority; use `/deliver`, `/dev --through delivered`, or a direct user instruction.
 Otherwise: commit, push, or open a PR only on a direct user instruction for that operation.
 Bypass hooks only with explicit approval of that risk.
 

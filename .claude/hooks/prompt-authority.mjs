@@ -34,6 +34,34 @@ export function promptRequestsDelivery(text) {
   return affirmed(text, DELIVERY);
 }
 
+// `/dev --through delivered` (or a /dev request that itself asks for a PR) is
+// the user's /deliver for the change that /dev run produces. A `--resume <id>`
+// binds it to that id; it never covers another change.
+export function devArgumentsRequestDelivery(args, changeId) {
+  const text = String(args || "");
+  if (!/(?:^|\s)--through\s+delivered(?:\s|$)/.test(text) && !promptRequestsDelivery(text))
+    return false;
+  const resume = text.match(/(?:^|\s)--resume\s+(\S+)/)?.[1];
+  return !resume || resume === changeId;
+}
+
+// The /dev invocation still governing this session: the latest typed slash
+// command, when it is /dev. Plain replies ("ลุยเลย", an answer) keep it; any
+// later slash command ends it.
+export function governingDevArguments(source) {
+  let governing = null;
+  for (const line of String(source || "").split("\n")) {
+    if (!line.trim()) continue;
+    let row;
+    try { row = JSON.parse(line); } catch { continue; }
+    const typed = row.type === "last-prompt" && typeof row.lastPrompt === "string"
+      ? row.lastPrompt.trim() : promptText(row);
+    if (!typed.startsWith("/")) continue;
+    governing = /^\/dev(?:\s|$)/.test(typed) ? typed.replace(/^\/dev\s*/, "") : null;
+  }
+  return governing;
+}
+
 // The Git publication the user directly asked for. Pushing needs a commit,
 // so a push request covers the commit it publishes; a commit request never
 // covers a push.

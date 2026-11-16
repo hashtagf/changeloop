@@ -574,6 +574,40 @@ assert_contains "urgency alone is not delivery authority" "$(deliver_with urgent
 } > "$TMP/answered-deliver.jsonl"
 assert_eq "a yes to the delivery question counts as /deliver" "" "$(deliver_with answered-deliver)"
 
+# `/dev --through delivered` is the user's /deliver for its own change, also
+# after a plain approval reply; another slash command or another --resume id
+# ends it.
+{
+  printf '%s\n' '{"type":"last-prompt","lastPrompt":"/dev --through delivered add search"}'
+  printf '%s\n' '{"type":"last-prompt","lastPrompt":"ลุยเลย"}'
+} > "$TMP/dev-through-delivered.jsonl"
+assert_eq "/dev --through delivered counts as /deliver after an approval reply" "" \
+  "$(deliver_with dev-through-delivered)"
+prompt_transcript dev-through-archived "/dev --through archived add search"
+assert_contains "/dev --through archived is not delivery authority" \
+  "$(deliver_with dev-through-archived)" 'ASK_USER: delivering delivery-change'
+prompt_transcript dev-resume-other "/dev --resume other-change --through delivered"
+assert_contains "/dev --through delivered never covers another change" \
+  "$(deliver_with dev-resume-other)" 'ASK_USER: delivering delivery-change'
+prompt_transcript dev-resume-same "/dev --resume delivery-change --through delivered"
+assert_eq "/dev --resume <id> --through delivered covers that change" "" \
+  "$(deliver_with dev-resume-same)"
+{
+  printf '%s\n' '{"type":"last-prompt","lastPrompt":"/dev --through delivered add search"}'
+  printf '%s\n' '{"type":"last-prompt","lastPrompt":"/change another thing"}'
+} > "$TMP/dev-superseded.jsonl"
+assert_contains "a later slash command ends /dev delivery authority" \
+  "$(deliver_with dev-superseded)" 'ASK_USER: delivering delivery-change'
+pi_deliver_with() {
+  printf '{"tool_name":"Bash","tool_input":{"command":"claude-foundation deliver advance delivery-change"}}' |
+    CLAUDE_PROJECT_DIR="$TMP/pre" FOUNDATION_GUARDRAIL_MODE=auto FOUNDATION_HOST=pi \
+    FOUNDATION_HOST_COMMAND="$1" FOUNDATION_HOST_ARGUMENTS="$2" node "$HOOK"
+}
+assert_eq "Pi /dev --through delivered counts as /deliver" "" \
+  "$(pi_deliver_with dev '--through delivered add search')"
+assert_contains "Pi /dev without a delivered target stays the question" \
+  "$(pi_deliver_with dev 'add search')" 'ASK_USER: delivering delivery-change'
+
 # git commit/push from the main checkout during Build or Prove does not run
 # unless the user's latest prompt asked for it; otherwise it becomes the
 # question. Inside the isolated workspace it is ordinary Build work.

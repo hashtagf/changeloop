@@ -24,8 +24,9 @@ The product and workflow are called **Change Loop**. The package and CLI remain
 ## Using Change Loop
 
 Users describe the goal to their coding agent and use `/change`, `/build`,
-`/prove`, and `/land`; `/dev` drives the same lifecycle, reaching Land only
-within the user's explicit authority.
+`/prove`, and `/land`; `/dev` drives the same lifecycle from an optional
+Investigate to an optional Deliver, stopping at the user's target and reaching
+Land or Deliver only within the user's explicit authority.
 The agent runs the underlying CLI, so users do not need to construct JSON,
 receipt, recovery, or bookkeeping commands.
 

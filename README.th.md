@@ -145,6 +145,9 @@ Deliver ไม่ deploy และจะ merge เฉพาะเมื่อ `f
 | ดูงานที่กำลังทำและขั้นถัดไป | `/changes` |
 | ใช้จุดเริ่มต้นเดียวขับ lifecycle | `/dev <สิ่งที่ต้องการ>` |
 
+`/dev` ทำตั้งแต่ Investigate (เมื่อจำเป็น) ผ่าน Change, Build, Prove, Land
+จนถึง Deliver และหยุดตาม `--through proven|archived|delivered` หากไม่ได้บอกว่า
+ให้จบที่ขั้นไหน agent จะถามพร้อมคำถามอนุมัติ spec
 `/dev` ใช้ข้อตกลงและขอบเขตอำนาจเดียวกัน หาก requirement เปลี่ยน
 แจ้ง agent เพื่อแก้ change เดิมและตรวจส่วนที่ได้รับผลกระทบ
 อ่านข้อกำหนดละเอียดใน [WORKFLOW.md](WORKFLOW.md)
