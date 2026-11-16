@@ -349,12 +349,20 @@ export function installedAllowedTools(project) {
   }
 }
 
+export const LAB_HOSTS = Object.freeze(["claude-code", "pi"]);
+
 export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RESULTS,
-  installer = join(ROOT, "install.sh"), runner = join(HERE, "run.mjs"),
+  installer = null, runner = join(HERE, "run.mjs"),
   tempParent = tmpdir(), keepProject = false, runId = null, resumeProject = null,
-  arm = "change-loop", dryRun = false, lifecycleInterruptions = null }) {
+  arm = "change-loop", dryRun = false, lifecycleInterruptions = null,
+  host = "claude-code", model = null }) {
   const selectedArm = benchArm(arm);
   const baseline = isBaselineArm(selectedArm);
+  if (!LAB_HOSTS.includes(host)) throw new Error(`--host must be one of ${LAB_HOSTS.join(", ")}`);
+  const pi = host === "pi";
+  // The no-harness arms measure Claude Code alone; a Pi baseline is a separate study.
+  if (pi && baseline) throw new Error("--host pi runs the Change Loop arm only; run baseline arms on claude-code");
+  installer ??= join(ROOT, pi ? "install-pi.sh" : "install.sh");
   const matrix = loadMatrix(matrixPath);
   const issues = matrixIssues(matrix);
   if (issues.length) throw new Error(`invalid matrix:\n${issues.join("\n")}`);
@@ -385,7 +393,7 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
     if (marker.disposable !== true)
       throw new Error("resume project must be an explicitly disposable benchmark project");
   }
-  const id = runId || `${scenarioId}${baseline ? `-${selectedArm}` : ""}-${Date.now()}`;
+  const id = runId || `${scenarioId}${baseline ? `-${selectedArm}` : ""}${pi ? "-pi" : ""}-${Date.now()}`;
   const runDir = resolve(outputRoot, id);
   const scorecards = join(runDir, "scorecards.jsonl");
   const args = [runner, "--scenario", scenarioId, "--project", prepared.project,
@@ -407,6 +415,9 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
   if (plan.budget.tool_calls !== undefined)
     args.push("--max-tool-calls", String(plan.budget.tool_calls));
   if (baseline) args.push("--arm", selectedArm);
+  // One pinned model for every arm; the Pi shim maps it to its provider.
+  if (model) args.push("--claude-arg", "--model", "--claude-arg", model);
+  if (pi) args.push("--claude-bin", join(HERE, "pi-host.mjs"));
   if (baseline && scenario.execution === "paid")
     args.push("--claude-arg", "--permission-mode", "--claude-arg", "acceptEdits",
       "--claude-arg", "--allowedTools",
@@ -423,7 +434,7 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
       "--claude-arg", "--allowedTools",
       ...installedAllowedTools(prepared.project).flatMap((rule) => ["--claude-arg", rule]));
   if (dryRun) return dryRunPlan({ args, prepared, keepProject, resumeProject,
-    arm: selectedArm, scenarioId });
+    arm: selectedArm, scenarioId, host });
   const startedAt = new Date().toISOString();
   const source = sourceRevision();
   let result;
@@ -458,7 +469,8 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
       project: prepared.project, runDir,
       manifest: {
         version: 1, protocol: "foundation-consumer-lab-run-v1", runId: id,
-        scenario: scenarioId, arm: selectedArm, prompt: scenario.prompt, host: scenario.host,
+        scenario: scenarioId, arm: selectedArm, prompt: scenario.prompt, host: pi ? "pi" : scenario.host,
+        requestedModel: model,
         risk: scenario.risk, seed: plan.fixture, seedDigest: prepared.seedDigest,
         expectedSeedDigest: scenario.fixture_digest, projectCommand: scenario.project_command,
         cleanInstallCommand: scenario.clean_install_command,
@@ -499,13 +511,14 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
 // Prepare the project, ask the runner for its zero-cost host plan, and report
 // it with the prepared tree's shape. No model is called and nothing is written
 // to the results directory.
-function dryRunPlan({ args, prepared, keepProject, resumeProject, arm, scenarioId }) {
+function dryRunPlan({ args, prepared, keepProject, resumeProject, arm, scenarioId, host }) {
   try {
     const result = commandResult(process.execPath, [...args, "--dry-run"], ROOT);
     requireSuccess(result, "runner dry-run");
     const host = JSON.parse(result.stdout);
     return {
-      status: 0, dryRun: true, arm, scenario: scenarioId,
+      status: 0, dryRun: true, arm, host, scenario: scenarioId,
+      piExtensionInstalled: existsSync(join(prepared.project, ".pi/extensions/changeloop.ts")),
       project: keepProject || resumeProject ? prepared.project : null,
       projectEntries: readdirSync(prepared.project).sort(),
       harnessInstalled: existsSync(join(prepared.project, ".claude/harness/foundation.mjs")),
@@ -533,7 +546,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       runId: flags["run-id"],
       arm: flags.arm,
       dryRun: flags.dryRun,
-      lifecycleInterruptions: flags["lifecycle-interruptions"] ?? null
+      lifecycleInterruptions: flags["lifecycle-interruptions"] ?? null,
+      host: flags.host ?? "claude-code",
+      model: flags.model ?? null
     });
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     process.exitCode = result.status || 0;

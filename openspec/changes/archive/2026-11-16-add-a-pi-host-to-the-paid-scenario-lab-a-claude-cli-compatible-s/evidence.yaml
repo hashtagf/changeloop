@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "pi-host-stream-a-fake-pi-rpc-process-answers-a-prompt-with-one-t",
+      "requirementKey": "pi-host-stream",
+      "scenario": "Translated session",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pi-host-stream-the-prompt-starts-with-a-slash-command-whose-hand",
+      "requirementKey": "pi-host-stream",
+      "scenario": "Extension command runs its turn",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pi-host-budget-the-fake-pi-reports-assistant-costs-that-exceed-m",
+      "requirementKey": "pi-host-budget",
+      "scenario": "Budget cap",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pi-host-budget-the-shim-receives-sigterm-after-one-priced-assist",
+      "requirementKey": "pi-host-budget",
+      "scenario": "Runner stop keeps cost",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pi-host-isolation-the-source-credential-expires-in-less-than-the",
+      "requirementKey": "pi-host-isolation",
+      "scenario": "Short-lived credential",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pi-host-isolation-the-fake-pi-records-pi-coding-agent-dir-and-it",
+      "requirementKey": "pi-host-isolation",
+      "scenario": "Isolated directory",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lab-pi-host-lab-mjs-scenario-notes-api-host-pi-model-claude-sonn",
+      "requirementKey": "lab-pi-host",
+      "scenario": "Pi dry run",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lab-pi-host-host-pi-is-combined-with-a-baseline-arm",
+      "requirementKey": "lab-pi-host",
+      "scenario": "Baseline stays on Claude",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/tests/bench/tests/openspec-native-pi-host.test.mjs) && (node --test .claude/tests/bench/tests/openspec-native-lab.test.mjs && grep -q -- '--host pi' .claude/tests/bench/openspec-native/README.md)"
+      ],
+      "segments": [
+        "node --test .claude/tests/bench/tests/openspec-native-pi-host.test.mjs",
+        "node --test .claude/tests/bench/tests/openspec-native-lab.test.mjs && grep -q -- '--host pi' .claude/tests/bench/openspec-native/README.md"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

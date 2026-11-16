@@ -369,6 +369,40 @@ stops its host at `proven` or `archived`); compare such costs as lower bounds.
 The release report reads Change Loop rows only: a baseline row can neither
 promote nor block a matrix row, and is counted in `excludedComparisonRuns`.
 
+## Pi host arm
+
+`lab.mjs --host pi` runs the Change Loop arm on Pi instead of Claude Code. The
+lab installs with `install-pi.sh` (adding `.pi/extensions/changeloop.ts`), names
+the run `<scenario>-pi-<stamp>`, records `host: "pi"` in the manifest, and passes
+`pi-host.mjs` as the runner's `--claude-bin`. Baseline arms stay on Claude Code.
+`--model <id>` pins the same model on every arm:
+
+```bash
+node .claude/tests/bench/openspec-native/lab.mjs \
+  --scenario notes-api --host pi --model claude-sonnet-5-5
+```
+
+`pi-host.mjs` accepts the Claude CLI arguments the runner passes, drives Pi in
+RPC mode (JSON print mode exits before an extension command's turn runs), and
+writes Claude stream-json rows, so terminal watching, request/tool caps, oracle,
+repair continuations and backend Land are unchanged. It sums Pi's per-message
+cost for `total_cost_usd` (null when Pi reports none), enforces
+`--max-budget-usd`, and on the runner's SIGTERM writes a non-error `terminated`
+result carrying the cost so far; a stopped Claude Code host has none, so
+compare Claude Code arm costs stopped at `proven` as lower bounds.
+
+Pi runs in a temporary agent directory holding only one provider credential
+(`PI_BENCH_PROVIDER`, default `claude-subscription`, from
+`PI_BENCH_AUTH_SOURCE`, default `~/.pi/agent/auth.json`), so user extensions,
+skills, context files, and other accounts never reach the lab. The copy is never
+written back: the shim refuses a credential expiring within
+`PI_BENCH_MIN_CREDENTIAL_MS` (default 45 minutes) rather than refresh and rotate
+the operator's login. The project's own extension loads through `--approve`.
+Provider extensions load from `PI_BENCH_EXTENSIONS` (colon-separated paths);
+`PI_BENCH_PI_CLI` and `PI_BENCH_THINKING` override the Pi CLI and thinking
+level. Pi has no permission prompts, so the allowlist arguments are ignored and
+the arm reports none.
+
 ## Collection-only verification
 
 Fixtures and recovered runs can be scored without launching Claude:

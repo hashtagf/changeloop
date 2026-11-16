@@ -366,6 +366,42 @@ test("baseline dry-run prints the exact host plan for free and keeps no project"
   }
 });
 
+test("Pi host dry-run installs the Pi adapter, routes through the shim and pins the model", () => {
+  const root = mkdtempSync(join(tmpdir(), "foundation-lab-pi-dry-"));
+  const fixture = join(root, "fixture");
+  const tempParent = join(root, "tmp");
+  mkdirSync(tempParent, { recursive: true });
+  write(join(fixture, "src/app.js"), "module.exports = 1;\n");
+  const oracle = join(root, "oracle.sh");
+  executable(oracle, "#!/bin/sh\nexit 0\n");
+  const matrix = join(root, "matrix.json");
+  writeFixtureMatrix(matrix, fixture, oracle);
+  // The real Pi installer runs here; a surrounding Change Loop session's project
+  // pin must not redirect it.
+  const saved = Object.fromEntries(["CLAUDE_FOUNDATION_PROJECT", "CLAUDE_PROJECT_DIR"]
+    .map((key) => [key, process.env[key]]));
+  for (const key of Object.keys(saved)) delete process.env[key];
+  try {
+    const plan = runScenarioLab({
+      matrixPath: matrix, scenarioId: "fixture", outputRoot: join(root, "results"), tempParent,
+      runId: "dry-pi", dryRun: true, host: "pi", model: "claude-sonnet-5-5"
+    });
+    assert.equal(plan.host.claudeBin.endsWith("openspec-native/pi-host.mjs"), true);
+    assert.equal(plan.runnerArgs[plan.runnerArgs.indexOf("--claude-bin") + 1], plan.host.claudeBin);
+    assert.equal(plan.host.argv[plan.host.argv.indexOf("--model") + 1], "claude-sonnet-5-5");
+    assert.equal(plan.piExtensionInstalled, true);
+    assert.equal(plan.harnessInstalled, true);
+    assert.deepEqual(readdirSync(tempParent), []);
+    assert.throws(() => runScenarioLab({ matrixPath: matrix, scenarioId: "fixture", tempParent,
+      arm: "baseline-review", dryRun: true, host: "pi" }), /--host pi runs the Change Loop arm only/);
+    assert.throws(() => runScenarioLab({ matrixPath: matrix, scenarioId: "fixture", tempParent,
+      dryRun: true, host: "codex" }), /--host must be one of/);
+  } finally {
+    for (const [key, value] of Object.entries(saved)) if (value !== undefined) process.env[key] = value;
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("baseline tools are what a plain user approves for the task", () => {
   const project = mkdtempSync(join(tmpdir(), "bench-lab-baseline-allow-"));
   try {
