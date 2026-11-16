@@ -294,6 +294,85 @@ export function renderComplianceChangeRecord(value, { language, approvalRef } = 
   return [record, approval].filter(Boolean).join("\n\n");
 }
 
+const VERIFICATION_LABELS = Object.freeze({
+  en: {
+    title: "Verification",
+    intro: "Summary of the proof run Land accepted. Receipts stay in the local proof store; the SHA-256 identifies each one.",
+    proofRun: "Proof run", status: "Status", workspaceHash: "Workspace hash",
+    contractFingerprint: "Contract fingerprint", providers: "Providers", provider: "Provider",
+    claims: "Claims", observed: "Observed", command: "Command", duration: "Duration",
+    receipt: "Receipt SHA-256", unavailable: "unavailable", advisories: "Advisories",
+    review: "Review", reviewRecorded: "See Appendix: Review record in proposal.md.",
+    reviewNone: "No completed review is recorded for this change.",
+    none: "None.", unknown: "unknown"
+  },
+  th: {
+    title: "ผลการพิสูจน์",
+    intro: "สรุป proof run ที่ Land ยอมรับ receipt ตัวจริงอยู่ใน proof store ของเครื่อง SHA-256 ใช้ระบุแต่ละตัว",
+    proofRun: "Proof run", status: "สถานะ", workspaceHash: "Workspace hash",
+    contractFingerprint: "Contract fingerprint", providers: "Provider", provider: "Provider",
+    claims: "Claim", observed: "ผลที่สังเกต", command: "คำสั่ง", duration: "เวลา",
+    receipt: "SHA-256 ของ receipt", unavailable: "unavailable", advisories: "Advisory",
+    review: "Review", reviewRecorded: "ดู ภาคผนวก: ผล review ใน proposal.md",
+    reviewNone: "change นี้ไม่มีผล review ที่เสร็จแล้ว",
+    none: "ไม่มี", unknown: "ไม่ทราบ"
+  }
+});
+
+// Machine-local values never reach the archived summary: log and artifact
+// paths, receipt locations, and anything naming the local proof store.
+function publicValue(value) {
+  const value_ = text(value);
+  return /\.foundation\//.test(value_) ? "" : value_;
+}
+
+function durationText(ms) {
+  const value = Number(ms);
+  return Number.isFinite(value) && value >= 0 ? `${(value / 1000).toFixed(1)} s` : "";
+}
+
+// verification.md for an archived change: the proof run Land accepted, one
+// row per receipt, advisories, and where the review record is. A receipt that
+// cannot be read keeps its provider and digest with status `unavailable`;
+// it never reads as a pass. "" when there is no proof run.
+export function renderVerificationRecord({ language, proof, receipts = {}, reviewAttempts = [] } = {}) {
+  if (!isObject(proof) || !present(proof.proofRunId)) return "";
+  const l = language === "th" ? VERIFICATION_LABELS.th : VERIFICATION_LABELS.en;
+  const summary = table([l.proofRun, l.status, l.workspaceHash, l.contractFingerprint], [[
+    `\`${text(proof.proofRunId)}\``, text(proof.status) || l.unknown,
+    text(proof.workspaceHash) || l.unknown, text(proof.contractFingerprint) || l.unknown
+  ]]);
+  const rows = (Array.isArray(proof.receipts) ? proof.receipts : []).filter(isObject).map((entry) => {
+    const receipt = isObject(receipts[entry.path]) ? receipts[entry.path] : null;
+    return [
+      text(entry.provider) || text(receipt?.provider) || l.unknown,
+      receipt ? (Array.isArray(receipt.claims) ? receipt.claims.map(text).join(", ") : "") : "",
+      receipt ? text(receipt.status) || l.unknown : l.unavailable,
+      receipt ? publicValue(receipt.observed) : "",
+      receipt && present(receipt.command) ? publicValue(receipt.command) : "",
+      receipt ? durationText(receipt.durationMs) : "",
+      text(entry.sha256) || l.unknown
+    ];
+  });
+  const providers = rows.length
+    ? table([l.provider, l.claims, l.status, l.observed, l.command, l.duration, l.receipt], rows)
+    : l.none;
+  const advisories = (Array.isArray(proof.advisories) ? proof.advisories : [])
+    .map((item) => publicValue(isObject(item)
+      ? [item.kind || item.type || item.code, item.provider || item.capability, item.reason || item.message]
+        .map(text).filter(Boolean).join(": ")
+      : item))
+    .filter(Boolean);
+  const reviewed = (Array.isArray(reviewAttempts) ? reviewAttempts : [])
+    .some((attempt) => isObject(attempt) && attempt.status === "completed");
+  return [
+    `# ${l.title}`, l.intro, summary,
+    `## ${l.providers}`, providers,
+    `## ${l.advisories}`, advisories.length ? advisories.map((item) => `- ${item}`).join("\n") : l.none,
+    `## ${l.review}`, reviewed ? l.reviewRecorded : l.reviewNone
+  ].join("\n\n");
+}
+
 export const PROCESS_FIELDS = Object.freeze({
   decisionLog: Object.freeze({ validate: validateDecisionLog, render: renderDecisionLog }),
   communication: Object.freeze({ validate: validateCommunication, render: renderCommunication }),

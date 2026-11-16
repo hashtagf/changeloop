@@ -71,6 +71,16 @@ validated at Change (approver differs from implementer; `approvedBefore:
 resumed Land restores the archived proposal to its pre-append bytes and appends
 the same text, so the record is written once.
 
+In the same step archive writes `verification.md` beside the archived
+proposal: the proof run Land accepted (id, status, workspace hash, contract
+fingerprint), one row per receipt (provider, claims, status, observed result,
+command, duration, receipt SHA-256), advisories, and whether a review record
+exists. Log paths, environment values, and `.foundation/` paths are left out;
+an unreadable receipt is listed as `unavailable`. Land refuses, before any
+target write, a packet that already contains `verification.md`. A resumed Land
+removes only a file whose text matches the recorded summary and writes it again
+once; an edited file stops Land and is kept. Delivery integrity binds the file.
+
 Apply is a journaled transaction over the target. An interruption is recovered
 and resumed by the Harness through the same `/land` invocation. Restore,
 keep-current, journal, check, resume, and archive mechanics are not separate

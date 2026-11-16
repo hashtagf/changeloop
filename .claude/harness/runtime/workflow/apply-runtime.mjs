@@ -64,8 +64,11 @@ import {
 } from "./target-edits.mjs";
 import {
   complianceEnabledFromConfig, renderComplianceChangeRecord, renderReviewRecord,
-  renderRolloutGates
+  renderRolloutGates, renderVerificationRecord
 } from "./validation/process-fields.mjs";
+
+// The archive-only proof summary Land writes beside the archived proposal.
+export const VERIFICATION_RECORD_FILE = "verification.md";
 import { outlineRow, sectionHeading } from "./validation/outline-contract.mjs";
 
 // Whether an empty root diff is an acceptable apply outcome rather than an
@@ -1605,16 +1608,52 @@ export function createApplyRuntime({
     let configText = "";
     try { configText = readFileSync(join(root, "openspec", "config.yaml"), "utf8"); } catch {}
     const read = (reader) => { try { return reader(id, state) || []; } catch { return []; } };
+    const language = draft.language || state.documentLanguage;
+    const reviewAttempts = read(reviewAttemptRecords);
     return {
       markdown: archiveAppendixMarkdown({
-        language: draft.language || state.documentLanguage,
-        reviewAttempts: read(reviewAttemptRecords),
+        language,
+        reviewAttempts,
         complianceEnabled: complianceEnabledFromConfig(configText),
         compliance: draft.compliance || null,
         approvalRef: state.specApproval?.decisionRef || null,
         rolloutGates: read(rolloutGates)
-      })
+      }),
+      verification: prepareVerificationRecord(id, language, reviewAttempts)
     };
+  }
+
+  // The proof Land accepted, with each receipt it names read from the local
+  // proof store. An unreadable receipt is passed as missing, never as a pass.
+  function prepareVerificationRecord(id, language, reviewAttempts) {
+    let proof = null;
+    try { proof = readJson(proofPath(id), null); } catch { proof = null; }
+    const receipts = {};
+    for (const entry of Array.isArray(proof?.receipts) ? proof.receipts : []) {
+      if (!entry?.path || typeof entry.path !== "string") continue;
+      try {
+        const absolute = resolve(root, entry.path);
+        if (absolute.startsWith(`${resolve(root)}/`))
+          receipts[entry.path] = readJson(absolute, null);
+      } catch { /* rendered as unavailable */ }
+    }
+    const markdown = renderVerificationRecord({
+      language: /^th\b/i.test(String(language || "")) ? "th" : "en",
+      proof, receipts, reviewAttempts
+    });
+    return markdown ? `${markdown}\n` : "";
+  }
+
+  // Refused before any target write: Land owns this name in the archive.
+  function assertVerificationRecordUnclaimed(id, state) {
+    const packets = [changePath(id)];
+    if (state?.workspace?.path && state.workspace.mode !== "direct")
+      packets.push(join(state.workspace.path, "openspec", "changes", id));
+    const claimed = packets.filter((packet) => existsSync(join(packet, VERIFICATION_RECORD_FILE)));
+    if (claimed.length)
+      fail(`change '${id}' packet already contains ${VERIFICATION_RECORD_FILE}, which Land writes ` +
+        `into the archived change; move that content to another file through 'cloop change revise ${id}' ` +
+        `and land again`);
   }
 
   // Volatile records (review, compliance, rollout) are written only into the
@@ -1623,11 +1662,12 @@ export function createApplyRuntime({
   // recorded first, so a resumed Land can restore the exact archived packet
   // (whose identity the approval and projection checks bind) and append again.
   function appendArchiveAppendix(state, archivedPath) {
+    writeVerificationRecord(state, archivedPath);
     const appendix = state.land?.archiveAppendix;
     if (!appendix?.markdown || !archivedPath) return;
     const proposal = join(root, archivedPath, "proposal.md");
     if (!existsSync(proposal)) return;
-    stripArchiveAppendix(state, archivedPath);
+    stripProposalAppendix(state, archivedPath);
     const original = readFileSync(proposal);
     state.land.archiveAppendix = { ...appendix, offset: original.length };
     saveRuntime(state);
@@ -1636,7 +1676,42 @@ export function createApplyRuntime({
       Buffer.from(`${separator}${appendix.markdown}\n`, "utf8")]));
   }
 
+  function writeVerificationRecord(state, archivedPath) {
+    const verification = state.land?.archiveAppendix?.verification;
+    if (!verification || !archivedPath || !existsSync(join(root, archivedPath))) return;
+    const file = join(root, archivedPath, VERIFICATION_RECORD_FILE);
+    stripVerificationRecord(state, archivedPath);
+    writeFileSync(file, verification);
+  }
+
+  // Removes only the exact text Land recorded, so a resumed Land rewrites it
+  // once and an edited file is never deleted.
+  function stripVerificationRecord(state, archivedPath) {
+    const verification = state.land?.archiveAppendix?.verification;
+    if (!verification || !archivedPath) return;
+    const file = join(root, archivedPath, VERIFICATION_RECORD_FILE);
+    if (!existsSync(file) && !isSymlink(file)) return;
+    if (lstatSync(file).isFile() && readFileSync(file, "utf8") === verification) {
+      rmSync(file, { force: true });
+      return;
+    }
+    // Checked here, before any retained-integrity or approval check that would
+    // otherwise report the whole archived packet as changed.
+    fail(`archived ${VERIFICATION_RECORD_FILE} differs from the recorded proof summary at ` +
+      `'${archivedPath}'; it is kept. Preserve a copy, remove it, and resume with ` +
+      `'cloop advance ${state.id} --through archived'`);
+  }
+
+  function isSymlink(path) {
+    try { return lstatSync(path).isSymbolicLink(); } catch { return false; }
+  }
+
   function stripArchiveAppendix(state, archivedPath) {
+    stripVerificationRecord(state, archivedPath);
+    stripProposalAppendix(state, archivedPath);
+  }
+
+  function stripProposalAppendix(state, archivedPath) {
     const offset = state.land?.archiveAppendix?.offset;
     if (!Number.isInteger(offset) || !archivedPath) return;
     const proposal = join(root, archivedPath, "proposal.md");
@@ -1774,6 +1849,7 @@ export function createApplyRuntime({
     recoverPendingApply(id, initial);
     let readiness = measure("land.check", () => landCheck(id, { preflight: "apply" }));
     if (readiness.archived) return;
+    assertVerificationRecordUnclaimed(id, readiness.state || initial);
     // Land never archives unproven work. landCheck already refuses it; this
     // repeats the gate at the last point before any target mutation.
     if (readiness.assurance?.status !== "passed")

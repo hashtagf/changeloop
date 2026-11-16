@@ -1,0 +1,122 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "verification-record-written-land-archive-change",
+      "requirementKey": "verification-record-written",
+      "scenario": "Proof ผ่านมี receipt test",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verification-record-written-land-archive-change-2",
+      "requirementKey": "verification-record-written",
+      "scenario": "Receipt อ่านไม่ได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verification-record-written-land-archive-change-3",
+      "requirementKey": "verification-record-written",
+      "scenario": "ไม่มีข้อมูลเครื่อง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verification-record-written-land-archive-change-4",
+      "requirementKey": "verification-record-written",
+      "scenario": "Review ไม่บังคับ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verification-record-written-land-archive-change-5",
+      "requirementKey": "verification-record-written",
+      "scenario": "Review มีผล",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verification-record-written-land-archive-change-6",
+      "requirementKey": "verification-record-written",
+      "scenario": "Packet ภาษาไทย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verification-record-written-openspec-archive",
+      "requirementKey": "verification-record-written",
+      "scenario": "Packet ที่ active ไม่มีไฟล์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verification-record-written-delivery-integrity-record",
+      "requirementKey": "verification-record-written",
+      "scenario": "Delivery integrity ครอบไฟล์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verification-record-resume-land",
+      "requirementKey": "verification-record-resume",
+      "scenario": "ทำต่อหลังเขียนไฟล์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verification-record-resume-land-2",
+      "requirementKey": "verification-record-resume",
+      "scenario": "ไฟล์ถูกแก้ระหว่างค้าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verification-name-reserved",
+      "requirementKey": "verification-name-reserved",
+      "scenario": "Packet มีไฟล์ชื่อซ้ำ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/archive-verification-record.test.mjs .claude/harness/tests/archive-appendices.test.mjs) && (bash .claude/tests/docs/run-doc-consistency.sh) && (env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/archive-verification-record.test.mjs .claude/harness/tests/archive-appendices.test.mjs",
+        "bash .claude/tests/docs/run-doc-consistency.sh",
+        "env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

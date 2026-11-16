@@ -224,6 +224,8 @@ packet บล็อกที่ผิดรูปจะได้ intake `EDIT` �
 ตอน archive Land ต่อท้าย record ที่เปลี่ยนแปลงได้ไว้ใน `proposal.md` ที่ archive แล้วเท่านั้น:
 Appendix: Review record, Appendix: Compliance change record (เฉพาะเมื่อ
 `openspec/config.yaml` ตั้ง `compliance: change-record`) และ Appendix: Rollout gates
+นอกจากนี้ยังเขียน `verification.md` ไว้ข้าง proposal ที่ archive: proof run ที่ Land
+ยอมรับ และหนึ่งแถวต่อ receipt พร้อม claim, ผล, คำสั่ง และ SHA-256 สรุปหลักฐานจึงติดไปกับ Git
 
 หลัง compile แล้ว `openspec/changes/<id>/` คือ source of truth Draft เป็นข้อมูล
 ชั่วคราว และ `.foundation/` เป็น runtime state ที่ derive ได้
