@@ -79,7 +79,7 @@ assert_cmd_zero "host capability contract covers every supported host truthfully
       guards.opencode.liveMutationGuards.sessionDigest === "unavailable" &&
       guards.opencode.workflowGuarantees.phaseIsolation === "live-plugin-and-runtime" &&
       guards.pi.liveMutationGuards.coverage === "partial" &&
-      guards.pi.liveMutationGuards.sessionDigest === "unavailable" &&
+      guards.pi.liveMutationGuards.sessionDigest === "live" &&
       guards.pi.workflowGuarantees.phaseIsolation === "live-extension-and-runtime" &&
       guards.cursor.liveMutationGuards.coverage === "unavailable" &&
       guards.codex.liveMutationGuards.coverage === "unavailable" &&

@@ -14,7 +14,17 @@ import { recordedPhaseContext } from '../../hooks/phase-state.mjs';
 const PHASE_FRESHNESS_MS = 12 * 60 * 60 * 1000;
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-const TOOLS = { read: "Read", grep: "Grep", write: "Write", edit: "Edit", bash: "Bash" };
+// background_bash (the maintainer extension) runs a shell command, so it gets
+// the same guards as bash; it always detaches, so it never runs authority.
+const TOOLS = { read: "Read", grep: "Grep", write: "Write", edit: "Edit", bash: "Bash",
+  background_bash: "Bash" };
+// Tools that read only names or coordinate sessions. Workers inherit guards
+// through FOUNDATION_PARENT_SESSION_ID, so spawning one is not a bypass.
+const UNGUARDED_OK = new Set(["ls", "find", "ask_user", "agent_list", "agent_inbox", "agent_send",
+  "agent_stop", "agent_spawn", "background_job", "task_board", "tool_guide", "session_title"]);
+const GUARD_FILES = ["protect-secrets.sh", "phase-mutation-guard.sh", "lint.sh", "shell-route-guard.sh",
+  "no-detached-authority.mjs", "session-context.mjs", "dev-terminal-guard.mjs"];
+const AUTHORITY_RUN = /\b(?:cloop|foundation\.mjs)\s+authority(?:-|\s+)run\b/;
 const quote = (value) => `'${String(value).replaceAll("'", "'\\''")}'`;
 const ID = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 
@@ -60,6 +70,9 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   let ready = false;
   const touched = new Map();
   const guardNotes = new Map();
+  const warnedTools = new Set();
+  let digest = "";
+  let devStartMs = 0;
 
   // Claude Code keeps the agent's cwd after the contract's single `cd` into the
   // Build workspace; every Pi bash call starts fresh in the session cwd. During
@@ -117,7 +130,10 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
 
   const hook = async (script, event, ctx, timeout = 10000) => {
     if (!ready) throw new Error("Change Loop guards unavailable; reinstall with --host pi and /reload.");
-    const result = await execute("bash", [join(runtimeRoot, ".claude/hooks", script)],
+    // .mjs hooks run directly: their .sh wrappers resolve CLAUDE_PROJECT_DIR,
+    // which a shared-runtime project does not contain.
+    const result = await execute(script.endsWith(".mjs") ? process.execPath : "bash",
+      [join(runtimeRoot, ".claude/hooks", script)],
       { cwd: event.cwd || ctx.cwd, env: environment(ctx), input: JSON.stringify(event),
         signal: ctx.signal, timeout });
     if (script === "lint.sh" && result.code === 2)
@@ -127,12 +143,15 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     if (!output) return {};
     const value = JSON.parse(output);
     if (value.decision === "block") throw new Error(value.reason || "Blocked by Change Loop");
-    return value.hookSpecificOutput || {};
+    return value.hookSpecificOutput || (typeof value.systemMessage === "string"
+      ? { systemMessage: value.systemMessage } : {});
   };
 
   const guard = async (name, input, ctx, cwd = ctx.cwd) => {
     const tool = TOOLS[name];
     if (!tool) return;
+    if (name === "background_bash" && AUTHORITY_RUN.test(normalizeHarnessCliInvocations(String(input.command))))
+      throw new Error("BLOCKED: authority run owns a synchronous reviewer and must stay in the foreground. Run it with bash, not background_bash, and wait for its completion.");
     const toolInput = () => tool === "Bash" ? { command: input.command }
       : tool === "Grep" ? { pattern: input.pattern, path: input.path ? resolve(cwd, input.path) : cwd,
         glob: input.glob || "", output_mode: "content" }
@@ -181,14 +200,28 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     if (["Read", "Grep", "Bash"].includes(tool)) apply(await hook("protect-secrets.sh", event(), ctx));
     if (["Write", "Edit", "Bash"].includes(tool)) apply(await hook("phase-mutation-guard.sh", event(), ctx));
     if (tool === "Bash") apply(await hook("shell-route-guard.sh", event(), ctx));
+    // Skip an interpreter start for the common command that cannot match.
+    if (tool === "Bash" && /authority/.test(String(input.command)))
+      apply(await hook("no-detached-authority.mjs", event(), ctx));
     return notes;
+  };
+
+  // The session digest names active changes and their next step. It is
+  // best-effort: a failing digest never blocks the session.
+  const refreshDigest = async (ctx) => {
+    digest = "";
+    try {
+      const output = await hook("session-context.mjs", { session_id: parent || ctx.sessionManager.getSessionId() }, ctx);
+      if (typeof output.additionalContext === "string") digest = output.additionalContext.trim();
+    } catch { /* best-effort */ }
   };
 
   pi.on("session_start", async (_event, ctx) => {
     invocation = null; contract = undefined; ready = false; touched.clear(); guardNotes.clear();
+    warnedTools.clear(); digest = "";
     try {
       assertSharedInstallation(root, runtimeRoot);
-      for (const file of ["protect-secrets.sh", "phase-mutation-guard.sh", "lint.sh", "shell-route-guard.sh"])
+      for (const file of GUARD_FILES)
         if (!existsSync(join(runtimeRoot, ".claude/hooks", file))) throw new Error(`Missing Change Loop guard: ${file}`);
       const jq = await execute("jq", ["--version"], { cwd: root, env: environment(ctx) });
       if (jq.code !== 0) throw new Error("Change Loop guards require jq.");
@@ -198,7 +231,21 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       status(ctx, "ready");
     } catch (error) {
       status(ctx, "unavailable"); ctx.ui.notify(error.message, "error");
+      return;
     }
+    await refreshDigest(ctx);
+  });
+  pi.on("session_compact", async (_event, ctx) => { if (ready) await refreshDigest(ctx); });
+
+  // /dev must reach proven (or a real boundary) before it stops. Like Claude
+  // Code's Stop hook this only records the verdict and warns; it never loops.
+  pi.on("agent_settled", async (event, ctx) => {
+    if (!ready || event?.aborted || invocation?.command !== "dev") return;
+    try {
+      const output = await hook("dev-terminal-guard.mjs", { session_id: parent || ctx.sessionManager.getSessionId(),
+        host_prompt: `/dev ${invocation.args}`.trim(), host_session_start_ms: devStartMs }, ctx);
+      if (output.systemMessage) ctx.ui.notify(output.systemMessage, "warning");
+    } catch { /* terminal truth stays with runtime proof; the warning is advisory */ }
   });
 
   // Only whole interactive user utterances route: extension, RPC and worker
@@ -228,6 +275,8 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   });
   pi.on("before_agent_start", async (event) => {
     if (!contract) return;
+    const message = digest ? { customType: "changeloop-digest", content: digest, display: false } : undefined;
+    digest = "";
     const instructions = isSharedProject(root) ? contract.contract.replaceAll('.claude/', `${runtimeRoot}/.claude/`) : contract.contract;
     return { systemPrompt: `${event.systemPrompt}\n\n${instructions}\n\n` +
       "Pi host: during Build every bash call starts in the change workspace, as if you had run cd there once; never cd to the project root to write files. " +
@@ -235,8 +284,8 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       "Follow runtime resume routes; /build and /prove never authorize Land. " +
       'For the single ready change in this session, explicit user consent such as "land ได้เลย" or /land resolves the change automatically; "เปิด PR ให้เลย" or /deliver does the same for Deliver, and "investigate <topic>" runs /investigate. ' +
       "Do not ask users to copy change IDs when session context resolves them. /deliver <change> separately authorizes publication. " +
-      "Guard coverage is partial: custom/MCP tools and other extensions are outside this adapter's live boundary. " +
-      "Do not claim OS sandboxing or unattended authority." };
+      "Guard coverage is partial: built-in tools and background_bash are guarded; other custom/MCP tools are outside this adapter's live boundary and only warned about. " +
+      "Do not claim OS sandboxing or unattended authority.", ...(message ? { message } : {}) };
   });
 
   for (const command of HOST_COMMANDS) pi.registerCommand(command, {
@@ -259,6 +308,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
         if (typeof value.instruction !== "string" || !value.instruction.trim() ||
             value.foundationVersion !== contract.foundationVersion) throw new Error("Change Loop changed; /reload before continuing.");
         invocation = { command, args: args.trim() };
+        if (command === "dev") devStartMs = Date.now();
         status(ctx, `${command}${args.trim() ? ` · ${args.trim().slice(0, 80)}` : ""}`);
         pi.sendUserMessage(isSharedProject(root) ? value.instruction.replaceAll('.claude/', `${runtimeRoot}/.claude/`) : value.instruction);
       } catch (error) { ctx.ui.notify(error.message, "error"); }
@@ -268,8 +318,25 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   pi.on("tool_call", async (event, ctx) => {
     try {
       if (event.toolName === "powershell") throw new Error("Change Loop Pi guards support bash; use bash for this workflow.");
-      const notes = await guard(event.toolName, event.input, ctx,
-        event.toolName === "bash" ? buildWorkspace(ctx) || ctx.cwd : ctx.cwd);
+      if (!TOOLS[event.toolName]) {
+        // Outside the live boundary: never blocked, named once per session
+        // while a phase is being enforced.
+        if (!UNGUARDED_OK.has(event.toolName) && !warnedTools.has(event.toolName) &&
+            (invocation?.command === "investigate" || buildWorkspace(ctx))) {
+          warnedTools.add(event.toolName);
+          guardNotes.set(event.toolCallId, `Change Loop: ${event.toolName} is outside the Pi live guard boundary; ` +
+            "phase, secret and Land checks did not run for it. Prefer built-in tools for project files during this change.");
+        }
+        return;
+      }
+      let cwd = ctx.cwd;
+      if (event.toolName === "bash") cwd = buildWorkspace(ctx) || ctx.cwd;
+      if (event.toolName === "background_bash") {
+        const workspace = buildWorkspace(ctx);
+        if (workspace && !event.input.cwd) event.input.cwd = workspace;
+        cwd = event.input.cwd ? resolve(ctx.cwd, String(event.input.cwd)) : ctx.cwd;
+      }
+      const notes = await guard(event.toolName, event.input, ctx, cwd);
       // Claude Code shows a guard's additional context to the model; Pi has no
       // pre-call channel, so the note rides on the tool's result.
       if (notes?.length) guardNotes.set(event.toolCallId, notes.join("\n"));

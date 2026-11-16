@@ -79,8 +79,9 @@ cloop init /path/to/your-project --host cursor    # หรือ opencode, codex
 ใน Pi แล้ว `/reload` ได้ การติดตั้งแบบเดิมยังใช้ต่อได้ คำสั่งนี้ไม่ลบหรือย้ายไฟล์เดิม
 ใช้ `/land <change>` เพื่อสั่ง Land โดยชัดเจน ส่วน `/build` และ `/prove` ไม่ให้สิทธิ์ Land
 การ reload หรือข้อความใหม่จากผู้ใช้จะยกเลิกสิทธิ์ Land จากคำสั่งก่อนหน้า
-guard ของ Pi ครอบคลุมบางส่วน: custom/MCP tools และ extension อื่นอยู่นอกขอบเขต
-live guard และยังไม่มี session-digest import การวิเคราะห์ shell ใช้นโยบายร่วมของ runtime
+guard ของ Pi ครอบคลุมบางส่วน: tool ในตัวและ `background_bash` ผ่าน guard ส่วน custom/MCP
+tools อื่นอยู่นอกขอบเขต live guard และได้คำเตือนครั้งเดียวระหว่างทำงาน มี session digest
+ตอนเริ่มและหลัง compact และ `/dev` เตือนเมื่อหยุดก่อน proof ผ่าน การวิเคราะห์ shell ใช้นโยบายร่วมของ runtime
 (ค่าเริ่มต้นเป็น audit; ตั้ง `FOUNDATION_SHELL_GUARD=block` เพื่อบังคับตรวจ shell)
 extension นี้ไม่ใช่ OS sandbox และไม่ออก unattended sandbox attestation
 การกำหนด model และ reviewer ยังคงอยู่ใน `foundation.json`

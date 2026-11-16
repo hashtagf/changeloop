@@ -567,10 +567,16 @@ session's single proven, applied, or archived change (several open a selection
 list; `/deliver` without an ID resolves the same way), and `investigate <topic>`
 acts as `/investigate <topic>`. Questions, refusals, and extension or RPC text
 never route. Runtime proof and Land gates remain
-authoritative. Custom/MCP tools and other extensions are outside this partial
-live boundary; PowerShell is refused. The shared shell policy audits by default
-(`FOUNDATION_SHELL_GUARD=block` enables strict checks). This is not OS isolation,
-does not issue unattended attestations, and does not import a session digest.
+authoritative. `background_bash` gets the same guards as bash (secrets, phase,
+shell route, Land/Deliver, detached authority), starts in the Build workspace
+when no cwd is given, and never runs `authority run`. Other custom/MCP tools
+are outside this partial live boundary: they are never blocked, and while a
+change phase is enforced the first call of each one per session carries a
+warning. PowerShell is refused. The session digest is injected into the first
+run after start and after compaction, and a `/dev` run that settles before
+proof passes records an incomplete verdict and warns. The shared shell policy
+audits by default (`FOUNDATION_SHELL_GUARD=block` enables strict checks). This
+is not OS isolation and does not issue unattended attestations.
 
 When the packaged CLI is not on `PATH`, use the source checkout's public router:
 

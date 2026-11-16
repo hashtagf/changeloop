@@ -504,3 +504,119 @@ test("Pi status reflects runtime actions without claiming proof from a successfu
   await b.fire("tool_result", { toolName: "bash", content: [{ type: "text", text: "test passed" }] });
   assert.match(b.statuses.at(-1), /ASK_USER/);
 });
+
+test("background_bash gets the bash secret, Land and authority guards", async () => {
+  // A session outside Build, so the command runs in the project root beside .env.
+  const b = await bridge("bg-secret-session");
+  writeFileSync(join(root, ".env"), "API_KEY=not-a-real-secret\n");
+  const secret = { command: "cat .env" };
+  assert.equal(await b.call("background_bash", secret), undefined);
+  assert.match(secret.command, /redacted/);
+  assert.doesNotMatch(secret.command, /^cat \.env$/);
+  const land = await b.call("background_bash", { command: "cloop advance pi-case --through archived" });
+  assert.equal(land.block, true);
+  assert.match(land.reason, /Land needs user approval/);
+  const authority = await b.call("background_bash", { command: "cloop authority run pi-case" });
+  assert.equal(authority.block, true);
+  assert.match(authority.reason, /foreground/);
+});
+
+test("background_bash starts in the Build workspace and reports outside writes", async () => {
+  const workspace = building("bg-session", "pi-bg-case");
+  const b = await bridge("bg-session");
+  const input = { command: "echo hi" };
+  assert.equal(await b.call("background_bash", input), undefined);
+  assert.equal(input.cwd, workspace);
+  const outside = { command: `cd '${root}' && echo bad > src/outside.js` };
+  const result = await b.call("background_bash", outside, "bg-outside");
+  if (result?.block) assert.match(result.reason, /phase|workspace|Build/i);
+  else {
+    const noted = await b.fire("tool_result", { toolName: "background_bash", toolCallId: "bg-outside", isError: false,
+      content: [{ type: "text", text: "job started" }] });
+    assert.match(noted.content.at(-1).text, /unverified shell mutation/);
+  }
+});
+
+test("background_bash fails closed when guards are unavailable", async () => {
+  const b = await bridge();
+  const script = join(root, ".claude/hooks/protect-secrets.sh");
+  const original = readFileSync(script, "utf8");
+  try {
+    rmSync(script);
+    await b.fire("session_start", { reason: "reload" });
+    const result = await b.call("background_bash", { command: "echo hi" });
+    assert.equal(result.block, true);
+    assert.match(result.reason, /guards unavailable/);
+  } finally { writeFileSync(script, original); }
+});
+
+test("detached authority runs are refused in bash; attached ones pass that guard", async () => {
+  const b = await bridge();
+  const detached = await b.call("bash", { command: "cloop authority run demo &" });
+  assert.equal(detached.block, true);
+  assert.match(detached.reason, /foreground/);
+  assert.equal(await b.call("bash", { command: "cloop authority run demo --help" }), undefined);
+});
+
+test("unguarded tools are warned once per session during a change and never blocked", async () => {
+  building("warn-session", "pi-warn-case");
+  const b = await bridge("warn-session");
+  const result = (id) => b.fire("tool_result", { toolName: "exa_search", toolCallId: id, isError: false,
+    content: [{ type: "text", text: "found" }] });
+  assert.equal(await b.call("exa_search", { query: "x" }, "w1"), undefined);
+  assert.match((await result("w1")).content.at(-1).text, /outside the Pi live guard boundary/);
+  assert.equal(await b.call("exa_search", { query: "y" }, "w2"), undefined);
+  assert.equal(await result("w2"), undefined);
+  assert.equal(await b.call("task_board", { action: "list" }, "w3"), undefined);
+  assert.equal(await b.fire("tool_result", { toolName: "task_board", toolCallId: "w3", content: [] }), undefined);
+  const idle = await bridge("no-phase-session");
+  assert.equal(await idle.call("exa_search", { query: "x" }, "w4"), undefined);
+  assert.equal(await idle.fire("tool_result", { toolName: "exa_search", toolCallId: "w4", content: [] }), undefined);
+});
+
+test("the session digest reaches the first run after start and after compaction", async () => {
+  building("digest-session", "pi-digest-case");
+  const b = await bridge("digest-session");
+  const first = await b.fire("before_agent_start", { systemPrompt: "rules" });
+  assert.equal(first.message.display, false);
+  assert.match(first.message.content, /pi-digest-case/);
+  assert.match(first.message.content, /next:/);
+  assert.equal((await b.fire("before_agent_start", { systemPrompt: "rules" })).message, undefined);
+  await b.fire("session_compact");
+  assert.match((await b.fire("before_agent_start", { systemPrompt: "rules" })).message.content, /pi-digest-case/);
+});
+
+test("a failing session digest never blocks the session", async () => {
+  const script = join(root, ".claude/hooks/session-context.mjs");
+  const original = readFileSync(script, "utf8");
+  try {
+    writeFileSync(script, "process.exit(3);\n");
+    const b = await bridge("digest-fail-session");
+    assert.match(b.statuses.at(-1), /ready/);
+    assert.equal((await b.fire("before_agent_start", { systemPrompt: "rules" })).message, undefined);
+  } finally { writeFileSync(script, original); }
+});
+
+test("/dev that settles before proof passes warns; plan-only and other commands do not", async () => {
+  mkdirSync(join(root, "openspec/changes/pi-dev-case"), { recursive: true });
+  const b = await bridge("dev-session");
+  await b.command("dev", "--resume pi-dev-case");
+  await b.fire("agent_settled", { aborted: false });
+  const warning = b.notices.at(-1);
+  assert.equal(warning?.kind, "warning");
+  assert.match(warning.text, /proof-not-passing for pi-dev-case/);
+  const count = b.notices.length;
+  await b.command("dev", "--plan-only pi-dev-case");
+  await b.fire("agent_settled", { aborted: false });
+  await b.command("build", "pi-dev-case");
+  await b.fire("agent_settled", { aborted: false });
+  assert.equal(b.notices.length, count);
+});
+
+test("Pi prompt states the guarded tools without claiming full coverage", async () => {
+  const b = await bridge();
+  const { systemPrompt } = await b.fire("before_agent_start", { systemPrompt: "rules" });
+  assert.match(systemPrompt, /built-in tools and background_bash are guarded/);
+  assert.match(systemPrompt, /outside this adapter's live boundary and only warned about/);
+  assert.match(systemPrompt, /Do not claim OS sandboxing/);
+});

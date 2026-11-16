@@ -4,7 +4,7 @@ import {
   appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { recordedPhaseContext } from "./phase-state.mjs";
 
@@ -179,8 +179,12 @@ function runCli(root, ...args) {
     checks.timedOut = true;
     return { status: null, stdout: "", stderr: "dev terminal check budget exhausted" };
   }
+  // A shared runtime (Pi) keeps the harness beside this hook, not in the project.
+  const local = join(root, ".claude", "harness", "foundation.mjs");
+  const harness = existsSync(local) ? local
+    : join(dirname(fileURLToPath(import.meta.url)), "..", "harness", "foundation.mjs");
   const child = spawnSync(process.execPath,
-    [join(root, ".claude", "harness", "foundation.mjs"), ...args], {
+    [harness, ...args], {
       cwd: root, encoding: "utf8", timeout: remaining,
       env: {
         ...process.env,
@@ -234,11 +238,17 @@ async function main() {
   let event = {};
   try { event = JSON.parse(readFileSync(0, "utf8")); } catch { return; }
   const root = resolve(process.env.CLAUDE_PROJECT_DIR || process.cwd());
+  // A host without a Claude transcript (Pi) supplies the /dev prompt and the
+  // time its run started directly; the transcript stays the Claude Code source.
+  const hosted = typeof event.host_prompt === "string";
   const transcriptPath = String(event.transcript_path || "");
-  if (!transcriptPath || !existsSync(transcriptPath)) return;
-  const transcript = readFileSync(transcriptPath, "utf8");
-  const prompt = devPrompt(transcript);
+  if (!hosted && (!transcriptPath || !existsSync(transcriptPath))) return;
+  const transcript = hosted ? "" : readFileSync(transcriptPath, "utf8");
+  const prompt = hosted
+    ? (/^\/dev(?:\s|$)/.test(event.host_prompt.trim()) ? event.host_prompt.trim() : "")
+    : devPrompt(transcript);
   if (!prompt) return;
+  const hostedStart = Number(event.host_session_start_ms);
   const changes = join(root, "openspec", "changes");
   const activeIds = existsSync(changes) ? readdirSync(changes, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && entry.name !== "archive")
@@ -252,7 +262,9 @@ async function main() {
     readText: readFileSync,
     nowMs: Date.now
   });
-  const wallMs = transcriptWallMs(transcript);
+  const wallMs = hosted
+    ? (Number.isFinite(hostedStart) ? Math.max(0, Date.now() - hostedStart) : null)
+    : transcriptWallMs(transcript);
   const sessionStart = wallMs === null ? null : Date.now() - wallMs;
   const archiveDir = join(changes, "archive");
   const archivedThisSession = sessionStart !== null && existsSync(archiveDir)
@@ -266,7 +278,7 @@ async function main() {
     activeIds,
     archivedThisSession,
     selectedChangeId: devResumeChange(prompt) || recorded?.changeId || null,
-    hostBoundary: latestHostPermissionBoundary(transcript),
+    hostBoundary: hosted ? null : latestHostPermissionBoundary(transcript),
     proofFor: (id) => {
       const path = join(root, ".foundation", "receipts", id, "proof.json");
       try { return JSON.parse(readFileSync(path, "utf8")); } catch { return null; }
@@ -287,7 +299,7 @@ async function main() {
     ...(checks.timedOut && !evaluated.complete ? {
       stopAllowed: true, status: "UNVERIFIED", blockerKind: "terminal-check-timeout"
     } : {}),
-    wallMs: transcriptWallMs(transcript),
+    wallMs,
     cost: null,
     costStatus: "provider-envelope-not-final-until-stop"
   };

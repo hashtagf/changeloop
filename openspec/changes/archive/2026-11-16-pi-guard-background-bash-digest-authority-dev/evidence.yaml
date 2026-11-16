@@ -1,0 +1,193 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "background-bash-guarded-background-bash-cat-env",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "อ่านไฟล์ลับถูกกัน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-background-bash-cloop-advance-id-through",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "Land โดยไม่ได้รับสิทธิ์ถูกปฏิเสธ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-background-bash-cloop-authority-run-id",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "authority run แบบ background ถูกปฏิเสธ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-background-bash-main-checkout-path",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "เขียนนอก workspace ตอน Build ถูกกัน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-background-bash",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "Build เริ่มใน workspace",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "background-bash-guarded-background-bash-2",
+      "requirementKey": "background-bash-guarded",
+      "scenario": "guard ใช้ไม่ได้ปิดตาย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "detached-authority-bash-bash-cloop-authority-run-demo",
+      "requirementKey": "detached-authority-bash",
+      "scenario": "authority run แบบ detach ถูกปฏิเสธ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "detached-authority-bash-bash-cloop-authority-run-demo-help-detac",
+      "requirementKey": "detached-authority-bash",
+      "scenario": "authority run ปกติผ่าน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "unknown-tool-warning-tool-exa-search",
+      "requirementKey": "unknown-tool-warning",
+      "scenario": "MCP ระหว่าง Build ได้คำเตือน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "unknown-tool-warning-exa-search",
+      "requirementKey": "unknown-tool-warning",
+      "scenario": "นอกงานไม่เตือน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "unknown-tool-warning-task-board",
+      "requirementKey": "unknown-tool-warning",
+      "scenario": "tool ประสานงานไม่เตือน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "session-digest-session",
+      "requirementKey": "session-digest",
+      "scenario": "เริ่ม session ได้ digest",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "session-digest-session-compact",
+      "requirementKey": "session-digest",
+      "scenario": "หลัง compact ได้ digest ใหม่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "session-digest-session-2",
+      "requirementKey": "session-digest",
+      "scenario": "digest ล้มเหลวไม่บล็อก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "dev-terminal-warning-1",
+      "requirementKey": "dev-terminal-warning",
+      "scenario": "หยุดก่อน proof ผ่านได้คำเตือน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "dev-terminal-warning-2",
+      "requirementKey": "dev-terminal-warning",
+      "scenario": "คำสั่งอื่นไม่ถูกประเมิน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "dev-terminal-warning-3",
+      "requirementKey": "dev-terminal-warning",
+      "scenario": "plan-only ไม่เตือน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "capability-truth-doc-consistency-check",
+      "requirementKey": "capability-truth",
+      "scenario": "ตารางตรงกับเอกสาร",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "capability-truth-system-prompt-adapter",
+      "requirementKey": "capability-truth",
+      "scenario": "prompt ไม่อ้างเกินจริง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(FOUNDATION_UPDATE_CHECK=0 node --test .claude/harness/tests/pi-extension.test.mjs) && (bash .claude/tests/docs/run-doc-consistency.sh && FOUNDATION_UPDATE_CHECK=0 node --test .claude/harness/tests/pi-extension.test.mjs)"
+      ],
+      "segments": [
+        "FOUNDATION_UPDATE_CHECK=0 node --test .claude/harness/tests/pi-extension.test.mjs",
+        "bash .claude/tests/docs/run-doc-consistency.sh && FOUNDATION_UPDATE_CHECK=0 node --test .claude/harness/tests/pi-extension.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

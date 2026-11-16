@@ -85,7 +85,7 @@ orchestration contract and is reported separately from live mutation guards.
 |---|---|---|---|
 | Claude Code | available | `.claude/settings.json` hook events (installed automatically) | full: phase live; secrets live; lint live; session digest live |
 | OpenCode | available | `.opencode/plugins/foundation.js` (placed by the OpenCode adapter install) replays these hooks via `tool.execute.before/after` | partial: phase live; secrets live; lint live; session digest unavailable |
-| Pi | available | `.pi/extensions/changeloop.ts` bridges built-in `tool_call`/`tool_result` and `user_bash`; custom tools and other extensions are outside its live boundary | partial: phase live; secrets live; lint live; session digest unavailable |
+| Pi | available | `.pi/extensions/changeloop.ts` bridges built-in and `background_bash` `tool_call`/`tool_result`, `user_bash`, `session_start`/`session_compact` (session digest) and `agent_settled` (`/dev` terminal warning); other custom/MCP tools are outside its live boundary and warned once per session during a change | partial: phase live; secrets live; lint live; session digest live |
 | Cursor | available | none — Cursor has no tool hooks | unavailable: phase unavailable; secrets unavailable; lint unavailable; session digest unavailable |
 | Codex CLI | available | none — Codex has no tool hooks | unavailable: phase unavailable; secrets unavailable; lint unavailable; session digest unavailable |
 | Gemini CLI | unavailable | none — no Foundation guard wiring is shipped; capabilities are declared unavailable until verified | unavailable: phase unavailable; secrets unavailable; lint unavailable; session digest unavailable |

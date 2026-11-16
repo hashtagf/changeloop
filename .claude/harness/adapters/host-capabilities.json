@@ -5,7 +5,7 @@
       "nativeDispatch": "available",
       "liveMutationGuards": {
         "coverage": "partial", "phase": "live", "secrets": "live",
-        "lint": "live", "sessionDigest": "unavailable"
+        "lint": "live", "sessionDigest": "live"
       },
       "finalEnforcement": "Land gates",
       "workflowGuarantees": {

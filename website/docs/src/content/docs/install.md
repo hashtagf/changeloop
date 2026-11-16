@@ -83,8 +83,10 @@ use `/changeloop init` in Pi and `/reload`. Existing local installations are kep
 shared initialization does not remove or migrate their files.
 Use `/land <change>` for explicit Land; `/build` and `/prove` never authorize it.
 Reload or a new user message revokes the previous command's Land authority.
-Pi guard coverage is partial: custom/MCP tools and other extensions are outside
-the live boundary, and session-digest import is unavailable. Shell analysis uses
+Pi guard coverage is partial: built-in tools and `background_bash` are guarded;
+other custom/MCP tools are outside the live boundary and get a one-time warning
+during a change. The session digest is injected at start and after compaction,
+and `/dev` warns when it stops before proof passes. Shell analysis uses
 the shared runtime policy (audit by default; `FOUNDATION_SHELL_GUARD=block` enables
 strict shell checks). This extension does not provide an OS sandbox or issue
 unattended sandbox attestations. Review/model routing stays in `foundation.json`.

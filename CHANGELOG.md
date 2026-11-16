@@ -9,6 +9,16 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Added
+
+- Pi guards `background_bash` like bash (secrets, phase, shell route,
+  Land/Deliver, detached authority) and starts it in the Build workspace;
+  `authority run` through it is refused. Other custom/MCP tools stay outside
+  the live boundary but are named once per session while a change phase is
+  enforced. Pi now injects the session digest at start and after compaction
+  (`sessionDigest: live`), refuses detached `authority run` in bash, and
+  warns when `/dev` settles before proof passes.
+
 ## [3.7.4] - 2026-11-16
 
 ### Added
