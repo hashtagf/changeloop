@@ -375,6 +375,8 @@ run-all watchdog|node --test "$ROOT/.claude/harness/tests/run-all-timeout.test.m
 affected test selection|node --test "$HERE/harness/affected-suite-selector.test.mjs"
 composition-root wiring|sh "$HERE/harness/run-wiring-tests.sh"
 architecture boundaries|node "$HERE/harness/run-architecture-tests.mjs"
+lint ratchet|node "$ROOT/scripts/lint/ratchet.mjs"
+lint rules|node --test "$ROOT/scripts/lint/test/rules.test.mjs" "$ROOT/scripts/lint/test/ratchet.test.mjs"
 single-source tables|node "$HERE/harness/run-single-source-tests.mjs"
 context budgets|sh "$HERE/harness/run-context-budget-tests.sh"
 agent contracts|sh "$HERE/harness/run-agent-contract-tests.sh"

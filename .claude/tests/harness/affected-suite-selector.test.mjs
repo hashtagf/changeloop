@@ -31,6 +31,26 @@ const labels = [
   "workspace surface"
 ];
 
+test("every change selects the lint ratchet", () => {
+  const known = [...labels, "lint ratchet", "lint rules"];
+  for (const file of ["README.md", "dashboard/server.mjs", ".claude/harness/runtime/core/state-runtime.mjs"]) {
+    const { selected, reasons } = selectAffectedSuites([file], known);
+    assert.ok(selected.includes("lint ratchet"), file);
+    assert.deepEqual(reasons.get("lint ratchet").slice(0, 1), ["always-on safety contract"], file);
+  }
+});
+
+test("lint tooling and baseline edits select the lint rules suite", () => {
+  const known = [...labels, "lint ratchet", "lint rules"];
+  for (const file of [
+    "scripts/lint/plugin.mjs", "scripts/lint/ratchet.mjs",
+    "scripts/lint/test/rules.test.mjs", "quality/baselines/lint-ratchet-v1.json"
+  ]) {
+    assert.ok(selectAffectedSuites([file], known).selected.includes("lint rules"), file);
+  }
+  assert.equal(selectAffectedSuites(["README.md"], known).selected.includes("lint rules"), false);
+});
+
 test("no changed files select no suites", () => {
   const { selected, reasons } = selectAffectedSuites([], labels);
   assert.deepEqual(selected, []);

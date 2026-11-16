@@ -252,12 +252,17 @@ installed runtime.
    mechanics, edit at root and use deterministic verification directly.
 4. Put runtime code in the appropriate `.claude/harness/runtime/` domain and
    keep `foundation.mjs` as the composition root.
-5. Add the lowest-level regression that would have caught the defect. A new
+5. When an agent repeats a mistake, encode the fix as a lint rule in
+   `scripts/lint/plugin.mjs` (message names the root-cause fix), a test, or an
+   API change, not another line of prose. `scripts/lint/ratchet.mjs` keeps
+   harness findings and large-file sizes, including `foundation.mjs`, from
+   growing; run `--tighten` after cleanup and commit the lowered baseline.
+6. Add the lowest-level regression that would have caught the defect. A new
    suite requires its script, registration in `.claude/tests/run-all.sh`, and a
    row in `.claude/tests/README.md`.
-6. Update canonical documentation and English/Thai public mirrors together.
+7. Update canonical documentation and English/Thai public mirrors together.
    Change `.claude/harness/protocol.json` only for a wire-visible contract.
-7. Run affected checks while iterating, then the default gate before commit;
+8. Run affected checks while iterating, then the default gate before commit;
    CI runs the complete `--full` set on every push. Review `git diff --check` and the final status; do not commit generated
    benchmark output or temporary consumers.
 

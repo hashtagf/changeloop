@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "sizeCeiling": 1500,
+  "violations": {
+    ".claude/harness/adapters/pi-extension.mjs": {
+      "changeloop/no-timer-wait": 1,
+      "changeloop/no-silent-catch": 3
+    },
+    ".claude/harness/adapters/pi-machine.mjs": {
+      "changeloop/no-silent-catch": 2
+    },
+    ".claude/harness/foundation.mjs": {
+      "no-unused-vars": 42
+    },
+    ".claude/harness/runtime/contracts/change-artifacts.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/core/cli-router.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/core/convergent-gate.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/core/diagnostics-runtime.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/core/git-read-memo.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/core/pi-land-context.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/core/process-lock.mjs": {
+      "changeloop/no-silent-catch": 2
+    },
+    ".claude/harness/runtime/core/process-runtime.mjs": {
+      "changeloop/no-timer-wait": 4
+    },
+    ".claude/harness/runtime/core/runtime-environment.mjs": {
+      "no-unused-vars": 2
+    },
+    ".claude/harness/runtime/core/state-runtime.mjs": {
+      "changeloop/no-silent-catch": 2
+    },
+    ".claude/harness/runtime/core/tool-identity.mjs": {
+      "changeloop/no-silent-catch": 2
+    },
+    ".claude/harness/runtime/core/update-advisory.mjs": {
+      "changeloop/no-timer-wait": 2
+    },
+    ".claude/harness/runtime/core/user-decisions.mjs": {
+      "no-unused-vars": 2
+    },
+    ".claude/harness/runtime/evidence/attestation.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/evidence/configured-reviewer.mjs": {
+      "no-unused-vars": 1,
+      "changeloop/no-timer-wait": 2
+    },
+    ".claude/harness/runtime/evidence/evidence-bootstrap.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/evidence/evidence-contract.mjs": {
+      "no-unused-vars": 1,
+      "changeloop/no-silent-catch": 3
+    },
+    ".claude/harness/runtime/evidence/evidence-results.mjs": {
+      "changeloop/no-workaround-comment": 1
+    },
+    ".claude/harness/runtime/evidence/npm-lockfile-check.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/evidence/proof-execution-runtime.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/evidence/proof-readiness.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/evidence/provider-scheduler.mjs": {
+      "no-unused-vars": 1,
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/evidence/receipt-runtime.mjs": {
+      "no-unused-vars": 3
+    },
+    ".claude/harness/runtime/evidence/review-attempt-store.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/evidence/review-diff.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/workflow/abandon-runtime.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/workflow/advance-recovery.mjs": {
+      "changeloop/no-silent-catch": 1,
+      "no-unused-vars": 4
+    },
+    ".claude/harness/runtime/workflow/advance-runtime.mjs": {
+      "changeloop/no-silent-catch": 6,
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/workflow/agent-planning.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/workflow/apply-runtime.mjs": {
+      "no-unused-vars": 3,
+      "changeloop/no-silent-catch": 3
+    },
+    ".claude/harness/runtime/workflow/approval-package.mjs": {
+      "no-unused-vars": 1,
+      "changeloop/no-silent-catch": 2
+    },
+    ".claude/harness/runtime/workflow/atomic-start-rollback.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/workflow/authority-runtime.mjs": {
+      "no-unused-vars": 8
+    },
+    ".claude/harness/runtime/workflow/budget-commands.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/workflow/change-lifecycle.mjs": {
+      "no-unused-vars": 8,
+      "changeloop/no-silent-catch": 6
+    },
+    ".claude/harness/runtime/workflow/change-validation.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/workflow/draft-folder.mjs": {
+      "changeloop/no-workaround-comment": 1
+    },
+    ".claude/harness/runtime/workflow/draft-packet-render.mjs": {
+      "no-unused-vars": 2
+    },
+    ".claude/harness/runtime/workflow/investigation-report.mjs": {
+      "changeloop/no-silent-catch": 2
+    },
+    ".claude/harness/runtime/workflow/land-runtime.mjs": {
+      "no-unused-vars": 3
+    },
+    ".claude/harness/runtime/workflow/land-undo.mjs": {
+      "changeloop/no-silent-catch": 2
+    },
+    ".claude/harness/runtime/workflow/lease-runtime.mjs": {
+      "changeloop/no-silent-catch": 2,
+      "changeloop/no-timer-wait": 1
+    },
+    ".claude/harness/runtime/workflow/packet-runtime.mjs": {
+      "changeloop/no-silent-catch": 1,
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/workflow/repository-delivery-saga.mjs": {
+      "no-unused-vars": 3
+    },
+    ".claude/harness/runtime/workflow/repository-topology.mjs": {
+      "no-unused-vars": 2
+    },
+    ".claude/harness/runtime/workflow/sandbox-cleanup.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/workflow/sandbox-runtime.mjs": {
+      "changeloop/no-silent-catch": 5
+    },
+    ".claude/harness/runtime/workflow/semantic-amendment.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/workflow/semantic-draft.mjs": {
+      "no-unused-vars": 1
+    },
+    ".claude/harness/runtime/workflow/session-lease.mjs": {
+      "changeloop/no-silent-catch": 4
+    },
+    ".claude/harness/runtime/workflow/target-edits.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/workflow/validation/dev-document.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/harness/runtime/workflow/validation/work-type-fields.mjs": {
+      "changeloop/no-silent-catch": 1
+    },
+    ".claude/hooks/dev-terminal-guard.mjs": {
+      "changeloop/no-silent-catch": 3
+    },
+    ".claude/hooks/phase-mutation-guard.mjs": {
+      "changeloop/no-silent-catch": 6
+    },
+    ".claude/hooks/secret-redaction.mjs": {
+      "changeloop/no-silent-catch": 2
+    },
+    ".claude/hooks/session-context.mjs": {
+      "changeloop/no-silent-catch": 4
+    },
+    ".claude/hooks/shell-route-guard.mjs": {
+      "changeloop/no-silent-catch": 1
+    }
+  },
+  "sizes": {
+    ".claude/harness/foundation.mjs": 2444,
+    ".claude/harness/runtime/evidence/proof-execution-runtime.mjs": 1749,
+    ".claude/harness/runtime/workflow/advance-runtime.mjs": 1748,
+    ".claude/harness/runtime/workflow/apply-runtime.mjs": 1890,
+    ".claude/harness/runtime/workflow/authority-runtime.mjs": 2222,
+    ".claude/harness/runtime/workflow/change-lifecycle.mjs": 2916,
+    ".claude/harness/runtime/workflow/change-validation.mjs": 2235,
+    ".claude/harness/runtime/workflow/pull-request-runtime.mjs": 1529,
+    ".claude/harness/runtime/workflow/sandbox-runtime.mjs": 2479,
+    ".claude/harness/runtime/workflow/semantic-amendment.mjs": 1549,
+    ".claude/harness/runtime/workflow/semantic-draft.mjs": 2065
+  }
+}

@@ -24,6 +24,10 @@ the normalized report with `baselines/dashboard-mutation-v1.json` under
 baseline snapshot mismatch. Reports are written under
 `.foundation/test-results/quality/` (ignored).
 
+`baselines/lint-ratchet-v1.json` belongs to the harness lint ratchet
+(`node scripts/lint/ratchet.mjs`, registered in `run-all.sh`). It may only
+shrink through `--tighten`; raising an entry is a reviewed manual edit.
+
 Semantic mutation of shipped boundaries is not run here: the registered suites
 in `.claude/tests/run-all.sh` own it, including
 `scripts/quality/run-shipping-semantic-mutation.mjs`.

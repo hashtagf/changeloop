@@ -1,0 +1,158 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "root-cause-rules-settimeout-spawnsync-sleep",
+      "requirementKey": "root-cause-rules",
+      "scenario": "timer เป็นทางรอ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "root-cause-rules-comment-todo-hack-workaround",
+      "requirementKey": "root-cause-rules",
+      "scenario": "comment workaround",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "root-cause-rules-catch-block-statement",
+      "requirementKey": "root-cause-rules",
+      "scenario": "catch ว่าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "root-cause-rules-comment-eslint-disable-next-line",
+      "requirementKey": "root-cause-rules",
+      "scenario": "disable ไม่มีเหตุผล",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "root-cause-rules-await-promise-catch-throw-comment-disable",
+      "requirementKey": "root-cause-rules",
+      "scenario": "โค้ดปกติไม่ถูกรายงาน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "violation-ratchet-runner",
+      "requirementKey": "violation-ratchet",
+      "scenario": "ไม่มีการเปลี่ยน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "violation-ratchet-violation-baseline-baseline-violation",
+      "requirementKey": "violation-ratchet",
+      "scenario": "violation ใหม่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "violation-ratchet-violation-baseline",
+      "requirementKey": "violation-ratchet",
+      "scenario": "เก็บกวาดแล้วแต่ baseline ค้าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "violation-ratchet-runner-tighten",
+      "requirementKey": "violation-ratchet",
+      "scenario": "tighten ลดได้อย่างเดียว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "violation-ratchet-baseline-json",
+      "requirementKey": "violation-ratchet",
+      "scenario": "baseline เสียหรือหาย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "size-ratchet-foundation-mjs-baseline",
+      "requirementKey": "size-ratchet",
+      "scenario": "composition root โต",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "size-ratchet-size-baseline-1500",
+      "requirementKey": "size-ratchet",
+      "scenario": "ไฟล์ใหม่เกินเพดาน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "size-ratchet-size-baseline-baseline",
+      "requirementKey": "size-ratchet",
+      "scenario": "ไฟล์ใหญ่หดลง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "gate-wiring-affected-selector-suite",
+      "requirementKey": "gate-wiring",
+      "scenario": "affected เลือกเสมอ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "gate-wiring-scripts-lint",
+      "requirementKey": "gate-wiring",
+      "scenario": "แก้ test ของกฎ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test scripts/lint/test/rules.test.mjs) && (node --test scripts/lint/test/ratchet.test.mjs) && (node --test .claude/tests/harness/affected-suite-selector.test.mjs)"
+      ],
+      "segments": [
+        "node --test scripts/lint/test/rules.test.mjs",
+        "node --test scripts/lint/test/ratchet.test.mjs",
+        "node --test .claude/tests/harness/affected-suite-selector.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}
