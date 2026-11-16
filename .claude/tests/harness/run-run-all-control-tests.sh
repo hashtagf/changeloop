@@ -233,6 +233,32 @@ for label in 'probes readiness' 'own fake cli'; do
     echo "FAIL: the guard failed legitimate suite: $label"; cat "$WORK/model-guard.out"; exit 1; }
 done
 
+# `--shard K/N` splits a selection into N disjoint slices whose union is the
+# unsliced set, so CI's parallel jobs together run exactly the --full gate.
+sh "$RUN_ALL" --list --full | sort > "$WORK/full.list"
+: > "$WORK/shards.list"
+for k in 1 2 3 4; do
+  sh "$RUN_ALL" --list --full --shard "$k/4" > "$WORK/shard-$k.list"
+  [ -s "$WORK/shard-$k.list" ] || { echo "FAIL: shard $k/4 is empty"; exit 1; }
+  cat "$WORK/shard-$k.list" >> "$WORK/shards.list"
+done
+[ -z "$(sort "$WORK/shards.list" | uniq -d)" ] || {
+  echo "FAIL: a suite runs in more than one shard"; sort "$WORK/shards.list" | uniq -d; exit 1; }
+sort "$WORK/shards.list" | cmp -s - "$WORK/full.list" || {
+  echo "FAIL: the shards together are not the --full selection"; exit 1; }
+# Each SLOW suite is dealt before any other, so no slice holds two of the
+# first four.
+for k in 1 2 3 4; do
+  grep -c -Fx -e 'harness contracts (topology planning)' -e 'harness contracts (topology siblings)' \
+    -e 'concurrent repositories seam' -e 'installer smoke' "$WORK/shard-$k.list" | grep -qx 1 || {
+    echo "FAIL: shard $k/4 does not hold exactly one of the four slowest suites"; exit 1; }
+done
+for bad in 0/4 5/4 x/4 4; do
+  if sh "$RUN_ALL" --list --full --shard "$bad" > /dev/null 2>&1; then
+    echo "FAIL: run-all accepted --shard $bad"; exit 1
+  fi
+done
+
 # The watchdog's limits and its timeout reporting are checked as structured
 # node:test cases, which is also the report Prove reads from this script.
 node --test "$HERE/../../harness/tests/run-all-timeout.test.mjs"

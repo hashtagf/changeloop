@@ -44,8 +44,17 @@ unset CLAUDE_FOUNDATION_PROJECT CLAUDE_PROJECT_DIR _host_var
 # files, slow rows included.
 selection_mode="fast"
 list_mode=0
+shard=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
+    --shard)
+      shard="${2:-}"; shift; [ "$#" -gt 0 ] && shift
+      case "$shard" in
+        [1-9]/[1-9]|[1-9]/[1-9][0-9]|[1-9][0-9]/[1-9][0-9]) ;;
+        *) echo "--shard requires K/N (for example 2/4)" >&2; exit 2 ;;
+      esac
+      [ "${shard%/*}" -le "${shard#*/}" ] || { echo "--shard K/N needs K <= N" >&2; exit 2; }
+      ;;
     --affected) selection_mode="affected"; shift ;;
     --quick) selection_mode="fast"; shift ;;
     --full) selection_mode="full"; shift ;;
@@ -426,9 +435,46 @@ in_mode() {
   esac
 }
 
+# `--shard K/N` keeps one of N disjoint slices of an already selected set, so
+# CI can run the gate as N parallel jobs. Suites are ranked like the pool
+# (SLOW, then EARLY, then table order) and dealt in a snake (1..N, N..1, …),
+# which spreads the long suites evenly; the union of every slice is the
+# unsliced selection. Reads selected table indexes, prints the kept ones.
+shard_indexes() {
+  [ -n "$shard" ] || { cat; return; }
+  _shard_ids="$(cat)"
+  suites | SELECTED_IDS="$_shard_ids" SLOW="$SLOW" EARLY="$EARLY" awk '
+    BEGIN {
+      n = split(ENVIRON["SELECTED_IDS"], ids, /[ \n]+/); for (i = 1; i <= n; i++) if (ids[i] != "") want[ids[i]] = 1
+      m = split(ENVIRON["SLOW"], names, "\n"); for (i = 1; i <= m; i++) rank[names[i]] = i
+      m = split(ENVIRON["EARLY"], names, "\n"); for (i = 1; i <= m; i++) rank[names[i]] = 100 + i
+    }
+    {
+      label = $0; sub(/\|.*/, "", label); sub(/^!/, "", label)
+      if (NR in want) printf "%d %d\n", (label in rank) ? rank[label] : 1000, NR
+    }' | sort -n -k1,1 -k2,2 | cut -d' ' -f2 |
+    awk -v k="${shard%/*}" -v n="${shard#*/}" '{
+      p = NR - 1; c = int(p / n); r = p % n; slot = (c % 2 == 0) ? r : n - 1 - r
+      if (slot == k - 1) print
+    }' | sort -n
+}
+
 if [ "$list_mode" -eq 1 ]; then
   suite_registry="$(suites)"
-  if [ "$selection_mode" = "affected" ]; then
+  if [ -n "$shard" ] && [ "$selection_mode" != "affected" ]; then
+    _list_ids=""
+    _list_index=1
+    while IFS= read -r line; do
+      in_mode "$selection_mode" "$line" && _list_ids="$_list_ids $_list_index"
+      _list_index=$((_list_index + 1))
+    done <<EOF_SUITES
+$suite_registry
+EOF_SUITES
+    for _list_index in $(printf '%s\n' $_list_ids | shard_indexes); do
+      label_of "$(nth "$_list_index")"
+      printf '\n'
+    done
+  elif [ "$selection_mode" = "affected" ]; then
     suite_labels="$(printf '%s\n' "$suite_registry" | while IFS='|' read -r label _command; do label_of "$label"; printf '\n'; done)"
     FOUNDATION_SUITE_LABELS="$suite_labels" \
       FOUNDATION_SUITE_REGISTRY="$suite_registry" \
@@ -701,8 +747,13 @@ while [ "$index" -le "$TOTAL" ]; do
     continue
   fi
   selected="$selected $index"
-  if exclusive "$line"; then alone="$alone $index"; else shared="$shared $index"; fi
   index=$((index + 1))
+done
+if [ -n "$shard" ]; then
+  selected="$(printf '%s\n' $selected | shard_indexes | tr '\n' ' ')"
+fi
+for index in $selected; do
+  if exclusive "$(nth "$index")"; then alone="$alone $index"; else shared="$shared $index"; fi
 done
 if [ -n "$selected" ]; then
   SELECTED_TOTAL="$(printf '%s\n' $selected | wc -l | tr -d ' ')"
@@ -797,7 +848,7 @@ then
 fi
 
 if [ "$failed" -eq 0 ]; then
-  echo "foundation tests: ALL SUITES PASS ($SELECTED_TOTAL suites, ${JOBS}-way${selection_mode:+, $selection_mode})"
+  echo "foundation tests: ALL SUITES PASS ($SELECTED_TOTAL suites, ${JOBS}-way${selection_mode:+, $selection_mode}${shard:+, shard $shard})"
   exit 0
 fi
 # Repeat the failures last: CI log viewers often show only the tail.

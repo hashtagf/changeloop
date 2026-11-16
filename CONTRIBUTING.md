@@ -60,13 +60,14 @@ rtk git diff --check
 ```
 
 `run-all.sh --full` runs the complete set, slow tier included. CI runs it on
-every push and pull request, and a green CI full run is required before merge
+every push and pull request (as four parallel `--shard K/4` jobs), and a green CI full run is required before merge
 or release; a changed shipped file needs both the local default gate and that
 CI run.
 
 Neither gate runs the release-only `openspec native sentinel`, which
 reruns the whole frozen workload suite. `--affected` still selects it when you
-change benchmark files; `run-all.sh --release` adds it for a release candidate.
+change benchmark files; `run-all.sh --release` adds it for a release candidate,
+and the release workflow runs that form.
 
 Current-source tests and historical upgrade fixtures exercise different inputs;
 do not commit or stash unfinished work just to run a test. See the
@@ -138,8 +139,8 @@ Use your real name and a reachable email address.
 - One logical change per pull request. Small PRs are reviewed quickly; large
   mixed PRs are usually sent back for splitting.
 - CI must be green. The workflow suite (`workflow-tests`) runs
-  `run-all.sh --release`: the full gate (the local default gate plus the slow
-  tier) and the release-only sentinel.
+  `run-all.sh --full` (the local default gate plus the slow tier) as four
+  parallel shards; the release-only sentinel runs in the release workflow.
 
 ## Reporting bugs and requesting features
 

@@ -1,11 +1,13 @@
 name: workflow-tests
 
 # Runs the complete deterministic workflow test harness (.claude/tests/run-all.sh
-# --release: the --full gate, slow tier included, plus the release-only
-# zero-cost benchmark sentinel) on any change to the workflow product. The
-# default local gate skips the slow tier, so this job is where it always runs.
-# Keep --release (a superset of --full) so CI also covers the sentinel. Live e2e / benchmark suites are token-costed and
-# stay off in CI (run-all.sh skips them unless CLAUDE_E2E=1).
+# --full, slow tier included) on any change to the workflow product, split into
+# four parallel `--shard K/4` jobs whose union is the whole --full set. The
+# default local gate skips the slow tier, so these jobs are where it always
+# runs. The release-only benchmark sentinel runs in release.yml (`--release`),
+# not on every push. A newer push to the same ref cancels the run it supersedes.
+# Live e2e / benchmark suites are token-costed and stay off in CI (run-all.sh
+# skips them unless CLAUDE_E2E=1).
 on:
   pull_request:
     paths:
@@ -82,6 +84,10 @@ on:
       - '.github/workflows/workflow-tests.yml'
   workflow_dispatch: {}
 
+concurrency:
+  group: workflow-tests-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   minimum-runtime:
     runs-on: ubuntu-latest
@@ -106,6 +112,11 @@ jobs:
 
   deterministic:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    name: deterministic (${{ matrix.shard }}/4)
     steps:
       # Upgrade compatibility archives the real previous release tag, so the
       # deterministic job needs release history rather than a depth-1 checkout.
@@ -124,14 +135,16 @@ jobs:
       - name: Ensure jq (harness dependency)
         run: command -v jq >/dev/null || { sudo apt-get update && sudo apt-get install -y jq; }
       - name: Run workflow test harness
-        run: sh .claude/tests/run-all.sh --release
+        run: sh .claude/tests/run-all.sh --full --shard ${{ matrix.shard }}/4
       - name: Report paid agent evals owed (informational, never runs them)
+        if: matrix.shard == 1
         # Paid evals spend money and need a maintainer's authorization, so CI
         # only says when an instruction-surface change owes them.
         env:
           EVALS_BASE: origin/${{ github.base_ref || 'main' }}
         run: npm run --silent evals:owed
       - name: Check packaged CLI contract
+        if: matrix.shard == 1
         # Default help is the small agent-facing lifecycle surface. Compatibility
         # primitives remain discoverable only through help --all.
         run: |
