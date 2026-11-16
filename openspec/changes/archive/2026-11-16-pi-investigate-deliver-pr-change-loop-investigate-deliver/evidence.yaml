@@ -1,0 +1,104 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "natural-investigate-routing-investigate-build",
+      "requirementKey": "natural-investigate-routing",
+      "scenario": "Investigate ภาษาธรรมดาเข้า workflow",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "natural-investigate-routing-investigate-investigate",
+      "requirementKey": "natural-investigate-routing",
+      "scenario": "ไม่ใช่คำขอ investigate",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "natural-investigate-routing-extension-rpc-investigate-build",
+      "requirementKey": "natural-investigate-routing",
+      "scenario": "ข้อความที่ไม่ได้มาจากผู้ใช้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "natural-deliver-consent-pr",
+      "requirementKey": "natural-deliver-consent",
+      "scenario": "เปิด PR ให้เลย เลือก change ของ session",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "natural-deliver-consent-pr-deliver",
+      "requirementKey": "natural-deliver-consent",
+      "scenario": "คำถามหรือคำปฏิเสธไม่ใช่คำสั่ง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "natural-deliver-consent-deliver",
+      "requirementKey": "natural-deliver-consent",
+      "scenario": "ไม่มี change ใน session",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "natural-deliver-consent-pr-2",
+      "requirementKey": "natural-deliver-consent",
+      "scenario": "Worker ส่งต่อไม่ได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "natural-deliver-consent-deliver-2",
+      "requirementKey": "natural-deliver-consent",
+      "scenario": "/deliver ไม่ใส่ change-id",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "natural-intent-docs",
+      "requirementKey": "natural-intent-docs",
+      "scenario": "เอกสารครบ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/pi-extension.test.mjs) && (bash .claude/tests/docs/run-doc-consistency.sh) && (env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/pi-extension.test.mjs",
+        "bash .claude/tests/docs/run-doc-consistency.sh",
+        "env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

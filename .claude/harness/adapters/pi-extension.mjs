@@ -7,7 +7,8 @@ import { fileURLToPath } from "node:url";
 import { HOST_COMMANDS } from "../runtime/core/host-instruction.mjs";
 import { normalizeHarnessCliInvocations } from "../runtime/core/shell-mutation-policy.mjs";
 import { assertSharedInstallation, isSharedProject } from '../runtime/core/project-installation.mjs';
-import { isLandConsent, resolveSessionLand } from '../runtime/core/pi-land-context.mjs';
+import { deliverRequest, investigateRequest, isLandConsent, resolveSessionDeliver,
+  resolveSessionLand } from '../runtime/core/pi-land-context.mjs';
 import { recordedPhaseContext } from '../../hooks/phase-state.mjs';
 
 const PHASE_FRESHNESS_MS = 12 * 60 * 60 * 1000;
@@ -200,19 +201,27 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     }
   });
 
+  // Only whole interactive user utterances route: extension, RPC and worker
+  // text never become a workflow or an authority grant.
   pi.on("input", async (event, ctx) => {
     if (event.source !== "extension") invocation = null;
-    if (event.source !== "interactive" || !isLandConsent(event.text)) return;
-    if (parent) { ctx.ui.notify(workerRefusal, "warning"); return { action: "handled" }; }
+    if (event.source !== "interactive") return;
+    const land = isLandConsent(event.text);
+    const deliver = land ? null : deliverRequest(event.text);
+    const topic = land || deliver ? null : investigateRequest(event.text);
+    if (!land && !deliver && topic === null) return;
+    if (parent && (land || deliver)) { ctx.ui.notify(workerRefusal, "warning"); return { action: "handled" }; }
     if (!ready) { ctx.ui.notify("Change Loop unavailable; fix the startup error and /reload.", "error"); return { action: "handled" }; }
     try {
-      const id = await resolveSessionLand(root, ctx);
-      if (!id) return { action: "handled" };
-      const value = await hostJson("instruction", ["land", "--protocol", "1", "--format", "json", "--arguments", id], ctx);
+      const command = land ? "land" : deliver ? "deliver" : "investigate";
+      const args = land ? await resolveSessionLand(root, ctx)
+        : deliver ? deliver.id || await resolveSessionDeliver(root, ctx) : topic;
+      if (!args) return { action: "handled" };
+      const value = await hostJson("instruction", [command, "--protocol", "1", "--format", "json", "--arguments", args], ctx);
       if (typeof value.instruction !== "string" || !value.instruction.trim() ||
           value.foundationVersion !== contract.foundationVersion) throw new Error("Change Loop changed; /reload before continuing.");
-      invocation = { command: "land", args: id };
-      status(ctx, `land · ${id}`);
+      invocation = { command, args };
+      status(ctx, `${command} · ${args.slice(0, 80)}`);
       return { action: "transform", text: isSharedProject(root) ? value.instruction.replaceAll('.claude/', `${runtimeRoot}/.claude/`) : value.instruction,
         images: event.images };
     } catch (error) { ctx.ui.notify(error.message, "error"); return { action: "handled" }; }
@@ -224,7 +233,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       "Pi host: during Build every bash call starts in the change workspace, as if you had run cd there once; never cd to the project root to write files. " +
       "Outside Build each bash call starts in the session cwd. Use absolute sandbox paths for Write and Edit. " +
       "Follow runtime resume routes; /build and /prove never authorize Land. " +
-      'For the single ready change in this session, explicit user consent such as "land ได้เลย" or /land resolves the change automatically. ' +
+      'For the single ready change in this session, explicit user consent such as "land ได้เลย" or /land resolves the change automatically; "เปิด PR ให้เลย" or /deliver does the same for Deliver, and "investigate <topic>" runs /investigate. ' +
       "Do not ask users to copy change IDs when session context resolves them. /deliver <change> separately authorizes publication. " +
       "Guard coverage is partial: custom/MCP tools and other extensions are outside this adapter's live boundary. " +
       "Do not claim OS sandboxing or unattended authority." };
@@ -237,8 +246,8 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
       invocation = null;
       if (!ready) { ctx.ui.notify("Change Loop unavailable; fix the startup error and /reload.", "error"); return; }
       if (parent && ["land", "deliver"].includes(command)) { ctx.ui.notify(workerRefusal, "error"); return; }
-      if (command === "land" && !args.trim()) {
-        args = await resolveSessionLand(root, ctx);
+      if (["land", "deliver"].includes(command) && !args.trim()) {
+        args = await (command === "land" ? resolveSessionLand : resolveSessionDeliver)(root, ctx);
         if (!args) return;
       }
       if (["land", "deliver"].includes(command) && !ID.test(args.trim())) {

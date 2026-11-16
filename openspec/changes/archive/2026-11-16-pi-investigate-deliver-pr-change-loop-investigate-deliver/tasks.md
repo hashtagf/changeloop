@@ -1,0 +1,7 @@
+# Tasks
+
+> This is the sole implementation ledger.
+
+- [x] **T001** Pi adapter ส่ง investigate และ deliver ภาษาธรรมดาเข้า workflow และ /deliver ไม่ใส่ id เลือก change ของ session [key:task-1] [kind:implementation] [paths:.claude/harness/adapters/pi-extension.mjs,.claude/harness/runtime/core/pi-land-context.mjs,.claude/harness/tests/pi-extension.test.mjs] [claims:natural-investigate-routing-investigate-build,natural-investigate-routing-investigate-investigate,natural-investigate-routing-extension-rpc-investigate-build,natural-deliver-consent-pr,natural-deliver-consent-pr-deliver,natural-deliver-consent-deliver,natural-deliver-consent-pr-2,natural-deliver-consent-deliver-2] — verify: `node --test .claude/harness/tests/pi-extension.test.mjs`
+- [x] **T002** เอกสาร Pi อธิบายคำขอภาษาธรรมดา [key:task-2] [kind:implementation] [paths:WORKFLOW.md,.claude/harness/README.md,CHANGELOG.md] [claims:natural-intent-docs] — verify: `bash .claude/tests/docs/run-doc-consistency.sh`
+- [x] **T003** Default deterministic gate ยังผ่าน [key:task-3] [kind:implementation] [paths:.claude/harness/adapters/pi-extension.mjs] [claims:natural-investigate-routing-investigate-build,natural-investigate-routing-investigate-investigate,natural-investigate-routing-extension-rpc-investigate-build,natural-deliver-consent-pr,natural-deliver-consent-pr-deliver,natural-deliver-consent-deliver,natural-deliver-consent-pr-2,natural-deliver-consent-deliver-2] — verify: `env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh`

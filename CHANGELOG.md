@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Pi routes plain-language requests into Change Loop. `investigate <topic>`
+  runs `/investigate`, and short requests such as `เปิด PR ให้เลย`,
+  `deliver ได้เลย`, or `open a PR` run `/deliver` for the session's change,
+  as does `/deliver` without an ID. Questions and refusals are not requests.
 - Pi follows the machine's Change Loop. After `brew upgrade`, reopening or
   reloading Pi installs the new runtime through the new
   `claude-foundation host pi-runtime` endpoint; a missing or failing CLI keeps

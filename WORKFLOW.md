@@ -1407,6 +1407,11 @@ quoted examples, worker messages, or RPC text as consent. Other explicit wording
 can use `/land`; `/land <change>` remains available for a specific target.
 The resolved authority stays session-local and change-specific, is revoked by
 new user input or reload, and does not authorize `/deliver` or publication.
+The same session resolution applies to `/deliver` without an ID and to short
+whole requests such as `เปิด PR ให้เลย`, `deliver ได้เลย`, or `open a PR`, over
+the session's `proven`, `applied`, or `archived` changes. An interactive
+message that starts with `investigate <topic>` runs `/investigate <topic>`.
+Neither grants Land beyond the Deliver workflow's own Land of a proven change.
 
 Land is the single hard gate ([blocking policy](#blocking-policy)). It refuses
 until the spec approval is still valid (checked again even when a grant

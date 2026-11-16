@@ -572,12 +572,17 @@ A Pi worker tool starts each worker with `FOUNDATION_PARENT_SESSION_ID` set to
 the coordinating session. The worker's guards then resolve that session's
 phase, so a parallel Build worker may write inside the change workspace and
 nowhere else, as a native subagent does. A worker session refuses `/land`,
-`/deliver`, and natural Land consent; only the coordinating session lands or
-delivers.
+`/deliver`, and natural Land or Deliver requests; only the coordinating session
+lands or delivers.
 
 `/land <change>` grants only that change's Land in the current session; reload,
 session replacement, or new user input revokes it. `/deliver <change>` separately
-authorizes the matching publication workflow. Runtime proof and Land gates remain
+authorizes the matching publication workflow. Whole interactive requests such
+as `เปิด PR ให้เลย`, `deliver ได้เลย`, or `open a PR` act as `/deliver` for the
+session's single proven, applied, or archived change (several open a selection
+list; `/deliver` without an ID resolves the same way), and `investigate <topic>`
+acts as `/investigate <topic>`. Questions, refusals, and extension or RPC text
+never route. Runtime proof and Land gates remain
 authoritative. Custom/MCP tools and other extensions are outside this partial
 live boundary; PowerShell is refused. The shared shell policy audits by default
 (`FOUNDATION_SHELL_GUARD=block` enables strict checks). This is not OS isolation,

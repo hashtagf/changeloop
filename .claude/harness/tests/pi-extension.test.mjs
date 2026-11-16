@@ -7,7 +7,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import install from "../adapters/pi-extension.mjs";
 import { HOST_COMMANDS } from "../runtime/core/host-instruction.mjs";
-import { isLandConsent } from "../runtime/core/pi-land-context.mjs";
+import { deliverRequest, investigateRequest, isLandConsent } from "../runtime/core/pi-land-context.mjs";
 
 const source = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const temp = realpathSync(mkdtempSync(join(tmpdir(), "pi-adapter-")));
@@ -342,6 +342,75 @@ test("natural Land consent never guesses another session, grants generic agreeme
     assert.equal(await b.fire("input", { source, text: "land ได้เลย" }), undefined);
     assert.equal((await b.call("bash", { command: "claude-foundation advance consent-case --through archived" })).block, true);
   }
+});
+
+// 2026-11-17: plain-language investigate and deliver requests bypassed the workflow.
+test("natural investigate and deliver requests are recognized only as whole affirmative utterances", () => {
+  assert.equal(investigateRequest("investigate ทำไม build ช้า"), "ทำไม build ช้า");
+  assert.equal(investigateRequest("ช่วย investigate why login fails"), "why login fails");
+  for (const text of ["investigate", "ควร investigate ไหม", "/investigate x", "please explain investigate"])
+    assert.equal(investigateRequest(text), null, text);
+  for (const text of ["deliver", "deliver ได้เลย", "deliver it", "เปิด PR ให้เลย", "เปิด PR ได้เลยครับ",
+    "ช่วยเปิด PR ให้หน่อย", "open a PR", "open a pull request", "go ahead and deliver"])
+    assert.deepEqual(deliverRequest(text), { id: "" }, text);
+  assert.deepEqual(deliverRequest("deliver my-change"), { id: "my-change" });
+  for (const text of ["เปิด PR ได้ไหม", "deliver ได้ไหม", "deliver?", "อย่าเพิ่ง deliver", "don't deliver",
+    "ไม่ต้องเปิด PR", "> เปิด PR ให้เลย", "deliver แล้ว deploy ด้วย", "ok"])
+    assert.equal(deliverRequest(text), null, text);
+});
+
+test("natural investigate routes to the investigate workflow and phase only for user input", async () => {
+  const b = await bridge("natural-investigate");
+  const result = await b.fire("input", { source: "interactive", text: "investigate ทำไม build ช้า" });
+  assert.equal(result.action, "transform");
+  assert.match(result.text, /ทำไม build ช้า/);
+  assert.match(result.text, /investigate/i);
+  for (const text of ["investigate", "ควร investigate ไหม"])
+    assert.equal(await b.fire("input", { source: "interactive", text }), undefined, text);
+  for (const source of ["extension", "rpc"])
+    assert.equal(await b.fire("input", { source, text: "investigate ทำไม build ช้า" }), undefined, source);
+});
+
+function delivered(session, id) {
+  readyForLand(session, id);
+  const file = join(root, ".foundation/runtime", `${id}.json`);
+  writeFileSync(file, JSON.stringify({ ...JSON.parse(readFileSync(file, "utf8")), status: "archived" }));
+}
+
+test("natural Deliver request resolves this session's change and grants only that publication", async () => {
+  const b = await bridge("natural-deliver");
+  delivered("natural-deliver", "deliver-case");
+  delivered("another-deliver", "deliver-other");
+  for (const text of ["เปิด PR ให้เลย", "deliver ได้เลย", "open a PR"]) {
+    const result = await b.fire("input", { source: "interactive", text });
+    assert.equal(result.action, "transform", text);
+    assert.match(result.text, /deliver-case/);
+    assert.equal(await b.call("bash", { command: "claude-foundation deliver advance deliver-case" }), undefined);
+    assert.equal((await b.call("bash", { command: "claude-foundation deliver advance deliver-other" })).block, true);
+    assert.equal((await b.call("bash", { command: "claude-foundation advance deliver-case --through archived" })).block, true);
+  }
+  for (const text of ["เปิด PR ได้ไหม", "อย่าเพิ่ง deliver"]) {
+    assert.equal(await b.fire("input", { source: "interactive", text }), undefined, text);
+    assert.equal((await b.call("bash", { command: "claude-foundation deliver advance deliver-case" })).block, true);
+  }
+  for (const source of ["extension", "rpc"]) {
+    assert.equal(await b.fire("input", { source, text: "เปิด PR ให้เลย" }), undefined);
+    assert.equal((await b.call("bash", { command: "claude-foundation deliver advance deliver-case" })).block, true);
+  }
+  await b.command("deliver");
+  assert.match(b.messages.at(-1), /deliver-case/);
+  assert.equal(await b.call("bash", { command: "claude-foundation deliver advance deliver-case" }), undefined);
+});
+
+test("natural Deliver without a ready change or in a worker grants nothing", async () => {
+  const b = await bridge("no-deliver");
+  assert.equal((await b.fire("input", { source: "interactive", text: "deliver ได้เลย" })).action, "handled");
+  assert.match(b.notices.at(-1).text, /No change ready for Deliver/);
+  delivered("worker-parent", "worker-deliver");
+  const w = await bridge("worker-child", { parent: "worker-parent" });
+  assert.equal((await w.fire("input", { source: "interactive", text: "เปิด PR ให้เลย" })).action, "handled");
+  assert.match(w.notices.at(-1).text, /worker/);
+  assert.equal((await w.call("bash", { command: "claude-foundation deliver advance worker-deliver" })).block, true);
 });
 
 test("multiple session Land candidates require selection and cancellation grants nothing", async () => {
