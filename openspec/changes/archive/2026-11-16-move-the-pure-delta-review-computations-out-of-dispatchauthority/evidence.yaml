@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "review-delta-scope-module",
+      "requirementKey": "review-delta-scope-module",
+      "scenario": "Dispatched packets unchanged",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/review-delta-scope.test.mjs .claude/harness/tests/authority-response-validation.test.mjs .claude/harness/tests/workflow-policy.test.mjs) && (env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/review-delta-scope.test.mjs .claude/harness/tests/authority-response-validation.test.mjs .claude/harness/tests/workflow-policy.test.mjs",
+        "env -u CLAUDE_FOUNDATION_PROJECT -u CLAUDE_PROJECT_DIR bash .claude/tests/run-all.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

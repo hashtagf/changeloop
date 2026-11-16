@@ -86,3 +86,12 @@ The sandbox setup functions SHALL live in .claude/harness/runtime/workflow/sandb
 
 - **WHEN** existing code and tests import setup functions from sandbox-runtime.mjs
 - **THEN** the imports resolve and the default gate passes without editing any test expectation
+
+### Requirement: review-delta-scope-module
+
+review-delta-scope.mjs SHALL own the delta scope rows, closure findings and delta packet projection, and dispatchAuthorityUnlocked SHALL call them.
+
+#### Scenario: Dispatched packets unchanged
+
+- **WHEN** a full or delta AI review is dispatched
+- **THEN** the dispatched packet, scope digest and errors are identical to the previous behavior and the default gate passes without changing any expectation

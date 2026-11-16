@@ -10,13 +10,13 @@ import {
 } from "../evidence/configured-reviewer.mjs";
 import { checkpointReviewResult, recoverReviewResult } from "../evidence/review-result-recovery.mjs";
 import {
-  blockingReviewFindings, normalizeReviewCompletionFindings, openHumanReviewClosure
+  normalizeReviewCompletionFindings, openHumanReviewClosure
 } from "../evidence/review-attempt-store.mjs";
 import {
   reviewAgreementValue, reviewDepthForTier, reviewDiffValue, reviewModelClass,
   reviewScenarioChecklist
 } from "../evidence/review-diff.mjs";
-import { deltaReviewInspection } from "./packet-runtime.mjs";
+import { applyDeltaPacket, closureFindingsValue, deltaScopeRows } from "./review-delta-scope.mjs";
 import { retiredCircuitReviewRequest } from "./authority.mjs";
 
 export function authorityRequestDisplayValue(request, limit = 8192) {
@@ -914,25 +914,10 @@ export function createAuthorityRuntime({
         fail("AI delta review base packet no longer matches the immutable first dispatch");
       const baseManifest = Array.isArray(baseRequest.packet?.changedSurface?.manifest)
         ? baseRequest.packet.changedSurface.manifest : [];
-      const baseRows = new Map(baseManifest.map((row) => [
-        `${row.repositoryId}/${row.path}`, row
-      ]));
-      const currentRows = new Map(currentManifest.map((row) => [
-        `${row.repositoryId}/${row.path}`, row
-      ]));
       const projected = request.packet.reviewScope?.mode === "delta" &&
         request.packet.reviewScope.baseAttemptDigest === baseAttemptDigest &&
         request.packet.changedSurface?.deltaFrom?.attemptDigest === baseAttemptDigest;
-      // A retry already carries a projected delta. Missing base rows there are
-      // unchanged files, not evidence of a revert in the current workspace.
-      if (!projected) {
-        scopeRows = currentManifest.filter((row) =>
-          baseRows.get(`${row.repositoryId}/${row.path}`)?.identity !== row.identity);
-        for (const [key, row] of baseRows)
-          if (!currentRows.has(key)) scopeRows.push({ ...row, identity: "reverted-to-base" });
-      }
-      scopeRows.sort((left, right) =>
-        `${left.repositoryId}/${left.path}`.localeCompare(`${right.repositoryId}/${right.path}`));
+      scopeRows = deltaScopeRows(baseManifest, currentManifest, projected);
       if (scopeRows.length === 0)
         fail("AI delta review has no files changed since the first AI dispatch; do not spend the second review round");
       baseWorkspaceHash = baseAttempt.workspaceHash;
@@ -962,70 +947,14 @@ export function createAuthorityRuntime({
       paths: scopePaths,
       digest: scopeDigest
     };
-    function closureFindingsValue(source) {
-      const closureFindings = blockingReviewFindings(source);
-      return {
-        baseAttemptDigest: source.digest,
-        ids: closureFindings.map((finding) => finding.id).sort(),
-        findings: closureFindings
-      };
-    }
     function applyHighRiskHumanClosure() {
     if (routing.tier === "high" && reviewerType === "human" && deliveredAi.length)
       packet.closureFindings = closureFindingsValue(deliveredAi.at(-1));
     }
     applyHighRiskHumanClosure();
-    function applyDeltaPacket() {
-    if (scopeMode === "delta") {
-      const inspection = deltaReviewInspection(scopeRows, request.packet?.changedSurface?.inspection);
-      packet.changedSurface = {
-        paths: scopePaths,
-        digest: stableHash(scopePaths),
-        inspection,
-        rows: scopeRows,
-        manifest: scopeRows,
-        deltaFrom: {
-          attemptDigest: baseAttemptDigest,
-          workspaceHash: baseWorkspaceHash
-        }
-      };
-      packet.closureFindings = closureFindingsValue(baseAttempt);
-      function applyDeltaContractProjection() {
-      const changedContractNames = new Set(scopeRows
-        .filter((row) => row.kind === "contract-artifact")
-        .map((row) => row.relativePath));
-      function artifactName(name) { return name; }
-      function artifactRelativePath(_name, artifact) {
-        return artifact?.relativePath || null;
-      }
-      function selectedDeltaArtifacts(artifacts, pathFor) {
-        return Object.fromEntries(Object.entries(artifacts).filter(([name, artifact]) =>
-          [...changedContractNames].some((path) => path === pathFor(name, artifact) ||
-            path.startsWith(`${pathFor(name, artifact)}/`))));
-      }
-      function artifactCollection(value) {
-        return value && typeof value === "object" ? value : {};
-      }
-      packet.contractArtifacts = selectedDeltaArtifacts(
-        artifactCollection(request.packet?.contractArtifacts), artifactName);
-      packet.decisions = selectedDeltaArtifacts(
-        artifactCollection(request.packet?.decisions), artifactRelativePath);
-      packet.references = selectedDeltaArtifacts(
-        artifactCollection(request.packet?.references), artifactRelativePath);
-      function applyDeltaGroundingAndClaims() {
-      packet.grounding = changedContractNames.has("grounding.yaml")
-        ? request.packet.grounding : null;
-      if (!changedContractNames.has("evidence.yaml")) packet.claims = {
-        reuseFromAttempt: baseAttemptDigest,
-        digest: stableHash(request.packet?.claims || [])
-      };
-      }
-      applyDeltaGroundingAndClaims();
-      }
-      applyDeltaContractProjection();
-    }
-    }
-    applyDeltaPacket();
+    if (scopeMode === "delta") applyDeltaPacket(packet, {
+      request, scopeRows, scopePaths, baseAttempt, baseAttemptDigest, baseWorkspaceHash, stableHash
+    });
     // A newer human verdict with blocker/major findings owns closure for the
     // next review of either reviewer type and scope; AI-only chains keep the
     // closure chosen above.

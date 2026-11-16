@@ -330,7 +330,7 @@ proof preflight|node --test "$ROOT/.claude/harness/tests/proof-preflight.test.mj
 telemetry import and sync|node --test "$ROOT/.claude/harness/tests/telemetry-import-sync.test.mjs"
 land journal apply entry|node --test "$ROOT/.claude/harness/tests/land-journal-apply-entry.test.mjs"
 verified CI recording|node --test "$ROOT/.claude/harness/tests/verified-ci-recording.test.mjs"
-authority response validation|node --test "$ROOT/.claude/harness/tests/authority-response-validation.test.mjs"
+authority response validation|node --test "$ROOT/.claude/harness/tests/authority-response-validation.test.mjs" "$ROOT/.claude/harness/tests/review-delta-scope.test.mjs"
 proof topology issues|node --test "$ROOT/.claude/harness/tests/proof-topology-issues.test.mjs"
 subject provenance|node --test "$ROOT/.claude/harness/tests/subject-provenance.test.mjs"
 handoff operation normalization|node --test "$ROOT/.claude/harness/tests/handoff-operation-normalization.test.mjs"
