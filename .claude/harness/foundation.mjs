@@ -194,6 +194,9 @@ let trappedFailureDepth = 0;
 // records its own refusal here instead of marking the whole process blocked:
 // its failure is an open request the next pass routes, not this command's stop.
 const detachedBlockScope = createDetachedBlockScope();
+let operationChangeId = null;
+let operationName = null;
+let operationPhase = null;
 // A command that prints a structured non-ready result and returns has also
 // ended in a refusal, not a crash — but it never reaches `die`. `block()` is
 // that second spelling: it records the decision without exiting, so the exit
@@ -267,9 +270,6 @@ const { readJsonLines, readJsonLinesTolerant } = createJsonlReader({
 });
 
 const operationStartedAt = Date.now();
-let operationChangeId = null;
-let operationName = null;
-let operationPhase = null;
 let operationStatusAtStart = null;
 let operationFingerprint = null;
 // Commands that only read. They are observed in inspections.jsonl so the
@@ -1506,6 +1506,14 @@ function unresolvedApplyTransactions(id) {
       "settling-current"]
       .includes(journal.status));
 }
+const modelDriftInspector = createModelDriftInspector({
+  logs: LOGS,
+  instructionManifests: INSTRUCTION_MANIFESTS,
+  activeChangePath,
+  policy: foundationPolicy,
+  taskBlocks,
+  taskMetadata
+});
 const {
   doctor,
   showChanges,
@@ -1765,14 +1773,6 @@ const guardedRecordReceipt = guardPublicProofMutation(
   "evidence receipt", recordReceipt);
 const guardedRunProvider = guardPublicProofMutation(
   "evidence run-provider", runProvider);
-const modelDriftInspector = createModelDriftInspector({
-  logs: LOGS,
-  instructionManifests: INSTRUCTION_MANIFESTS,
-  activeChangePath,
-  policy: foundationPolicy,
-  taskBlocks,
-  taskMetadata
-});
 const {
   landCheck,
   recoverLand,
@@ -1837,6 +1837,15 @@ const landGrantRuntime = createLandGrantRuntime({
   workspaceHash: (id) => relevantHash(id, null, true),
   archiveRecoveryReady: (id) => applyRuntime.archiveRecoveryReady(id)
 });
+// Cross-change rollups read the store directly and never write it: the
+// attempt reader below bypasses reviewHistoryState, which may migrate state.
+const reviewAttemptRecords = (id) => {
+  const dir = join(EVIDENCE_VAULT, id, "review-attempts");
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).filter((name) => name.endsWith(".json")).sort()
+    .map((name) => readJsonOrNull(join(dir, name)))
+    .filter((value) => value && typeof value === "object");
+};
 const applyRuntime = createApplyRuntime({
   // Archive appendices: review rounds and post-release rollout gates.
   reviewAttemptRecords: (id) => reviewAttemptRecords(id),
@@ -2117,15 +2126,6 @@ const { showFeedback } = createFeedbackRuntime({
   packetValue: packetRuntime.inspectionPacketValue,
   nextAction: (id) => advanceValue(id, { inspect: true })
 });
-// Cross-change rollups read the store directly and never write it: the
-// attempt reader below bypasses reviewHistoryState, which may migrate state.
-const reviewAttemptRecords = (id) => {
-  const dir = join(EVIDENCE_VAULT, id, "review-attempts");
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir).filter((name) => name.endsWith(".json")).sort()
-    .map((name) => readJsonOrNull(join(dir, name)))
-    .filter((value) => value && typeof value === "object");
-};
 const { showOutcomes } = createOutcomesRuntime({
   runtimeDir: RUNTIME,
   evidenceDir: EVIDENCE_VAULT,
