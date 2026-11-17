@@ -101,7 +101,7 @@ Once the committed quality config exists, evidence bootstrap can wire the enforc
 
 Change Loop deliberately does **not** invent CRAP values for Bash, SQL, MongoDB, HTML, CSS, or Sass. Unsupported, unavailable, and unmapped capabilities never become zero or pass.
 
-**Findings ratchet** covers lint, type-check, file size, and module boundaries. Each finding is recorded per file and rule; existing findings become a baseline that may only shrink. A new finding, a tracked file that grows, or a new file longer than `policy.findings.fileSizeCeiling` (default 1000 lines) fails. Before a baseline exists the lane passes with reduced assurance and tells you to run `cloop quality baseline --write`, so turning the ratchet on never fails every existing finding at once. Module boundaries declare which folders may import which; a relative import between modules that `allow` does not list is a finding whose message says where the shared code should go:
+**Findings ratchet** covers lint, type-check, file size, module boundaries, stopgap comments, duplicated blocks, and nesting depth. Each finding is recorded per file and rule; existing findings become a baseline that may only shrink. A new finding, a tracked file that grows, or a new file longer than `policy.findings.fileSizeCeiling` (default 1000 lines) fails. Before a baseline exists the lane passes with reduced assurance and tells you to run `cloop quality baseline --write`, so turning the ratchet on never fails every existing finding at once. Module boundaries declare which folders may import which; a relative import between modules that `allow` does not list is a finding whose message says where the shared code should go:
 
 ```json
 "module-boundaries": {
@@ -115,7 +115,9 @@ Change Loop deliberately does **not** invent CRAP values for Bash, SQL, MongoDB,
 }
 ```
 
-Discovery adds `file-size` to every application profile, `type-check` (`tsc --noEmit`) when the project has TypeScript and `tsconfig.json`, and `lint` (`eslint -f json`) when it has ESLint. An exit code of 1 from these tools is how they report findings; the ratchet, not the exit code, decides the lane.
+`workaround-comments` records each comment line with an upper-case `TODO`, `FIXME`, `HACK`, or `XXX` (or the word workaround), and `duplication` records each block of at least 8 significant lines (`window`) copied from earlier code, and `nesting-depth` records each file whose deepest line nests more than 5 levels (`maxDepth`; a rough line scan, not a parser); none needs a project tool, and the baseline absorbs what already exists.
+
+Discovery adds `file-size`, `workaround-comments`, `duplication`, and `nesting-depth` to every application profile, `type-check` (`tsc --noEmit`) when the project has TypeScript and `tsconfig.json`, and `lint` (`eslint -f json`) when it has ESLint. An exit code of 1 from these tools is how they report findings; the ratchet, not the exit code, decides the lane.
 
 ## Providers and built-in normalizers
 
@@ -127,7 +129,7 @@ The project owns every command and pinned tool version. A `command` provider emi
 - `php-clover`
 - `canonical-functions`
 - `generic-mutation-json`
-- `eslint-json`, `tsc-text`, `file-size`, `module-boundaries`, and `generic-findings-json` (`foundation-findings-v1`) for the findings ratchet; an input path of `-` reads the command's stdout
+- `eslint-json`, `tsc-text`, `file-size`, `module-boundaries`, `workaround-comments`, `duplication`, `nesting-depth`, and `generic-findings-json` (`foundation-findings-v1`) for the findings ratchet; an input path of `-` reads the command's stdout
 
 CRAP and mutation reports bind the repository ID, commit, workspace digest, language, tool version, adapter version, and configuration digest. A report from another workspace or incompatible tool configuration cannot silently become the baseline for the current run.
 

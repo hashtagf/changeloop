@@ -69,6 +69,25 @@ function outsideRootRepositories() {
     });
 }
 
+// An installed project whose tool-free checks were never adopted gets only the
+// verification layer: no ratchet catches a new finding and no feature map
+// grounds a change. Existence checks only, so the hook stays within its budget;
+// `doctor` names each step and the onboard skill asks before anything binds.
+function setupGaps() {
+  if (!existsSync(join(ROOT, ".foundation", "install-manifest.txt"))) return [];
+  const gaps = [];
+  if (!existsSync(join(ROOT, "quality", "foundation-quality.json"))) gaps.push("no quality lanes");
+  else {
+    const baselines = join(ROOT, "quality", "baselines");
+    const recorded = existsSync(baselines) && readdirSync(baselines, { withFileTypes: true })
+      .some((entry) => entry.isDirectory() && readdirSync(join(baselines, entry.name)).length > 0);
+    if (!recorded) gaps.push("no findings baseline");
+  }
+  const map = bestEffort(() => JSON.parse(readFileSync(join(ROOT, "openspec", "feature-map.json"), "utf8")), null);
+  if (!Array.isArray(map?.features) || !map.features.length) gaps.push("no feature map");
+  return gaps;
+}
+
 // Where the loop stands, stated without being asked.
 //
 // Deliberately hash-free: `relevantHash` walks the entire workspace, and this
@@ -113,6 +132,10 @@ function workflowDigest() {
   lines.push("  Agent shell: one plain command per call (no `cd` chains, `$VAR`/`$(…)`, " +
     "braces, or heredocs); view and change files with Read/Grep/Edit/Write, not " +
     "`sed -i`, python, or scripts.");
+  const gaps = setupGaps();
+  if (gaps.length)
+    lines.push(`  Project setup incomplete (${gaps.join(", ")}): offer once, when it fits the user's ` +
+      "request, to onboard the project (skill: onboard); `cloop doctor` lists each step.");
   const outside = outsideRootRepositories();
   if (outside.length)
     lines.push(`  Outside the working directory: ${

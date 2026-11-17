@@ -1,33 +1,34 @@
-// Findings ratchet for consumer projects: lint, type-check, file-size, and
-// module-boundary findings are recorded per file and rule. Existing findings
+// Findings ratchet for consumer projects: lint, type-check, file-size,
+// module-boundary, stopgap-comment, duplication, and nesting findings are recorded
+// per file and rule. Existing findings
 // become a baseline that may only shrink; a new finding, a grown file, or a
 // new boundary violation fails. The same rule Change Loop applies to its own
 // harness, offered to the projects that install it.
-import { readFileSync, readdirSync, statSync } from "node:fs";
-import { extname, join, posix, relative } from "node:path";
+import { readFileSync, statSync } from "node:fs";
+import { join, posix, relative } from "node:path";
 import { configDigest } from "./quality-protocol.mjs";
 import { pathMatches } from "./quality-evaluator.mjs";
+import { SOURCE_EXTENSIONS, lineCount, slash, sourceFiles } from "./source-scan.mjs";
+import { duplicationFindings, nestingDepthFindings, workaroundCommentFindings } from "./code-health-findings.mjs";
 
 export const FINDINGS_PROTOCOL = "foundation-findings-v1";
-export const FINDINGS_CAPABILITIES = new Set(["lint", "type-check", "file-size", "module-boundaries"]);
+export const FINDINGS_CAPABILITIES = new Set(["lint", "type-check", "file-size", "module-boundaries",
+  "workaround-comments", "duplication", "nesting-depth"]);
 export const FINDINGS_ADAPTER_VERSION = "1";
 export const DEFAULT_FILE_SIZE_CEILING = 1000;
-const SOURCE_EXTENSIONS = [".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx", ".mts", ".cts"];
-// Dependencies, build output, and installed agent tooling (Change Loop itself
-// lives under .claude/) are not the project's source.
-const SKIP_DIRECTORIES = new Set([".git", "node_modules", "vendor", "dist", "build", "coverage", ".foundation", ".claude"]);
-const MAXIMUM_FILES = 20000;
-
-const slash = (path) => String(path || "").replaceAll("\\", "/").replace(/^\.\//, "");
 
 function tool(provider, adapter) {
+  // Settings added after a lane's first release join the digest only when
+  // set, so an existing baseline keeps comparing.
+  const later = Object.fromEntries(["extensions", "window", "maxDepth"]
+    .filter((key) => provider[key] !== undefined).map((key) => [key, provider[key]]));
   return {
     name: provider.tool?.name || adapter,
     version: String(provider.tool?.version || "unknown"),
     adapterVersion: FINDINGS_ADAPTER_VERSION,
     configDigest: configDigest({ adapter, inputs: provider.inputs || null, include: provider.include || null,
       exclude: provider.exclude || null, ceiling: provider.ceiling || null, modules: provider.modules || null,
-      allow: provider.allow || null, tool: provider.tool || null })
+      allow: provider.allow || null, tool: provider.tool || null, ...later })
   };
 }
 
@@ -79,32 +80,6 @@ export function parseTscText(source) {
     if (match) findings.push({ path: slash(match[1]), rule: `types/${match[3]}`, line: Number(match[2]), message: match[4] });
   }
   return findings;
-}
-
-function sourceFiles(root, provider) {
-  const include = provider.include?.length ? provider.include : ["**/*"];
-  const exclude = provider.exclude || [];
-  const extensions = provider.extensions?.length ? provider.extensions : SOURCE_EXTENSIONS;
-  const files = [];
-  const walk = (directory) => {
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-      if (files.length >= MAXIMUM_FILES) throw new Error(`source scan exceeded ${MAXIMUM_FILES} files; narrow include`);
-      if (entry.isDirectory()) {
-        if (!SKIP_DIRECTORIES.has(entry.name)) walk(join(directory, entry.name));
-      } else if (entry.isFile() && extensions.includes(extname(entry.name))) {
-        const path = slash(relative(root, join(directory, entry.name)));
-        if (pathMatches(path, include) && !pathMatches(path, exclude)) files.push(path);
-      }
-    }
-  };
-  walk(root);
-  return files.sort();
-}
-
-function lineCount(text) {
-  if (!text.length) return 0;
-  const breaks = text.split("\n").length - 1;
-  return text.endsWith("\n") ? breaks : breaks + 1;
 }
 
 // Files longer than the ceiling become `file-size` findings carrying their
@@ -208,7 +183,16 @@ export const FINDINGS_ADAPTERS = Object.freeze({
         policy?.findings?.fileSizeCeiling), { repository, ...identity }) },
   "module-boundaries": { capability: "module-boundaries", inputs: [],
     run: ({ repository, provider, ...identity }) =>
-      report("module-boundaries", provider, moduleBoundaryFindings(repository.path, provider), { repository, ...identity }) }
+      report("module-boundaries", provider, moduleBoundaryFindings(repository.path, provider), { repository, ...identity }) },
+  "workaround-comments": { capability: "workaround-comments", inputs: [],
+    run: ({ repository, provider, ...identity }) =>
+      report("workaround-comments", provider, workaroundCommentFindings(repository.path, provider), { repository, ...identity }) },
+  "duplication": { capability: "duplication", inputs: [],
+    run: ({ repository, provider, ...identity }) =>
+      report("duplication", provider, duplicationFindings(repository.path, provider), { repository, ...identity }) },
+  "nesting-depth": { capability: "nesting-depth", inputs: [],
+    run: ({ repository, provider, ...identity }) =>
+      report("nesting-depth", provider, nestingDepthFindings(repository.path, provider), { repository, ...identity }) }
 });
 
 function counts(findings) {

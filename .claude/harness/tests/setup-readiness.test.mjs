@@ -108,8 +108,10 @@ test("doctor --json carries a setup section and no setup row is an error", (t) =
   const run = spawnSync(process.execPath, [FOUNDATION, "doctor", "--json"], { cwd: root, encoding: "utf8",
     env: { ...process.env, CLAUDE_FOUNDATION_PROJECT: root, FOUNDATION_TELEMETRY: "0" } });
   const value = JSON.parse(run.stdout);
-  assert.deepEqual(value.setup.map((row) => row.id).sort(), ["agent-guide", "feature-map", "lessons", "quality-config"]);
-  for (const row of value.setup) assert.ok(row.next, row.id);
+  assert.deepEqual(value.setup.map((row) => row.id).sort(), ["agent-guide", "feature-map", "lessons", "lessons-enforcement", "quality-config"]);
+  // A row that is not ready names its next step; a project with no history has no pending lessons.
+  for (const row of value.setup) assert.ok(row.level === "ok" || row.next, row.id);
+  assert.equal(value.setup.find((row) => row.id === "lessons-enforcement").level, "ok");
   const setupChecks = value.checks.filter((check) => check.name.startsWith("setup:"));
   assert.equal(setupChecks.length, value.setup.length);
   assert.ok(setupChecks.every((check) => check.level !== "error"));

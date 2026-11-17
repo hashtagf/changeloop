@@ -16,7 +16,7 @@ import {
 } from "./runtime/observability/metrics-runtime.mjs";
 import { createExecRuntime } from "./runtime/observability/exec-runtime.mjs";
 import { createOutcomesRuntime } from "./runtime/observability/outcomes-runtime.mjs";
-import { createLessonsRuntime } from "./runtime/observability/lessons-runtime.mjs";
+import { createLessonsRuntime, lessonsReadiness } from "./runtime/observability/lessons-runtime.mjs";
 import { createProjectFeaturesCommand, projectSetupReadiness } from "./runtime/workflow/validation/project-feature-map.mjs";
 import { createApprovalPackageRuntime, routeForState } from "./runtime/workflow/change/approval-package.mjs";
 import {
@@ -1581,7 +1581,7 @@ const {
   reviewerStatus,
   unverifiedDrift: (id) => modelDriftInspector.changeDrift(id).unverified,
   evidenceDetection: evidenceDetectionValue,
-  setupReadiness: () => [...qualityReadiness(), ...projectSetupReadiness(ROOT)],
+  setupReadiness: () => [...qualityReadiness(), ...projectSetupReadiness(ROOT), lessonsReadiness(lessonsValue())],
   fail: die
 });
 const {
@@ -2135,12 +2135,12 @@ const { showOutcomes } = createOutcomesRuntime({
   changeWorkTypes: (id, state) => changeWorkTypes(activeChangePath(id, state)),
   reviewAttemptRecords
 });
-const { showLessons } = createLessonsRuntime({
+const { lessonsValue, showLessons } = createLessonsRuntime({
   runtimeDir: RUNTIME,
   evidenceDir: EVIDENCE_VAULT,
   logsDir: LOGS,
   reviewAttemptRecords,
-  lessonsDocument: join(ROOT, "openspec", "lessons.md"),
+  lessonsDocument: join(ROOT, "openspec", "lessons.md"), projectFileExists: (path) => existsSync(join(ROOT, path)),
   fail: die
 });
 const { showFeatures } = createProjectFeaturesCommand({

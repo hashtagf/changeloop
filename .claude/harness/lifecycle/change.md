@@ -305,7 +305,10 @@ Optional `constraints` (non-empty strings) render as a proposal Constraints
 section and are `{kind: constraint}` investigation coverage targets; optional
 `fixes` names archived change ids (an `openspec/changes/archive/<date>-<id>`
 directory) that this change corrects, is kept on the change, and feeds the
-`outcomes` escaped-defect count.
+`outcomes` escaped-defect count. Optional `enforces` names recurring lesson
+codes from `lessons` that this change adds a check for; at least one task must
+change a file that is not prose (Markdown or text), or the agent gets an
+`EDIT` that names the check to add or `judgment: <why>` instead.
 Inspection persists one machine-owned snapshot bound to the draft and its
 grounded-source digests. Before each v4 or v5 inspection the harness performs bounded,
 read-only repository discovery and ranks relevant specs, tests, callers,

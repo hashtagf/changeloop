@@ -116,6 +116,18 @@ try {
   // python/sed rewrite of the draft, `$(find …)` loops, and `cd` chains.
   check(() => assert.match(empty, /Agent shell: one plain command per call \(no `cd` chains, `\$VAR`\/`\$\(…\)`, braces, or heredocs\); view and change files with Read\/Grep\/Edit\/Write, not `sed -i`, python, or scripts\./));
   check(() => assert.doesNotMatch(empty, /Outside the working directory/));
+  // Only an installed project is asked to onboard; this repository is not one.
+  check(() => assert.doesNotMatch(empty, /Project setup incomplete/));
+  writeFileSync(join(fixture, ".foundation", "install-manifest.txt"), "");
+  check(() => assert.match(digest(fixture),
+    /Project setup incomplete \(no quality lanes, no feature map\): offer once, when it fits the user's request, to onboard the project \(skill: onboard\)/));
+  mkdirSync(join(fixture, "quality", "baselines", "root"), { recursive: true });
+  writeFileSync(join(fixture, "quality", "foundation-quality.json"), "{}");
+  check(() => assert.match(digest(fixture), /Project setup incomplete \(no findings baseline, no feature map\)/));
+  writeFileSync(join(fixture, "quality", "baselines", "root", "file-size-v1.json"), "{}");
+  writeFileSync(join(fixture, "openspec", "feature-map.json"), JSON.stringify({ features: [{ id: "x" }] }));
+  check(() => assert.doesNotMatch(digest(fixture), /Project setup incomplete/));
+  rmSync(join(fixture, ".foundation", "install-manifest.txt"));
 
   // A declared sibling outside the root is named before the first read aimed
   // there (each was a permission prompt during Change); an in-root submodule

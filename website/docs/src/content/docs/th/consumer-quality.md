@@ -97,7 +97,7 @@ cloop quality run --change <change-id> --enforce
 
 Change Loop ตั้งใจ **ไม่สร้าง CRAP ปลอม** ให้ Bash, SQL, MongoDB, HTML, CSS หรือ Sass และสถานะ unsupported, unavailable หรือ unmapped จะไม่กลายเป็นศูนย์หรือ pass
 
-**Findings ratchet** ครอบคลุม lint, type-check, ขนาดไฟล์ และขอบเขตโมดูล ระบบบันทึก finding ต่อไฟล์และต่อกฎ finding ที่มีอยู่เดิมกลายเป็น baseline ที่ลดได้อย่างเดียว finding ใหม่, ไฟล์ที่ติดตามอยู่แล้วโตขึ้น หรือไฟล์ใหม่ที่ยาวเกิน `policy.findings.fileSizeCeiling` (ค่าเริ่มต้น 1000 บรรทัด) จะ fail ก่อนมี baseline lane จะผ่านแบบ reduced assurance และบอกให้รัน `cloop quality baseline --write` การเปิด ratchet จึงไม่ทำให้ finding เดิมทั้งหมด fail พร้อมกัน ขอบเขตโมดูลประกาศว่าโฟลเดอร์ไหน import โฟลเดอร์ไหนได้ import แบบ relative ระหว่างโมดูลที่ `allow` ไม่ได้ระบุจะเป็น finding พร้อมข้อความบอกว่าโค้ดที่ใช้ร่วมกันควรย้ายไปไว้ที่ไหน:
+**Findings ratchet** ครอบคลุม lint, type-check, ขนาดไฟล์, ขอบเขตโมดูล, คอมเมนต์แก้ขัด, โค้ดที่ copy ซ้ำ และความลึกของการซ้อนโค้ด ระบบบันทึก finding ต่อไฟล์และต่อกฎ finding ที่มีอยู่เดิมกลายเป็น baseline ที่ลดได้อย่างเดียว finding ใหม่, ไฟล์ที่ติดตามอยู่แล้วโตขึ้น หรือไฟล์ใหม่ที่ยาวเกิน `policy.findings.fileSizeCeiling` (ค่าเริ่มต้น 1000 บรรทัด) จะ fail ก่อนมี baseline lane จะผ่านแบบ reduced assurance และบอกให้รัน `cloop quality baseline --write` การเปิด ratchet จึงไม่ทำให้ finding เดิมทั้งหมด fail พร้อมกัน ขอบเขตโมดูลประกาศว่าโฟลเดอร์ไหน import โฟลเดอร์ไหนได้ import แบบ relative ระหว่างโมดูลที่ `allow` ไม่ได้ระบุจะเป็น finding พร้อมข้อความบอกว่าโค้ดที่ใช้ร่วมกันควรย้ายไปไว้ที่ไหน:
 
 ```json
 "module-boundaries": {
@@ -111,7 +111,9 @@ Change Loop ตั้งใจ **ไม่สร้าง CRAP ปลอม** �
 }
 ```
 
-Discovery เพิ่ม `file-size` ให้ทุก application profile เพิ่ม `type-check` (`tsc --noEmit`) เมื่อโปรเจกต์มี TypeScript และ `tsconfig.json` และเพิ่ม `lint` (`eslint -f json`) เมื่อมี ESLint exit code 1 ของเครื่องมือเหล่านี้คือการรายงาน finding ตัวที่ตัดสิน lane คือ ratchet ไม่ใช่ exit code
+`workaround-comments` บันทึกคอมเมนต์ทุกบรรทัดที่มี `TODO`, `FIXME`, `HACK` หรือ `XXX` ตัวพิมพ์ใหญ่ (หรือคำว่า workaround) และ `duplication` บันทึกทุกช่วงโค้ดอย่างน้อย 8 บรรทัดที่มีเนื้อหา (`window`) ซึ่ง copy มาจากโค้ดก่อนหน้า และ `nesting-depth` บันทึกไฟล์ที่บรรทัดลึกสุดซ้อนเกิน 5 ชั้น (`maxDepth`; สแกนรายบรรทัดแบบหยาบ ไม่ใช่ parser) ทั้งหมดไม่ต้องใช้เครื่องมือของโปรเจกต์ และของที่มีอยู่เดิมเข้า baseline ได้
+
+Discovery เพิ่ม `file-size`, `workaround-comments`, `duplication` และ `nesting-depth` ให้ทุก application profile เพิ่ม `type-check` (`tsc --noEmit`) เมื่อโปรเจกต์มี TypeScript และ `tsconfig.json` และเพิ่ม `lint` (`eslint -f json`) เมื่อมี ESLint exit code 1 ของเครื่องมือเหล่านี้คือการรายงาน finding ตัวที่ตัดสิน lane คือ ratchet ไม่ใช่ exit code
 
 ## Provider และ built-in normalizer
 
@@ -123,7 +125,7 @@ Discovery เพิ่ม `file-size` ให้ทุก application profile เ
 - `php-clover`
 - `canonical-functions`
 - `generic-mutation-json`
-- `eslint-json`, `tsc-text`, `file-size`, `module-boundaries` และ `generic-findings-json` (`foundation-findings-v1`) สำหรับ findings ratchet ถ้าใส่ input path เป็น `-` จะอ่านจาก stdout ของ command
+- `eslint-json`, `tsc-text`, `file-size`, `module-boundaries`, `workaround-comments`, `duplication`, `nesting-depth` และ `generic-findings-json` (`foundation-findings-v1`) สำหรับ findings ratchet ถ้าใส่ input path เป็น `-` จะอ่านจาก stdout ของ command
 
 CRAP และ mutation report ผูกกับ repository ID, commit, workspace digest, language, tool version, adapter version และ configuration digest Report จาก workspace อื่นหรือ tool config ที่ไม่ตรงจึงใช้เป็น baseline ของรอบปัจจุบันไม่ได้เงียบ ๆ
 

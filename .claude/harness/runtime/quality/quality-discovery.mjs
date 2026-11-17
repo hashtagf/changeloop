@@ -92,10 +92,11 @@ export function detectedProviders(root, profiles) {
     if (composer?.scripts?.test) providers.test ||= commandProvider(["composer", "test"]);
     if (composer?.scripts?.analyse) providers["static-analysis"] ||= commandProvider(["composer", "analyse"]);
   }
-  // Every application profile gets the file-size ratchet: it needs no project
-  // tool, and an ever-growing file is the first thing an agent copies.
+  // Every application profile gets the tool-free ratchets: an ever-growing
+  // file, a stopgap marker comment, and a copied block are what an agent copies first.
   if (profiles.some((profile) => profile.startsWith("application-")))
-    providers["file-size"] = { kind: "builtin", adapter: "file-size", isolation: "read-only" };
+    for (const adapter of ["file-size", "workaround-comments", "duplication", "nesting-depth"])
+      providers[adapter] = { kind: "builtin", adapter, isolation: "read-only" };
   return providers;
 }
 

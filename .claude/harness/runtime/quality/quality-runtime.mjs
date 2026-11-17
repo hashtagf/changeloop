@@ -540,7 +540,7 @@ export function createQualityRuntime({
   // never exits; each row names its next step.
   function readiness() {
     if (!existsSync(configPath)) return [{ id: "quality-config", level: "warn",
-      detail: `${QUALITY_CONFIG_RELATIVE} is missing; lint, type-check, file-size, and CRAP are not measured`,
+      detail: `${QUALITY_CONFIG_RELATIVE} is missing; lint, type-check, file-size, duplication, nesting, and CRAP are not measured`,
       next: "cloop quality discover, then cloop quality init --write" }];
     let config;
     try {
@@ -554,7 +554,7 @@ export function createQualityRuntime({
     for (const repository of config.repositories) {
       const capabilities = Object.keys(repository.providers).filter((name) => FINDINGS_CAPABILITIES.has(name));
       if (!capabilities.length) rows.push({ id: `findings:${repository.id}`, level: "info",
-        detail: `repository '${repository.id}' has no lint, type-check, file-size, or module-boundaries lane`,
+        detail: `repository '${repository.id}' has no findings ratchet lane (lint, type-check, file-size, module-boundaries, workaround-comments, duplication, or nesting-depth)`,
         next: "add one in quality/foundation-quality.json (see CONSUMER-QUALITY.md, Findings ratchet)" });
       for (const capability of capabilities) {
         const id = `baseline:${repository.id}:${capability}`;
