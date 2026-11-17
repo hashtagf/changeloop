@@ -535,5 +535,52 @@ export function createQualityRuntime({
     return value;
   }
 
-  return { discovery, showDiscovery, draft, initialize, configured, doctor, run, report, baseline, debt };
+  // Setup readiness rows for `doctor`: whether quality is configured and each
+  // findings ratchet has a baseline it can compare against. Never an error and
+  // never exits; each row names its next step.
+  function readiness() {
+    if (!existsSync(configPath)) return [{ id: "quality-config", level: "warn",
+      detail: `${QUALITY_CONFIG_RELATIVE} is missing; lint, type-check, file-size, and CRAP are not measured`,
+      next: "cloop quality discover, then cloop quality init --write" }];
+    let config;
+    try {
+      config = readJsonFile(configPath);
+      validateConsumerQualityConfig(config, new Set(repositoryCatalog().repositories.map((row) => row.id)));
+    } catch (error) {
+      return [{ id: "quality-config", level: "warn", detail: `invalid ${QUALITY_CONFIG_RELATIVE}: ${error.message}`,
+        next: "cloop quality doctor" }];
+    }
+    const rows = [{ id: "quality-config", level: "ok", detail: QUALITY_CONFIG_RELATIVE, next: null }];
+    for (const repository of config.repositories) {
+      const capabilities = Object.keys(repository.providers).filter((name) => FINDINGS_CAPABILITIES.has(name));
+      if (!capabilities.length) rows.push({ id: `findings:${repository.id}`, level: "info",
+        detail: `repository '${repository.id}' has no lint, type-check, file-size, or module-boundaries lane`,
+        next: "add one in quality/foundation-quality.json (see CONSUMER-QUALITY.md, Findings ratchet)" });
+      for (const capability of capabilities) {
+        const id = `baseline:${repository.id}:${capability}`;
+        const resultPath = providerResultPath(root, repository.id, capability);
+        const basePath = baselinePath(root, repository.id, capability);
+        if (!existsSync(resultPath)) { rows.push({ id, level: "info",
+          detail: `${capability} has not run`, next: `cloop quality run --capability ${capability}` }); continue; }
+        if (!existsSync(basePath)) { rows.push({ id, level: "warn",
+          detail: `${capability} has no baseline, so it measures but cannot fail on new findings`,
+          next: `cloop quality baseline --write --capability ${capability} --decision-ref <ref> --reason <why>` }); continue; }
+        let evaluation;
+        try {
+          evaluation = evaluateFindingsRatchet({ current: readJsonFile(resultPath), baseline: readJsonFile(basePath) });
+        } catch (error) {
+          rows.push({ id, level: "warn", detail: `${capability} result or baseline is unreadable: ${error.message}`,
+            next: `cloop quality run --capability ${capability}` });
+          continue;
+        }
+        rows.push(evaluation.baselineCompatible
+          ? { id, level: "ok", detail: `${capability} ratchets against its baseline`, next: null }
+          : { id, level: "warn", detail: `${capability} baseline no longer matches the tool or configuration`,
+            next: `cloop quality baseline --write --capability ${capability} --decision-ref <ref> --reason <why>` });
+      }
+    }
+    return rows;
+  }
+
+  return { discovery, showDiscovery, draft, initialize, configured, doctor, run, report, baseline, debt, readiness };
 }

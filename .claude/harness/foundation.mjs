@@ -17,7 +17,7 @@ import {
 import { createExecRuntime } from "./runtime/observability/exec-runtime.mjs";
 import { createOutcomesRuntime } from "./runtime/observability/outcomes-runtime.mjs";
 import { createLessonsRuntime } from "./runtime/observability/lessons-runtime.mjs";
-import { createProjectFeaturesCommand } from "./runtime/workflow/validation/project-feature-map.mjs";
+import { createProjectFeaturesCommand, projectSetupReadiness } from "./runtime/workflow/validation/project-feature-map.mjs";
 import { createApprovalPackageRuntime, routeForState } from "./runtime/workflow/change/approval-package.mjs";
 import {
   createFeedbackRuntime, FEEDBACK_SCHEMA_VERSION
@@ -611,7 +611,7 @@ const {
   run: runQuality,
   report: showQualityReport,
   baseline: updateQualityBaseline,
-  debt: showQualityDebt
+  debt: showQualityDebt, readiness: qualityReadiness
 } = createQualityRuntime({
   root: ROOT,
   repositoryCatalog,
@@ -1581,6 +1581,7 @@ const {
   reviewerStatus,
   unverifiedDrift: (id) => modelDriftInspector.changeDrift(id).unverified,
   evidenceDetection: evidenceDetectionValue,
+  setupReadiness: () => [...qualityReadiness(), ...projectSetupReadiness(ROOT)],
   fail: die
 });
 const {

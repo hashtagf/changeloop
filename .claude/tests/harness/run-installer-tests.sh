@@ -358,6 +358,9 @@ assert_file_contains "consumer quality guide documents fail-closed repository co
 assert_file_exists "Claude session context hook installed" \
   "$TARGET/.claude/hooks/session-context.sh"
 assert_file_exists "portable agent contract installed" "$TARGET/.claude/harness/AGENT.md"
+assert_file_exists "onboarding skill installed" "$TARGET/.claude/skills/onboard/SKILL.md"
+assert_file_exists "onboarding feature map guide installed" \
+  "$TARGET/.claude/skills/onboard/references/feature-map-guide.md"
 assert_file_contains "portable agent contract translates machine output" \
   "$TARGET/.claude/harness/AGENT.md" "Harness output is a machine handoff"
 assert_file_exists "developer setup guide installed" "$TARGET/.claude/harness/DEVELOPER-SETUP.md"

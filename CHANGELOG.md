@@ -11,6 +11,13 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- `doctor` lists project setup rows (quality config, findings baselines,
+  feature map, lessons, agent guide), each naming its next command and never
+  failing `doctor`; `doctor --json` carries them under `setup`.
+- `onboard` skill: runs the setup commands `doctor` names, drafts the feature
+  map and module boundaries from the code, and asks the user to confirm them
+  and to adopt today's findings as the ratchet baseline.
+
 - Consumer findings ratchet: `lint`, `type-check`, `file-size`, and
   `module-boundaries` quality lanes record findings per file and rule against a
   baseline that may only shrink (`foundation-findings-v1`). Discovery adds
