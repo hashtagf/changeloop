@@ -1,6 +1,8 @@
 import {renderMarkdown,imagePreview} from "/render.js";
 import { buildSessionTree, sessionLabel, visibleSessionTree } from "/navigation.js";
 import { createTaskBoard } from '/tasks.js';
+import { shortPath, selectAttachments, skippedMessage, branchNameError } from '/ui-helpers.js';
+import { setLocale, detectLocale, locale, t } from '/i18n.js';
 const $=id=>document.getElementById(id);
 const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
 const button=(text,fn,cls="")=>{const n=el("button",cls,text);n.type="button";n.addEventListener("click",()=>run(fn));return n;};
@@ -9,7 +11,8 @@ let projectFingerprint="",showSaved=localStorage.getItem("pi-nav-history")==="1"
 let catalog=[],selected=localStorage.getItem("pi-session")||"",state,stream,tab="files",inspecting=false,loading=false,revision,dialogId="",customSession="";
 let treePath=".",openFile,gitState,lastMessages="",toastTimer,lastNotice="";
 const drafts=new Map();
-let city,cityLoading,viewMode="chat",cityConnected=true,tasks;
+let city,cityLoading,viewMode="chat",cityConnected=true,tasks,role="member",lastReply="";
+const readOnly=()=>role==="viewer";
 function syncView(){
   const active=viewMode==="city";
   $("main").classList.toggle("city-mode",active);$("city").hidden=!active;
@@ -26,7 +29,7 @@ async function setView(mode){
     city=createCity($("city"),async key=>{await switchSession(key);if(selected===key)await setView("chat");},()=>api("/api/city"));
     city.update(catalog,selected);city.setConnected(cityConnected);syncView();
     $("city-loading").hidden=true;
-  }).catch(()=>{$("city-loading").hidden=true;$("city-error").hidden=false;$("city-error").textContent="เปิด 3D ไม่ได้ในเบราว์เซอร์นี้ ใช้ Chat เพื่อทำงานต่อได้";});
+  }).catch(()=>{$("city-loading").hidden=true;$("city-error").hidden=false;$("city-error").textContent="3D is unavailable in this browser. Use Chat to continue.";});
   await cityLoading;
 }
 $("view-chat").addEventListener("click",()=>void setView("chat"));
@@ -40,7 +43,11 @@ const banner=message=>{$("banner").textContent=message||"";$("banner").hidden=!m
 async function api(path,body){
   const response=await fetch(path,{method:body===undefined?"GET":"POST",headers:body===undefined?{}:{"Content-Type":"application/json"},body:body===undefined?undefined:JSON.stringify(body)});
   let value;try{value=await response.json();}catch{throw Error("Server returned an unreadable response.");}
-  if(response.status===401){join();throw Error("Please sign in again.");}
+  if(response.status===401){
+    // A failed login explains the code problem; elsewhere 401 means the access ended.
+    if(path==="/api/login")throw Error(value.error||"Access code is invalid or expired. Ask the host for a new invite.");
+    const message=value.error||"Your access ended. Sign in again.";join();$("login-error").textContent=t(message);throw Error(message);
+  }
   if(!response.ok)throw Error(value.error||"Request failed.");
   return value;
 }
@@ -50,7 +57,12 @@ const request=(action,body,key=selected)=>api(endpoint(action,key),body);
 function join(){city?.setVisible(false);tasks?.setVisible(false);stream?.close();$("join").hidden=false;$("workspace").hidden=true;}
 tasks=createTaskBoard({api,catalog:()=>catalog,preferredProject:()=>current()?.projectRoot,toast});
 const tasksButton=el('button','','Tasks');tasksButton.id='view-tasks';tasksButton.setAttribute('aria-pressed','false');tasksButton.onclick=()=>{setInspector(false);void setView('tasks');};$("view-chat").after(tasksButton);
-function authenticated(name){$("member").textContent=name;$("join").hidden=true;$("workspace").hidden=false;connect();const mode=localStorage.getItem('pi-view-mode');void setView(['city','tasks'].includes(mode)?mode:'chat');}
+function applyRole(next){
+  role=next==="viewer"?"viewer":"member";document.body.classList.toggle("read-only",readOnly());
+  $("role-badge").hidden=!readOnly();$("invite").hidden=readOnly();tasks?.setReadOnly(readOnly());updateAvailability();
+}
+function authenticated(name,nextRole){$("member").textContent=name;applyRole(nextRole);$("login-error").textContent="";
+  if(localStorage.getItem("pi-tips-done")!=="1")$("welcome-tips").hidden=false;$("join").hidden=true;$("workspace").hidden=false;connect();const mode=localStorage.getItem('pi-view-mode');void setView(['city','tasks'].includes(mode)?mode:'chat');}
 async function connect(){
   stream?.close();stream=new EventSource("/api/events");
   stream.addEventListener("state",e=>{
@@ -100,7 +112,7 @@ function renderProjects(){
     } else row.append(el("span","tree-toggle-spacer"));
     const b=button("",()=>switchSession(s.key),"session"+(s.key===selected?" selected":""));
     b.dataset.sessionKey=s.key;b.disabled=Boolean(s.unavailable);
-    b.setAttribute("aria-current",s.key===selected?"page":"false");b.title=sessionLabel(s)+"\n"+(s.cwd||"Parent session unavailable");
+    b.setAttribute("aria-current",s.key===selected?"page":"false");b.title=sessionLabel(s)+"\n"+(s.cwd?shortPath(s.cwd):"Parent session unavailable");
     const text=el("span","session-text"),name=el("span","session-name-line");
     name.append(el("span","session-name",sessionLabel(s)),el("span","session-role",depth?"Sub":"Main"));
     text.append(name,el("small","session-state",status(s)));
@@ -131,13 +143,13 @@ function renderProjects(){
 function emptyWorkspace(){state=undefined;selected="";$("welcome").hidden=false;$("conversation").hidden=true;$("composer-area").hidden=true;}
 function persistDraft(){if(selected)draft(selected).text=$("prompt").value;}
 async function switchSession(key){
-  if(key===selected&&(loading||state))return;
+  if(key===selected&&(loading||state)){$("sidebar").classList.remove("open");return;}
   if(openFile&&$("file-text")?.value!==openFile.text&&!confirm("Discard unsaved file edits?"))return;
   const generation=++selectionGeneration;
   persistDraft();
   const reveal=node=>{if(node.session.key===key)return true;const found=node.children.some(reveal);if(found)collapsed.delete(node.session.key);return found;};
   for(const group of buildSessionTree(catalog))group.roots.forEach(reveal);
-  selected=key;$("background-count").textContent="…";jobRequestVersion++;jobsSession="";jobsFingerprint="";localStorage.setItem("pi-session",key);state=undefined;revision=undefined;lastMessages="";treePath=".";openFile=undefined;
+  selected=key;lastReply="";$("background-count").textContent="…";jobRequestVersion++;jobsSession="";jobsFingerprint="";localStorage.setItem("pi-session",key);state=undefined;revision=undefined;lastMessages="";treePath=".";openFile=undefined;
   loading=true;city?.update(catalog,selected);renderProjects();$("sidebar").classList.remove("open");$("welcome").hidden=true;$("conversation").hidden=false;$("composer-area").hidden=false;
   $("messages").replaceChildren(el("div","empty","Loading conversation…"));$("prompt").value=draft(key).text;renderAttachments();
   if(inspecting)$("inspector-body").replaceChildren(el("div","empty","Loading session…"));
@@ -158,9 +170,11 @@ async function loadState(key=selected,generation=selectionGeneration){
   renderMessages();updateAvailability();renderExtensionUI();
 }
 function updateAvailability(){
-  const row=current(),online=Boolean(row?.online&&state);
-  $("send").disabled=!online;$("attach").disabled=!online;$("stop").hidden=!online||!state?.busy;
-  $("prompt").placeholder=online?"Message Pi, or use an extension /command…":"Resume this session in Pi to send messages…";
+  const row=current(),online=Boolean(row?.online&&state),writable=online&&!readOnly();
+  const empty=!$("prompt").value.trim()&&!(selected&&draft(selected).files.length);
+  $("send").disabled=!writable||empty;$("attach").disabled=!writable;$("stop").hidden=!writable||!state?.busy;
+  $("prompt").readOnly=readOnly();$("delivery").disabled=readOnly();
+  $("prompt").placeholder=readOnly()?"Read-only access · you can view but not send or change anything.":online?"Message Pi, or use an extension /command…":"Resume this session in Pi to send messages…";
 }
 const messageNodes=new Map(),callNodes=new Map();
 function localImageLoader(key) {return async path=>{
@@ -223,6 +237,11 @@ function renderMessages(){
   }
   if(!timeline.length)fragment.append(el("div","empty","Start a conversation. Messages go to this Pi session with its existing context and extensions."));
   $("messages").replaceChildren(fragment);
+  // Announce a finished assistant reply once; the initial load of a session is not announced.
+  const reply=[...(state.messages||[])].reverse().find(m=>m.role==="assistant"&&!m.streaming);
+  const replyKey=reply?selected+":"+reply.id:"";
+  if(lastReply&&replyKey&&replyKey!==lastReply)$("announcer").textContent=(locale()==="th"?"คำตอบใหม่จาก ":"New reply from ")+(current()?.sessionName||"Pi")+": "+String(reply.text||"").slice(0,160);
+  lastReply=replyKey||lastReply||selected+":none";
   $("activity-line").textContent=(state.tools||[]).length?"◌ "+state.tools.map(t=>t.name).join(" · "):state.busy?(state.activitySource==='session-log'?"◌ Pi is working · activity from saved session log":"◌ Pi is working…"):state.queued?.length?state.queued.length+" message(s) queued":"";
   if(atEnd||!view.dataset.loaded){view.scrollTop=view.scrollHeight;view.dataset.loaded="yes";}
 }
@@ -231,15 +250,17 @@ function renderAttachments(){
   for(const file of draft(key).files){
     const item=el("div","attachment");
     if(file.preview){const img=el("img");img.src=file.preview;img.alt=file.name;item.append(img);}
-    item.append(el("span","",file.name),button("×",()=>{draft(key).files=draft(key).files.filter(f=>f!==file);if(file.preview)URL.revokeObjectURL(file.preview);renderAttachments();},"icon"));
+    const remove=button("×",()=>{draft(key).files=draft(key).files.filter(f=>f!==file);if(file.preview)URL.revokeObjectURL(file.preview);renderAttachments();},"icon");remove.setAttribute("aria-label","Remove "+file.name);
+    item.append(el("span","",file.name),remove);
     area.append(item);
   }
+  updateAvailability();
 }
 async function attachFiles(files){
   const key=selected,d=draft(key);if(!current()?.online)throw Error("Connect a session before attaching files.");
-  if(d.files.length+files.length>10)throw Error("Attach up to 10 files per message.");
-  for(const file of files){
-    if(file.size>20*1024*1024)throw Error(file.name+": limit is 20 MB.");
+  const {accepted,skipped}=selectAttachments(d.files.length,files),note=skippedMessage(skipped);
+  if(!accepted.length){if(note)throw Error(note);return;}
+  for(const file of accepted){
     const preview=file.type.startsWith("image/")?URL.createObjectURL(file):null;
     const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(",")[1]);r.onerror=reject;r.readAsDataURL(file);});
     toast("Uploading "+file.name+"…");
@@ -247,7 +268,7 @@ async function attachFiles(files){
     catch(e){if(preview)URL.revokeObjectURL(preview);throw e;}
     if(key===selected)renderAttachments();
   }
-  toast("Attachments ready.");
+  toast(note?"Attached "+accepted.length+". "+note:"Attachments ready.");
 }
 async function sendMessage(){
   const key=selected,d=draft(key),text=$("prompt").value.trim();if(!text&&!d.files.length)return;
@@ -264,6 +285,18 @@ async function sendMessage(){
     await loadState(key);
   }finally{$("send").removeAttribute("aria-busy");$("composer").dataset.state="ready";updateAvailability();}
 }
+// In-app branch/worktree dialog; validates names before any request is sent.
+function gitDialog(kind){
+  const dialog=$("git-dialog"),input=$("git-branch-name"),error=$("git-dialog-error");
+  $("git-dialog-title").textContent=t(kind==="worktree"?"New worktree":"New branch");
+  $("git-dialog-hint").textContent=kind==="worktree"?t("Creates a sibling worktree on a new branch."):"";
+  input.value="";error.textContent="";dialog.showModal();input.focus();
+  return new Promise(resolve=>{
+    const finish=value=>{$("git-form").onsubmit=null;$("git-cancel").onclick=null;dialog.oncancel=null;dialog.close();resolve(value);};
+    $("git-form").onsubmit=e=>{e.preventDefault();const problem=branchNameError(input.value);if(problem){error.textContent=problem;input.focus();return;}finish(input.value.trim());};
+    $("git-cancel").onclick=()=>finish("");dialog.oncancel=e=>{e.preventDefault();finish("");};
+  });
+}
 function setInspector(open){if(!open&&tab==="jobs"){jobSelections.delete(selected);jobsFingerprint="";}inspecting=open;$("inspector").hidden=!open;$("toggle-inspector").setAttribute("aria-expanded",String(open));if(open)void run(renderInspector);}
 async function renderInspector(){
   const key=selected,container=$("inspector-body");
@@ -271,7 +304,8 @@ async function renderInspector(){
   container.replaceChildren(el("div","empty","Loading…"));
   document.querySelectorAll("[data-tab]").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===tab)));
   try{
-    if(tab==="files")await renderFiles(key);
+    container.setAttribute("aria-labelledby","tab-"+tab);
+  if(tab==="files")await renderFiles(key);
     else if(tab==="git")await renderGit(key);
     else if(tab==="extensions")renderExtensions();
     else if(tab==="jobs")await refreshJobs(true);
@@ -326,7 +360,7 @@ async function showFile(key,path){
   const save=button("Save changes",async()=>{
     const next=await request("save",{path,text:editor.value,hash:openFile.hash},key);
     openFile={...openFile,text:editor.value,hash:next.hash};toast("Saved "+path);save.disabled=true;
-  },"primary");save.disabled=true;editor.addEventListener("input",()=>save.disabled=editor.value===openFile.text);
+  },"primary mutates");editor.readOnly=readOnly();save.disabled=true;editor.addEventListener("input",()=>save.disabled=editor.value===openFile.text);
   container.append(editor,el("p","file-hint","Save writes to this worktree. External changes are checked before writing."),save);
 }
 async function renderGit(key){
@@ -334,12 +368,13 @@ async function renderGit(key){
   const c=$("inspector-body");c.replaceChildren();
   const toolbar=el("div","inspector-toolbar");toolbar.append(el("strong","","SOURCE CONTROL"),button("↻",()=>renderGit(key),"quiet"));c.append(toolbar);
   const branch=el("div","git-branch"),select=el("select");select.setAttribute("aria-label","Git branch");
+  select.disabled=readOnly();
   for(const name of result.branches){const option=el("option","",name);option.value=name;option.selected=name===result.branch;select.append(option);}
   if(!result.branches.length)select.append(el("option","",result.branch));
   select.addEventListener("change",()=>run(async()=>{await request("switch",{branch:select.value},key);toast("Switched branch.");await renderGit(key);}));
-  branch.append(select,button("+ Branch",async()=>{const name=prompt("New branch name");if(!name)return;await request("switch",{branch:name,create:true},key);await renderGit(key);}));c.append(branch);
+  branch.append(select,button("+ Branch",async()=>{const name=await gitDialog("branch");if(!name)return;await request("switch",{branch:name,create:true},key);await renderGit(key);},"mutates"));c.append(branch);
   const changeHead=el("div","inspector-toolbar");changeHead.append(el("div","section-label","CHANGES · "+result.changes.length));
-  if(result.changes.length)changeHead.append(button("Stage all",async()=>{await request("stage",{paths:result.changes.map(x=>x.path)},key);await renderGit(key);},"quiet"));
+  if(result.changes.length)changeHead.append(button("Stage all",async()=>{await request("stage",{paths:result.changes.map(x=>x.path)},key);await renderGit(key);},"quiet mutates"));
   c.append(changeHead);
   if(!result.changes.length)c.append(el("div","empty","Working tree is clean."));
   for(const item of result.changes){
@@ -347,19 +382,21 @@ async function renderGit(key){
     row.append(el("span","status",item.status),button(item.path,async()=>{
       const diff=await request("diff?path="+encodeURIComponent(item.path)+(staged?"&staged=true":""),undefined,key);
       const pre=el("pre","diff",diff.text||"No tracked diff. New files appear in Files.");row.after(pre);
-    },"file-name"),button(staged?"−":"+",async()=>{await request(staged?"unstage":"stage",{paths:[item.path]},key);await renderGit(key);}));
+    },"file-name"));
+    const toggle=button(staged?"−":"+",async()=>{await request(staged?"unstage":"stage",{paths:[item.path]},key);await renderGit(key);},"mutates");
+    toggle.setAttribute("aria-label",(staged?"Unstage ":"Stage ")+item.path);row.append(toggle);
     c.append(row);
   }
-  const commit=el("form","commit-box"),message=el("input");message.placeholder="Commit message";message.setAttribute("aria-label","Commit message");
+  const commit=el("form","commit-box mutates"),message=el("input");message.placeholder="Commit message";message.setAttribute("aria-label","Commit message");
   const submit=el("button","primary","Commit");submit.type="submit";
   commit.append(message,submit);commit.addEventListener("submit",e=>{e.preventDefault();void run(async()=>{submit.disabled=true;try{const r=await request("commit",{message:message.value},key);toast(r.text||"Committed.");await renderGit(key);}finally{submit.disabled=false;}});});c.append(commit);
   c.append(el("div","section-label","WORKTREES"));
   for(const w of result.worktrees){
     const card=el("div","worktree-card");card.append(el("strong","",w.branch),el("small","",w.path));
-    if(w.path!==current()?.root&&w.path!==result.worktrees[0]?.path&&!catalog.some(s=>s.online&&s.root===w.path))card.append(button("Remove",async()=>{if(!confirm("Remove clean worktree "+w.path+"?"))return;await request("worktree-remove",{path:w.path},key);await renderGit(key);},"quiet"));
+    if(w.path!==current()?.root&&w.path!==result.worktrees[0]?.path&&!catalog.some(s=>s.online&&s.root===w.path))card.append(button("Remove",async()=>{if(!confirm("Remove clean worktree "+w.path+"?"))return;await request("worktree-remove",{path:w.path},key);await renderGit(key);},"quiet mutates"));
     c.append(card);
   }
-  c.append(button("+ New worktree",async()=>{const name=prompt("Branch name for new sibling worktree");if(!name)return;const r=await request("worktree-add",{branch:name},key);toast("Created "+r.path);await renderGit(key);},"quiet"),el("div","section-label","RECENT COMMITS"));
+  c.append(button("+ New worktree",async()=>{const name=await gitDialog("worktree");if(!name)return;const r=await request("worktree-add",{branch:name},key);toast("Created "+shortPath(r.path));await renderGit(key);},"quiet mutates"),el("div","section-label","RECENT COMMITS"));
   for(const line of result.log)c.append(el("div","log-row",line));
 }
 const jobSelections=new Map(),stoppingJobs=new Set();
@@ -413,7 +450,7 @@ function renderJobs(force=false){
           stoppingJobs.add(key+":"+detail.id);renderJobs(true);
           try{await request("job-stop",{id:detail.id},key);toast("Job stop requested.");await refreshJobs();}
           catch(e){stoppingJobs.delete(key+":"+detail.id);throw e;}
-        },"stop");stop.disabled=stoppingJobs.has(key+":"+detail.id);controls.append(stop);
+        },"stop mutates");stop.disabled=stoppingJobs.has(key+":"+detail.id);controls.append(stop);
       }
       const download=el("a","quiet","Download log ↓");download.href=endpoint("jobs?id="+encodeURIComponent(detail.id)+"&download=1",key);download.download="background-"+detail.id+".log";controls.append(download);view.append(controls);
       const output=el("pre","job-output");output.tabIndex=0;output.setAttribute("aria-label","Background job output");output.textContent=detail.output||"(no output yet)";
@@ -497,8 +534,8 @@ async function replyDialog(cancel=false){
 }
 $("login-form").addEventListener("submit",e=>{e.preventDefault();void run(async()=>{
   const submit=e.currentTarget.querySelector("button");submit.disabled=true;$("login-error").textContent="";
-  try{const r=await api("/api/login",{name:$("name").value,token:$("token").value});$("token").value="";authenticated(r.name);}
-  catch(e){$("login-error").textContent=e.message;}finally{submit.disabled=false;}
+  try{const r=await api("/api/login",{name:$("name").value,token:$("token").value});$("token").value="";authenticated(r.name,r.role);}
+  catch(e){$("login-error").textContent=t(e.message);$("token").select();}finally{submit.disabled=false;}
 });});
 $("search").addEventListener("input",renderProjects);
 $("toggle-history").addEventListener("click",()=>{
@@ -506,7 +543,7 @@ $("toggle-history").addEventListener("click",()=>{
   if(showSaved&&!selected&&catalog.length)void switchSession(catalog[0].key);
 });
 $("composer").addEventListener("submit",e=>{e.preventDefault();void run(sendMessage);});
-$("prompt").addEventListener("input",()=>{persistDraft();draft(selected).id=crypto.randomUUID();});
+$("prompt").addEventListener("input",()=>{persistDraft();draft(selected).id=crypto.randomUUID();updateAvailability();});
 $("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(!$("send").disabled)void run(sendMessage);}});
 $("prompt").addEventListener("paste",e=>{const files=[...e.clipboardData.files];if(files.length){e.preventDefault();void run(()=>attachFiles(files));}});
 $("attach").addEventListener("click",()=>$("file-input").click());
@@ -526,7 +563,43 @@ $("inspector-body").addEventListener("keydown",e=>{
  const rows=[...$("inspector-body").querySelectorAll(".job-row")],i=rows.indexOf(document.activeElement);if(i<0)return;
  e.preventDefault();rows[(i+(e.key==="ArrowDown"?1:-1)+rows.length)%rows.length]?.focus();
 });
-$("invite").addEventListener("click",()=>void run(async()=>{const r=await api("/api/invite");await navigator.clipboard.writeText(r.url);toast("Invite link copied.");}));
+$("invite").addEventListener("click",()=>void run(openAccess));
+async function copy(text){try{await navigator.clipboard.writeText(text);toast(t("Invite link copied."));}catch{window.prompt("Copy this invite link",text);}}
+async function renderAccess(){
+  const body=$("access-body");body.replaceChildren(el("p","","Loading access…"));
+  const data=await api("/api/access");body.replaceChildren();
+  body.append(button("Copy main invite",async()=>{const r=await api("/api/invite");await copy(r.url);},"quiet"));
+  const form=el("form","access-form"),roleSelect=el("select"),hours=el("select"),submit=el("button","primary","Create invite");
+  roleSelect.id="invite-role";hours.id="invite-hours";submit.type="submit";
+  for(const [v,label] of [["viewer","Viewer · read only"],["member","Member · full access"]]){const o=el("option","",label);o.value=v;roleSelect.append(o);}
+  for(const [v,label] of [[1,"1 hour"],[24,"24 hours"],[168,"7 days"]]){const o=el("option","",label);o.value=String(v);o.selected=v===24;hours.append(o);}
+  const roleLabel=el("label","","Role"),hoursLabel=el("label","","Expires after");roleLabel.htmlFor="invite-role";hoursLabel.htmlFor="invite-hours";
+  form.append(roleLabel,roleSelect,hoursLabel,hours,submit);
+  form.onsubmit=e=>{e.preventDefault();void run(async()=>{const r=await api("/api/access",{action:"create",role:roleSelect.value,hours:Number(hours.value)});await copy(r.url);await renderAccess();});};
+  body.append(el("div","section-label","ACTIVE INVITES"));
+  if(!data.invites.length)body.append(el("p","file-hint","No extra invites. Create one below."));
+  for(const invite of data.invites){
+    const row=el("div","access-row");row.dataset.inviteId=invite.id;
+    row.append(el("span","",t(invite.role)+" · "+invite.createdBy),el("small","",t("Expires {s}").replace("{s}","")+new Date(invite.expires).toLocaleString()),
+      button("Revoke",async()=>{await api("/api/access",{action:"revoke",id:invite.id});toast(t("Invite revoked."));await renderAccess();},"quiet"));
+    body.append(row);
+  }
+  body.append(form,el("div","section-label","SIGNED-IN PEOPLE"));
+  for(const m of data.members)body.append(el("div","access-row",m.name+" · "+t(m.role)));
+  body.append(el("div","section-label","RECENT ACTIVITY"));
+  const log=el("ol","audit-list");log.setAttribute("aria-label","Recent activity");
+  for(const e of data.audit.slice(0,50))log.append(el("li","",new Date(e.at).toLocaleTimeString()+" · "+e.name+" ("+t(e.role)+") · "+e.action+" · "+e.status));
+  if(!data.audit.length)body.append(el("p","file-hint","No recorded changes yet."));else body.append(log);
+  body.append(el("p","file-hint","Invites and activity are kept in hub memory and cleared by /serve stop."));
+}
+async function openAccess(){if(readOnly())return;$("access-dialog").showModal();try{await renderAccess();}catch(e){$("access-body").replaceChildren(el("p","render-error",e.message));}}
+$("access-close").addEventListener("click",()=>$("access-dialog").close());
+$("help").addEventListener("click",()=>$("help-dialog").showModal());
+$("tips-help").addEventListener("click",()=>$("help-dialog").showModal());
+$("help-close").addEventListener("click",()=>$("help-dialog").close());
+$("tips-done").addEventListener("click",()=>{localStorage.setItem("pi-tips-done","1");$("welcome-tips").hidden=true;});
+$("locale").addEventListener("change",()=>setLocale($("locale").value));
+$("skip-link").addEventListener("click",e=>{e.preventDefault();const target=$("conversation").hidden?$("welcome"):$("prompt");if(target===$("welcome"))target.tabIndex=-1;target.focus();});
 $("logout").addEventListener("click",()=>void run(async()=>{await api("/api/logout",{});drafts.clear();state=undefined;join();}));
 $("dialog-form").addEventListener("submit",e=>{e.preventDefault();void run(()=>replyDialog());});
 $("dialog-cancel").addEventListener("click",()=>void run(()=>replyDialog(true)));
@@ -549,4 +622,5 @@ setInterval(()=>{
 },1200);
 const fragment=location.hash.slice(1);
 if(fragment){$("token").value=fragment;history.replaceState(null,"",location.pathname);}
-void (async()=>{try{const result=await api("/api/state");authenticated(result.member);}catch{join();}})();
+{const lang=detectLocale(localStorage.getItem("pi-locale"),navigator.language);$("locale").value=lang;setLocale(lang);}
+void (async()=>{try{const result=await api("/api/state");authenticated(result.member,result.role);}catch{join();$("login-error").textContent="";}})();

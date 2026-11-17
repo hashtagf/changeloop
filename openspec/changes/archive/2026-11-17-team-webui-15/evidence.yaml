@@ -1,0 +1,438 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "webui-project-labels-tasks",
+      "requirementKey": "webui-project-labels",
+      "scenario": "ตัวเลือกโปรเจกต์อ่านง่าย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-project-labels-title-session",
+      "requirementKey": "webui-project-labels",
+      "scenario": "tooltip session ไม่เผยพาธเต็ม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-project-labels-app",
+      "requirementKey": "webui-project-labels",
+      "scenario": "พาธสั้น",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-task-stage-navigation-tasks",
+      "requirementKey": "webui-task-stage-navigation",
+      "scenario": "มือถือเห็นการ์ดทันที",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-task-stage-navigation-land-1",
+      "requirementKey": "webui-task-stage-navigation",
+      "scenario": "เดสก์ท็อปไปยังขั้นที่อยู่นอกจอ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-task-stage-navigation-3",
+      "requirementKey": "webui-task-stage-navigation",
+      "scenario": "ขั้นที่เลือกว่าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-task-stage-navigation-prove",
+      "requirementKey": "webui-task-stage-navigation",
+      "scenario": "คำอธิบายขั้น",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-mobile-header-session-edge-cases-cancellation",
+      "requirementKey": "webui-mobile-header",
+      "scenario": "ชื่อ session อ่านได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-mobile-header-session",
+      "requirementKey": "webui-mobile-header",
+      "scenario": "แตะ session เดิม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-login-feedback-1",
+      "requirementKey": "webui-login-feedback",
+      "scenario": "รหัสผิด",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-login-feedback-api",
+      "requirementKey": "webui-login-feedback",
+      "scenario": "session หมดอายุ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-help-help",
+      "requirementKey": "webui-help",
+      "scenario": "เปิดความช่วยเหลือ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-help-2",
+      "requirementKey": "webui-help",
+      "scenario": "คำแนะนำครั้งแรก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-locale-1",
+      "requirementKey": "webui-locale",
+      "scenario": "เลือกภาษาไทย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-locale-english",
+      "requirementKey": "webui-locale",
+      "scenario": "เลือกภาษาอังกฤษ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-locale-3",
+      "requirementKey": "webui-locale",
+      "scenario": "ไม่แปลข้อความแชท",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-viewer-role-get-api-state",
+      "requirementKey": "webui-viewer-role",
+      "scenario": "viewer อ่านได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-viewer-role-post-api-sessions-key-commit",
+      "requirementKey": "webui-viewer-role",
+      "scenario": "viewer ส่ง POST ไม่ได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-viewer-role-get-api-invite",
+      "requirementKey": "webui-viewer-role",
+      "scenario": "viewer อ่านรหัสหลักไม่ได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-viewer-role-post-api-sessions-key-commit-2",
+      "requirementKey": "webui-viewer-role",
+      "scenario": "member ส่ง POST ได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-viewer-role-post-api-logout",
+      "requirementKey": "webui-viewer-role",
+      "scenario": "viewer ออกจากระบบได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-invite-lifecycle-viewer-24",
+      "requirementKey": "webui-invite-lifecycle",
+      "scenario": "สร้างลิงก์ viewer",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-invite-lifecycle-2",
+      "requirementKey": "webui-invite-lifecycle",
+      "scenario": "ลิงก์หมดอายุ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-invite-lifecycle-member",
+      "requirementKey": "webui-invite-lifecycle",
+      "scenario": "เพิกถอนตัด session",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-invite-lifecycle-role-admin-5",
+      "requirementKey": "webui-invite-lifecycle",
+      "scenario": "ค่าที่ไม่รองรับ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-invite-lifecycle-post-api-access",
+      "requirementKey": "webui-invite-lifecycle",
+      "scenario": "viewer สร้างลิงก์ไม่ได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-audit-log-post-commit",
+      "requirementKey": "webui-audit-log",
+      "scenario": "บันทึก commit",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-audit-log-post-save",
+      "requirementKey": "webui-audit-log",
+      "scenario": "บันทึกการปฏิเสธ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-audit-log-3",
+      "requirementKey": "webui-audit-log",
+      "scenario": "ไม่เก็บความลับ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-accessibility-tab",
+      "requirementKey": "webui-accessibility",
+      "scenario": "skip link",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-accessibility-assistant",
+      "requirementKey": "webui-accessibility",
+      "scenario": "ประกาศคำตอบ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-accessibility-3",
+      "requirementKey": "webui-accessibility",
+      "scenario": "หัวข้อในข้อความ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-accessibility-4",
+      "requirementKey": "webui-accessibility",
+      "scenario": "เป้าสัมผัส",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-attachment-partial-12",
+      "requirementKey": "webui-attachment-partial",
+      "scenario": "แนบ 12 ไฟล์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-attachment-partial-21-mb",
+      "requirementKey": "webui-attachment-partial",
+      "scenario": "มีไฟล์ใหญ่เกิน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-attachment-partial-1",
+      "requirementKey": "webui-attachment-partial",
+      "scenario": "ครบ 10 แล้ว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-composer-empty-1",
+      "requirementKey": "webui-composer-empty",
+      "scenario": "ช่องว่าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-composer-empty-hello",
+      "requirementKey": "webui-composer-empty",
+      "scenario": "พิมพ์แล้ว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-composer-empty-3",
+      "requirementKey": "webui-composer-empty",
+      "scenario": "มีแต่ช่องว่าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-git-dialogs-new-worktree-feature-x",
+      "requirementKey": "webui-git-dialogs",
+      "scenario": "สร้าง worktree",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-git-dialogs-bad-name",
+      "requirementKey": "webui-git-dialogs",
+      "scenario": "ชื่อไม่ถูกต้อง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-git-dialogs-cancel",
+      "requirementKey": "webui-git-dialogs",
+      "scenario": "ยกเลิก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-city-counts-city",
+      "requirementKey": "webui-city-counts",
+      "scenario": "6 agents",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-city-counts-city-2",
+      "requirementKey": "webui-city-counts",
+      "scenario": "ไม่มี agent",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-html-validity-index-html",
+      "requirementKey": "webui-html-validity",
+      "scenario": "stylesheet ใน head",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "webui-html-validity-inline-code",
+      "requirementKey": "webui-html-validity",
+      "scenario": "คอนทราสต์ inline code",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(cd pi-extensions && node --test team-webui/test/server.test.mjs) && (cd pi-extensions && node --test team-webui/test/ui-helpers.test.mjs) && (cd pi-extensions && node team-webui/test/browser-run.mjs team-webui/test/usability-browser.py) && (cd pi-extensions && npm test)"
+      ],
+      "segments": [
+        "cd pi-extensions && node --test team-webui/test/server.test.mjs",
+        "cd pi-extensions && node --test team-webui/test/ui-helpers.test.mjs",
+        "cd pi-extensions && node team-webui/test/browser-run.mjs team-webui/test/usability-browser.py",
+        "cd pi-extensions && npm test"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

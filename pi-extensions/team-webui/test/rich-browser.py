@@ -1,3 +1,4 @@
+# preview-env: PI_PREVIEW_RICH=1
 from playwright.sync_api import sync_playwright,expect
 from pathlib import Path
 import json,sys
@@ -8,7 +9,7 @@ with sync_playwright() as p:
  errors=[];external=[];page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:external.append(r.url) if 'example.invalid' in r.url else None)
  page.goto(sys.argv[1]+'/#preview-only');page.locator('#name').fill('Renderer Tester');page.locator('#login-form button').click()
  page.get_by_role('button',name='Main · extension refactor',exact=False).first.click()
- expect(page.locator('#messages h1').filter(has_text='Rich response')).to_be_visible()
+ expect(page.locator('#messages h3').filter(has_text='Rich response')).to_be_visible()
  expect(page.locator('#messages table')).to_have_count(1);expect(page.locator('#messages blockquote')).to_have_count(1)
  expect(page.locator('#messages input[type=checkbox]')).to_have_count(2)
  expect(page.locator('#messages .mermaid-preview img')).to_have_count(1)
@@ -27,7 +28,7 @@ with sync_playwright() as p:
  expect(page.locator('#messages img[alt="Local preview"]')).to_be_visible()
  page.locator('#messages .mermaid-preview').first.get_by_role('button',name='Expand image').click()
  expect(page.locator('.image-viewer')).to_be_visible();page.keyboard.press('Escape');expect(page.locator('.image-viewer')).not_to_be_visible()
- page.locator('#messages h1').filter(has_text='Rich response').scroll_into_view_if_needed()
+ page.locator('#messages h3').filter(has_text='Rich response').scroll_into_view_if_needed()
  page.screenshot(path=str(out/'rich-desktop.png'))
  # A heartbeat must retain both the existing DOM node and expanded call details.
  page.evaluate("window.fixtureNode=document.querySelector('[data-call-id=call-mcp]')")

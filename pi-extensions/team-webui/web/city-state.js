@@ -1,16 +1,16 @@
 export const cityStatus = row => !row.online ? "offline" : row.busy ? "working" : "idle";
-export const cityStatusLabel = { working: "กำลังทำงาน", idle: "พร้อมรับงาน", offline: "ออฟไลน์" };
+export const cityStatusLabel = { working: "Working", idle: "Ready for work", offline: "Offline" };
 export const districts = [
-  ['open','Intake','รับโจทย์ · อ่านเอกสาร','#789995','read'],
-  ['investigate','Research','สืบค้น · ชี้กระดาน','#8a94b3','point'],
-  ['change','Change','ตกลงสเปก · วาดแบบ','#b68ea4','draw'],
-  ['build','Build','เขียนโค้ด · ประกอบงาน','#c58759','type'],
-  ['prove','Test Lab','พิสูจน์ · ตรวจเครื่องมือ','#74a3b5','inspect'],
-  ['land','Landing','นำลง · อ่านผล','#aa9b6c','read'],
-  ['deliver','PR Exchange','ส่งมอบ · ส่งเอกสาร','#a48dbb','handoff'],
-  ['merge','Integration','รวมงาน · ประกอบชิ้นส่วน','#70a58a','assemble'],
-  ['tag','Release','ออกเวอร์ชัน · แพ็กกล่อง','#bf9273','pack'],
-  ['deploy','Operations','ดูแลระบบ · ตรวจจอ','#729db1','monitor'],
+  ['open','Intake','Read a brief','#789995','read'],
+  ['investigate','Research','Point at a plan','#8a94b3','point'],
+  ['change','Change','Agree the spec · sketch','#b68ea4','draw'],
+  ['build','Build','Write code · assemble','#c58759','type'],
+  ['prove','Test Lab','Prove · inspect equipment','#74a3b5','inspect'],
+  ['land','Landing','Land · read findings','#aa9b6c','read'],
+  ['deliver','PR Exchange','Hand over documents','#a48dbb','handoff'],
+  ['merge','Integration','Merge · assemble parts','#70a58a','assemble'],
+  ['tag','Release','Pack a release','#bf9273','pack'],
+  ['deploy','Operations','Operate · scan monitors','#729db1','monitor'],
 ].map(([id,name,description,color,pose],i)=>({id,name,description,color,pose,x:(i%5-2)*12,z:Math.floor(i/5)*18-10}));
 export function cityAssignment(row,assignments=[]) {
   const task=assignments.find(t=>t.ownerSessionId===row.id);

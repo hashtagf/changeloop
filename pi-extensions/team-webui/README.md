@@ -52,6 +52,10 @@ The hub runs independently of its creator. Closing, switching or reloading one s
   Markdown images load only on an explicit button click. Local image paths stay
   confined to the selected worktree. CSP permits inline diagram styling but not
   inline scripts or eval. Existing message DOM is reused across heartbeats.
+- Language: English or Thai from the sidebar selector (default follows the browser). Interface labels switch; chat, code, files and task text are never translated. The page `lang` follows the choice.
+- Help (`?`) explains sessions, delivery modes, task stages and roles; first-run tips appear on the welcome screen until dismissed.
+- Phones: two-row header, one task stage at a time, 44px touch targets. A skip link, announced replies and linked inspector tabs support keyboard and screen-reader use.
+- Branch and worktree creation use an in-app dialog that checks the name before sending.
 - Background: a persistent button with running count opens the selected session's managed jobs. View live output, elapsed time and exit status, stop a job directly, download its log, or show finished history. Works for offline owners too; viewing and stopping require no model request. Unrelated shell/`nohup` processes are not adopted.
 
 ## Persistent task board
@@ -178,7 +182,15 @@ Compatibility is not universal for terminal-specific UI: native editor replaceme
 
 ## Access
 
-Localhost only by default. An invite grants access to all discovered projects, conversations, files, Git and registered commands; there are no separate viewer/editor roles. Use LAN mode only with trusted collaborators on a trusted LAN/VPN. The server uses HTTP rather than built-in TLS.
+Localhost only by default. The `/serve` code grants **member** access: all discovered projects, conversations, files, Git and registered commands. Use LAN mode only with trusted collaborators on a trusted LAN/VPN. The server uses HTTP rather than built-in TLS.
+
+Members open **Access** in the sidebar to create extra invites:
+
+- Role **viewer** (read only) or **member** (full access); lifetime 1 hour, 24 hours or 7 days; at most 32 active invites.
+- Viewers can read chat, files, Git, jobs and tasks. Every state-changing request except logout returns 403, and the UI hides write controls. Viewers cannot read invites or activity.
+- **Revoke** deletes an invite and immediately ends sessions that joined with it. The `/serve` code cannot be revoked here; use `/serve stop` and `/serve`.
+- Recent activity lists the last state-changing requests (name, role, action, HTTP status, time), including refusals. It never records message text, file contents or codes.
+- Invites and activity are kept in hub memory only and are cleared by `/serve stop`.
 
 Invite tokens exchange for HttpOnly/SameSite cookies. Host/origin validation, authentication, bounded bodies, action limits, session-scoped attachment IDs and message retry receipts apply. File APIs confine paths to the selected worktree, reject symlink escapes and hide secret/configuration paths such as `.env`, private keys, `.ssh` and `.git`.
 
@@ -210,6 +222,8 @@ and [Mermaid's strict security mode](https://mermaid.js.org/config/usage).
 `npm test` runs security, workspace, bridge and real Pi integration tests without model calls. Git writes occur only in temporary repositories.
 
 For browser checks, start `PI_CODING_AGENT_DIR=/tmp/pi-web-preview node team-webui/test/preview.mjs`, then use Python Playwright to run `team-webui/test/browser-smoke.py <preview-url>`. The script uses the locally installed Chrome executable. Start a fresh fixture for each run. Screenshots and evidence are written to `team-webui/reports/`, which is not committed.
+
+`node team-webui/test/browser-run.mjs <script.py>` starts a fresh fixture, runs one browser script and stops the fixture. `test/usability-browser.py` covers the persona usability fixes (roles, invites, locale, mobile tasks, accessibility); `test/ui-helpers.test.mjs` covers path shortening, attachment limits, branch names and translations.
 
 `test/background-browser.py <preview-url>` checks the Background interface on desktop and mobile, including an actual fixture process stop and session isolation. Start a fresh preview fixture for this check too.
 
