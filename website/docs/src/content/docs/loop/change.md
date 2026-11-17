@@ -186,6 +186,9 @@ shape and an example, never a user question. Some examples:
 | migration | `migrationPlan`, `rollout` |
 | ui | `userFlow`, `uiStates`, `componentMap` |
 
+An API that calls no other service, queue, or store answers `boundaries` with
+`"none: <reason>"` instead of inventing a row.
+
 Docs, test, and chore work owes only a summary; user-visible work also owes a
 `releaseNote`. A new hotfix (`bugfix.variant: "hotfix"`) also owes a regression
 for its incident: a scenario with `regressionOf` set to `bugfix.incident.link`,

@@ -135,3 +135,12 @@ test("empty values render empty strings and validate cleanly", () => {
     }
   }
 });
+
+// A single-process API crosses no boundary; a paid run spent a draft round
+// because the only accepted answer was an invented row.
+test("boundaries accepts a reasoned none, asks for the reason of a bare one, and renders it", () => {
+  const none = "none: one Node process; the only store is a local JSON file";
+  assert.deepEqual(validateBoundaries(none), []);
+  assert.match(validateBoundaries("none")[0], /boundaries says none or unknown without a reason/);
+  assert.equal(renderBoundaries(none), none);
+});

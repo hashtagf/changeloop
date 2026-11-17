@@ -18,6 +18,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 - `change start --template` and `change amend --template` print compact JSON
   (about a third smaller); a size-budget test keeps the start template under
   22,000 characters.
+- `change start --template` also states one case per scenario line (no `;`)
+  and how to name an existing requirement for `operation: "modified"`.
+- `boundaries` accepts `"none: <reason>"` for an API that calls no other
+  service, queue, or store; a bare `none` asks for the reason.
 - `change amend --template` adds a `revisedRequirement` form with its evidence,
   and an amendment without evidence gets the exact `evidence` block to add.
 

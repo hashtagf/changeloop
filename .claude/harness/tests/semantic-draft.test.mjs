@@ -3618,3 +3618,20 @@ test("an amendment without evidence gets a copyable block keyed by its requireme
   assert.ok(issues.some((issue) => issue.includes(
     '"evidence": {"request-timeout":{"capabilities":["test"]}} at the amendment top level')), issues.join("\n"));
 });
+
+test("an API draft that crosses no boundary passes with boundaries 'none: <reason>'", () => {
+  const { workTypeExamples: examples, workType: _type, userFlow: _flow, ...base } = semanticDraftTemplate();
+  const draft = { ...base, workType: ["api"], ...structuredClone(examples.api),
+    boundaries: "none: one process; the API calls no other service, queue, or store" };
+  assert.deepEqual(devDocumentIssues(draft), []);
+  assert.deepEqual(designBlueprintIssues(draft), []);
+  assert.deepEqual(devDocumentShapeIssues(draft), []);
+  assert.match(examples.use, /'none: <reason>'.*boundaries/);
+});
+
+// Paid runs repaired drafts for ';'-joined cases (3 of 10 lanes) and for a
+// modified requirement named by a new key; the template states both rules.
+test("the template states one case per scenario line and how to name a modified requirement", () => {
+  assert.match(MINIMAL_DRAFT_WRITING.scenarios, /never join cases with ';'/);
+  assert.match(MINIMAL_DRAFT_WRITING.modify, /operation 'modified' and requirement to its exact '### Requirement:' name/);
+});
