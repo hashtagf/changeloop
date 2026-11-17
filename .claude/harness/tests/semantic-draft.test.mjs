@@ -48,6 +48,7 @@ import {
   designBlueprintIssues, designBlueprintWarnings
 } from "../runtime/workflow/validation/design-blueprints.mjs";
 import { LIGHT_WORK, WORK_TYPES } from "../runtime/contracts/work-types.mjs";
+import { riskLevel } from "../runtime/contracts/scratch-router.mjs";
 import {
   devDocumentIssues, devDocumentShapeIssues, requiredDevSections
 } from "../runtime/workflow/validation/dev-document.mjs";
@@ -1170,7 +1171,10 @@ test("a direct verify correction runs through change amend and leaves no staged 
 test("the amendment template leads with the verify-only form", () => {
   const template = semanticAmendmentTemplate();
   assert.deepEqual(Object.keys(template),
-    ["save", "verifyOnly", "reopenCompleted", "removeUnfinished", "requirementChange"]);
+    ["save", "verifyOnly", "reopenCompleted", "removeUnfinished", "requirementChange", "revisedRequirement"]);
+  // A paid run revised a requirement without evidence; the form carries it.
+  assert.deepEqual(Object.keys(template.revisedRequirement.evidence),
+    template.revisedRequirement.reviseRequirements.map((row) => row.key));
   // The host refuses a shell-written amendment; the file tool is pre-allowed.
   assert.match(template.save, /Write tool to \.foundation\/drafts\/<change>-amendment\.json/);
   assert.match(template.save, /not save it through the shell \(heredoc/);
@@ -3532,7 +3536,10 @@ test("a High or Critical draft being started or revised must say how to undo it"
     { requireUndo: true }).issues.filter((issue) => issue.includes("undo"));
   const high = issuesFor({ impact: "high" });
   assert.equal(high.length, 1);
-  assert.match(high[0], /scratch\.undo is required for risk level High: say how to undo it, or 'none: <reason>'/);
+  assert.match(high[0], /scratch\.undo is required for risk level High \(impact:high\): say how to undo it, or 'none: <reason>'/);
+  // The level names its cause, so a heavy signal the agent declared is visible.
+  assert.match(issuesFor({ impact: "low", riskSignals: ["access-control"] })[0],
+    /risk level High \(impact:low, risk:access-control\)/);
   // A medium draft with a heavy signal is High; with impact high and money it is Critical.
   assert.match(issuesFor({ impact: "medium", riskSignals: ["financial"] })[0], /risk level High/);
   assert.match(issuesFor({ impact: "high", riskSignals: ["financial"] })[0], /risk level Critical/);
@@ -3565,4 +3572,49 @@ test("the undo rule is off for callers that do not ask for it, such as an amendm
   const issues = normalizeSemanticDraft(semanticDraft({ impact: "high", scratch: APPROVER_SCRATCH }), slugify)
     .issues.filter((issue) => issue.includes("undo"));
   assert.deepEqual(issues, []);
+});
+
+// Paid runs sent 4 of 10 first drafts back because the harness raised impact
+// or risk from the draft and then required approval lines the template called
+// optional. The template's rule must name exactly what the derivation uses.
+test("the template's scratch rule names every work type and signal that makes the lines required", () => {
+  const rule = MINIMAL_DRAFT_WRITING.scratch;
+  const listed = (rule.match(/workType includes ([^,]+(?:, [^,]+)*?), when/) || [])[1] || "";
+  const named = new Set(listed.replace(/\bor\b/g, "").split(/[,\s]+/).filter(Boolean));
+  for (const type of WORK_TYPES) {
+    const draft = { version: 4, workType: [type], intent: "x",
+      requirements: [{ key: "r", description: "The system SHALL x" }],
+      tasks: [{ key: "t", outcome: "x", paths: ["src/x.js"], verify: "npm test" }] };
+    assert.equal(deriveDraftRisk(draft).impact === "medium", named.has(type),
+      `work type ${type}: derivation and template rule agree`);
+  }
+  for (const signal of ["access-control", "persisted-data-change", "external-integration", "performance-slo",
+    "user-interface", "high-operational-risk", "external-side-effect", "financial", "input-domain"]) {
+    const high = riskLevel({ riskSignals: [signal], impact: "low" }).level === "High";
+    assert.equal(rule.includes(signal), high, `signal ${signal}: undo rule and risk level agree`);
+  }
+});
+
+test("a raised impact names its evidence on each required approval line", () => {
+  const draft = withDerivedRisk(semanticDraft({ workType: ["api"], impact: "low" }));
+  const { scratch: _drop, ...bare } = draft;
+  const issues = normalizeSemanticDraft(bare, slugify, { requireScratch: true }).issues
+    .filter((issue) => /scratch\.\w+ is required for impact/.test(issue));
+  assert.equal(issues.length, 4);
+  for (const issue of issues) assert.match(issue, /impact medium \(derived: declared work type api\)/);
+});
+
+// A revised requirement without evidence cost a paid run one amend round; the
+// repair now carries the exact block to add.
+test("an amendment without evidence gets a copyable block keyed by its requirements", () => {
+  const { issues } = compileSemanticAmendment({
+    amendment: { version: 1, reason: "Build found a coercion case",
+      reviseRequirements: [{ key: "request-timeout", capability: "config", operation: "added",
+        description: "The system SHALL coerce numeric strings",
+        scenarios: [{ name: "String value", when: "the file sets \"3000\"", then: "3000 is used" }] }] },
+    contract: { version: 1, claims: [], providers: {} },
+    tasksContent: "# Tasks\n", slugify, renderTask: renderDraftTask
+  });
+  assert.ok(issues.some((issue) => issue.includes(
+    '"evidence": {"request-timeout":{"capabilities":["test"]}} at the amendment top level')), issues.join("\n"));
 });

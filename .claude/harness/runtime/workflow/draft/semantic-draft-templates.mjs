@@ -1,5 +1,7 @@
 import { EXAMPLE_TYPES } from "./scratch-fields.mjs";
 import { OUTLINE } from "../validation/outline-contract.mjs";
+import { DERIVED_IMPACT_RULE } from "../validation/draft-risk.mjs";
+import { HEAVY_RISK_SIGNALS } from "../../contracts/scratch-router.mjs";
 
 // The smallest draft the compiler accepts: omit `version` and it infers keys,
 // capability, operation, scenario names, covers, and rapid defaults. Optional
@@ -48,7 +50,7 @@ export function semanticDraftTemplate() {
       asIs: "Required for impact medium or high: how it works today, with a count when known",
       toBe: "Required for impact medium or high: how it works after the change",
       ifFail: "Required for impact medium or high: what the user sees when it fails and how it recovers",
-      undo: "Optional: how to undo this change if it is approved and turns out wrong",
+      undo: "Required for impact high or a heavy risk signal (see minimalDraftWriting.scratch): how to undo this change if it is approved and turns out wrong, or 'none: <reason>'",
       who: "Optional: who is affected, in plain words"
     },
     examples: [{
@@ -126,8 +128,11 @@ export const MINIMAL_DRAFT_WRITING = Object.freeze({
   language: "Write in the user's language; keep field names, keys, and SHALL/WHEN/THEN in English",
   sections: "Fill only the sections your work type needs (workTypeExamples); leave the rest out",
   scratch: "Required when impact is medium or high, optional for low: scratch.get, asIs, toBe, ifFail are one plain line each " +
-    "(at most 240 characters) for an approver who does not read code; put counts in asIs when known; " +
-    "scratch.undo and scratch.who are optional lines for how to undo it and who is affected",
+    "(at most 240 characters) for an approver who does not read code; put counts in asIs when known. " +
+    `The harness raises impact from the draft itself, so write them in the first draft when it applies: ${DERIVED_IMPACT_RULE}. ` +
+    "scratch.undo (how to undo it, or 'none: <reason>') is required when impact is high or riskSignals include any of " +
+    `${HEAVY_RISK_SIGNALS.join(", ")}, unless rollout, dataModel, migrationPlan, dependencyChange, dataFix, or pipelinePlan ` +
+    "already states a rollback; otherwise it and scratch.who (who is affected) are optional",
   scenarios: "Write one scenario per rule, limit, endpoint, or error that the request or its referenced documents state, " +
     "not one per heading; add each rule's failure and boundary cases (empty, minimum, maximum, wrong type, unauthorized). " +
     "Every scenario becomes a test, so a thin spec yields thin tests",

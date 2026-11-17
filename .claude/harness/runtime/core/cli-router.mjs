@@ -186,7 +186,9 @@ export async function routeRuntimeCommand(command, values, api) {
         if (rest.length) die("start --template takes no draft path");
         if (flags.inspect || flags["consume-draft"] || approval)
           die("start --template cannot be combined with --inspect, --consume-draft, or --approve-spec");
-        console.log(JSON.stringify(rapidStartTemplate(), null, 2));
+        // Compact: the agent reads it once and carries it in context for the
+        // rest of the run, and indentation alone was a third of its size.
+        console.log(JSON.stringify(rapidStartTemplate()));
       } else {
         if (rest.length !== 1) die("start requires exactly one draft JSON path");
         if (flags.inspect) {
@@ -241,7 +243,7 @@ export async function routeRuntimeCommand(command, values, api) {
         if (rest.length) die("change amend --template takes no change or amendment path");
         if (flags.inspect || flags["consume-amendment"] || approval)
           die("change amend --template cannot be combined with --inspect, --consume-amendment, or --approve-spec");
-        console.log(JSON.stringify(amendmentTemplate(), null, 2));
+        console.log(JSON.stringify(amendmentTemplate()));
         return;
       }
       if (rest.length !== 2)

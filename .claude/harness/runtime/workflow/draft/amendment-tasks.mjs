@@ -155,8 +155,29 @@ export function semanticAmendmentTemplate() {
         paths: ["<path/glob>"], verify: "<command>"
       }],
       evidence: { "<new-requirement-key>": { capabilities: ["test"] } }
+    },
+    // A revised requirement restates its evidence like an added one; the
+    // form carries it so the first amendment needs no evidence repair.
+    revisedRequirement: {
+      version: 1,
+      reason: "<what Build discovered>",
+      reviseRequirements: [{
+        key: "<existing-requirement-key>", capability: "<capability>", operation: "added",
+        description: "The system SHALL <revised behavior>",
+        scenarios: [{ name: "<scenario>", when: "<condition>", then: "<outcome>" }]
+      }],
+      evidence: { "<existing-requirement-key>": { capabilities: ["test"] } }
     }
   };
+}
+
+// The repair for an amendment without evidence carries the exact block to add,
+// keyed by its own requirements, so it is fixed in one edit.
+export function missingEvidenceIssue(keys) {
+  const evidence = Object.fromEntries(keys.map((key) => [key || "<requirement-key>", { capabilities: ["test"] }]));
+  return "semantic amendment requires evidence keyed by each added or revised requirement; add " +
+    `"evidence": ${JSON.stringify(evidence)} at the amendment top level ` +
+    "(name the security capabilities too when the requirement has security triggers)";
 }
 
 export function updateTaskClaimAnnotation(line, claimIds) {

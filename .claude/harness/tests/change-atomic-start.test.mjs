@@ -1116,6 +1116,16 @@ test("the start template limits input-domain to outside values", (t) => {
     assert.match(minimalDraftRiskSignals, new RegExp(`'${signal}'`));
 });
 
+// Every agent reads the start template once and carries it for the rest of
+// the run, and a host truncates long tool output (Claude Code at 30,000
+// characters). Raise this ceiling only with a measured reason.
+const START_TEMPLATE_MAX_CHARACTERS = 22000;
+test("the start template stays within its size budget", (t) => {
+  const printed = JSON.stringify(fixture(t).lifecycle.rapidStartTemplate());
+  assert.ok(printed.length <= START_TEMPLATE_MAX_CHARACTERS,
+    `start template is ${printed.length} characters; budget ${START_TEMPLATE_MAX_CHARACTERS}`);
+});
+
 test("the start template names every risk signal's required coverage rows", (t) => {
   const { minimalDraftRiskCoverage } = fixture(t).lifecycle.rapidStartTemplate();
   for (const [signal, dimensions] of Object.entries(riskSignalDimensions()))

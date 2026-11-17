@@ -89,8 +89,12 @@ export function scratchRequiredIssues(source) {
   const impact = text(source?.impact).toLowerCase();
   if (impact !== "medium" && impact !== "high") return [];
   const scratch = isObject(source?.scratch) ? source.scratch : {};
+  // Name the evidence when the harness raised the impact, so the agent sees
+  // why a field it was told is optional is now owed.
+  const reasons = source?._riskDerivation?.impact?.value === impact ? source._riskDerivation.impact.reasons : [];
+  const why = reasons.length ? ` (derived: ${reasons.join("; ")})` : "";
   return SCRATCH_KEYS.filter((key) => scratch[key] === undefined || !text(scratch[key])).map((key) =>
-    `semantic draft scratch.${key} is required for impact ${impact}: ` +
+    `semantic draft scratch.${key} is required for impact ${impact}${why}: ` +
     `one plain line of at most ${SCRATCH_TEXT_MAX} characters for the approver`);
 }
 

@@ -50,9 +50,9 @@ export function undoIssues(draft) {
   const issues = [];
   const bare = bareAbsenceIssue(draft?.scratch?.undo, "semantic draft scratch.undo");
   if (bare) issues.push(bare);
-  const { level } = riskLevel({ riskSignals: draft?.riskSignals, impact: draft?.impact });
+  const { level, reasons } = riskLevel({ riskSignals: draft?.riskSignals, impact: draft?.impact });
   if ((level === "High" || level === "Critical") && !undoPlan(draft))
-    issues.push(`semantic draft scratch.undo is required for risk level ${level}: say how to undo it, ` +
+    issues.push(`semantic draft scratch.undo is required for risk level ${level} (${reasons.join(", ")}): say how to undo it, ` +
       "or 'none: <reason>' when it cannot be undone; an existing rollback field also counts " +
       `(${UNDO_FIELDS.map(([source]) => source).join(", ")})`);
   return issues;

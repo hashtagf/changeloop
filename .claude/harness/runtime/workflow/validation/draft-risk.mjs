@@ -15,6 +15,13 @@ const UNIT_ROOT = /^(services|packages|apps|libs|modules)\/([^/*?{[]+)/;
 // Durable state: migrations, schema files, and database directories.
 const PERSISTENCE_PATH = /\.(?:sql|prisma)$|(?:^|\/)(?:migrations?|db|database|schema|schemas)\/|(?:^|\/)[^/]*migrat[^/]*$/i;
 const CONTRACT_TYPES = ["api", "data", "async"];
+
+// The derivation rule in words, for the template an agent writes from: a
+// draft that already knows its lane owes its required sections in one pass.
+export const DERIVED_IMPACT_RULE = "impact becomes medium when workType includes " +
+  `${CONTRACT_TYPES.join(", ")}, when a task path touches migrations, schema, db, .sql, or .prisma ` +
+  "files, or (with no workType) when the requirements name an API, endpoint, published contract, " +
+  "migration, or database";
 const DATA_TEXT = /\b(?:migrations?|rollbacks?|roll back|databases?|sql)\b/i;
 const CONTRACT_TEXT = new RegExp("\\b(?:apis?|endpoints?|webhooks?|(?:request|response|wire)\\s+payloads?|graphql|grpc|openapi|" +
   "(?:events?|messages?|public|published|wire|service)\\s+(?:contracts?|schemas?))\\b", "i");
