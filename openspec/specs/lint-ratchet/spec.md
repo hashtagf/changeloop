@@ -12,6 +12,8 @@ gate แบบ deterministic ที่กัน anti-pattern ใหม่ใน�
 - no-silent-catch: catch block ที่ว่าง
 - no-bare-disable: eslint-disable ที่ไม่มีเหตุผลหลัง --
 - กฎ built-in: no-undef, no-unused-vars, no-unreachable, no-dupe-keys
+- ข้อยกเว้นที่มีชื่อ: setTimeout ใช้ได้เฉพาะใน runtime/core/timing.mjs และ catch ที่ไม่จัดการ error ใช้ได้เฉพาะใน runtime/core/best-effort.mjs ข้อความของกฎบอกชื่อ helper ที่ต้องใช้
+- ผลของ `tsc --checkJs` บันทึกเป็นกฎ `types/TS<code>` ต่อไฟล์ และ ratchet แบบเดียวกับ lint
 
 #### Scenario: timer เป็นทางรอ
 
@@ -71,7 +73,7 @@ gate แบบ deterministic ที่กัน anti-pattern ใหม่ใน�
 
 ### Requirement: ไฟล์ใหญ่และ composition root ห้ามโต
 
-ระบบ SHALL ล้มเมื่อไฟล์ใน size baseline มีจำนวนบรรทัดเกิน baseline หรือไฟล์อื่นในขอบเขตเกินเพดาน 1500 บรรทัด
+ระบบ SHALL ล้มเมื่อไฟล์ใน size baseline มีจำนวนบรรทัดเกิน baseline หรือไฟล์อื่นในขอบเขตเกินเพดาน `sizeCeiling` ของ baseline (ตอนนี้ 1000 บรรทัด)
 
 - foundation.mjs อยู่ใน size baseline เสมอเพราะต้องเป็น composition root
 
@@ -82,7 +84,7 @@ gate แบบ deterministic ที่กัน anti-pattern ใหม่ใน�
 
 #### Scenario: ไฟล์ใหม่เกินเพดาน
 
-- **WHEN** ไฟล์ที่ไม่อยู่ใน size baseline ยาวเกิน 1500 บรรทัด
+- **WHEN** ไฟล์ที่ไม่อยู่ใน size baseline ยาวเกิน `sizeCeiling`
 - **THEN** exit ไม่ใช่ 0 พร้อมข้อความให้แยกโมดูล
 
 #### Scenario: ไฟล์ใหญ่หดลง
