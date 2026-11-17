@@ -11,6 +11,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Changed
 
+- `workaround-comments` counts a marker only when it opens the comment or is
+  followed by `:` or `(`; a marker named in prose or inside a regular
+  expression is no longer a finding.
+
 - `change start --template` states exactly when the approval lines and
   `scratch.undo` are required (the work types, paths, and risk signals the
   harness derives impact and risk from), so a first draft no longer returns for

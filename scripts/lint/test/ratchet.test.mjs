@@ -175,6 +175,26 @@ test("initial baseline tracks the composition root and only files over the ceili
   assert.match(again.text(), /already exists/);
 });
 
+// The harness is held to the code-health checks it ships: a deeper file or a
+// new copied block fails like a new lint finding.
+test("nesting depth and copied blocks ratchet like lint findings", async (t) => {
+  const { root, write } = fixture(t);
+  const nest = (depth) => [...Array(depth).keys()].map((level) => `${"  ".repeat(level)}if (x) {`)
+    .concat([...Array(depth).keys()].reverse().map((level) => `${"  ".repeat(level)}}`)).join("\n");
+  const block = Array.from({ length: 9 }, (_, index) => `  total += order.items[${index}].price * rate;`).join("\n");
+  write(".claude/harness/runtime/core/deep.mjs", `export function deep(x) {\n${nest(6)}\n}\n`);
+  write(".claude/harness/runtime/core/a.mjs", `export function a(order, rate) {\n  let total = 0;\n${block}\n  return total;\n}\n`);
+  await initialize(root);
+  const baseline = JSON.parse(readFileSync(join(root, DEFAULT_BASELINE), "utf8"));
+  assert.equal(baseline.violations[".claude/harness/runtime/core/deep.mjs"]["complexity/nesting"], 7);
+  write(".claude/harness/runtime/core/deep.mjs", `export function deep(x) {\n${nest(7)}\n}\n`);
+  write(".claude/harness/runtime/core/b.mjs", `export function b(order, rate) {\n  let total = 0;\n${block}\n  return total;\n}\n`);
+  const output = capture();
+  assert.equal(await main(["--root", root], output.out), 1);
+  assert.match(output.text(), /deep\.mjs: complexity\/nesting 8 \(baseline 7\)[\s\S]*return early or extract/);
+  assert.match(output.text(), /b\.mjs: duplication\/block 1 \(baseline 0\)[\s\S]*repeat \.claude\/harness\/runtime\/core\/a\.mjs/);
+});
+
 test("the repository is at or below its committed baseline", async () => {
   const log = capture();
   assert.equal(await main([], log.out), 0, log.text());
