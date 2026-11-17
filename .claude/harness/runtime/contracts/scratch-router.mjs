@@ -11,9 +11,10 @@ const RISK_SIGNALS = new Set([
   "user-interface", "high-operational-risk", "external-side-effect", "financial", "input-domain"
 ]);
 // Signals whose discovery weight is 3: any of them alone makes a change High.
-const HEAVY_SIGNALS = new Set([
+export const HEAVY_RISK_SIGNALS = Object.freeze([
   "access-control", "persisted-data-change", "high-operational-risk", "external-side-effect", "financial"
 ]);
+const HEAVY_SIGNALS = new Set(HEAVY_RISK_SIGNALS);
 const INTENTS = Object.freeze({
   feature: "feature", bugfix: "bugfix", refactor: "refactor", migration: "migration",
   experiment: "experiment", deprecation: "decommission"

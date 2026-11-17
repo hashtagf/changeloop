@@ -11,7 +11,7 @@ import { amendmentCompileVersion, isRecordedSemanticVersion } from "../validatio
 import { unique } from "../../core/values.mjs";
 import {
   TASK_CONTRACT_FIELDS, amendmentList, appendRequirementToSpec, combinedChain,
-  combinedCommand, hasField, keyOf, removalRef, renderRequirement, reopenTask,
+  combinedCommand, hasField, keyOf, missingEvidenceIssue, removalRef, renderRequirement, reopenTask,
   replaceRequirementBlock, replaceTaskDepends, replaceTaskPaths, replaceTaskVerify,
   requirementBlocks, semanticTaskKey, stringList, taskClaims, taskCompleted,
   taskContractOnlyAmendment, taskDepends, taskId, taskPaths, taskVerify,
@@ -52,7 +52,7 @@ function amendmentIssues(amendment) {
       "that cover existing requirements, or only sections");
   if ((added.length || revised.length) && (!amendment?.evidence ||
       typeof amendment.evidence !== "object" || Array.isArray(amendment.evidence)))
-    issues.push("semantic amendment requires evidence keyed by each added or revised requirement");
+    issues.push(missingEvidenceIssue([...added, ...revised].map(keyOf)));
   for (const [index, row] of removed.entries()) {
     if (!keyOf(row)) issues.push(`semantic amendment removeRequirements[${index}].key is required`);
     if (!String(row?.migration || "").trim())

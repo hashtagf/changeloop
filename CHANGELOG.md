@@ -9,6 +9,18 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Changed
+
+- `change start --template` states exactly when the approval lines and
+  `scratch.undo` are required (the work types, paths, and risk signals the
+  harness derives impact and risk from), so a first draft no longer returns for
+  them; the repair names the derivation that required them.
+- `change start --template` and `change amend --template` print compact JSON
+  (about a third smaller); a size-budget test keeps the start template under
+  22,000 characters.
+- `change amend --template` adds a `revisedRequirement` form with its evidence,
+  and an amendment without evidence gets the exact `evidence` block to add.
+
 ### Added
 
 - `doctor` lists project setup rows (quality config, findings baselines,
