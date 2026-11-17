@@ -84,6 +84,8 @@ dashboard/data/*.db-wal
 !/docs/database-recovery.md
 !/docs/independent-review.md
 !/docs/changelog-history.md
+!/docs/feature-map.json
+!/docs/feature-map.md
 !/docs/reports/
 !/docs/reports/*.md
 !/docs/adr/

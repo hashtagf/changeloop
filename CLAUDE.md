@@ -102,6 +102,7 @@ the explicit contracts they test, not every claim's truth.
 | `.claude/tests/README.md` | Check selection, suite ownership, fixtures, execution controls | Suite registration, ownership, or runner behavior changes | Another lifecycle specification |
 | `RELEASING.md` | Release preparation, verification, publication and recovery procedure | Release machinery or authority requirements change | A claim that an old candidate proves the current source |
 | `CHANGELOG.md`, `docs/changelog-history.md` | Release notes from 3.6.0 on (`[Unreleased]` is the release workflow's input); notes for 3.5.30 and earlier, unchanged | Every user-visible change adds to `[Unreleased]`; the history file changes only to fix a link | Design rationale and investigation detail |
+| `docs/feature-map.json`, `docs/feature-map.md` | User-facing features tied to their commands, user states, runtime groups, code, tests, and docs; the page is rendered from the JSON | A user-facing command, slash command, user state, or runtime group is added, renamed, moved, or removed | Lifecycle semantics (keep them in `WORKFLOW.md`) and user term definitions (keep them in the glossary) |
 | `docs/reports/README.md` | Index of current operating documents and dated evidence | A report is added or a document's current/historical status changes | Full report content or user tutorials |
 | `docs/reports/user-scenario-release-status.md` | Current release assurance and known gaps | New candidate or release evidence is available | Fabricated pass, cost, or completion claims |
 | `docs/reports/user-scenario-test-plan.md` | Scenario portfolio and acceptance requirements | Scenario scope or acceptance contract changes | Results presented as requirements |
@@ -266,7 +267,9 @@ installed runtime.
    what); `scripts/lint/skill-contracts.mjs` checks it.
 6. Add the lowest-level regression that would have caught the defect. A new
    suite requires its script, registration in `.claude/tests/run-all.sh`, and a
-   row in `.claude/tests/README.md`.
+   row in `.claude/tests/README.md`. A new user-facing command, user state, or
+   runtime group needs its feature in `docs/feature-map.json`; regenerate the
+   page with `node scripts/docs/feature-map.mjs --write`.
 7. Update canonical documentation and English/Thai public mirrors together.
    Change `.claude/harness/protocol.json` only for a wire-visible contract.
 8. Run affected checks while iterating, then the default gate before commit;

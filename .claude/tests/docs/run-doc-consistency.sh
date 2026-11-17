@@ -9,6 +9,9 @@ ROOT="$(cd "$HERE/../../.." && pwd)"
 assert_cmd_zero "documentation ownership, reading budgets, bilingual pages, and entry links" \
   node --test "$HERE/documentation-governance.test.mjs"
 
+assert_cmd_zero "feature map covers every command, state, and runtime group with real paths" \
+  node --test "$HERE/feature-map.test.mjs"
+
 assert_cmd_zero "skill catalog metadata, references, and routing-case contracts" \
   node --test "$HERE/skill-catalog.test.mjs"
 assert_cmd_zero "skill evaluation helpers preserve measurements and held-out independence" \
