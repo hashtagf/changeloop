@@ -18,10 +18,15 @@ implementation is grouped by domain:
 1. The entrypoint creates stores and runtimes through explicit factory dependencies.
 2. Domain modules should not import `foundation.mjs` or mutate another domain's private state.
 3. Dependencies point from `workflow` to `evidence`, then to `core`/`contracts`;
-   reverse edges are forbidden. Direct cross-domain imports are limited to stable pure
+   `observability` and `quality` depend only on `core`/`contracts`; reverse edges are forbidden. Direct cross-domain imports are limited to stable pure
    helpers and contracts along that direction. Stateful behavior is injected as a callback.
 4. Pure validation and normalization stay separate from filesystem/process adapters.
 5. Public CLI compatibility remains in `foundation.mjs` and `core/cli-router.mjs`.
+6. Import a symbol from the module that owns it. Re-exports are allowed only for the
+   surfaces `openspec/specs/runtime-maintainability` pins (`change-lifecycle` and
+   `sandbox-runtime`'s sandbox-setup functions).
+7. Timers go through `core/timing.mjs` and deliberately ignored failures through
+   `core/best-effort.mjs`; lint allows neither anywhere else.
 
 These rules keep subsystem tests bounded and prevent the compatibility entrypoint from
 growing back into a monolith.
