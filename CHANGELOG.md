@@ -9,6 +9,27 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Changed
+
+- Harness runtime modules under `.claude/harness/runtime/workflow/` now live in
+  feature groups (`land/`, `sandbox/`, `delivery/`, `advance/`, `change/`,
+  `authority/`, `draft/`, `packet/`, `investigation/`, `prototype/`,
+  `repository/`, `transaction/`, `validation/`), and large modules are split
+  into focused files. Behavior and public commands are unchanged; the
+  installer removes the old paths on upgrade. Code that imported runtime
+  modules by path must import from the owning module; only `change-lifecycle`
+  and `sandbox-runtime`'s sandbox-setup functions keep their re-exports.
+- Timers and deliberately ignored failures go through
+  `runtime/core/timing.mjs` and `runtime/core/best-effort.mjs`.
+
+### Added
+
+- Repository checks (not shipped): workflow group layering and no
+  re-exports in the architecture suite, `tsc --checkJs` findings in the lint
+  ratchet, a 1000-line ceiling for new runtime files, repository hygiene,
+  multi-process lock and lease interleaving properties, and a golden for the
+  user-facing lifecycle projection.
+
 ## [3.7.5] - 2026-11-16
 
 ### Changed
