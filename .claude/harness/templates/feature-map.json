@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "description": "This project's features as its users meet them. Change Loop seeds this file once and never rewrites it. Add one entry per feature: { \"id\": \"kebab-case\", \"name\": \"...\", \"summary\": \"what the user sees or does\", \"paths\": [\"src/feature/**\"], \"tests\": [...], \"docs\": [...] }. Investigation and change intake read it, 'cloop features' checks it, and the approval page lists the features a change touches.",
+  "features": []
+}

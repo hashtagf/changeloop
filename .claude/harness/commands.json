@@ -74,6 +74,14 @@
       "description": "Summarize every archived change (proof runs, first-proof pass, user decisions, known cost, declared escaped defects) and work type × impact × risk cohorts over known values, without writing state."
     },
     {
+      "name": "features",
+      "usage": "features [--change <id>] [--strict] [--pretty]",
+      "audience": "agent",
+      "kind": "read",
+      "idempotent": true,
+      "description": "Check the project's feature map (openspec/feature-map.json) and, with --change, name the features the change's task scopes and changed files touch, without writing state; --strict fails on map issues."
+    },
+    {
       "name": "lessons",
       "usage": "lessons [--min-changes <n>] [--pretty]",
       "audience": "agent",
@@ -788,6 +796,7 @@
     "feedback",
     "outcomes",
     "lessons",
+    "features",
     "package",
     "preview",
     "budget-checkpoint",

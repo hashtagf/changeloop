@@ -350,6 +350,9 @@ case "${1:-}" in
   lessons)
     shift
     run_runtime read lessons "$@" ;;
+  features)
+    shift
+    run_runtime read features "$@" ;;
   package)
     shift
     run_runtime read package "$@" ;;

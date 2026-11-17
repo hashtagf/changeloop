@@ -14,7 +14,7 @@ Change Loop เพิ่มไฟล์เข้าไปใน repository ข�
 
 | กลุ่ม | ไฟล์ | สิ่งที่คุณทำ |
 |---|---|---|
-| **ของคุณ** (commit ไว้ และ upgrade ไม่ทับ) | `openspec/specs/`, `openspec/changes/`, `openspec/investigations/`, `foundation.json`, `openspec/config.yaml`, `openspec/repositories.yaml`, `quality/`, `REVIEW.md`, `openspec/incidents/`, `openspec/lessons.md`, `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json` | ตรวจและตัดสินใจ ให้ agent แก้ข้อตกลงผ่าน workflow ที่รองรับ |
+| **ของคุณ** (commit ไว้ และ upgrade ไม่ทับ) | `openspec/specs/`, `openspec/changes/`, `openspec/investigations/`, `foundation.json`, `openspec/config.yaml`, `openspec/repositories.yaml`, `quality/`, `REVIEW.md`, `openspec/incidents/`, `openspec/lessons.md`, `openspec/feature-map.json`, `CLAUDE.md`, `AGENTS.md`, `.claude/settings.json` | ตรวจและตัดสินใจ ให้ agent แก้ข้อตกลงผ่าน workflow ที่รองรับ |
 | **Installer ดูแล** (ถูกแทนที่ตอน upgrade) | `.claude/orchestrator.md`, `.claude/commands`, `.claude/harness`, `.claude/skills`, `.claude/rules`, `.claude/hooks`, `openspec/schemas`, `WORKFLOW.md`, `.foundation/.gitignore`, `.foundation/README.md` | อ่านเป็นข้อมูลอ้างอิง ปรับผ่าน config ของโปรเจกต์ ไม่ใช่แก้ไฟล์เหล่านี้ |
 | **Harness สร้างขึ้น** (Git ignore) | `.foundation/runtime/`, `receipts/`, `evidence/`, `transactions/`, `logs/` | อ่านเพื่อวิเคราะห์ได้ แต่ห้ามแก้เพื่อเปลี่ยนผลตรวจ และอย่าถือว่าลบทิ้งได้ |
 | **ไฟล์ระหว่างทำงาน** | `.foundation/drafts/`, โค้ดใน `.foundation/sandboxes/` | Agent เป็นผู้เขียน คุณตรวจข้อตกลงที่ compile แล้วและ diff สุดท้าย |
@@ -85,6 +85,7 @@ openspec/
 ├── investigations/      สิ่งที่ค้นพบจาก /investigate ที่ต้องคงอยู่
 ├── incidents/           บันทึก incident ตัวละไฟล์ (README.md, _template.md)
 ├── lessons.md           บทเรียนถาวร investigate และ change อ่านเป็น grounding
+├── feature-map.json     ฟีเจอร์ของคุณและ path ที่อยู่เบื้องหลัง อ่านเป็น grounding
 └── schemas/             assurance profile สองแบบพร้อม template
 ```
 
@@ -97,11 +98,21 @@ openspec/
 | `config.yaml` | โปรเจกต์ของคุณ | คัดลอกให้เฉพาะตอนที่ยังไม่มี หลังจากนั้นเป็นของคุณ |
 | `repositories.yaml` | โปรเจกต์ของคุณ | คัดลอกให้เฉพาะตอนที่ยังไม่มี หลังจากนั้นเป็นของคุณ |
 | `specs/`, `changes/`, `investigations/` | โปรเจกต์ของคุณ | installer ไม่แตะเลย |
-| `incidents/README.md`, `incidents/_template.md`, `lessons.md` | โปรเจกต์ของคุณ | คัดลอกให้เฉพาะตอนที่ยังไม่มี หลังจากนั้นเป็นของคุณ ไม่ถูกเขียนทับ |
+| `incidents/README.md`, `incidents/_template.md`, `lessons.md`, `feature-map.json` | โปรเจกต์ของคุณ | คัดลอกให้เฉพาะตอนที่ยังไม่มี หลังจากนั้นเป็นของคุณ ไม่ถูกเขียนทับ |
 
 `lessons.md` คือรายการบทเรียนถาวรของโปรเจกต์ แต่ละข้อลิงก์ไปยังบันทึก incident
 เมื่อมีไฟล์นี้ investigation และ change intake จะอ่านเป็นแหล่งข้อมูลอ้างอิง (grounding)
 ไฟล์นี้ไม่เกี่ยวกับคำสั่ง `cloop lessons` ซึ่งรวบรวมรหัส blocker และ review ที่เกิดซ้ำ
+
+`feature-map.json` ระบุฟีเจอร์ของโปรเจกต์ตามที่ผู้ใช้เจอ แต่ละฟีเจอร์มี path ที่ implement
+คุณกับ agent จึงเรียกสิ่งเดียวกันด้วยชื่อเดียวกัน investigation และ change intake อ่านไฟล์นี้เป็น grounding
+`cloop features` ตรวจไฟล์และบอกว่า change แตะฟีเจอร์ไหน และหน้าอนุมัติแสดงรายการฟีเจอร์นั้น
+ไฟล์เริ่มต้นว่าง เพิ่มทีละฟีเจอร์:
+
+```json
+{ "id": "checkout", "name": "Checkout", "summary": "ชำระเงินในตะกร้า",
+  "paths": ["src/checkout/**"], "tests": ["test/checkout.test.js"] }
+```
 
 `REVIEW.md` ที่ root ของ repository เก็บกฎ review แบบแนะนำของโปรเจกต์ AI reviewer
 ได้รับไฟล์นี้เป็นแนวทาง แต่ไม่เปลี่ยนผลผ่านหรือไม่ผ่านของ review คัดลอกให้เฉพาะตอนที่ยังไม่มี

@@ -18,6 +18,9 @@ export const DEFAULT_CONSUMER_QUALITY_POLICY = Object.freeze({
     changedCodeTarget: 70,
     semanticKillRate: 100
   },
+  // Lint, type-check, file-size, and module-boundary findings ratchet against
+  // quality/baselines; a new file longer than the ceiling is a finding.
+  findings: { fileSizeCeiling: 1000 },
   unsupportedCapability: { default: "report", neverAssumePass: true, neverAssumeZero: true },
   remediation: {
     mode: "changed-code-only",
@@ -35,7 +38,7 @@ export const DEFAULT_CONSUMER_QUALITY_POLICY = Object.freeze({
 const PROVIDER_KINDS = new Set(["command", "builtin"]);
 const PROTOCOLS = new Set([
   "foundation-quality-capabilities-v1", "foundation-crap-v1",
-  "foundation-automated-mutation-v1", "foundation-mutation-v2"
+  "foundation-automated-mutation-v1", "foundation-mutation-v2", "foundation-findings-v1"
 ]);
 
 function object(value) { return value && typeof value === "object" && !Array.isArray(value); }
@@ -55,6 +58,10 @@ export function validateConsumerQualityPolicy(policy) {
     failAt("complexity.maximumChanged must be >= 1");
   if (!Number.isFinite(policy.crap?.maximumNew) || policy.crap.maximumNew < 1)
     failAt("crap.maximumNew must be >= 1");
+  if (policy.findings !== undefined && (!object(policy.findings) ||
+      (policy.findings.fileSizeCeiling !== undefined &&
+        (!Number.isInteger(policy.findings.fileSizeCeiling) || policy.findings.fileSizeCeiling < 1))))
+    failAt("findings.fileSizeCeiling must be a positive integer");
   percent(policy.mutation?.changedCodeTarget, "mutation.changedCodeTarget");
   percent(policy.mutation?.semanticKillRate, "mutation.semanticKillRate");
   if (policy.unsupportedCapability?.neverAssumePass !== true ||

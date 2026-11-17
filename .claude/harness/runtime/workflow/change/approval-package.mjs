@@ -9,6 +9,7 @@ import { factsDigest, snapshotFor, syncStatus, syncWarnings } from "../prototype
 import { undoPlan } from "../transaction/undo-plan.mjs";
 import { devDocumentChecklist, inferWorkTypes } from "../validation/dev-document.mjs";
 import { bestEffort } from "../../core/best-effort.mjs";
+import { projectFeaturesForDraft } from "../validation/project-feature-map.mjs";
 
 // Approval data: what the harness computes about a change for the people who
 // approve it, printed as JSON by `package <change>`. The harness writes no
@@ -328,6 +329,8 @@ export function createApprovalPackageRuntime({
         who: who ? { value: who.value, source: who.source } : null
       },
       scope: scopeCounts(draft),
+      // Project features the task scopes touch, from openspec/feature-map.json.
+      features: projectFeaturesForDraft(root, draft),
       openQuestions: openQuestions(draft),
       failures: failureRows(draft),
       requiredSections: checklist.map((row) => ({ key: row.key, present: row.present, missingFields: row.missingFields || [] })),

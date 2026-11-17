@@ -58,7 +58,8 @@ its own read-only HTML file.
 | `version` | Print the installed package version |
 | `describe [command] [--json]` | Describe the slash commands and CLI commands; every command also answers `--help` |
 | `outcomes [--pretty]` | Summarize archived changes: proof runs, first-proof pass, user decisions, known cost, and declared escaped defects |
-| `lessons [--min-changes <n>] [--pretty]` | Group blocker and review codes that recur across at least `n` changes (default 3) into advisory check proposals for `/change` |
+| `lessons [--min-changes <n>] [--pretty]` | Group blocker and review codes that recur across at least `n` changes (default 3) into advisory check proposals for `/change`: the strongest workable enforcement (architecture, type, lint, test), the past changes a new check must fail on, and the check already named in `openspec/lessons.md` when one exists |
+| `features [--change <id>] [--strict] [--pretty]` | Check the project's feature map (`openspec/feature-map.json`) and, with `--change`, name the features the change touches |
 
 ## Consumer quality
 

@@ -13,7 +13,7 @@ import { semanticIntakeAction, semanticIntakeIssues } from "../validation/semant
 import { prototypeSelectionIssues } from "../prototype/prototype-binding.mjs";
 import { inspectSemanticSources } from "../validation/semantic-source-inventory.mjs";
 import {
-  PROJECT_LESSONS_PATH, inspectRepositoryIntelligence, repositoryIntelligenceRequired,
+  PROJECT_GROUNDING_PATHS, inspectRepositoryIntelligence, repositoryIntelligenceRequired,
   skippedRepositoryIntelligence
 } from "../validation/repository-intelligence.mjs";
 import {
@@ -269,7 +269,7 @@ export function createChangeLifecycle({
   // A skipped repository scan still grounds the project's lessons, so even a
   // rapid intake reads them and an edit to them refreshes source coverage.
   function lessonsSourcePaths() {
-    return existsSync(join(root, PROJECT_LESSONS_PATH)) ? [PROJECT_LESSONS_PATH] : [];
+    return PROJECT_GROUNDING_PATHS.filter((path) => existsSync(join(root, path)));
   }
 
   function semanticSourceInspection(source, baseline = null, discoveredPaths = []) {

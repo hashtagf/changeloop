@@ -28,6 +28,7 @@ keeping this map current are in [How the map is kept current](#how-the-map-is-ke
 | [Operations handoff](#operations-handoff) | ส่งต่องานปฏิบัติการ | cross-phase | `handoff status`, `handoff list`, `handoff packet` |
 | [Abandon a change](#abandon) | ยกเลิก change | cross-phase | `change abandon` |
 | [Consumer quality gates](#consumer-quality) | quality gate ของโปรเจกต์ผู้ใช้ | cross-phase | `quality discover`, `quality init`, `quality doctor` |
+| [Project feature map](#project-feature-map) | feature map ของโปรเจกต์ | cross-phase | `features` |
 | [Install and host integration](#install-and-hosts) | ติดตั้งและเชื่อมกับ host | setup | `init`, `models`, `host agent-contract` |
 | [Team dashboard](#team-dashboard) | dashboard ของทีม | setup | `dashboard`, `dashboard snapshot` |
 
@@ -357,9 +358,9 @@ Retire a change that cannot be proven after a recorded user decision, quarantini
 
 **Phase:** cross-phase
 
-Optional CRAP and mutation checks on the user's project with changed-code ratchets and a debt inventory.
+Optional CRAP, mutation, lint, type-check, file-size, and module-boundary checks on the user project; every one ratchets against a baseline that may only shrink.
 
-ตรวจ CRAP และ mutation ในโปรเจกต์ของผู้ใช้ (เปิดหรือไม่ก็ได้) พร้อม ratchet เฉพาะโค้ดที่เปลี่ยนและรายการหนี้คุณภาพ
+ตรวจ CRAP, mutation, lint, type-check, ขนาดไฟล์ และขอบเขตโมดูลในโปรเจกต์ของผู้ใช้ (เปิดหรือไม่ก็ได้) ทุกตัว ratchet กับ baseline ที่ลดได้อย่างเดียว
 
 | | |
 |---|---|
@@ -367,9 +368,29 @@ Optional CRAP and mutation checks on the user's project with changed-code ratche
 | CLI commands | `quality discover`, `quality init`, `quality doctor`, `quality run`, `quality report`, `quality baseline`, `quality debt` |
 | User states | — |
 | Runtime groups | `quality` |
-| Code | `.claude/harness/runtime/quality/quality-runtime.mjs` |
-| Tests | `.claude/harness/tests/quality-runtime.test.mjs`, `.claude/harness/tests/quality-adapters.test.mjs` |
+| Code | `.claude/harness/runtime/quality/quality-runtime.mjs`, `.claude/harness/runtime/quality/findings-ratchet.mjs` |
+| Tests | `.claude/harness/tests/quality-runtime.test.mjs`, `.claude/harness/tests/quality-adapters.test.mjs`, `.claude/harness/tests/findings-ratchet.test.mjs` |
 | Docs | `.claude/harness/CONSUMER-QUALITY.md`, `website/docs/src/content/docs/consumer-quality.md` |
+
+<a id="project-feature-map"></a>
+
+## Project feature map — feature map ของโปรเจกต์
+
+**Phase:** cross-phase
+
+The user project names its own features and the paths behind them in openspec/feature-map.json; intake reads it, the features command checks it and names the features a change touches, and the approval page lists them.
+
+โปรเจกต์ของผู้ใช้ตั้งชื่อฟีเจอร์ของตัวเองและ path ที่อยู่เบื้องหลังใน openspec/feature-map.json ขั้น intake อ่านไฟล์นี้ คำสั่ง features ตรวจและบอกว่า change แตะฟีเจอร์ไหน และหน้าอนุมัติแสดงรายการฟีเจอร์
+
+| | |
+|---|---|
+| Slash commands | — |
+| CLI commands | `features` |
+| User states | — |
+| Runtime groups | — |
+| Code | `.claude/harness/runtime/workflow/validation/project-feature-map.mjs`, `.claude/harness/templates/feature-map.json` |
+| Tests | `.claude/harness/tests/project-feature-map.test.mjs` |
+| Docs | `website/docs/src/content/docs/artifacts.md`, `WORKFLOW.md` |
 
 <a id="install-and-hosts"></a>
 

@@ -67,6 +67,13 @@ export function detectedProviders(root, profiles) {
     if (crapScript) providers.crap = commandProvider(["npm", "run", crapScript], {
       protocol: "foundation-crap-v1", output: ".foundation/quality/crap.json"
     });
+    const dependencies = { ...packageJson?.dependencies, ...packageJson?.devDependencies };
+    if (dependencies.typescript && existsSync(join(root, "tsconfig.json")))
+      providers["type-check"] = { kind: "builtin", adapter: "tsc-text", isolation: "read-only",
+        command: ["npx", "--no-install", "tsc", "--noEmit", "--pretty", "false"], inputs: { report: "-" } };
+    if (dependencies.eslint)
+      providers.lint = { kind: "builtin", adapter: "eslint-json", isolation: "read-only",
+        command: ["npx", "--no-install", "eslint", ".", "-f", "json"], inputs: { report: "-" } };
     if (scripts["foundation:quality:mutation"]) providers["automated-mutation"] = commandProvider(["npm", "run", "foundation:quality:mutation"], {
       protocol: "foundation-automated-mutation-v1", output: ".foundation/quality/mutation.json", isolation: "tool"
     });
@@ -85,6 +92,10 @@ export function detectedProviders(root, profiles) {
     if (composer?.scripts?.test) providers.test ||= commandProvider(["composer", "test"]);
     if (composer?.scripts?.analyse) providers["static-analysis"] ||= commandProvider(["composer", "analyse"]);
   }
+  // Every application profile gets the file-size ratchet: it needs no project
+  // tool, and an ever-growing file is the first thing an agent copies.
+  if (profiles.some((profile) => profile.startsWith("application-")))
+    providers["file-size"] = { kind: "builtin", adapter: "file-size", isolation: "read-only" };
   return providers;
 }
 

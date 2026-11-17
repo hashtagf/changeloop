@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve } from "node:path";
 import { configDigest, normalizeCrapReport, normalizeMutationReport } from "./quality-protocol.mjs";
+import { FINDINGS_ADAPTERS, FINDINGS_CAPABILITIES } from "./findings-ratchet.mjs";
 
 export const QUALITY_ADAPTER_VERSION = "1";
 
@@ -279,21 +280,25 @@ export const QUALITY_ADAPTERS = Object.freeze({
   "python-radon-coverage": { capability: "crap", inputs: ["complexity", "coverage"], run: pythonAdapter },
   "go-complexity-cover": { capability: "crap", inputs: ["complexity", "coverage"], run: goAdapter },
   "php-clover": { capability: "crap", inputs: ["clover"], run: phpCloverAdapter },
-  "generic-mutation-json": { capability: "automated-mutation", inputs: ["mutation"], run: genericMutationAdapter }
+  "generic-mutation-json": { capability: "automated-mutation", inputs: ["mutation"], run: genericMutationAdapter },
+  ...FINDINGS_ADAPTERS
 });
 
+// An input path of "-" reads the provider command's stdout (for tools that
+// print their report, such as `tsc --noEmit` or `eslint -f json`).
 export function runBuiltinQualityAdapter({ repository, capability, provider, pathInside, repositoryCommit,
-  workspaceDigest }) {
+  workspaceDigest, stdout = "", policy = null }) {
   const adapter = QUALITY_ADAPTERS[provider.adapter];
   if (!adapter) throw new Error(`unknown built-in quality adapter '${provider.adapter || ""}'`);
-  if (adapter.capability !== capability)
-    throw new Error(`adapter '${provider.adapter}' provides ${adapter.capability}, not ${capability}`);
+  const fits = adapter.capability === null ? FINDINGS_CAPABILITIES.has(capability) : adapter.capability === capability;
+  if (!fits)
+    throw new Error(`adapter '${provider.adapter}' provides ${adapter.capability || "findings"}, not ${capability}`);
   const inputs = {};
   for (const name of adapter.inputs) {
     const path = provider.inputs?.[name];
     if (!path) throw new Error(`adapter '${provider.adapter}' requires input '${name}'`);
-    inputs[name] = safeRead(repository, path, pathInside);
+    inputs[name] = path === "-" ? String(stdout || "") : safeRead(repository, path, pathInside);
   }
-  return adapter.run({ repository, provider, inputs, repositoryCommit,
+  return adapter.run({ repository, provider, inputs, repositoryCommit, policy,
     workspaceDigest: workspaceDigest || configDigest({ repository: repository.id, repositoryCommit }) });
 }

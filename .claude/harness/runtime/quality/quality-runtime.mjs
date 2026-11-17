@@ -14,6 +14,9 @@ import {
 } from "./quality-protocol.mjs";
 import { runBuiltinQualityAdapter } from "./adapter-registry.mjs";
 import {
+  FINDINGS_CAPABILITIES, FINDINGS_PROTOCOL, evaluateFindingsRatchet, normalizeFindingsReport
+} from "./findings-ratchet.mjs";
+import {
   aggregateQualityLanes, classifyMutationSurfaces, evaluateCrapRatchet,
   evaluateMutationRatchet, pathMatches
 } from "./quality-evaluator.mjs";
@@ -62,10 +65,13 @@ function normalizeProviderResult(protocol, value, repository) {
   if (protocol === "foundation-crap-v1") return normalizeCrapReport(bound);
   if (protocol === "foundation-automated-mutation-v1") return normalizeMutationReport(bound);
   if (protocol === "foundation-mutation-v2") return value;
+  if (protocol === FINDINGS_PROTOCOL) return normalizeFindingsReport(bound);
   throw new Error(`unsupported quality provider protocol '${protocol}'`);
 }
 
-export function runQualityProvider({ repository, capability, provider, git, pathInside, environment = {} }) {
+export function runQualityProvider({
+  repository, capability, provider, git, pathInside, environment = {}, policy = null
+}) {
   const command = provider.command || [];
   if (command.length && !executableExists(command[0], repository.path)) return {
     repository: repository.id, capability, status: "unavailable", assurance: "missing",
@@ -100,7 +106,10 @@ export function runQualityProvider({ repository, capability, provider, git, path
     reason: "provider changed repository state and did not restore it", durationMs: elapsed(),
     required: provider.required !== false
   };
-  if (result.status !== 0) return {
+  // Linters and type checkers exit 1 when they report findings; the findings
+  // ratchet, not the exit code, decides those lanes.
+  const findingsExit = FINDINGS_CAPABILITIES.has(capability) && result.status === 1;
+  if (result.status !== 0 && !findingsExit) return {
     repository: repository.id, capability, status: "fail", assurance: "missing",
     reason: `provider exited ${result.status ?? "without status"}`,
     stderr: String(result.stderr || "").slice(-4000), durationMs: elapsed(),
@@ -110,7 +119,8 @@ export function runQualityProvider({ repository, capability, provider, git, path
   if (provider.kind === "builtin") {
     try {
       value = runBuiltinQualityAdapter({ repository, capability, provider, pathInside,
-        repositoryCommit: repository.head || null, workspaceDigest: repository.workspaceDigest });
+        repositoryCommit: repository.head || null, workspaceDigest: repository.workspaceDigest,
+        stdout: result.stdout, policy });
     } catch (error) {
       return { repository: repository.id, capability, status: "fail", assurance: "missing",
         reason: `built-in adapter failed: ${error.message}`, durationMs: elapsed(),
@@ -344,7 +354,7 @@ export function createQualityRuntime({
         if (!selectedLane(repository.id, capability)) continue;
         const laneStarted = performance.now();
         const lane = runQualityProvider({ repository, capability, provider, git, pathInside,
-          environment: { FOUNDATION_QUALITY_CHANGE: activeChange || "" } });
+          environment: { FOUNDATION_QUALITY_CHANGE: activeChange || "" }, policy: config.policy });
         if (lane.result) {
           writeJson(providerResultPath(root, repository.id, capability), lane.result);
           const basePath = baselinePath(root, repository.id, capability);
@@ -363,9 +373,16 @@ export function createQualityRuntime({
             lane.evaluation = evaluateMutationRatchet({ current: lane.result, baseline,
               policy: config.policy, exceptions: config.exceptions });
           }
+          if (FINDINGS_CAPABILITIES.has(capability) && lane.result.findings) {
+            lane.evaluation = evaluateFindingsRatchet({ current: lane.result, baseline });
+            if (lane.evaluation.assurance === "reduced") {
+              lane.assurance = "reduced";
+              lane.reason = lane.evaluation.reason;
+            }
+          }
           if (lane.evaluation?.status === "fail" || lane.evaluation?.summary?.fail > 0) {
             lane.status = "fail";
-            lane.reason = "quality ratchet failed";
+            lane.reason = lane.evaluation?.reason || "quality ratchet failed";
           }
         }
         lane.durationMs = performance.now() - laneStarted;
@@ -423,7 +440,7 @@ export function createQualityRuntime({
     const changes = [];
     for (const repository of config.repositories) {
       if (options.repository && repository.id !== options.repository) continue;
-      for (const capability of ["crap", "automated-mutation"]) {
+      for (const capability of ["crap", "automated-mutation", ...FINDINGS_CAPABILITIES]) {
         if (options.capability && capability !== options.capability) continue;
         const source = providerResultPath(root, repository.id, capability);
         if (!existsSync(source)) continue;
@@ -493,7 +510,12 @@ export function createQualityRuntime({
         repository: lane.repository, capability: lane.capability,
         target: lane.capability, reasons: [lane.reason || lane.status],
         blocksCurrentChange: lane.status === "unavailable" }));
-    const findings = [...new Map([...changedFindings, ...inventoryFindings, ...capabilityFindings]
+    const ratchetFindings = summary.lanes.flatMap((lane) => (lane.evaluation?.regressions || [])
+      .filter(() => FINDINGS_CAPABILITIES.has(lane.capability))
+      .map((row) => ({ id: `${lane.repository}:${lane.capability}:${row.path}:${row.rule}`,
+        repository: lane.repository, capability: lane.capability, target: `${row.path}:${row.rule}`,
+        reasons: [`${row.baseline ?? 0} -> ${row.current}`], blocksCurrentChange: true })));
+    const findings = [...new Map([...changedFindings, ...inventoryFindings, ...capabilityFindings, ...ratchetFindings]
       .map((finding) => [finding.id, finding])).values()]
       .sort((left, right) => left.id.localeCompare(right.id));
     const value = { protocol: "foundation-quality-debt-v1", generatedAt: new Date().toISOString(), findings };

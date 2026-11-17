@@ -159,6 +159,7 @@ test("the data carries risk, domains, roles, labels, scratch lines, scope, failu
   assert.equal(data.scratch.undo.value, "off");
   assert.equal(data.scratch.who.value, "owners");
   assert.deepEqual(data.scope, { files: 2, questions: 1, failures: 1 });
+  assert.deepEqual(data.features, { available: false, features: [] });
   assert.deepEqual(data.openQuestions, ["Which currency?"]);
   assert.deepEqual(data.failures, [{ when: "empty", sees: "400", recovery: "retry" }]);
   assert.ok(Array.isArray(data.requiredSections));

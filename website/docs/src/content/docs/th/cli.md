@@ -57,7 +57,8 @@ recovery, administration และ host integration ด้านล่าง
 | `version` | พิมพ์เวอร์ชันแพ็กเกจที่ติดตั้งอยู่ |
 | `describe [command] [--json]` | อธิบาย slash command และคำสั่ง CLI ทุกคำสั่งตอบ `--help` ได้ด้วย |
 | `outcomes [--pretty]` | สรุป change ที่ archive แล้ว: จำนวนรอบ proof, ผ่านตั้งแต่ proof แรกไหม, การตัดสินใจของผู้ใช้, ค่าใช้จ่ายที่รู้ และ defect ที่หลุดตามที่แจ้งไว้ |
-| `lessons [--min-changes <n>] [--pretty]` | รวม code ของ blocker และ review ที่เกิดซ้ำในอย่างน้อย `n` change (ค่าเริ่มต้น 3) เป็นข้อเสนอ check ถาวรแบบแนะนำสำหรับ `/change` |
+| `lessons [--min-changes <n>] [--pretty]` | รวม code ของ blocker และ review ที่เกิดซ้ำในอย่างน้อย `n` change (ค่าเริ่มต้น 3) เป็นข้อเสนอ check ถาวรแบบแนะนำสำหรับ `/change`: ตัวบังคับที่แข็งที่สุดที่ทำได้ (architecture, type, lint, test), change ในอดีตที่ check ใหม่ต้อง fail ได้ และ check ที่ `openspec/lessons.md` ระบุไว้แล้วถ้ามี |
+| `features [--change <id>] [--strict] [--pretty]` | ตรวจ feature map ของโปรเจกต์ (`openspec/feature-map.json`) และเมื่อใส่ `--change` จะบอกว่า change นั้นแตะฟีเจอร์ไหน |
 
 ## Consumer quality
 
