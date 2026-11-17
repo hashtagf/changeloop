@@ -650,15 +650,15 @@ jq '.workflow.grounding = "optional"' "$TARGET/foundation.json" \
 cp "$TMP/foundation-atomic.json" "$TARGET/foundation.json"
 start_template="$(bash "$ROOT/cli.sh" --project "$TARGET" change start --template)"
 assert_contains "atomic start exposes a versioned draft template" \
-  "$start_template" '"version": 5'
+  "$start_template" '"version":5'
 assert_contains "atomic start exposes discovery coverage" \
   "$start_template" '"discovery"'
 assert_contains "atomic start template links tasks by requirement key" \
-  "$start_template" '"covers": ['
+  "$start_template" '"covers":['
 assert_contains "atomic start template requests evidence capabilities" \
-  "$start_template" '"capabilities": ['
+  "$start_template" '"capabilities":['
 assert_not_contains "atomic start template omits derived execution wiring" \
-  "$start_template" '"adapter": "test-discovery"'
+  "$start_template" '"adapter":"test-discovery"'
 printf '%s\n' '#!/usr/bin/env sh' \
   'mkdir -p test-results' \
   'printf "%s\n" "{\"numTotalTests\":1}" > test-results/atomic.json' \
