@@ -291,6 +291,7 @@ agent plan view|node --test "$ROOT/.claude/harness/tests/agent-plan-view.test.mj
 agent dispatch|node --test "$ROOT/.claude/harness/tests/agent-dispatch.test.mjs"
 process lock|node --test "$ROOT/.claude/harness/tests/process-lock.test.mjs"
 process lock interleaving|node --test "$ROOT/.claude/harness/tests/process-lock-interleaving.test.mjs"
+lease interleaving|node --test "$ROOT/.claude/harness/tests/lease-interleaving.test.mjs"
 runtime primitives|node --test "$ROOT/.claude/harness/tests/runtime-primitives.test.mjs"
 budget continuation|node --test "$ROOT/.claude/harness/tests/budget-continuation.test.mjs"
 budget runtime|node --test "$ROOT/.claude/harness/tests/budget-runtime.test.mjs"
