@@ -203,7 +203,7 @@ const SECTION_HELP = {
   boundaries: "'boundaries': [{ from, to, mode: sync|async, why, timeout (sync), retry, consistency, " +
     "staleness (eventual), owner }] (e.g. { \"from\": \"api\", \"to\": \"billing\", \"mode\": \"sync\", " +
     "\"why\": \"price at checkout\", \"timeout\": \"2s\", \"retry\": \"none\", \"consistency\": \"strong\", " +
-    "\"owner\": \"payments\" })",
+    "\"owner\": \"payments\" }); 'none: <reason>' when the change calls no other service, queue, or store",
   libraryContract: "'libraryContract': { exports: [{ symbol, signature }], errors, semver: major|minor|patch, " +
     "runtimes, deprecation, changelog } (e.g. { \"exports\": [{ \"symbol\": \"parse\", " +
     "\"signature\": \"parse(text: string): Ast\" }], \"semver\": \"minor\", \"changelog\": \"Adds parse\" }); " +

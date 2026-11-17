@@ -141,6 +141,8 @@ standard change ต้องมี ถ้าขาดจะเป็น `EDIT` �
 | migration | `migrationPlan`, `rollout` |
 | ui | `userFlow`, `uiStates`, `componentMap` |
 
+API ที่ไม่เรียก service, queue หรือที่เก็บข้อมูลอื่นตอบ `boundaries` ด้วย `"none: <เหตุผล>"` แทนการแต่งแถวขึ้นมา
+
 งาน docs, test และ chore ต้องมีแค่ summary งานที่ผู้ใช้มองเห็นต้องมี `releaseNote` ด้วย
 hotfix ที่สร้างใหม่ (`bugfix.variant: "hotfix"`) ต้องมี regression ของ incident นั้นด้วย
 คือ scenario ที่ตั้ง `regressionOf` ตรงกับ `bugfix.incident.link` ใน requirement ที่รันการตรวจได้จริง

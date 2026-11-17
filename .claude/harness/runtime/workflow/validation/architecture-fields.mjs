@@ -7,6 +7,7 @@ import {
   cell, localized, objectList, present, requireFields, stringList, table, text
 } from "./field-helpers.mjs";
 import { isObject } from "../../core/values.mjs";
+import { absenceKind, bareAbsenceIssue } from "./explicit-absence.mjs";
 
 const LABELS = Object.freeze({
   en: {
@@ -39,8 +40,11 @@ const ERROR_GROUPS = Object.freeze(["expected", "infrastructure", "bug"]);
 
 // --- boundaries -----------------------------------------------------------
 
+// A change that crosses no service, queue, or store boundary answers
+// 'none: <reason>' instead of inventing a row; a bare 'none' asks for the reason.
 export function validateBoundaries(value, path = "boundaries") {
   if (!present(value)) return [];
+  if (absenceKind(value)) return [bareAbsenceIssue(value, path)].filter(Boolean);
   const issues = [];
   for (const [row, rowPath] of objectList(value, path, issues)) {
     requireFields(row, rowPath, ["from", "to", "mode", "why", "retry", "consistency", "owner"], issues);
@@ -58,6 +62,7 @@ export function validateBoundaries(value, path = "boundaries") {
 }
 
 export function renderBoundaries(value, { language } = {}) {
+  if (absenceKind(value) === "reasoned") return text(value);
   if (!Array.isArray(value) || value.length === 0) return "";
   const l = labels(language);
   const rows = value.filter(isObject).map((row) => {

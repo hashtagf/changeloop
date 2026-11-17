@@ -135,7 +135,10 @@ export const MINIMAL_DRAFT_WRITING = Object.freeze({
     "already states a rollback; otherwise it and scratch.who (who is affected) are optional",
   scenarios: "Write one scenario per rule, limit, endpoint, or error that the request or its referenced documents state, " +
     "not one per heading; add each rule's failure and boundary cases (empty, minimum, maximum, wrong type, unauthorized). " +
-    "Every scenario becomes a test, so a thin spec yields thin tests",
+    "Every scenario becomes a test, so a thin spec yields thin tests. Each when and then states one case: never join " +
+    "cases with ';' (write another scenario, put preconditions in given, and extra outcomes in and)",
+  modify: "To change a requirement that already exists, set operation 'modified' and requirement to its exact " +
+    "'### Requirement:' name from openspec/specs/<capability>/spec.md (read that file first); a new key does not match it",
   examples: "Optional typed examples with real values from the request, code, or data, never invented: " +
     `each { type, title, why?, postBuild?, capability? } where type is one of ${EXAMPLE_TYPES.join(", ")}`,
   limits: Object.freeze({ intentMaxCharacters: 70, whyMaxSentences: 3 })
@@ -154,7 +157,8 @@ function workTypeExamples() {
   const userFlow = () => structuredClone(USER_FLOW_EXAMPLE);
   return {
     use: "Copy the block for each of your work types to the draft top level; every key " +
-      "in a block is required for that type and nothing else is",
+      "in a block is required for that type and nothing else is. A key with nothing to " +
+      "describe takes 'none: <reason>' where accepted (boundaries for an API that calls no other service, queue, or store)",
     feature: { userFlow: userFlow(), releaseNote: "Search now filters by tag." },
     bugfix: {
       bugfix: {
