@@ -22,9 +22,11 @@ user decides what becomes binding.
    before writing `openspec/feature-map.json`.
 5. Module boundaries (optional): propose modules from real imports, say how
    many imports already violate them, and add the lane only if the user agrees.
-6. Verify with `cloop features --strict`, `cloop quality run`, and
+6. Lessons: if `lessons-enforcement` warns, offer each listed lesson's
+   `adoption.draft` through `/change`; never mark one enforced without a check.
+7. Verify with `cloop features --strict`, `cloop quality run`, and
    `cloop doctor`; report what is ready and the next command for the rest.
-7. Hand a missing or stale `CLAUDE.md`/`AGENTS.md` to `claude-md`.
+8. Hand a missing or stale `CLAUDE.md`/`AGENTS.md` to `claude-md`.
 
 ## Harness
 

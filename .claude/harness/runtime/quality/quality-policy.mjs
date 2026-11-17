@@ -18,7 +18,8 @@ export const DEFAULT_CONSUMER_QUALITY_POLICY = Object.freeze({
     changedCodeTarget: 70,
     semanticKillRate: 100
   },
-  // Lint, type-check, file-size, and module-boundary findings ratchet against
+  // Lint, type-check, file-size, module-boundary, stopgap-comment,
+  // duplication, and nesting findings ratchet against
   // quality/baselines; a new file longer than the ceiling is a finding.
   findings: { fileSizeCeiling: 1000 },
   unsupportedCapability: { default: "report", neverAssumePass: true, neverAssumeZero: true },

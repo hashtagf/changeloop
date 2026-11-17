@@ -1,11 +1,10 @@
 import { investigationCoverageIssues } from "../validation/investigation-coverage.mjs";
 import { parseSpecDocument } from "../../contracts/change-artifacts.mjs";
-import {
-  normalizeDiscovery, semanticIntakeIssues
-} from "../validation/semantic-intake.mjs";
+import { normalizeDiscovery, semanticIntakeIssues } from "../validation/semantic-intake.mjs";
 import { designBlueprintIssues } from "../validation/design-blueprints.mjs";
 import { scratchFieldIssues, scratchRequiredIssues } from "./scratch-fields.mjs";
 import { undoIssues } from "../transaction/undo-plan.mjs";
+import { enforcesIssues } from "../../contracts/lesson-enforcement.mjs";
 import { readerGuideIssues } from "../validation/reader-guide.mjs";
 import {
   devDocumentIssues, devDocumentShapeIssues, inferWorkTypes
@@ -21,7 +20,6 @@ import {
   deriveRepositoryTaskDependencies, derivedExecution, normalizeTasks,
   unknownTaskFieldWarnings
 } from "./semantic-draft-tasks.mjs";
-
 
 const OPERATIONS = new Set(["added", "modified", "removed"]);
 
@@ -373,6 +371,7 @@ function semanticDraftIssues(source, { defaultTestEvidence = false, requireScrat
   if (source?.fixes !== undefined && (!Array.isArray(source.fixes) ||
       source.fixes.some((value) => !text(value))))
     issues.push("semantic draft fixes must be an array of archived change ids");
+  issues.push(...enforcesIssues(source));
   issues.push(...benchmarkProviderIssues(source?.execution));
   if (source?.prototypeSelection !== undefined) {
     if (!text(source.prototypeSelection?.reference))
@@ -803,6 +802,7 @@ export function normalizeSemanticDraft(input, slugify, options = {}) {
     nonGoals: stringList(source.nonGoals),
     ...(Array.isArray(source.constraints) ? { constraints: stringList(source.constraints) } : {}),
     ...(Array.isArray(source.fixes) ? { fixes: unique(stringList(source.fixes)) } : {}),
+    ...(Array.isArray(source.enforces) ? { enforces: unique(stringList(source.enforces)) } : {}),
     decisions: Array.isArray(source.decisions)
       ? source.decisions.map((decision) =>
         text(decision?.reason || decision?.why) ? decision : { ...decision, why: SETTLED_REASON })

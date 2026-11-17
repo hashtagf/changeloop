@@ -1,5 +1,6 @@
-// Consumer findings ratchet: lint, type-check, file-size, and module-boundary
-// findings may shrink but never grow; adoption starts with a baseline.
+// Consumer findings ratchet: lint, type-check, file-size, module-boundary,
+// stopgap-comment, and duplication findings may shrink but never grow;
+// adoption starts with a baseline.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -13,6 +14,11 @@ import {
 } from "../runtime/quality/findings-ratchet.mjs";
 import { createQualityRuntime } from "../runtime/quality/quality-runtime.mjs";
 import { detectedProviders } from "../runtime/quality/quality-discovery.mjs";
+import {
+  duplicationFindings, duplicationWindow, maxNestingDepth, nestingDepthFindings, workaroundCommentFindings
+} from "../runtime/quality/code-health-findings.mjs";
+import { FINDINGS_ADAPTERS } from "../runtime/quality/findings-ratchet.mjs";
+import { configDigest } from "../runtime/quality/quality-protocol.mjs";
 
 function project(t, files) {
   const root = mkdtempSync(join(tmpdir(), "findings-ratchet-"));
@@ -104,8 +110,77 @@ test("discovery offers type-check, lint, and file-size without project scripts",
   assert.equal(providers["type-check"].adapter, "tsc-text");
   assert.equal(providers["type-check"].inputs.report, "-");
   assert.equal(providers.lint.adapter, "eslint-json");
-  assert.equal(providers["file-size"].adapter, "file-size");
-  assert.equal(detectedProviders(root, ["web-style"])["file-size"], undefined);
+  for (const adapter of ["file-size", "workaround-comments", "duplication", "nesting-depth"]) {
+    assert.equal(providers[adapter].adapter, adapter);
+    assert.equal(detectedProviders(root, ["web-style"])[adapter], undefined);
+  }
+});
+
+const BLOCK = ["function total(order) {", "  const items = order.items.filter(Boolean);",
+  "  const sum = items.reduce((acc, item) => acc + item.price, 0);", "  const tax = sum * order.taxRate;",
+  "  const shipping = sum > 100 ? 0 : order.shipping;", "  const discount = order.coupon ? sum * 0.1 : 0;",
+  "  log('total', sum + tax + shipping - discount);", "  return sum + tax + shipping - discount;", "}"];
+
+test("stopgap marker comments are findings per marker; ordinary words and strings are not", (t) => {
+  const root = project(t, {
+    "src/a.js": "// TODO: drop after v2\nconst list = 'TODO app'; // a todo list\n/* FIXME(ann) */\n",
+    "src/b.py": "x = 1  # HACK until the API returns ids\n# Workaround for the vendor bug\n",
+    "src/c.md": "TODO in docs is not code\n",
+    "node_modules/d.js": "// TODO vendored\n"
+  });
+  assert.deepEqual(workaroundCommentFindings(root, {}).map(({ path, rule, line }) => `${path}:${line} ${rule}`), [
+    "src/a.js:1 comment/todo", "src/a.js:3 comment/fixme", "src/b.py:1 comment/hack", "src/b.py:2 comment/workaround"]);
+});
+
+test("a copied block is one duplication finding in the later file, and the ratchet catches a new copy", (t) => {
+  const root = project(t, { "src/a.js": `${BLOCK.join("\n")}\n`, "src/b.js": `// copy\n${BLOCK.join("\n")}\n` });
+  const findings = duplicationFindings(root, {});
+  assert.deepEqual(findings.map(({ path, rule, line }) => `${path}:${line} ${rule}`), ["src/b.js:2 duplication/block"]);
+  assert.match(findings[0].message, /repeat src\/a\.js:1; extract the shared code/);
+  const repository = { id: "root", path: root };
+  const run = () => FINDINGS_ADAPTERS.duplication.run({ repository, provider: {} });
+  const baseline = run();
+  writeFileSync(join(root, "src", "c.js"), `${BLOCK.join("\n")}\n`);
+  const grown = evaluateFindingsRatchet({ current: run(), baseline });
+  assert.equal(grown.status, "fail");
+  assert.equal(grown.regressions[0].path, "src/c.js");
+  // Blank lines and lone brackets never make two blocks alike, and short blocks are below the window.
+  assert.deepEqual(duplicationFindings(project(t, { "a.js": "}\n\n}\n".repeat(20) }), {}), []);
+  assert.throws(() => duplicationWindow({ window: 2 }), /at least 4/);
+});
+
+test("nesting depth is one finding per file over the limit, ignoring braces in strings and comments", (t) => {
+  const nest = (depth) => [...Array(depth).keys()].map((level) => `${"  ".repeat(level)}if (x) {`)
+    .concat([...Array(depth).keys()].reverse().map((level) => `${"  ".repeat(level)}}`)).join("\n");
+  const root = project(t, {
+    "src/deep.js": `${nest(6)}\n`,
+    "src/ok.js": `${nest(5)}\nconst s = "{{{{{{"; // {{{{\n/* {{{{{{\n{{{{ */\n`,
+    "src/deep.py": "def f(a):\n    if a:\n        for x in a:\n            if x:\n                while x:\n                    if x:\n                        pass\n",
+    "src/script.sh": "{ { { { { { { echo; } } } } } } }\n"
+  });
+  assert.deepEqual(nestingDepthFindings(root, {}).map(({ path, rule, line, value }) => `${path}:${line} ${rule} ${value}`),
+    ["src/deep.js:6 complexity/nesting 6", "src/deep.py:7 complexity/nesting 6"]);
+  assert.deepEqual(nestingDepthFindings(root, { maxDepth: 6 }), []);
+  assert.throws(() => maxNestingDepth({ maxDepth: 1 }), /at least 2/);
+  // Like file size, the depth is a value: a tracked file may not get deeper.
+  const repository = { id: "root", path: root };
+  const run = () => FINDINGS_ADAPTERS["nesting-depth"].run({ repository, provider: {} });
+  const baseline = run();
+  writeFileSync(join(root, "src", "deep.js"), `${nest(7)}\n`);
+  const grown = evaluateFindingsRatchet({ current: run(), baseline });
+  assert.equal(grown.status, "fail");
+  assert.deepEqual(grown.regressions.map((row) => [row.path, row.baseline, row.current]), [["src/deep.js", 6, 7]]);
+});
+
+test("a later lane setting joins the digest only when set, so existing baselines keep comparing", (t) => {
+  const root = project(t, { "a.js": "x\n" });
+  const repository = { id: "root", path: root };
+  const digest = (provider) => FINDINGS_ADAPTERS["file-size"].run({ repository, provider }).tool.configDigest;
+  assert.equal(digest({}), configDigest({ adapter: "file-size", inputs: null, include: null, exclude: null,
+    ceiling: null, modules: null, allow: null, tool: null }), "the digest a 3.7 baseline recorded");
+  assert.notEqual(digest({}), digest({ extensions: [".py"] }));
+  const window = (value) => FINDINGS_ADAPTERS.duplication.run({ repository, provider: { window: value } }).tool.configDigest;
+  assert.notEqual(window(8), window(12));
 });
 
 test("quality run ratchets a type checker that exits 1 and reads its stdout", (t) => {

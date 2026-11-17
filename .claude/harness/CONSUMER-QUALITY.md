@@ -73,7 +73,8 @@ state-identity controls.
 
 ## Findings ratchet
 
-The `lint`, `type-check`, `file-size`, and `module-boundaries` capabilities use
+The `lint`, `type-check`, `file-size`, `module-boundaries`,
+`workaround-comments`, `duplication`, and `nesting-depth` capabilities use
 `foundation-findings-v1`: findings keyed by file and rule (`file-size` carries
 the line count). Existing findings are the baseline under
 `quality/baselines/<repository>/<capability>-v1.json`; a new finding, a grown
@@ -86,9 +87,20 @@ Built-in adapters: `eslint-json`, `tsc-text`, `generic-findings-json` (read a
 report file, or the command's stdout when the input path is `-`),
 `file-size` (no tool), and `module-boundaries` (`modules`: name and path
 globs; `allow`: which modules each may import; relative JavaScript and
-TypeScript imports only). Exit code 1 from a findings tool is accepted as
-"findings reported". Discovery adds `file-size` to every application profile,
-`type-check` with TypeScript and `tsconfig.json`, and `lint` with ESLint.
+TypeScript imports only), `workaround-comments` (one `comment/<marker>`
+finding per comment line with an upper-case `TODO`, `FIXME`, `HACK`, or `XXX`,
+or the word workaround), and `duplication` (one `duplication/block` finding per
+run of at least `window` significant lines, default 8, repeated from earlier
+in path order), and `nesting-depth` (one `complexity/nesting` finding per file
+whose deepest line nests more than `maxDepth` levels, default 5, carrying that
+depth: braces with strings and comments removed, indentation for Python and
+Ruby, shell and SQL skipped; a rough line scan, not a parser). They scan common
+source extensions without a project tool and skip files over 512 KiB;
+`extensions`, `window`, and `maxDepth` join the configuration digest only when
+set. Exit code 1 from a findings tool is accepted as
+"findings reported". Discovery adds `file-size`, `workaround-comments`,
+`duplication`, and `nesting-depth` to every application profile, `type-check` with TypeScript and
+`tsconfig.json`, and `lint` with ESLint.
 
 ## Baseline and debt authority
 

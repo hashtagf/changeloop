@@ -595,8 +595,11 @@ escaped defects declared through later changes' `fixes`, grouped by work type,
 impact, and risk signals. `lessons` lists blocker and review finding codes that
 recur across distinct changes with a suggested permanent check, the strongest
 workable enforcement for it (architecture, type, lint, test), the past changes a
-new check must fail on, and the check `openspec/lessons.md` already names in
-its "Enforced by" column; adopting one is an ordinary Change. A project's
+new check must fail on, a starting draft, and whether the "Enforced by" column
+of `openspec/lessons.md` names a real check (a project file or
+`quality:<capability>`), a reasoned `judgment:`, or only prose; `doctor` warns
+while one lacks a check. Adopting one is an ordinary Change whose `enforces`
+requires a task that changes a file that can fail. A project's
 `openspec/feature-map.json` names its features and the paths behind them:
 intake reads it as grounding beside `openspec/lessons.md`, `features --change`
 names the features a change touches, and the approval page lists them.

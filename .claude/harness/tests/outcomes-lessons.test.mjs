@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,8 +9,11 @@ import test from "node:test";
 
 import { createOutcomesRuntime } from "../runtime/observability/outcomes-runtime.mjs";
 import {
-  createLessonsRuntime, enforcementFor, lessonsText, minChangesValue, suggestedCheck
+  adoptionDraft, createLessonsRuntime, enforcementFor, enforcementKind, lessonsReadiness, lessonsText,
+  minChangesValue, suggestedCheck
 } from "../runtime/observability/lessons-runtime.mjs";
+import { normalizeSemanticDraft } from "../runtime/workflow/draft/semantic-draft.mjs";
+import { expandMinimalSemanticDraft } from "../runtime/workflow/draft/semantic-draft-minimal.mjs";
 
 const FOUNDATION = fileURLToPath(new URL("../foundation.mjs", import.meta.url));
 // Directories every runtime invocation ensures exist; a real store has them.
@@ -76,7 +79,7 @@ function lessons(fixture, minChanges, lessonsDocument = null) {
   return createLessonsRuntime({
     runtimeDir: join(fixture.store, "runtime"), evidenceDir: join(fixture.store, "evidence"),
     logsDir: join(fixture.store, "logs"), reviewAttemptRecords: attemptRecords(fixture.store),
-    lessonsDocument,
+    lessonsDocument, projectFileExists: (path) => existsSync(join(fixture.root, path)),
     fail: (message) => { throw new Error(message); }
   }).lessonsValue(minChanges);
 }
@@ -241,9 +244,12 @@ test("a blocker code recurring across three changes becomes a lesson", (t) => {
       how: "add a contract test that fails when the published shape changes incompatibly" },
     adoption: {
       intent: "Add a permanent contract-compatibility-check for recurring blocker code 'contract-invalid' (seen in 3 changes)",
-      mustFailOn: ["a", "b", "c"]
+      mustFailOn: ["a", "b", "c"],
+      draft: adoptionDraft({ code: "contract-invalid", source: "blocker", changes: ["a", "b", "c"] },
+        "contract-compatibility-check", enforcementFor("contract-compatibility-check"))
     },
-    enforcedBy: null
+    enforcedBy: null,
+    status: "open"
   });
   assert.doesNotMatch(JSON.stringify(value), /secret|\/tmp\/path/,
     "free-text reasons are never exported");
@@ -254,16 +260,95 @@ test("a lesson recorded as enforced in openspec/lessons.md names its check", (t)
   for (const id of ["a", "b"])
     fixture.change(id, {}, { operations: [{ status: "blocked", blocker: { code: "workspace-boundary" } }] });
   const document = join(fixture.store, "lessons.md");
-  write(document, "| Date | Lesson | Incident | Enforced by |\n|---|---|---|---|\n" +
-    "| 2026-11-17 | ui must not import data (workspace-boundary) | [i](x) | module-boundaries lane |\n" +
+  const table = (cell) => write(document, "| Date | Lesson | Incident | Enforced by |\n|---|---|---|---|\n" +
+    `| 2026-11-17 | ui must not import data (workspace-boundary) | [i](x) | ${cell} |\n` +
     "| 2026-11-16 | contract-invalid seen | [i](y) |  |\n");
+  table("quality:module-boundaries lane");
   const [lesson] = lessons(fixture, 2, document).lessons;
   assert.equal(lesson.suggestedCheck, "dependency-rule");
   assert.equal(lesson.enforcement.layer, "architecture");
   assert.match(lesson.enforcement.how, /module-boundaries/);
-  assert.equal(lesson.enforcedBy, "module-boundaries lane");
+  assert.equal(lesson.enforcedBy, "quality:module-boundaries lane");
+  assert.equal(lesson.status, "enforced");
+  assert.equal(lesson.adoption.draft, null);
   assert.equal(lessons(fixture, 2).lessons[0].enforcedBy, null);
-  assert.match(lessonsText(lessons(fixture, 2, document)), /enforced by module-boundaries lane/);
+  assert.match(lessonsText(lessons(fixture, 2, document)), /enforced by quality:module-boundaries lane/);
+  // Prose is the last layer: a reminder keeps the lesson open with its draft.
+  table("see AGENTS.md");
+  const prose = lessons(fixture, 2, document).lessons[0];
+  assert.equal(prose.status, "prose-only");
+  assert.ok(prose.adoption.draft);
+  assert.match(lessonsText(lessons(fixture, 2, document)), /only prose \(see AGENTS\.md\); dependency-rule/);
+  table("judgment: imports are reviewed by the owning team");
+  assert.equal(lessons(fixture, 2, document).lessons[0].status, "judgment");
+  write(join(fixture.root, "test", "boundary.test.js"), "x\n");
+  table("`test/boundary.test.js`");
+  assert.equal(lessons(fixture, 2, document).lessons[0].status, "enforced");
+});
+
+test("an Enforced by cell counts only a project file, a quality lane, or a reasoned judgment", () => {
+  const exists = (path) => ["test/a.test.js", "eslint.config.js"].includes(path);
+  assert.equal(enforcementKind("", exists), "open");
+  assert.equal(enforcementKind("test/a.test.js:12", exists), "check");
+  assert.equal(enforcementKind("rule in ./eslint.config.js#L4", exists), "check");
+  assert.equal(enforcementKind("quality:duplication", exists), "check");
+  assert.equal(enforcementKind("judgment: needs a person", exists), "judgment");
+  assert.equal(enforcementKind("judgment:", exists), "prose");
+  assert.equal(enforcementKind("AGENTS.md section 3", () => true), "prose");
+  assert.equal(enforcementKind("test/missing.test.js", exists), "prose");
+  assert.equal(enforcementKind("../outside.test.js", () => true), "prose");
+});
+
+// The adoption draft is the start of the change that adds the check: the
+// agent adds tasks (files and command) and nothing it carries needs repair.
+test("an adoption draft compiles once the agent adds its tasks", () => {
+  for (const [code, source] of [["contract-invalid", "blocker"], ["missing-authorization-check", "review"],
+    ["a".repeat(64), "review"]]) {
+    const check = suggestedCheck(code) === "investigate" ? "lint-rule" : suggestedCheck(code);
+    const draft = adoptionDraft({ code, source, changes: ["2026-10-01-add-a-very-long-change-identifier-for-the-report", "b"] },
+      check, enforcementFor(check));
+    const json = draft["change.json"];
+    assert.ok(json.intent.length <= 70, json.intent);
+    assert.doesNotMatch(JSON.stringify(json), /;/);
+    const expanded = expandMinimalSemanticDraft({ ...json,
+      tasks: [{ outcome: "Add the check", verify: "npm test", paths: ["test/**"] }] }, {});
+    const { issues } = normalizeSemanticDraft(expanded, (value) => String(value).toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), { defaultRapidEvidence: true });
+    assert.deepEqual(issues, [], code);
+  }
+  assert.equal(adoptionDraft({ code: "x", source: "review", changes: ["a"] }, "investigate",
+    enforcementFor("investigate")), null);
+});
+
+// Prose is the last layer: a change adopting a lesson's check must change a
+// file that can fail, or the lesson is recorded as a judgment call instead.
+test("a draft that enforces a lesson needs a task path that is not prose", () => {
+  const draft = (paths, enforces = ["contract-invalid"]) => {
+    const json = adoptionDraft({ code: "contract-invalid", source: "blocker", changes: ["a", "b"] },
+      "contract-compatibility-check", enforcementFor("contract-compatibility-check"))["change.json"];
+    return expandMinimalSemanticDraft({ ...json, enforces,
+      tasks: [{ outcome: "Add the check", verify: "npm test", paths }] }, {});
+  };
+  const issues = (value) => normalizeSemanticDraft(value, (text) => String(text).toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""), { defaultRapidEvidence: true }).issues;
+  assert.match(issues(draft(["AGENTS.md", "docs/rules.md"])).join("\n"),
+    /enforces 'contract-invalid' but no task changes a file that can fail: every task path is prose \(AGENTS\.md, docs\/rules\.md\); add the check itself/);
+  assert.deepEqual(issues(draft(["AGENTS.md", "test/contract.test.js"])), []);
+  assert.deepEqual(issues(draft(["test/**"])), []);
+  assert.match(issues(draft(["test/**"], ["Not A Code"])).join("\n"), /enforces must be a non-empty array of lesson codes/);
+  assert.deepEqual(normalizeSemanticDraft(draft(["test/**"]), (text) => text, { defaultRapidEvidence: true })
+    .draft?.enforces, ["contract-invalid"]);
+});
+
+test("doctor warns about recurring lessons without a check and names the next step", () => {
+  const value = (statuses) => ({ lessons: statuses.map((status, index) => ({ code: `c${index}`, status })) });
+  assert.deepEqual(lessonsReadiness(value([])), { id: "lessons-enforcement", level: "ok",
+    detail: "no recurring lessons yet", next: null });
+  assert.equal(lessonsReadiness(value(["enforced", "judgment"])).level, "ok");
+  const pending = lessonsReadiness(value(["open", "prose-only", "enforced", "open", "open"]));
+  assert.equal(pending.level, "warn");
+  assert.equal(pending.detail, "4 recurring lesson(s) without a check: c0, c1, c3 (+1 more)");
+  assert.match(pending.next, /cloop lessons --pretty; adopt each check through \/change/);
 });
 
 test("a code below the threshold is not a lesson", (t) => {

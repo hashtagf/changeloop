@@ -27,6 +27,21 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- A draft's `enforces` names recurring lesson codes it adds a check for; a
+  task must change a file that is not prose, so a lesson cannot be closed by a
+  reminder alone.
+- Tool-free findings ratchet lanes `workaround-comments` (`TODO`/`FIXME`/`HACK`/`XXX`
+  and workaround comments) and `duplication` (copied blocks of at least 8
+  significant lines), and `nesting-depth` (files nesting more than 5 levels,
+  carrying the depth); discovery adds them to every application profile.
+- `lessons` reports each recurring lesson's status (`enforced`, `judgment`,
+  `prose-only`, `open`) and a starting draft for the change that adds its
+  check; an "Enforced by" cell counts only a project file, `quality:<capability>`,
+  or `judgment: <why>`. `doctor` warns (setup row `lessons-enforcement`)
+  while a recurring lesson lacks a check.
+- The session start digest of an installed project names missing setup (quality
+  lanes, findings baseline, feature map) and offers the `onboard` skill once.
+
 - `doctor` lists project setup rows (quality config, findings baselines,
   feature map, lessons, agent guide), each naming its next command and never
   failing `doctor`; `doctor --json` carries them under `setup`.
