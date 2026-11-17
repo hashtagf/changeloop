@@ -266,6 +266,10 @@ installed runtime.
    generated from the validator's own constants and tested against it, never
    retyped. A required field accepts `none: <reason>` rather than forcing an
    invented value, and every repair names the derived cause and a copyable fix.
+   A rule added to this file or `AGENTS.md` gets a row in
+   `quality/rule-enforcement.json` naming the check that enforces it, or a
+   judgment call; `scripts/quality/scorecard.mjs --check` fails on a stale
+   quote and when prose-only rules exceed their ceiling.
    A new or changed skill needs `.claude/skills/<name>/contract.json`
    (trigger, inputs, action, outputs, handoff, and who does or decides
    what); `scripts/lint/skill-contracts.mjs` checks it.
@@ -297,6 +301,7 @@ rtk npm run build                         # from website/docs
 rtk npm run bench:openspec-native:sentinel
 rtk npm run release:preflight
 rtk git diff --check
+rtk npm run quality:scorecard            # code health and rule enforcement
 ```
 
 The default `run-all.sh` (fast tier, about three minutes) is the local gate

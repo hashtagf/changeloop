@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Lint ratchet for harness code: existing findings are recorded per file and
-// rule in a baseline that may only shrink. New findings, growth of tracked
+// rule in a baseline that may only shrink. Besides ESLint and tsc it runs the
+// code-health checks Change Loop ships to consumer projects (nesting depth and
+// duplicated blocks), so the harness is held to what it asks of others. New findings, growth of tracked
 // large files, or a new file over the size ceiling fail. When findings drop,
 // the gate fails until `--tighten` lowers the baseline, so cleanup is kept.
 //
@@ -16,6 +18,7 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import config from "./eslint.config.mjs";
+import { duplicatesIn, nestingIn } from "../../.claude/harness/runtime/quality/code-health-findings.mjs";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 export const REPO_ROOT = resolve(HERE, "../..");
@@ -96,6 +99,15 @@ export function typeFindings(root, files) {
   return findings;
 }
 
+// Nesting is recorded as the file's depth (one count per level), so a tracked
+// file may get shallower but never deeper; duplication counts copied blocks.
+export function codeHealthFindings(texts) {
+  const nesting = texts.flatMap(({ path, text }) => nestingIn(path, text))
+    .map((finding) => ({ ...finding, count: finding.value }));
+  const duplicates = duplicatesIn(texts).map((finding) => ({ ...finding, count: 1 }));
+  return [...nesting, ...duplicates];
+}
+
 export async function collect(root = REPO_ROOT, files = scopeFiles(root)) {
   const eslint = new ESLint({ cwd: root, overrideConfigFile: true, overrideConfig: config });
   const results = files.length ? await eslint.lintFiles(files.map((file) => join(root, file))) : [];
@@ -118,8 +130,16 @@ export async function collect(root = REPO_ROOT, files = scopeFiles(root)) {
     details[path] ??= {};
     (details[path][rule] ??= []).push({ line: finding.line, message: finding.message });
   }
+  const texts = files.map((path) => ({ path, text: readFileSync(join(root, path), "utf8") }));
+  for (const finding of codeHealthFindings(texts)) {
+    const { path, rule } = finding;
+    violations[path] ??= {};
+    violations[path][rule] = (violations[path][rule] || 0) + finding.count;
+    details[path] ??= {};
+    (details[path][rule] ??= []).push({ line: finding.line, message: finding.message });
+  }
   const sizes = {};
-  for (const file of files) sizes[file] = lineCount(readFileSync(join(root, file), "utf8"));
+  for (const { path, text } of texts) sizes[path] = lineCount(text);
   return { violations, details, sizes };
 }
 

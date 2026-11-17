@@ -1,8 +1,10 @@
 // Code-health findings that need no project tool: stopgap marker comments
-// (the stopgap-comment lane), duplicated blocks, and deep nesting. Both are what an agent copies first, so the ratchet keeps
-// them from growing the same way it keeps files from growing. Neither parses
-// the language: comment markers and normalized line windows are enough to
-// count, and the baseline absorbs what already exists.
+// (the stopgap-comment lane), duplicated blocks, and deep nesting. These are
+// what an agent copies first, so the ratchet keeps them from growing the same
+// way it keeps files from growing. None parses the language: comment markers,
+// brace or indent depth, and normalized line windows are enough to count, and
+// the baseline absorbs what already exists. The text-level functions are
+// shared with Change Loop's own harness ratchet.
 import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { sourceFiles } from "./source-scan.mjs";
@@ -28,32 +30,35 @@ const scanned = (root, provider) => sourceFiles(root, provider, CODE_EXTENSIONS)
   .filter((path) => statSync(join(root, path)).size <= MAXIMUM_FILE_BYTES);
 
 const COMMENT_START = /\/\/|\/\*|<!--|#|--|^\s*\*/;
-// Upper-case markers only: "todo" is also an ordinary word (a todo list).
-const MARKER = /\b(TODO|FIXME|HACK|XXX)\b/;
-const WORKAROUND = /\bwork-?around\b/i;
+const COMMENT_OPENER = /^(?:\/\/+|\/\*+|<!--|#+|-{2,}|\*+)/;
+// A marker counts when it opens the comment or is followed by ':' or '(' (an
+// owner tag). A marker named in prose or inside a regular expression is not
+// one; upper case only, since the lower-case word is ordinary English.
+const LEADING_MARKER = /^\s*(TODO|FIXME|HACK|XXX)\b/;
+const TAGGED_MARKER = /\b(TODO|FIXME|HACK|XXX)\s*[:(]/;
+const WORKAROUND = /\bwork-?arounds?\b/i;
 
-function commentMarker(line) {
+export function commentMarker(line) {
   const start = line.match(COMMENT_START);
   if (!start) return null;
-  const comment = line.slice(start.index);
-  const marker = comment.match(MARKER);
+  const body = line.slice(start.index).replace(COMMENT_OPENER, "");
+  const marker = body.match(LEADING_MARKER) || body.match(TAGGED_MARKER);
   if (marker) return marker[1].toLowerCase();
-  return WORKAROUND.test(comment) ? "workaround" : null;
+  return WORKAROUND.test(body) ? "workaround" : null;
 }
 
 // One `comment/<marker>` finding per comment line carrying a stopgap marker
 // (the four upper-case markers, or the word the lane is named after).
+export function markerCommentsIn(path, text) {
+  return text.split("\n").flatMap((line, index) => {
+    const marker = commentMarker(line);
+    return marker ? [{ path, rule: `comment/${marker}`, line: index + 1,
+      message: `${marker} comment: fix the cause, or track it outside the code and remove the marker` }] : [];
+  });
+}
+
 export function workaroundCommentFindings(root, provider) {
-  const findings = [];
-  for (const path of scanned(root, provider)) {
-    const lines = readFileSync(join(root, path), "utf8").split("\n");
-    lines.forEach((line, index) => {
-      const marker = commentMarker(line);
-      if (marker) findings.push({ path, rule: `comment/${marker}`, line: index + 1,
-        message: `${marker} comment: fix the cause, or track it outside the code and remove the marker` });
-    });
-  }
-  return findings;
+  return scanned(root, provider).flatMap((path) => markerCommentsIn(path, readFileSync(join(root, path), "utf8")));
 }
 
 export function maxNestingDepth(provider) {
@@ -101,18 +106,19 @@ function indentDepths(text) {
 // One `complexity/nesting` finding per file whose deepest line nests more than
 // maxDepth levels, carrying that depth: like file size, a tracked file may get
 // shallower but never deeper. A rough line scan, not a parser.
+export function nestingIn(path, text, limit = DEFAULT_MAX_NESTING_DEPTH) {
+  const extension = path.slice(path.lastIndexOf("."));
+  if (UNNESTED.has(extension)) return [];
+  const depths = INDENTED.has(extension) ? indentDepths(text) : braceDepths(text);
+  const deepest = depths.reduce((most, depth) => Math.max(most, depth), 0);
+  if (deepest <= limit) return [];
+  return [{ path, rule: "complexity/nesting", line: depths.indexOf(deepest) + 1, value: deepest,
+    message: `nests ${deepest} levels (limit ${limit}); return early or extract the inner block into a function` }];
+}
+
 export function nestingDepthFindings(root, provider) {
   const limit = maxNestingDepth(provider);
-  return scanned(root, provider).flatMap((path) => {
-    const extension = path.slice(path.lastIndexOf("."));
-    if (UNNESTED.has(extension)) return [];
-    const text = readFileSync(join(root, path), "utf8");
-    const depths = INDENTED.has(extension) ? indentDepths(text) : braceDepths(text);
-    const deepest = depths.reduce((most, depth) => Math.max(most, depth), 0);
-    if (deepest <= limit) return [];
-    return [{ path, rule: "complexity/nesting", line: depths.indexOf(deepest) + 1, value: deepest,
-      message: `nests ${deepest} levels (limit ${limit}); return early or extract the inner block into a function` }];
-  });
+  return scanned(root, provider).flatMap((path) => nestingIn(path, readFileSync(join(root, path), "utf8"), limit));
 }
 
 export function duplicationWindow(provider) {
@@ -135,11 +141,16 @@ function significantLines(text) {
 // one `duplication/block` finding at the first line of the run, so a copied
 // 30-line function is one finding, not 23.
 export function duplicationFindings(root, provider) {
-  const window = duplicationWindow(provider);
+  return duplicatesIn(scanned(root, provider).map((path) => ({ path, text: readFileSync(join(root, path), "utf8") })),
+    duplicationWindow(provider));
+}
+
+// `files` in path order: [{ path, text }].
+export function duplicatesIn(files, window = DEFAULT_DUPLICATION_WINDOW) {
   const firstSeen = new Map();
   const duplicateStarts = new Map();
-  for (const path of scanned(root, provider)) {
-    const lines = significantLines(readFileSync(join(root, path), "utf8"));
+  for (const { path, text } of files) {
+    const lines = significantLines(text);
     for (let index = 0; index + window <= lines.length; index += 1) {
       const key = lines.slice(index, index + window).map((row) => row.text).join("\n");
       const first = firstSeen.get(key);

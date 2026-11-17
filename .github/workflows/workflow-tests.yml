@@ -147,6 +147,20 @@ jobs:
         env:
           EVALS_BASE: origin/${{ github.base_ref || 'main' }}
         run: npm run --silent evals:owed
+      - name: Quality scorecard (job summary and artifact)
+        if: matrix.shard == 1
+        # Code health from the committed ratchet baselines and how each guide
+        # rule is enforced; the artifact keeps the per-commit trend.
+        run: |
+          node scripts/quality/scorecard.mjs --markdown >> "$GITHUB_STEP_SUMMARY"
+          node scripts/quality/scorecard.mjs > quality-scorecard.json
+      - name: Upload quality scorecard
+        if: matrix.shard == 1
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-scorecard-${{ github.sha }}
+          path: quality-scorecard.json
+          retention-days: 90
       - name: Check packaged CLI contract
         if: matrix.shard == 1
         # Default help is the small agent-facing lifecycle surface. Compatibility

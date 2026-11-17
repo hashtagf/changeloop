@@ -126,6 +126,8 @@ test("stopgap marker comments are findings per marker; ordinary words and string
     "src/a.js": "// TODO: drop after v2\nconst list = 'TODO app'; // a todo list\n/* FIXME(ann) */\n",
     "src/b.py": "x = 1  # HACK until the API returns ids\n# Workaround for the vendor bug\n",
     "src/c.md": "TODO in docs is not code\n",
+    // Named in prose or inside a pattern, a marker is not a stopgap.
+    "src/d.js": "const tap = line.match(/\\s+#\\s*(SKIP|TODO)\\b/i);\n// checks the folder (no TODO\n// placeholders)\n",
     "node_modules/d.js": "// TODO vendored\n"
   });
   assert.deepEqual(workaroundCommentFindings(root, {}).map(({ path, rule, line }) => `${path}:${line} ${rule}`), [

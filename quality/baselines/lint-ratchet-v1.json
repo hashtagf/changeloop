@@ -3,10 +3,12 @@
   "sizeCeiling": 1000,
   "violations": {
     ".claude/harness/adapters/pi-extension.mjs": {
+      "complexity/nesting": 6,
       "types/TS2339": 9,
       "types/TS2353": 3
     },
     ".claude/harness/foundation.mjs": {
+      "duplication/block": 1,
       "types/TS2322": 5,
       "types/TS2339": 6,
       "types/TS2353": 1
@@ -17,11 +19,35 @@
       "types/TS2362": 1,
       "types/TS2488": 1
     },
+    ".claude/harness/runtime/core/cli-router.mjs": {
+      "complexity/nesting": 6,
+      "duplication/block": 3
+    },
+    ".claude/harness/runtime/core/diagnostics-runtime.mjs": {
+      "complexity/nesting": 7,
+      "duplication/block": 2
+    },
+    ".claude/harness/runtime/core/process-runtime.mjs": {
+      "complexity/nesting": 6
+    },
+    ".claude/harness/runtime/core/runtime-environment.mjs": {
+      "complexity/nesting": 6
+    },
+    ".claude/harness/runtime/core/state-runtime.mjs": {
+      "duplication/block": 2
+    },
+    ".claude/harness/runtime/core/workspace-surface.mjs": {
+      "duplication/block": 1
+    },
     ".claude/harness/runtime/evidence/adapter-runtime.mjs": {
       "types/TS2339": 8
     },
     ".claude/harness/runtime/evidence/configured-reviewer.mjs": {
+      "complexity/nesting": 7,
       "types/TS2556": 1
+    },
+    ".claude/harness/runtime/evidence/evidence-contract.mjs": {
+      "duplication/block": 1
     },
     ".claude/harness/runtime/evidence/evidence-results.mjs": {
       "types/TS2322": 1,
@@ -29,15 +55,31 @@
       "types/TS2363": 1
     },
     ".claude/harness/runtime/evidence/proof-execution-runtime.mjs": {
+      "complexity/nesting": 7,
+      "duplication/block": 1,
       "types/TS2554": 3
     },
     ".claude/harness/runtime/evidence/proof-execution/repair-stops.mjs": {
+      "complexity/nesting": 7,
       "types/TS2353": 1
     },
+    ".claude/harness/runtime/evidence/proof-readiness.mjs": {
+      "complexity/nesting": 7,
+      "duplication/block": 1
+    },
+    ".claude/harness/runtime/evidence/provider-scheduler.mjs": {
+      "complexity/nesting": 7,
+      "duplication/block": 1
+    },
     ".claude/harness/runtime/evidence/receipt-runtime.mjs": {
+      "complexity/nesting": 6,
       "types/TS2554": 1
     },
+    ".claude/harness/runtime/evidence/receipt-validity.mjs": {
+      "complexity/nesting": 6
+    },
     ".claude/harness/runtime/evidence/review-attempt-store.mjs": {
+      "complexity/nesting": 6,
       "types/TS2339": 3
     },
     ".claude/harness/runtime/evidence/review-diff.mjs": {
@@ -46,11 +88,17 @@
     ".claude/harness/runtime/evidence/test-discrimination.mjs": {
       "types/TS2769": 1
     },
+    ".claude/harness/runtime/evidence/visual-review.mjs": {
+      "complexity/nesting": 7
+    },
     ".claude/harness/runtime/observability/exec-runtime.mjs": {
       "types/TS2339": 3
     },
     ".claude/harness/runtime/observability/host-execution-contract.mjs": {
       "types/TS2339": 8
+    },
+    ".claude/harness/runtime/observability/lessons-runtime.mjs": {
+      "complexity/nesting": 6
     },
     ".claude/harness/runtime/observability/metrics-runtime.mjs": {
       "types/TS2339": 1
@@ -58,14 +106,22 @@
     ".claude/harness/runtime/observability/model-drift.mjs": {
       "types/TS2339": 4
     },
+    ".claude/harness/runtime/observability/telemetry-runtime.mjs": {
+      "complexity/nesting": 7,
+      "duplication/block": 2
+    },
     ".claude/harness/runtime/observability/telemetry.mjs": {
       "types/TS2339": 1
+    },
+    ".claude/harness/runtime/quality/quality-runtime.mjs": {
+      "complexity/nesting": 7
     },
     ".claude/harness/runtime/workflow/advance/advance-envelope.mjs": {
       "types/TS2349": 1,
       "types/TS2769": 1
     },
     ".claude/harness/runtime/workflow/advance/advance-runtime.mjs": {
+      "complexity/nesting": 8,
       "types/TS2554": 5
     },
     ".claude/harness/runtime/workflow/authority/agent-dispatch.mjs": {
@@ -73,24 +129,51 @@
       "types/TS2353": 3
     },
     ".claude/harness/runtime/workflow/authority/authority-reviewer-run.mjs": {
+      "complexity/nesting": 6,
       "types/TS2353": 1
     },
+    ".claude/harness/runtime/workflow/authority/authority-runtime.mjs": {
+      "complexity/nesting": 7,
+      "duplication/block": 5
+    },
+    ".claude/harness/runtime/workflow/authority/handoff-runtime.mjs": {
+      "complexity/nesting": 6
+    },
+    ".claude/harness/runtime/workflow/authority/session-lease.mjs": {
+      "complexity/nesting": 7
+    },
     ".claude/harness/runtime/workflow/change/change-amendment.mjs": {
+      "complexity/nesting": 6,
       "types/TS2353": 4
     },
     ".claude/harness/runtime/workflow/change/change-lifecycle.mjs": {
+      "duplication/block": 4,
       "types/TS2339": 2,
       "types/TS2353": 5
+    },
+    ".claude/harness/runtime/workflow/change/change-policy.mjs": {
+      "complexity/nesting": 6
+    },
+    ".claude/harness/runtime/workflow/change/change-resolution.mjs": {
+      "complexity/nesting": 7
+    },
+    ".claude/harness/runtime/workflow/change/change-revision.mjs": {
+      "complexity/nesting": 6,
+      "duplication/block": 1
     },
     ".claude/harness/runtime/workflow/change/change-start.mjs": {
       "types/TS2322": 1,
       "types/TS2353": 4
     },
     ".claude/harness/runtime/workflow/change/change-validation.mjs": {
+      "duplication/block": 2,
       "types/TS2339": 1
     },
     ".claude/harness/runtime/workflow/change/gate-waivers.mjs": {
       "types/TS2339": 2
+    },
+    ".claude/harness/runtime/workflow/change/grounding-scope.mjs": {
+      "complexity/nesting": 6
     },
     ".claude/harness/runtime/workflow/change/grounding-validation.mjs": {
       "types/TS2740": 1
@@ -106,12 +189,16 @@
       "types/TS2339": 2
     },
     ".claude/harness/runtime/workflow/delivery/pull-request-runtime.mjs": {
+      "complexity/nesting": 6,
+      "duplication/block": 1,
       "types/TS2741": 7
     },
     ".claude/harness/runtime/workflow/delivery/repository-delivery-saga.mjs": {
+      "complexity/nesting": 6,
       "types/TS2339": 2
     },
     ".claude/harness/runtime/workflow/draft/amendment-sections.mjs": {
+      "complexity/nesting": 6,
       "types/TS2339": 2
     },
     ".claude/harness/runtime/workflow/draft/amendment-verify.mjs": {
@@ -131,6 +218,9 @@
     ".claude/harness/runtime/workflow/draft/semantic-draft-tasks.mjs": {
       "types/TS2339": 1
     },
+    ".claude/harness/runtime/workflow/draft/semantic-draft-templates.mjs": {
+      "complexity/nesting": 6
+    },
     ".claude/harness/runtime/workflow/draft/semantic-draft.mjs": {
       "types/TS2339": 1,
       "types/TS2353": 1
@@ -139,10 +229,13 @@
       "types/TS2339": 2
     },
     ".claude/harness/runtime/workflow/investigation/investigation-runtime.mjs": {
+      "complexity/nesting": 6,
       "types/TS2339": 10,
       "types/TS2353": 4
     },
     ".claude/harness/runtime/workflow/land/apply-runtime.mjs": {
+      "complexity/nesting": 10,
+      "duplication/block": 2,
       "types/TS2353": 3
     },
     ".claude/harness/runtime/workflow/land/archive-appendix.mjs": {
@@ -161,6 +254,21 @@
     },
     ".claude/harness/runtime/workflow/prototype/prototype-checklist.mjs": {
       "types/TS2339": 3
+    },
+    ".claude/harness/runtime/workflow/repository/repository-projection.mjs": {
+      "complexity/nesting": 6
+    },
+    ".claude/harness/runtime/workflow/sandbox/sandbox-repositories.mjs": {
+      "complexity/nesting": 6
+    },
+    ".claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs": {
+      "complexity/nesting": 7
+    },
+    ".claude/harness/runtime/workflow/sandbox/sandbox-sync.mjs": {
+      "complexity/nesting": 6
+    },
+    ".claude/harness/runtime/workflow/transaction/apply-recovery.mjs": {
+      "duplication/block": 1
     },
     ".claude/harness/runtime/workflow/transaction/undo-plan.mjs": {
       "types/TS2349": 1
@@ -181,6 +289,7 @@
       "types/TS2559": 1
     },
     ".claude/harness/runtime/workflow/validation/dev-document.mjs": {
+      "complexity/nesting": 7,
       "types/TS2339": 3,
       "types/TS2349": 1
     },
@@ -195,6 +304,7 @@
       "types/TS2339": 5
     },
     ".claude/harness/runtime/workflow/validation/repository-intelligence.mjs": {
+      "complexity/nesting": 6,
       "types/TS2339": 2
     },
     ".claude/harness/runtime/workflow/validation/selective-proof-plan.mjs": {
@@ -202,6 +312,9 @@
     },
     ".claude/harness/runtime/workflow/validation/semantic-source-inventory.mjs": {
       "types/TS2339": 1
+    },
+    ".claude/harness/runtime/workflow/validation/spec-delta.mjs": {
+      "duplication/block": 1
     },
     ".claude/harness/runtime/workflow/validation/verify-shape.mjs": {
       "types/TS2339": 1
@@ -212,6 +325,12 @@
     ".claude/hooks/dev-terminal-guard.mjs": {
       "types/TS2322": 1,
       "types/TS2339": 2
+    },
+    ".claude/hooks/phase-mutation-guard.mjs": {
+      "duplication/block": 1
+    },
+    ".claude/hooks/prompt-authority.mjs": {
+      "duplication/block": 1
     }
   },
   "sizes": {
