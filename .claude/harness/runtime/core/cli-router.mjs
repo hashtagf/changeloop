@@ -40,6 +40,7 @@ export async function routeRuntimeCommand(command, values, api) {
     showFeedback,
     showOutcomes,
     showLessons,
+    showFeatures,
     showPackage,
     showPreview,
     execObserved,
@@ -458,6 +459,13 @@ export async function routeRuntimeCommand(command, values, api) {
       });
       if (rest.length) die("lessons takes no change id; it groups codes across changes");
       showLessons(flags);
+    },
+    "features": async () => {
+      const { flags, rest } = parseStrictCommandFlags(values, "features", {
+        boolean: ["pretty", "strict"], value: ["change"]
+      });
+      if (rest.length) die("features takes no positional arguments; use --change <id>");
+      showFeatures(flags);
     },
     "package": async () => {
       const { flags, rest } = parseStrictCommandFlags(values, "package", { boolean: ["pretty"] });

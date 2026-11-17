@@ -9,6 +9,22 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Added
+
+- Consumer findings ratchet: `lint`, `type-check`, `file-size`, and
+  `module-boundaries` quality lanes record findings per file and rule against a
+  baseline that may only shrink (`foundation-findings-v1`). Discovery adds
+  `file-size` to every application profile, `type-check` for TypeScript, and
+  `lint` for ESLint; a lane without a baseline passes with reduced assurance
+  until `cloop quality baseline --write`.
+- `lessons` proposes the strongest workable enforcement for each recurring
+  code, the past changes a new check must fail on, and the check already
+  named in `openspec/lessons.md`.
+- Project feature map: `openspec/feature-map.json` (seeded empty, never
+  overwritten) names the project's features and their paths. Intake reads it
+  as grounding, `cloop features [--change <id>]` checks it and names the
+  features a change touches, and the approval data lists them.
+
 ### Changed
 
 - Harness runtime modules under `.claude/harness/runtime/workflow/` now live in

@@ -71,6 +71,7 @@ for required in \
   .claude/harness/templates/incidents/README.md \
   .claude/harness/templates/incidents/_template.md \
   .claude/harness/templates/lessons.md \
+  .claude/harness/templates/feature-map.json \
   .claude/skills .claude/rules .claude/hooks .claude/settings.json \
   openspec/config.yaml openspec/repositories.yaml openspec/schemas \
   foundation.json .foundation/.gitignore .foundation/README.md WORKFLOW.md; do
@@ -138,6 +139,7 @@ RECORD_SEEDS=(
   "openspec/incidents/README.md|incidents/README.md"
   "openspec/incidents/_template.md|incidents/_template.md"
   "openspec/lessons.md|lessons.md"
+  "openspec/feature-map.json|feature-map.json"
 )
 
 info "Install plan"
@@ -182,6 +184,7 @@ PROJECT_MUTABLE=(
   "openspec/incidents/README.md"
   "openspec/incidents/_template.md"
   "openspec/lessons.md"
+  "openspec/feature-map.json"
 )
 validate_managed_path() {
   case "$1" in

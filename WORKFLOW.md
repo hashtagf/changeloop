@@ -593,8 +593,13 @@ they write nothing, never gate a change, and keep unknown values `null`.
 `outcomes` reports first-proof pass, rework, recorded user decisions, cost, and
 escaped defects declared through later changes' `fixes`, grouped by work type,
 impact, and risk signals. `lessons` lists blocker and review finding codes that
-recur across distinct changes with a suggested permanent check; adopting one is
-an ordinary Change.
+recur across distinct changes with a suggested permanent check, the strongest
+workable enforcement for it (architecture, type, lint, test), the past changes a
+new check must fail on, and the check `openspec/lessons.md` already names in
+its "Enforced by" column; adopting one is an ordinary Change. A project's
+`openspec/feature-map.json` names its features and the paths behind them:
+intake reads it as grounding beside `openspec/lessons.md`, `features --change`
+names the features a change touches, and the approval page lists them.
 
 ## Sandbox and repository safety
 

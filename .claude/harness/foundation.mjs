@@ -17,6 +17,7 @@ import {
 import { createExecRuntime } from "./runtime/observability/exec-runtime.mjs";
 import { createOutcomesRuntime } from "./runtime/observability/outcomes-runtime.mjs";
 import { createLessonsRuntime } from "./runtime/observability/lessons-runtime.mjs";
+import { createProjectFeaturesCommand } from "./runtime/workflow/validation/project-feature-map.mjs";
 import { createApprovalPackageRuntime, routeForState } from "./runtime/workflow/change/approval-package.mjs";
 import {
   createFeedbackRuntime, FEEDBACK_SCHEMA_VERSION
@@ -279,7 +280,7 @@ let operationFingerprint = null;
 // Lifecycle commands stay: metrics derives rework and typed-stop signals from
 // their rows, so proof-* and land-* are measurements, not inspections.
 const READ_ONLY_OPERATIONS = new Set([
-  "metrics", "feedback", "outcomes", "lessons", "hash", "changes", "current", "providers", "repos", "models", "describe",
+  "metrics", "feedback", "outcomes", "lessons", "features", "hash", "changes", "current", "providers", "repos", "models", "describe",
   "package", "budget-checkpoint",
   "packet", "agent-task", "audit-change", "authority-status",
   "handoff-list", "handoff-status", "handoff-packet", "evidence-detect", "evidence-doctor",
@@ -2138,7 +2139,11 @@ const { showLessons } = createLessonsRuntime({
   evidenceDir: EVIDENCE_VAULT,
   logsDir: LOGS,
   reviewAttemptRecords,
+  lessonsDocument: join(ROOT, "openspec", "lessons.md"),
   fail: die
+});
+const { showFeatures } = createProjectFeaturesCommand({
+  root: ROOT, loadRuntime, activeChangePath, canonicalChangedSurface, fail: die
 });
 const abandonRuntime = createAbandonRuntime({
   root: ROOT,
@@ -2317,6 +2322,7 @@ await routeRuntimeCommand(command, values, {
   showFeedback,
   showOutcomes,
   showLessons,
+  showFeatures,
   showPackage: approvalPackage.showPackage,
   showPreview: preview.showPreview,
   execObserved,

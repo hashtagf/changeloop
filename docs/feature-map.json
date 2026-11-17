@@ -4,32 +4,63 @@
   "features": [
     {
       "id": "investigate",
-      "name": { "en": "Investigate", "th": "สืบค้นก่อนตกลง" },
+      "name": {
+        "en": "Investigate",
+        "th": "สืบค้นก่อนตกลง"
+      },
       "phase": "investigate",
       "summary": {
         "en": "Research a problem, a bug's mechanics, or bounded alternatives without editing product code; hands grounded findings to Change.",
         "th": "ค้นข้อมูล กลไกของบั๊ก หรือทางเลือก โดยไม่แก้โค้ด แล้วส่งผลที่มีหลักฐานต่อให้ขั้น Change"
       },
-      "slashCommands": ["/investigate"],
-      "cliCommands": ["investigate"],
+      "slashCommands": [
+        "/investigate"
+      ],
+      "cliCommands": [
+        "investigate"
+      ],
       "states": [],
-      "groups": ["workflow/investigation"],
-      "code": [".claude/harness/runtime/workflow/investigation/investigation-runtime.mjs"],
-      "tests": [".claude/harness/tests/investigation-runtime.test.mjs"],
-      "docs": [".claude/harness/lifecycle/investigate.md", "website/docs/src/content/docs/loop/investigate.md"]
+      "groups": [
+        "workflow/investigation"
+      ],
+      "code": [
+        ".claude/harness/runtime/workflow/investigation/investigation-runtime.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/investigation-runtime.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/investigate.md",
+        "website/docs/src/content/docs/loop/investigate.md"
+      ]
     },
     {
       "id": "agreement",
-      "name": { "en": "Write the agreement", "th": "เขียนข้อตกลงของ change" },
+      "name": {
+        "en": "Write the agreement",
+        "th": "เขียนข้อตกลงของ change"
+      },
       "phase": "change",
       "summary": {
         "en": "Turn settled intent into an OpenSpec agreement: the agent writes a draft, the harness compiles proposal, design, specs, tasks, and evidence, and the user approves it.",
         "th": "เปลี่ยนเจตนาที่ตกลงแล้วเป็นข้อตกลง OpenSpec: agent เขียน draft, harness compile เป็น proposal, design, specs, tasks และ evidence แล้วผู้ใช้อนุมัติ"
       },
-      "slashCommands": ["/change"],
-      "cliCommands": ["change start", "change new", "change revise", "change resolve", "providers"],
+      "slashCommands": [
+        "/change"
+      ],
+      "cliCommands": [
+        "change start",
+        "change new",
+        "change revise",
+        "change resolve",
+        "providers"
+      ],
       "states": [],
-      "groups": ["workflow/change", "workflow/draft", "workflow/validation"],
+      "groups": [
+        "workflow/change",
+        "workflow/draft",
+        "workflow/validation"
+      ],
       "code": [
         ".claude/harness/runtime/workflow/change/change-lifecycle.mjs",
         ".claude/harness/runtime/workflow/draft/semantic-draft.mjs",
@@ -40,59 +71,96 @@
         ".claude/harness/tests/semantic-draft.test.mjs",
         ".claude/harness/tests/change-lifecycle-surface.test.mjs"
       ],
-      "docs": [".claude/harness/lifecycle/change.md", "website/docs/src/content/docs/loop/change.md"]
+      "docs": [
+        ".claude/harness/lifecycle/change.md",
+        "website/docs/src/content/docs/loop/change.md"
+      ]
     },
     {
       "id": "approval-page",
-      "name": { "en": "Approval page", "th": "หน้าอนุมัติ" },
+      "name": {
+        "en": "Approval page",
+        "th": "หน้าอนุมัติ"
+      },
       "phase": "change",
       "summary": {
         "en": "The decision-first page the user reads before approving: risk, decisions, open questions, scope, and optional prototype previews.",
         "th": "หน้าที่ผู้ใช้อ่านก่อนอนุมัติ เรียงจากการตัดสินใจ: ความเสี่ยง, ทางเลือก, คำถามค้าง, ขอบเขต และ preview ของ prototype"
       },
       "slashCommands": [],
-      "cliCommands": ["package", "preview"],
+      "cliCommands": [
+        "package",
+        "preview"
+      ],
       "states": [],
-      "groups": ["workflow/prototype"],
+      "groups": [
+        "workflow/prototype"
+      ],
       "code": [
         ".claude/harness/runtime/workflow/change/approval-package.mjs",
         ".claude/harness/runtime/workflow/prototype/preview-runtime.mjs",
         ".claude/harness/runtime/workflow/prototype/prototype-binding.mjs"
       ],
-      "tests": [".claude/harness/tests/approval-package.test.mjs", ".claude/harness/tests/preview-runtime.test.mjs"],
-      "docs": ["website/docs/src/content/docs/approval.md"]
+      "tests": [
+        ".claude/harness/tests/approval-package.test.mjs",
+        ".claude/harness/tests/preview-runtime.test.mjs"
+      ],
+      "docs": [
+        "website/docs/src/content/docs/approval.md"
+      ]
     },
     {
       "id": "amendment",
-      "name": { "en": "Amend during Build", "th": "แก้ข้อตกลงระหว่าง Build" },
+      "name": {
+        "en": "Amend during Build",
+        "th": "แก้ข้อตกลงระหว่าง Build"
+      },
       "phase": "build",
       "summary": {
         "en": "Change requirements or tasks mid-Build under the same change ID; only the affected proof is redone.",
         "th": "เพิ่ม แก้ หรือลบ requirement หรือ task ระหว่าง Build โดยใช้ change ID เดิม และทำ proof ใหม่เฉพาะส่วนที่กระทบ"
       },
       "slashCommands": [],
-      "cliCommands": ["change amend"],
+      "cliCommands": [
+        "change amend"
+      ],
       "states": [],
-      "groups": ["workflow/draft"],
+      "groups": [
+        "workflow/draft"
+      ],
       "code": [
         ".claude/harness/runtime/workflow/change/change-amendment.mjs",
         ".claude/harness/runtime/workflow/draft/semantic-amendment.mjs"
       ],
-      "tests": [".claude/harness/tests/amendment-invalidation.test.mjs", ".claude/harness/tests/amendment-record.test.mjs"],
-      "docs": [".claude/harness/lifecycle/change.md"]
+      "tests": [
+        ".claude/harness/tests/amendment-invalidation.test.mjs",
+        ".claude/harness/tests/amendment-record.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/change.md"
+      ]
     },
     {
       "id": "validation",
-      "name": { "en": "Validate and trace", "th": "ตรวจข้อตกลงและการโยงหลักฐาน" },
+      "name": {
+        "en": "Validate and trace",
+        "th": "ตรวจข้อตกลงและการโยงหลักฐาน"
+      },
       "phase": "change",
       "summary": {
         "en": "Check that every scenario, claim, task, and provider trace to each other, and record a user-approved waiver of one failing gate.",
         "th": "ตรวจว่า scenario, claim, task และ provider โยงกันครบ และบันทึกการยกเว้น gate ที่ผู้ใช้อนุมัติ"
       },
       "slashCommands": [],
-      "cliCommands": ["change validate", "change audit", "change waive"],
+      "cliCommands": [
+        "change validate",
+        "change audit",
+        "change waive"
+      ],
       "states": [],
-      "groups": ["workflow/change"],
+      "groups": [
+        "workflow/change"
+      ],
       "code": [
         ".claude/harness/runtime/workflow/change/change-validation.mjs",
         ".claude/harness/runtime/workflow/change/grounding-validation.mjs",
@@ -103,20 +171,43 @@
         ".claude/harness/tests/traceability.test.mjs",
         ".claude/harness/tests/waive-gate.test.mjs"
       ],
-      "docs": ["website/docs/src/content/docs/evidence/claims.md"]
+      "docs": [
+        "website/docs/src/content/docs/evidence/claims.md"
+      ]
     },
     {
       "id": "advance",
-      "name": { "en": "Advance and what the user sees", "th": "advance และสิ่งที่ผู้ใช้เห็น" },
+      "name": {
+        "en": "Advance and what the user sees",
+        "th": "advance และสิ่งที่ผู้ใช้เห็น"
+      },
       "phase": "cross-phase",
       "summary": {
         "en": "The one resumable command that moves a change toward a target, reuses valid work, and stops only at a real decision; every stop becomes one of the user-facing states.",
         "th": "คำสั่งเดียวที่พา change ไปถึงเป้าหมาย ใช้งานที่ยังถูกต้องซ้ำ และหยุดเฉพาะเมื่อต้องตัดสินใจจริง ทุกจุดหยุดแสดงเป็นสถานะที่ผู้ใช้เห็น"
       },
-      "slashCommands": ["/dev", "/feature"],
-      "cliCommands": ["advance", "current", "packet", "budget checkpoint", "budget continue"],
-      "states": ["WORKING", "TARGET_REACHED", "DELIVERED", "NEEDS_DECISION", "WAITING_EXTERNAL", "PAUSED"],
-      "groups": ["workflow/advance"],
+      "slashCommands": [
+        "/dev",
+        "/feature"
+      ],
+      "cliCommands": [
+        "advance",
+        "current",
+        "packet",
+        "budget checkpoint",
+        "budget continue"
+      ],
+      "states": [
+        "WORKING",
+        "TARGET_REACHED",
+        "DELIVERED",
+        "NEEDS_DECISION",
+        "WAITING_EXTERNAL",
+        "PAUSED"
+      ],
+      "groups": [
+        "workflow/advance"
+      ],
       "code": [
         ".claude/harness/runtime/workflow/advance/advance-runtime.mjs",
         ".claude/harness/runtime/workflow/advance/advance-envelope.mjs",
@@ -127,20 +218,36 @@
         ".claude/harness/tests/lifecycle-user-projection-golden.test.mjs",
         ".claude/harness/tests/budget-continuation.test.mjs"
       ],
-      "docs": ["WORKFLOW.md", "website/docs/src/content/docs/cli.md"]
+      "docs": [
+        "WORKFLOW.md",
+        "website/docs/src/content/docs/cli.md"
+      ]
     },
     {
       "id": "build-sandbox",
-      "name": { "en": "Build in a sandbox", "th": "Build ใน sandbox" },
+      "name": {
+        "en": "Build in a sandbox",
+        "th": "Build ใน sandbox"
+      },
       "phase": "build",
       "summary": {
         "en": "Implement the change in an isolated workspace so the main checkout stays untouched until Land; keep it in sync with agreement revisions and target moves.",
         "th": "เขียนโค้ดใน workspace แยก checkout หลักไม่ถูกแตะจนถึง Land และ sync เมื่อข้อตกลงหรือ repo เป้าหมายเปลี่ยน"
       },
-      "slashCommands": ["/build"],
-      "cliCommands": ["sandbox create", "sandbox sync", "sandbox inspect", "sandbox challenge", "exec"],
+      "slashCommands": [
+        "/build"
+      ],
+      "cliCommands": [
+        "sandbox create",
+        "sandbox sync",
+        "sandbox inspect",
+        "sandbox challenge",
+        "exec"
+      ],
       "states": [],
-      "groups": ["workflow/sandbox"],
+      "groups": [
+        "workflow/sandbox"
+      ],
       "code": [
         ".claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs",
         ".claude/harness/runtime/workflow/sandbox/sandbox-sync.mjs"
@@ -150,20 +257,35 @@
         ".claude/harness/tests/sandbox-runtime-sync.test.mjs",
         ".claude/harness/tests/sandbox-data-loss.test.mjs"
       ],
-      "docs": [".claude/harness/lifecycle/build.md", "website/docs/src/content/docs/loop/build.md"]
+      "docs": [
+        ".claude/harness/lifecycle/build.md",
+        "website/docs/src/content/docs/loop/build.md"
+      ]
     },
     {
       "id": "parallel-agents",
-      "name": { "en": "Parallel agents and task packets", "th": "agent ทำงานขนานและ task packet" },
+      "name": {
+        "en": "Parallel agents and task packets",
+        "th": "agent ทำงานขนานและ task packet"
+      },
       "phase": "build",
       "summary": {
         "en": "Plan independently verifiable tasks, hand each worker a bounded packet, and fence shared resources with leases.",
         "th": "วางแผน task ที่ตรวจแยกกันได้ ส่ง packet ที่มีขอบเขตชัดให้แต่ละ worker และกันทรัพยากรที่ใช้ร่วมกันด้วย lease"
       },
       "slashCommands": [],
-      "cliCommands": ["agents plan", "agents dispatch", "agents acquire", "agents release", "agent-task"],
+      "cliCommands": [
+        "agents plan",
+        "agents dispatch",
+        "agents acquire",
+        "agents release",
+        "agent-task"
+      ],
       "states": [],
-      "groups": ["workflow/authority", "workflow/packet"],
+      "groups": [
+        "workflow/authority",
+        "workflow/packet"
+      ],
       "code": [
         ".claude/harness/runtime/workflow/authority/agent-planning.mjs",
         ".claude/harness/runtime/workflow/authority/agent-dispatch.mjs",
@@ -175,25 +297,46 @@
         ".claude/harness/tests/lease-interleaving.test.mjs",
         ".claude/harness/tests/packet-value.test.mjs"
       ],
-      "docs": [".claude/harness/lifecycle/build.md"]
+      "docs": [
+        ".claude/harness/lifecycle/build.md"
+      ]
     },
     {
       "id": "prove",
-      "name": { "en": "Prove with evidence", "th": "พิสูจน์ด้วยหลักฐาน" },
+      "name": {
+        "en": "Prove with evidence",
+        "th": "พิสูจน์ด้วยหลักฐาน"
+      },
       "phase": "prove",
       "summary": {
         "en": "Run the project's own checks for every claim and bind each result to the exact code; detect and wire providers, and accept signed CI or external evidence.",
         "th": "รัน check ของโปรเจกต์ตาม claim แล้วผูกผลกับโค้ดชุดนั้นพอดี ตรวจหาและต่อ provider และรับ CI ที่ลงนามหรือหลักฐานจากภายนอก"
       },
-      "slashCommands": ["/prove"],
+      "slashCommands": [
+        "/prove"
+      ],
       "cliCommands": [
-        "proof readiness", "proof collect", "proof advance", "proof run", "proof preflight",
-        "proof execute", "proof finalize", "proof audit", "proof-plan",
-        "evidence detect", "evidence init", "evidence doctor", "evidence run", "evidence record",
-        "evidence verify-ci", "hash"
+        "proof readiness",
+        "proof collect",
+        "proof advance",
+        "proof run",
+        "proof preflight",
+        "proof execute",
+        "proof finalize",
+        "proof audit",
+        "proof-plan",
+        "evidence detect",
+        "evidence init",
+        "evidence doctor",
+        "evidence run",
+        "evidence record",
+        "evidence verify-ci",
+        "hash"
       ],
       "states": [],
-      "groups": ["evidence"],
+      "groups": [
+        "evidence"
+      ],
       "code": [
         ".claude/harness/runtime/evidence/proof-execution-runtime.mjs",
         ".claude/harness/runtime/evidence/evidence-contract.mjs",
@@ -213,7 +356,10 @@
     },
     {
       "id": "review",
-      "name": { "en": "Review and external authority", "th": "รีวิวและผู้มีอำนาจภายนอก" },
+      "name": {
+        "en": "Review and external authority",
+        "th": "รีวิวและผู้มีอำนาจภายนอก"
+      },
       "phase": "prove",
       "summary": {
         "en": "Route AI or human review and acceptance, keep the attempt history, and record bound responses; retries and extra waves need a recorded user decision.",
@@ -221,12 +367,20 @@
       },
       "slashCommands": [],
       "cliCommands": [
-        "authority request", "authority status", "authority dispatch", "authority abort",
-        "authority run", "authority reset-infra", "authority extend-review",
-        "authority reset-base-move", "authority record"
+        "authority request",
+        "authority status",
+        "authority dispatch",
+        "authority abort",
+        "authority run",
+        "authority reset-infra",
+        "authority extend-review",
+        "authority reset-base-move",
+        "authority record"
       ],
       "states": [],
-      "groups": ["workflow/authority"],
+      "groups": [
+        "workflow/authority"
+      ],
       "code": [
         ".claude/harness/runtime/workflow/authority/authority-runtime.mjs",
         ".claude/harness/runtime/workflow/authority/authority-reviewer-run.mjs",
@@ -237,20 +391,38 @@
         ".claude/harness/tests/configured-reviewer.test.mjs",
         ".claude/harness/tests/review-repair-closure.test.mjs"
       ],
-      "docs": [".claude/harness/EVIDENCE.md"]
+      "docs": [
+        ".claude/harness/EVIDENCE.md"
+      ]
     },
     {
       "id": "land",
-      "name": { "en": "Land and archive", "th": "Land และ archive" },
+      "name": {
+        "en": "Land and archive",
+        "th": "Land และ archive"
+      },
       "phase": "land",
       "summary": {
         "en": "On the user's explicit instruction, apply the proven change to the target as an uncommitted diff with HEAD and index unchanged, then archive the agreement; interrupted Land resumes the same transaction.",
         "th": "เมื่อผู้ใช้สั่งชัดเจน นำ change ที่พิสูจน์แล้วลง repo เป้าหมายเป็น diff ที่ยังไม่ commit โดย HEAD และ index ไม่เปลี่ยน แล้ว archive ข้อตกลง ถ้าสะดุดจะกลับมาทำ transaction เดิมต่อ"
       },
-      "slashCommands": ["/land"],
-      "cliCommands": ["land check", "land advance", "land recover", "land archive", "land resume", "land plan", "sandbox apply"],
+      "slashCommands": [
+        "/land"
+      ],
+      "cliCommands": [
+        "land check",
+        "land advance",
+        "land recover",
+        "land archive",
+        "land resume",
+        "land plan",
+        "sandbox apply"
+      ],
       "states": [],
-      "groups": ["workflow/land", "workflow/transaction"],
+      "groups": [
+        "workflow/land",
+        "workflow/transaction"
+      ],
       "code": [
         ".claude/harness/runtime/workflow/land/land-runtime.mjs",
         ".claude/harness/runtime/workflow/land/apply-runtime.mjs",
@@ -261,117 +433,254 @@
         ".claude/harness/tests/land-grant.test.mjs",
         ".claude/harness/tests/recover-pending-apply.test.mjs"
       ],
-      "docs": [".claude/harness/lifecycle/land.md", "website/docs/src/content/docs/loop/land.md"]
+      "docs": [
+        ".claude/harness/lifecycle/land.md",
+        "website/docs/src/content/docs/loop/land.md"
+      ]
     },
     {
       "id": "deliver",
-      "name": { "en": "Deliver as a pull request", "th": "ส่งงานเป็น pull request" },
+      "name": {
+        "en": "Deliver as a pull request",
+        "th": "ส่งงานเป็น pull request"
+      },
       "phase": "deliver",
       "summary": {
         "en": "Optionally commit an archived change on its own branch and open a pull request; needs separate delivery authority.",
         "th": "commit change ที่ archive แล้วบน branch ของตัวเองและเปิด PR (ทำหรือไม่ก็ได้) ต้องได้สิทธิ์ส่งงานแยกต่างหาก"
       },
-      "slashCommands": ["/deliver"],
-      "cliCommands": ["deliver advance"],
+      "slashCommands": [
+        "/deliver"
+      ],
+      "cliCommands": [
+        "deliver advance"
+      ],
       "states": [],
-      "groups": ["workflow/delivery"],
+      "groups": [
+        "workflow/delivery"
+      ],
       "code": [
         ".claude/harness/runtime/workflow/delivery/pull-request-runtime.mjs",
         ".claude/harness/runtime/workflow/delivery/repository-delivery-saga.mjs"
       ],
-      "tests": [".claude/harness/tests/pull-request-runtime.test.mjs", ".claude/harness/tests/repository-delivery-saga.test.mjs"],
-      "docs": [".claude/harness/lifecycle/deliver.md"]
+      "tests": [
+        ".claude/harness/tests/pull-request-runtime.test.mjs",
+        ".claude/harness/tests/repository-delivery-saga.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/deliver.md"
+      ]
     },
     {
       "id": "multi-repository",
-      "name": { "en": "Multiple repositories", "th": "หลาย repository" },
+      "name": {
+        "en": "Multiple repositories",
+        "th": "หลาย repository"
+      },
       "phase": "cross-phase",
       "summary": {
         "en": "Work across submodules and sibling repositories: select them, isolate each, and land them in dependency order.",
         "th": "ทำงานข้าม submodule และ repo ข้างเคียง: เลือก repo แยก workspace แต่ละตัว และ Land ตามลำดับการพึ่งพา"
       },
       "slashCommands": [],
-      "cliCommands": ["repos"],
+      "cliCommands": [
+        "repos"
+      ],
       "states": [],
-      "groups": ["workflow/repository"],
+      "groups": [
+        "workflow/repository"
+      ],
       "code": [
         ".claude/harness/runtime/workflow/repository/repository-topology.mjs",
         ".claude/harness/runtime/workflow/repository/repository-snapshot.mjs"
       ],
-      "tests": [".claude/harness/tests/repository-topology.test.mjs", ".claude/harness/tests/concurrent-repositories.test.mjs"],
-      "docs": ["website/docs/src/content/docs/multi-repository.md"]
+      "tests": [
+        ".claude/harness/tests/repository-topology.test.mjs",
+        ".claude/harness/tests/concurrent-repositories.test.mjs"
+      ],
+      "docs": [
+        "website/docs/src/content/docs/multi-repository.md"
+      ]
     },
     {
       "id": "status",
-      "name": { "en": "Status, history, and diagnosis", "th": "สถานะ ประวัติ และการวินิจฉัย" },
+      "name": {
+        "en": "Status, history, and diagnosis",
+        "th": "สถานะ ประวัติ และการวินิจฉัย"
+      },
       "phase": "cross-phase",
       "summary": {
         "en": "See active changes and their next step, diagnose readiness, and read measured cost, timing, outcomes, and recurring findings.",
         "th": "ดู change ที่กำลังทำและขั้นถัดไป ตรวจความพร้อม และอ่านค่าใช้จ่าย เวลา ผลลัพธ์ และปัญหาที่เกิดซ้ำที่วัดได้จริง"
       },
-      "slashCommands": ["/changes"],
-      "cliCommands": ["changes", "doctor", "metrics", "feedback", "outcomes", "lessons", "describe", "help", "version", "update check"],
+      "slashCommands": [
+        "/changes"
+      ],
+      "cliCommands": [
+        "changes",
+        "doctor",
+        "metrics",
+        "feedback",
+        "outcomes",
+        "lessons",
+        "describe",
+        "help",
+        "version",
+        "update check"
+      ],
       "states": [],
-      "groups": ["observability"],
+      "groups": [
+        "observability"
+      ],
       "code": [
         ".claude/harness/runtime/core/diagnostics-runtime.mjs",
         ".claude/harness/runtime/observability/metrics-runtime.mjs",
         ".claude/harness/runtime/observability/outcomes-runtime.mjs"
       ],
-      "tests": [".claude/harness/tests/diagnostics-changes.test.mjs", ".claude/harness/tests/outcomes-lessons.test.mjs"],
-      "docs": ["website/docs/src/content/docs/cli.md"]
+      "tests": [
+        ".claude/harness/tests/diagnostics-changes.test.mjs",
+        ".claude/harness/tests/outcomes-lessons.test.mjs"
+      ],
+      "docs": [
+        "website/docs/src/content/docs/cli.md"
+      ]
     },
     {
       "id": "operations-handoff",
-      "name": { "en": "Operations handoff", "th": "ส่งต่องานปฏิบัติการ" },
+      "name": {
+        "en": "Operations handoff",
+        "th": "ส่งต่องานปฏิบัติการ"
+      },
       "phase": "cross-phase",
       "summary": {
         "en": "Track permission-bound external operations (deploys, migrations, access) as obligations for a named operator, not developer tasks.",
         "th": "ติดตามงานภายนอกที่ต้องใช้สิทธิ์ เช่น deploy, migration หรือการให้สิทธิ์ เป็นภาระของผู้ปฏิบัติการที่มีชื่อ ไม่ใช่ task ของ developer"
       },
       "slashCommands": [],
-      "cliCommands": ["handoff status", "handoff list", "handoff packet", "handoff record"],
+      "cliCommands": [
+        "handoff status",
+        "handoff list",
+        "handoff packet",
+        "handoff record"
+      ],
       "states": [],
-      "groups": ["workflow/authority"],
-      "code": [".claude/harness/runtime/workflow/authority/handoff-runtime.mjs"],
-      "tests": [".claude/harness/tests/handoff-policy.test.mjs", ".claude/harness/tests/handoff-operation-normalization.test.mjs"],
-      "docs": ["WORKFLOW.md"]
+      "groups": [
+        "workflow/authority"
+      ],
+      "code": [
+        ".claude/harness/runtime/workflow/authority/handoff-runtime.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/handoff-policy.test.mjs",
+        ".claude/harness/tests/handoff-operation-normalization.test.mjs"
+      ],
+      "docs": [
+        "WORKFLOW.md"
+      ]
     },
     {
       "id": "abandon",
-      "name": { "en": "Abandon a change", "th": "ยกเลิก change" },
+      "name": {
+        "en": "Abandon a change",
+        "th": "ยกเลิก change"
+      },
       "phase": "cross-phase",
       "summary": {
         "en": "Retire a change that cannot be proven after a recorded user decision, quarantining its record instead of deleting it.",
         "th": "เลิก change ที่พิสูจน์ไม่ได้หลังผู้ใช้ตัดสินใจ โดยเก็บบันทึกแยกไว้ ไม่ลบทิ้ง"
       },
       "slashCommands": [],
-      "cliCommands": ["change abandon"],
+      "cliCommands": [
+        "change abandon"
+      ],
       "states": [],
-      "groups": ["workflow/change"],
-      "code": [".claude/harness/runtime/workflow/change/abandon-runtime.mjs"],
-      "tests": [".claude/harness/tests/abandon-runtime.test.mjs"],
-      "docs": ["WORKFLOW.md"]
+      "groups": [
+        "workflow/change"
+      ],
+      "code": [
+        ".claude/harness/runtime/workflow/change/abandon-runtime.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/abandon-runtime.test.mjs"
+      ],
+      "docs": [
+        "WORKFLOW.md"
+      ]
     },
     {
       "id": "consumer-quality",
-      "name": { "en": "Consumer quality gates", "th": "quality gate ของโปรเจกต์ผู้ใช้" },
+      "name": {
+        "en": "Consumer quality gates",
+        "th": "quality gate ของโปรเจกต์ผู้ใช้"
+      },
       "phase": "cross-phase",
       "summary": {
-        "en": "Optional CRAP and mutation checks on the user's project with changed-code ratchets and a debt inventory.",
-        "th": "ตรวจ CRAP และ mutation ในโปรเจกต์ของผู้ใช้ (เปิดหรือไม่ก็ได้) พร้อม ratchet เฉพาะโค้ดที่เปลี่ยนและรายการหนี้คุณภาพ"
+        "en": "Optional CRAP, mutation, lint, type-check, file-size, and module-boundary checks on the user project; every one ratchets against a baseline that may only shrink.",
+        "th": "ตรวจ CRAP, mutation, lint, type-check, ขนาดไฟล์ และขอบเขตโมดูลในโปรเจกต์ของผู้ใช้ (เปิดหรือไม่ก็ได้) ทุกตัว ratchet กับ baseline ที่ลดได้อย่างเดียว"
       },
       "slashCommands": [],
-      "cliCommands": ["quality discover", "quality init", "quality doctor", "quality run", "quality report", "quality baseline", "quality debt"],
+      "cliCommands": [
+        "quality discover",
+        "quality init",
+        "quality doctor",
+        "quality run",
+        "quality report",
+        "quality baseline",
+        "quality debt"
+      ],
       "states": [],
-      "groups": ["quality"],
-      "code": [".claude/harness/runtime/quality/quality-runtime.mjs"],
-      "tests": [".claude/harness/tests/quality-runtime.test.mjs", ".claude/harness/tests/quality-adapters.test.mjs"],
-      "docs": [".claude/harness/CONSUMER-QUALITY.md", "website/docs/src/content/docs/consumer-quality.md"]
+      "groups": [
+        "quality"
+      ],
+      "code": [
+        ".claude/harness/runtime/quality/quality-runtime.mjs",
+        ".claude/harness/runtime/quality/findings-ratchet.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/quality-runtime.test.mjs",
+        ".claude/harness/tests/quality-adapters.test.mjs",
+        ".claude/harness/tests/findings-ratchet.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/CONSUMER-QUALITY.md",
+        "website/docs/src/content/docs/consumer-quality.md"
+      ]
+    },
+    {
+      "id": "project-feature-map",
+      "name": {
+        "en": "Project feature map",
+        "th": "feature map ของโปรเจกต์"
+      },
+      "phase": "cross-phase",
+      "summary": {
+        "en": "The user project names its own features and the paths behind them in openspec/feature-map.json; intake reads it, the features command checks it and names the features a change touches, and the approval page lists them.",
+        "th": "โปรเจกต์ของผู้ใช้ตั้งชื่อฟีเจอร์ของตัวเองและ path ที่อยู่เบื้องหลังใน openspec/feature-map.json ขั้น intake อ่านไฟล์นี้ คำสั่ง features ตรวจและบอกว่า change แตะฟีเจอร์ไหน และหน้าอนุมัติแสดงรายการฟีเจอร์"
+      },
+      "slashCommands": [],
+      "cliCommands": [
+        "features"
+      ],
+      "states": [],
+      "groups": [],
+      "code": [
+        ".claude/harness/runtime/workflow/validation/project-feature-map.mjs",
+        ".claude/harness/templates/feature-map.json"
+      ],
+      "tests": [
+        ".claude/harness/tests/project-feature-map.test.mjs"
+      ],
+      "docs": [
+        "website/docs/src/content/docs/artifacts.md",
+        "WORKFLOW.md"
+      ]
     },
     {
       "id": "install-and-hosts",
-      "name": { "en": "Install and host integration", "th": "ติดตั้งและเชื่อมกับ host" },
+      "name": {
+        "en": "Install and host integration",
+        "th": "ติดตั้งและเชื่อมกับ host"
+      },
       "phase": "setup",
       "summary": {
         "en": "Install or upgrade Change Loop, connect agent hosts (Claude Code, Pi, others), choose model tiers, and import host usage.",
@@ -379,8 +688,15 @@
       },
       "slashCommands": [],
       "cliCommands": [
-        "init", "models", "host agent-contract", "host instruction",
-        "telemetry sync", "telemetry import", "telemetry host-import", "event", "api-version"
+        "init",
+        "models",
+        "host agent-contract",
+        "host instruction",
+        "telemetry sync",
+        "telemetry import",
+        "telemetry host-import",
+        "event",
+        "api-version"
       ],
       "states": [],
       "groups": [],
@@ -389,24 +705,43 @@
         ".claude/harness/runtime/core/host-instruction.mjs",
         ".claude/harness/runtime/observability/telemetry-runtime.mjs"
       ],
-      "tests": [".claude/harness/tests/host-capability-matrix.test.mjs", ".claude/harness/tests/telemetry-import-sync.test.mjs"],
-      "docs": ["website/docs/src/content/docs/install.md", ".claude/harness/README.md"]
+      "tests": [
+        ".claude/harness/tests/host-capability-matrix.test.mjs",
+        ".claude/harness/tests/telemetry-import-sync.test.mjs"
+      ],
+      "docs": [
+        "website/docs/src/content/docs/install.md",
+        ".claude/harness/README.md"
+      ]
     },
     {
       "id": "team-dashboard",
-      "name": { "en": "Team dashboard", "th": "dashboard ของทีม" },
+      "name": {
+        "en": "Team dashboard",
+        "th": "dashboard ของทีม"
+      },
       "phase": "setup",
       "summary": {
         "en": "Optional team presence and usage view fed by agent heartbeats.",
         "th": "หน้าแสดงว่าใครออนไลน์และการใช้งานของทีม (เปิดหรือไม่ก็ได้) จาก heartbeat ของ agent"
       },
       "slashCommands": [],
-      "cliCommands": ["dashboard", "dashboard snapshot"],
+      "cliCommands": [
+        "dashboard",
+        "dashboard snapshot"
+      ],
       "states": [],
       "groups": [],
-      "code": ["dashboard/server.js", "dashboard/client.sh"],
-      "tests": ["dashboard/test/server.test.js"],
-      "docs": ["dashboard/README.md"]
+      "code": [
+        "dashboard/server.js",
+        "dashboard/client.sh"
+      ],
+      "tests": [
+        "dashboard/test/server.test.js"
+      ],
+      "docs": [
+        "dashboard/README.md"
+      ]
     }
   ]
 }

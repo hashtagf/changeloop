@@ -9,7 +9,7 @@ import test from "node:test";
 
 import { createOutcomesRuntime } from "../runtime/observability/outcomes-runtime.mjs";
 import {
-  createLessonsRuntime, minChangesValue, suggestedCheck
+  createLessonsRuntime, enforcementFor, lessonsText, minChangesValue, suggestedCheck
 } from "../runtime/observability/lessons-runtime.mjs";
 
 const FOUNDATION = fileURLToPath(new URL("../foundation.mjs", import.meta.url));
@@ -72,10 +72,11 @@ function outcomes(fixture) {
   }).outcomesValue();
 }
 
-function lessons(fixture, minChanges) {
+function lessons(fixture, minChanges, lessonsDocument = null) {
   return createLessonsRuntime({
     runtimeDir: join(fixture.store, "runtime"), evidenceDir: join(fixture.store, "evidence"),
     logsDir: join(fixture.store, "logs"), reviewAttemptRecords: attemptRecords(fixture.store),
+    lessonsDocument,
     fail: (message) => { throw new Error(message); }
   }).lessonsValue(minChanges);
 }
@@ -235,10 +236,34 @@ test("a blocker code recurring across three changes becomes a lesson", (t) => {
   assert.equal(value.lessons.length, 1);
   assert.deepEqual(value.lessons[0], {
     code: "contract-invalid", source: "blocker", changeCount: 3, changes: ["a", "b", "c"],
-    occurrences: 3, suggestedCheck: "contract-compatibility-check", route: "/change"
+    occurrences: 3, suggestedCheck: "contract-compatibility-check", route: "/change",
+    enforcement: { layer: "test",
+      how: "add a contract test that fails when the published shape changes incompatibly" },
+    adoption: {
+      intent: "Add a permanent contract-compatibility-check for recurring blocker code 'contract-invalid' (seen in 3 changes)",
+      mustFailOn: ["a", "b", "c"]
+    },
+    enforcedBy: null
   });
   assert.doesNotMatch(JSON.stringify(value), /secret|\/tmp\/path/,
     "free-text reasons are never exported");
+});
+
+test("a lesson recorded as enforced in openspec/lessons.md names its check", (t) => {
+  const fixture = project(t);
+  for (const id of ["a", "b"])
+    fixture.change(id, {}, { operations: [{ status: "blocked", blocker: { code: "workspace-boundary" } }] });
+  const document = join(fixture.store, "lessons.md");
+  write(document, "| Date | Lesson | Incident | Enforced by |\n|---|---|---|---|\n" +
+    "| 2026-11-17 | ui must not import data (workspace-boundary) | [i](x) | module-boundaries lane |\n" +
+    "| 2026-11-16 | contract-invalid seen | [i](y) |  |\n");
+  const [lesson] = lessons(fixture, 2, document).lessons;
+  assert.equal(lesson.suggestedCheck, "dependency-rule");
+  assert.equal(lesson.enforcement.layer, "architecture");
+  assert.match(lesson.enforcement.how, /module-boundaries/);
+  assert.equal(lesson.enforcedBy, "module-boundaries lane");
+  assert.equal(lessons(fixture, 2).lessons[0].enforcedBy, null);
+  assert.match(lessonsText(lessons(fixture, 2, document)), /enforced by module-boundaries lane/);
 });
 
 test("a code below the threshold is not a lesson", (t) => {
@@ -295,4 +320,9 @@ test("the code to check mapping is fixed", () => {
   assert.equal(suggestedCheck("workspace-boundary"), "dependency-rule");
   assert.equal(suggestedCheck("idempotency-missing"), "idempotency-test");
   assert.equal(suggestedCheck("resource-conflict"), "investigate");
+  assert.equal(suggestedCheck("import-cycle"), "dependency-rule");
+  assert.equal(suggestedCheck("type-mismatch"), "type-rule");
+  assert.equal(suggestedCheck("lint-violation"), "lint-rule");
+  assert.equal(enforcementFor("lint-rule").layer, "lint");
+  assert.equal(enforcementFor("unknown").layer, "investigate");
 });

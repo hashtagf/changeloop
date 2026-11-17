@@ -4,6 +4,8 @@ import { EXCLUDED_WORKSPACE_DIRS } from "../../core/workspace-policy.mjs";
 import { isExcludedPath } from "../../core/workspace-surface.mjs";
 import { requiredDiscoveryDimensions } from "./semantic-intake.mjs";
 import { pathInside } from "../../core/paths.mjs";
+import { bestEffort } from "../../core/best-effort.mjs";
+import { PROJECT_FEATURE_MAP_PATH } from "./project-feature-map.mjs";
 
 const DEFAULT_LIMITS = Object.freeze({
   maxEntries: 12_000,
@@ -304,13 +306,14 @@ function blockedResult({ limits, terms, scan, findings }) {
 // the file joins the seed sources whenever it exists, so the agent reads it
 // and an edit to it refreshes source coverage like any other grounded file.
 export const PROJECT_LESSONS_PATH = "openspec/lessons.md";
+// The project's feature map grounds intake the same way, so the agent uses the
+// project's own feature names.
+export const PROJECT_GROUNDING_PATHS = Object.freeze([PROJECT_LESSONS_PATH, PROJECT_FEATURE_MAP_PATH]);
 
 function projectLessonsSeed(projectRoot, fs) {
   if (typeof projectRoot !== "string" || !projectRoot.trim()) return [];
-  try {
-    return fs.stat(resolve(projectRoot, PROJECT_LESSONS_PATH)).isFile()
-      ? [PROJECT_LESSONS_PATH] : [];
-  } catch { return []; }
+  return PROJECT_GROUNDING_PATHS.filter((path) =>
+    bestEffort(() => fs.stat(resolve(projectRoot, path)).isFile(), false));
 }
 
 export function inspectRepositoryIntelligence({

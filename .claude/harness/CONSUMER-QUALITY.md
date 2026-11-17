@@ -71,6 +71,25 @@ meaningful mapping. Other surfaces use semantic, integration, migration,
 browser, accessibility, compatibility, performance, resilience, or
 state-identity controls.
 
+## Findings ratchet
+
+The `lint`, `type-check`, `file-size`, and `module-boundaries` capabilities use
+`foundation-findings-v1`: findings keyed by file and rule (`file-size` carries
+the line count). Existing findings are the baseline under
+`quality/baselines/<repository>/<capability>-v1.json`; a new finding, a grown
+tracked file, or a new file over `policy.findings.fileSizeCeiling` (default
+1000) fails. Without a compatible baseline the lane passes with
+`reduced` assurance and names `cloop quality baseline --write`; a changed
+tool or configuration digest is never compared against the old baseline.
+
+Built-in adapters: `eslint-json`, `tsc-text`, `generic-findings-json` (read a
+report file, or the command's stdout when the input path is `-`),
+`file-size` (no tool), and `module-boundaries` (`modules`: name and path
+globs; `allow`: which modules each may import; relative JavaScript and
+TypeScript imports only). Exit code 1 from a findings tool is accepted as
+"findings reported". Discovery adds `file-size` to every application profile,
+`type-check` with TypeScript and `tsconfig.json`, and `lint` with ESLint.
+
 ## Baseline and debt authority
 
 ```bash

@@ -331,8 +331,8 @@ assert_cmd_zero "command registry has one unique entry per public name" \
 # `outcomes` and `lessons` are read-only cross-change rollups. `package` is the
 # read-only approval package; `preview` is the optional pre-Build run whose
 # receipts never count as evidence. `current` is the read-only lookup of the one
-# active change.
-assert_eq "agent command surface is bounded" "25" \
+# active change. `features` is the read-only check of the project's feature map.
+assert_eq "agent command surface is bounded" "26" \
   "$(jq '[.commands[] | select(.audience == "agent")] | length' \
     "$TARGET/.claude/harness/commands.json")"
 # 21 includes explicit authority dispatch/abort/configured-reviewer/reset routes, the
@@ -456,7 +456,8 @@ assert_cmd_zero "rewritten review routing is accepted by the installed runtime" 
 RECORD_TEMPLATES="$ROOT/.claude/harness/templates"
 for record in "openspec/incidents/README.md|incidents/README.md" \
     "openspec/incidents/_template.md|incidents/_template.md" \
-    "openspec/lessons.md|lessons.md"; do
+    "openspec/lessons.md|lessons.md" \
+    "openspec/feature-map.json|feature-map.json"; do
   rel="${record%%|*}"
   assert_cmd_zero "upgrade without $rel seeds the starter record" \
     cmp -s "$RECORD_TEMPLATES/${record#*|}" "$TARGET/$rel"
