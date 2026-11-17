@@ -65,7 +65,8 @@ test("a changed tool or configuration is not compared against the old baseline",
 
 test("file-size records files over the ceiling and fails when one grows or a new one appears", (t) => {
   const lines = (count) => "x;\n".repeat(count);
-  const root = project(t, { "src/big.js": lines(12), "src/small.js": lines(3), "node_modules/dep.js": lines(50) });
+  const root = project(t, { "src/big.js": lines(12), "src/small.js": lines(3), "node_modules/dep.js": lines(50),
+    ".claude/harness/runtime/installed.mjs": lines(50) });
   const first = fileSizeFindings(root, { ceiling: 10 });
   assert.deepEqual(first.map(({ path, value }) => [path, value]), [["src/big.js", 12]]);
   const baseline = report(first);

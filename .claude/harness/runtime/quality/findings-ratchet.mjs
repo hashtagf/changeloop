@@ -13,7 +13,9 @@ export const FINDINGS_CAPABILITIES = new Set(["lint", "type-check", "file-size",
 export const FINDINGS_ADAPTER_VERSION = "1";
 export const DEFAULT_FILE_SIZE_CEILING = 1000;
 const SOURCE_EXTENSIONS = [".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx", ".mts", ".cts"];
-const SKIP_DIRECTORIES = new Set([".git", "node_modules", "vendor", "dist", "build", "coverage", ".foundation"]);
+// Dependencies, build output, and installed agent tooling (Change Loop itself
+// lives under .claude/) are not the project's source.
+const SKIP_DIRECTORIES = new Set([".git", "node_modules", "vendor", "dist", "build", "coverage", ".foundation", ".claude"]);
 const MAXIMUM_FILES = 20000;
 
 const slash = (path) => String(path || "").replaceAll("\\", "/").replace(/^\.\//, "");

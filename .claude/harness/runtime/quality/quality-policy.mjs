@@ -177,7 +177,7 @@ export function defaultConsumerQualityConfig(repositories) {
       id: repository.id,
       profiles: repository.profiles,
       include: ["**/*"],
-      exclude: ["**/node_modules/**", "**/vendor/**", "**/.git/**", "**/.foundation/**", "**/dist/**", "**/build/**"],
+      exclude: ["**/node_modules/**", "**/vendor/**", "**/.git/**", "**/.foundation/**", "**/.claude/**", "**/dist/**", "**/build/**"],
       providers: repository.providers || {}
     })),
     exceptions: []
