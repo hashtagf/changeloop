@@ -38,6 +38,10 @@ locale pairing, and the pointers to the canonical
 [documentation policy](../../CLAUDE.md#documentation-ownership).
 These structural checks complement semantic review; they cannot establish that
 every explanation is correct or that a translation preserves its meaning.
+It also runs `docs/feature-map.test.mjs`: every CLI command, slash command,
+user state, and runtime group belongs to exactly one feature in
+`docs/feature-map.json`, every named path exists, and `docs/feature-map.md`
+matches what `scripts/docs/feature-map.mjs --write` renders.
 
 ## Setup and execution
 

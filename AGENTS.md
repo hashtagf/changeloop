@@ -65,6 +65,8 @@ Use the smallest relevant canonical source:
 - `.claude/tests/README.md` — suite ownership and regression placement.
 - `CLAUDE.md` — maintainer workflow, shipping boundary, and source map.
 - `docs/reports/README.md` — current versus historical reports.
+- `docs/feature-map.md` — user-facing features and the code, tests, and docs
+  that own each; use its feature names when describing work.
 
 Do not duplicate a canonical contract into another guide. Link to it and keep
 summaries short. Keep English and Thai public documentation aligned.
