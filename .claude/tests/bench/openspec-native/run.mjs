@@ -735,7 +735,10 @@ export function runClaude({ project, prompt, claudeBin, claudeArgs, timeoutMs,
       // moment the backend reached the terminal state, not the narration after.
       if (terminalWallMs === null) {
         terminalWallMs = performance.now() - started;
-        requestsAtTerminal = requestIds.size;
+        // Timers run before I/O in an event-loop turn, so after a stalled turn
+        // the host's lines written before the terminal state may still wait in
+        // the pipe. Count requests once that pending output has been read.
+        setImmediate(() => { requestsAtTerminal ??= requestIds.size; });
       }
       if (finalEnvelopeGraceMs > 0 && !sawResult &&
           Date.now() - terminalSeenAt < finalEnvelopeGraceMs) return;

@@ -127,7 +127,9 @@ matching protocol pin and upgrade coverage.
 Paid scenario evidence is a separate, explicitly authorized release activity.
 Use disposable consumer labs, require `archived`, run the hidden oracle before
 Land, and retain clean-install verification. There is no scheduled paid
-portfolio workflow.
+portfolio workflow. A claim that agents got faster or cheaper compares
+measured runs before and after on the same lanes, attributes time from the
+host logs, and states the run count.
 
 ## Shipping ownership
 

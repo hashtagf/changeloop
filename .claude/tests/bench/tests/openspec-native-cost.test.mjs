@@ -96,9 +96,7 @@ test("a final-envelope grace captures the host result without inflating wall tim
     "sleep 1",
     `printf '%s\\n' '{"type":"assistant","message":{"id":"before","content":[]}}'`,
     `printf '%s\\n' '{"id":"todo","status":"archived"}' > ${JSON.stringify(runtime)}`,
-    // The terminal watcher polls every 250 ms; a loaded CI runner once missed
-    // a 1 s window and counted the closing narration as pre-terminal.
-    "sleep 3",
+    "sleep 1",
     `printf '%s\\n' '{"type":"assistant","message":{"id":"closing","content":[]}}'`,
     "sleep 1",
     `printf '%s\\n' '${envelope}'`,
@@ -106,10 +104,16 @@ test("a final-envelope grace captures the host result without inflating wall tim
   ].join("\n"));
   chmodSync(host, 0o755);
   try {
-    const graced = await runClaude({
+    const pending = runClaude({
       project, prompt: "finish", claudeBin: host, claudeArgs: [],
       timeoutMs: 20000, stopOnArchived: true, finalEnvelopeGraceMs: 8000
     });
+    // A loaded CI runner stalls the event loop; then the archived state and
+    // the line written before it are both pending when the loop resumes, and
+    // the terminal watcher (a timer) runs first. Stall it here on purpose.
+    const resumeAt = Date.now() + 1500;
+    while (Date.now() < resumeAt) { /* stall the event loop past the archived write */ }
+    const graced = await pending;
     assert.equal(graced.terminalReached?.status, "archived");
     assert.equal(parseHostOutput(graced.stdout).envelope.total_cost_usd, 1.5);
     assert.ok(graced.stopwatch.wallMs < 2500, `wall ${graced.stopwatch.wallMs} includes narration`);
