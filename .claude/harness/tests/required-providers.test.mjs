@@ -2,13 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  addRequiredCapability,
-  missingHighRiskQualityCapabilities,
-  postReleaseRolloutGates,
-  providersForCapability,
-  requiredProvidersOperation,
-  reviewCoveredAdvisories
-} from "../runtime/workflow/change-validation.mjs";
+  addRequiredCapability, missingHighRiskQualityCapabilities, postReleaseRolloutGates,
+  providersForCapability, requiredProvidersOperation, reviewCoveredAdvisories
+} from "../runtime/workflow/change/required-providers.mjs";
 import { providerCapability as catalogCapability, proofRolloutGates } from
   "../runtime/evidence/provider-catalog.mjs";
 

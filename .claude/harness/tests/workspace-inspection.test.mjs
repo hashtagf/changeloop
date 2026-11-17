@@ -9,14 +9,11 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { createSandboxRuntime } from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 import {
-  createSandboxRuntime,
-  repositoryInspectionRows,
-  workspaceIdentityValid,
-  workspaceInspectionValue,
-  workspaceIsolationKind,
-  workspaceTargetDrift
-} from "../runtime/workflow/sandbox-runtime.mjs";
+  repositoryInspectionRows, workspaceIdentityValid, workspaceInspectionValue,
+  workspaceIsolationKind, workspaceTargetDrift
+} from "../runtime/workflow/sandbox/sandbox-inspection.mjs";
 
 const root = realpathSync(mkdtempSync(join(tmpdir(), "foundation-workspace-inspection-")));
 const copyPath = join(root, "copy");

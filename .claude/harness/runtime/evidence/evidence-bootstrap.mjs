@@ -201,7 +201,7 @@ export function scriptCandidates(capability, tooling, repository, repositoryCoun
   safe.length > 1 ? `alternatives detected: ${safe.join(", ")}` : "project-owned package script"));
 }
 
-export function npmLockfileCandidates(tooling, repository, repositoryCount, declaredSurface) {
+export function npmLockfileCandidates(tooling, repository, repositoryCount) {
   if (!tooling || tooling.manager !== "npm" ||
       !existsSync(join(repository.workspacePath, "package-lock.json")) ||
       !existsSync(projectResource(repository.workspacePath, ".claude", "harness", "runtime",
@@ -258,7 +258,7 @@ export function evidenceCandidateRows(
   if (capability === "browser")
     return browserCandidates(tooling, repository, repositoryCount, declaredSurface);
   if (capability === "dependency-supply-chain")
-    return npmLockfileCandidates(tooling, repository, repositoryCount, declaredSurface);
+    return npmLockfileCandidates(tooling, repository, repositoryCount);
   if (capability === "discovery") return [];
   return scriptCandidates(capability, tooling, repository, repositoryCount, declaredSurface);
 }

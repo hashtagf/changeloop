@@ -6,15 +6,13 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 
 import {
-  assertRecoveredArchiveReadyOperation,
-  buildApplyEntriesOperation,
-  buildReapplyEntriesOperation,
-  createApplyRuntime,
-  gitApplyInputsOperation,
-  prepareApplyTransactionOperation,
-  refreshAppliedProjectionOperation,
-  sandboxDiffNamesOperation
-} from "../runtime/workflow/apply-runtime.mjs";
+  createApplyRuntime, sandboxDiffNamesOperation
+} from "../runtime/workflow/land/apply-runtime.mjs";
+import {
+  assertRecoveredArchiveReadyOperation, buildApplyEntriesOperation,
+  buildReapplyEntriesOperation, gitApplyInputsOperation, prepareApplyTransactionOperation,
+  refreshAppliedProjectionOperation
+} from "../runtime/workflow/land/apply-entries.mjs";
 
 const fail = (message) => { throw new Error(message); };
 

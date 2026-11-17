@@ -50,7 +50,7 @@ export function securityRiskSignals(state = {}, tier = null) {
 // the change also declares risk: security triggers, an access-control risk
 // signal, non-low impact, coupling, a non-low claim, or a grounded risk
 // tier/class.
-export function declaredReviewRisk({ state = {}, claims = [], grounding = null }) {
+export function declaredReviewRisk({ state = /** @type {Record<string, any>} */ ({}), claims = [], grounding = null }) {
   return Boolean((state.securityTriggers || []).length ||
     securityRiskSignals(state, "high").length ||
     (state.impact && state.impact !== "low") || state.coupling === "coupled" ||
@@ -59,7 +59,7 @@ export function declaredReviewRisk({ state = {}, claims = [], grounding = null }
     (grounding?.risk?.classes || []).length);
 }
 
-export function reviewSemanticText({ state = {}, claims = [], grounding = null }) {
+export function reviewSemanticText({ state = /** @type {Record<string, any>} */ ({}), claims = [], grounding = null }) {
   const declared = (state.securityTriggers || []).join(" ");
   const text = declaredReviewRisk({ state, claims, grounding })
     ? `${state.intent || ""} ${declared}` : declared;

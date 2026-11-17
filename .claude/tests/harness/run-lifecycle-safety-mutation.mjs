@@ -57,7 +57,7 @@ const CASES = [
   },
   {
     id: "MUT-AMENDMENT-TASK-CONTRACT-REPLACED",
-    sourcePath: ".claude/harness/runtime/workflow/semantic-amendment.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/draft/semantic-amendment.mjs",
     expectedKiller: "CASE-AMENDMENT-TASK-CONTRACT",
     detector: SEMANTIC_DETECTOR,
     before: "const unsupported = [",
@@ -65,7 +65,7 @@ const CASES = [
   },
   {
     id: "MUT-SEMANTIC-REFERENCE-REALPATH-DROPPED",
-    sourcePath: ".claude/harness/runtime/workflow/change-lifecycle.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/change/change-lifecycle.mjs",
     expectedKiller: "CASE-SEMANTIC-REFERENCE-CONTAINMENT",
     detector: SEMANTIC_DETECTOR,
     before: "const canonical = realpathSync(path);",
@@ -73,7 +73,7 @@ const CASES = [
   },
   {
     id: "MUT-SEMANTIC-REFERENCE-HTTPS-DROPPED",
-    sourcePath: ".claude/harness/runtime/workflow/change-lifecycle.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/change/change-lifecycle.mjs",
     expectedKiller: "CASE-SEMANTIC-REFERENCE-HTTPS",
     detector: SEMANTIC_DETECTOR,
     before: "if (url.protocol !== \"https:\")",
@@ -81,7 +81,7 @@ const CASES = [
   },
   {
     id: "MUT-ISOLATED-REPOSITORY-TARGET-FALLBACK",
-    sourcePath: ".claude/harness/runtime/workflow/repository-topology.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/repository/repository-topology.mjs",
     expectedKiller: "CASE-ISOLATED-REPOSITORY-BINDING",
     detector: TOPOLOGY_DETECTOR,
     before: "if (options.useTargetPaths || !isolatedRepositoryState(state) ||\n      repository.id === \"root\") return null;",
@@ -89,7 +89,7 @@ const CASES = [
   },
   {
     id: "MUT-MULTI-REPOSITORY-SNAPSHOT-COLLAPSED",
-    sourcePath: ".claude/harness/runtime/workflow/repository-snapshot.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/repository/repository-snapshot.mjs",
     expectedKiller: "CASE-MULTI-REPOSITORY-SNAPSHOT",
     detector: SNAPSHOT_DETECTOR,
     before: "if (!compositeRepositorySelection(selection))",
@@ -137,7 +137,7 @@ const CASES = [
   },
   {
     id: "MUT-ADVANCE-FAILURE-ENVELOPE-GENERIC",
-    sourcePath: ".claude/harness/runtime/workflow/advance-runtime.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/advance/advance-runtime.mjs",
     expectedKiller: "CASE-ADVANCE-EXACT-FAILURE-ENVELOPE",
     detector: ADVANCE_DETECTOR,
     before: "const dispatch = agentDispatchValue(id, options, readPlan);",
@@ -145,7 +145,7 @@ const CASES = [
   },
   {
     id: "MUT-ADVANCE-PREFLIGHT-HASH-REPEATED",
-    sourcePath: ".claude/harness/runtime/workflow/advance-runtime.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/advance/advance-runtime.mjs",
     expectedKiller: "CASE-ADVANCE-PREFLIGHT-HASH-OWNERSHIP",
     detector: ADVANCE_DETECTOR,
     before: "const workspaceHash = dispatch.action === \"build-complete\" && proofPreflight\n          ? proofPreflight.workspaceHash : relevantHash(id);",
@@ -153,7 +153,7 @@ const CASES = [
   },
   {
     id: "MUT-ADVANCE-FIXED-CYCLE-LIMIT",
-    sourcePath: ".claude/harness/runtime/workflow/advance-runtime.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/advance/advance-runtime.mjs",
     expectedKiller: "CASE-ADVANCE-SEMANTIC-CONVERGENCE",
     detector: ADVANCE_DETECTOR,
     before: "while (true) {",
@@ -161,7 +161,7 @@ const CASES = [
   },
   {
     id: "MUT-PARTIAL-SANDBOX-RECOVERY-SKIPPED",
-    sourcePath: ".claude/harness/runtime/workflow/sandbox-runtime.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/sandbox/sandbox-repositories.mjs",
     expectedKiller: "CASE-PARTIAL-SANDBOX-RECOVERY",
     detector: SANDBOX_DETECTOR,
     before: "if (existsSync(expectedPath)) {",
@@ -169,7 +169,7 @@ const CASES = [
   },
   {
     id: "MUT-REVIEW-PACKET-BASE-DIVERGED",
-    sourcePath: ".claude/harness/runtime/workflow/packet-runtime.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/packet/packet-runtime.mjs",
     expectedKiller: "CASE-REVIEW-PACKET-REPOSITORY-BASE",
     detector: PACKET_DETECTOR,
     before: "baseHead: repositoryBaseHead(repository, state),",
@@ -177,7 +177,7 @@ const CASES = [
   },
   {
     id: "MUT-SINGLE-CHILD-LAND-DOWNGRADED",
-    sourcePath: ".claude/harness/runtime/workflow/land-runtime.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/land/land-runtime.mjs",
     expectedKiller: "CASE-SINGLE-CHILD-LAND-SAGA",
     detector: LAND_DETECTOR,
     before: "const multiRepository = compositeRepositorySelection(selectedRepositories(id, initial));",
@@ -185,7 +185,7 @@ const CASES = [
   },
   {
     id: "MUT-SINGLE-CHILD-LOCAL-APPLY-ALLOWED",
-    sourcePath: ".claude/harness/runtime/workflow/apply-runtime.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/land/apply-journal.mjs",
     expectedKiller: "CASE-SINGLE-CHILD-LOCAL-APPLY",
     detector: APPLY_DETECTOR,
     before: "if (emptyRootDiffPermitted(initialState) && !options.controlPlane)",
@@ -193,7 +193,7 @@ const CASES = [
   },
   {
     id: "MUT-REPOSITORY-INSPECTION-OMITS-MISSING",
-    sourcePath: ".claude/harness/runtime/workflow/sandbox-runtime.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/sandbox/sandbox-inspection.mjs",
     expectedKiller: "CASE-REPOSITORY-INSPECTION-COMPLETENESS",
     detector: INSPECTION_DETECTOR,
     before: "const ids = new Set([...Object.keys(records), ...expected]);",

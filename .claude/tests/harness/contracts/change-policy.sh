@@ -504,7 +504,7 @@ assert_cmd_zero "OpenTelemetry GenAI attributes normalize into usage events" \
   .foundation/logs/mixed-telemetry-runs/events.jsonl
 
 # The lifecycle gate is about a task that names a lifecycle *command*. Matching a
-# bare `/land` anywhere also matched the path `runtime/workflow/land-runtime.mjs`,
+# bare `/land` anywhere also matched the path `runtime/workflow/land/land-runtime.mjs`,
 # so every change declaring that file in `[paths:]` was unvalidatable — the guard
 # blocked work on the code it guards.
 node .claude/harness/foundation.mjs new 'Land surface paths validate' --rapid >/dev/null
@@ -513,7 +513,7 @@ node .claude/harness/foundation.mjs resolve land-surface-paths-validate \
 printf '%s\n' \
   '# Tasks' \
   '' \
-  '- [ ] **T001** Confine the apply projection — `.claude/harness/runtime/workflow/land-runtime.mjs` — verify: `node --test suite.mjs` [claims:land-surface-paths-validate-outcome] [paths:.claude/harness/runtime/workflow/land-runtime.mjs]' \
+  '- [ ] **T001** Confine the apply projection — `.claude/harness/runtime/workflow/land/land-runtime.mjs` — verify: `node --test suite.mjs` [claims:land-surface-paths-validate-outcome] [paths:.claude/harness/runtime/workflow/land/land-runtime.mjs]' \
   > openspec/changes/land-surface-paths-validate/tasks.md
 preferred_validate="$({ node .claude/harness/foundation.mjs validate \
   land-surface-paths-validate; } 2>&1)"

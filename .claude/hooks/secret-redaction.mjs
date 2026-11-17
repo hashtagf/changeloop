@@ -15,6 +15,7 @@ import { existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileS
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { bestEffort } from "../harness/runtime/core/best-effort.mjs";
 
 const REDACTED = "<redacted>";
 const KEY_MATERIAL = /\.(?:pem|key|pfx|p12|jks|keystore|kdbx|ppk|gpg)$|^id_(?:rsa|dsa|ecdsa|ed25519)$/i;
@@ -33,8 +34,9 @@ export function redactText(name, text) {
   if (KEY_MATERIAL.test(name) || text.includes("\0") || /-----BEGIN [A-Z ]*PRIVATE KEY-----/.test(text))
     return `${REDACTED} key material (${Buffer.byteLength(text)} bytes); contents withheld\n`;
   if (/\.json$/i.test(name)) {
-    try { return `${JSON.stringify(redactValue(JSON.parse(text)), null, 2)}\n`; }
-    catch { /* not JSON after all: fall through to line redaction */ }
+    // Not JSON after all: fall through to line redaction.
+    const json = bestEffort(() => `${JSON.stringify(redactValue(JSON.parse(text)), null, 2)}\n`, null);
+    if (json !== null) return json;
   }
   return text.split("\n").map((line) => {
     const trimmed = line.trim();
@@ -63,8 +65,8 @@ export function redactedCopy(path, cwd = process.cwd()) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
-  try {
+  bestEffort(() => {
     const copy = redactedCopy(process.argv[2] || "", process.argv[3] || process.cwd());
     if (copy) process.stdout.write(copy);
-  } catch { /* the caller falls back to an untouched call */ }
+  }); // the caller falls back to an untouched call
 }

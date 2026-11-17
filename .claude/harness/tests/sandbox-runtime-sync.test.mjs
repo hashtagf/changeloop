@@ -6,18 +6,20 @@ import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 
+import { createSandboxRuntime } from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 import {
-  createSandboxRuntime, recordSandboxBaseMove, reportSandboxSync,
-  sandboxMovementLine, unusedCopyResolveMessage
-} from "../runtime/workflow/sandbox-runtime.mjs";
+  recordSandboxBaseMove, reportSandboxSync
+} from "../runtime/workflow/sandbox/sandbox-repositories.mjs";
+import { sandboxMovementLine } from "../runtime/workflow/sandbox/sandbox-copy.mjs";
+import { unusedCopyResolveMessage } from "../runtime/workflow/sandbox/sandbox-inspection.mjs";
 import { agreementIdentity } from "../runtime/core/user-decisions.mjs";
-import { createAdvanceRuntime } from "../runtime/workflow/advance-runtime.mjs";
-import { targetHeadMovedDecision } from "../runtime/workflow/apply-recovery.mjs";
+import { createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
+import { targetHeadMovedDecision } from "../runtime/workflow/transaction/apply-recovery.mjs";
 import { gateDigest } from "../runtime/core/convergent-gate.mjs";
 import {
   COPY_BASE_MAX_BYTES, captureCopyBase, captureCopyBaseSurface, copyBaseBytes, copyBaseStore,
   fileSource
-} from "../runtime/workflow/copy-base.mjs";
+} from "../runtime/workflow/transaction/copy-base.mjs";
 import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 const digest = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");

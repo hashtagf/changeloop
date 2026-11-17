@@ -51,6 +51,18 @@ test("lint tooling and baseline edits select the lint rules suite", () => {
   assert.equal(selectAffectedSuites(["README.md"], known).selected.includes("lint rules"), false);
 });
 
+test("skill and command edits select the skill contract suite; unrelated edits do not", () => {
+  const known = [...labels, "skill contracts"];
+  for (const file of [
+    ".claude/skills/land/contract.json", ".claude/skills/build/SKILL.md",
+    ".claude/commands/deliver.md", "scripts/lint/skill-contracts.mjs",
+    "quality/baselines/skill-contracts-v1.json"
+  ]) {
+    assert.ok(selectAffectedSuites([file], known).selected.includes("skill contracts"), file);
+  }
+  assert.equal(selectAffectedSuites(["dashboard/server.mjs"], known).selected.includes("skill contracts"), false);
+});
+
 test("no changed files select no suites", () => {
   const { selected, reasons } = selectAffectedSuites([], labels);
   assert.deepEqual(selected, []);

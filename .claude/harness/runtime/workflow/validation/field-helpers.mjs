@@ -2,7 +2,6 @@
 // Issue text is part of the draft-validation contract: keep messages unchanged.
 import { isObject } from "../../core/values.mjs";
 
-export { isObject };
 
 export function localized(labels) {
   return (language) => language === "th" ? labels.th : labels.en;

@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "skill": "dev",
+  "trigger": "/dev is invoked: run Change Loop from optional Investigate to the user's target",
+  "inputs": [
+    "the intent and requested target (proven, archived, delivered)",
+    "repository sources and openspec/specs"
+  ],
+  "action": "Compose investigate, change, build, prove, land, and deliver up to the target, pausing only at user gates",
+  "outputs": [
+    {
+      "kind": "agreement",
+      "description": "compiled change packet"
+    },
+    {
+      "kind": "code",
+      "description": "implemented change, applied at Land when authorized"
+    },
+    {
+      "kind": "evidence",
+      "description": "proof for the change"
+    },
+    {
+      "kind": "git",
+      "description": "delivered pull request when the target is delivered"
+    }
+  ],
+  "handoff": [
+    {
+      "to": "skill:investigate",
+      "when": "the cause or feasibility is unknown"
+    },
+    {
+      "to": "skill:change",
+      "when": "the agreement must be written"
+    },
+    {
+      "to": "skill:land",
+      "when": "the target includes archived and Land is authorized"
+    },
+    {
+      "to": "command:deliver",
+      "when": "the target is delivered"
+    },
+    {
+      "to": "user",
+      "when": "a gate needs approval or the target is reached"
+    }
+  ],
+  "responsibility": {
+    "aiDoes": [
+      "runs each phase and its resume routes"
+    ],
+    "humanDoes": [
+      "reviews the final diff"
+    ],
+    "humanDecides": [
+      "the target",
+      "spec approval",
+      "Land",
+      "Deliver"
+    ]
+  }
+}

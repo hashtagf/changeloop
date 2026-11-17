@@ -28,8 +28,8 @@ const noTimerWait = {
     schema: [],
     messages: {
       timer: "{{name}} used as a wait hides the real dependency and races under load. " +
-        "Wait for the actual event, promise, exit, or file condition instead; a bounded " +
-        "timeout belongs in one named helper whose disable comment states why.",
+        "Wait for the actual event, promise, exit, or file condition instead; bound it with " +
+        "deadline/delay/terminateWithGrace/retrySync from .claude/harness/runtime/core/timing.mjs.",
       atomics: "Atomics.wait blocks the process to sleep. Wait for the real condition " +
         "(child exit, lock release, file event) instead.",
       sleep: "Spawning sleep is a timer wait. Poll the real condition or wait for the " +
@@ -60,7 +60,11 @@ const noTimerWait = {
   }
 };
 
-const WORKAROUND_MARKER = /\b(?:TODO|FIXME|HACK|XXX)\b|\bwork-?arounds?\b/i;
+// Markers count as a note to self only at the start of a comment or as
+// "TODO:"/"TODO(name)"; prose that names a marker (a check that rejects TODO
+// placeholders, Playwright's test.fixme) is not a deferred fix.
+const WORKAROUND_MARKER = /^\s*\*?\s*(?:TODO|FIXME|HACK|XXX)\b|\b(?:TODO|FIXME|HACK|XXX)\s*[:(]/m;
+const WORKAROUND_WORD = /\bwork-?arounds?\b/i;
 const DIRECTIVE = /^\s*(?:eslint|global|exported)\b/;
 
 const noWorkaroundComment = {
@@ -80,7 +84,7 @@ const noWorkaroundComment = {
       Program() {
         for (const comment of source.getAllComments()) {
           if (DIRECTIVE.test(comment.value)) continue;
-          if (WORKAROUND_MARKER.test(comment.value))
+          if (WORKAROUND_MARKER.test(comment.value) || WORKAROUND_WORD.test(comment.value))
             context.report({ loc: comment.loc, messageId: "marker" });
         }
       }
@@ -96,7 +100,9 @@ const noSilentCatch = {
     messages: {
       silent: "An empty catch swallows every failure, including the ones you did not " +
         "expect. Handle the error, rethrow it, or test a named condition " +
-        "(for example error.code === \"ENOENT\") and rethrow everything else."
+        "(for example error.code === \"ENOENT\") and rethrow everything else. An advisory, " +
+        "cleanup, or optional-probe step uses bestEffort from " +
+        ".claude/harness/runtime/core/best-effort.mjs with a one-line reason."
     }
   },
   create(context) {

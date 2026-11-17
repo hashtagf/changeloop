@@ -6,6 +6,7 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { acquireProcessLock } from "./process-lock.mjs";
+import { deadline, retrySync } from "./timing.mjs";
 import { legacyLandSagaLine, legacyLandSagaMarkers } from "./legacy-land-saga.mjs";
 
 export const UPDATE_CACHE_VERSION = 1;
@@ -205,14 +206,8 @@ export function notificationSessionId(options) {
 }
 
 export function acquireNotificationLock(path, timeoutMs) {
-  const deadline = Date.now() + Number(timeoutMs ?? 250);
-  let lock;
-  do {
-    lock = acquireProcessLock(`${path}.lock`);
-    if (lock.acquired) break;
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5);
-  } while (Date.now() < deadline);
-  return lock;
+  return retrySync(() => acquireProcessLock(`${path}.lock`),
+    { deadlineMs: Number(timeoutMs ?? 250), intervalMs: 5 });
 }
 
 export function nextNotificationState(state, sessionId, directive, trigger, now) {
@@ -265,7 +260,7 @@ export function updateNotificationDirective(advisory, trigger, options = {}) {
 
 async function fetchLatestVersion(fetchImpl, timeoutMs) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const cancelTimeout = deadline(timeoutMs, () => controller.abort());
   try {
     const response = await fetchImpl(LATEST_RELEASE_URL, {
       headers: {
@@ -280,7 +275,7 @@ async function fetchLatestVersion(fetchImpl, timeoutMs) {
     if (!latestVersion) throw new Error("release-tag-invalid");
     return latestVersion;
   } finally {
-    clearTimeout(timer);
+    cancelTimeout();
   }
 }
 
@@ -331,7 +326,7 @@ export function updateBoundary(command) {
 export function upgradeCompatibilityDiagnostics({
   previousVersion = null,
   currentVersion = null,
-  configuredPolicy = {},
+  configuredPolicy = /** @type {any} */ ({}),
   activeChanges = [],
   signedCiConfigured = false
 } = {}) {

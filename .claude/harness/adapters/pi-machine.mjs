@@ -4,6 +4,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
+import { bestEffort } from "../runtime/core/best-effort.mjs";
 
 export const BUNDLE = /^\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?-api\d+-[a-f0-9]{16}$/;
 
@@ -16,11 +17,9 @@ export function machineCli(base, env = process.env) {
   for (const name of ['cloop'])
     for (const directory of (env.PATH || '').split(delimiter).filter(Boolean)) {
       const candidate = join(directory, name);
-      try {
-        if (!statSync(candidate).isFile()) continue;
-        if (directory.startsWith(releases + '/') || realpathSync(candidate).startsWith(releases + '/')) continue;
-        return candidate;
-      } catch { /* not on this PATH entry */ }
+      const usable = bestEffort(() => statSync(candidate).isFile() &&
+        !directory.startsWith(releases + '/') && !realpathSync(candidate).startsWith(releases + '/'), false);
+      if (usable) return candidate;
     }
   return undefined;
 }
@@ -36,7 +35,7 @@ export function followMachine(base, agentDir, env = process.env) {
     ? String(version.stdout).trim().match(/(\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?)\s*$/)?.[1] : undefined;
   if (!machine) return `Could not read the machine Change Loop version from ${cli}; Pi keeps its current bundle.`;
   let current = '';
-  try { current = JSON.parse(readFileSync(join(base, 'installation.json'), 'utf8')).current || ''; } catch { /* first install */ }
+  current = bestEffort(() => JSON.parse(readFileSync(join(base, 'installation.json'), 'utf8')).current || '', current); // first install
   if (BUNDLE.test(current) && current.startsWith(machine + '-api') &&
       existsSync(join(base, 'releases', current, 'bundle.json'))) return undefined;
   const installed = run(['host', 'pi-runtime', '--protocol', '1', '--format', 'json'], 120000);

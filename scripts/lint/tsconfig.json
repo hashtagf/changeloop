@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "esnext",
+    "strict": false,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "pretty": false
+  },
+  "include": [
+    "../../.claude/harness/foundation.mjs",
+    "../../.claude/harness/runtime/**/*.mjs",
+    "../../.claude/harness/adapters/*.mjs",
+    "../../.claude/hooks/*.mjs"
+  ],
+  "exclude": ["../../.claude/harness/vendor/**", "../../**/node_modules/**"]
+}

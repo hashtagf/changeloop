@@ -3,8 +3,8 @@ import test from "node:test";
 
 import { createProviderScheduler } from "../runtime/evidence/provider-scheduler.mjs";
 import { createProofExecutionRuntime } from "../runtime/evidence/proof-execution-runtime.mjs";
-import { createAdvanceRuntime } from "../runtime/workflow/advance-runtime.mjs";
-import { landAdvisoryLines } from "../runtime/workflow/land-runtime.mjs";
+import { createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
+import { landAdvisoryLines } from "../runtime/workflow/land/land-runtime.mjs";
 import { gateDigest } from "../runtime/core/convergent-gate.mjs";
 import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 

@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { loadDraftFolder } from "../runtime/workflow/draft-folder.mjs";
-import { atomicStartPreflight } from "../runtime/workflow/change-lifecycle.mjs";
+import { loadDraftFolder } from "../runtime/workflow/draft/draft-folder.mjs";
+import { atomicStartPreflight } from "../runtime/workflow/change/change-lifecycle.mjs";
 
 const EXECUTION = {
   version: 1,

@@ -16,7 +16,7 @@ import {
 import { resolveHostInstructionWithUpdate } from
   "../../harness/runtime/core/host-instruction.mjs";
 import { attachPhaseUpdateAdvisory } from
-  "../../harness/runtime/workflow/packet-runtime.mjs";
+  "../../harness/runtime/workflow/packet/packet-runtime.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..", "..");

@@ -13,12 +13,12 @@ import { fileURLToPath } from "node:url";
 import {
   ADVANCE_DECISIONS, ALTERNATE_AFTER_ROUNDS, STRATEGY_AFTER_ROUNDS,
   USER_AUTHORITY_BOUNDARIES, createAdvanceRecovery
-} from "../../harness/runtime/workflow/advance-recovery.mjs";
+} from "../../harness/runtime/workflow/advance/advance-recovery.mjs";
 import { lifecycleOutcome } from "../../harness/runtime/core/lifecycle-outcome.mjs";
 import {
   LIFECYCLE_STATUSES, lifecycleTransitionValue, normalizeLifecycleStatus
 } from "../../harness/runtime/core/lifecycle-reducer.mjs";
-import { createLandRuntime } from "../../harness/runtime/workflow/land-runtime.mjs";
+import { createLandRuntime } from "../../harness/runtime/workflow/land/land-runtime.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const RUNTIME = join(ROOT, ".claude", "harness", "runtime");
@@ -150,21 +150,22 @@ test("waits are never counted as repeated repair", () => {
 // site whose source is covered above (ladder pending records) or carries the
 // raising module's own typed decision.
 const SCANNED = [
-  "workflow/advance-runtime.mjs", "workflow/advance-recovery.mjs",
+  "workflow/advance/advance-runtime.mjs", "workflow/advance/advance-envelope.mjs", "workflow/advance/advance-actions.mjs",
+  "workflow/advance/advance-recovery.mjs",
   "evidence/proof-execution-runtime.mjs", "evidence/proof-readiness.mjs",
-  "core/convergent-gate.mjs", "workflow/land-runtime.mjs",
-  "workflow/lease-runtime.mjs", "workflow/agent-dispatch.mjs",
-  "workflow/apply-runtime.mjs"
+  "core/convergent-gate.mjs", "workflow/land/land-runtime.mjs",
+  "workflow/authority/lease-runtime.mjs", "workflow/authority/agent-dispatch.mjs",
+  "workflow/land/apply-runtime.mjs"
 ];
 const REVIEWED_COMPUTED_SITES = new Map([
   // A thrown error that already carries a typed decision or user owner; the
   // raising module chose the boundary and the decision kind.
-  ["workflow/advance-runtime.mjs:error.boundary || \"user-authority\"", "error-carried decision"],
-  ["workflow/advance-runtime.mjs:error?.boundary || \"user-authority\"", "error owned by the user or Land"],
+  ["workflow/advance/advance-envelope.mjs:error.boundary || \"user-authority\"", "error-carried decision"],
+  ["workflow/advance/advance-envelope.mjs:error?.boundary || \"user-authority\"", "error owned by the user or Land"],
   // Replays a ladder pending record; pending records exist only for user
   // boundaries, typed advance decisions, and the budget cap (tested above).
-  ["workflow/advance-runtime.mjs:pending.paused ? \"user-paused\" : pending.boundary || \"repeated-no-progress\"", "ladder pending record"],
-  ["workflow/advance-recovery.mjs:pending.boundary || \"repeated-no-progress\"", "ladder pending record"]
+  ["workflow/advance/advance-runtime.mjs:pending.paused ? \"user-paused\" : pending.boundary || \"repeated-no-progress\"", "ladder pending record"],
+  ["workflow/advance/advance-recovery.mjs:pending.boundary || \"repeated-no-progress\"", "ladder pending record"]
 ]);
 
 function askUserSites(file) {

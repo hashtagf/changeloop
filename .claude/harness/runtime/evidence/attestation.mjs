@@ -8,6 +8,7 @@ import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { verifySignedPayload } from "../core/trust.mjs";
 import { canonical, pathInside } from "../core/paths.mjs";
+import { bestEffort } from "../core/best-effort.mjs";
 
 export function writableControlSocket(path, options = {}) {
   const {
@@ -39,7 +40,7 @@ export function inspectContainerBoundary(options = {}) {
     status = "detected";
     evidence.push({ source: "filesystem", value: "/run/.containerenv" });
   } else {
-    try {
+    bestEffort(() => {
       const cgroup = read("/proc/1/cgroup", "utf8").toLowerCase();
       const token = ["docker", "containerd", "kubepods", "lxc", "podman"]
         .find((candidate) => cgroup.includes(candidate));
@@ -48,9 +49,7 @@ export function inspectContainerBoundary(options = {}) {
         status = "detected";
         evidence.push({ source: "cgroup", value: token });
       }
-    } catch {
-      // Platforms without procfs remain unknown unless another strong signal exists.
-    }
+    }); // Platforms without procfs remain unknown unless another strong signal exists.
   }
   if (kind === "unknown" && env.CODESPACES === "true" && exists("/workspaces")) {
     kind = "container";

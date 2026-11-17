@@ -4,8 +4,8 @@ import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 
-import { createChangeLifecycle } from "../runtime/workflow/change-lifecycle.mjs";
-import { normalizeSemanticDraft } from "../runtime/workflow/semantic-draft.mjs";
+import { createChangeLifecycle } from "../runtime/workflow/change/change-lifecycle.mjs";
+import { normalizeSemanticDraft } from "../runtime/workflow/draft/semantic-draft.mjs";
 import {
   amendedScenarioTestBinding, amendmentScenarioBindingIssues, scenarioBindingIssues, scenarioTestBinding
 } from "../runtime/workflow/validation/scenario-test-binding.mjs";

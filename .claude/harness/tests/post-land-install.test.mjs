@@ -7,7 +7,7 @@ import test from "node:test";
 
 import {
   DEPENDENCY_FILES, dependencySnapshot, postLandInstall
-} from "../runtime/workflow/apply-runtime.mjs";
+} from "../runtime/workflow/land/post-land-install.mjs";
 
 const identity = (path) => existsSync(path) ? `file:${readFileSync(path, "utf8")}` : null;
 

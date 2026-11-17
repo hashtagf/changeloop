@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
 import { resolve, relative } from 'node:path';
-import { buildRepositoryCatalog } from '../../../harness/runtime/workflow/repository-topology.mjs';
+import { buildRepositoryCatalog } from '../../../harness/runtime/workflow/repository/repository-topology.mjs';
 
 import { directoryDigest, runScenarioLab } from "../openspec-native/lab.mjs";
 import { executionPlan, loadMatrix, matrixIssues } from "../openspec-native/matrix.mjs";

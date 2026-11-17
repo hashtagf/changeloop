@@ -155,20 +155,22 @@ the upstream repository uses those names for its own maintainer guidance.
 | Evidence | `runtime/evidence/signed-ci.mjs` | Signed CI envelope verification |
 | Evidence | `runtime/evidence/semantic-acceptance.mjs` | Signed hidden/independent case verification without exposing oracle content |
 | Evidence | `runtime/evidence/traceability.mjs` | Pure scenario, claim, task, and provider auditing |
+| Core | `runtime/core/timing.mjs` | The only timer primitives (`deadline`, `delay`, `terminateWithGrace`, `retrySync`); lint forbids raw timers elsewhere |
+| Core | `runtime/core/best-effort.mjs` | The only ignore-on-failure primitive (`bestEffort`, `bestEffortAsync`); lint forbids silent catches elsewhere |
 | Quality | `runtime/quality/quality-runtime.mjs` | Consumer discovery, execution, baselines, debt, and repository-lane aggregation |
 | Quality | `runtime/quality/adapter-registry.mjs` | Portable CRAP and mutation report adapters |
 | Quality | `runtime/quality/quality-policy.mjs` | Changed-code ratchets, fallback assurance, and bounded exceptions |
 | Observability | `runtime/observability/telemetry.mjs` | Portable host telemetry normalization |
 | Observability | `runtime/observability/metrics-runtime.mjs` | Read-only aggregation of operations, usage, context, and evidence metrics |
 | Observability | `runtime/observability/telemetry-runtime.mjs` | Context events, host transcript synchronization, and telemetry ledgers |
-| Workflow | `runtime/workflow/agent-planning.mjs` | Task dependency/resource planning and bounded dispatch views |
-| Workflow | `runtime/workflow/apply-runtime.mjs` | Apply transaction preparation, recovery, cleanup, and archive orchestration |
-| Workflow | `runtime/workflow/authority-runtime.mjs` | Authority request/response bridge and signed CI recording |
-| Workflow | `runtime/workflow/authority.mjs` | External authority request persistence and response validation |
-| Workflow | `runtime/workflow/budget.mjs` | Run/lifetime usage windows and budget policy transitions |
-| Workflow | `runtime/workflow/change-lifecycle.mjs` | Change creation, draft materialization, resolution, and atomic start |
-| Workflow | `runtime/workflow/semantic-draft.mjs` | Semantic draft v4/v5 discovery coverage, stable links, typed extensions, decision status and durable rationale, unknown task field warnings, and provider defaults |
-| Workflow | `runtime/workflow/draft-folder.mjs` | Draft v5 folder loader: splits authored `proposal.md`/`design.md` prose by outline heading, checks order, placeholders, and derived headings, and derives grounding NFR/observability from `change.json` |
+| Workflow | `runtime/workflow/authority/agent-planning.mjs` | Task dependency/resource planning and bounded dispatch views |
+| Workflow | `runtime/workflow/land/apply-runtime.mjs` | Apply transaction preparation, recovery, cleanup, and archive orchestration; journal, entries, target restore, post-Land install, and archive appendix in `apply-journal`, `apply-entries`, `target-restore`, `post-land-install`, `archive-appendix` |
+| Workflow | `runtime/workflow/authority/authority-runtime.mjs` | Authority request/response bridge and signed CI recording; requests, responses, session provenance, and reviewer runs in `authority-requests`, `authority-response`, `session-provenance`, `authority-reviewer-run` |
+| Workflow | `runtime/workflow/authority/authority.mjs` | External authority request persistence and response validation |
+| Workflow | `runtime/workflow/authority/budget.mjs` | Run/lifetime usage windows and budget policy transitions |
+| Workflow | `runtime/workflow/change/change-lifecycle.mjs` | Change command factory: shared draft/intake helpers and wiring of `change-materialize`, `change-resolution`, `change-start`, `change-revision`, and `change-amendment`; pure values in `change-start-values` |
+| Workflow | `runtime/workflow/draft/semantic-draft.mjs` | Semantic draft v4/v5 discovery coverage, stable links, typed extensions, decision status and durable rationale, unknown task field warnings, and provider defaults (text primitives, minimal-draft expansion, task normalization, and templates in `semantic-draft-text`, `-minimal`, `-tasks`, `-templates`) |
+| Workflow | `runtime/workflow/draft/draft-folder.mjs` | Draft v5 folder loader: splits authored `proposal.md`/`design.md` prose by outline heading, checks order, placeholders, and derived headings, and derives grounding NFR/observability from `change.json` |
 | Workflow | `runtime/workflow/validation/outline-contract.mjs` | The versioned outline: each packet section's document, order, heading (en/th), owner, feeding fields, and condition |
 | Workflow | `runtime/workflow/validation/architecture-fields.mjs` | Typed fields `boundaries`, `tenancy`, `domain` |
 | Workflow | `runtime/workflow/validation/contract-fields.mjs` | Typed fields `apiContracts`, `eventContracts`, `dataModel`, `ui`, `configContract` |
@@ -182,22 +184,22 @@ the upstream repository uses those names for its own maintainer guidance.
 | Workflow | `runtime/workflow/validation/semantic-source-inventory.mjs` | Deterministic grounded-source inventory and freshness findings |
 | Workflow | `runtime/workflow/validation/repository-intelligence.mjs` | Bounded repository discovery, relevance ranking, and dependency/caller/test maps |
 | Workflow | `runtime/workflow/validation/semantic-intake-intelligence.mjs` | Adaptive intake depth, question-quality gates, multilingual-neutral signals, and effectiveness snapshots |
-| Workflow | `runtime/workflow/semantic-intake-state.mjs` | Draft/source-bound typed intake snapshot and safe resume projection |
+| Workflow | `runtime/workflow/draft/semantic-intake-state.mjs` | Draft/source-bound typed intake snapshot and safe resume projection |
 | Workflow | `runtime/workflow/validation/amendment-invalidation.mjs` | Selective claim, task, provider, approval, and proof invalidation planning |
 | Workflow | `runtime/workflow/validation/selective-proof-plan.mjs` | Fail-closed receipt preservation and exact post-amendment proof recovery |
-| Workflow | `runtime/workflow/semantic-amendment.mjs` | Transactional Build-time agreement amendments that preserve canonical prose and completed work |
-| Workflow | `runtime/workflow/advance-runtime.mjs` | Protocol-v7 deterministic chaining, durable recovery decisions, owner outcomes, and safe user projection |
-| Workflow | `runtime/workflow/change-validation.mjs` | Traceability, change validation, and provider requirements |
-| Workflow | `runtime/workflow/land-journal.mjs` | Atomic apply identity, journal, rollback, verification, and cleanup |
-| Workflow | `runtime/workflow/land-runtime.mjs` | Multi-repository Land readiness, planning, pointers, and resume saga |
-| Workflow | `runtime/workflow/repository-delivery-saga.mjs` | Prepare-all, dependency-ordered, uncommitted multi-repository Apply and resume |
-| Workflow | `runtime/workflow/land-verification.mjs` | Target-read verification that every writable repository holds its proven sandbox bytes before archive |
-| Workflow | `runtime/workflow/sandbox-preservation.mjs` | Sandbox-versus-target comparison and recoverable backups before any sandbox removal |
-| Workflow | `runtime/workflow/lease-runtime.mjs` | Agent resource lease acquisition, renewal, release, and cleanup |
-| Workflow | `runtime/workflow/packet-runtime.mjs` | Changed-surface calculation and bounded task/review packet generation |
-| Workflow | `runtime/workflow/repository-topology.mjs` | Repository discovery, selection, dependency validation, and workspace views |
-| Workflow | `runtime/workflow/sandbox-runtime.mjs` | Isolation inspection, sandbox creation, and contract synchronization |
-| Workflow | `runtime/workflow/security-policy.mjs` | Trust-boundary phrases that select security-sensitive assurance |
+| Workflow | `runtime/workflow/draft/semantic-amendment.mjs` | Transactional Build-time agreement amendments that preserve canonical prose and completed work; task, section, and verify helpers in `amendment-tasks`, `amendment-sections`, `amendment-verify` |
+| Workflow | `runtime/workflow/advance/advance-runtime.mjs` | Protocol-v7 deterministic chaining, durable recovery decisions, owner outcomes, and safe user projection; envelopes in `advance-envelope`, phase actions in `advance-actions` |
+| Workflow | `runtime/workflow/change/change-validation.mjs` | Traceability, change validation, and provider requirements; grounding validation, grounding scope, gate waivers, semantic invariants, durable decisions, and required providers in their own `change/` modules |
+| Workflow | `runtime/workflow/transaction/land-journal.mjs` | Atomic apply identity, journal, rollback, verification, and cleanup |
+| Workflow | `runtime/workflow/land/land-runtime.mjs` | Multi-repository Land readiness, planning, pointers, and resume saga |
+| Workflow | `runtime/workflow/delivery/repository-delivery-saga.mjs` | Prepare-all, dependency-ordered, uncommitted multi-repository Apply and resume |
+| Workflow | `runtime/workflow/land/land-verification.mjs` | Target-read verification that every writable repository holds its proven sandbox bytes before archive |
+| Workflow | `runtime/workflow/sandbox/sandbox-preservation.mjs` | Sandbox-versus-target comparison and recoverable backups before any sandbox removal |
+| Workflow | `runtime/workflow/authority/lease-runtime.mjs` | Agent resource lease acquisition, renewal, release, and cleanup |
+| Workflow | `runtime/workflow/packet/packet-runtime.mjs` | Changed-surface calculation and bounded task/review packet generation |
+| Workflow | `runtime/workflow/repository/repository-topology.mjs` | Repository discovery, selection, dependency validation, and workspace views |
+| Workflow | `runtime/workflow/sandbox/sandbox-runtime.mjs` | Sandbox command factory; inspection, replay, copy, repository isolation, diff identity, and sync live in the matching `sandbox-*` modules |
+| Workflow | `runtime/workflow/authority/security-policy.mjs` | Trust-boundary phrases that select security-sensitive assurance |
 | Workflow | `runtime/workflow/validation/spec-delta.mjs` | Scenario-drop and new-capability validation for OpenSpec deltas |
 | Docs | `runtime/README.md` | Domain boundaries and dependency rules |
 | Docs | `AGENT.md` | Small portable contract loaded by Claude, Codex, and other agents |

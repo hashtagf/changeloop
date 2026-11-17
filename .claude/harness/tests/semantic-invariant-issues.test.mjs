@@ -2,12 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  compatibilityInvariantBindingIssues,
-  semanticInvariantCollectionIssues,
-  semanticInvariantIdentityIssues,
-  semanticInvariantIssues,
-  semanticInvariantReferenceIssues
-} from "../runtime/workflow/change-validation.mjs";
+  compatibilityInvariantBindingIssues, semanticInvariantCollectionIssues,
+  semanticInvariantIdentityIssues, semanticInvariantIssues, semanticInvariantReferenceIssues
+} from "../runtime/workflow/change/semantic-invariants.mjs";
 
 test("semantic invariant identity validates stable unique IDs and statements", () => {
   const ids = new Set();

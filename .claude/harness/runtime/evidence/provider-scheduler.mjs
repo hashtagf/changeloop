@@ -1,6 +1,7 @@
 import { findCyclePath } from "../core/graph.mjs";
 import { scheduleReadyBatch } from "../core/graph-execution.mjs";
 import { advisoryVisualProviders } from "./visual-review.mjs";
+import { bestEffort } from "../core/best-effort.mjs";
 
 // An advisory provider runs once per content: any current receipt, passing
 // or not, is its report, and reruns would only repeat the reviewer's cost.
@@ -135,7 +136,6 @@ export function createProviderScheduler({
   adapterResources,
   resourcesConflict,
   executeAdapter,
-  fail,
   // Resolved per call: `advance` silences console.log around quiet proof,
   // and a reference captured at construction leaked into its JSON output.
   log = (...args) => console.log(...args),
@@ -172,7 +172,7 @@ export function createProviderScheduler({
   // `onProgress` sees each wave start and each provider finish, so a caller
   // can persist where a long proof is; it never changes what runs.
   async function runExecutionDag(id, nodes, proofRunId, { onProgress = null } = {}) {
-    const report = (event) => { try { onProgress?.(event); } catch { /* progress is advisory */ } };
+    const report = (event) => { bestEffort(() => onProgress?.(event)); /* progress is advisory */ };
     const pending = new Map(nodes.map((node) => [node.provider, node]));
     const completed = new Set();
     const failedOutputs = new Set();

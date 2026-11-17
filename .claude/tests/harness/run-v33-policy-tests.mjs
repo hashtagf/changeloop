@@ -17,9 +17,9 @@ import { providerEvidencePolicy, providerReceiptWriterConflicts } from
 import { createConfiguredReviewerRuntime } from "../../harness/runtime/evidence/configured-reviewer.mjs";
 import { createRuntimeEnvironment } from "../../harness/runtime/core/runtime-environment.mjs";
 import { effectiveReviewAttemptLimit } from "../../harness/runtime/core/authority-policy.mjs";
-import { createChangeLifecycle } from "../../harness/runtime/workflow/change-lifecycle.mjs";
+import { createChangeLifecycle } from "../../harness/runtime/workflow/change/change-lifecycle.mjs";
 import { taskBlocks, taskMetadata } from "../../harness/runtime/contracts/change-artifacts.mjs";
-import { emptyRootDiffPermitted } from "../../harness/runtime/workflow/apply-runtime.mjs";
+import { emptyRootDiffPermitted } from "../../harness/runtime/workflow/land/apply-journal.mjs";
 import { changeLifecycleDeps } from "../../harness/tests/fixtures/runtime-deps.mjs";
 
 function pass(label) { process.stdout.write(`PASS: ${label}\n`); }

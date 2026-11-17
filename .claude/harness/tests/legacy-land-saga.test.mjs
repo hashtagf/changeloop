@@ -4,7 +4,7 @@ import test from "node:test";
 import { legacyLandSagaMarkers } from "../runtime/core/legacy-land-saga.mjs";
 import { changeListingRow } from "../runtime/core/diagnostics-runtime.mjs";
 import { upgradeCompatibilityDiagnostics } from "../runtime/core/update-advisory.mjs";
-import { createAdvanceRuntime } from "../runtime/workflow/advance-runtime.mjs";
+import { createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
 import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 // Hand-built runtime state in the shape Change Loop 3.7.0 and earlier wrote

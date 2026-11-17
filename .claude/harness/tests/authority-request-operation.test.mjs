@@ -1,29 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  abortAuthorityOperation,
-  acceptanceResponseEvidence,
-  authorityClaimIds,
-  authorityPacketOperation,
-  authorityResponseTemplate,
-  authorityRequestPolicy,
-  authorityRequestSelection,
-  displayAuthorityRequest,
-  lockedAuthorityOperation,
-  newAuthorityRequestValue,
-  pendingAuthorityRequest,
-  parseTelemetryEventLine,
-  preferredSessionTelemetryRow,
-  requestAuthorityOperation,
-  reviewResponseEvidence,
-  sessionTelemetryProvenanceOperation,
-  telemetryProviderFamily,
-  telemetryProvenanceValue,
-  telemetryRowHasModel,
-  telemetryRowsForSession,
-  resetInfrastructureAuthorityOperation,
-  extendReviewAuthorityOperation
-} from "../runtime/workflow/authority-runtime.mjs";
+  abortAuthorityOperation, authorityClaimIds, authorityRequestPolicy,
+  authorityRequestSelection, displayAuthorityRequest, lockedAuthorityOperation,
+  newAuthorityRequestValue, pendingAuthorityRequest, requestAuthorityOperation,
+  resetInfrastructureAuthorityOperation, extendReviewAuthorityOperation
+} from "../runtime/workflow/authority/authority-requests.mjs";
+import {
+  acceptanceResponseEvidence, authorityPacketOperation, authorityResponseTemplate,
+  reviewResponseEvidence
+} from "../runtime/workflow/authority/authority-response.mjs";
+import {
+  parseTelemetryEventLine, preferredSessionTelemetryRow, sessionTelemetryProvenanceOperation,
+  telemetryProviderFamily, telemetryProvenanceValue, telemetryRowHasModel,
+  telemetryRowsForSession
+} from "../runtime/workflow/authority/session-provenance.mjs";
 import { effectiveReviewAttemptLimit } from "../runtime/core/authority-policy.mjs";
 
 const fail = (message) => { throw new Error(message); };

@@ -176,7 +176,7 @@ assert_file_contains "upgrade keeps an unrecorded consumer test" \
 assert_eq "the manifest records no unshipped harness path" "0" \
   "$(grep -cE '^\.claude/harness/(tests|fixtures)/' "$TARGET/.foundation/install-manifest.txt" || true)"
 assert_file_exists "investigation runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/investigation-runtime.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/investigation/investigation-runtime.mjs"
 assert_file_exists "shared trust runtime installed" "$TARGET/.claude/harness/runtime/core/trust.mjs"
 assert_file_exists "authority policy runtime installed" \
   "$TARGET/.claude/harness/runtime/core/authority-policy.mjs"
@@ -191,17 +191,17 @@ assert_file_exists "Land grant runtime installed" \
 assert_file_exists "tool preparation runtime installed" \
   "$TARGET/.claude/harness/runtime/core/tool-preparation.mjs"
 assert_file_exists "repository delivery saga installed" \
-  "$TARGET/.claude/harness/runtime/workflow/repository-delivery-saga.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/delivery/repository-delivery-saga.mjs"
 assert_file_exists "lifecycle reducer runtime installed" \
   "$TARGET/.claude/harness/runtime/core/lifecycle-reducer.mjs"
 assert_file_exists "derived state projection runtime installed" \
   "$TARGET/.claude/harness/runtime/core/state-projections.mjs"
 assert_file_exists "evidence bootstrap runtime installed" \
   "$TARGET/.claude/harness/runtime/evidence/evidence-bootstrap.mjs"
-assert_file_exists "budget runtime installed" "$TARGET/.claude/harness/runtime/workflow/budget.mjs"
-assert_file_exists "authority runtime installed" "$TARGET/.claude/harness/runtime/workflow/authority.mjs"
+assert_file_exists "budget runtime installed" "$TARGET/.claude/harness/runtime/workflow/authority/budget.mjs"
+assert_file_exists "authority runtime installed" "$TARGET/.claude/harness/runtime/workflow/authority/authority.mjs"
 assert_file_exists "agent planner runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/agent-planning.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/authority/agent-planning.mjs"
 assert_file_exists "CLI router runtime installed" "$TARGET/.claude/harness/runtime/core/cli-router.mjs"
 investigation_template="$(bash "$ROOT/cli.sh" --project "$TARGET" investigate --template)"
 assert_contains "public investigate template exposes typed facts" \
@@ -269,7 +269,7 @@ assert_file_exists "shared process lock runtime installed" \
   "$TARGET/.claude/harness/runtime/core/process-lock.mjs"
 assert_file_exists "runtime architecture guide installed" "$TARGET/.claude/harness/runtime/README.md"
 assert_file_exists "repository topology runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/repository-topology.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/repository/repository-topology.mjs"
 assert_file_exists "provider scheduler runtime installed" \
   "$TARGET/.claude/harness/runtime/evidence/provider-scheduler.mjs"
 assert_file_exists "review protocol runtime installed" \
@@ -294,31 +294,31 @@ assert_file_exists "metrics runtime installed" \
   "$TARGET/.claude/harness/runtime/observability/metrics-runtime.mjs"
 assert_file_exists "telemetry runtime installed" \
   "$TARGET/.claude/harness/runtime/observability/telemetry-runtime.mjs"
-assert_file_exists "sandbox runtime installed" "$TARGET/.claude/harness/runtime/workflow/sandbox-runtime.mjs"
-assert_file_exists "Land journal runtime installed" "$TARGET/.claude/harness/runtime/workflow/land-journal.mjs"
+assert_file_exists "sandbox runtime installed" "$TARGET/.claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs"
+assert_file_exists "Land journal runtime installed" "$TARGET/.claude/harness/runtime/workflow/transaction/land-journal.mjs"
 assert_file_exists "proof runtime installed" "$TARGET/.claude/harness/runtime/evidence/proof-runtime.mjs"
 assert_file_exists "change lifecycle runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/change-lifecycle.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/change/change-lifecycle.mjs"
 assert_file_exists "semantic draft compiler installed" \
-  "$TARGET/.claude/harness/runtime/workflow/semantic-draft.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/draft/semantic-draft.mjs"
 assert_file_exists "semantic amendment compiler installed" \
-  "$TARGET/.claude/harness/runtime/workflow/semantic-amendment.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/draft/semantic-amendment.mjs"
 assert_file_exists "unified advance runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/advance-runtime.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/advance/advance-runtime.mjs"
 assert_file_exists "change validation runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/change-validation.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/change/change-validation.mjs"
 assert_file_exists "packet runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/packet-runtime.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/packet/packet-runtime.mjs"
 assert_file_exists "lease runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/lease-runtime.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/authority/lease-runtime.mjs"
 assert_file_exists "authority bridge runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/authority-runtime.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/authority/authority-runtime.mjs"
 assert_file_exists "Land runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/land-runtime.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/land/land-runtime.mjs"
 assert_file_exists "external handoff runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/handoff-runtime.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/authority/handoff-runtime.mjs"
 assert_file_exists "apply runtime installed" \
-  "$TARGET/.claude/harness/runtime/workflow/apply-runtime.mjs"
+  "$TARGET/.claude/harness/runtime/workflow/land/apply-runtime.mjs"
 assert_file_exists "command registry installed" "$TARGET/.claude/harness/commands.json"
 assert_cmd_zero "command registry has one unique entry per public name" \
   jq -e '([.commands[].name] | length) == ([.commands[].name] | unique | length)' \

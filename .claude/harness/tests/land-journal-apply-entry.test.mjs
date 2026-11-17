@@ -18,8 +18,8 @@ import {
   restoreLandJournalEntry,
   rollbackLandJournalOperation,
   verifyLandJournalOperation
-} from "../runtime/workflow/land-journal.mjs";
-import { landUndoPlan } from "../runtime/workflow/land-undo.mjs";
+} from "../runtime/workflow/transaction/land-journal.mjs";
+import { landUndoPlan } from "../runtime/workflow/land/land-undo.mjs";
 
 function write(path, content) {
   mkdirSync(dirname(path), { recursive: true });

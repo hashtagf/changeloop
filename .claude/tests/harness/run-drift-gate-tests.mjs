@@ -10,8 +10,8 @@ import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createModelDriftInspector } from "../../harness/runtime/observability/host-execution-contract.mjs";
-import { createLandRuntime } from "../../harness/runtime/workflow/land-runtime.mjs";
-import { createChangeValidationRuntime } from "../../harness/runtime/workflow/change-validation.mjs";
+import { createLandRuntime } from "../../harness/runtime/workflow/land/land-runtime.mjs";
+import { createChangeValidationRuntime } from "../../harness/runtime/workflow/change/change-validation.mjs";
 
 let assertions = 0;
 function check(actual, expected, message) {

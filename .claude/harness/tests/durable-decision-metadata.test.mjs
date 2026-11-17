@@ -6,23 +6,17 @@ import test from "node:test";
 
 import {
   materializeDraftSpecs, renderDraftDesign, renderDraftProposal
-} from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
 import {
   normalizeSemanticDraft, renderRequirementMarkdown
-} from "../runtime/workflow/semantic-draft.mjs";
+} from "../runtime/workflow/draft/semantic-draft.mjs";
 
 import {
-  durableDecisionBlockIssues,
-  durableDecisionGraphIssues,
-  durableDecisionMetadataIssues,
-  durableDecisionReciprocityIssues,
-  durableDecisionReferenceIssues,
-  durableDecisionSection,
-  durableDecisionStatusIssues,
-  durableDecisionValues,
-  localDecisionReference,
+  durableDecisionBlockIssues, durableDecisionGraphIssues, durableDecisionMetadataIssues,
+  durableDecisionReciprocityIssues, durableDecisionReferenceIssues, durableDecisionSection,
+  durableDecisionStatusIssues, durableDecisionValues, localDecisionReference,
   parseDurableDecisions
-} from "../runtime/workflow/change-validation.mjs";
+} from "../runtime/workflow/change/durable-decisions.mjs";
 
 const fields = [
   "Status", "Decision", "Why", "Rejected", "Consequences",

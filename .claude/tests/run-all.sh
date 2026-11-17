@@ -290,6 +290,10 @@ provider workspace hash|node --test "$ROOT/.claude/harness/tests/provider-worksp
 agent plan view|node --test "$ROOT/.claude/harness/tests/agent-plan-view.test.mjs"
 agent dispatch|node --test "$ROOT/.claude/harness/tests/agent-dispatch.test.mjs"
 process lock|node --test "$ROOT/.claude/harness/tests/process-lock.test.mjs"
+process lock interleaving|node --test "$ROOT/.claude/harness/tests/process-lock-interleaving.test.mjs"
+lease interleaving|node --test "$ROOT/.claude/harness/tests/lease-interleaving.test.mjs"
+lifecycle user projection golden|node --test "$ROOT/.claude/harness/tests/lifecycle-user-projection-golden.test.mjs"
+runtime primitives|node --test "$ROOT/.claude/harness/tests/runtime-primitives.test.mjs"
 budget continuation|node --test "$ROOT/.claude/harness/tests/budget-continuation.test.mjs"
 budget runtime|node --test "$ROOT/.claude/harness/tests/budget-runtime.test.mjs"
 repository topology|node --test "$ROOT/.claude/harness/tests/repository-topology.test.mjs" "$ROOT/.claude/harness/tests/submodule-repository-workspace.test.mjs"
@@ -349,6 +353,7 @@ telemetry source cursor|node --test "$ROOT/.claude/harness/tests/telemetry-sourc
 proof audit|node "$ROOT/.claude/harness/tests/proof-audit.test.mjs"
 change draft loading|node "$ROOT/.claude/harness/tests/change-draft-loading.test.mjs"
 change creation|node --test "$ROOT/.claude/harness/tests/change-creation.test.mjs"
+change lifecycle surface|node --test "$ROOT/.claude/harness/tests/change-lifecycle-surface.test.mjs"
 change resolution|node "$ROOT/.claude/harness/tests/change-resolution.test.mjs"
 diagnostics runtime|node "$ROOT/.claude/harness/tests/diagnostics-runtime.test.mjs"
 diagnostics changes|node --test "$ROOT/.claude/harness/tests/diagnostics-changes.test.mjs"
@@ -375,8 +380,10 @@ run-all watchdog|node --test "$ROOT/.claude/harness/tests/run-all-timeout.test.m
 affected test selection|node --test "$HERE/harness/affected-suite-selector.test.mjs"
 composition-root wiring|sh "$HERE/harness/run-wiring-tests.sh"
 architecture boundaries|node "$HERE/harness/run-architecture-tests.mjs"
+repository hygiene|node --test "$HERE/harness/repository-hygiene.test.mjs"
 lint ratchet|node "$ROOT/scripts/lint/ratchet.mjs"
 lint rules|node --test "$ROOT/scripts/lint/test/rules.test.mjs" "$ROOT/scripts/lint/test/ratchet.test.mjs"
+skill contracts|node --test "$ROOT/scripts/lint/test/skill-contracts.test.mjs" "$ROOT/scripts/lint/test/lifecycle-contracts.test.mjs"
 single-source tables|node "$HERE/harness/run-single-source-tests.mjs"
 context budgets|sh "$HERE/harness/run-context-budget-tests.sh"
 agent contracts|sh "$HERE/harness/run-agent-contract-tests.sh"
@@ -519,8 +526,10 @@ suite_timeout_seconds() {
       echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-1200}" ;;
     # The sibling topology fixture walks a real change to archived on its own.
     # Each upgrade-from-3.7.0 row drives a published release and the current
-    # one through every lifecycle stage on real Git.
-    'pull request delivery'|'proof loop end to end'|'apply conflict'|'concurrent repositories seam'|'installer smoke'|'harness contracts (topology siblings)'|'upgrade from 3.7.0'|'upgrade from 3.7.0 (legacy review)')
+    # one through every lifecycle stage on real Git. Evidence binding mutation
+    # reruns the evidence suites per fault: about 115s alone, over 300s when
+    # it shares the pool with the rest of the full tier.
+    'evidence binding mutation'|'pull request delivery'|'proof loop end to end'|'apply conflict'|'concurrent repositories seam'|'installer smoke'|'harness contracts (topology siblings)'|'upgrade from 3.7.0'|'upgrade from 3.7.0 (legacy review)')
       echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-600}" ;;
     *) echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-300}" ;;
   esac

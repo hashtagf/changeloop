@@ -255,8 +255,14 @@ installed runtime.
 5. When an agent repeats a mistake, encode the fix as a lint rule in
    `scripts/lint/plugin.mjs` (message names the root-cause fix), a test, or an
    API change, not another line of prose. `scripts/lint/ratchet.mjs` keeps
-   harness findings and large-file sizes, including `foundation.mjs`, from
+   harness lint and `tsc --checkJs` type findings (`types/TS<code>`) and large-file sizes, including `foundation.mjs`, from
    growing; run `--tighten` after cleanup and commit the lowered baseline.
+   Timers go through `runtime/core/timing.mjs` and deliberately ignored
+   failures through `runtime/core/best-effort.mjs`; lint allows neither
+   anywhere else.
+   A new or changed skill needs `.claude/skills/<name>/contract.json`
+   (trigger, inputs, action, outputs, handoff, and who does or decides
+   what); `scripts/lint/skill-contracts.mjs` checks it.
 6. Add the lowest-level regression that would have caught the defect. A new
    suite requires its script, registration in `.claude/tests/run-all.sh`, and a
    row in `.claude/tests/README.md`.

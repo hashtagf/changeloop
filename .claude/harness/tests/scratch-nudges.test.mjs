@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { scratchNoteLine } from "../runtime/workflow/change-lifecycle.mjs";
+import { scratchNoteLine } from "../runtime/workflow/change/change-lifecycle.mjs";
 
 const PREFIX = "scratch (advisory, approval page): ";
 const example = { type: "examples", title: "Rules", rules: [] };
@@ -52,7 +52,7 @@ test("low impact and complete drafts raise no scratch NOTE", () => {
 });
 
 // A path that points at a risk the draft neither declares nor covers is a note.
-import { pathRiskNoteLine } from "../runtime/workflow/change-lifecycle.mjs";
+import { pathRiskNoteLine } from "../runtime/workflow/change/change-lifecycle.mjs";
 
 const migrationTask = { tasks: [{ paths: ["db/migrations/0042_orders.sql"] }] };
 

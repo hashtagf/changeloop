@@ -4,8 +4,8 @@ import test from "node:test";
 import { WORK_TYPES } from "../runtime/contracts/work-types.mjs";
 import {
   SURFACE_KEYS, SURFACE_ORDER, TYPE_SURFACES, checklistFor, checklistNoteLine, coverageReport, coversIssues
-} from "../runtime/workflow/prototype-checklist.mjs";
-import { scratchFieldIssues } from "../runtime/workflow/scratch-fields.mjs";
+} from "../runtime/workflow/prototype/prototype-checklist.mjs";
+import { scratchFieldIssues } from "../runtime/workflow/draft/scratch-fields.mjs";
 
 const keys = (items) => items.map((item) => item.key);
 

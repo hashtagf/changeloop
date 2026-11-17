@@ -10,7 +10,7 @@ import {
   normalizedOperationReferences,
   recordHandoffOperation,
   requiredOperationString
-} from "../runtime/workflow/handoff-runtime.mjs";
+} from "../runtime/workflow/authority/handoff-runtime.mjs";
 
 const fail = (message) => { throw new Error(message); };
 const label = "change/handoffs.yaml operations[0]";

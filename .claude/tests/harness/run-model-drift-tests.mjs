@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import {
-  classifyDrift, DRIFT_BLOCKING_TASK_KINDS, isBlockingDrift, resolveFamily
+  classifyDrift, isBlockingDrift, resolveFamily
 } from "../../harness/runtime/observability/model-drift.mjs";
+import { DRIFT_BLOCKING_TASK_KINDS } from "../../harness/runtime/contracts/model-policy.mjs";
 
 const policy = {
   models: {

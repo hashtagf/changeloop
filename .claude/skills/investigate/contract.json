@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "skill": "investigate",
+  "trigger": "Before Change, a request needs feasibility, requirements, a bug's mechanics, or how/why code works (/investigate)",
+  "inputs": [
+    "the user's question and corrections",
+    "repository code, tests, and openspec/specs",
+    "recorded rationale and prior investigation records"
+  ],
+  "action": "Gather evidence without product edits, keep the investigation record current, and ask only unresolved material questions",
+  "outputs": [
+    {
+      "kind": "report",
+      "description": "investigation report with conclusion, evidence, and open questions"
+    },
+    {
+      "kind": "decision-request",
+      "description": "material questions only the user can settle"
+    }
+  ],
+  "handoff": [
+    {
+      "to": "skill:change",
+      "when": "intent is settled and must become an agreement"
+    },
+    {
+      "to": "skill:brainstorming",
+      "when": "the outcome or approach is still an open choice"
+    },
+    {
+      "to": "user",
+      "when": "a material question blocks a conclusion"
+    }
+  ],
+  "responsibility": {
+    "aiDoes": [
+      "reads sources and runs read-only checks",
+      "records findings and their evidence"
+    ],
+    "humanDoes": [
+      "supplies facts the repository cannot provide"
+    ],
+    "humanDecides": [
+      "unresolved material questions",
+      "whether to start a Change"
+    ]
+  }
+}

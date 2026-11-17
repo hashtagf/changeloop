@@ -7,8 +7,7 @@ import {
   executionPreparationValue,
   foundationToolPaths
 } from "../runtime/core/tool-preparation.mjs";
-import { retryFailedSandboxSetups } from
-  "../runtime/workflow/sandbox-runtime.mjs";
+import { retryFailedSandboxSetups } from "../runtime/workflow/sandbox/sandbox-repositories.mjs";
 import {
   executableIdentity, gitIndexIdentity, memoizeByGitIndex
 } from "../runtime/core/tool-identity.mjs";
@@ -127,7 +126,7 @@ test("failed repository setup is retried without repeating ready siblings", () =
 // A failed setup the harness cannot finish is handed to the agent with the
 // exact command, directory, and output, never a bare diagnostic loop.
 test("a failed repository setup carries its handoff into the advance repair", async () => {
-  const { advanceFailureAction } = await import("../runtime/workflow/advance-runtime.mjs");
+  const { advanceFailureAction } = await import("../runtime/workflow/advance/advance-envelope.mjs");
   const plan = executionPreparationValue({
     id: "demo",
     state: { workspace: { path: "/ws" }, repositories: { root: {
@@ -154,7 +153,7 @@ test("a failed repository setup carries its handoff into the advance repair", as
 // With no configured setup the harness runs the detected lockfile install
 // itself; a failure is the same agent handoff a configured command gets.
 test("a failed detected lockfile install is planned and handed off like configured setup", async () => {
-  const { advanceFailureAction } = await import("../runtime/workflow/advance-runtime.mjs");
+  const { advanceFailureAction } = await import("../runtime/workflow/advance/advance-envelope.mjs");
   const state = { workspace: { path: "/ws", setup: {
     command: "pnpm install --frozen-lockfile", status: "failed", exitCode: 127,
     source: "lockfile", lockfile: "pnpm-lock.yaml", cwd: "/ws",

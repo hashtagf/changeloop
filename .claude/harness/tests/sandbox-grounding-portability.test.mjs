@@ -9,9 +9,9 @@ import { join } from "node:path";
 
 import {
   gitBaseCheckoutPaths, gitBaseCheckoutStatus, groundingPortabilityFindings,
-  isPacketLocalSource, plannedGroundingPortabilityStatus
-} from
-  "../runtime/workflow/sandbox-runtime.mjs";
+  isPacketLocalSource
+} from "../runtime/workflow/sandbox/sandbox-copy.mjs";
+import { plannedGroundingPortabilityStatus } from "../runtime/workflow/sandbox/sandbox-replay.mjs";
 
 const root = mkdtempSync(join(tmpdir(), "foundation-grounding-portability-"));
 const digest = (value) => createHash("sha256").update(value).digest("hex");

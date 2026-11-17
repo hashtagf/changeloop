@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { applyDeltaPacket, deltaScopeRows } from "../runtime/workflow/review-delta-scope.mjs";
+import { applyDeltaPacket, deltaScopeRows } from "../runtime/workflow/packet/review-delta-scope.mjs";
 
 const row = (path, identity, extra = {}) => ({ repositoryId: "root", path, identity, ...extra });
 

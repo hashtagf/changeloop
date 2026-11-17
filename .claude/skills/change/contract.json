@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "skill": "change",
+  "trigger": "Settled intent must become or amend an OpenSpec agreement (/change, new behavior request, new behavior found in Build)",
+  "inputs": [
+    "the settled request and conversation constraints",
+    "repository code, tests, and openspec/specs",
+    "investigation conclusions when present"
+  ],
+  "action": "Write a v5 draft, compile it with change start, repair EDIT findings, and present the compiled packet for approval",
+  "outputs": [
+    {
+      "kind": "agreement",
+      "description": "compiled openspec/changes/<id>/ packet with requirements, scenarios, and tasks"
+    },
+    {
+      "kind": "decision-request",
+      "description": "spec approval question with scope, behavior, and open questions"
+    }
+  ],
+  "handoff": [
+    {
+      "to": "skill:build",
+      "when": "the user approved the spec"
+    },
+    {
+      "to": "user",
+      "when": "the spec awaits approval or a semantic question is open"
+    }
+  ],
+  "responsibility": {
+    "aiDoes": [
+      "drafts requirements, scenarios, and tasks",
+      "repairs validation findings"
+    ],
+    "humanDoes": [
+      "answers material semantic questions"
+    ],
+    "humanDecides": [
+      "approve, edit, or reject the spec"
+    ]
+  }
+}

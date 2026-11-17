@@ -9,37 +9,49 @@ import { dirname, isAbsolute, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 import {
-  deriveRepositoryTaskDependencies, derivedCapabilityPurpose, expandMinimalSemanticDraft,
-  mergeSemanticDraft,
-  MINIMAL_DRAFT_WRITING, minimalSemanticDraftTemplate, normalizeSemanticDraft,
-  renderRequirementMarkdown, renderSpecHeading, semanticDraftTemplate,
-  SEMANTIC_DRAFT_VERSIONS, isSemanticVersion,
-  TASK_FIELDS, unknownTaskFieldWarnings
-} from "../runtime/workflow/semantic-draft.mjs";
-import { requiredProvidersOperation } from "../runtime/workflow/change-validation.mjs";
+  derivedCapabilityPurpose, mergeSemanticDraft, normalizeSemanticDraft,
+  renderRequirementMarkdown, renderSpecHeading
+} from "../runtime/workflow/draft/semantic-draft.mjs";
+import {
+  deriveRepositoryTaskDependencies, TASK_FIELDS, unknownTaskFieldWarnings
+} from "../runtime/workflow/draft/semantic-draft-tasks.mjs";
+import { expandMinimalSemanticDraft } from "../runtime/workflow/draft/semantic-draft-minimal.mjs";
+import {
+  MINIMAL_DRAFT_WRITING, minimalSemanticDraftTemplate, semanticDraftTemplate
+} from "../runtime/workflow/draft/semantic-draft-templates.mjs";
+import {
+  SEMANTIC_DRAFT_VERSIONS, isSemanticVersion
+} from "../runtime/workflow/validation/draft-version.mjs";
+import { requiredProvidersOperation } from "../runtime/workflow/change/required-providers.mjs";
 import { classifyReviewRisk } from "../runtime/evidence/review-routing.mjs";
 import {
   createChangeLifecycle, draftNeedsDesign, renderDraftProposal, renderDraftTask,
   semanticDraftKeepsDesign, synchronizeProposalClassification
-} from "../runtime/workflow/change-lifecycle.mjs";
+} from "../runtime/workflow/change/change-lifecycle.mjs";
 import {
   declaredDraftRisk, deriveDraftRisk, riskLabel, withDerivedRisk
 } from "../runtime/workflow/validation/draft-risk.mjs";
 import {
-  amendTaskVerifyOperation, amendmentRepositoryOrderIssues, appendRequirementToSpec,
-  compileSemanticAmendment,
-  semanticAmendmentTemplate, taskContractOnlyAmendment, taskVerifyAmendment,
-  updateTaskClaimAnnotation, verifyCannotFail, writeSemanticAmendment
-} from "../runtime/workflow/semantic-amendment.mjs";
-import { taskCheck } from "../runtime/workflow/session-lease.mjs";
-import { groupAgentTasks } from "../runtime/workflow/agent-planning.mjs";
+  compileSemanticAmendment, writeSemanticAmendment
+} from "../runtime/workflow/draft/semantic-amendment.mjs";
 import {
-  LIGHT_WORK, WORK_TYPES, designBlueprintIssues, designBlueprintWarnings
+  amendTaskVerifyOperation, amendmentRepositoryOrderIssues, taskVerifyAmendment,
+  verifyCannotFail
+} from "../runtime/workflow/draft/amendment-verify.mjs";
+import {
+  appendRequirementToSpec, semanticAmendmentTemplate, taskContractOnlyAmendment,
+  updateTaskClaimAnnotation
+} from "../runtime/workflow/draft/amendment-tasks.mjs";
+import { taskCheck } from "../runtime/workflow/authority/session-lease.mjs";
+import { groupAgentTasks } from "../runtime/workflow/authority/agent-planning.mjs";
+import {
+  designBlueprintIssues, designBlueprintWarnings
 } from "../runtime/workflow/validation/design-blueprints.mjs";
+import { LIGHT_WORK, WORK_TYPES } from "../runtime/contracts/work-types.mjs";
 import {
   devDocumentIssues, devDocumentShapeIssues, requiredDevSections
 } from "../runtime/workflow/validation/dev-document.mjs";
-import { splitProse } from "../runtime/workflow/draft-folder.mjs";
+import { splitProse } from "../runtime/workflow/draft/draft-folder.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 const slugify = (value) => String(value).toLowerCase()
@@ -3500,7 +3512,7 @@ test("a minimal draft without a version still defaults to v4", () => {
 test("no literal semantic-version check remains outside the helper", () => {
   const runtime = new URL("../runtime/", import.meta.url);
   const files = [
-    "workflow/semantic-draft.mjs", "workflow/change-lifecycle.mjs",
+    "workflow/draft/semantic-draft.mjs", "workflow/change/change-lifecycle.mjs",
     ...readdirSync(new URL("workflow/validation/", runtime))
       .filter((name) => name.endsWith(".mjs") && name !== "draft-version.mjs")
       .map((name) => `workflow/validation/${name}`)

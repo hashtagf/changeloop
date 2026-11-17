@@ -2,6 +2,7 @@ import { existsSync, readdirSync, renameSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import { emitSignal } from "../core/signals.mjs";
+import { bestEffort } from "../core/best-effort.mjs";
 
 const DELIVERED_VERDICTS = ["pass", "fail", "inconclusive"];
 
@@ -288,7 +289,7 @@ export function reviewChainLowered(files, history, verifies) {
   return !inFlight;
 }
 
-export function evidencedReviewAttemptCount({ history = {}, files = [],
+export function evidencedReviewAttemptCount({ history = /** @type {Record<string, any>} */ ({}), files = [],
   receiptRounds = [], verifiedTop = 0 }) {
   const claimed = files.flatMap((file) => [
     attemptNumberFromName(file.name),
@@ -874,12 +875,12 @@ export function createReviewAttemptStore({
     const move = state.lastBaseMove;
     if (move?.movementKey) {
       const reference = `harness:base-move:${move.movementKey}`;
-      try {
+      bestEffort(() => {
         assertBaseMoveResetAllowed(history, move, reference, refuse);
         baseMoveReleasedAttempt(attempts, move, refuse);
         acknowledgeBaseMoveAttempts(id, reference);
         released.push(reference);
-      } catch {}
+      });
     }
     const current = reviewHistoryState(id, loadRuntime(id));
     const infrastructure = infrastructureAiAttempts(id, current);

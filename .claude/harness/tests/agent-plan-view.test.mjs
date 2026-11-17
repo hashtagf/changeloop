@@ -26,7 +26,7 @@ import {
   showAgentTask,
   showAgentPlan,
   taskPlanIdentity
-} from "../runtime/workflow/agent-planning.mjs";
+} from "../runtime/workflow/authority/agent-planning.mjs";
 import { taskAuthorityShape } from "../runtime/core/task-execution-authority.mjs";
 
 const fail = (message) => { throw new Error(message); };

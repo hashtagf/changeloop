@@ -6,7 +6,7 @@ import {
   defaultTaskModelTier,
   modelForTaskOperation,
   taskIsHighRisk
-} from "../runtime/workflow/agent-planning.mjs";
+} from "../runtime/workflow/authority/agent-planning.mjs";
 
 const models = {
   fast: { family: "fast-family", fallbackTier: null },

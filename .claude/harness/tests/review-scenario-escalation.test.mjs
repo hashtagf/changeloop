@@ -12,8 +12,8 @@ import {
 } from "../runtime/evidence/configured-reviewer.mjs";
 import { createReviewAttemptStore } from "../runtime/evidence/review-attempt-store.mjs";
 import { parseScenarioCoverage } from "../runtime/evidence/review-diff.mjs";
-import { createAuthorityStore } from "../runtime/workflow/authority.mjs";
-import { createAuthorityRuntime } from "../runtime/workflow/authority-runtime.mjs";
+import { createAuthorityStore } from "../runtime/workflow/authority/authority.mjs";
+import { createAuthorityRuntime } from "../runtime/workflow/authority/authority-runtime.mjs";
 
 // N8 part B: the scenario checklist is bound into the review packet, the
 // prompt asks for per-scenario coverage, and a fast-tier round with a gap is

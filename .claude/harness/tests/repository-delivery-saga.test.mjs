@@ -11,7 +11,7 @@ import test from "node:test";
 
 import {
   copyBaselineState, createRepositoryDeliverySaga, repositoryDeliveryOrder, targetOverwrites
-} from "../runtime/workflow/repository-delivery-saga.mjs";
+} from "../runtime/workflow/delivery/repository-delivery-saga.mjs";
 
 const digest = (value) => createHash("sha256").update(value).digest("hex");
 const stableHash = (value) => digest(JSON.stringify(value));

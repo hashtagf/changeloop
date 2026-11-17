@@ -90,6 +90,7 @@ export function executionPreparationValue({
       setupLog: runtime.setup?.logTail || null
     };
   });
+  /** @type {any[]} */
   const issues = repositoryRows.filter((row) => row.setupStatus === "failed")
     .map((row) => ({
       code: "REPOSITORY_SETUP_FAILED",

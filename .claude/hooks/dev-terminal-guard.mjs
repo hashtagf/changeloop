@@ -7,17 +7,18 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 import { recordedPhaseContext } from "./phase-state.mjs";
+import { bestEffort } from "../harness/runtime/core/best-effort.mjs";
 
 export function devPrompt(transcript) {
   let prompt = "";
   for (const line of String(transcript || "").split("\n")) {
     if (!line.trim()) continue;
-    try {
+    bestEffort(() => {
       const row = JSON.parse(line);
       if (row.type === "last-prompt" && typeof row.lastPrompt === "string" &&
           /^\/dev(?:\s|$)/.test(row.lastPrompt.trim()))
         prompt = row.lastPrompt.trim();
-    } catch { /* tolerate a partially flushed final line */ }
+    }); // tolerate a partially flushed final line
   }
   return prompt;
 }
@@ -29,10 +30,8 @@ export function devResumeChange(prompt) {
 export function transcriptWallMs(transcript, nowMs = Date.now()) {
   for (const line of String(transcript || "").split("\n")) {
     if (!line.trim()) continue;
-    try {
-      const started = Date.parse(JSON.parse(line).timestamp || "");
-      if (Number.isFinite(started)) return Math.max(0, nowMs - started);
-    } catch { /* keep looking for the first timestamped row */ }
+    const started = bestEffort(() => Date.parse(JSON.parse(line).timestamp || ""), NaN);
+    if (Number.isFinite(started)) return Math.max(0, nowMs - started);
   }
   return null;
 }
@@ -206,7 +205,7 @@ function nextAction(root, id) {
 }
 
 function record(root, event, result) {
-  try {
+  bestEffort(() => {
     const dir = join(root, ".foundation", "logs");
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     const row = terminalVerdict(event, result);
@@ -221,7 +220,7 @@ function record(root, event, result) {
       { mode: 0o600 });
     writeFileSync(join(verdictDir, "latest.json"), `${JSON.stringify(row, null, 2)}\n`,
       { mode: 0o600 });
-  } catch { /* terminal truth must not depend on telemetry storage */ }
+  }); // terminal truth must not depend on telemetry storage
 }
 
 export function terminalVerdict(event, result, at = new Date().toISOString()) {

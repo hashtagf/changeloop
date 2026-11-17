@@ -20,7 +20,7 @@ SOURCE="$WORK/source"
 create_mutation_fixture "$ROOT" "$SOURCE"
 mutation_v2_begin "$WORK"
 SURFACE="$SOURCE/.claude/harness/runtime/core/state-runtime.mjs"
-DELETION="$SOURCE/.claude/harness/runtime/workflow/apply-recovery.mjs"
+DELETION="$SOURCE/.claude/harness/runtime/workflow/transaction/apply-recovery.mjs"
 
 restore() {
   rm -rf "$WORK"
@@ -109,7 +109,7 @@ cp "$WORK/apply-recovery.mjs" "$DELETION"
 restored_2=false; cmp -s "$WORK/apply-recovery.mjs" "$DELETION" && restored_2=true
 result_2=survived killer_2=""
 if [ "$killed_2" = true ]; then result_2=killed; killer_2=CASE-LAND-SURFACE-SUITE; fi
-mutation_v2_record "MUT-UNDECLARED-DELETION-ALLOWED" ".claude/harness/runtime/workflow/apply-recovery.mjs" \
+mutation_v2_record "MUT-UNDECLARED-DELETION-ALLOWED" ".claude/harness/runtime/workflow/transaction/apply-recovery.mjs" \
   "$applied_2" "$compiled_2" "$result_2" "CASE-LAND-SURFACE-SUITE" "$killer_2" "$restored_2"
 
 if ! suite_passes; then

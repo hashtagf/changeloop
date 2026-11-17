@@ -74,7 +74,6 @@ export async function routeRuntimeCommand(command, values, api) {
     recordAuthority,
     recordReceipt,
     runProvider,
-    prove,
     landCheck,
     grantLand,
     advanceLand,

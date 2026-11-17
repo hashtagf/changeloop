@@ -23,9 +23,9 @@ SOURCE="$WORK/source"
 . "$ROOT/.claude/tests/lib/mutation-v2.sh"
 create_mutation_fixture "$ROOT" "$SOURCE"
 mutation_v2_begin "$WORK"
-REPLAY="$SOURCE/.claude/harness/runtime/workflow/sandbox-runtime.mjs"
-LANDABLE="$SOURCE/.claude/harness/runtime/workflow/land-runtime.mjs"
-SNAPSHOT="$SOURCE/.claude/harness/runtime/workflow/repository-snapshot.mjs"
+REPLAY="$SOURCE/.claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs"
+LANDABLE="$SOURCE/.claude/harness/runtime/workflow/land/land-runtime.mjs"
+SNAPSHOT="$SOURCE/.claude/harness/runtime/workflow/repository/repository-snapshot.mjs"
 
 restore() {
   rm -rf "$WORK"
@@ -87,7 +87,7 @@ fi
 cp "$WORK/sandbox-runtime.mjs" "$REPLAY"
 restored_1=false; cmp -s "$WORK/sandbox-runtime.mjs" "$REPLAY" && restored_1=true
 result_1=survived killer_1=""; [ "$killed_1" != true ] || { result_1=killed; killer_1=CASE-TARGET-DRIFT-SUITE; }
-mutation_v2_record "MUT-TARGET-REPLAY-REMOVED" ".claude/harness/runtime/workflow/sandbox-runtime.mjs" \
+mutation_v2_record "MUT-TARGET-REPLAY-REMOVED" ".claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs" \
   "$applied_1" "$compiled_1" "$result_1" "CASE-TARGET-DRIFT-SUITE" "$killer_1" "$restored_1"
 
 # Fault 2: `land check` stops weighing the target and reports on the change
@@ -118,7 +118,7 @@ fi
 cp "$WORK/land-runtime.mjs" "$LANDABLE"
 restored_2=false; cmp -s "$WORK/land-runtime.mjs" "$LANDABLE" && restored_2=true
 result_2=survived killer_2=""; [ "$killed_2" != true ] || { result_2=killed; killer_2=CASE-TARGET-DRIFT-SUITE; }
-mutation_v2_record "MUT-LAND-TARGET-GUARD-REMOVED" ".claude/harness/runtime/workflow/land-runtime.mjs" \
+mutation_v2_record "MUT-LAND-TARGET-GUARD-REMOVED" ".claude/harness/runtime/workflow/land/land-runtime.mjs" \
   "$applied_2" "$compiled_2" "$result_2" "CASE-TARGET-DRIFT-SUITE" "$killer_2" "$restored_2"
 
 # Fault 3: commit identity is folded back into the composite content hash, so a
@@ -150,7 +150,7 @@ fi
 cp "$WORK/repository-snapshot.mjs" "$SNAPSHOT"
 restored_3=false; cmp -s "$WORK/repository-snapshot.mjs" "$SNAPSHOT" && restored_3=true
 result_3=survived killer_3=""; [ "$killed_3" != true ] || { result_3=killed; killer_3=CASE-TARGET-DRIFT-SUITE; }
-mutation_v2_record "MUT-CONTENT-IDENTITY-BINDS-HEAD" ".claude/harness/runtime/workflow/repository-snapshot.mjs" \
+mutation_v2_record "MUT-CONTENT-IDENTITY-BINDS-HEAD" ".claude/harness/runtime/workflow/repository/repository-snapshot.mjs" \
   "$applied_3" "$compiled_3" "$result_3" "CASE-TARGET-DRIFT-SUITE" "$killer_3" "$restored_3"
 
 if ! cmp -s "$WORK/sandbox-runtime.mjs" "$REPLAY" ||

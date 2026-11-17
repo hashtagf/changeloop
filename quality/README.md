@@ -27,6 +27,8 @@ baseline snapshot mismatch. Reports are written under
 `baselines/lint-ratchet-v1.json` belongs to the harness lint ratchet
 (`node scripts/lint/ratchet.mjs`, registered in `run-all.sh`). It may only
 shrink through `--tighten`; raising an entry is a reviewed manual edit.
+`baselines/skill-contracts-v1.json` lists skills that still lack a
+`contract.json` (`node scripts/lint/skill-contracts.mjs`) under the same rule.
 
 Semantic mutation of shipped boundaries is not run here: the registered suites
 in `.claude/tests/run-all.sh` own it, including

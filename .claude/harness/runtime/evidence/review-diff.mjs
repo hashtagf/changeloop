@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { bestEffort } from "../core/best-effort.mjs";
 
 // Diff-scoped review input. The configured reviewer receives the changed
 // hunks and the agreement's requirements instead of being told to open whole
@@ -149,7 +150,7 @@ export const MEDIUM_TIER_SPEED_SAFE_TRIGGERS = Object.freeze([
 ]);
 
 export function reviewModelClass({
-  tier, deliveredAiCount = 0, triggers = [], declaredReview = false, settings = {}
+  tier, deliveredAiCount = 0, triggers = [], declaredReview = false, settings = /** @type {Record<string, any>} */ ({})
 } = {}) {
   if (!["low", "medium"].includes(tier) || Number(deliveredAiCount) > 0)
     return "configured";
@@ -371,10 +372,8 @@ function coverageCandidates(text) {
       open = open > 0 ? text.lastIndexOf("{", open - 1) : -1) {
       const body = balancedObject(text, open);
       if (!body || open + body.length <= match.index) continue;
-      try {
-        const value = JSON.parse(body);
-        if (Array.isArray(value?.scenarioCoverage)) { found.push(value); break; }
-      } catch {}
+      const value = bestEffort(() => JSON.parse(body), null);
+      if (Array.isArray(value?.scenarioCoverage)) { found.push(value); break; }
     }
   }
   return found;

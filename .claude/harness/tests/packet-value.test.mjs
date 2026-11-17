@@ -15,7 +15,7 @@ import {
   reviewEvidenceRows,
   reviewSurfaceRows,
   reviewSurfaceWorkspace
-} from "../runtime/workflow/packet-runtime.mjs";
+} from "../runtime/workflow/packet/packet-runtime.mjs";
 
 const root = mkdtempSync(join(tmpdir(), "foundation-packet-value-"));
 let activePath = join(root, "openspec", "changes", "packet-test");

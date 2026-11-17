@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "skill": "feature",
+  "trigger": "/feature is invoked or a selected PRD or backlog group must be implemented and proven",
+  "inputs": [
+    "the PRD or backlog group",
+    "repository sources and openspec/specs"
+  ],
+  "action": "Ground the PRD once, settle one Decision Sheet, compile and approve the change, then build and prove it",
+  "outputs": [
+    {
+      "kind": "decision-request",
+      "description": "one Decision Sheet of grounded questions"
+    },
+    {
+      "kind": "agreement",
+      "description": "compiled change for the selected group"
+    },
+    {
+      "kind": "evidence",
+      "description": "proof for the group"
+    }
+  ],
+  "handoff": [
+    {
+      "to": "skill:land",
+      "when": "the group is proven and the user grants Land"
+    },
+    {
+      "to": "user",
+      "when": "the Decision Sheet or spec awaits answers or approval"
+    }
+  ],
+  "responsibility": {
+    "aiDoes": [
+      "grounds the PRD",
+      "builds and proves the selected group"
+    ],
+    "humanDoes": [
+      "answers the Decision Sheet"
+    ],
+    "humanDecides": [
+      "spec approval",
+      "which group runs next",
+      "Land"
+    ]
+  }
+}

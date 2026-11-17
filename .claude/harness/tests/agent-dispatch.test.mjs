@@ -7,8 +7,8 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { createAgentDispatchRuntime } from "../runtime/workflow/agent-dispatch.mjs";
-import { createLeaseRuntime } from "../runtime/workflow/lease-runtime.mjs";
+import { createAgentDispatchRuntime } from "../runtime/workflow/authority/agent-dispatch.mjs";
+import { createLeaseRuntime } from "../runtime/workflow/authority/lease-runtime.mjs";
 import { routeRuntimeCommand } from "../runtime/core/cli-router.mjs";
 
 const NO_FALLBACK = Symbol("no-fallback");

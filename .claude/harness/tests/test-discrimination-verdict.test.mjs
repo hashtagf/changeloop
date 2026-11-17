@@ -11,7 +11,7 @@ import {
 } from "../runtime/evidence/test-discrimination.mjs";
 import { configuredCommand } from "../runtime/evidence/evidence-results.mjs";
 import { lightKind } from "../runtime/workflow/validation/dev-document.mjs";
-import { landAdvisoryLines } from "../runtime/workflow/land-runtime.mjs";
+import { landAdvisoryLines } from "../runtime/workflow/land/land-runtime.mjs";
 
 // A behavior change whose base check gives no verdict is named to the user
 // (Prove outcome, Land report); a repository with changed product code and no

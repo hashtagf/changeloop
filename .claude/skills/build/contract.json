@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "skill": "build",
+  "trigger": "An approved change must be implemented or repaired in its isolated workspace (/build, returned EDIT or REPAIR)",
+  "inputs": [
+    "the compiled packet and returned task list",
+    "contextFiles named by the envelope",
+    "the isolated sandbox workspace"
+  ],
+  "action": "Implement every returned task inside allowed paths, then resume advance so the harness runs each verify and ticks passing tasks",
+  "outputs": [
+    {
+      "kind": "code",
+      "description": "product and test changes inside the sandbox"
+    },
+    {
+      "kind": "state",
+      "description": "tasks completed by the harness after their verify passes"
+    }
+  ],
+  "handoff": [
+    {
+      "to": "skill:prove",
+      "when": "every task passed and proof runs"
+    },
+    {
+      "to": "skill:change",
+      "when": "Build discovers new observable behavior that needs an amendment"
+    }
+  ],
+  "responsibility": {
+    "aiDoes": [
+      "implements and repairs product code and tests",
+      "follows the exact resume route"
+    ],
+    "humanDoes": [],
+    "humanDecides": []
+  }
+}

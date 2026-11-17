@@ -1,5 +1,5 @@
 import { behaviorChangingWork } from "../../evidence/test-discrimination.mjs";
-import { BEHAVIOR_NEUTRAL_WORK } from "./design-blueprints.mjs";
+import { BEHAVIOR_NEUTRAL_WORK } from "../../contracts/work-types.mjs";
 import { lightKind, scenarioKindLabel, inferWorkTypes } from "./dev-document.mjs";
 
 // What every change's proposal states once: who and which lane, the scope,

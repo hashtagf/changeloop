@@ -6,7 +6,7 @@ import test from "node:test";
 
 import {
   claimContractIssues, taskContractIssues
-} from "../../harness/runtime/workflow/change-validation.mjs";
+} from "../../harness/runtime/workflow/change/change-validation.mjs";
 import {
   eventUsageRecoveryActions, normalizedTelemetryHost, usageAvailability
 } from "../../harness/runtime/observability/metrics-runtime.mjs";
@@ -15,7 +15,7 @@ import {
 } from "../../harness/runtime/observability/telemetry-runtime.mjs";
 import {
   packetOverflowSummary
-} from "../../harness/runtime/workflow/packet-runtime.mjs";
+} from "../../harness/runtime/workflow/packet/packet-runtime.mjs";
 
 const jsonLines = (path) => {
   try {

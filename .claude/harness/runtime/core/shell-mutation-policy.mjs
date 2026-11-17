@@ -125,7 +125,7 @@ function heredocBodies(command) {
   return bodies;
 }
 
-function withoutHeredocBodies(command, keep = () => false) {
+function withoutHeredocBodies(command, keep = (_body) => false) {
   let text = "";
   let cursor = 0;
   for (const body of heredocBodies(command)) {

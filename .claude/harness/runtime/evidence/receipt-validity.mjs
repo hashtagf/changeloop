@@ -145,9 +145,9 @@ export function createReceiptValidity({
   reviewAttemptByDigest, reviewAttemptIsValid, resolvedAcceptance,
   claimsForProvider, stableHash, adapterFingerprint, providerWorkspaceHash,
   providerInputIdentity, validateArtifact, relevantHash, relevantSnapshot,
-  changeDiffIdentity, identityBridges = () => [],
+  changeDiffIdentity, identityBridges = (..._args) => [],
   // Without a rules lookup the project is treated as having no REVIEW.md.
-  currentReviewRulesHash = () => null
+  currentReviewRulesHash = (..._args) => null
 }) {
   const invalidReceipt = (provider, validity, value) =>
     ({ provider, validity, status: value.status });

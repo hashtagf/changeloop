@@ -24,7 +24,7 @@ printf '%s\n' '{"version":1,"repositories":[{"id":"api","path":"../api","allowOu
 # The upstream runtime and its proof/state records are never patched.
 node --input-type=module -e '
   import { readFileSync, writeFileSync } from "node:fs";
-  const path = ".claude/harness/runtime/workflow/repository-delivery-saga.mjs";
+  const path = ".claude/harness/runtime/workflow/delivery/repository-delivery-saga.mjs";
   const source = readFileSync(path, "utf8");
   const anchor = "      checkpoint(\"after-repository\", {";
   if (source.split(anchor).length !== 2) throw new Error("checkpoint anchor changed");

@@ -96,7 +96,8 @@ rules must not become dependencies of installed consumer files.
 - Use patch-based edits. Do not overwrite files through shell redirection.
 - Do not run destructive Git commands or remove user work.
 - Do not commit generated `.foundation` state, benchmark results, website build
-  output, caches, temporary consumers, or secrets.
+  output, caches, temporary consumers, or secrets (`repository hygiene` fails on
+  tracked ignored files).
 - Do not commit, push, publish, or run paid scenarios without explicit user
   authority.
 
@@ -131,4 +132,5 @@ portfolio workflow.
 `install.sh` `MANAGED` is authoritative for overwritten product files. Consumer
 configuration, `CLAUDE.md`, `AGENTS.md`, OpenSpec changes, and `.foundation`
 state are project-owned and must survive install/upgrade. Never make shipped
-files depend on repository-only tests, reports, or release tooling.
+files depend on repository-only tests, reports, or release tooling;
+`repository hygiene` checks every managed file.

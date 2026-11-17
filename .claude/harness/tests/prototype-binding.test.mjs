@@ -5,9 +5,9 @@ import { tmpdir } from "node:os";
 import test from "node:test";
 import {
   PROTOTYPE_BINDING, materializePrototype, prototypeSelectionIssues, readPrototypeBinding
-} from "../runtime/workflow/prototype-binding.mjs";
+} from "../runtime/workflow/prototype/prototype-binding.mjs";
 import { packetIdentity } from "../runtime/core/user-decisions.mjs";
-import { renderDraftDesign } from "../runtime/workflow/change-lifecycle.mjs";
+import { renderDraftDesign } from "../runtime/workflow/change/change-lifecycle.mjs";
 
 function project(t) {
   const root = mkdtempSync(join(tmpdir(), "foundation-prototype-binding-"));

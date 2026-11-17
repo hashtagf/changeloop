@@ -5,20 +5,12 @@ import { join } from "node:path";
 import test from "node:test";
 
 import {
-  acquireLeaseUnderLock,
-  cleanupLeaseOperation,
-  leaseAcquisitionRequest,
-  leaseDescriptorIsOwned,
-  leasePathIsAllowed,
-  leaseReleaseIdentity,
-  leaseRenewalRows,
-  leaseResourceConflicts,
-  observedLeaseWrites,
-  reapExpiredLeaseOperation,
-  releaseLeaseUnderLock,
-  sameLeaseRenewalAuthority,
-  taskNodeOutputSchema
-} from "../runtime/workflow/lease-runtime.mjs";
+  acquireLeaseUnderLock, cleanupLeaseOperation, leaseAcquisitionRequest,
+  leaseDescriptorIsOwned, leaseReleaseIdentity, leaseRenewalRows, leaseResourceConflicts,
+  observedLeaseWrites, reapExpiredLeaseOperation, releaseLeaseUnderLock,
+  sameLeaseRenewalAuthority, taskNodeOutputSchema
+} from "../runtime/workflow/authority/lease-runtime.mjs";
+import { leasePathIsAllowed } from "../runtime/core/graph-execution.mjs";
 
 const owned = {
   changeId: "change-a", taskId: "T001", owner: "agent-a",

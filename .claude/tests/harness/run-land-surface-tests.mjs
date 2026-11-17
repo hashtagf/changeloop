@@ -20,23 +20,23 @@ import {
 } from "../../harness/runtime/core/workspace-surface.mjs";
 import {
   createApplyRecovery, projectionCounts, targetHeadMovedDecision, undeclaredDeletions
-} from "../../harness/runtime/workflow/apply-recovery.mjs";
+} from "../../harness/runtime/workflow/transaction/apply-recovery.mjs";
 import {
   createBlockedDecision
 } from "../../harness/runtime/core/blocked-decision.mjs";
 import {
   outOfBandDeliveryDriftValue
 } from "../../harness/runtime/core/authority-policy.mjs";
-import { createLandJournal } from "../../harness/runtime/workflow/land-journal.mjs";
+import { createLandJournal } from "../../harness/runtime/workflow/transaction/land-journal.mjs";
 import {
   recordedDeliveryReferences, targetProjectionObservationValue
-} from "../../harness/runtime/workflow/land-runtime.mjs";
+} from "../../harness/runtime/workflow/land/land-runtime.mjs";
 import {
   shouldReportOutOfBandDelivery
 } from "../../harness/runtime/core/diagnostics-runtime.mjs";
-import { createApplyRuntime } from "../../harness/runtime/workflow/apply-runtime.mjs";
-import { targetEditPaths } from "../../harness/runtime/workflow/target-edits.mjs";
-import { automaticRecoveryAction } from "../../harness/runtime/workflow/advance-recovery.mjs";
+import { createApplyRuntime } from "../../harness/runtime/workflow/land/apply-runtime.mjs";
+import { targetEditPaths } from "../../harness/runtime/workflow/transaction/target-edits.mjs";
+import { automaticRecoveryAction } from "../../harness/runtime/workflow/advance/advance-recovery.mjs";
 
 const EXCLUDED = new Set([".git", ".foundation", ".workflow", "node_modules"]);
 

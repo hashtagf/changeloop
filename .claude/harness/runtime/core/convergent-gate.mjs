@@ -111,7 +111,7 @@ export function gateRepairPlan(findings = [], { phase = "unknown", gate = "unkno
 // often the same stall repeats belongs to the advance recovery ladder.
 // Genuine user-authority choices keep using `noProgressDecision`.
 export function noProgressRepair({
-  changeId, phase, gate, progress, findings = [], attemptedStrategies = [],
+  phase, gate, progress, findings = [], attemptedStrategies = [],
   resumeCommand, reason = null
 }) {
   const normalized = normalizeGateFindings(findings, { phase, gate });

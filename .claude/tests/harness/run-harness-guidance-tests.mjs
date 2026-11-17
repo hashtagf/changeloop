@@ -8,7 +8,7 @@ import {
 import { blockerTelemetryValue } from "../../harness/runtime/observability/telemetry-runtime.mjs";
 import { reviewRepairIntervals } from "../../harness/runtime/observability/feedback-runtime.mjs";
 import { derivedReviewRepairGraph } from "../../harness/runtime/evidence/repair-runtime.mjs";
-import { coordinatorAction } from "../../harness/runtime/workflow/advance-runtime.mjs";
+import { coordinatorAction } from "../../harness/runtime/workflow/advance/advance-actions.mjs";
 
 const results = [];
 const check = (id, operation) => {

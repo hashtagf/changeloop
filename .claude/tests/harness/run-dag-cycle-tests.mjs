@@ -17,7 +17,7 @@ import {
   providerAvailabilityIssue,
   providerExecutionNode
 } from "../../harness/runtime/evidence/provider-scheduler.mjs";
-import { createAgentPlanner } from "../../harness/runtime/workflow/agent-planning.mjs";
+import { createAgentPlanner } from "../../harness/runtime/workflow/authority/agent-planning.mjs";
 import { agentPlannerDeps } from "../../harness/tests/fixtures/runtime-deps.mjs";
 
 test("findCyclePath returns null for an acyclic diamond", () => {

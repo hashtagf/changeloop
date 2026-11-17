@@ -15,7 +15,7 @@ import {
   runtimeSessionId
 } from "../../harness/runtime/observability/telemetry.mjs";
 import { createTelemetryRuntime } from "../../harness/runtime/observability/telemetry-runtime.mjs";
-import { createBudgetRuntime } from "../../harness/runtime/workflow/budget.mjs";
+import { createBudgetRuntime } from "../../harness/runtime/workflow/authority/budget.mjs";
 
 const policy = () => ({
   execution: {

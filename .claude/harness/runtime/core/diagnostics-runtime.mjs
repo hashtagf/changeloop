@@ -101,10 +101,9 @@ export function createDiagnosticsRuntime({
   unverifiedDrift,
   unresolvedApplyTransactions,
   deliveryObservation = null,
-  authorityPreflight = () => ({ status: "READY", blockers: [] }),
+  authorityPreflight = (_id) => ({ status: "READY", blockers: [] }),
   executionContract = null,
   evidenceDetection = null,
-  parseFlags,
   fail
 }) {
   // A forecast is a prediction about files that do not exist. It warns, names

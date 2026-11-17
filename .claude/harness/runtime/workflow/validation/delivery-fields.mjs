@@ -5,8 +5,9 @@
 // (markdown body without the section heading, "" when empty).
 
 import {
-  cell, isObject, localized, objectList, present, requireFields, stringList, table,
+  cell, localized, objectList, present, requireFields, stringList, table
 } from "./field-helpers.mjs";
+import { isObject } from "../../core/values.mjs";
 
 const LABELS = Object.freeze({
   en: {

@@ -1,6 +1,8 @@
 export const STATE_PROJECTION_VERSION = 1;
 
-export function deriveChangeProjection({ state = {}, proof = null, currentHash = null }) {
+export function deriveChangeProjection({
+  state = /** @type {any} */ ({}), proof = null, currentHash = null
+}) {
   const proofCurrent = proof?.status === "pass" &&
     typeof currentHash === "string" && proof.workspaceHash === currentHash;
   const lifecycleStatus = state.status || "untracked";

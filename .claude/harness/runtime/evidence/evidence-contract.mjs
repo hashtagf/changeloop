@@ -14,6 +14,7 @@ import {
   visualProviderConfig, withVisualRequirement
 } from "./visual-review.mjs";
 import { relativeInside } from "../core/paths.mjs";
+import { bestEffort } from "../core/best-effort.mjs";
 
 const THAI_REQUIRED_SEMANTICS =
   thaiRiskPattern("concurrency", "money", "migration", "irreversible");
@@ -230,7 +231,7 @@ export function collectReviewSignals(state, contract, configuredCapabilities = [
 // deterministic evidence alone. Anything inferred from the built diff that
 // raises the tier (security-static, contract or data capabilities) restores
 // review, because the tier is recomputed at every Prove.
-export function rapidEvidenceOnly({ state = {}, signals, riskRoute, signalled }) {
+export function rapidEvidenceOnly({ state = /** @type {Record<string, any>} */ ({}), signals, riskRoute, signalled }) {
   return state.schema === "foundation-rapid" && riskRoute?.tier === "low" &&
     !signalled && !(signals?.diversityTriggers || []).length;
 }
@@ -328,16 +329,16 @@ export function commandWorkspaceFiles(config, workspace) {
     // the file appears and would make the provider depend on its own output.
     if (rel === report) continue;
     const path = join(workspace, rel);
-    try {
+    bestEffort(() => {
       if (existsSync(path) && statSync(path).isFile()) files.push(rel);
-    } catch {}
+    });
   }
   return [...new Set(files)].sort();
 }
 
 export function uncoveredCommandWorkspaceFiles({
-  config, workspace, repositoryId = "root", tracked = () => false,
-  declared = () => false
+  config, workspace, repositoryId = "root", tracked = (..._args) => false,
+  declared = (..._args) => false
 }) {
   // Pure checks first: `tracked` may have to consult Git.
   return commandWorkspaceFiles(config, workspace).filter((rel) =>
@@ -599,7 +600,7 @@ export function createEvidenceContract({
   filesystemEntryIdentity,
   policyCapabilities, foundationPolicy, handoffContract, git, declaredSurfaceMatcher, die,
   // Absent in narrow compositions: every capability may raise the review tier.
-  policyCapabilityTrigger = () => null
+  policyCapabilityTrigger = (..._args) => null
 }) {
   function executionServiceSource(id, name, service) {
     const commandValid = Array.isArray(service?.command) &&
@@ -620,7 +621,7 @@ export function createEvidenceContract({
       die(`service '${name}' requires readiness.url`);
     if (staticRootValid) {
       let protocol;
-      try { protocol = new URL(service.readiness.url).protocol; } catch {}
+      protocol = bestEffort(() => new URL(service.readiness.url).protocol, protocol);
       if (protocol !== "http:")
         die(`service '${name}' staticRoot readiness.url must use http`);
     }
@@ -1107,8 +1108,7 @@ export function createEvidenceContract({
     if (provider === VISUAL_CAPABILITY) {
       const dir = activeChangePath(id);
       let claimIds = [];
-      try { claimIds = (readJson(join(dir, "evidence.yaml")).claims || []).map((claim) => claim.id); }
-      catch { /* an unreadable contract fails elsewhere; no extra claims are bound here */ }
+      claimIds = bestEffort(() => (readJson(join(dir, "evidence.yaml")).claims || []).map((claim) => claim.id), claimIds); // an unreadable contract fails elsewhere; no extra claims are bound here
       const binding = reconcileVisualBinding(readVisualBinding(dir), claimIds);
       return binding ? builtInVisualConfig(id, dir, binding) : null;
     }

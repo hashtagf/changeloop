@@ -6,13 +6,13 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
-import { createAdvanceRuntime } from "../runtime/workflow/advance-runtime.mjs";
-import { createLeaseRuntime } from "../runtime/workflow/lease-runtime.mjs";
-import { recoverCompletedTasksForExecution } from "../runtime/workflow/agent-planning.mjs";
+import { createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
+import { createLeaseRuntime } from "../runtime/workflow/authority/lease-runtime.mjs";
+import { recoverCompletedTasksForExecution } from "../runtime/workflow/authority/agent-planning.mjs";
 import { taskAuthorityShape } from "../runtime/core/task-execution-authority.mjs";
 import {
   createSessionLeaseRuntime, runTaskCheck, sessionLeaseOwner, taskCheck, taskLineChecked, tickTaskLine
-} from "../runtime/workflow/session-lease.mjs";
+} from "../runtime/workflow/authority/session-lease.mjs";
 import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 const stableHash = (value) => JSON.stringify(value).length.toString(16).padStart(12, "0");

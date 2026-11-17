@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { bestEffort } from "./best-effort.mjs";
 
 const ID = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 const POLITE = String.raw`(?:\s*(?:ครับ|ค่ะ|คับ|นะ|please))?[.!！]*$`;
@@ -48,10 +49,10 @@ function sessionCandidates(root, sessionId, statuses) {
         });
         if (!belongs) return [];
         let title = id;
-        try {
+        bestEffort(() => {
           const proposal = readFileSync(join(root, "openspec/changes", id, "proposal.md"), "utf8");
           title = proposal.match(/^#\s+(.+)$/m)?.[1]?.trim() || id;
-        } catch { /* An ID remains an unambiguous fallback label. */ }
+        }); // An ID remains an unambiguous fallback label.
         return [{ id, title }];
       } catch { return []; }
     }).sort((a, b) => a.id.localeCompare(b.id));

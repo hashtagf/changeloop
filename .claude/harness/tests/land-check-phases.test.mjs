@@ -4,10 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { agreementIdentity, assertSpecApproval } from "../runtime/core/user-decisions.mjs";
-import { automaticRecoveryAction } from "../runtime/workflow/advance-recovery.mjs";
+import { automaticRecoveryAction } from "../runtime/workflow/advance/advance-recovery.mjs";
 import {
   advanceLandOperation, createLandRuntime, landTransactionStarted
-} from "../runtime/workflow/land-runtime.mjs";
+} from "../runtime/workflow/land/land-runtime.mjs";
 
 const HASH = "workspacehash0000000000000000000000000000000000000000000000000000";
 

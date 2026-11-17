@@ -7,8 +7,8 @@ import {
   pendingRecoveryEntries,
   replaceRecoveryEntry,
   stageRecoveryBackups
-} from "../runtime/workflow/land-journal.mjs";
-import { createLandRuntime } from "../runtime/workflow/land-runtime.mjs";
+} from "../runtime/workflow/transaction/land-journal.mjs";
+import { createLandRuntime } from "../runtime/workflow/land/land-runtime.mjs";
 
 const entry = {
   path: "app.txt", before: "before", after: "after", backup: "backup/0"

@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
 
-import { factsDigest, pageFile, snapshotFor, syncStatus, syncWarnings } from "../runtime/workflow/prototype-sync.mjs";
+import { factsDigest, pageFile, snapshotFor, syncStatus, syncWarnings } from "../runtime/workflow/prototype/prototype-sync.mjs";
 
 const draft = (path = "prototype.html") => ({ workType: ["ui"], examples: [{ type: "prototype", title: "p", path }] });
 const FACTS = { level: "Medium", proof: 0, lanes: [] };

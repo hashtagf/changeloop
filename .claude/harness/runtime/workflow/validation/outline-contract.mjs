@@ -253,3 +253,10 @@ export function outlineRow(document, key) {
 export function derivedSectionKeys(document) {
   return rowsOf(document).filter((section) => section.owner !== "author").map((section) => section.key);
 }
+
+// True when a v5 draft authors the proposal section `key` as prose, so checks
+// that look for the typed field also accept the prose that replaces it.
+export function hasAuthoredProposalProse(draft, key) {
+  const body = draft?.prose?.proposal?.[key];
+  return typeof body === "string" && body.trim() !== "";
+}

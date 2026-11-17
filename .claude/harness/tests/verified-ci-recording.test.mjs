@@ -1,10 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  recordVerifiedCiOperation,
-  requireExternalCiConfig,
-  signedCiReceiptFlags
-} from "../runtime/workflow/authority-runtime.mjs";
+  recordVerifiedCiOperation, requireExternalCiConfig, signedCiReceiptFlags
+} from "../runtime/workflow/authority/authority-requests.mjs";
 
 const fail = (message) => { throw new Error(message); };
 const config = {

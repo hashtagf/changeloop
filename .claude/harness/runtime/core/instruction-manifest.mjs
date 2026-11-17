@@ -5,7 +5,6 @@ import { sortedJson } from "./trust.mjs";
 
 export const INSTRUCTION_MANIFEST_SCHEMA_VERSION = 1;
 
-export { sortedJson as canonicalJson };
 
 export function sha256(value) {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;

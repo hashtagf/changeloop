@@ -34,7 +34,7 @@ function heartbeat(agentId, overrides = {}) {
 }
 
 before(async () => {
-  await new Promise((resolve) => startServer(0).once('listening', resolve));
+  await new Promise((resolve) => startServer(0, '127.0.0.1').once('listening', resolve));
   origin = `http://127.0.0.1:${server.address().port}`;
 });
 

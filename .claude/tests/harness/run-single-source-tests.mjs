@@ -122,7 +122,7 @@ const pins = {
 
 check(() => assert.equal(
   JSON.parse(read(".claude/harness/protocol.json")).investigationStateSchema,
-  read(".claude/harness/runtime/workflow/investigation-runtime.mjs")
+  read(".claude/harness/runtime/workflow/investigation/investigation-runtime.mjs")
     .match(/INVESTIGATION_STATE_VERSION\s*=\s*(\d+)/)?.[1],
   "investigation schema pin must match the highest supported state version"));
 

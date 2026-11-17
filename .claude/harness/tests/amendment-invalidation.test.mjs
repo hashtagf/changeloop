@@ -6,8 +6,8 @@ import test from "node:test";
 import { planAmendmentInvalidation } from
   "../runtime/workflow/validation/amendment-invalidation.mjs";
 import { formatInvalidatedWaivers, invalidatedWaivers } from
-  "../runtime/workflow/change-lifecycle.mjs";
-import { amendmentSectionIssues } from "../runtime/workflow/semantic-amendment.mjs";
+  "../runtime/workflow/change/change-lifecycle.mjs";
+import { amendmentSectionIssues } from "../runtime/workflow/draft/amendment-sections.mjs";
 
 // The harness builds the file map, work type, and acceptance rows; an
 // amendment can replace only author sections, and the repair says so.
@@ -22,7 +22,7 @@ test("amending a harness-built outline section returns an issue naming the harne
 });
 
 import { compileSemanticAmendment, writeSemanticAmendment } from
-  "../runtime/workflow/semantic-amendment.mjs";
+  "../runtime/workflow/draft/semantic-amendment.mjs";
 
 // Waivers bind to the contract revision; an amendment that moves it must say
 // which gates came back instead of letting them reappear silently (issue #40).

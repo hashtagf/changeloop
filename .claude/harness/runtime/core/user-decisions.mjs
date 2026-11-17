@@ -93,12 +93,11 @@ export function approvalMatches(identity, root, id) {
 }
 
 export function userDecisionError(code, summary, options, recommended) {
-  const error = new Error(summary);
-  error.code = code;
-  error.owner = "user";
-  error.boundary = code.toLowerCase().replaceAll("_", "-");
-  error.decision = { kind: error.boundary, summary, options, recommended };
-  return error;
+  const boundary = code.toLowerCase().replaceAll("_", "-");
+  return Object.assign(new Error(summary), {
+    code, owner: "user", boundary,
+    decision: { kind: boundary, summary, options, recommended }
+  });
 }
 
 // A lane counts for the packet it was given on: the same bytes are the same
@@ -416,10 +415,7 @@ export function agreementDriftError(id, workspacePath) {
     "edits are bookkeeping; revert any other edit there and express semantic changes with " +
     `'cloop change amend ${id} <amendment.json>'. See the edit with ` +
     `\`diff -r openspec/changes/${id} ${workspacePath}/openspec/changes/${id}\` from the project root. Never ask the user to copy agreement files.`);
-  error.code = "AGREEMENT_DRIFT";
-  error.owner = "agent";
-  error.boundary = "agreement-drift";
-  return error;
+  return Object.assign(error, { code: "AGREEMENT_DRIFT", owner: "agent", boundary: "agreement-drift" });
 }
 
 export function currentWaivers(state, workspaceHash) {

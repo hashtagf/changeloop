@@ -220,7 +220,7 @@ export function createExecRuntime({
   callerCwd = () => process.env.FOUNDATION_CALLER_CWD || process.cwd(),
   // Brings the change's sandboxes current (the root sandbox's nested
   // repository paths) before a check runs in one of them.
-  prepareWorkspace = () => {}
+  prepareWorkspace = (..._args) => {}
 }) {
   function execObserved(id, commandArgs, { phase, repository = null, task = null } = {}) {
     const state = loadRuntime(id);

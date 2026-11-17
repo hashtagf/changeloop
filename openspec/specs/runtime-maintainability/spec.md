@@ -53,7 +53,7 @@ and Land behavior.
 
 ### Requirement: rendering-module
 
-The packet-rendering functions SHALL live in .claude/harness/runtime/workflow/draft-packet-render.mjs and change-lifecycle.mjs SHALL no longer define them.
+The packet-rendering functions SHALL live in .claude/harness/runtime/workflow/draft/draft-packet-render.mjs and change-lifecycle.mjs SHALL no longer define them.
 
 #### Scenario: Rendering module owns the functions
 
@@ -80,7 +80,7 @@ amendment-record.mjs SHALL own the amendment coverage changes, the amendment his
 
 ### Requirement: sandbox-setup-module
 
-The sandbox setup functions SHALL live in .claude/harness/runtime/workflow/sandbox-setup.mjs and sandbox-runtime.mjs SHALL re-export them unchanged.
+The sandbox setup functions SHALL live in .claude/harness/runtime/workflow/sandbox/sandbox-setup.mjs and sandbox-runtime.mjs SHALL re-export them unchanged.
 
 #### Scenario: Importers keep working
 

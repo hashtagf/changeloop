@@ -1,7 +1,18 @@
-import { NFR_CATEGORY_CAPABILITIES } from "../change-validation.mjs";
 import {
-  isObject, localized, objectList, present, requireFields, stringList, table, text,
+  localized, objectList, present, requireFields, stringList, table, text
 } from "./field-helpers.mjs";
+import { isObject } from "../../core/values.mjs";
+
+export const NFR_CATEGORY_CAPABILITIES = Object.freeze({
+  performance: ["performance"],
+  capacity: ["performance", "resilience"],
+  availability: ["resilience"],
+  securityPrivacy: ["security-static"],
+  accessibility: ["accessibility"],
+  operability: ["observability"],
+  compatibility: ["compatibility", "cross-repo-contract"],
+  recoverability: ["resilience", "data-migration", "deployment"]
+});
 
 // Typed design fields for quality, security, and operability: NFR scenarios,
 // the threat model, observability, the analytics tracking plan, and capacity.

@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 
-import { createHandoffRuntime } from "../runtime/workflow/handoff-runtime.mjs";
+import { createHandoffRuntime } from "../runtime/workflow/authority/handoff-runtime.mjs";
 
 const canonical = (value) => Array.isArray(value) ? value.map(canonical)
   : value && typeof value === "object"

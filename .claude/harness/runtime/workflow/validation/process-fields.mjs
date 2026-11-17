@@ -5,8 +5,9 @@
 // without the section heading, "" when empty).
 
 import {
-  isObject, localized, objectList, present, requireFields, stringList, table, text,
+  localized, objectList, present, requireFields, stringList, table, text
 } from "./field-helpers.mjs";
+import { isObject } from "../../core/values.mjs";
 
 const LABELS = Object.freeze({
   en: {

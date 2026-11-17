@@ -64,7 +64,7 @@ test("Investigate harness-ownership prose is backed by runtime enforcement", () 
   const workflow = readFileSync(join(root,
     ".claude/skills/investigate/references/workflow.md"), "utf8");
   const runtime = readFileSync(join(root,
-    ".claude/harness/runtime/workflow/investigation-runtime.mjs"), "utf8");
+    ".claude/harness/runtime/workflow/investigation/investigation-runtime.mjs"), "utf8");
   const guard = readFileSync(join(root, ".claude/hooks/phase-mutation-guard.mjs"), "utf8");
   const execution = readFileSync(join(root,
     ".claude/harness/runtime/core/execution-contract.mjs"), "utf8");

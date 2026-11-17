@@ -4,14 +4,17 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createAdvanceRuntime, advanceFailureAction, withSignals } from "../runtime/workflow/advance-runtime.mjs";
+import { createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
+import {
+  advanceFailureAction, withSignals
+} from "../runtime/workflow/advance/advance-envelope.mjs";
 import { drainSignals, emitSignal, recordSignal } from "../runtime/core/signals.mjs";
-import { manualRecoveryDecision, targetHeadMovedDecision } from "../runtime/workflow/apply-recovery.mjs";
+import { manualRecoveryDecision, targetHeadMovedDecision } from "../runtime/workflow/transaction/apply-recovery.mjs";
 import { gateDigest, noProgressDecision } from "../runtime/core/convergent-gate.mjs";
 import {
   actionableGuidance, agentSafeRoutes, automaticRecoveryAction, createAdvanceRecovery,
   currentDeliveryProof, environmentCause, userEnvironmentCause
-} from "../runtime/workflow/advance-recovery.mjs";
+} from "../runtime/workflow/advance/advance-recovery.mjs";
 import { userDecisionError } from "../runtime/core/user-decisions.mjs";
 import { lifecycleOutcome } from "../runtime/core/lifecycle-outcome.mjs";
 import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
@@ -559,7 +562,7 @@ test("separate CLI host processes retain decisions, protect inspection, and resu
   const directory = mkdtempSync(join(tmpdir(), "advance-recovery-process-"));
   const statePath = join(directory, "runtime.json");
   const scriptPath = join(directory, "host.mjs");
-  const moduleUrl = new URL("../runtime/workflow/advance-runtime.mjs", import.meta.url).href;
+  const moduleUrl = new URL("../runtime/workflow/advance/advance-runtime.mjs", import.meta.url).href;
   const digestUrl = new URL("../runtime/core/convergent-gate.mjs", import.meta.url).href;
   const depsUrl = new URL("./fixtures/runtime-deps.mjs", import.meta.url).href;
   try {
@@ -690,7 +693,7 @@ test("REPAIR outcomes require an actionable command or instruction", () => {
 });
 
 test("every coordinator legacyAction and readiness status yields an actionable recovery", async () => {
-  const { coordinatorAction } = await import("../runtime/workflow/advance-runtime.mjs");
+  const { coordinatorAction } = await import("../runtime/workflow/advance/advance-actions.mjs");
   const base = { id: "demo", state: { status: "building" }, dispatch: { action: "build-complete" },
     workspaceHash: "w1", proofCursor: {}, authorityRequests: [], stableHash: gateDigest };
   const plan = { tasks: [{ id: "T001", text: "do — verify: `npm test`", repository: "root", paths: ["src/a.js"] }] };

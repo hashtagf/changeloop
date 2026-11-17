@@ -11,6 +11,7 @@
 // Raising a baseline entry is never automatic: edit the JSON so the review
 // shows the accepted exception.
 import { ESLint } from "eslint";
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -36,7 +37,7 @@ const SIZE_GROWTH = "Tracked large file grew. Move the new logic into a focused 
   "instead of extending this file.";
 const ROOT_GROWTH = "foundation.mjs is the composition root: it wires domains and holds no " +
   "behavior. Put the new logic in its domain under .claude/harness/runtime/ and inject it.";
-const NEW_LARGE = `File exceeds ${SIZE_CEILING} lines. Split it into focused modules ` +
+const newLarge = (ceiling) => `File exceeds ${ceiling} lines. Split it into focused modules ` +
   "before adding it.";
 const ROOT_UNTRACKED = "The composition root must stay tracked in the size baseline.";
 
@@ -69,6 +70,32 @@ export function lineCount(text) {
   return text.endsWith("\n") ? breaks : breaks + 1;
 }
 
+// Type findings from `tsc --checkJs` over the same scope, recorded under
+// `types/TS<code>` rules so they ratchet like lint findings. A root without
+// scripts/lint/tsconfig.json (test fixtures) has no type pass.
+export const TYPE_CONFIG = "scripts/lint/tsconfig.json";
+const TYPE_LINE = /^(.+?)\((\d+),\d+\): error (TS\d+): (.*)$/;
+
+export function typeFindings(root, files) {
+  const config = join(root, TYPE_CONFIG);
+  if (!existsSync(config)) return [];
+  const tsc = join(REPO_ROOT, "node_modules", ".bin", "tsc");
+  const run = spawnSync(tsc, ["-p", config], { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  if (run.error) throw new Error(`type check could not run: ${run.error.message}`);
+  const scope = new Set(files);
+  const findings = [];
+  for (const line of `${run.stdout}${run.stderr}`.split("\n")) {
+    const match = TYPE_LINE.exec(line.trim());
+    if (!match) continue;
+    const path = toPosix(relative(root, resolve(root, match[1])));
+    if (scope.has(path))
+      findings.push({ path, rule: `types/${match[3]}`, line: Number(match[2]), message: match[4] });
+  }
+  if (run.status !== 0 && !findings.length && !/error TS\d+/.test(`${run.stdout}${run.stderr}`))
+    throw new Error(`type check failed: ${(run.stderr || run.stdout).trim()}`);
+  return findings;
+}
+
 export async function collect(root = REPO_ROOT, files = scopeFiles(root)) {
   const eslint = new ESLint({ cwd: root, overrideConfigFile: true, overrideConfig: config });
   const results = files.length ? await eslint.lintFiles(files.map((file) => join(root, file))) : [];
@@ -83,6 +110,13 @@ export async function collect(root = REPO_ROOT, files = scopeFiles(root)) {
       details[path] ??= {};
       (details[path][rule] ??= []).push({ line: message.line, message: message.message });
     }
+  }
+  for (const finding of typeFindings(root, files)) {
+    const { path, rule } = finding;
+    violations[path] ??= {};
+    violations[path][rule] = (violations[path][rule] || 0) + 1;
+    details[path] ??= {};
+    (details[path][rule] ??= []).push({ line: finding.line, message: finding.message });
   }
   const sizes = {};
   for (const file of files) sizes[file] = lineCount(readFileSync(join(root, file), "utf8"));
@@ -127,7 +161,7 @@ export function compare(baseline, current) {
       if (path === COMPOSITION_ROOT)
         regressions.push({ kind: "size", path, baseline: null, current: lines, message: ROOT_UNTRACKED });
       else if (lines > ceiling)
-        regressions.push({ kind: "size", path, baseline: ceiling, current: lines, message: NEW_LARGE });
+        regressions.push({ kind: "size", path, baseline: ceiling, current: lines, message: newLarge(ceiling) });
     } else if (lines > tracked) {
       regressions.push({ kind: "size", path, baseline: tracked, current: lines,
         message: path === COMPOSITION_ROOT ? ROOT_GROWTH : SIZE_GROWTH });

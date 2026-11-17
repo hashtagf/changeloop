@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import { createEvidenceContract } from "../runtime/evidence/evidence-contract.mjs";
-import { requiredProvidersOperation } from "../runtime/workflow/change-validation.mjs";
+import { requiredProvidersOperation } from "../runtime/workflow/change/required-providers.mjs";
 
 // The shipped evidence contract, through the CLI: a previewOnly provider is
 // outside the proof contract, so Prove's wiring rules never reach it.

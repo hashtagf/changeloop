@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { existsSync, readFileSync, realpathSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { spawnSync } from "node:child_process";
 

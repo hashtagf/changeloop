@@ -6,8 +6,9 @@ import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 
-import { archiveAppendixMarkdown, createApplyRuntime } from "../runtime/workflow/apply-runtime.mjs";
-import { postReleaseRolloutGates } from "../runtime/workflow/change-validation.mjs";
+import { createApplyRuntime } from "../runtime/workflow/land/apply-runtime.mjs";
+import { archiveAppendixMarkdown } from "../runtime/workflow/land/archive-appendix.mjs";
+import { postReleaseRolloutGates } from "../runtime/workflow/change/required-providers.mjs";
 import {
   complianceEnabledFromConfig, renderReviewRecord
 } from "../runtime/workflow/validation/process-fields.mjs";
