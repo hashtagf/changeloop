@@ -262,6 +262,10 @@ installed runtime.
    Timers go through `runtime/core/timing.mjs` and deliberately ignored
    failures through `runtime/core/best-effort.mjs`; lint allows neither
    anywhere else.
+   Guidance that restates a validation rule (templates, repair hints) is
+   generated from the validator's own constants and tested against it, never
+   retyped. A required field accepts `none: <reason>` rather than forcing an
+   invented value, and every repair names the derived cause and a copyable fix.
    A new or changed skill needs `.claude/skills/<name>/contract.json`
    (trigger, inputs, action, outputs, handoff, and who does or decides
    what); `scripts/lint/skill-contracts.mjs` checks it.
@@ -269,11 +273,15 @@ installed runtime.
    suite requires its script, registration in `.claude/tests/run-all.sh`, and a
    row in `.claude/tests/README.md`. A new user-facing command, user state, or
    runtime group needs its feature in `docs/feature-map.json`; regenerate the
-   page with `node scripts/docs/feature-map.mjs --write`.
+   page with `node scripts/docs/feature-map.mjs --write`. A test that fails
+   only under machine load is a timing defect: fix its window or seam, never
+   rerun it until green.
 7. Update canonical documentation and English/Thai public mirrors together.
    Change `.claude/harness/protocol.json` only for a wire-visible contract.
 8. Run affected checks while iterating, then the default gate before commit;
-   CI runs the complete `--full` set on every push. Review `git diff --check` and the final status; do not commit generated
+   CI runs the complete `--full` set on every push. A change to printed CLI
+   output also runs `.claude/tests/harness/run-installer-tests.sh` locally,
+   because that slow-tier smoke reads the output. Review `git diff --check` and the final status; do not commit generated
    benchmark output or temporary consumers.
 
 ## Verification commands
