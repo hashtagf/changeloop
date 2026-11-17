@@ -150,7 +150,7 @@ export const MEDIUM_TIER_SPEED_SAFE_TRIGGERS = Object.freeze([
 ]);
 
 export function reviewModelClass({
-  tier, deliveredAiCount = 0, triggers = [], declaredReview = false, settings = {}
+  tier, deliveredAiCount = 0, triggers = [], declaredReview = false, settings = /** @type {Record<string, any>} */ ({})
 } = {}) {
   if (!["low", "medium"].includes(tier) || Number(deliveredAiCount) > 0)
     return "configured";

@@ -311,7 +311,7 @@ export function enrichAgentTasks(context, id, allTasks, repositories, selectedPo
 }
 
 export function groupAgentTasks(tasks, completed, maxParallelAgents, resourcesConflict, fail,
-  recordWave = () => {}) {
+  recordWave = (..._args) => {}) {
   const pending = new Map(tasks.map((task) => [task.id, task]));
   const groups = [];
   const initialCycle = findCyclePath(new Map(tasks.map((task) =>

@@ -19,7 +19,6 @@ import {
   outOfBandDeliveryDriftValue, riskRequiresCi
 } from "../../core/authority-policy.mjs";
 import { normalizeLifecycleStatus } from "../../core/lifecycle-reducer.mjs";
-import * as stateRuntime from "../../core/state-runtime.mjs";
 import { compositeRepositorySelection } from "../../core/repository-binding.mjs";
 import { probeOpenSpecVersion } from "../../core/tool-identity.mjs";
 
@@ -272,18 +271,15 @@ function surfaceEntryKey(entry) {
 }
 
 export function landSurfaceReport(state) {
-  const report = typeof stateRuntime.surfaceAdditionReport === "function"
-    ? stateRuntime.surfaceAdditionReport(state) : null;
-  const entries = report?.entries || (Array.isArray(state?.surfaceAdditions)
+  const entries = (Array.isArray(state?.surfaceAdditions)
     ? state.surfaceAdditions : []).filter((entry) =>
     entry && typeof entry === "object" && typeof entry.path === "string");
-  const protectedEntries = report?.protected || entries.filter((entry) => entry.protected === true);
-  const deleted = report?.deleted || entries.filter((entry) => entry.deleted === true);
+  const protectedEntries = entries.filter((entry) => entry.protected === true);
+  const deleted = entries.filter((entry) => entry.deleted === true);
   return {
     protected: protectedEntries.map(surfaceEntryKey),
     deleted: deleted.map(surfaceEntryKey),
-    requiresPresentation: report ? Boolean(report.requiresPresentation)
-      : protectedEntries.length > 0 || deleted.length > 0
+    requiresPresentation: protectedEntries.length > 0 || deleted.length > 0
   };
 }
 
@@ -308,9 +304,9 @@ export function createLandRuntime({
   writeJson,
   clearSnapshotCache,
   relevantHash,
-  workspaceIsolationIssues = () => [],
-  targetEditNotices = () => [],
-  reviewPolicy = () => null,
+  workspaceIsolationIssues = (..._args) => [],
+  targetEditNotices = (..._args) => [],
+  reviewPolicy = (..._args) => null,
   requiredProviders,
   receiptValidity,
   fileDigest,
@@ -318,7 +314,7 @@ export function createLandRuntime({
   handoffReadiness,
   telemetryReadiness = null,
   verifyAppliedProjection,
-  selectedRepositories = () => [],
+  selectedRepositories = (..._args) => [],
   git,
   gitHead,
   stableHash = (value) => JSON.stringify(value),

@@ -128,7 +128,7 @@ export const DEPENDENCY_LOCKFILES = [
 // the workspace's own lockfile pins. `sandbox.installDependencies: false` opts
 // out of the detected install; a configured command always runs. Never links or
 // copies the checkout's node_modules — the install happens in the workspace.
-export function workspaceSetupPlan({ sandbox = {}, workspace, pathExists }) {
+export function workspaceSetupPlan({ sandbox = /** @type {Record<string, any>} */ ({}), workspace, pathExists }) {
   if (sandbox.setupCommand)
     return { command: sandbox.setupCommand, source: "configured" };
   // A lockfile without its manifest is not an installable project.

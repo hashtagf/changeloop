@@ -326,7 +326,7 @@ export function updateBoundary(command) {
 export function upgradeCompatibilityDiagnostics({
   previousVersion = null,
   currentVersion = null,
-  configuredPolicy = {},
+  configuredPolicy = /** @type {any} */ ({}),
   activeChanges = [],
   signedCiConfigured = false
 } = {}) {

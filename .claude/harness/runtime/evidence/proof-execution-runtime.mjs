@@ -252,11 +252,11 @@ export function createProofExecutionRuntime({
   rebindDiffBoundReceipt, executionNodes,
   collectableExecutionNodes, startRequiredServices, runExecutionDag,
   durableArtifact, pendingTasks, proofPreflight, prove, proofAudit,
-  readJson, writeJson = () => {}, proofPath, proofAdvancePath = () => null,
-  proofAdvanceLockPath = () => null, providerCapability = (provider) => provider,
-  providerConfig = () => null, providerWorkspaceHash = () => null,
-  reviewPolicy = () => ({ tier: "low", requiresHumanFinal: false }),
-  deliveredAiAttempts = () => [], recordDeterministicReviewClosure = () => null,
+  readJson, writeJson = (..._args) => {}, proofPath, proofAdvancePath = (..._args) => null,
+  proofAdvanceLockPath = (..._args) => null, providerCapability = (provider) => provider,
+  providerConfig = (..._args) => null, providerWorkspaceHash = () => null,
+  reviewPolicy = (..._args) => ({ tier: "low", requiresHumanFinal: false }),
+  deliveredAiAttempts = (..._args) => [], recordDeterministicReviewClosure = (..._args) => null,
   authorityStatusValue = () => ({ requests: [] }), requestAuthority = () => null,
   // (id, request, command) => Promise | null. Starts the harness-runnable
   // configured review in the foreground; null means the route is a handoff.
@@ -264,10 +264,10 @@ export function createProofExecutionRuntime({
   stableHash = (value) => JSON.stringify(value), die, markBlocked = () => {},
   // (id) => boolean. Whether the retained proof binds the current receipts;
   // advance treats a proven change whose receipts were re-earned as stale.
-  deliveryProofCurrent = () => true,
+  deliveryProofCurrent = (..._args) => true,
   // Brings the change's sandboxes current (the root sandbox's nested
   // repository paths) before any provider runs in them.
-  prepareWorkspace = () => {},
+  prepareWorkspace = (..._args) => {},
   // (id, workspaceHash) => { status: pass|fail|not-applicable, findings }.
   // Whether the change's tests fail on the base source (test-discrimination.mjs).
   testDiscrimination = null,

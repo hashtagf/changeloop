@@ -117,7 +117,7 @@ function packetSpecFiles(dir) {
 // (`<repository>/<path>`, as repair-graph nodes carry them) and resolve in
 // that repository's own sandbox, never in the shared sandbox's submodule mirror.
 export function envelopeContextFiles({
-  packetDir, state = {}, tasks = [], paths = [], scopedPaths = [], repairClaims = []
+  packetDir, state = /** @type {Record<string, any>} */ ({}), tasks = [], paths = [], scopedPaths = [], repairClaims = []
 }) {
   const specs = packetSpecFiles(join(packetDir, "specs"));
   // A bound prototype is a read-only design reference for the work it

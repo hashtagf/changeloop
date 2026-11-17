@@ -70,7 +70,7 @@ export function createAuthorityRuntime({
   reviewerConfig,
   reviewerStatus,
   // Absent in narrow compositions: every configured reviewer is routable.
-  reviewerInstalled = () => true,
+  reviewerInstalled = (..._args) => true,
   runConfiguredReview,
   // Optional non-blocking twin of runConfiguredReview; absent means the
   // asynchronous route awaits the synchronous reviewer.
@@ -80,7 +80,7 @@ export function createAuthorityRuntime({
   grantExtraAiWave = () => fail("extra AI review waves are unavailable in this composition"),
   acknowledgeBaseMoveAttempts,
   // Absent in narrow compositions: dispatch then keeps the manual reset routes.
-  autoReleaseReviewBudget = () => [],
+  autoReleaseReviewBudget = (..._args) => [],
   // Drops the process-local snapshot cache so the post-review content check
   // reads the bytes on disk, not the snapshot taken before the reviewer ran.
   clearSnapshotCache = () => {},

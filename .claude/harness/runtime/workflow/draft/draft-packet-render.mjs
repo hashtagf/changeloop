@@ -455,7 +455,7 @@ export function renderDraftDesign(draft) {
 // named instead.
 export function reviewRouteLabel({
   lowRiskModel = "fast", modelByTier = undefined,
-  state = {}, claims = [], grounding = null
+  state = /** @type {Record<string, any>} */ ({}), claims = [], grounding = null
 } = {}) {
   const rows = (Array.isArray(claims) ? claims : []).filter((claim) =>
     claim && typeof claim === "object" && Array.isArray(claim.capabilities));
@@ -604,7 +604,7 @@ export function renderDraftSpecDocument(specs, renderRequirement, { newCapabilit
 // `capabilityExists` reports whether openspec/specs already holds the
 // capability; only a new capability's delta states a Purpose.
 export function materializeDraftSpecs({
-  basePath, specs, slugify, renderRequirement, capabilityExists = () => true,
+  basePath, specs, slugify, renderRequirement, capabilityExists = (..._args) => true,
   remove = rmSync, makeDirectory = mkdirSync, write = writeFileSync
 }) {
   remove(join(basePath, "specs"), { recursive: true, force: true });

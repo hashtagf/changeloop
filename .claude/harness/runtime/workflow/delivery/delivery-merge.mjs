@@ -11,7 +11,7 @@ function clean(value) {
 }
 
 export function mergeError(code, message, fields = {}) {
-  const error = new Error(message);
+  const error = /** @type {Error & Record<string, any>} */ (new Error(message));
   error.code = code;
   Object.assign(error, fields);
   return error;

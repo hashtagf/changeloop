@@ -213,7 +213,7 @@ export function assertReadOnlyReplayClean(repository, record, git, fail) {
 
 export function replayContext({
   id, state, candidate, gitHead, selectedRepositories, declaredRepositoryPaths = () => [],
-  carriedExcludes = () => []
+  carriedExcludes = (..._args) => []
 }) {
   const { repository, record, targetPath } = candidate;
   const currentHead = targetPath ? gitHead(targetPath) : null;

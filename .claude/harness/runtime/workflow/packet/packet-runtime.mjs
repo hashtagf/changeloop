@@ -260,8 +260,8 @@ export function createPacketRuntime({
       handoffs: handoffReadiness(id)
     });
   },
-  deliveredAiAttempts = () => [],
-  resumeAction = null, activeLeases = () => [],
+  deliveredAiAttempts = (..._args) => [],
+  resumeAction = null, activeLeases = (..._args) => [],
   inspectSnapshots = (operation) => operation(),
   serializedJson, foundationPolicy, recordContextMetric, recordInstructionManifest,
   fail

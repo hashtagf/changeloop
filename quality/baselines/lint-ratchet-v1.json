@@ -7,9 +7,9 @@
       "types/TS2353": 3
     },
     ".claude/harness/foundation.mjs": {
-      "types/TS2322": 16,
+      "types/TS2322": 5,
       "types/TS2339": 6,
-      "types/TS2353": 8
+      "types/TS2353": 1
     },
     ".claude/harness/runtime/contracts/scratch-router.mjs": {
       "types/TS2339": 1,
@@ -17,61 +17,11 @@
       "types/TS2362": 1,
       "types/TS2488": 1
     },
-    ".claude/harness/runtime/core/authority-policy.mjs": {
-      "types/TS2554": 3
-    },
-    ".claude/harness/runtime/core/diagnostics-runtime.mjs": {
-      "types/TS2554": 1
-    },
-    ".claude/harness/runtime/core/git-read-memo.mjs": {
-      "types/TS2538": 2
-    },
-    ".claude/harness/runtime/core/graph-execution.mjs": {
-      "types/TS2339": 1,
-      "types/TS2554": 1
-    },
-    ".claude/harness/runtime/core/land-grant.mjs": {
-      "types/TS2339": 3,
-      "types/TS2554": 1
-    },
-    ".claude/harness/runtime/core/process-runtime.mjs": {
-      "types/TS2769": 1
-    },
-    ".claude/harness/runtime/core/shell-mutation-policy.mjs": {
-      "types/TS2345": 2,
-      "types/TS2554": 1
-    },
-    ".claude/harness/runtime/core/state-projections.mjs": {
-      "types/TS2339": 2
-    },
-    ".claude/harness/runtime/core/state-runtime.mjs": {
-      "types/TS2339": 1
-    },
-    ".claude/harness/runtime/core/task-execution-authority.mjs": {
-      "types/TS2339": 14
-    },
-    ".claude/harness/runtime/core/tool-identity.mjs": {
-      "types/TS2339": 1
-    },
-    ".claude/harness/runtime/core/tool-preparation.mjs": {
-      "types/TS2739": 1
-    },
-    ".claude/harness/runtime/core/update-advisory.mjs": {
-      "types/TS2339": 4
-    },
-    ".claude/harness/runtime/core/user-decisions.mjs": {
-      "types/TS2339": 8
-    },
     ".claude/harness/runtime/evidence/adapter-runtime.mjs": {
       "types/TS2339": 8
     },
     ".claude/harness/runtime/evidence/configured-reviewer.mjs": {
       "types/TS2556": 1
-    },
-    ".claude/harness/runtime/evidence/evidence-contract.mjs": {
-      "types/TS2322": 1,
-      "types/TS2339": 1,
-      "types/TS2554": 3
     },
     ".claude/harness/runtime/evidence/evidence-results.mjs": {
       "types/TS2322": 1,
@@ -79,42 +29,25 @@
       "types/TS2363": 1
     },
     ".claude/harness/runtime/evidence/proof-execution-runtime.mjs": {
-      "types/TS2554": 17
+      "types/TS2554": 3
     },
     ".claude/harness/runtime/evidence/proof-execution/repair-stops.mjs": {
       "types/TS2353": 1
     },
-    ".claude/harness/runtime/evidence/proof-runtime.mjs": {
-      "types/TS2554": 2
-    },
-    ".claude/harness/runtime/evidence/provider-scheduler.mjs": {
-      "types/TS2322": 1
-    },
     ".claude/harness/runtime/evidence/receipt-runtime.mjs": {
-      "types/TS2345": 1,
-      "types/TS2554": 4
-    },
-    ".claude/harness/runtime/evidence/receipt-validity.mjs": {
-      "types/TS2554": 2
+      "types/TS2554": 1
     },
     ".claude/harness/runtime/evidence/review-attempt-store.mjs": {
-      "types/TS2339": 5
+      "types/TS2339": 3
     },
     ".claude/harness/runtime/evidence/review-diff.mjs": {
-      "types/TS2339": 4
-    },
-    ".claude/harness/runtime/evidence/review-routing.mjs": {
-      "types/TS2339": 6
+      "types/TS2339": 2
     },
     ".claude/harness/runtime/evidence/test-discrimination.mjs": {
       "types/TS2769": 1
     },
-    ".claude/harness/runtime/evidence/visual-review.mjs": {
-      "types/TS2339": 4
-    },
     ".claude/harness/runtime/observability/exec-runtime.mjs": {
-      "types/TS2339": 3,
-      "types/TS2554": 1
+      "types/TS2339": 3
     },
     ".claude/harness/runtime/observability/host-execution-contract.mjs": {
       "types/TS2339": 8
@@ -128,11 +61,7 @@
     ".claude/harness/runtime/observability/telemetry.mjs": {
       "types/TS2339": 1
     },
-    ".claude/harness/runtime/workflow/advance/advance-actions.mjs": {
-      "types/TS2339": 11
-    },
     ".claude/harness/runtime/workflow/advance/advance-envelope.mjs": {
-      "types/TS2339": 6,
       "types/TS2349": 1,
       "types/TS2769": 1
     },
@@ -143,25 +72,8 @@
       "types/TS2339": 2,
       "types/TS2353": 3
     },
-    ".claude/harness/runtime/workflow/authority/agent-planning.mjs": {
-      "types/TS2322": 1,
-      "types/TS2554": 1
-    },
-    ".claude/harness/runtime/workflow/authority/authority-response.mjs": {
-      "types/TS2554": 1
-    },
     ".claude/harness/runtime/workflow/authority/authority-reviewer-run.mjs": {
       "types/TS2353": 1
-    },
-    ".claude/harness/runtime/workflow/authority/authority-runtime.mjs": {
-      "types/TS2322": 1,
-      "types/TS2554": 3
-    },
-    ".claude/harness/runtime/workflow/authority/session-lease.mjs": {
-      "types/TS2339": 2
-    },
-    ".claude/harness/runtime/workflow/change/approval-package.mjs": {
-      "types/TS2554": 1
     },
     ".claude/harness/runtime/workflow/change/change-amendment.mjs": {
       "types/TS2353": 4
@@ -170,20 +82,12 @@
       "types/TS2339": 2,
       "types/TS2353": 5
     },
-    ".claude/harness/runtime/workflow/change/change-materialize.mjs": {
-      "types/TS2322": 1
-    },
-    ".claude/harness/runtime/workflow/change/change-resolution.mjs": {
-      "types/TS2339": 4
-    },
     ".claude/harness/runtime/workflow/change/change-start.mjs": {
       "types/TS2322": 1,
       "types/TS2353": 4
     },
     ".claude/harness/runtime/workflow/change/change-validation.mjs": {
-      "types/TS2339": 1,
-      "types/TS2353": 1,
-      "types/TS2554": 4
+      "types/TS2339": 1
     },
     ".claude/harness/runtime/workflow/change/gate-waivers.mjs": {
       "types/TS2339": 2
@@ -194,41 +98,32 @@
     ".claude/harness/runtime/workflow/change/task-change.mjs": {
       "types/TS2345": 1
     },
-    ".claude/harness/runtime/workflow/delivery/delivery-merge.mjs": {
-      "types/TS2339": 1
-    },
     ".claude/harness/runtime/workflow/delivery/delivery-naming.mjs": {
-      "types/TS2339": 6,
       "types/TS2345": 1,
       "types/TS2554": 1
     },
     ".claude/harness/runtime/workflow/delivery/delivery-projection.mjs": {
-      "types/TS2339": 12
+      "types/TS2339": 2
     },
     ".claude/harness/runtime/workflow/delivery/pull-request-runtime.mjs": {
-      "types/TS2339": 3,
       "types/TS2741": 7
     },
     ".claude/harness/runtime/workflow/delivery/repository-delivery-saga.mjs": {
-      "types/TS2339": 2,
-      "types/TS2554": 3
+      "types/TS2339": 2
     },
     ".claude/harness/runtime/workflow/draft/amendment-sections.mjs": {
       "types/TS2339": 2
     },
     ".claude/harness/runtime/workflow/draft/amendment-verify.mjs": {
       "types/TS2339": 2,
-      "types/TS2353": 3,
-      "types/TS2554": 1
+      "types/TS2353": 3
     },
     ".claude/harness/runtime/workflow/draft/draft-folder.mjs": {
       "types/TS2339": 1,
       "types/TS2353": 1
     },
     ".claude/harness/runtime/workflow/draft/draft-packet-render.mjs": {
-      "types/TS2339": 2,
-      "types/TS2353": 1,
-      "types/TS2554": 1
+      "types/TS2353": 1
     },
     ".claude/harness/runtime/workflow/draft/semantic-amendment.mjs": {
       "types/TS2339": 1
@@ -248,25 +143,16 @@
       "types/TS2353": 4
     },
     ".claude/harness/runtime/workflow/land/apply-runtime.mjs": {
-      "types/TS2322": 1,
-      "types/TS2353": 2,
-      "types/TS2554": 18
+      "types/TS2353": 3
     },
     ".claude/harness/runtime/workflow/land/archive-appendix.mjs": {
       "types/TS2339": 1
-    },
-    ".claude/harness/runtime/workflow/land/land-runtime.mjs": {
-      "types/TS2339": 2,
-      "types/TS2353": 1,
-      "types/TS2554": 8
     },
     ".claude/harness/runtime/workflow/land/spec-sync-verify.mjs": {
       "types/TS2339": 2
     },
     ".claude/harness/runtime/workflow/packet/packet-runtime.mjs": {
-      "types/TS2322": 1,
       "types/TS2339": 5,
-      "types/TS2554": 2,
       "types/TS2739": 2
     },
     ".claude/harness/runtime/workflow/prototype/preview-runtime.mjs": {
@@ -275,27 +161,6 @@
     },
     ".claude/harness/runtime/workflow/prototype/prototype-checklist.mjs": {
       "types/TS2339": 3
-    },
-    ".claude/harness/runtime/workflow/repository/repository-topology.mjs": {
-      "types/TS2339": 1
-    },
-    ".claude/harness/runtime/workflow/sandbox/sandbox-cleanup.mjs": {
-      "types/TS2554": 2
-    },
-    ".claude/harness/runtime/workflow/sandbox/sandbox-replay.mjs": {
-      "types/TS2554": 1
-    },
-    ".claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs": {
-      "types/TS2554": 1
-    },
-    ".claude/harness/runtime/workflow/sandbox/sandbox-setup.mjs": {
-      "types/TS2339": 3
-    },
-    ".claude/harness/runtime/workflow/sandbox/sandbox-sync.mjs": {
-      "types/TS2339": 1
-    },
-    ".claude/harness/runtime/workflow/transaction/delivery-integrity.mjs": {
-      "types/TS2339": 1
     },
     ".claude/harness/runtime/workflow/transaction/undo-plan.mjs": {
       "types/TS2349": 1
@@ -335,9 +200,6 @@
     ".claude/harness/runtime/workflow/validation/selective-proof-plan.mjs": {
       "types/TS2339": 13
     },
-    ".claude/harness/runtime/workflow/validation/semantic-intake-intelligence.mjs": {
-      "types/TS2339": 4
-    },
     ".claude/harness/runtime/workflow/validation/semantic-source-inventory.mjs": {
       "types/TS2339": 1
     },
@@ -353,7 +215,7 @@
     }
   },
   "sizes": {
-    ".claude/harness/foundation.mjs": 2401,
+    ".claude/harness/foundation.mjs": 2386,
     ".claude/harness/runtime/evidence/adapter-runtime.mjs": 1070,
     ".claude/harness/runtime/evidence/configured-reviewer.mjs": 1043,
     ".claude/harness/runtime/evidence/evidence-contract.mjs": 1319,

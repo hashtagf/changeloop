@@ -231,7 +231,7 @@ export function collectReviewSignals(state, contract, configuredCapabilities = [
 // deterministic evidence alone. Anything inferred from the built diff that
 // raises the tier (security-static, contract or data capabilities) restores
 // review, because the tier is recomputed at every Prove.
-export function rapidEvidenceOnly({ state = {}, signals, riskRoute, signalled }) {
+export function rapidEvidenceOnly({ state = /** @type {Record<string, any>} */ ({}), signals, riskRoute, signalled }) {
   return state.schema === "foundation-rapid" && riskRoute?.tier === "low" &&
     !signalled && !(signals?.diversityTriggers || []).length;
 }
@@ -337,8 +337,8 @@ export function commandWorkspaceFiles(config, workspace) {
 }
 
 export function uncoveredCommandWorkspaceFiles({
-  config, workspace, repositoryId = "root", tracked = () => false,
-  declared = () => false
+  config, workspace, repositoryId = "root", tracked = (..._args) => false,
+  declared = (..._args) => false
 }) {
   // Pure checks first: `tracked` may have to consult Git.
   return commandWorkspaceFiles(config, workspace).filter((rel) =>
@@ -600,7 +600,7 @@ export function createEvidenceContract({
   filesystemEntryIdentity,
   policyCapabilities, foundationPolicy, handoffContract, git, declaredSurfaceMatcher, die,
   // Absent in narrow compositions: every capability may raise the review tier.
-  policyCapabilityTrigger = () => null
+  policyCapabilityTrigger = (..._args) => null
 }) {
   function executionServiceSource(id, name, service) {
     const commandValid = Array.isArray(service?.command) &&

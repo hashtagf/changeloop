@@ -104,7 +104,7 @@ export async function startNativeStaticService({
   }));
   await new Promise((complete, reject) => {
     server.once("error", reject);
-    server.listen(port, host, complete);
+    server.listen(port, host, () => complete(undefined));
   });
   const runBoundReadiness = {
     ...config.readiness,

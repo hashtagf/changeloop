@@ -66,8 +66,8 @@ export function untickTaskLine(content, taskId) {
 // The primitive's refusal names `agents acquire`; a harness-owned lease is
 // renewed by resuming, so the repair names that route instead.
 function sessionScopeError(id, detail, through = "build") {
-  const error = new Error(`${detail}. Revert edits that belong to another active task, ` +
-    `then resume with 'cloop advance ${id} --through ${through}'`);
+  const error = /** @type {Error & Record<string, any>} */ (new Error(`${detail}. Revert edits that belong to another active task, ` +
+    `then resume with 'cloop advance ${id} --through ${through}'`));
   error.owner = "agent";
   error.boundary = "task-scope";
   return error;

@@ -48,7 +48,7 @@ export function assertDeliveryEntries(root, entries, pathIdentity) {
 }
 
 function drift(message, code = "DELIVERY_PROJECTION_DRIFT") {
-  const error = new Error(message);
+  const error = /** @type {Error & Record<string, any>} */ (new Error(message));
   error.code = code;
   throw error;
 }

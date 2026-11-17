@@ -154,7 +154,7 @@ export function createPullRequestRuntime({
 
   function assertDeliveryBranch(branch, provider) {
     if ([provider.baseBranch, provider.defaultBranch].includes(branch)) {
-      const error = new Error(`delivery branch '${branch}' is the remote default or PR base branch; configure a feature branch and retry Deliver`);
+      const error = /** @type {Error & Record<string, any>} */ (new Error(`delivery branch '${branch}' is the remote default or PR base branch; configure a feature branch and retry Deliver`));
       error.code = "DELIVERY_DEFAULT_BRANCH_FORBIDDEN";
       throw error;
     }
@@ -171,7 +171,7 @@ export function createPullRequestRuntime({
     const descendsFromBase = projection.baseHead && currentHead !== projection.baseHead &&
       git(["merge-base", "--is-ancestor", projection.baseHead, currentHead], repositoryRoot).status === 0;
     if (!projection.baseHead || (currentHead !== projection.baseHead && !descendsFromBase)) {
-      const error = new Error(`target HEAD moved after Land (expected ${projection.baseHead || "unknown"}, observed ${currentHead})`);
+      const error = /** @type {Error & Record<string, any>} */ (new Error(`target HEAD moved after Land (expected ${projection.baseHead || "unknown"}, observed ${currentHead})`));
       error.code = "DELIVERY_TARGET_MOVED";
       throw error;
     }
@@ -428,8 +428,8 @@ export function createPullRequestRuntime({
     narrative ||= pullRequestNarrative({ changeId: id, state: lifecycle, ...sources, proof, paths });
     const evidence = deliveryEvidenceAssessment({ root, lifecycle, proof, narrative, readJson });
     if (!evidence.requiredComplete && policy.missingRequiredEvidence === "block") {
-      const error = new Error(`required delivery evidence is incomplete: ${
-        evidence.requiredIssues.join("; ")}`);
+      const error = /** @type {Error & Record<string, any>} */ (new Error(`required delivery evidence is incomplete: ${
+        evidence.requiredIssues.join("; ")}`));
       error.code = "DELIVERY_EVIDENCE_BLOCKED";
       throw error;
     }

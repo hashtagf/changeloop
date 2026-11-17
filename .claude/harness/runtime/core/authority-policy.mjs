@@ -103,8 +103,8 @@ export function riskRequiresCi(state, reviewRisk = null) {
 }
 
 export function authorityPreflightValue({
-  changeId, state, reviewRisk = null, providers = [], providerConfig = () => null,
-  providerCapability = (provider) => provider,
+  changeId, state, reviewRisk = null, providers = [], providerConfig = (_provider) => null,
+  providerCapability = (provider, _config) => provider,
   acceptance = null,
   grounding = null,
   handoffs = null

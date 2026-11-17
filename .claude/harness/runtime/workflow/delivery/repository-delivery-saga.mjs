@@ -205,7 +205,7 @@ function childEditCarried(files, repository, runtime, path) {
     baseBytes: shown.stdout });
 }
 
-function assertChildTargetCompatible({ git, journalRuntime, landedBy = () => ({}) }, repository,
+function assertChildTargetCompatible({ git, journalRuntime, landedBy = (..._args) => ({}) }, repository,
   runtime, entries, prior = new Map()) {
   const targetHead = git(["rev-parse", "HEAD"], repository.path);
   if (targetHead.status !== 0 || String(targetHead.stdout || "").trim() !== runtime.baseHead)
@@ -240,7 +240,7 @@ export function createRepositoryDeliverySaga({
   transactions, loadRuntime, saveRuntime, selectedRepositories,
   git, fileDigest, directoryHash, pathInside, readJson, writeJson,
   stableHash, proofPath, now, prepareRoot, executeRoot, verifyRoot,
-  reapplyRoot = () => null, fail, checkpoint = () => {}, planRoot = null
+  reapplyRoot = (..._args) => null, fail, checkpoint = (..._args) => {}, planRoot = null
 }) {
   const sagaPath = (id) => join(transactions, id, "repository-delivery.json");
   // repositoryId -> path -> entry of a delivery the sandbox has since outgrown.

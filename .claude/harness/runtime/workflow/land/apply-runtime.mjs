@@ -134,10 +134,10 @@ export function createApplyRuntime({
   assertOpenSpecCli,
   cleanupChangeLeases,
   now,
-  archiveCheckpoint = () => {},
+  archiveCheckpoint = (..._args) => {},
   measure = (_stage, operation) => operation(),
-  assertLandGrant = () => {},
-  consumeLandGrant = () => {},
+  assertLandGrant = (..._args) => {},
+  consumeLandGrant = (..._args) => {},
   blockWithDecision,
   fail,
   // Archive appendix inputs. All optional: an unwired reader contributes no

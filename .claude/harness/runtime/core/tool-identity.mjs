@@ -116,7 +116,7 @@ export function executableIdentity(command, env = process.env, cwd = process.cwd
 // `openspec --version` with the spawnSync result shape. A successful probe is
 // reused while the resolved CLI is byte-identical; failures always re-probe.
 export function probeOpenSpecVersion({
-  cwd, timeout = null, spawn = spawnSync, env = process.env
+  cwd = undefined, timeout = null, spawn = spawnSync, env = process.env
 } = {}) {
   const identity = spawn === spawnSync ? executableIdentity("openspec", env, cwd) : null;
   if (identity && versionProbes.has(identity))

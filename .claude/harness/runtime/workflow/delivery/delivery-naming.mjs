@@ -46,7 +46,7 @@ const PLACEHOLDER = /\{([^{}]*)\}/g;
 // A project naming setting that cannot produce a valid commit subject or
 // branch. Deliver refuses it before any workspace, commit, or push exists.
 export function namingInvalid(message) {
-  const error = new Error(`${message}; correct the 'deliver' naming settings in foundation.json and retry Deliver`);
+  const error = /** @type {Error & Record<string, any>} */ (new Error(`${message}; correct the 'deliver' naming settings in foundation.json and retry Deliver`));
   error.code = "DELIVERY_NAMING_INVALID";
   return error;
 }
@@ -82,7 +82,7 @@ export function deliveryTicket(ticketPattern, sources = []) {
 // The values naming templates may reference, all derived from the
 // checkpointed narrative so a resumed or follow-up delivery names its commit
 // and branch the same way.
-export function deliveryNamingValues({ changeId, narrative = {}, ticketPattern = null }) {
+export function deliveryNamingValues({ changeId, narrative = /** @type {Record<string, any>} */ ({}), ticketPattern = null }) {
   const title = clean(narrative.title) || clean(changeId);
   return {
     changeId: clean(changeId),

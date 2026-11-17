@@ -201,7 +201,7 @@ const SCRATCH_LINES = ["get", "asIs", "toBe", "ifFail"];
 const RISK_STEP = Object.freeze({ Low: 1, Medium: 2, High: 3, Critical: 4 });
 
 export function createApprovalPackageRuntime({
-  root, runtimeDir, previewsDir, receiptsDir, loadRuntime, saveRuntime = () => {}, activeChangePath,
+  root, runtimeDir, previewsDir, receiptsDir, loadRuntime, saveRuntime = (..._args) => {}, activeChangePath,
   changeWorkTypes, evidence, providerCapability, receiptValidity, fail,
   // Runs a harness call so its failure throws instead of exiting the process;
   // the data is a reading aid and survives broken evidence wiring.

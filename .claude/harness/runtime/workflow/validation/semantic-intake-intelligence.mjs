@@ -56,7 +56,7 @@ function sizeScore(source, repository) {
  * Choose bounded investigation effort from typed change and repository signals.
  * Required semantic dimensions are returned verbatim and never reduced by the tier.
  */
-export function planSemanticIntakeDepth(source = {}, { repository = {} } = {}) {
+export function planSemanticIntakeDepth(source = {}, { repository = /** @type {Record<string, any>} */ ({}) } = {}) {
   const requiredDimensions = requiredDiscoveryDimensions(source);
   const reasons = [];
   let score = 0;

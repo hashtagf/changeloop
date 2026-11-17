@@ -17,7 +17,7 @@ export function selectedRepository(catalogValue, id, entry, reportFailure) {
 }
 
 export function selectedRepositoryRuntimeIssue({
-  repository, entry, state, options = {}, canonicalPath, root = null,
+  repository, entry, state, options = /** @type {Record<string, any>} */ ({}), canonicalPath, root = null,
   changeId = null, ownsWorktree = worktreeOwnedByTarget
 }) {
   if (options.useTargetPaths || !isolatedRepositoryState(state) ||

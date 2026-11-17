@@ -55,7 +55,7 @@ export function criticalPathDepths(nodes = []) {
 // nodes whose declared resources do not conflict.
 export function scheduleReadyBatch(nodes = [], completed = new Set(), {
   maxParallel = 1,
-  conflicts = () => false
+  conflicts = (_left, _right) => false
 } = {}) {
   const capacity = Math.max(1, Number(maxParallel) || 1);
   const depths = criticalPathDepths(nodes);
@@ -76,6 +76,7 @@ function sorted(values) {
   return [...new Set((values || []).filter(Boolean))].sort();
 }
 
+/** @param {{ name: string, version: number, accepts?: string[] }} [fallback] */
 function schema(value, fallback = NODE_DATA_SCHEMA) {
   if (!value) return { ...fallback, accepts: sorted(fallback.accepts) };
   if (typeof value === "string") {

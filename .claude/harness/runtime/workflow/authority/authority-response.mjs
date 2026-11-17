@@ -93,7 +93,7 @@ const RESPONSE_REFERENCE_URI = /^[a-z][a-z0-9+.-]*:\/\//i;
 // receipt, collected together: dispatch, references, provenance, and finding
 // closure. The later checks stay as the authority; this only reports early.
 export function authorityResponsePreflightIssues({ request, response, undispatched = false,
-  referenceExists = () => true }) {
+  referenceExists = (..._args) => true }) {
   const issues = [];
   if (undispatched)
     issues.push(`dispatch the request first: cloop authority dispatch ${request.changeId} ` +

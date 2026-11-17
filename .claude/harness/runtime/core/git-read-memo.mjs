@@ -144,6 +144,7 @@ export function gitReadMemoStats() {
 // --- mutation observer -----------------------------------------------------
 
 // [name, indexes of the path arguments it writes].
+/** @type {Array<[string, number[]]>} */
 const SYNC_PATH_MUTATORS = [
   ["writeFileSync", [0]], ["appendFileSync", [0]], ["renameSync", [0, 1]],
   ["rmSync", [0]], ["unlinkSync", [0]], ["mkdirSync", [0]], ["cpSync", [1]],

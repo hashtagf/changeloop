@@ -441,8 +441,8 @@ function buildAction(id, dispatch, state, plan = null) {
 
 export function coordinatorAction({
   id, state, dispatch, workspaceHash, latestReview = null,
-  proofCursor = {}, authorityRequests = [], stableHash, authorityActions = null,
-  proofPreflight = null, plan = null, proofIsCurrent = null, automation = {}
+  proofCursor = /** @type {Record<string, any>} */ ({}), authorityRequests = [], stableHash, authorityActions = null,
+  proofPreflight = null, plan = null, proofIsCurrent = null, automation = /** @type {Record<string, any>} */ ({})
 }) {
   if (state.status === "archived") return envelope(id, "DONE", {
     legacyAction: "ARCHIVED", boundary: null, reason: "change is archived",

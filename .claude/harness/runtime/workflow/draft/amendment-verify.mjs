@@ -201,7 +201,7 @@ function selectionIds(selection) {
  * ({id, relativePath, path}); `selection` is the draft's `repositories`.
  */
 export function taskRepositoryIssues(tasks, {
-  repositories = [], selection, exists = () => false, label = "task", selectionSource = "draft"
+  repositories = [], selection, exists = (..._args) => false, label = "task", selectionSource = "draft"
 } = {}) {
   const rows = Array.isArray(tasks) ? tasks.filter((task) => task && typeof task === "object") : [];
   const declared = catalogRepositories(repositories);

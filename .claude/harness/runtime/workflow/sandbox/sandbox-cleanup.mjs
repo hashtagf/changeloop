@@ -38,7 +38,7 @@ export function cleanupAppliedSandboxOperation({
   pathExists,
   removePath,
   guardRemoval = null,
-  describe = () => null
+  describe = (..._args) => null
 }, id, state, options = {}) {
   const path = state.workspace?.sandboxPath || state.workspace?.path;
   if (!path || resolve(path) === resolve(root) || !pathExists(path))

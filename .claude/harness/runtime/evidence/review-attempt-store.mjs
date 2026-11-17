@@ -289,7 +289,7 @@ export function reviewChainLowered(files, history, verifies) {
   return !inFlight;
 }
 
-export function evidencedReviewAttemptCount({ history = {}, files = [],
+export function evidencedReviewAttemptCount({ history = /** @type {Record<string, any>} */ ({}), files = [],
   receiptRounds = [], verifiedTop = 0 }) {
   const claimed = files.flatMap((file) => [
     attemptNumberFromName(file.name),

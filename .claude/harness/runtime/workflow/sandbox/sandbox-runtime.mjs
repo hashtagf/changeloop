@@ -52,7 +52,7 @@ export function createSandboxRuntime({
   selectedRepositories, cleanupRepositorySandboxes, cleanupAppliedSandbox,
   repositoryCatalog,
   clearSnapshotCache, validate, repositorySelectionIdsAt, contractFingerprint,
-  executionFingerprint, taskBlocks, proofPath, proofAdvancePath = () => null, relevantHash, now, fail,
+  executionFingerprint, taskBlocks, proofPath, proofAdvancePath = (..._args) => null, relevantHash, now, fail,
   markBlocked,
   recordScheduler,
   declaredSurfaceMatcher = null

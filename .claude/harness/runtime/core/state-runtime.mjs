@@ -487,11 +487,10 @@ export function createStateRuntime({
     const state = existsSync(runtimePath(id)) ? readJson(runtimePath(id)) : {};
     const workspace = canonicalPath(workspaceOverride || state.workspace?.path || root);
     if (!existsSync(workspace)) {
-      const error = new Error(`workspace '${workspace}' for change '${id}' no longer exists; ` +
+      throw Object.assign(new Error(`workspace '${workspace}' for change '${id}' no longer exists; ` +
         `recreate or repair it with 'cloop sandbox create ${id} --all' or run ` +
-        `'cloop change abandon ${id} --reason <reason> --decision-ref <ref>'`);
-      error.code = "FOUNDATION_WORKSPACE_MISSING";
-      throw error;
+        `'cloop change abandon ${id} --reason <reason> --decision-ref <ref>'`),
+      { code: "FOUNDATION_WORKSPACE_MISSING" });
     }
     const contractRevision = Number(state.contractRevision ?? 0);
     const ignored = new Set(ignoredPaths.map((value) =>

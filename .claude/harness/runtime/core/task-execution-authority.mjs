@@ -83,7 +83,8 @@ export function taskAuthorityShape(graph = {}, taskId) {
 }
 
 export function legacySingleSessionCompatibility({
-  id, taskId, state = {}, savedPlan = {}, currentGraph = {}, currentContractFingerprint
+  id, taskId, state = /** @type {any} */ ({}), savedPlan = /** @type {any} */ ({}),
+  currentGraph = /** @type {any} */ ({}), currentContractFingerprint
 }) {
   const savedGraph = savedPlan.graph || {};
   const execution = savedPlan.taskExecution?.[taskId];
@@ -156,7 +157,7 @@ export function taskResultMismatches(result, taskId, node, graph, state) {
 }
 
 export function resolveTaskExecutionAuthority({
-  id, taskId, node, graph, state = {}, savedPlan = {}, resultRecord = null,
+  id, taskId, node, graph, state = {}, savedPlan = /** @type {any} */ ({}), resultRecord = null,
   taskLease = null, currentContractFingerprint = null
 }) {
   if (taskLease?.leaseId) return {

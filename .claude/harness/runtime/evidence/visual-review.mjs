@@ -133,7 +133,7 @@ function screenshotPatterns(values) {
 // without asking the reviewer again; the prototype digest in the command
 // changes the provider fingerprint whenever the bound file changes.
 export function visualProviderConfig({
-  changeId, packetPath, packetRelative, binding, scriptPath, base = {}
+  changeId, packetPath, packetRelative, binding, scriptPath, base = /** @type {Record<string, any>} */ ({})
 }) {
   const screenshots = screenshotPatterns(base.screenshots);
   const report = visualReportPath(changeId);

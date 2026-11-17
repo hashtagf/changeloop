@@ -20,7 +20,7 @@ export const DELIVERY_RECEIPT_SCHEMA_VERSION = 1;
 const PROVIDER_GIT_COMMANDS = new Set(["push", "fetch", "ls-remote"]);
 
 export function providerUnavailable(message) {
-  const error = new Error(message);
+  const error = /** @type {Error & Record<string, any>} */ (new Error(message));
   error.code = "DELIVERY_PROVIDER_UNAVAILABLE";
   return error;
 }
@@ -28,7 +28,7 @@ export function providerUnavailable(message) {
 export function runChecked(run, executable, args, options, label) {
   const result = run(executable, args, options);
   if (result.status !== 0) {
-    const error = new Error(`${label}: ${resultText(result) || `exit ${result.status}`}`);
+    const error = /** @type {Error & Record<string, any>} */ (new Error(`${label}: ${resultText(result) || `exit ${result.status}`}`));
     error.code = executable === "gh" || (executable === "git" && PROVIDER_GIT_COMMANDS.has(args[0]))
       ? "DELIVERY_PROVIDER_UNAVAILABLE" : "DELIVERY_EXTERNAL_COMMAND_FAILED";
     error.command = executable;
@@ -39,7 +39,7 @@ export function runChecked(run, executable, args, options, label) {
 }
 
 export function workspaceDrift(message) {
-  const error = new Error(message);
+  const error = /** @type {Error & Record<string, any>} */ (new Error(message));
   error.code = "DELIVERY_PROJECTION_DRIFT";
   error.stage = "delivery-workspace";
   return error;
@@ -90,7 +90,7 @@ function changedLandEntries(base, entries, pathIdentity, where = "") {
   for (const entry of changed) {
     assertLandEntryMode(base, entry, pathIdentity);
     if (pathIdentity(join(base, entry.path)) !== entry.after) {
-      const error = new Error(`proven path changed after Land${where}: ${entry.path}`);
+      const error = /** @type {Error & Record<string, any>} */ (new Error(`proven path changed after Land${where}: ${entry.path}`));
       error.code = "DELIVERY_PROJECTION_DRIFT";
       error.path = entry.path;
       throw error;
@@ -134,7 +134,7 @@ export function repositoryDeliveryProjection({
 
 export function deliveryProjection({ root, state, readJson, transactionJournalPath, pathIdentity }) {
   if (state.status !== "archived") {
-    const error = new Error(`change '${state.id}' is not archived`);
+    const error = /** @type {Error & Record<string, any>} */ (new Error(`change '${state.id}' is not archived`));
     error.code = "DELIVERY_REQUIRES_ARCHIVED";
     throw error;
   }
@@ -150,7 +150,7 @@ export function deliveryProjection({ root, state, readJson, transactionJournalPa
   if (!archive || !existsSync(join(root, archive)))
     throw new Error(`archived OpenSpec packet for '${state.id}' is unavailable`);
   if (state.deliveryIntegrity?.version !== 2) {
-    const error = new Error("Archived mode evidence is unavailable in this legacy change; automatic Deliver cannot reconstruct historical modes. Preserve the archived work and review the current diff for separately authorized Git publication.");
+    const error = /** @type {Error & Record<string, any>} */ (new Error("Archived mode evidence is unavailable in this legacy change; automatic Deliver cannot reconstruct historical modes. Preserve the archived work and review the current diff for separately authorized Git publication."));
     error.code = "DELIVERY_MODE_EVIDENCE_UNAVAILABLE";
     throw error;
   }

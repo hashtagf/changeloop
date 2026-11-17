@@ -74,7 +74,7 @@ export function createProofRuntime({
   writeJson, readJson, pathInside, validateArtifact, instructionProvenance,
   agentPlanValue = null, savedAgentPlan = null, taskResult = null,
   taskLease = null, taskPacketWasPrecompleted = null,
-  selectedRepositories = () => [], git = null, rolloutGates = () => [], now, fail
+  selectedRepositories = (..._args) => [], git = null, rolloutGates = (..._args) => [], now, fail
 }) {
   function assertReadRepositoriesUnchanged(id, state) {
     if (!git) return;

@@ -177,7 +177,7 @@ export function normalizedReviewFinding(finding) {
   };
 }
 
-export function repairClosureFindings(findings, resolveBinding = () => null) {
+export function repairClosureFindings(findings, resolveBinding = (..._args) => null) {
   return (findings || []).map((finding) => {
     const declaredClaims = [...new Set(finding.claimIds || [])].filter(Boolean).sort();
     const declaredCases = [...new Set(finding.verificationCaseIds || [])]
@@ -532,7 +532,7 @@ export function createReceiptRuntime({
   providerInputIdentity, contractFingerprint, executionFingerprint, stableHash,
   // Null identity means "not rebindable", so a composition that does not wire
   // these degrades to the pre-rebind behavior instead of failing to record.
-  relevantSnapshot = () => null, changeDiffIdentity = () => null,
+  relevantSnapshot = (..._args) => null, changeDiffIdentity = (..._args) => null,
   adapterFingerprint, environmentDescriptor, reviewPolicy, subjectProvenance,
   reviewProvenanceResult, readJson, flagValues, reviewHistoryState,
   reviewAttemptByDigest, reviewAttemptIsValid,

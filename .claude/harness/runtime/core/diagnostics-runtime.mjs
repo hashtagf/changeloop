@@ -101,7 +101,7 @@ export function createDiagnosticsRuntime({
   unverifiedDrift,
   unresolvedApplyTransactions,
   deliveryObservation = null,
-  authorityPreflight = () => ({ status: "READY", blockers: [] }),
+  authorityPreflight = (_id) => ({ status: "READY", blockers: [] }),
   executionContract = null,
   evidenceDetection = null,
   fail

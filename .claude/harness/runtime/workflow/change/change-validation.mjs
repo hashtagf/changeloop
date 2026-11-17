@@ -296,7 +296,7 @@ export function reportValidationReviewAssurance(quiet, resolvable, policy,
 }
 
 export function createChangeValidationRuntime({
-  markBlocked = () => {},
+  markBlocked = (..._args) => {},
   root,
   activeChangePath,
   relevantHash,
@@ -310,12 +310,12 @@ export function createChangeValidationRuntime({
   providerConfig,
   resolvedAcceptance,
   reviewPolicy,
-  reviewAssurancePosture = () => null,
+  reviewAssurancePosture = (..._args) => null,
   policyCapabilities,
   policyCapabilityTrigger,
   // (id, configuredCapabilities) -> agent-owned configure-provider EDIT rows
   // for work-type capabilities the change has no provider for.
-  policyProviderSetupActions = () => [],
+  policyProviderSetupActions = (..._args) => [],
   changedSurfaceResolvable,
   forecastCapabilities,
   rawExecution,
@@ -328,7 +328,7 @@ export function createChangeValidationRuntime({
   knownProviders,
   writeJson,
   now,
-  authorityPreflight = () => ({ status: "READY", blockers: [], decision: null }),
+  authorityPreflight = (..._args) => ({ status: "READY", blockers: [], decision: null }),
   executionContract = null,
   foundationPolicy = () => ({ quality: { changeGate: "off" } }),
   fail: terminalFail

@@ -39,7 +39,7 @@ export function landGrantBinding({ state, proof = null, workspaceHash = null,
 
 export function createLandGrantRuntime({
   transactions, loadRuntime, selectedRepositories, proofPath, readJson, writeJson,
-  stableHash, now, landCheck, workspaceHash = () => null,
+  stableHash, now, landCheck, workspaceHash = (_id) => null,
   archiveRecoveryReady = null, env = process.env
 }) {
   const grantPath = (id) => join(transactions, id, "land-grant.json");
@@ -108,12 +108,9 @@ export function createLandGrantRuntime({
   function assert(id) {
     const result = valid(id);
     if (!result.valid) {
-      const error = new Error(
-        `Land authority is unavailable for '${id}' (${result.reason})`);
-      error.code = "LAND_GRANT_REQUIRED";
-      error.owner = "user";
-      error.boundary = "land-authority";
-      throw error;
+      throw Object.assign(new Error(
+        `Land authority is unavailable for '${id}' (${result.reason})`),
+      { code: "LAND_GRANT_REQUIRED", owner: "user", boundary: "land-authority" });
     }
     return result.grant;
   }

@@ -945,7 +945,6 @@ const receiptRuntime = createReceiptRuntime({
     const state = loadRuntime(id);
     return groundingValue(id, state, activeChangePath(id, state))?.value || null;
   },
-  foundationPolicy,
   die
 });
 const {
@@ -1021,7 +1020,6 @@ const {
   providerWorkspace,
   playwrightAvailability,
   evidence,
-  stableHash,
   providerCapability,
   adapterResources,
   resourcesConflict,
@@ -1029,7 +1027,6 @@ const {
   maxParallelProviders,
   recordScheduler: commandPhaseRecorder.scheduler,
   timestamp: Date.now,
-  fail: die
 });
 const { modelForTask } = createModelRouter({
   loadRuntime,
@@ -1056,7 +1053,6 @@ const packetRuntime = createPacketRuntime({
   repositoryById,
   claimsForProvider,
   relevantSnapshot,
-  snapshotPath,
   singleRelevantSnapshot,
   requiredProviders,
   receiptValidity,
@@ -1116,7 +1112,6 @@ const {
   providerConfig,
   reviewPacketValue,
   loadRuntime,
-  saveRuntime,
   evidence,
   resolvedAcceptance,
   relevantHash,
@@ -1197,7 +1192,6 @@ const {
   requiredProviders,
   providerConfig,
   providerRepositories,
-  resourcesConflict,
   authorityPreflight,
   executionContract,
   taskResult: (id, taskId) => {
@@ -1480,7 +1474,6 @@ const {
   now,
   bindClaudeSession,
   validate,
-  showPacket,
   measureStage: commandPhaseRecorder.measure,
   receiptPath,
   receiptValidity,
@@ -1579,7 +1572,6 @@ const {
   reviewerStatus,
   unverifiedDrift: (id) => modelDriftInspector.changeDrift(id).unverified,
   evidenceDetection: evidenceDetectionValue,
-  parseFlags,
   fail: die
 });
 const {
@@ -1661,7 +1653,6 @@ const { finalize: prove, audit: proofAudit } = createProofRuntime({
     } : null;
   },
   agentPlanValue,
-  executionContract,
   savedAgentPlan: (id) => readJson(join(PLANS, `${id}.json`), {}),
   taskResult: (id, taskId) => {
     const path = join(LEASES, "results", id, `${taskId}.json`);
@@ -1793,7 +1784,6 @@ const {
   root: ROOT,
   transactions: TRANSACTIONS,
   loadRuntime,
-  saveRuntime,
   pendingApplyTransactions,
   recoverPendingApply,
   assertNoDroppedScenarios,
@@ -1815,10 +1805,8 @@ const {
   telemetryReadiness,
   verifyAppliedProjection,
   selectedRepositories,
-  repositoryById,
   git,
   gitHead,
-  ciEvidenceProtocolVersion: CI_EVIDENCE_PROTOCOL_VERSION,
   stableHash,
   agentPlanValue,
   executionContract,
@@ -1898,9 +1886,7 @@ const applyRuntime = createApplyRuntime({
     assertLandedProjection({ root: ROOT, id, state, fail: die });
   },
   archivedChangeRelativePath,
-  pendingTasks,
   assertOpenSpecCli,
-  proofAudit,
   cleanupChangeLeases,
   now,
   measure: commandPhaseRecorder.measure,
@@ -2181,7 +2167,6 @@ const abandonRuntime = createAbandonRuntime({
   cleanupRepositorySandboxes,
   transactionJournals: (id) => readTransactionJournals(TRANSACTIONS, id, readJson),
   rollbackApplyTransaction,
-  readJson,
   writeJson,
   now,
   blockWithDecision,
