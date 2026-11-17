@@ -1,5 +1,6 @@
 import { leasePathIsAllowed } from "../../core/graph-execution.mjs";
-import { BEHAVIOR_NEUTRAL_WORK, LIGHT_WORK, OBJECT_FIELDS, draftWorkTypes } from "./design-blueprints.mjs";
+import { OBJECT_FIELDS, draftWorkTypes } from "./design-blueprints.mjs";
+import { BEHAVIOR_NEUTRAL_WORK, LIGHT_WORK } from "../../contracts/work-types.mjs";
 import { isSemanticVersion } from "./draft-version.mjs";
 import { REQUIRED_ANSWERS } from "./work-type-fields.mjs";
 import { hasAuthoredProposalProse } from "./outline-contract.mjs";

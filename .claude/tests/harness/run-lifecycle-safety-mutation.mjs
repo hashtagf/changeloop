@@ -185,7 +185,7 @@ const CASES = [
   },
   {
     id: "MUT-SINGLE-CHILD-LOCAL-APPLY-ALLOWED",
-    sourcePath: ".claude/harness/runtime/workflow/land/apply-runtime.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/land/apply-journal.mjs",
     expectedKiller: "CASE-SINGLE-CHILD-LOCAL-APPLY",
     detector: APPLY_DETECTOR,
     before: "if (emptyRootDiffPermitted(initialState) && !options.controlPlane)",

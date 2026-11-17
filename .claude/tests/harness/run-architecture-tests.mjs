@@ -8,7 +8,9 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { dependencyFindings, undeclaredDomains, workflowLayerFindings } from "./architecture-check.mjs";
+import {
+  dependencyFindings, reexportFindings, undeclaredDomains, workflowLayerFindings
+} from "./architecture-check.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..", "..");
@@ -32,6 +34,9 @@ pass("every runtime folder is a declared domain");
 assert.deepEqual(workflowLayerFindings(RUNTIME), []);
 pass("workflow modules live in declared groups that import only lower groups");
 
+assert.deepEqual(reexportFindings(RUNTIME), []);
+pass("runtime modules re-export only the spec-pinned surfaces");
+
 {
   const layered = mkdtempSync(join(tmpdir(), "foundation-workflow-layers-"));
   try {
@@ -45,6 +50,10 @@ pass("workflow modules live in declared groups that import only lower groups");
     const findings = workflowLayerFindings(layered).map((finding) => finding.path).sort();
     assert.deepEqual(findings, ["workflow/loose.mjs", "workflow/misc/thing.mjs", "workflow/transaction/edit.mjs"]);
     pass("workflow layering reports upward imports, root files, and undeclared groups");
+    writeFileSync(join(workflow, "change", "alias.mjs"),
+      'import { edit } from "../transaction/edit.mjs";\nexport { edit };\nexport { other } from "./other.mjs";\n');
+    assert.equal(reexportFindings(layered).filter((finding) => finding.path === "workflow/change/alias.mjs").length, 2);
+    pass("re-exports outside the pinned surfaces are reported");
   } finally {
     rmSync(layered, { recursive: true, force: true });
   }

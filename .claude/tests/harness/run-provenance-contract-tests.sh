@@ -20,9 +20,10 @@ import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 const {
-  canonicalJson, createInstructionManifest, instructionProvenance,
+  createInstructionManifest, instructionProvenance,
   instructionManifestShapeReason, verifyInstructionManifest
 } = await import(`${process.env.ROOT}/.claude/harness/runtime/core/instruction-manifest.mjs`);
+const { canonicalJson } = await import(`${process.env.ROOT}/.claude/harness/runtime/core/trust.mjs`);
 
 const fixture = process.env.FIXTURE;
 const options = {

@@ -5,19 +5,12 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, w
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { createStateRuntime } from "../runtime/core/state-runtime.mjs";
+import { createSandboxRuntime } from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 import {
-  assertReadOnlyReplayClean,
-  commitSandboxReplay,
-  createSandboxRuntime,
-  manuallyRebasedMovement,
-  prepareWorktreeReplay,
-  preserveReplayPacket,
-  recoverAmendedReplay,
-  rejectedPaths,
-  replayContext,
-  replayStagingCleanup,
-  stageReplayWorkspace
-} from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
+  assertReadOnlyReplayClean, commitSandboxReplay, manuallyRebasedMovement,
+  prepareWorktreeReplay, preserveReplayPacket, recoverAmendedReplay, rejectedPaths,
+  replayContext, replayStagingCleanup, stageReplayWorkspace
+} from "../runtime/workflow/sandbox/sandbox-replay.mjs";
 
 const fail = (message) => { throw new Error(message); };
 const ok = { status: 0, stdout: "", stderr: "" };

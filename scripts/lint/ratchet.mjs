@@ -37,7 +37,7 @@ const SIZE_GROWTH = "Tracked large file grew. Move the new logic into a focused 
   "instead of extending this file.";
 const ROOT_GROWTH = "foundation.mjs is the composition root: it wires domains and holds no " +
   "behavior. Put the new logic in its domain under .claude/harness/runtime/ and inject it.";
-const NEW_LARGE = `File exceeds ${SIZE_CEILING} lines. Split it into focused modules ` +
+const newLarge = (ceiling) => `File exceeds ${ceiling} lines. Split it into focused modules ` +
   "before adding it.";
 const ROOT_UNTRACKED = "The composition root must stay tracked in the size baseline.";
 
@@ -161,7 +161,7 @@ export function compare(baseline, current) {
       if (path === COMPOSITION_ROOT)
         regressions.push({ kind: "size", path, baseline: null, current: lines, message: ROOT_UNTRACKED });
       else if (lines > ceiling)
-        regressions.push({ kind: "size", path, baseline: ceiling, current: lines, message: NEW_LARGE });
+        regressions.push({ kind: "size", path, baseline: ceiling, current: lines, message: newLarge(ceiling) });
     } else if (lines > tracked) {
       regressions.push({ kind: "size", path, baseline: tracked, current: lines,
         message: path === COMPOSITION_ROOT ? ROOT_GROWTH : SIZE_GROWTH });

@@ -3,9 +3,14 @@ import test from "node:test";
 import { spawnSync } from "node:child_process";
 
 import {
-  advanceFailureAction, coordinatorAction, createAdvanceRuntime, envelopeContextFiles,
-  hasValidLandGrant, noProgressOutput, prepareAdvanceBuild, proofOperationAction, runAdvanceProof
+  createAdvanceRuntime, hasValidLandGrant, prepareAdvanceBuild, runAdvanceProof
 } from "../runtime/workflow/advance/advance-runtime.mjs";
+import {
+  advanceFailureAction, envelopeContextFiles, noProgressOutput
+} from "../runtime/workflow/advance/advance-envelope.mjs";
+import {
+  coordinatorAction, proofOperationAction
+} from "../runtime/workflow/advance/advance-actions.mjs";
 import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 test("a running proof's WORKING action carries its progress to the caller", () => {

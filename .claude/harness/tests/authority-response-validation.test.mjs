@@ -9,7 +9,7 @@ import {
 } from "../runtime/workflow/authority/authority.mjs";
 import {
   authorityResponsePreflightIssues, authorityResponseTemplate, reviewFindingResponseEvidence
-} from "../runtime/workflow/authority/authority-runtime.mjs";
+} from "../runtime/workflow/authority/authority-response.mjs";
 
 // One record run reports every problem it can decide, not one per attempt.
 test("authority record preflight reports every response problem together", () => {

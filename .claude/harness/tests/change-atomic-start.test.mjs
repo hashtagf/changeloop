@@ -12,7 +12,7 @@ import {
 import {
   amendmentTaskRepositoryIssues, amendmentVerifyPathIssues, taskRepositoryIssues,
   verifyDirectoryTargets, verifyPathIssues, verifyTestFileReferences
-} from "../runtime/workflow/draft/semantic-amendment.mjs";
+} from "../runtime/workflow/draft/amendment-verify.mjs";
 import { verifySpecSync } from "../runtime/workflow/land/spec-sync-verify.mjs";
 import { verifyCountAdvisories } from "../runtime/workflow/validation/design-blueprints.mjs";
 import {

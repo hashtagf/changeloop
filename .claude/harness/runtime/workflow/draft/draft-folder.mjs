@@ -8,7 +8,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  OUTLINE, derivedSectionKeys, hasAuthoredProposalProse, sectionHeading
+  OUTLINE, derivedSectionKeys, sectionHeading
 } from "../validation/outline-contract.mjs";
 import { groundingFromQuality } from "../validation/quality-fields.mjs";
 import { FOLDER_DRAFT_VERSION } from "../validation/draft-version.mjs";
@@ -91,8 +91,6 @@ export function splitProse(document, text, { language, file = `${document}.md` }
 
 const PLACEHOLDER = /(?<![A-Za-z0-9_])(TODO|TBD)(?![A-Za-z0-9_])/i;
 
-// hasAuthoredProposalProse lives in validation/outline-contract.mjs; re-exported so importers are unchanged.
-export { hasAuthoredProposalProse };
 
 // Authored headings must follow the outline's reader order.
 function orderIssues(document, sections, file) {

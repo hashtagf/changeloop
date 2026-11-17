@@ -2,9 +2,9 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { join, relative } from "node:path";
 import { DRAFT_FOLDER_VERSION } from "../draft/draft-folder.mjs";
 import {
-  MINIMAL_DRAFT_WRITING, minimalDraftFolderTemplate, semanticDraftTemplate,
-  unknownTaskFieldWarnings
-} from "../draft/semantic-draft.mjs";
+  MINIMAL_DRAFT_WRITING, minimalDraftFolderTemplate, semanticDraftTemplate
+} from "../draft/semantic-draft-templates.mjs";
+import { unknownTaskFieldWarnings } from "../draft/semantic-draft-tasks.mjs";
 import { isRecordedSemanticVersion, isSemanticVersion } from "../validation/draft-version.mjs";
 import { FIXES_DIMENSIONS, riskSignalDimensions } from "../validation/semantic-intake.mjs";
 import { materializePrototype } from "../prototype/prototype-binding.mjs";

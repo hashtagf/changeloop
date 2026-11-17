@@ -23,7 +23,6 @@ import * as stateRuntime from "../../core/state-runtime.mjs";
 import { compositeRepositorySelection } from "../../core/repository-binding.mjs";
 import { probeOpenSpecVersion } from "../../core/tool-identity.mjs";
 
-export { riskRequiresCi } from "../../core/authority-policy.mjs";
 
 export function recordedDeliveryReferences(state) {
   const explicit = Array.isArray(state?.deliveryReferences)

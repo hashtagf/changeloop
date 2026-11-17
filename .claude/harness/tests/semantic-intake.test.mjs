@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import {
   createChangeLifecycle, documentSectionInvalidation, sectionsOnlyAmendment, v5QualityGrounding
 } from "../runtime/workflow/change/change-lifecycle.mjs";
-import { durableDecisionMetadataIssues } from "../runtime/workflow/change/change-validation.mjs";
+import { durableDecisionMetadataIssues } from "../runtime/workflow/change/durable-decisions.mjs";
 import { groundingFromQuality } from "../runtime/workflow/validation/quality-fields.mjs";
 import {
   CORE_DISCOVERY_DIMENSIONS,

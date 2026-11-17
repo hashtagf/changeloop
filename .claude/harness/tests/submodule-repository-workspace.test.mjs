@@ -8,7 +8,8 @@ import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { coordinatorAction, envelopeContextFiles } from "../runtime/workflow/advance/advance-runtime.mjs";
+import { coordinatorAction } from "../runtime/workflow/advance/advance-actions.mjs";
+import { envelopeContextFiles } from "../runtime/workflow/advance/advance-envelope.mjs";
 import { createChangePolicy } from "../runtime/workflow/change/change-policy.mjs";
 import { shellMutationViolation } from "../runtime/core/shell-mutation-policy.mjs";
 import { reviewChangedSurface } from "../runtime/workflow/packet/packet-runtime.mjs";

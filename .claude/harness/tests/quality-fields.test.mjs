@@ -9,9 +9,8 @@ import {
   renderThreatModel, renderTrackingPlan, validateCapacity, validateNfr,
   validateObservability, validateThreatModel, validateTrackingPlan,
 } from "../runtime/workflow/validation/quality-fields.mjs";
-import {
-  NFR_CATEGORY_CAPABILITIES, createChangeValidationRuntime,
-} from "../runtime/workflow/change/change-validation.mjs";
+import { createChangeValidationRuntime } from "../runtime/workflow/change/change-validation.mjs";
+import { NFR_CATEGORY_CAPABILITIES } from "../runtime/workflow/validation/quality-fields.mjs";
 
 const threatModel = {
   assets: ["session token (secret)", "member PII (personal)"],

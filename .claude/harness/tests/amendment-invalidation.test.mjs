@@ -7,7 +7,7 @@ import { planAmendmentInvalidation } from
   "../runtime/workflow/validation/amendment-invalidation.mjs";
 import { formatInvalidatedWaivers, invalidatedWaivers } from
   "../runtime/workflow/change/change-lifecycle.mjs";
-import { amendmentSectionIssues } from "../runtime/workflow/draft/semantic-amendment.mjs";
+import { amendmentSectionIssues } from "../runtime/workflow/draft/amendment-sections.mjs";
 
 // The harness builds the file map, work type, and acceptance rows; an
 // amendment can replace only author sections, and the repair says so.

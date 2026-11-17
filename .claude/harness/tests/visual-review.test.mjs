@@ -14,7 +14,7 @@ import {
 } from "../runtime/evidence/visual-review.mjs";
 import { claimsForCapability } from "../runtime/evidence/evidence-contract.mjs";
 import { PROVIDERS, providerCapability } from "../runtime/evidence/provider-catalog.mjs";
-import { requiredProvidersOperation } from "../runtime/workflow/change/change-validation.mjs";
+import { requiredProvidersOperation } from "../runtime/workflow/change/required-providers.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SCRIPT = join(HERE, "..", "runtime", "evidence", "visual-review.mjs");

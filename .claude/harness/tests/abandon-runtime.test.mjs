@@ -8,7 +8,7 @@ import { createHash } from "node:crypto";
 import { createAbandonRuntime } from "../runtime/workflow/change/abandon-runtime.mjs";
 import { createReviewAttemptStore } from "../runtime/evidence/review-attempt-store.mjs";
 import { createAuthorityStore } from "../runtime/workflow/authority/authority.mjs";
-import { pendingAuthorityRequest } from "../runtime/workflow/authority/authority-runtime.mjs";
+import { pendingAuthorityRequest } from "../runtime/workflow/authority/authority-requests.mjs";
 import { createModelDriftInspector } from "../runtime/observability/host-execution-contract.mjs";
 
 const root = mkdtempSync(join(tmpdir(), "foundation-abandon-runtime-"));

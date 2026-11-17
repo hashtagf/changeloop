@@ -14,11 +14,12 @@ import {
   planSelectiveProofRecovery, rebindSelectiveProofReceipt, demoteSelectivePreservation
 } from "../validation/selective-proof-plan.mjs";
 import { semanticIntakeResumeProjection } from "../draft/semantic-intake-state.mjs";
+import { compileSemanticAmendment, writeSemanticAmendment } from "../draft/semantic-amendment.mjs";
 import {
-  amendmentRepositoryOrderIssues, amendmentTaskRepositoryIssues,
-  amendmentVerifyPathIssues, amendmentVerifyShapeIssues, compileSemanticAmendment,
-  taskContractOnlyAmendment, writeSemanticAmendment
-} from "../draft/semantic-amendment.mjs";
+  amendmentRepositoryOrderIssues, amendmentTaskRepositoryIssues, amendmentVerifyPathIssues,
+  amendmentVerifyShapeIssues
+} from "../draft/amendment-verify.mjs";
+import { taskContractOnlyAmendment } from "../draft/amendment-tasks.mjs";
 import {
   amendmentInvestigationSource, investigationCoverageIssues
 } from "../validation/investigation-coverage.mjs";

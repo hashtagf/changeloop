@@ -12,17 +12,11 @@ import {
 } from "../runtime/workflow/draft/semantic-draft.mjs";
 
 import {
-  durableDecisionBlockIssues,
-  durableDecisionGraphIssues,
-  durableDecisionMetadataIssues,
-  durableDecisionReciprocityIssues,
-  durableDecisionReferenceIssues,
-  durableDecisionSection,
-  durableDecisionStatusIssues,
-  durableDecisionValues,
-  localDecisionReference,
+  durableDecisionBlockIssues, durableDecisionGraphIssues, durableDecisionMetadataIssues,
+  durableDecisionReciprocityIssues, durableDecisionReferenceIssues, durableDecisionSection,
+  durableDecisionStatusIssues, durableDecisionValues, localDecisionReference,
   parseDurableDecisions
-} from "../runtime/workflow/change/change-validation.mjs";
+} from "../runtime/workflow/change/durable-decisions.mjs";
 
 const fields = [
   "Status", "Decision", "Why", "Rejected", "Consequences",

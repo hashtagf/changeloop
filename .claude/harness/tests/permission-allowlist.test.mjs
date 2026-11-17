@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { coordinatorAction } from "../runtime/workflow/advance/advance-runtime.mjs";
+import { coordinatorAction } from "../runtime/workflow/advance/advance-actions.mjs";
 
 // A normal Change → Build → Prove → Land run must not stop on a host approval
 // prompt. The installer seeds `.claude/settings.json` permissions.allow; every

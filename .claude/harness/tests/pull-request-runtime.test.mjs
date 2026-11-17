@@ -10,23 +10,18 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { deliveryTreeEntries } from "../runtime/workflow/transaction/delivery-integrity.mjs";
 
+import { createPullRequestRuntime } from "../runtime/workflow/delivery/pull-request-runtime.mjs";
 import {
-  classifyPullRequest,
-  containsSecretMaterial,
-  createPullRequestRuntime,
-  deliveryBranchName,
-  deliveryCommitSubject,
-  deliveryEvidenceAssessment,
-  deliveryNamingValues,
-  deliveryPolicy,
-  deliveryProjection,
-  followUpDeliveryCandidates,
-  markdownSection,
-  parseGitHubRemote,
-  pullRequestNarrative,
-  repositoryDeliveryProjection,
+  classifyPullRequest, containsSecretMaterial, deliveryEvidenceAssessment,
+  followUpDeliveryCandidates, markdownSection, parseGitHubRemote, pullRequestNarrative,
   renderPullRequestBody
-} from "../runtime/workflow/delivery/pull-request-runtime.mjs";
+} from "../runtime/workflow/delivery/pull-request-body.mjs";
+import {
+  deliveryBranchName, deliveryCommitSubject, deliveryNamingValues, deliveryPolicy
+} from "../runtime/workflow/delivery/delivery-naming.mjs";
+import {
+  deliveryProjection, repositoryDeliveryProjection
+} from "../runtime/workflow/delivery/delivery-projection.mjs";
 
 function hash(value) {
   return createHash("sha256").update(value).digest("hex");

@@ -8,8 +8,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   assertOpenSpecCli, createLandRuntime, openSpecCliStatus, openSpecVersionStatus,
-  riskRequiresCi, signedCiProvider
+  signedCiProvider
 } from "../../harness/runtime/workflow/land/land-runtime.mjs";
+import { riskRequiresCi } from "../../harness/runtime/core/authority-policy.mjs";
 
 let assertions = 0;
 function check(actual, expected, message) {

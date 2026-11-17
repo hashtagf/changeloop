@@ -8,17 +8,11 @@ import { join } from "node:path";
 import test from "node:test";
 
 import {
-  createProcessRuntime, serviceWorkspace,
-  pathInside,
-  readinessMatches,
-  servesOverNetwork,
-  serviceEnvironment,
-  startNativeStaticService,
-  startSpawnedService,
-  staticServiceIdentity,
-  staticServiceRequestHandler,
-  writeServiceLog
+  createProcessRuntime, serviceWorkspace, readinessMatches, servesOverNetwork,
+  serviceEnvironment, startNativeStaticService, startSpawnedService, staticServiceIdentity,
+  staticServiceRequestHandler, writeServiceLog
 } from "../runtime/core/process-runtime.mjs";
+import { pathInside } from "../runtime/core/paths.mjs";
 import { canonical, relativeInside } from "../runtime/core/paths.mjs";
 
 test("service workspace resolves repository, runtime, and root locations", () => {

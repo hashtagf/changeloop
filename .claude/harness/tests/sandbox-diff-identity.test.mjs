@@ -1,14 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  changeDiffCandidatePlan,
-  changeDiffCandidateRow,
-  changeDiffCandidates,
-  changeDiffIdentityOperation,
-  copyDiffIdentity,
-  combinedDiffIdentity,
-  normalizedDiffDigest
-} from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
+  changeDiffCandidatePlan, changeDiffCandidateRow, changeDiffCandidates,
+  changeDiffIdentityOperation, copyDiffIdentity, combinedDiffIdentity, normalizedDiffDigest
+} from "../runtime/workflow/sandbox/sandbox-diff-identity.mjs";
 
 const writable = {
   mode: "worktree", access: "write", baseHead: "base", path: "/box"

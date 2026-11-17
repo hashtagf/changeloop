@@ -21,7 +21,6 @@ const RENAME_TARGET = /^\s*-\s*(?:FROM|TO):\s*`?#{0,6}\s*Requirement:\s*(.+?)`?\
 // enclosing `## ` heading, which is what makes a delta requirement ADDED,
 // MODIFIED, or REMOVED; `body` is the verbatim block used for the
 // byte-identical comparison of untouched requirements.
-export { parseSpecDocument };
 
 // `## RENAMED Requirements` names its requirements in FROM/TO list items
 // rather than `### Requirement:` headings, so they are invisible to the parser

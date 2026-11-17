@@ -5,7 +5,6 @@ import { dirname, join, relative, resolve } from "node:path";
 import { pathInside } from "./paths.mjs";
 import { deadline, delay, terminateWithGrace } from "./timing.mjs";
 
-export { pathInside };
 
 // Only an http(s) readiness URL names a port another run can be holding. A
 // data: URL, for instance, always answers, and pre-probing one would report

@@ -6,10 +6,12 @@ import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 
+import { createSandboxRuntime } from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 import {
-  createSandboxRuntime, recordSandboxBaseMove, reportSandboxSync,
-  sandboxMovementLine, unusedCopyResolveMessage
-} from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
+  recordSandboxBaseMove, reportSandboxSync
+} from "../runtime/workflow/sandbox/sandbox-repositories.mjs";
+import { sandboxMovementLine } from "../runtime/workflow/sandbox/sandbox-copy.mjs";
+import { unusedCopyResolveMessage } from "../runtime/workflow/sandbox/sandbox-inspection.mjs";
 import { agreementIdentity } from "../runtime/core/user-decisions.mjs";
 import { createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
 import { targetHeadMovedDecision } from "../runtime/workflow/transaction/apply-recovery.mjs";

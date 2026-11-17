@@ -21,23 +21,7 @@ import {
   deriveRepositoryTaskDependencies, derivedExecution, normalizeTasks,
   unknownTaskFieldWarnings
 } from "./semantic-draft-tasks.mjs";
-// Moved to semantic-draft-tasks.mjs; re-exported so importers are unchanged.
-export {
-  TASK_FIELDS, deriveRepositoryTaskDependencies, unknownTaskFieldWarnings, verifyChain
-} from "./semantic-draft-tasks.mjs";
-// Moved to semantic-draft-minimal.mjs; re-exported so importers are unchanged.
-export {
-  capabilityFromIntent, expandMinimalSemanticDraft, isMinimalSemanticDraft
-} from "./semantic-draft-minimal.mjs";
-// Moved to semantic-draft-templates.mjs; re-exported so importers are unchanged.
-export {
-  MINIMAL_DRAFT_WRITING, minimalDraftFolderTemplate, minimalSemanticDraftTemplate,
-  semanticDraftTemplate
-} from "./semantic-draft-templates.mjs";
 
-export {
-  SEMANTIC_DRAFT_VERSIONS, isSemanticVersion
-} from "../validation/draft-version.mjs";
 
 const OPERATIONS = new Set(["added", "modified", "removed"]);
 

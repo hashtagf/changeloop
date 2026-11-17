@@ -164,8 +164,8 @@ the upstream repository uses those names for its own maintainer guidance.
 | Observability | `runtime/observability/metrics-runtime.mjs` | Read-only aggregation of operations, usage, context, and evidence metrics |
 | Observability | `runtime/observability/telemetry-runtime.mjs` | Context events, host transcript synchronization, and telemetry ledgers |
 | Workflow | `runtime/workflow/authority/agent-planning.mjs` | Task dependency/resource planning and bounded dispatch views |
-| Workflow | `runtime/workflow/land/apply-runtime.mjs` | Apply transaction preparation, recovery, cleanup, and archive orchestration |
-| Workflow | `runtime/workflow/authority/authority-runtime.mjs` | Authority request/response bridge and signed CI recording |
+| Workflow | `runtime/workflow/land/apply-runtime.mjs` | Apply transaction preparation, recovery, cleanup, and archive orchestration; journal, entries, target restore, post-Land install, and archive appendix in `apply-journal`, `apply-entries`, `target-restore`, `post-land-install`, `archive-appendix` |
+| Workflow | `runtime/workflow/authority/authority-runtime.mjs` | Authority request/response bridge and signed CI recording; requests, responses, session provenance, and reviewer runs in `authority-requests`, `authority-response`, `session-provenance`, `authority-reviewer-run` |
 | Workflow | `runtime/workflow/authority/authority.mjs` | External authority request persistence and response validation |
 | Workflow | `runtime/workflow/authority/budget.mjs` | Run/lifetime usage windows and budget policy transitions |
 | Workflow | `runtime/workflow/change/change-lifecycle.mjs` | Change command factory: shared draft/intake helpers and wiring of `change-materialize`, `change-resolution`, `change-start`, `change-revision`, and `change-amendment`; pure values in `change-start-values` |
@@ -187,9 +187,9 @@ the upstream repository uses those names for its own maintainer guidance.
 | Workflow | `runtime/workflow/draft/semantic-intake-state.mjs` | Draft/source-bound typed intake snapshot and safe resume projection |
 | Workflow | `runtime/workflow/validation/amendment-invalidation.mjs` | Selective claim, task, provider, approval, and proof invalidation planning |
 | Workflow | `runtime/workflow/validation/selective-proof-plan.mjs` | Fail-closed receipt preservation and exact post-amendment proof recovery |
-| Workflow | `runtime/workflow/draft/semantic-amendment.mjs` | Transactional Build-time agreement amendments that preserve canonical prose and completed work |
+| Workflow | `runtime/workflow/draft/semantic-amendment.mjs` | Transactional Build-time agreement amendments that preserve canonical prose and completed work; task, section, and verify helpers in `amendment-tasks`, `amendment-sections`, `amendment-verify` |
 | Workflow | `runtime/workflow/advance/advance-runtime.mjs` | Protocol-v7 deterministic chaining, durable recovery decisions, owner outcomes, and safe user projection; envelopes in `advance-envelope`, phase actions in `advance-actions` |
-| Workflow | `runtime/workflow/change/change-validation.mjs` | Traceability, change validation, and provider requirements |
+| Workflow | `runtime/workflow/change/change-validation.mjs` | Traceability, change validation, and provider requirements; grounding validation, grounding scope, gate waivers, semantic invariants, durable decisions, and required providers in their own `change/` modules |
 | Workflow | `runtime/workflow/transaction/land-journal.mjs` | Atomic apply identity, journal, rollback, verification, and cleanup |
 | Workflow | `runtime/workflow/land/land-runtime.mjs` | Multi-repository Land readiness, planning, pointers, and resume saga |
 | Workflow | `runtime/workflow/delivery/repository-delivery-saga.mjs` | Prepare-all, dependency-ordered, uncommitted multi-repository Apply and resume |

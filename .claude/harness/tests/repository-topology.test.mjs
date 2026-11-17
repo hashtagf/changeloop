@@ -6,25 +6,16 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import test from "node:test";
 
 import {
-  assertCatalogDependencies,
-  assertCatalogRepository,
-  assertSelectedDependencies,
-  buildRepositoryCatalog,
-  createRepositoryTopology,
-  mergeCatalogRepositories,
-  normalizeCatalogRepositoryPath,
-  normalizedSelectionEntry,
-  normalizedCatalogRepository,
-  parseDiscoveredSubmodules,
-  compositeRepositorySelection,
-  repositoryBaseHead,
-  repositoryDisplayRow,
-  repositoryDisplayState,
-  selectRepositories,
-  selectedRepository,
-  selectedRepositoryRow,
+  assertCatalogDependencies, assertCatalogRepository, assertSelectedDependencies,
+  buildRepositoryCatalog, createRepositoryTopology, mergeCatalogRepositories,
+  normalizeCatalogRepositoryPath, normalizedSelectionEntry, normalizedCatalogRepository,
+  parseDiscoveredSubmodules, repositoryDisplayRow, repositoryDisplayState,
+  selectRepositories, selectedRepository, selectedRepositoryRow,
   selectedRepositoryRuntimeIssue
 } from "../runtime/workflow/repository/repository-topology.mjs";
+import {
+  compositeRepositorySelection, repositoryBaseHead
+} from "../runtime/core/repository-binding.mjs";
 import { worktreeOwnedByTarget } from "../runtime/core/repository-binding.mjs";
 
 const fail = (message) => { throw new Error(message); };

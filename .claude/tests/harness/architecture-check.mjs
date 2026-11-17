@@ -150,6 +150,37 @@ export function workflowLayerFindings(runtimeRoot) {
   return findings;
 }
 
+// A re-export makes a symbol importable from a module that does not own it,
+// so the next change copies that import and the real home goes unread.
+// Only the surfaces openspec/specs/runtime-maintainability pins may re-export.
+const REEXPORT_ALLOWED = [
+  (path) => path === "workflow/change/change-lifecycle.mjs",
+  (path, from) => path === "workflow/sandbox/sandbox-runtime.mjs" && from === "./sandbox-setup.mjs"
+];
+
+export function reexportFindings(runtimeRoot) {
+  const findings = [];
+  for (const path of walk(runtimeRoot).filter((candidate) => candidate.endsWith(".mjs"))) {
+    const rel = relative(runtimeRoot, path).replaceAll("\\", "/");
+    const source = readFileSync(path, "utf8");
+    const imported = new Set();
+    for (const match of source.matchAll(/import\s*\{([^}]*)\}\s*from/g))
+      for (const name of match[1].split(","))
+        imported.add(name.trim().split(/\s+as\s+/).pop());
+    const report = (index, from) => {
+      if (REEXPORT_ALLOWED.some((allowed) => allowed(rel, from))) return;
+      findings.push({ path: rel, line: lineAt(source, index), message:
+        "re-export hides where the symbol lives; import it from its owning module instead" });
+    };
+    for (const match of source.matchAll(/export\s*(?:\*|\{[^}]*\})\s*from\s*["']([^"']+)["']/g))
+      report(match.index, match[1]);
+    for (const match of source.matchAll(/export\s*\{([^}]*)\}\s*;/g))
+      if (match[1].split(",").some((name) => imported.has(name.trim().split(/\s+as\s+/)[0])))
+        report(match.index, null);
+  }
+  return findings;
+}
+
 function main() {
   const root = resolve(process.argv[2] || process.cwd());
   const runtimeRoot = join(root, ".claude", "harness", "runtime");
@@ -158,7 +189,7 @@ function main() {
   for (const name of undeclared)
     console.log(`${name}/: undeclared runtime domain; add it to DOMAINS and ALLOWED in architecture-check.mjs`);
   if (undeclared.length) process.exitCode = 1;
-  const layers = workflowLayerFindings(runtimeRoot);
+  const layers = [...workflowLayerFindings(runtimeRoot), ...reexportFindings(runtimeRoot)];
   for (const finding of layers) console.log(`${finding.path}:${finding.line}: ${finding.message}`);
   if (layers.length) process.exitCode = 1;
   if (!findings.length) {

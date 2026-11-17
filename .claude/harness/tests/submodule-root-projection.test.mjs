@@ -21,10 +21,11 @@ import { sandboxCodePathspec } from "../runtime/core/workspace-surface.mjs";
 import { rootPointerMoves } from "../runtime/workflow/land/land-verification.mjs";
 import { projectableRepositories } from "../runtime/workflow/repository/repository-projection.mjs";
 import { assessSandbox, sandboxDescriptors } from "../runtime/workflow/sandbox/sandbox-preservation.mjs";
+import { createSandboxRuntime } from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 import {
-  changeDiffCandidatePlan, changeDiffCandidateRow, createSandboxRuntime, normalizedDiffDigest,
-  sandboxCopyPlan
-} from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
+  changeDiffCandidatePlan, changeDiffCandidateRow, normalizedDiffDigest
+} from "../runtime/workflow/sandbox/sandbox-diff-identity.mjs";
+import { sandboxCopyPlan } from "../runtime/workflow/sandbox/sandbox-copy.mjs";
 
 const ID = "clamp-change";
 

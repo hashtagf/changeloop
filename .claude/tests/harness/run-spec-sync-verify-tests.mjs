@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import {
-  parseSpecDocument, predictSpecSync, verifySpecSync
+  predictSpecSync, verifySpecSync
 } from "../../harness/runtime/workflow/land/spec-sync-verify.mjs";
+import { parseSpecDocument } from "../../harness/runtime/contracts/change-artifacts.mjs";
 
 const lines = (...rows) => `${rows.join("\n")}\n`;
 

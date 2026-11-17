@@ -8,39 +8,26 @@ import { tmpdir } from "node:os";
 import test from "node:test";
 
 import {
-  assertSandboxGroundingPortable,
-  applySetupResult,
-  carrySandboxIgnoredArtifacts,
-  carryableGitMetadata,
-  commitSandboxReplay,
-  copiedPreexistingDigests,
-  copySandboxEntries,
-  copyTrackedRootMetadata,
-  createSandbox,
-  createSandboxRuntime,
-  dependencyDigest,
-  executeSandboxSetupBatch,
-  ignoredSandboxPaths,
-  inspectSandbox,
-  isolateSelectedRepositories,
-  prepareBuildSandbox,
-  refreshChangedSandboxDependencies,
-  repairSelectedRepositories,
-  reportMultiRepositorySandbox,
-  retryFailedSandboxSetups,
-  runMeasuredSandboxSetupBatch,
-  runSandboxSetupBatch,
-  runSandboxSetupCommand,
-  runWorkspaceSetupPlan,
-  sandboxSetupLine,
-  workspaceSetupPlan,
-  sandboxCopyPlan,
-  sandboxCopyWorkspace,
-  sandboxCreatePreflight,
-  showSandboxInspection,
-  setupSelectedRepositories,
-  unrelatedSandboxTargetChanges
+  createSandboxRuntime, dependencyDigest, executeSandboxSetupBatch,
+  refreshChangedSandboxDependencies, runMeasuredSandboxSetupBatch, runSandboxSetupBatch,
+  runSandboxSetupCommand, runWorkspaceSetupPlan, sandboxSetupLine, workspaceSetupPlan
 } from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
+import {
+  assertSandboxGroundingPortable, carrySandboxIgnoredArtifacts, commitSandboxReplay,
+  unrelatedSandboxTargetChanges
+} from "../runtime/workflow/sandbox/sandbox-replay.mjs";
+import {
+  applySetupResult, createSandbox, isolateSelectedRepositories, prepareBuildSandbox,
+  repairSelectedRepositories, reportMultiRepositorySandbox, retryFailedSandboxSetups,
+  sandboxCreatePreflight, setupSelectedRepositories
+} from "../runtime/workflow/sandbox/sandbox-repositories.mjs";
+import {
+  carryableGitMetadata, copiedPreexistingDigests, copySandboxEntries,
+  copyTrackedRootMetadata, ignoredSandboxPaths, sandboxCopyPlan, sandboxCopyWorkspace
+} from "../runtime/workflow/sandbox/sandbox-copy.mjs";
+import {
+  inspectSandbox, showSandboxInspection
+} from "../runtime/workflow/sandbox/sandbox-inspection.mjs";
 import { carriedLandedExcludes } from "../runtime/workflow/transaction/target-edits.mjs";
 import {
   isInvestigationPath, sandboxCodePathspec

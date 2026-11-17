@@ -61,13 +61,12 @@ import { createInstructionRecorder } from "./runtime/core/instruction-recorder.m
 import { createAgentPlanner, createModelRouter } from "./runtime/workflow/authority/agent-planning.mjs";
 import { createAgentDispatchRuntime } from "./runtime/workflow/authority/agent-dispatch.mjs";
 import {
-  ADVANCE_PROTOCOL_VERSION, advanceFailureAction, createAdvanceRuntime, hasValidLandGrant,
-  prepareAdvanceBuild, runAdvanceProof
+  createAdvanceRuntime, hasValidLandGrant, prepareAdvanceBuild, runAdvanceProof
 } from "./runtime/workflow/advance/advance-runtime.mjs";
+import { ADVANCE_PROTOCOL_VERSION, advanceFailureAction } from "./runtime/workflow/advance/advance-envelope.mjs";
 import { automaticReviewRun, currentDeliveryProof } from "./runtime/workflow/advance/advance-recovery.mjs";
-import {
-  copySandboxEntries, createSandboxRuntime, sandboxCopyPlan
-} from "./runtime/workflow/sandbox/sandbox-runtime.mjs";
+import { createSandboxRuntime } from "./runtime/workflow/sandbox/sandbox-runtime.mjs";
+import { copySandboxEntries, sandboxCopyPlan } from "./runtime/workflow/sandbox/sandbox-copy.mjs";
 import { createPreviewRuntime } from "./runtime/workflow/prototype/preview-runtime.mjs";
 import { createSandboxCleanup } from "./runtime/workflow/sandbox/sandbox-cleanup.mjs";
 import { rollbackAtomicStart as rollbackAtomicStartOperation } from "./runtime/workflow/change/atomic-start-rollback.mjs";
@@ -85,7 +84,7 @@ import { createPacketRuntime } from "./runtime/workflow/packet/packet-runtime.mj
 import { createChangePolicy } from "./runtime/workflow/change/change-policy.mjs";
 import { taskBlocks, taskMetadata } from "./runtime/contracts/change-artifacts.mjs";
 import { createChangeLifecycle } from "./runtime/workflow/change/change-lifecycle.mjs";
-import { amendTaskVerifyOperation } from "./runtime/workflow/draft/semantic-amendment.mjs";
+import { amendTaskVerifyOperation } from "./runtime/workflow/draft/amendment-verify.mjs";
 import { createInvestigationRuntime } from "./runtime/workflow/investigation/investigation-runtime.mjs";
 import { createLeaseRuntime } from "./runtime/workflow/authority/lease-runtime.mjs";
 import { createAuthorityRuntime } from "./runtime/workflow/authority/authority-runtime.mjs";
@@ -105,9 +104,8 @@ import {
   REVIEW_FORCING_CAPABILITIES,
   REVIEW_DIVERSITY_CAPABILITIES
 } from "./runtime/evidence/evidence-contract.mjs";
-import {
-  createChangeValidationRuntime, postReleaseRolloutGates
-} from "./runtime/workflow/change/change-validation.mjs";
+import { createChangeValidationRuntime } from "./runtime/workflow/change/change-validation.mjs";
+import { postReleaseRolloutGates } from "./runtime/workflow/change/required-providers.mjs";
 import { routeRuntimeCommand } from "./runtime/core/cli-router.mjs";
 import { impliedChangeValues } from "./runtime/core/implied-change.mjs";
 import { createProviderScheduler } from "./runtime/evidence/provider-scheduler.mjs";
@@ -154,9 +152,8 @@ import {
   createSessionLeaseRuntime, isSessionOwner, runTaskCheck
 } from "./runtime/workflow/authority/session-lease.mjs";
 import { createQualityRuntime } from "./runtime/quality/quality-runtime.mjs";
-import {
-  createPullRequestRuntime, DELIVERY_PROTOCOL_VERSION, DELIVERY_RECEIPT_SCHEMA_VERSION
-} from "./runtime/workflow/delivery/pull-request-runtime.mjs";
+import { createPullRequestRuntime } from "./runtime/workflow/delivery/pull-request-runtime.mjs";
+import { DELIVERY_PROTOCOL_VERSION, DELIVERY_RECEIPT_SCHEMA_VERSION } from "./runtime/workflow/delivery/delivery-projection.mjs";
 
 const VERSION = "3.7.5";
 const RUNTIME_API_VERSION = "42";

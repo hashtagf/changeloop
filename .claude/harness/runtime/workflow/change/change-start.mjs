@@ -5,7 +5,7 @@ import { hotfixRegressionIssues } from "../validation/hotfix-regression.mjs";
 import { TYPE_SURFACES, checklistNoteLine } from "../prototype/prototype-checklist.mjs";
 import { inspectSemanticSources } from "../validation/semantic-source-inventory.mjs";
 import { semanticIntakeResumeProjection } from "../draft/semantic-intake-state.mjs";
-import { taskRepositoryIssues, verifyPathIssues } from "../draft/semantic-amendment.mjs";
+import { taskRepositoryIssues, verifyPathIssues } from "../draft/amendment-verify.mjs";
 import { behaviorChangingTypes, verifyShapeIssues } from "../validation/verify-shape.mjs";
 import {
   bindingRecord, scenarioBindingIssues, scenarioTestBinding

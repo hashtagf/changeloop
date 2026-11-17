@@ -277,8 +277,6 @@ export function leaseAuthorityIsStale(plan, taskLease) {
     leaseContractChanged(plan, taskLease);
 }
 
-// leasePathIsAllowed lives in core/graph-execution.mjs; re-exported so importers are unchanged.
-export { leasePathIsAllowed };
 
 export function observedLeaseWrites(context, id, taskLease, force) {
   if (force) return [];

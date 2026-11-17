@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { behaviorChangingWork } from "../../evidence/test-discrimination.mjs";
-import { leasePathIsAllowed } from "../authority/lease-runtime.mjs";
+import { leasePathIsAllowed } from "../../core/graph-execution.mjs";
 import { lightKind, packetWorkTypes } from "../validation/dev-document.mjs";
 
 // Task kinds that observe or record rather than change behavior.

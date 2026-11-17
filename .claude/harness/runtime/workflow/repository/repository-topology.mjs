@@ -4,9 +4,6 @@ import {
   isolatedRepositoryState, worktreeOwnedByTarget
 } from "../../core/repository-binding.mjs";
 
-export {
-  compositeRepositorySelection, isolatedRepositoryState, repositoryBaseHead
-} from "../../core/repository-binding.mjs";
 
 export function normalizedSelectionEntry(entry) {
   return typeof entry === "string" ? { id: entry } : entry;

@@ -2,11 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  assertWaivableCapability,
-  revokeGateWaiver,
-  waiveGateOperation,
-  waiverRequest
-} from "../runtime/workflow/change/change-validation.mjs";
+  assertWaivableCapability, revokeGateWaiver, waiveGateOperation, waiverRequest
+} from "../runtime/workflow/change/gate-waivers.mjs";
 
 const fail = (message) => { throw new Error(message); };
 

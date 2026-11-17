@@ -5,10 +5,10 @@ import {
 } from "node:fs";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
-import {
-  createChangeValidationRuntime, durableDecisionMetadataIssues,
-  groundingInteractionRequirements, semanticInvariantIssues
-} from "../runtime/workflow/change/change-validation.mjs";
+import { createChangeValidationRuntime } from "../runtime/workflow/change/change-validation.mjs";
+import { durableDecisionMetadataIssues } from "../runtime/workflow/change/durable-decisions.mjs";
+import { groundingInteractionRequirements } from "../runtime/workflow/change/grounding-scope.mjs";
+import { semanticInvariantIssues } from "../runtime/workflow/change/semantic-invariants.mjs";
 import { renderDraftDecisions } from "../runtime/workflow/change/change-lifecycle.mjs";
 
 const fixture = mkdtempSync(join(tmpdir(), "foundation-grounding-policy-"));

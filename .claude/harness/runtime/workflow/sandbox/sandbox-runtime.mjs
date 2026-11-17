@@ -39,39 +39,6 @@ import {
   headOfRepository, inspectSandbox, showSandboxInspection, workspaceInspectionFor
 } from "./sandbox-inspection.mjs";
 import { createSandboxSync } from "./sandbox-sync.mjs";
-// Moved to sandbox-inspection.mjs; re-exported so importers are unchanged.
-export {
-  headOfRepository, inspectSandbox, repositoryInspectionRows, showSandboxInspection,
-  unusedCopyResolveMessage, workspaceIdentityValid, workspaceInspectionValue,
-  workspaceIsolationKind, workspaceTargetDrift
-} from "./sandbox-inspection.mjs";
-// Moved to sandbox-replay.mjs; re-exported so importers are unchanged.
-export {
-  assertReadOnlyReplayClean, assertSandboxGroundingPortable, carrySandboxIgnoredArtifacts,
-  commitSandboxReplay, manuallyRebasedMovement, plannedGroundingPortabilityStatus,
-  prepareWorktreeReplay, preserveReplayPacket, recoverAmendedReplay, rejectedPaths,
-  replayContext, replayStagingCleanup, stageReplayWorkspace, unrelatedSandboxTargetChanges
-} from "./sandbox-replay.mjs";
-// Moved to sandbox-repositories.mjs; re-exported so importers are unchanged.
-export {
-  applySetupResult, assertRelocatedSandboxIdentity, assertRelocatedSandboxLayout,
-  createSandbox, isolateSelectedRepositories, prepareBuildSandbox,
-  rebindRelocatedSandboxOperation, recordSandboxBaseMove, relocatedSandboxCandidate,
-  repairSelectedRepositories, reportMultiRepositorySandbox, reportSandboxSync,
-  retryFailedSandboxSetups, sandboxCreatePreflight, setupSelectedRepositories
-} from "./sandbox-repositories.mjs";
-// Moved to sandbox-copy.mjs; re-exported so importers are unchanged.
-export {
-  carryableGitMetadata, copiedPreexistingDigests, copySandboxEntries,
-  copyTrackedRootMetadata, gatheringRoot, gitBaseCheckoutPaths, gitBaseCheckoutStatus,
-  groundingPortabilityFindings, ignoredSandboxPaths, isPacketLocalSource,
-  nestedRepositoryAncestor, sandboxCopyPlan, sandboxCopyWorkspace, sandboxMovementLine
-} from "./sandbox-copy.mjs";
-// Moved to sandbox-diff-identity.mjs; re-exported so importers are unchanged.
-export {
-  changeDiffCandidatePlan, changeDiffCandidateRow, changeDiffCandidates,
-  changeDiffIdentityOperation, combinedDiffIdentity, copyDiffIdentity, normalizedDiffDigest
-} from "./sandbox-diff-identity.mjs";
 // Sandbox setup moved to sandbox-setup.mjs; re-exported so importers are unchanged.
 export {
   runSandboxSetupCommand, runSandboxSetupBatch, executeSandboxSetupBatch, runMeasuredSandboxSetupBatch, DEPENDENCY_LOCKFILES, workspaceSetupPlan, sandboxSetupLine, SETUP_DEPENDENCY_FILES, dependencyDigest, runWorkspaceSetupPlan, refreshChangedSandboxDependencies

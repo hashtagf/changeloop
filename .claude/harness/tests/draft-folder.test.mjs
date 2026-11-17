@@ -9,7 +9,9 @@ import {
   createChangeLifecycle, renderDraftDesign, renderDraftProposal
 } from "../runtime/workflow/change/change-lifecycle.mjs";
 import { groundingFromQuality } from "../runtime/workflow/validation/quality-fields.mjs";
-import { expandMinimalSemanticDraft, isMinimalSemanticDraft } from "../runtime/workflow/draft/semantic-draft.mjs";
+import {
+  expandMinimalSemanticDraft, isMinimalSemanticDraft
+} from "../runtime/workflow/draft/semantic-draft-minimal.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 
 function folder(files) {

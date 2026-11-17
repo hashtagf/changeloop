@@ -11,13 +11,13 @@ import { delimiter, join } from "node:path";
 import { routeRuntimeCommand } from "../../harness/runtime/core/cli-router.mjs";
 import { createFlagParser } from "../../harness/runtime/core/cli-flags.mjs";
 import {
-  assertOpenSpecStrictValid, groundingTaskOverlapFindings,
-  groundingInteractionRequirements, groundingMissingReadSourceRecovery,
-  groundingPathRowShapeIssue,
-  hasObservableSecurityControl,
-  plannedGroundingPathEligible,
-  plannedGroundingPathRecovery
+  assertOpenSpecStrictValid
 } from "../../harness/runtime/workflow/change/change-validation.mjs";
+import {
+  groundingTaskOverlapFindings, groundingInteractionRequirements,
+  groundingMissingReadSourceRecovery, groundingPathRowShapeIssue,
+  hasObservableSecurityControl, plannedGroundingPathEligible, plannedGroundingPathRecovery
+} from "../../harness/runtime/workflow/change/grounding-scope.mjs";
 
 const fail = (message) => { throw new Error(message); };
 const { parseFlags, parseStrictCommandFlags } = createFlagParser({ fail });

@@ -4,7 +4,6 @@ import { repositoryBaseHead } from "../../core/repository-binding.mjs";
 import { isPostReleaseCapability } from "../../evidence/provider-catalog.mjs";
 import { changeWorkTypes as packetChangeWorkTypes } from "./task-change.mjs";
 
-export { repositoryBaseHead } from "../../core/repository-binding.mjs";
 
 export function addChangedSurfaceSource({
   sources, path, source, repositoryId, changeId, excludedWorkspaceDirs,

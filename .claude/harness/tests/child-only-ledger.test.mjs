@@ -4,7 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 
-import { syncChildOnlyPacket, syncChildOnlyTaskProgress } from "../runtime/workflow/land/apply-runtime.mjs";
+import {
+  syncChildOnlyPacket, syncChildOnlyTaskProgress
+} from "../runtime/workflow/land/apply-entries.mjs";
 import { taskBlocks } from "../runtime/contracts/change-artifacts.mjs";
 import { createSandboxRuntime } from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
 

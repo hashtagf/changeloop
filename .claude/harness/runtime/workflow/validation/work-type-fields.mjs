@@ -10,7 +10,8 @@
 // SECTION_HELP entries in dev-document.mjs, so a help example always passes.
 
 import { absenceKind, bareAbsenceIssue } from "./explicit-absence.mjs";
-import { isObject, localized, objectList, present, requireFields, text } from "./field-helpers.mjs";
+import { localized, objectList, present, requireFields, text } from "./field-helpers.mjs";
+import { isObject } from "../../core/values.mjs";
 import { bestEffort } from "../../core/best-effort.mjs";
 
 const LABELS = Object.freeze({

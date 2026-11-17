@@ -1,6 +1,6 @@
 import { behaviorChangingWork } from "../../evidence/test-discrimination.mjs";
 import { shellDisplayArgument } from "../../core/shell-mutation-policy.mjs";
-import { pathInside } from "../../core/process-runtime.mjs";
+import { pathInside } from "../../core/paths.mjs";
 import { drainSignals } from "../../core/signals.mjs";
 import { readPrototypeBinding } from "../prototype/prototype-binding.mjs";
 import {

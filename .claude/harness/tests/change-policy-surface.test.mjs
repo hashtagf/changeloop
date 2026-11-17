@@ -4,14 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import {
-  addChangedSurfaceSource,
-  capabilitiesForWorkTypes,
-  carriedInUnchanged,
-  changedSurfaceRows,
-  createChangePolicy,
-  repositoryBaseHead,
-  sortChangedSurface
+  addChangedSurfaceSource, capabilitiesForWorkTypes, carriedInUnchanged, changedSurfaceRows,
+  createChangePolicy, sortChangedSurface
 } from "../runtime/workflow/change/change-policy.mjs";
+import { repositoryBaseHead } from "../runtime/core/repository-binding.mjs";
 import {
   PROVIDER_CONTRACTS, PROVIDERS
 } from "../runtime/evidence/provider-catalog.mjs";

@@ -6,15 +6,13 @@ import { DELIVERY_FIELDS } from "./delivery-fields.mjs";
 import { WORK_TYPE_FIELDS } from "./work-type-fields.mjs";
 import { PROCESS_FIELDS } from "./process-fields.mjs";
 import { isSemanticVersion } from "./draft-version.mjs";
-import { BEHAVIOR_NEUTRAL_WORK, LIGHT_WORK, WORK_TYPES } from "../../contracts/work-types.mjs";
+import { LIGHT_WORK, WORK_TYPES } from "../../contracts/work-types.mjs";
 
 // Design blueprints: the typed design sections a declared work type needs
 // before implementation. A thin design.md let Builds guess endpoint shapes,
 // UI states, and failure behavior. Shape errors block compilation; missing or
 // thin sections only warn, so the agent completes them without a user gate.
 // The single work-type list and light-work/behavior-neutral sets live in
-// contracts so evidence modules share them; re-exported for existing importers.
-export { WORK_TYPES, LIGHT_WORK, BEHAVIOR_NEUTRAL_WORK };
 
 export const BLUEPRINT_KEYS = Object.freeze([
   "fileMap", "failureMatrix", "testMap", "apiContracts", "dataModel", "uiStates",

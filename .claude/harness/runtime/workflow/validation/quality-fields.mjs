@@ -1,6 +1,7 @@
 import {
-  isObject, localized, objectList, present, requireFields, stringList, table, text,
+  localized, objectList, present, requireFields, stringList, table, text
 } from "./field-helpers.mjs";
+import { isObject } from "../../core/values.mjs";
 
 export const NFR_CATEGORY_CAPABILITIES = Object.freeze({
   performance: ["performance"],

@@ -10,9 +10,8 @@ import { fileURLToPath } from "node:url";
 import {
   lifecycleOutcome, lifecycleUserProjection
 } from "../runtime/core/lifecycle-outcome.mjs";
-import {
-  coordinatorAction, createAdvanceRuntime
-} from "../runtime/workflow/advance/advance-runtime.mjs";
+import { createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
+import { coordinatorAction } from "../runtime/workflow/advance/advance-actions.mjs";
 import { diagnosticExport } from "../runtime/observability/diagnostic-export.mjs";
 import { createFeedbackRuntime, readinessProjection } from "../runtime/observability/feedback-runtime.mjs";
 import { archivedResumeSource, resumePacketValue } from "../runtime/workflow/packet/resume-packet.mjs";

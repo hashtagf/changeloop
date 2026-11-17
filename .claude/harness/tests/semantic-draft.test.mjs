@@ -9,14 +9,20 @@ import { dirname, isAbsolute, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 import {
-  deriveRepositoryTaskDependencies, derivedCapabilityPurpose, expandMinimalSemanticDraft,
-  mergeSemanticDraft,
-  MINIMAL_DRAFT_WRITING, minimalSemanticDraftTemplate, normalizeSemanticDraft,
-  renderRequirementMarkdown, renderSpecHeading, semanticDraftTemplate,
-  SEMANTIC_DRAFT_VERSIONS, isSemanticVersion,
-  TASK_FIELDS, unknownTaskFieldWarnings
+  derivedCapabilityPurpose, mergeSemanticDraft, normalizeSemanticDraft,
+  renderRequirementMarkdown, renderSpecHeading
 } from "../runtime/workflow/draft/semantic-draft.mjs";
-import { requiredProvidersOperation } from "../runtime/workflow/change/change-validation.mjs";
+import {
+  deriveRepositoryTaskDependencies, TASK_FIELDS, unknownTaskFieldWarnings
+} from "../runtime/workflow/draft/semantic-draft-tasks.mjs";
+import { expandMinimalSemanticDraft } from "../runtime/workflow/draft/semantic-draft-minimal.mjs";
+import {
+  MINIMAL_DRAFT_WRITING, minimalSemanticDraftTemplate, semanticDraftTemplate
+} from "../runtime/workflow/draft/semantic-draft-templates.mjs";
+import {
+  SEMANTIC_DRAFT_VERSIONS, isSemanticVersion
+} from "../runtime/workflow/validation/draft-version.mjs";
+import { requiredProvidersOperation } from "../runtime/workflow/change/required-providers.mjs";
 import { classifyReviewRisk } from "../runtime/evidence/review-routing.mjs";
 import {
   createChangeLifecycle, draftNeedsDesign, renderDraftProposal, renderDraftTask,
@@ -26,16 +32,22 @@ import {
   declaredDraftRisk, deriveDraftRisk, riskLabel, withDerivedRisk
 } from "../runtime/workflow/validation/draft-risk.mjs";
 import {
-  amendTaskVerifyOperation, amendmentRepositoryOrderIssues, appendRequirementToSpec,
-  compileSemanticAmendment,
-  semanticAmendmentTemplate, taskContractOnlyAmendment, taskVerifyAmendment,
-  updateTaskClaimAnnotation, verifyCannotFail, writeSemanticAmendment
+  compileSemanticAmendment, writeSemanticAmendment
 } from "../runtime/workflow/draft/semantic-amendment.mjs";
+import {
+  amendTaskVerifyOperation, amendmentRepositoryOrderIssues, taskVerifyAmendment,
+  verifyCannotFail
+} from "../runtime/workflow/draft/amendment-verify.mjs";
+import {
+  appendRequirementToSpec, semanticAmendmentTemplate, taskContractOnlyAmendment,
+  updateTaskClaimAnnotation
+} from "../runtime/workflow/draft/amendment-tasks.mjs";
 import { taskCheck } from "../runtime/workflow/authority/session-lease.mjs";
 import { groupAgentTasks } from "../runtime/workflow/authority/agent-planning.mjs";
 import {
-  LIGHT_WORK, WORK_TYPES, designBlueprintIssues, designBlueprintWarnings
+  designBlueprintIssues, designBlueprintWarnings
 } from "../runtime/workflow/validation/design-blueprints.mjs";
+import { LIGHT_WORK, WORK_TYPES } from "../runtime/contracts/work-types.mjs";
 import {
   devDocumentIssues, devDocumentShapeIssues, requiredDevSections
 } from "../runtime/workflow/validation/dev-document.mjs";

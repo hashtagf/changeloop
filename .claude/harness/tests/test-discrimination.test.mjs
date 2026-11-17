@@ -9,7 +9,7 @@ import test from "node:test";
 import {
   behaviorChangingWork, createTestDiscriminationRuntime, scopedTestCommand, segmentTestCommand
 } from "../runtime/evidence/test-discrimination.mjs";
-import { verifyChain } from "../runtime/workflow/draft/semantic-draft.mjs";
+import { verifyChain } from "../runtime/workflow/draft/semantic-draft-tasks.mjs";
 
 // The base-source run reruns only the task verify that names a changed test.
 test("discrimination runs segments through the last one that names a changed test", () => {
@@ -48,7 +48,7 @@ test("a compiled chain of several verifies records them as segments", () => {
 });
 import { configuredCommand } from "../runtime/evidence/evidence-results.mjs";
 import { lightKind, packetWorkTypes } from "../runtime/workflow/validation/dev-document.mjs";
-import { BEHAVIOR_NEUTRAL_WORK } from "../runtime/workflow/validation/design-blueprints.mjs";
+import { BEHAVIOR_NEUTRAL_WORK } from "../runtime/contracts/work-types.mjs";
 import { coverageNotes } from "../runtime/workflow/validation/packet-overview.mjs";
 import { taskChangeIssue } from "../runtime/workflow/change/task-change.mjs";
 

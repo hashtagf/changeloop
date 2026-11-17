@@ -271,7 +271,7 @@ test("a dispatched record left above the head by a crash is not treated as lower
 // owes a receipt: that check refused every later dispatch, a human review
 // included ("a completed AI response has no matching recorded receipt").
 test("a rebuilt placeholder never blocks a later human review as an unrecorded response", async (t) => {
-  const { attemptAwaitsRecordedReceipt } = await import("../runtime/workflow/authority/authority-runtime.mjs");
+  const { attemptAwaitsRecordedReceipt } = await import("../runtime/workflow/authority/authority-response.mjs");
   const id = "change-human-after-rebuild";
   const w = world(t, id);
   w.reserve("fail");

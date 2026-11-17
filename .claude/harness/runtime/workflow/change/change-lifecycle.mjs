@@ -5,10 +5,9 @@ import { acquireProcessLock } from "../../core/process-lock.mjs";
 import { requireDeps } from "../../core/required-deps.mjs";
 import { projectResource } from '../../core/project-installation.mjs';
 import { loadDraftFolder } from "../draft/draft-folder.mjs";
-import {
-  expandMinimalSemanticDraft, normalizeSemanticDraft, renderRequirementMarkdown,
-  unknownTaskFieldWarnings
-} from "../draft/semantic-draft.mjs";
+import { normalizeSemanticDraft, renderRequirementMarkdown } from "../draft/semantic-draft.mjs";
+import { expandMinimalSemanticDraft } from "../draft/semantic-draft-minimal.mjs";
+import { unknownTaskFieldWarnings } from "../draft/semantic-draft-tasks.mjs";
 import { isSemanticVersion } from "../validation/draft-version.mjs";
 import { semanticIntakeAction, semanticIntakeIssues } from "../validation/semantic-intake.mjs";
 import { prototypeSelectionIssues } from "../prototype/prototype-binding.mjs";
@@ -23,7 +22,7 @@ import {
   semanticQuestionQualityFindings
 } from "../validation/semantic-intake-intelligence.mjs";
 import { reduceSemanticIntakeState, semanticDraftDigest } from "../draft/semantic-intake-state.mjs";
-import { semanticAmendmentTemplate } from "../draft/semantic-amendment.mjs";
+import { semanticAmendmentTemplate } from "../draft/amendment-tasks.mjs";
 import { validateInvestigationBinding } from "../investigation/investigation-runtime.mjs";
 import {
   designBlueprintWarnings, verifyCountAdvisories

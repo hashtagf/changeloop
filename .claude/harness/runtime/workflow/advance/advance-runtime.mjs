@@ -1,7 +1,7 @@
 import { currentWaivers } from "../../core/user-decisions.mjs";
 import { requireDeps } from "../../core/required-deps.mjs";
 import { grantVisualRepair } from "../../evidence/repair-runtime.mjs";
-import { recordVisualDriftWaiver } from "../change/change-validation.mjs";
+import { recordVisualDriftWaiver } from "../change/gate-waivers.mjs";
 import { advisoryVisualLine } from "../../evidence/visual-review.mjs";
 import { inconclusiveLine } from "../../evidence/test-discrimination.mjs";
 import { changeWorkTypes } from "../change/task-change.mjs";
@@ -20,16 +20,6 @@ import {
 import {
   coordinatorAction, landOperationAction, proofOperationAction
 } from "./advance-actions.mjs";
-// Moved to advance-actions.mjs; re-exported so importers are unchanged.
-export {
-  coordinatorAction, exhaustedReviewDecision, proofOperationAction,
-  reviewInfrastructureAlternatives, unstartableReviewReason
-} from "./advance-actions.mjs";
-// Moved to advance-envelope.mjs; re-exported so importers are unchanged.
-export {
-  ADVANCE_PROTOCOL_VERSION, advanceFailureAction, envelopeContextFiles, noProgressOutput,
-  repairTargetFromError, taskCheckCommand, testAdequacyInstruction, withSignals
-} from "./advance-envelope.mjs";
 
 const THROUGH_ORDER = ["build", "proven", "archived"];
 

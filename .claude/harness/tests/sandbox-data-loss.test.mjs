@@ -20,7 +20,7 @@ import test from "node:test";
 import { createAbandonRuntime } from "../runtime/workflow/change/abandon-runtime.mjs";
 import { createApplyRuntime } from "../runtime/workflow/land/apply-runtime.mjs";
 import { captureCopyBase, fileSource } from "../runtime/workflow/transaction/copy-base.mjs";
-import { advanceFailureAction } from "../runtime/workflow/advance/advance-runtime.mjs";
+import { advanceFailureAction } from "../runtime/workflow/advance/advance-envelope.mjs";
 import {
   createLandJournal, transactionJournals
 } from "../runtime/workflow/transaction/land-journal.mjs";

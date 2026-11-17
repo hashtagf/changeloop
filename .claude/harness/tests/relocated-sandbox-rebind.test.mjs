@@ -1,11 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  assertRelocatedSandboxIdentity,
-  assertRelocatedSandboxLayout,
-  rebindRelocatedSandboxOperation,
-  relocatedSandboxCandidate
-} from "../runtime/workflow/sandbox/sandbox-runtime.mjs";
+  assertRelocatedSandboxIdentity, assertRelocatedSandboxLayout,
+  rebindRelocatedSandboxOperation, relocatedSandboxCandidate
+} from "../runtime/workflow/sandbox/sandbox-repositories.mjs";
 
 const fail = (message) => { throw new Error(message); };
 const candidate = "/project/.foundation/sandboxes/change";
