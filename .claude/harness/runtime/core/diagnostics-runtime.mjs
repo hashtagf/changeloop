@@ -104,6 +104,9 @@ export function createDiagnosticsRuntime({
   authorityPreflight = (_id) => ({ status: "READY", blockers: [] }),
   executionContract = null,
   evidenceDetection = null,
+  // Project setup rows ({ id, level, detail, next }) from the quality and
+  // feature-map owners; informational, never an error.
+  setupReadiness = () => [],
   fail
 }) {
   // A forecast is a prediction about files that do not exist. It warns, names
@@ -594,8 +597,14 @@ export function createDiagnosticsRuntime({
     });
     }
     collectInstallationChecks();
+    let setup;
+    try { setup = setupReadiness(); }
+    catch (error) { setup = [{ id: "setup", level: "warn", detail: `setup readiness unavailable: ${error.message}`, next: null }]; }
+    setup = setup.map((row) => ({ ...row, level: row.level === "error" ? "warn" : row.level }));
+    for (const row of setup) checks.push({ level: row.level, name: `setup:${row.id}`,
+      detail: row.next ? `${row.detail}; next: ${row.next}` : row.detail });
 
-    if (flags.json) console.log(JSON.stringify({ version: 1, stage, checks }, null, 2));
+    if (flags.json) console.log(JSON.stringify({ version: 1, stage, checks, setup }, null, 2));
     else for (const check of checks)
       console.log(`${check.level.toUpperCase().padEnd(5)} ${check.name}: ${check.detail}`);
     if (checks.some((check) => check.level === "error")) process.exitCode = 1;

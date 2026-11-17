@@ -130,3 +130,92 @@ test("member stop requests reach Pi, failed dispatch can be retried, and session
     assert.equal((await r.request("/api/state", undefined, cookie)).response.status, 401);
   } finally { Date.now = now; }
 });
+
+async function invite(r, cookie, role = "viewer", hours = 24) {
+  const result = await r.request("/api/access", { action: "create", role, hours }, cookie);
+  assert.equal(result.response.status, 200, JSON.stringify(result.value));
+  return { ...result.value, code: new URL(result.value.url).hash.slice(1) };
+}
+async function loginWith(r, code, name) {
+  const result = await r.request("/api/login", { token: code, name });
+  return { ...result, cookie: result.response.headers.get("set-cookie")?.split(";")[0] };
+}
+
+test("wrong or expired access codes explain how to recover", async (t) => {
+  const r = await room(t);
+  const wrong = await r.request("/api/login", { token: "wrong", name: "Newbie" });
+  assert.equal(wrong.response.status, 401);
+  assert.equal(wrong.value.error, "Access code is invalid or expired. Ask the host for a new invite.");
+  const cookie = await r.login(); const now = Date.now;
+  try {
+    Date.now = () => now() + 9 * 60 * 60 * 1000;
+    const ended = await r.request("/api/state", undefined, cookie);
+    assert.equal(ended.response.status, 401); assert.equal(ended.value.error, "Your access ended. Sign in again.");
+  } finally { Date.now = now; }
+});
+
+test("viewer invites can read but every state-changing request except logout is refused", async (t) => {
+  let api = 0;
+  const r = await room(t, { onApi: async () => { api++; return { ok: true }; } });
+  const owner = await r.login("Owner");
+  const ownerState = await r.request("/api/state", undefined, owner);
+  assert.equal(ownerState.value.role, "member");
+  const created = await invite(r, owner, "viewer", 24);
+  assert.equal(created.role, "viewer"); assert.ok(created.expires > Date.now() + 23 * 3600000);
+  const viewer = await loginWith(r, created.code, "PM");
+  assert.equal(viewer.response.status, 200); assert.equal(viewer.value.role, "viewer");
+  const state = await r.request("/api/state", undefined, viewer.cookie);
+  assert.equal(state.response.status, 200); assert.equal(state.value.role, "viewer");
+  assert.equal((await r.request("/api/sessions/" + "a".repeat(32) + "/state", undefined, viewer.cookie)).response.status, 200);
+  const before = api;
+  for (const path of ["/api/sessions/" + "a".repeat(32) + "/commit", "/api/sessions/" + "a".repeat(32) + "/save", "/api/tasks", "/api/messages", "/api/abort", "/api/access"]) {
+    const denied = await r.request(path, { action: "create", role: "viewer", hours: 1, message: "x" }, viewer.cookie);
+    assert.equal(denied.response.status, 403, path); assert.equal(denied.value.error, "Read-only access.");
+  }
+  assert.equal(api, before); assert.equal(r.sent.length, 0); assert.equal(r.stopped.length, 0);
+  assert.equal((await r.request("/api/invite", undefined, viewer.cookie)).response.status, 403);
+  assert.equal((await r.request("/api/access", undefined, viewer.cookie)).response.status, 403);
+  assert.equal((await r.request("/api/sessions/" + "a".repeat(32) + "/commit", { message: "ok" }, owner)).response.status, 200);
+  assert.equal((await r.request("/api/logout", {}, viewer.cookie)).response.status, 200);
+});
+
+test("invites validate role and lifetime, expire, and revocation ends their sessions", async (t) => {
+  const r = await room(t); const owner = await r.login("Owner");
+  for (const body of [{ action: "create", role: "admin", hours: 24 }, { action: "create", role: "viewer", hours: 5 }, { action: "create", role: "viewer" }, { action: "nope" }])
+    assert.equal((await r.request("/api/access", body, owner)).response.status, 400, JSON.stringify(body));
+  const member = await invite(r, owner, "member", 1);
+  const guest = await loginWith(r, member.code, "Guest");
+  assert.equal(guest.value.role, "member");
+  const listed = await r.request("/api/access", undefined, owner);
+  assert.deepEqual(listed.value.invites.map((i) => [i.id, i.role]), [[member.id, "member"]]);
+  assert.ok(!JSON.stringify(listed.value).includes(member.code));
+  assert.ok(listed.value.members.some((m) => m.name === "Guest" && m.role === "member"));
+  assert.equal((await r.request("/api/access", { action: "revoke", id: member.id }, owner)).response.status, 200);
+  assert.equal((await r.request("/api/state", undefined, guest.cookie)).response.status, 401);
+  assert.equal((await loginWith(r, member.code, "Again")).response.status, 401);
+  assert.equal((await r.request("/api/access", { action: "revoke", id: member.id }, owner)).response.status, 404);
+  assert.equal((await r.request("/api/state", undefined, owner)).response.status, 200, "the main /serve code is not revoked");
+  const short = await invite(r, owner, "viewer", 1); const now = Date.now;
+  try {
+    Date.now = () => now() + 2 * 3600000;
+    const expired = await loginWith(r, short.code, "Late");
+    assert.equal(expired.response.status, 401); assert.match(expired.value.error, /invalid or expired/);
+  } finally { Date.now = now; }
+});
+
+test("state-changing requests are audited without secrets, including refusals", async (t) => {
+  const r = await room(t, { onApi: async () => ({ ok: true }) });
+  const owner = await r.login("Ann");
+  await r.request("/api/sessions/" + "b".repeat(32) + "/commit", { message: "secret commit text" }, owner);
+  const created = await invite(r, owner, "viewer", 24);
+  const viewer = await loginWith(r, created.code, "Bo");
+  await r.request("/api/sessions/" + "b".repeat(32) + "/save", { path: "README.md", text: "x" }, viewer.cookie);
+  const { value } = await r.request("/api/access", undefined, owner);
+  const rows = value.audit.map((e) => [e.name, e.role, e.action, e.status]);
+  assert.deepEqual(rows.find((row) => row[2] === "commit"), ["Ann", "member", "commit", 200]);
+  assert.deepEqual(rows.find((row) => row[2] === "save"), ["Bo", "viewer", "save", 403]);
+  assert.ok(rows.some((row) => row[2] === "invite-create:viewer"));
+  const text = JSON.stringify(value.audit);
+  assert.ok(!text.includes(created.code)); assert.ok(!text.includes("secret commit text")); assert.ok(!text.includes(r.info.token));
+  assert.ok(value.audit.every((e) => Number.isFinite(e.at)));
+});

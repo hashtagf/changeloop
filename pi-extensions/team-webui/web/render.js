@@ -39,7 +39,9 @@ export function renderMarkdown(text,parent,{streaming=false,loadLocalImage}={}) 
     if(!/^(https?:|mailto:|#)/i.test(href))link.removeAttribute('href');
     else {link.target='_blank';link.rel='noopener noreferrer';}
   }
-  for(const input of fragment.querySelectorAll('input')){if(input.type!=='checkbox')input.remove();else input.disabled=true;}
+  for(const input of fragment.querySelectorAll('input')){if(input.type!=='checkbox')input.remove();else{input.disabled=true;input.setAttribute('aria-label',(input.checked?'Done: ':'Not done: ')+(input.parentElement?.textContent||'').trim().slice(0,120));}}
+  // The page owns h1/h2; message headings start at h3 so screen-reader outlines stay correct.
+  for(const heading of fragment.querySelectorAll('h1,h2,h3,h4,h5,h6')){const level=Math.min(6,Number(heading.tagName[1])+2),next=document.createElement('h'+level);next.append(...heading.childNodes);next.dataset.mdLevel=heading.tagName[1];heading.replaceWith(next);}
   for(const image of fragment.querySelectorAll('img')) {
     const src=image.getAttribute('src')||'',alt=image.alt||'Markdown image';
     const slot=el('div','image-slot');image.replaceWith(slot);

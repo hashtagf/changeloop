@@ -1,3 +1,4 @@
+# preview-env: PI_PREVIEW_CHANGELOOP=1
 from playwright.sync_api import sync_playwright,expect
 from pathlib import Path
 import sys,json

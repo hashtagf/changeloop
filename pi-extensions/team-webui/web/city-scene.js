@@ -31,7 +31,7 @@ export function buildCity(scene) {
   for(const [color,items] of groups){const mesh=new THREE.InstancedMesh(geometry,material(color),items.length);items.forEach((b,i)=>{dummy.position.set(b.x,b.y,b.z);dummy.scale.set(b.w,b.h,b.d);dummy.rotation.set(0,0,0);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);});mesh.receiveShadow=true;scene.add(mesh);}
   // Labels are textures, not one DOM update per agent per frame.
   const labels=[...districts.map(d=>({...d,label:d.name})),{x:0,z:-26,label:'PARK / READY',color:'#668b76'},{x:0,z:25,label:'STATION / OFFLINE',color:'#889397'}];
-  for(const d of labels){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=96;const ctx=canvas.getContext('2d');ctx.fillStyle='#f6f3df';ctx.fillRect(0,0,512,96);ctx.fillStyle='#2f514c';ctx.textAlign='center';ctx.font='bold 42px sans-serif';ctx.fillText(d.label,256,64);const map=new THREE.CanvasTexture(canvas),sprite=new THREE.Sprite(new THREE.SpriteMaterial({map,depthTest:false}));sprite.position.set(d.x,3.7,d.z-4);sprite.scale.set(7,1.3,1);scene.add(sprite);}
+  for(const d of labels){const canvas=document.createElement('canvas');canvas.width=512;canvas.height=96;const ctx=canvas.getContext('2d');ctx.fillStyle='#f6f3df';ctx.fillRect(0,0,512,96);ctx.fillStyle='#2f514c';ctx.textAlign='center';ctx.font='bold 42px sans-serif';ctx.fillText(d.label,256,64);const map=new THREE.CanvasTexture(canvas),sprite=new THREE.Sprite(new THREE.SpriteMaterial({map,depthTest:false}));sprite.position.set(d.x,3.7,d.z-4);sprite.scale.set(10.5,1.95,1);scene.add(sprite);}
   return material;
 }
 

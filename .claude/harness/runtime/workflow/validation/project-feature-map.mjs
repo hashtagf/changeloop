@@ -131,3 +131,38 @@ export function createProjectFeaturesCommand({
 
   return { featuresValue, showFeatures };
 }
+
+// Setup readiness rows for `doctor`: the project-owned files that make the
+// project ready for agents. Never an error; each row names its next step.
+export function projectSetupReadiness(root) {
+  const rows = [];
+  let map = null;
+  let readError = null;
+  try { map = readProjectFeatureMap(root); }
+  catch (error) { readError = error.message; }
+  if (readError) rows.push({ id: "feature-map", level: "warn",
+    detail: `invalid ${PROJECT_FEATURE_MAP_PATH}: ${readError}`, next: `fix the JSON, then run 'cloop features --strict'` });
+  else if (!map) rows.push({ id: "feature-map", level: "info",
+    detail: `${PROJECT_FEATURE_MAP_PATH} is missing`,
+    next: "rerun 'cloop init' to seed it, then ask the agent to onboard the project" });
+  else {
+    const issues = validateProjectFeatureMap(map, { exists: (path) => existsSync(join(root, path)) });
+    if (!list(map.features).length) rows.push({ id: "feature-map", level: "warn",
+      detail: `${PROJECT_FEATURE_MAP_PATH} names no features`,
+      next: "ask the agent to onboard the project (skill: onboard), which drafts it for you to confirm" });
+    else if (issues.length) rows.push({ id: "feature-map", level: "warn",
+      detail: `${map.features.length} feature(s), ${issues.length} issue(s): ${issues[0]}`,
+      next: "run 'cloop features --strict' and fix the listed paths" });
+    else rows.push({ id: "feature-map", level: "ok", detail: `${map.features.length} feature(s)`, next: null });
+  }
+  rows.push(existsSync(join(root, "openspec", "lessons.md"))
+    ? { id: "lessons", level: "ok", detail: "openspec/lessons.md present", next: null }
+    : { id: "lessons", level: "info", detail: "openspec/lessons.md is missing",
+      next: "rerun 'cloop init' to seed it" });
+  const guide = ["CLAUDE.md", "AGENTS.md"].find((name) => existsSync(join(root, name)));
+  rows.push(guide
+    ? { id: "agent-guide", level: "ok", detail: `${guide} present`, next: null }
+    : { id: "agent-guide", level: "info", detail: "no CLAUDE.md or AGENTS.md",
+      next: "ask the agent to write a short agent guide (skill: claude-md)" });
+  return rows;
+}

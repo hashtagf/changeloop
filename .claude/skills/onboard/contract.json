@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "skill": "onboard",
+  "trigger": "A project that installed Change Loop must be made ready for agents: quality lanes and baselines, the feature map, or module boundaries ('onboard this repo', 'ตั้งค่าโปรเจกต์ให้พร้อมใช้ Change Loop', doctor setup rows not ok)",
+  "inputs": [
+    "cloop doctor --json setup rows",
+    "cloop quality discover output and quality run results",
+    "repository routes, commands, tests, docs, and imports"
+  ],
+  "action": "Run the deterministic setup steps doctor names, draft the feature map and module boundaries from the code, ask the user to confirm them and to adopt today's findings as the baseline, then verify with features --strict, quality run, and doctor",
+  "outputs": [
+    {
+      "kind": "document",
+      "description": "quality/foundation-quality.json and openspec/feature-map.json drafted from the repository"
+    },
+    {
+      "kind": "decision-request",
+      "description": "whether today's findings become the baseline, the feature names and paths, and the module boundaries"
+    },
+    {
+      "kind": "report",
+      "description": "setup readiness after onboarding with the next command for each remaining row"
+    }
+  ],
+  "handoff": [
+    {
+      "to": "skill:claude-md",
+      "when": "CLAUDE.md or AGENTS.md is missing or stale"
+    },
+    {
+      "to": "skill:init-project-docs",
+      "when": "the user asks for human onboarding documents"
+    },
+    {
+      "to": "user",
+      "when": "a baseline, feature name, or module boundary needs a decision"
+    }
+  ],
+  "responsibility": {
+    "aiDoes": [
+      "runs the setup commands doctor names",
+      "drafts the feature map and module boundaries from the code",
+      "verifies readiness and reports what remains"
+    ],
+    "humanDoes": [],
+    "humanDecides": [
+      "whether today's findings become the ratchet baseline",
+      "the feature names and their paths",
+      "which module boundaries to enforce"
+    ]
+  }
+}

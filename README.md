@@ -61,7 +61,8 @@ project. The installer does not grant commit authority to the agent.
 
 For source installation, prerequisites, host differences, headless/CI trust,
 and upgrades, follow the [installation guide](https://changeloop.ai/docs/install/).
-The agent can check readiness with `cloop doctor --stage change`.
+The agent can check readiness with `cloop doctor --stage change`, then set the
+project up (quality baselines, feature map) when you ask it to onboard the repo.
 
 ## Your first change
 

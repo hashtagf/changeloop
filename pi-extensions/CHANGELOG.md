@@ -5,7 +5,24 @@ changelog format (`## [x.y.z]`) so Pi can show them after an update.
 
 ## [Unreleased]
 
+### Added
+
+- team-webui: viewer (read-only) and member invites that expire after 1 hour,
+  24 hours or 7 days and can be revoked, ending the sessions that used them.
+  The **Access** dialog lists invites, signed-in people and recent
+  state-changing activity. Viewers get 403 for every write except logout.
+  Invites and activity live in hub memory; the `/serve` code is unchanged.
+- team-webui: English/Thai interface switch, first-run tips and a Help
+  dialog, task-stage chips with counts and stage descriptions, a skip link,
+  announced replies and in-app branch/worktree dialogs.
+
 ### Changed
+
+- team-webui: phones show one task stage at a time and a two-row header;
+  touch targets are at least 44px. Project and session paths are shortened.
+  A wrong access code now says it is invalid or expired; attaching too many or
+  oversized files keeps the valid ones; Send is disabled while empty; message
+  headings start at h3; 3D City shows live agent counts.
 
 - team-webui: task board statuses now follow Change Loop phases — `open`,
   `investigate`, `change`, `build`, `prove`, `land`, `deliver`, `merge`, `tag`,

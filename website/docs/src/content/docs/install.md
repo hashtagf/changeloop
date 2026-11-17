@@ -111,6 +111,19 @@ cloop doctor --stage change
 
 `doctor` is the readiness check you should reach for whenever something looks wrong. It diagnoses project, provider, and lifecycle state, and it reports unresolved apply transactions before Land ever reaches them.
 
+## Set up the project for agents
+
+After the first install, `doctor` also lists **setup** rows: whether consumer
+quality is configured, whether each lint, type-check, file-size, or
+module-boundary lane has a baseline, whether `openspec/feature-map.json` names
+your features, and whether `openspec/lessons.md` and an agent guide exist. Each
+row names its next command; none of them fails `doctor`.
+
+Ask the agent to onboard the project ("onboard this repo"). The `onboard` skill
+runs the commands `doctor` names, drafts the feature map and optional module
+boundaries from your code, and asks you to confirm them and to adopt today's
+findings as the baseline. You decide; nothing becomes binding silently.
+
 ## Commit the installation
 
 In a Git project, the installer stages the managed setup files but does not

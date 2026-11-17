@@ -678,13 +678,13 @@
     {
       "id": "install-and-hosts",
       "name": {
-        "en": "Install and host integration",
-        "th": "ติดตั้งและเชื่อมกับ host"
+        "en": "Install, hosts, and onboarding",
+        "th": "ติดตั้ง เชื่อม host และ onboarding"
       },
       "phase": "setup",
       "summary": {
-        "en": "Install or upgrade Change Loop, connect agent hosts (Claude Code, Pi, others), choose model tiers, and import host usage.",
-        "th": "ติดตั้งหรืออัปเกรด Change Loop เชื่อมกับ host ของ agent (Claude Code, Pi และอื่นๆ) เลือกระดับโมเดล และนำเข้าข้อมูลการใช้งานจาก host"
+        "en": "Install or upgrade Change Loop, connect agent hosts, then onboard the project: doctor lists setup rows and the onboard skill drafts the quality baselines and feature map for the user to confirm.",
+        "th": "ติดตั้งหรืออัปเกรด Change Loop เชื่อม host ของ agent แล้ว onboard โปรเจกต์: doctor แสดงรายการ setup และ skill onboard ร่าง quality baseline กับ feature map ให้ผู้ใช้ยืนยัน"
       },
       "slashCommands": [],
       "cliCommands": [
@@ -703,11 +703,13 @@
       "code": [
         ".claude/harness/adapters/pi-extension.mjs",
         ".claude/harness/runtime/core/host-instruction.mjs",
-        ".claude/harness/runtime/observability/telemetry-runtime.mjs"
+        ".claude/harness/runtime/observability/telemetry-runtime.mjs",
+        ".claude/skills/onboard/SKILL.md"
       ],
       "tests": [
         ".claude/harness/tests/host-capability-matrix.test.mjs",
-        ".claude/harness/tests/telemetry-import-sync.test.mjs"
+        ".claude/harness/tests/telemetry-import-sync.test.mjs",
+        ".claude/harness/tests/setup-readiness.test.mjs"
       ],
       "docs": [
         "website/docs/src/content/docs/install.md",

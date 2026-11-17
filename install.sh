@@ -150,7 +150,7 @@ for rel in "${MANAGED[@]}"; do printf '  ~ %s\n' "$rel"; done
 for seed in "${RECORD_SEEDS[@]}"; do
   rel="${seed%%|*}"
   [ -e "$TARGET_PATH/$rel" ] || [ -L "$TARGET_PATH/$rel" ] ||
-    printf '  + %s (incident and lesson records; edit freely)\n' "$rel"
+    printf '  + %s (project record seeded once; edit freely)\n' "$rel"
 done
 if [ "$PERMISSION_ALLOWLIST" = yes ]; then
   printf '  ~ .claude/settings.json (merge hooks and permission allowlist, preserve user settings)\n'

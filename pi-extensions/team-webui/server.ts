@@ -13,6 +13,8 @@ const ASSETS = new Map<any, any>([
   ["/tasks.js", ["text/javascript; charset=utf-8", "tasks.js"]],
   ["/tasks.css", ["text/css; charset=utf-8", "tasks.css"]],
   ["/navigation.js", ["text/javascript; charset=utf-8", "navigation.js"]],
+  ["/ui-helpers.js", ["text/javascript; charset=utf-8", "ui-helpers.js"]],
+  ["/i18n.js", ["text/javascript; charset=utf-8", "i18n.js"]],
   ["/city.js", ["text/javascript; charset=utf-8", "city.js"]],
   ["/city-scene.js", ["text/javascript; charset=utf-8", "city-scene.js"]],
   ["/city-state.js", ["text/javascript; charset=utf-8", "city-state.js"]],
@@ -26,6 +28,18 @@ const hash = (value) => createHash("sha256").update(value).digest();
 const equal = (left, right) => timingSafeEqual(hash(left), hash(right));
 const ID = /^[a-zA-Z0-9_-]{8,80}$/;
 const fail = (status, message) => Object.assign(new Error(message), { status });
+// Extra invites and the audit trail live only in hub memory; /serve stop clears them.
+export const INVITE_ROLES = ["viewer", "member"];
+export const INVITE_HOURS = [1, 24, 168];
+const MAX_INVITES = 32, AUDIT_LIMIT = 500;
+const INVALID_CODE = "Access code is invalid or expired. Ask the host for a new invite.";
+const READ_ONLY = "Read-only access.";
+/** Short, secret-free label for a state-changing request path. */
+export function auditAction(pathname) {
+  const session = pathname.match(/^\/api\/sessions\/[a-f0-9]{32}\/([a-z-]+)$/);
+  if (session) return session[1];
+  return pathname.replace(/^\/api\//, "").replace(/\//g, ":") || "request";
+}
 
 export function addresses() {
   return [...new Set(Object.values(networkInterfaces()).flat().filter((item) =>
@@ -56,6 +70,15 @@ export function createTeamServer({ getSnapshot, onMessage, onAbort, onApi,
   if (!["127.0.0.1", "0.0.0.0"].includes(host)) throw new Error("Choose localhost or --lan.");
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error("Invalid port.");
   const sessions = new Map<any, any>(), attempts = new Map<any, any>(), receipts = new Map<any, any>(), clients = new Set<any>();
+  const invites = new Map<any, any>(), audit: any[] = [];
+  const pruneInvites = () => { for (const [id, invite] of invites) if (invite.expires < Date.now()) invites.delete(id); };
+  const record = (entry) => { audit.push(entry); if (audit.length > AUDIT_LIMIT) audit.splice(0, audit.length - AUDIT_LIMIT); };
+  const endSessions = (match) => {
+    for (const [id, session] of sessions) if (match(session)) {
+      sessions.delete(id);
+      for (const client of clients) if (client.sessionId === id) client.res.end();
+    }
+  };
   const allowedNames = new Set(["localhost", "127.0.0.1", ...addresses(), hostname().toLowerCase()]);
   let actualPort, updateTimer, heartbeat, cleanupTimer, stopped = false;
   const cookieName = () => `pi_team_${actualPort}`;
@@ -88,8 +111,8 @@ export function createTeamServer({ getSnapshot, onMessage, onAbort, onApi,
     const value = (req.headers.cookie || "").split(";").map((s) => s.trim())
       .find((s) => s.startsWith(`${cookieName()}=`))?.slice(cookieName().length + 1);
     const session = value && sessions.get(value);
-    if (!session || session.expires < Date.now()) throw fail(401, "Please join this room again.");
-    return { id: value, ...session };
+    if (!session || session.expires < Date.now()) throw fail(401, "Your access ended. Sign in again.");
+    return { id: value, ...session, role: session.role || "member" };
   };
   const snapshot = () => ({ ...getSnapshot(), connections: clients.size });
   const sendState = (res) => {
@@ -99,6 +122,7 @@ export function createTeamServer({ getSnapshot, onMessage, onAbort, onApi,
   const flush = () => { updateTimer = undefined; for (const client of clients) sendState(client.res); };
   const publish = () => { if (!stopped && !updateTimer) updateTimer = setTimeout(flush, 60); };
   const server = http.createServer(async (req, res) => {
+    let pending;
     try {
       const base = origin(req);
       const url = new URL(req.url || "/", base);
@@ -115,17 +139,58 @@ export function createTeamServer({ getSnapshot, onMessage, onAbort, onApi,
         recent.push(Date.now()); attempts.set(ip, recent);
         if (attempts.size > 1024) attempts.delete(attempts.keys().next().value);
         const body = await jsonBody(req);
-        if (typeof body.token !== "string" || body.token.length > 128 || !equal(body.token, token))
-          throw fail(401, "The access code is incorrect.");
+        if (typeof body.token !== "string" || body.token.length > 128) throw fail(401, INVALID_CODE);
+        pruneInvites();
+        let role = "member", inviteId = null;
+        if (!equal(body.token, token)) {
+          const invite = [...invites.values()].find((item) => equal(body.token, item.code));
+          if (!invite) throw fail(401, INVALID_CODE);
+          role = invite.role; inviteId = invite.id;
+        }
         const name = typeof body.name === "string" ? body.name.trim() : "";
         if (!name || [...name].length > 40 || /[\p{C}<>]/u.test(name)) throw fail(400, "Enter a name of 1–40 characters.");
         for (const [id, session] of sessions) if (session.expires < Date.now()) sessions.delete(id);
         if (sessions.size >= 64) throw fail(429, "This room has reached its member limit.");
         const id = randomBytes(24).toString("base64url");
-        sessions.set(id, { name, expires: Date.now() + SESSION_MS, messages: [], aborts: [] });
-        respond(res, 200, { name }, { "Set-Cookie": cookie(id) }); return;
+        const invite = inviteId && invites.get(inviteId);
+        sessions.set(id, { name, role, inviteId, expires: Math.min(Date.now() + SESSION_MS, invite?.expires ?? Infinity), messages: [], aborts: [] });
+        respond(res, 200, { name, role }, { "Set-Cookie": cookie(id) }); return;
       }
       const member = authenticate(req);
+      if (req.method === "POST") {
+        pending = { at: Date.now(), name: member.name, role: member.role, action: auditAction(url.pathname) };
+        if (member.role === "viewer" && url.pathname !== "/api/logout") throw fail(403, READ_ONLY);
+      }
+      if (url.pathname === "/api/access") {
+        if (member.role !== "member") throw fail(403, READ_ONLY);
+        pruneInvites();
+        if (req.method === "GET") {
+          respond(res, 200, {
+            role: member.role,
+            invites: [...invites.values()].map(({ code, ...item }) => item),
+            members: [...sessions.values()].filter((s) => s.expires >= Date.now()).map((s) => ({ name: s.name, role: s.role || "member", expires: s.expires })),
+            audit: audit.slice(-100).reverse(),
+          }); return;
+        }
+        if (req.method !== "POST") throw fail(405, "Use GET or POST.");
+        const body = await jsonBody(req);
+        if (body.action === "create") {
+          if (!INVITE_ROLES.includes(body.role) || !INVITE_HOURS.includes(body.hours)) throw fail(400, "Choose role viewer or member and 1, 24 or 168 hours.");
+          if (invites.size >= MAX_INVITES) throw fail(429, "Revoke an invite before creating another.");
+          const item = { id: randomBytes(8).toString("hex"), code: randomBytes(24).toString("base64url"), role: body.role,
+            createdAt: Date.now(), expires: Date.now() + body.hours * 3600000, createdBy: member.name };
+          invites.set(item.id, item); pending.action = "invite-create:" + item.role;
+          const { code, ...visible } = item;
+          respond(res, 200, { ...visible, url: `${base}/#${code}` }); return;
+        }
+        if (body.action === "revoke") {
+          if (typeof body.id !== "string" || !invites.has(body.id)) throw fail(404, "Invite not found.");
+          invites.delete(body.id); pending.action = "invite-revoke";
+          endSessions((session) => session.inviteId === body.id);
+          respond(res, 200, { ok: true }); publish(); return;
+        }
+        throw fail(400, "Use create or revoke.");
+      }
       if (onApi && (url.pathname.startsWith('/api/session') || url.pathname === '/api/tasks' || url.pathname === '/api/tasks/projects' || url.pathname === '/api/city')) {
         if(req.method === 'POST') {
           const record = sessions.get(member.id), now = Date.now();
@@ -146,9 +211,10 @@ export function createTeamServer({ getSnapshot, onMessage, onAbort, onApi,
         respond(res, 200, { ok: true }, { "Set-Cookie": cookie("", 0) }); return;
       }
       if (req.method === "GET" && url.pathname === "/api/state") {
-        respond(res, 200, { ...snapshot(), member: member.name }); return;
+        respond(res, 200, { ...snapshot(), member: member.name, role: member.role }); return;
       }
       if (req.method === "GET" && url.pathname === "/api/invite") {
+        if (member.role !== "member") throw fail(403, READ_ONLY);
         respond(res, 200, { url: `${base}/#${token}` }); return;
       }
       if (req.method === "GET" && url.pathname === "/api/events") {
@@ -192,6 +258,7 @@ export function createTeamServer({ getSnapshot, onMessage, onAbort, onApi,
       }
       throw fail(404, "Not found.");
     } catch (error) { respond(res, error.status || 500, { error: error.status ? error.message : "The room could not complete this request." }); }
+    finally { if (pending) record({ ...pending, status: res.statusCode }); }
   });
   server.requestTimeout = 15000;
   server.headersTimeout = 10000;
@@ -212,6 +279,7 @@ export function createTeamServer({ getSnapshot, onMessage, onAbort, onApi,
       }, 15000); heartbeat.unref();
       cleanupTimer = setInterval(() => {
         for (const [id, session] of sessions) if (session.expires < Date.now()) sessions.delete(id);
+        pruneInvites();
         for (const [id, receipt] of receipts) if (Date.now() - receipt.at > 15 * 60000) receipts.delete(id);
         for (const [ip, times] of attempts) if (Date.now() - times.at(-1) > 60000) attempts.delete(ip);
       }, 60000); cleanupTimer.unref();
@@ -221,7 +289,7 @@ export function createTeamServer({ getSnapshot, onMessage, onAbort, onApi,
     async stop() {
       stopped = true; clearTimeout(updateTimer); clearInterval(heartbeat); clearInterval(cleanupTimer);
       for (const client of clients) client.res.end();
-      clients.clear(); sessions.clear(); receipts.clear(); attempts.clear();
+      clients.clear(); sessions.clear(); receipts.clear(); attempts.clear(); invites.clear(); audit.length = 0;
       await new Promise((resolve) => { server.close(resolve); server.closeAllConnections(); });
     },
   };

@@ -158,6 +158,15 @@
       "status": "not-run"
     },
     {
+      "id": "onboard",
+      "positive": "We just installed Change Loop here; set up the quality baselines and the feature map so agents can work safely.",
+      "negative": "Rewrite our CLAUDE.md so it stays short and keeps the house rules.",
+      "expectedSkill": "onboard",
+      "expectedNegativeSkill": "claude-md",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
       "id": "ux-ui-principles",
       "positive": "ตรวจ UX flow นี้ด้วยหลักการที่เกี่ยวข้อง ระบุ failure/recovery, hierarchy และวิธีตรวจ โดยยังไม่ทำ frontend",
       "negative": "Implement the already approved typography and spacing using existing components.",

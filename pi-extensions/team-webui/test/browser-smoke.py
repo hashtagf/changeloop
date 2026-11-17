@@ -63,7 +63,7 @@ with sync_playwright() as p:
     checks.append("keyboard navigation, switching and session drafts")
     page.locator("#toggle-inspector").click()
     expect(page.locator("#inspector-body")).to_contain_text("README.md")
-    page.get_by_role("button",name="· README.md",exact=True).click()
+    page.locator("#inspector-body [data-path=\"README.md\"]").click()
     expect(page.locator("#file-text")).to_be_visible()
     page.locator("#file-text").fill("# Edited from UI\n")
     page.get_by_role("button",name="Save changes").click()

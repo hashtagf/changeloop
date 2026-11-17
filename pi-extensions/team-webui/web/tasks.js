@@ -1,3 +1,4 @@
+import { shortPath, defaultStage } from '/ui-helpers.js';
 const el = (tag, cls, text) => {
   const n = document.createElement(tag);
   if (cls) n.className = cls;
@@ -15,6 +16,19 @@ const labels = {
   merge: 'Merge',
   tag: 'Tag',
   deploy: 'Deploy',
+};
+// One-line meaning of each stage for people who do not know Change Loop terms.
+const descriptions = {
+  open: 'New work waiting to start.',
+  investigate: 'Research the problem before committing to a change.',
+  change: 'Agree on the scope and expected behavior.',
+  build: 'Implement in an isolated workspace.',
+  prove: 'Collect test and review evidence.',
+  land: 'Apply the proven change to the project.',
+  deliver: 'Open a pull request or hand over.',
+  merge: 'Merged into the main branch.',
+  tag: 'Released as a version.',
+  deploy: 'Running in an environment.',
 };
 export function createTaskBoard({ api, catalog, preferredProject, toast }) {
   let visible = false,
@@ -34,14 +48,17 @@ export function createTaskBoard({ api, catalog, preferredProject, toast }) {
     graphMode = false,
     trashMode = false,
     dialogRequest = 0,
-    loadingTask = false;
+    loadingTask = false,
+    readOnly = false,
+    stage = '';
+  const narrow = matchMedia('(max-width: 720px)');
   const root = el('section', 'task-board');
   root.id = 'task-board';
   root.hidden = true;
   root.setAttribute('aria-label', 'Project task board');
-  root.innerHTML = `<div class="task-heading"><div><div class="eyebrow">PROJECT WORK</div><h1>Project tasks</h1><p>Shared across sessions · Record the next step before you leave.</p></div><button id="task-add" class="primary" disabled>+ New task</button></div>
+  root.innerHTML = `<div class="task-heading"><div><div class="eyebrow">PROJECT WORK</div><h1>Project tasks</h1><p>Shared across sessions · Record the next step before you leave.</p></div><button id="task-add" class="primary mutates" disabled>+ New task</button></div>
     <div class="task-filters"><label>Project<select id="task-project"></select></label><label class="task-search">Search<input id="task-search" type="search" placeholder="Title, description or owner…"></label><label>Status<select id="task-filter"><option value="">All statuses</option></select></label><button id="task-trash-toggle" aria-pressed="false">Trash</button><button id="task-refresh">Refresh</button><button id="task-graph-toggle" aria-pressed="false">Dependency graph</button></div>
-    <div id="task-feedback" role="status" class="task-feedback"></div><div id="task-columns" class="task-columns" tabindex="0" aria-label="Kanban columns; scroll horizontally"></div>
+    <div id="task-feedback" role="status" class="task-feedback"></div><div id="task-stages" class="task-stages" role="group" aria-label="Stages"></div><div id="task-columns" class="task-columns" tabindex="0" aria-label="Kanban columns; scroll horizontally"></div>
     <div id="task-graph" class="task-graph" hidden></div><div class="task-footer"><span id="task-count"></span><div><button id="task-prev">Previous</button><button id="task-next">Next</button></div></div>
     <p class="task-note">Moving a card records status. It does not create a PR, merge code, tag a release or deploy.</p>`;
   document.getElementById('banner').after(root);
@@ -52,11 +69,11 @@ export function createTaskBoard({ api, catalog, preferredProject, toast }) {
   dialog.innerHTML = `<form id="task-form"><div class="task-dialog-heading"><h2 id="task-dialog-title">New task</h2><button type="button" id="task-close" aria-label="Close task">×</button></div>
     <div id="task-edit-error" class="task-error" role="alert"></div><p id="task-workflow" class="task-note"></p>
     <label>Title<input name="title" maxlength="240" required></label><div class="task-form-row"><label>Status<select name="status"></select></label><label>Owner session<select name="ownerSessionId"></select></label></div>
-    <details><summary>Dependencies · required milestones</summary><div id="task-dependencies"></div></details><button type="button" id="task-handoff">Hand off to selected session</button><label>Description<textarea name="description" rows="3" maxlength="12000"></textarea></label>
+    <details><summary>Dependencies · required milestones</summary><div id="task-dependencies"></div></details><button type="button" id="task-handoff" class="mutates">Hand off to selected session</button><label>Description<textarea name="description" rows="3" maxlength="12000"></textarea></label>
     <label>Next step<textarea name="nextStep" rows="2" maxlength="4000" placeholder="What should the next session do?"></textarea></label>
     <label>Blocker<textarea name="blocker" rows="2" maxlength="4000" placeholder="Waiting for an answer, dependency or decision…"></textarea></label>
     <label>Evidence / references<textarea name="evidence" rows="2" maxlength="12000" placeholder="Test results, PR URL, commit, release tag or deployment reference"></textarea></label>
-    <div class="task-save-row"><small id="task-version">Draft</small><button id="task-reload" type="button">Reload latest</button><button id="task-delete" type="button">Move to trash</button><button id="task-save" class="primary" type="submit">Save task</button></div>
+    <div class="task-save-row"><small id="task-version">Draft</small><button id="task-reload" type="button">Reload latest</button><button id="task-delete" class="mutates" type="button">Move to trash</button><button id="task-save" class="primary mutates" type="submit">Save task</button></div>
     <details><summary>Change history</summary><ol id="task-history"></ol></details></form>`;
   document.body.append(dialog);
   const form = dialog.querySelector('form'),
@@ -114,7 +131,7 @@ export function createTaskBoard({ api, catalog, preferredProject, toast }) {
     const busy = saving || loadingTask;
     const deleted = Boolean(editing?.deletedAt);
     for (const input of form.querySelectorAll('input,textarea,select'))
-      input.disabled = busy || deleted;
+      input.disabled = busy || deleted || readOnly;
     for (const id of [
       'task-close',
       'task-delete',
@@ -375,7 +392,7 @@ export function createTaskBoard({ api, catalog, preferredProject, toast }) {
   };
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (saving || loadingTask || !editing || editing.deletedAt) return;
+    if (readOnly || saving || loadingTask || !editing || editing.deletedAt) return;
     void mutateTask(editing.id ? 'update' : 'create', formValue());
   });
   async function safe(fn) {
@@ -428,30 +445,70 @@ export function createTaskBoard({ api, catalog, preferredProject, toast }) {
       graphMode,
       trashMode,
       $('task-filter').value,
+      narrow.matches,
+      stage,
+      readOnly,
     ]);
     if (next === fingerprint) return;
     fingerprint = next;
     const board = $('task-columns'),
       left = board.scrollLeft;
     const focused = document.activeElement?.dataset.taskId;
-    const columns = (
-      $('task-filter').value ? [$('task-filter').value] : statuses
-    ).map((status) => {
+    const counts = Object.fromEntries(
+      statuses.map((s) => [s, data.tasks.filter((t) => t.status === s).length]),
+    );
+    // Narrow screens show one stage at a time; chips carry every stage's count.
+    const active = defaultStage(statuses, counts, stage);
+    const chips = statuses.map((status) => {
+      const chip = el('button', 'task-stage-chip');
+      chip.type = 'button';
+      chip.dataset.stage = status;
+      chip.title = descriptions[status] || '';
+      chip.setAttribute(
+        'aria-pressed',
+        String(narrow.matches ? status === active : false),
+      );
+      chip.append(
+        el('span', 'task-stage-name', labels[status]),
+        el('span', 'task-stage-count', String(counts[status])),
+      );
+      chip.onclick = () => {
+        if (narrow.matches) {
+          stage = status;
+          render();
+        } else
+          board
+            .querySelector(`[data-status="${status}"]`)
+            ?.scrollIntoView({ inline: 'start', block: 'nearest', behavior: 'smooth' });
+      };
+      return chip;
+    });
+    $('task-stages').replaceChildren(...chips);
+    $('task-stages').hidden = graphMode || Boolean($('task-filter').value);
+    const shownStatuses = $('task-filter').value
+      ? [$('task-filter').value]
+      : narrow.matches
+        ? [active]
+        : statuses;
+    const columns = shownStatuses.map((status) => {
       const col = el('section', 'task-column');
       col.dataset.status = status;
       col.setAttribute('aria-label', labels[status]);
       const cards = data.tasks.filter((t) => t.status === status),
-        head = el('div', 'task-column-head');
+        head = el('div', 'task-column-head'),
+        description = el('p', 'task-stage-desc', descriptions[status] || '');
+      description.id = 'task-stage-desc-' + status;
+      col.setAttribute('aria-describedby', description.id);
       head.append(
         el('h2', '', labels[status]),
         el('span', '', String(cards.length)),
       );
-      col.append(head);
+      col.append(head, description);
       for (const task of cards) {
         const card = el('button', 'task-card');
         card.type = 'button';
         card.dataset.taskId = task.id;
-        card.draggable = !trashMode;
+        card.draggable = !trashMode && !readOnly;
         card.append(
           el('small', 'task-card-id', task.id.slice(0, 8)),
           el('strong', '', task.title),
@@ -508,7 +565,7 @@ export function createTaskBoard({ api, catalog, preferredProject, toast }) {
         col.classList.remove('drop-target');
         const task = drag;
         drag = undefined;
-        if (!task || task.status === status) return;
+        if (!task || task.status === status || readOnly) return;
         void safe(async () => {
           if (['deliver', 'merge', 'tag', 'deploy'].includes(status)) {
             await openTask(task, status);
@@ -611,12 +668,16 @@ export function createTaskBoard({ api, catalog, preferredProject, toast }) {
     );
     if ($('task-project').dataset.signature !== fingerprintProjects) {
       $('task-project').replaceChildren(
-        ...projects.map((p) => option(p.root, p.name + ' · ' + p.root)),
+        ...projects.map((p) => {
+          const o = option(p.root, p.name + ' · ' + shortPath(p.root));
+          o.title = p.root;
+          return o;
+        }),
       );
       $('task-project').dataset.signature = fingerprintProjects;
     }
     $('task-project').value = project;
-    $('task-add').disabled = !project || trashMode;
+    $('task-add').disabled = !project || trashMode || readOnly;
     if (!project) {
       feedback('No projects yet. Open a Pi session to add its project.');
       $('task-columns').replaceChildren();
@@ -646,8 +707,12 @@ export function createTaskBoard({ api, catalog, preferredProject, toast }) {
     render();
   }
   $('task-filter').append(...statuses.map((s) => option(s, labels[s])));
+  narrow.addEventListener('change', () => {
+    if (data) render();
+  });
   $('task-project').onchange = () => {
     project = $('task-project').value;
+    stage = '';
     localStorage.setItem('pi-task-project', project);
     offset = 0;
     void safe(() => refresh(true));
@@ -700,6 +765,12 @@ export function createTaskBoard({ api, catalog, preferredProject, toast }) {
     }
   }, 5000);
   return {
+    setReadOnly(value) {
+      readOnly = Boolean(value);
+      $('task-add').disabled = !project || trashMode || readOnly;
+      syncDialogControls();
+      if (data) render();
+    },
     setVisible(value) {
       const changed = visible !== value;
       visible = value;

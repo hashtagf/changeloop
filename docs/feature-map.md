@@ -29,7 +29,7 @@ keeping this map current are in [How the map is kept current](#how-the-map-is-ke
 | [Abandon a change](#abandon) | ยกเลิก change | cross-phase | `change abandon` |
 | [Consumer quality gates](#consumer-quality) | quality gate ของโปรเจกต์ผู้ใช้ | cross-phase | `quality discover`, `quality init`, `quality doctor` |
 | [Project feature map](#project-feature-map) | feature map ของโปรเจกต์ | cross-phase | `features` |
-| [Install and host integration](#install-and-hosts) | ติดตั้งและเชื่อมกับ host | setup | `init`, `models`, `host agent-contract` |
+| [Install, hosts, and onboarding](#install-and-hosts) | ติดตั้ง เชื่อม host และ onboarding | setup | `init`, `models`, `host agent-contract` |
 | [Team dashboard](#team-dashboard) | dashboard ของทีม | setup | `dashboard`, `dashboard snapshot` |
 
 <a id="investigate"></a>
@@ -394,13 +394,13 @@ The user project names its own features and the paths behind them in openspec/fe
 
 <a id="install-and-hosts"></a>
 
-## Install and host integration — ติดตั้งและเชื่อมกับ host
+## Install, hosts, and onboarding — ติดตั้ง เชื่อม host และ onboarding
 
 **Phase:** setup
 
-Install or upgrade Change Loop, connect agent hosts (Claude Code, Pi, others), choose model tiers, and import host usage.
+Install or upgrade Change Loop, connect agent hosts, then onboard the project: doctor lists setup rows and the onboard skill drafts the quality baselines and feature map for the user to confirm.
 
-ติดตั้งหรืออัปเกรด Change Loop เชื่อมกับ host ของ agent (Claude Code, Pi และอื่นๆ) เลือกระดับโมเดล และนำเข้าข้อมูลการใช้งานจาก host
+ติดตั้งหรืออัปเกรด Change Loop เชื่อม host ของ agent แล้ว onboard โปรเจกต์: doctor แสดงรายการ setup และ skill onboard ร่าง quality baseline กับ feature map ให้ผู้ใช้ยืนยัน
 
 | | |
 |---|---|
@@ -408,8 +408,8 @@ Install or upgrade Change Loop, connect agent hosts (Claude Code, Pi, others), c
 | CLI commands | `init`, `models`, `host agent-contract`, `host instruction`, `telemetry sync`, `telemetry import`, `telemetry host-import`, `event`, `api-version` |
 | User states | — |
 | Runtime groups | — |
-| Code | `.claude/harness/adapters/pi-extension.mjs`, `.claude/harness/runtime/core/host-instruction.mjs`, `.claude/harness/runtime/observability/telemetry-runtime.mjs` |
-| Tests | `.claude/harness/tests/host-capability-matrix.test.mjs`, `.claude/harness/tests/telemetry-import-sync.test.mjs` |
+| Code | `.claude/harness/adapters/pi-extension.mjs`, `.claude/harness/runtime/core/host-instruction.mjs`, `.claude/harness/runtime/observability/telemetry-runtime.mjs`, `.claude/skills/onboard/SKILL.md` |
+| Tests | `.claude/harness/tests/host-capability-matrix.test.mjs`, `.claude/harness/tests/telemetry-import-sync.test.mjs`, `.claude/harness/tests/setup-readiness.test.mjs` |
 | Docs | `website/docs/src/content/docs/install.md`, `.claude/harness/README.md` |
 
 <a id="team-dashboard"></a>

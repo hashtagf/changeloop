@@ -104,6 +104,17 @@ cloop doctor --stage change
 
 `doctor` คือคำสั่งที่ควรหยิบใช้ทุกครั้งที่รู้สึกว่ามีอะไรผิดปกติ มันวินิจฉัยสถานะของโปรเจกต์ provider และ lifecycle และรายงาน apply transaction ที่ค้างอยู่ก่อนที่ Land จะไปเจอเข้า
 
+## ตั้งค่าโปรเจกต์ให้พร้อมสำหรับ agent
+
+หลังติดตั้งครั้งแรก `doctor` จะแสดงรายการ **setup** เพิ่ม บอกว่าตั้งค่า consumer quality
+แล้วหรือยัง, lane ของ lint, type-check, ขนาดไฟล์ และขอบเขตโมดูลมี baseline หรือยัง,
+`openspec/feature-map.json` ระบุฟีเจอร์ของคุณแล้วหรือยัง และมี `openspec/lessons.md`
+กับ agent guide หรือยัง แต่ละรายการบอกคำสั่งถัดไป และไม่มีรายการไหนทำให้ `doctor` fail
+
+สั่ง agent ให้ onboard โปรเจกต์ ("onboard this repo") skill `onboard` จะรันคำสั่งที่
+`doctor` บอก ร่าง feature map และขอบเขตโมดูล (ถ้าต้องการ) จากโค้ดของคุณ แล้วถามให้คุณยืนยัน
+และถามว่าจะใช้ finding ที่มีวันนี้เป็น baseline ไหม คุณเป็นคนตัดสิน ไม่มีอะไรมีผลบังคับโดยที่คุณไม่รู้
+
 ## Commit การติดตั้ง
 
 ถ้าเป็น Git project installer จะ stage ไฟล์ setup ที่ดูแลให้ แต่จะไม่ commit
