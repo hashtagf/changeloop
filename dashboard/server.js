@@ -1039,8 +1039,11 @@ function handleRequest(req, res) {
 
 const server = http.createServer(handleRequest);
 
-function startServer(port = PORT) {
-  return server.listen(port, () => {
+// `host` defaults to every interface. Tests pass 127.0.0.1: a port-0 bind on
+// `::` can be handed a port another process already holds on 127.0.0.1, and a
+// request to 127.0.0.1 then reaches that other process.
+function startServer(port = PORT, host = undefined) {
+  return server.listen(port, host, () => {
     const address = server.address();
     console.log(`cloop dashboard listening on :${address && address.port}  (online window ${ONLINE_TTL_MS}ms)`);
   });
