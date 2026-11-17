@@ -96,7 +96,9 @@ test("a final-envelope grace captures the host result without inflating wall tim
     "sleep 1",
     `printf '%s\\n' '{"type":"assistant","message":{"id":"before","content":[]}}'`,
     `printf '%s\\n' '{"id":"todo","status":"archived"}' > ${JSON.stringify(runtime)}`,
-    "sleep 1",
+    // The terminal watcher polls every 250 ms; a loaded CI runner once missed
+    // a 1 s window and counted the closing narration as pre-terminal.
+    "sleep 3",
     `printf '%s\\n' '{"type":"assistant","message":{"id":"closing","content":[]}}'`,
     "sleep 1",
     `printf '%s\\n' '${envelope}'`,
