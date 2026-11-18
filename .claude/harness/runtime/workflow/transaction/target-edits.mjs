@@ -310,6 +310,16 @@ export function pendingLandedConflict({ record, path, targetIdentity, sandboxIde
   return Boolean(synced) && synced.target === targetIdentity && synced.sandbox === sandboxIdentity;
 }
 
+// Land's stop for a repository delivery refused over an earlier change's
+// landed, uncommitted work: a sync onto it (the harness proves again and
+// continues, as for the root) or a conflict with it; null for anything else.
+export function landedWorkStop(changeId, details = {}) {
+  if (details.landedSync) return landedChangeSyncStop({ changeId, landedBy: details.landedBy });
+  if (details.landedConflict) return landedConflictStop({ changeId, repository: details.repository,
+    paths: details.conflicts, landedBy: details.landedBy || {} });
+  return null;
+}
+
 // Land's stop for landed-work conflicts the agent still has to resolve in the
 // sandbox copy. Not automatic: the harness cannot choose between two intents.
 export function landedConflictStop({ changeId, repository = null, paths, landedBy = {} }) {

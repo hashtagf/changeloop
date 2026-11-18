@@ -435,22 +435,12 @@ export function createDiagnosticsRuntime({
       for (const provider of contractProviders) {
         const config = providerConfig(requestedChange, provider);
         const current = receiptValidity(requestedChange, provider);
-        if (!config) {
-          checks.push({
-            level: current.validity === "valid" ? "ok" : "warn",
-            name: `provider:${provider}`,
-            detail: current.validity === "valid"
-              ? "external receipt valid"
-              : "no executable adapter; external receipt required"
-          });
-          continue;
-        }
-        if (config.adapter === "external") {
-          checks.push({
-            level: current.validity === "valid" ? "ok" : "warn",
-            name: `provider:${provider}`,
-            detail: current.validity === "valid" ? "external receipt valid" : "awaiting external receipt"
-          });
+        // A provider without a harness-run command proves by an external receipt.
+        if (!config || config.adapter === "external") {
+          const valid = current.validity === "valid";
+          checks.push({ level: valid ? "ok" : "warn", name: `provider:${provider}`,
+            detail: valid ? "external receipt valid"
+              : config ? "awaiting external receipt" : "no executable adapter; external receipt required" });
           continue;
         }
         const executable = config.command?.[0];

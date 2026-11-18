@@ -264,8 +264,8 @@ installed runtime.
    anywhere else.
    Guidance that restates a validation rule (templates, repair hints) is
    generated from the validator's own constants and tested against it, never
-   retyped. A required field accepts `none: <reason>` rather than forcing an
-   invented value, and every repair names the derived cause and a copyable fix.
+   retyped. A required free-text field accepts `none: <reason>` rather than
+   forcing an invented value, and every repair names the derived cause and a copyable fix.
    A rule added to this file or `AGENTS.md` gets a row in
    `quality/rule-enforcement.json` naming the check that enforces it, or a
    judgment call; `scripts/quality/scorecard.mjs --check` fails on a stale
@@ -283,9 +283,9 @@ installed runtime.
 7. Update canonical documentation and English/Thai public mirrors together.
    Change `.claude/harness/protocol.json` only for a wire-visible contract.
 8. Run affected checks while iterating, then the default gate before commit;
-   CI runs the complete `--full` set on every push. A change to printed CLI
-   output also runs `.claude/tests/harness/run-installer-tests.sh` locally,
-   because that slow-tier smoke reads the output. Review `git diff --check` and the final status; do not commit generated
+   CI runs the complete `--full` set on every push. The default gate also runs
+   a slow suite that alone checks a changed file (printed CLI output promotes
+   the installer smoke; `PROMOTED` in `affected-suite-selector.mjs`). Review `git diff --check` and the final status; do not commit generated
    benchmark output or temporary consumers.
 
 ## Verification commands

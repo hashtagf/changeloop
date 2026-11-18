@@ -410,6 +410,19 @@ export function createProofExecutionRuntime({
     };
   }
 
+  // The decisions a readiness waiting on the user asks for.
+  function readinessRequests(id, readiness) {
+    return readiness.status === "NEEDS_USER_DECISION" ? statusRequests(id) : [];
+  }
+
+  // A readiness neither ready nor waiting on the user stops proof advance;
+  // the outcome names the providers this pass ran or reused. Null otherwise.
+  function blockedAdvanceOutcome(id, readiness, providers) {
+    if (["READY", "NEEDS_USER_DECISION"].includes(readiness.status)) return null;
+    return writeAdvance(id, { ...readiness, command: "proof advance", completed: false,
+      stage: "blocked", requests: [], ...providers });
+  }
+
   function printOutcome(outcome) {
     if (!quietAdvanceOutput) console.log(JSON.stringify(outcome, null, 2));
     return outcome;
@@ -707,19 +720,9 @@ export function createProofExecutionRuntime({
     if (review) {
       readiness = proofReadinessValue(id, "prove");
     }
-    authorityRequests = readiness.status === "NEEDS_USER_DECISION"
-      ? statusRequests(id) : [];
-    if (!["READY", "NEEDS_USER_DECISION"].includes(readiness.status)) {
-      const outcome = writeAdvance(id, {
-        ...readiness,
-        command: "proof advance",
-        completed: false,
-        stage: "blocked",
-        requests: [],
-        executedProviders
-      });
-      return { outcome: stopProofAdvance(outcome) };
-    }
+    authorityRequests = readinessRequests(id, readiness);
+    const blocked = blockedAdvanceOutcome(id, readiness, { executedProviders });
+    if (blocked) return { outcome: stopProofAdvance(blocked) };
     return { readiness, authorityRequests, executedProviders, discrimination };
   }
 
@@ -1138,21 +1141,13 @@ export function createProofExecutionRuntime({
         (row.validity === "reusable-inputs"
           ? rebindReusableReceipt : rebindDiffBoundReceipt)(id, row, snapshot, reuseRunId);
       readiness = proofReadinessValue(id, "prove");
-      authorityRequests = readiness.status === "NEEDS_USER_DECISION"
-        ? statusRequests(id) : [];
-      if (!["READY", "NEEDS_USER_DECISION"].includes(readiness.status)) {
-        const outcome = writeAdvance(id, {
-          ...readiness,
-          command: "proof advance",
-          completed: false,
-          stage: "blocked",
-          requests: [],
-          executedProviders: [],
-          reusedProviders: reusable.map((row) => row.provider)
-        });
-        markBlocked(blockedOutcomeStop(outcome));
+      authorityRequests = readinessRequests(id, readiness);
+      const blocked = blockedAdvanceOutcome(id, readiness,
+        { executedProviders: [], reusedProviders: reusable.map((row) => row.provider) });
+      if (blocked) {
+        markBlocked(blockedOutcomeStop(blocked));
         process.exitCode = 2;
-        return printOutcome(outcome);
+        return printOutcome(blocked);
       }
     }
     const executionResult = await collectAdvanceExecution(

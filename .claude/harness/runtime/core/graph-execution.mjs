@@ -1,4 +1,5 @@
 import { findCyclePath } from "./graph.mjs";
+import { globRegExp } from "./path-glob.mjs";
 
 export const EXECUTION_GRAPH_VERSION = 3;
 export const NODE_DATA_SCHEMA = Object.freeze({ name: "foundation.node-data", version: 1 });
@@ -346,17 +347,7 @@ export function scopeAllowsPath(scope, path) {
   const prefix = raw.replace(/\/\*\*?$/, "").replace(/\/$/, "");
   if (path === prefix || path.startsWith(`${prefix}/`)) return true;
   if (!/[*?]/.test(raw)) return false;
-  let pattern = "";
-  for (let index = 0; index < raw.length; index += 1) {
-    const character = raw[index];
-    if (character === "*" && raw[index + 1] === "*") {
-      pattern += raw[index + 2] === "/" ? "(?:.*/)?" : ".*";
-      index += raw[index + 2] === "/" ? 2 : 1;
-    } else if (character === "*") pattern += "[^/]*";
-    else if (character === "?") pattern += "[^/]";
-    else pattern += character.replace(/[.+^${}()|[\]\\]/g, "\\$&");
-  }
-  return new RegExp(`^${pattern}$`).test(path);
+  return globRegExp(raw).test(path);
 }
 
 export function compileLandPreparation({

@@ -24,7 +24,7 @@ import {
   ROOT_POINTER_MOVED, repositoryPointerStop, rootPointerMoves, rootPointerRepairMessage
 } from "./land-verification.mjs";
 import {
-  carriedLandedExcludes, landedChangeSyncStop, landedConflictStop, landedTargetPaths,
+  carriedLandedExcludes, landedTargetPaths, landedWorkStop,
   otherLandedOutput, parseRestoreTargetPaths, restorableTargetPaths
 } from "../transaction/target-edits.mjs";
 import {
@@ -524,33 +524,27 @@ export function createApplyRuntime({
   // the automatic sync needs is recorded exactly as Apply would record it.
   function landPreflight(id, state = loadRuntime(id), { inspect = true } = {}) {
     if (state.status === "archived" || specSyncPending(id, state)) return;
-    if (["worktree", "copy"].includes(state.workspace?.mode)) {
-      if (compositeRepositorySelection(selectedRepositories(id, state))) {
-        // The saga's typed error, reported through the command boundary so
-        // `land check` prints a refusal instead of an uncaught exception.
-        try { repositoryDelivery().preflight(id, { inspect }); }
-        catch (error) {
-          if (!(error instanceof RepositoryDeliveryError)) throw error;
-          // An earlier change's landed, uncommitted work is part of the
-          // target: the harness syncs this change's repository sandboxes onto
-          // it, proves again, and continues, as it does for the root.
-          if (error.details?.landedSync) {
-            const stop = landedChangeSyncStop({ changeId: id, landedBy: error.details.landedBy });
-            return blockWithDecision(id, stop.code, stop.decision);
-          }
-          if (error.details?.landedConflict) {
-            const stop = landedConflictStop({ changeId: id, repository: error.details.repository,
-              paths: error.details.conflicts, landedBy: error.details.landedBy || {} });
-            return blockWithDecision(id, stop.code, stop.decision);
-          }
-          fail(error.message, 1, { code: error.code, owner: error.owner,
-            boundary: error.boundary, ...(error.decision ? { decision: error.decision } : {}) });
-        }
-      } else if (!state.workspace.applied) {
-        planApplyEntries(id, state, null, { inspect });
-      }
+    const sandboxed = ["worktree", "copy"].includes(state.workspace?.mode);
+    if (sandboxed && compositeRepositorySelection(selectedRepositories(id, state))) {
+      const blocked = repositoryDeliveryPreflight(id, inspect);
+      if (blocked) return blocked.result;
+    } else if (sandboxed && !state.workspace.applied) {
+      planApplyEntries(id, state, null, { inspect });
     }
     assertSpecSyncPreflight(id, state);
+  }
+
+  // The saga's typed refusal through the command boundary, so `land check`
+  // prints it; `{ result }` when Land stops for a decision, otherwise null.
+  function repositoryDeliveryPreflight(id, inspect) {
+    try { repositoryDelivery().preflight(id, { inspect }); return null; } catch (error) {
+      if (!(error instanceof RepositoryDeliveryError)) throw error;
+      const stop = landedWorkStop(id, error.details || {});
+      if (stop) return { result: blockWithDecision(id, stop.code, stop.decision) };
+      fail(error.message, 1, { code: error.code, owner: error.owner,
+        boundary: error.boundary, ...(error.decision ? { decision: error.decision } : {}) });
+      return null;
+    }
   }
 
   // The gate can only fire once the change is already recorded archived, so a
