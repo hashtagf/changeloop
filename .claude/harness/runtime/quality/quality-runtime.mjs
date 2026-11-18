@@ -556,36 +556,73 @@ export function createQualityRuntime({
         next: "cloop quality doctor" }];
     }
     const rows = [{ id: "quality-config", level: "ok", detail: QUALITY_CONFIG_RELATIVE, next: null }];
+    const baselineNext = (capability) =>
+      `cloop quality baseline --write --capability ${capability} --decision-ref <ref> --reason <why>`;
+    const ROW = {
+      "not-run": (capability) => ({ level: "info", detail: `${capability} has not run`,
+        next: `cloop quality run --capability ${capability}` }),
+      "no-baseline": (capability) => ({ level: "warn",
+        detail: `${capability} has no baseline, so it measures but cannot fail on new findings`, next: baselineNext(capability) }),
+      unreadable: (capability, error) => ({ level: "warn", detail: `${capability} result or baseline is unreadable: ${error}`,
+        next: `cloop quality run --capability ${capability}` }),
+      ratcheting: (capability) => ({ level: "ok", detail: `${capability} ratchets against its baseline`, next: null }),
+      incompatible: (capability) => ({ level: "warn",
+        detail: `${capability} baseline no longer matches the tool or configuration`, next: baselineNext(capability) })
+    };
     for (const repository of config.repositories) {
-      const capabilities = Object.keys(repository.providers).filter((name) => FINDINGS_CAPABILITIES.has(name));
-      if (!capabilities.length) rows.push({ id: `findings:${repository.id}`, level: "info",
+      const lanes = repositoryLaneStates(repository).filter((row) => FINDINGS_CAPABILITIES.has(row.capability));
+      if (!lanes.length) rows.push({ id: `findings:${repository.id}`, level: "info",
         detail: `repository '${repository.id}' has no findings ratchet lane (lint, type-check, file-size, module-boundaries, workaround-comments, duplication, or nesting-depth)`,
         next: "add one in quality/foundation-quality.json (see CONSUMER-QUALITY.md, Findings ratchet)" });
-      for (const capability of capabilities) {
-        const id = `baseline:${repository.id}:${capability}`;
-        const resultPath = providerResultPath(root, repository.id, capability);
-        const basePath = baselinePath(root, repository.id, capability);
-        if (!existsSync(resultPath)) { rows.push({ id, level: "info",
-          detail: `${capability} has not run`, next: `cloop quality run --capability ${capability}` }); continue; }
-        if (!existsSync(basePath)) { rows.push({ id, level: "warn",
-          detail: `${capability} has no baseline, so it measures but cannot fail on new findings`,
-          next: `cloop quality baseline --write --capability ${capability} --decision-ref <ref> --reason <why>` }); continue; }
-        let evaluation;
-        try {
-          evaluation = evaluateFindingsRatchet({ current: readJsonFile(resultPath), baseline: readJsonFile(basePath) });
-        } catch (error) {
-          rows.push({ id, level: "warn", detail: `${capability} result or baseline is unreadable: ${error.message}`,
-            next: `cloop quality run --capability ${capability}` });
-          continue;
-        }
-        rows.push(evaluation.baselineCompatible
-          ? { id, level: "ok", detail: `${capability} ratchets against its baseline`, next: null }
-          : { id, level: "warn", detail: `${capability} baseline no longer matches the tool or configuration`,
-            next: `cloop quality baseline --write --capability ${capability} --decision-ref <ref> --reason <why>` });
-      }
+      for (const { capability, state, error } of lanes)
+        rows.push({ id: `baseline:${repository.id}:${capability}`, ...ROW[state](capability, error) });
     }
     return rows;
   }
 
-  return { discovery, showDiscovery, draft, initialize, configured, doctor, run, report, baseline, debt, readiness };
+  // Each configured lane of one repository: whether it has run, has a
+  // baseline, and (for findings) still compares against it.
+  function repositoryLaneStates(repository) {
+    return Object.keys(repository.providers).map((capability) => {
+      const resultPath = providerResultPath(root, repository.id, capability);
+      const basePath = baselinePath(root, repository.id, capability);
+      if (!existsSync(resultPath)) return { capability, state: "not-run" };
+      let current = null;
+      try { current = readJsonFile(resultPath); } catch (error) {
+        return { capability, state: "unreadable", error: error.message };
+      }
+      const findings = FINDINGS_CAPABILITIES.has(capability) && Array.isArray(current?.findings)
+        ? current.findings.length : null;
+      if (!existsSync(basePath)) return { capability, state: "no-baseline", findings };
+      if (findings === null) return { capability, state: "ratcheting", findings };
+      try {
+        const evaluation = evaluateFindingsRatchet({ current, baseline: readJsonFile(basePath) });
+        return { capability, state: evaluation.baselineCompatible ? "ratcheting" : "incompatible", findings };
+      } catch (error) {
+        return { capability, state: "unreadable", error: error.message, findings };
+      }
+    });
+  }
+
+  // One state per capability across repositories: the least ready repository
+  // decides, so a lane counts only where every configured repository ratchets.
+  // Findings add up across repositories. Null when quality is not configured.
+  function laneStates() {
+    if (!existsSync(configPath)) return null;
+    let config;
+    try { config = readJsonFile(configPath); } catch { return null; }
+    const order = ["unreadable", "not-run", "no-baseline", "incompatible", "ratcheting"];
+    const lanes = {};
+    const findings = {};
+    for (const repository of config.repositories || [])
+      for (const { capability, state, findings: count } of repositoryLaneStates(repository)) {
+        const current = lanes[capability];
+        lanes[capability] = current === undefined || order.indexOf(state) < order.indexOf(current) ? state : current;
+        if (Number.isInteger(count)) findings[capability] = (findings[capability] || 0) + count;
+      }
+    return { lanes, findings };
+  }
+
+  return { discovery, showDiscovery, draft, initialize, configured, doctor, run, report, baseline, debt, readiness,
+    laneStates };
 }

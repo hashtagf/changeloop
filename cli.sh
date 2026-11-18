@@ -110,7 +110,7 @@ run_runtime() {
   local phase=""
   case "${1:-}" in
     investigate) phase="investigate" ;;
-    new|start|resolve|amend|revise|validate|audit-change|abandon|waive|evidence-detect|evidence-init|evidence-doctor|quality-discover|quality-init|quality-doctor|preview) phase="change" ;;
+    new|start|resolve|amend|revise|validate|audit-change|abandon|waive|evidence-detect|evidence-init|evidence-doctor|quality-discover|quality-init|quality-doctor|quality-readiness|preview) phase="change" ;;
     sandbox|agent-plan|agent-dispatch|agent-acquire|agent-release) phase="build" ;;
     proof-plan|proof-readiness|proof-advance|proof-run|proof-collect|proof-preflight|proof-execute|proof-audit|prove|receipt|run-provider|evidence-verify-ci|authority-request|authority-dispatch|authority-run|authority-abort|authority-status|authority-record|authority-reset-infra|authority-reset-base-move|authority-extend-review|quality-run|quality-report|quality-baseline|quality-debt) phase="prove" ;;
     handoff-list|handoff-status|handoff-packet|handoff-record|land-check|land-advance|land-recover|land-plan|land-resume|archive) phase="land" ;;
@@ -481,9 +481,10 @@ case "${1:-}" in
       doctor) run_runtime read quality-doctor "$@" ;;
       run) run_runtime write quality-run "$@" ;;
       report) run_runtime read quality-report "$@" ;;
+      readiness) run_runtime read quality-readiness "$@" ;;
       baseline) run_runtime write quality-baseline "$@" ;;
       debt) run_runtime write quality-debt "$@" ;;
-      *) fail "quality requires 'discover', 'init', 'doctor', 'run', 'report', 'baseline', or 'debt'" ;;
+      *) fail "quality requires 'discover', 'init', 'doctor', 'run', 'report', 'readiness', 'baseline', or 'debt'" ;;
     esac ;;
   authority)
     shift

@@ -73,6 +73,7 @@ language profiles, baselines, and rollout policy.
 | `quality doctor [--change <id>] [--enforce]` | Validate selected repositories, provider configuration, executable availability, and mutation isolation |
 | `quality run [--change <id>] [--repo <id>] [--capability <name>] [--full] [--shard-index <n> --shard-count <n>] [--enforce]` | Run per-repository lanes and apply changed-code or full-inventory ratchets |
 | `quality report` | Read the latest non-averaged repository-lane summary |
+| `quality readiness [--pretty]` | Score the project per pyramid layer (codebase, static, verification, prose, review) with the next step for the weakest layer; unmeasured criteria are never scored |
 | `quality baseline [--repo <id>] [--capability <name>] [--write --decision-ref <ref> --reason <why>]` | Preview or explicitly approve versioned CRAP/mutation baselines |
 | `quality debt` | Render JSON and Markdown debt from the latest run without widening Change scope |
 

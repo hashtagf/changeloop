@@ -28,6 +28,7 @@ keeping this map current are in [How the map is kept current](#how-the-map-is-ke
 | [Operations handoff](#operations-handoff) | ส่งต่องานปฏิบัติการ | cross-phase | `handoff status`, `handoff list`, `handoff packet` |
 | [Abandon a change](#abandon) | ยกเลิก change | cross-phase | `change abandon` |
 | [Consumer quality gates](#consumer-quality) | quality gate ของโปรเจกต์ผู้ใช้ | cross-phase | `quality discover`, `quality init`, `quality doctor` |
+| [Pyramid readiness](#pyramid-readiness) | ความพร้อมตาม pyramid | cross-phase | `quality readiness` |
 | [Project feature map](#project-feature-map) | feature map ของโปรเจกต์ | cross-phase | `features` |
 | [Install, hosts, and onboarding](#install-and-hosts) | ติดตั้ง เชื่อม host และ onboarding | setup | `init`, `models`, `host agent-contract` |
 | [Team dashboard](#team-dashboard) | dashboard ของทีม | setup | `dashboard`, `dashboard snapshot` |
@@ -370,6 +371,26 @@ Optional CRAP, mutation, lint, type-check, file-size, and module-boundary checks
 | Runtime groups | `quality` |
 | Code | `.claude/harness/runtime/quality/quality-runtime.mjs`, `.claude/harness/runtime/quality/findings-ratchet.mjs` |
 | Tests | `.claude/harness/tests/quality-runtime.test.mjs`, `.claude/harness/tests/quality-adapters.test.mjs`, `.claude/harness/tests/findings-ratchet.test.mjs` |
+| Docs | `.claude/harness/CONSUMER-QUALITY.md`, `website/docs/src/content/docs/consumer-quality.md` |
+
+<a id="pyramid-readiness"></a>
+
+## Pyramid readiness — ความพร้อมตาม pyramid
+
+**Phase:** cross-phase
+
+Per-layer readiness (codebase, static checks, verification, prose, review) of the user project, the same criteria Change Loop's own scorecard uses, with the next step for the weakest layer.
+
+ความพร้อมของโปรเจกต์ผู้ใช้แยกตามชั้น (ตัวโค้ด, ตัวตรวจอัตโนมัติ, เทสต์, เอกสาร, คนรีวิว) ด้วยเกณฑ์เดียวกับ scorecard ของ Change Loop เอง พร้อมขั้นต่อไปของชั้นที่อ่อนที่สุด
+
+| | |
+|---|---|
+| Slash commands | — |
+| CLI commands | `quality readiness` |
+| User states | — |
+| Runtime groups | — |
+| Code | `.claude/harness/runtime/quality/pyramid-readiness.mjs`, `.claude/harness/runtime/quality/rule-registry.mjs`, `.claude/harness/runtime/composition/pyramid-readiness-command.mjs` |
+| Tests | `.claude/harness/tests/pyramid-readiness.test.mjs` |
 | Docs | `.claude/harness/CONSUMER-QUALITY.md`, `website/docs/src/content/docs/consumer-quality.md` |
 
 <a id="project-feature-map"></a>
