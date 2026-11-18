@@ -17,7 +17,7 @@ const A11Y_LINT = new Set([
   "eslint-plugin-lit-a11y", "eslint-plugin-astro", "svelte-check", "@biomejs/biome", "@html-eslint/eslint-plugin"
 ]);
 const RENDERED = new Set([
-  "@playwright/test", "playwright", "puppeteer", "cypress", "@storybook/test-runner", "webdriverio"
+  "@playwright/test", "playwright", "playwright-core", "puppeteer", "cypress", "@storybook/test-runner", "webdriverio"
 ]);
 const A11Y_CHECK = new Set([
   "axe-core", "@axe-core/playwright", "@axe-core/puppeteer", "@axe-core/react", "jest-axe", "vitest-axe",
