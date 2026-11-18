@@ -62,12 +62,14 @@
   --card: #faf7f0;
   --ink: #17181c;
   --ink-soft: #373a42;
-  --muted: #6b6d72;
+  --muted: #67696e;
   --faint: #999991;
   --line: #d7d0c3;
   --line-dark: #bcb4a6;
   --signal: #ff5c35;
-  --signal-dark: #d9401b;
+  --signal-dark: #c53a19;
+  /* the brand orange darkened to 3:1 on paper, for large display text */
+  --signal-strong: #e64a22;
   --blue: #2949e8;
   --blue-soft: #e3e8ff;
   --green: #087e67;
@@ -224,7 +226,7 @@ h2 {
 
 h2 em,
 h1 em {
-  color: var(--signal);
+  color: var(--signal-strong);
   font-weight: 500;
 }
 
@@ -387,7 +389,7 @@ h1 em {
 }
 
 .button.primary {
-  color: white;
+  color: var(--ink);
   background: var(--signal);
   box-shadow: 0 14px 30px -18px color-mix(in srgb, var(--signal-dark) 90%, transparent);
 }
@@ -2012,4 +2014,10 @@ footer {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* The tab list wraps only the tabs (the copy button is not a tab) and lays
+   out as if its buttons were children of .code-tabs. */
+.code-tab-list {
+  display: contents;
 }

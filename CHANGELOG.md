@@ -21,6 +21,11 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Changed
 
+- The landing page meets WCAG AA contrast: a darker orange for small labels,
+  a slightly deeper orange for the headline accent, and dark text on the
+  Install button. Maintainers: `scripts/ui/rendered-check.mjs` checks the
+  repository's own pages in Chrome with axe-core.
+
 - Maintainers: no harness runtime file exceeds 800 lines (the lint ratchet's
   ceiling, down from 1,000); `foundation.mjs` keeps only composition, with
   the running command's record in `runtime/composition/operation-state.mjs`.

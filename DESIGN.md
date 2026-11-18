@@ -70,8 +70,12 @@ each stylesheet's `:root`:
   in order, labels, alt text, `lang`, valid roles) with zero findings.
 - `role="list"` on a styled list is deliberate (Safari drops list semantics
   without bullets) and allowed.
-- Static lint cannot see contrast or focus order; check them rendered when a
-  surface's colors or interaction change.
+- `node scripts/ui/rendered-check.mjs` renders the pages in Chrome at desktop
+  and phone widths and runs axe-core (contrast, names, roles) with zero
+  serious or critical findings, and no sideways scroll on a phone.
+- Large display text in the brand orange uses `--signal-strong` (#e64a22,
+  3:1 on paper); small text uses `--signal-dark` (#c53a19, 4.5:1). Text on an
+  orange button is `--ink`, not white.
 
 ## Not yet tokenized (known drift)
 
@@ -85,5 +89,6 @@ surface is next restyled, with the owner's approval:
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-11-18 | Landing contrast to WCAG AA: `--signal-dark` #d9401b→#c53a19, headline accent `--signal-strong`, ink text on the orange button, `--muted` #6b6d72→#67696e | The rendered check found them below 4.5:1 (3:1 for large text); owner chose this option from screenshots |
 | 2026-11-18 | Font sizes and radii snapped to one scale (nearest step by ratio, ties larger; 8px text became 9px, half-pixel sizes whole) | Up to 28 sizes and 13 radii per surface had no system; the largest shift is about one step |
 | 2026-11-18 | Every stylesheet color became a token; near-duplicates within ΔE 6 merged into the most used one (78 colors moved, largest ΔE 5.8) | One token source, as the UI readiness row requires; ΔE ≤ 6 is hard to see side by side |
