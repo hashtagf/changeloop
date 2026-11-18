@@ -6,7 +6,7 @@ import {
 import { dirname, join, relative, resolve } from "node:path";
 import { DRAFT_FOLDER_VERSION } from "../draft/draft-folder.mjs";
 import { resumeThrough } from "../../core/next-step.mjs";
-import { mergeSemanticDraft } from "../draft/semantic-draft.mjs";
+import { mergeSemanticDraft } from "../draft/semantic-draft-merge.mjs";
 import { expandMinimalSemanticDraft } from "../draft/semantic-draft-minimal.mjs";
 import { isRecordedSemanticVersion, isSemanticVersion } from "../validation/draft-version.mjs";
 import { bindingRecord, scenarioTestBinding } from "../validation/scenario-test-binding.mjs";

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { acquireProcessLock } from "../../core/process-lock.mjs";
 import { requireDeps } from "../../core/required-deps.mjs";
@@ -10,7 +10,6 @@ import { expandMinimalSemanticDraft } from "../draft/semantic-draft-minimal.mjs"
 import { unknownTaskFieldWarnings } from "../draft/semantic-draft-tasks.mjs";
 import { isSemanticVersion } from "../validation/draft-version.mjs";
 import { semanticIntakeAction, semanticIntakeIssues } from "../validation/semantic-intake.mjs";
-import { prototypeSelectionIssues } from "../prototype/prototype-binding.mjs";
 import { inspectSemanticSources } from "../validation/semantic-source-inventory.mjs";
 import {
   PROJECT_GROUNDING_PATHS, inspectRepositoryIntelligence, repositoryIntelligenceRequired,
@@ -37,6 +36,7 @@ import { createChangeResolution } from "./change-resolution.mjs";
 import { createChangeRevision } from "./change-revision.mjs";
 import { createChangeStart } from "./change-start.mjs";
 import { createChangeAmendment } from "./change-amendment.mjs";
+import { createSemanticReferences } from "./semantic-references.mjs";
 // Moved to change-start-values.mjs; re-exported so importers are unchanged.
 export {
   apiContractErrorIssues, atomicStartPreflight, documentSectionInvalidation,
@@ -481,80 +481,11 @@ export function createChangeLifecycle({
     return draft;
   }
 
-  function semanticReferenceIssues(draft) {
-    const issues = [];
-    const validateLocalFile = (field, value) => {
-      const path = resolve(root, value);
-      try {
-        const project = realpathSync(root);
-        const canonical = realpathSync(path);
-        if (!pathInside(project, canonical) || !statSync(canonical).isFile())
-          throw new Error("not a contained regular file");
-      } catch {
-        issues.push(`semantic draft ${field} must reference an existing regular file inside the project`);
-      }
-    };
-    const referencedPaths = [];
-    if (draft.prototypeSelection?.reference)
-      referencedPaths.push(["prototypeSelection.reference", draft.prototypeSelection.reference]);
-    for (const [index, row] of (draft.discovery?.coverage || []).entries())
-      for (const [sourceIndex, source] of (row.sources || []).entries())
-        referencedPaths.push([
-          `discovery.coverage[${index}].sources[${sourceIndex}]`, source
-        ]);
-    for (const [index, diagram] of (draft.diagrams || []).entries()) {
-      if (!["mermaid", "svg", "png"].includes(diagram?.type))
-        issues.push(`semantic draft diagrams[${index}].type must be mermaid|svg|png`);
-      if (!String(diagram?.key || "").trim())
-        issues.push(`semantic draft diagrams[${index}].key is required`);
-      if (!String(diagram?.purpose || "").trim())
-        issues.push(`semantic draft diagrams[${index}].purpose is required`);
-      if (diagram.type === "mermaid" && !String(diagram.source || "").trim())
-        issues.push(`semantic draft diagrams[${index}].source is required`);
-      if (diagram.type !== "mermaid") {
-        const path = diagram.path || diagram.source;
-        if (!String(path || "").trim())
-          issues.push(`semantic draft diagrams[${index}].path is required`);
-        else referencedPaths.push([`diagrams[${index}].path`, path]);
-      }
-    }
-    for (const [field, value] of referencedPaths) validateLocalFile(field, value);
-    const requirementKeys = draft._requirementKeys?.length ? draft._requirementKeys
-      : (draft.claims || []).map((claim) => claim?.requirementKey).filter(Boolean);
-    issues.push(...prototypeSelectionIssues(draft.prototypeSelection, requirementKeys, draft.execution?.providers));
-    for (const [index, integration] of (draft.integrations || []).entries()) {
-      const source = String(integration?.documentation?.source || "").trim();
-      if (!source) continue;
-      if (/^[a-z][a-z0-9+.-]*:\/\//i.test(source)) {
-        let url;
-        try { url = new URL(source); }
-        catch {
-          issues.push(`semantic draft integrations[${index}].documentation.source must be a valid HTTPS URL`);
-          continue;
-        }
-        if (url.protocol !== "https:")
-          issues.push(`semantic draft integrations[${index}].documentation.source must use HTTPS`);
-        const version = String(integration?.documentation?.version || "").trim();
-        if (/^(?:latest|current|main|master|head)$/i.test(version))
-          issues.push(`semantic draft integrations[${index}].documentation.version must identify a fixed version`);
-        continue;
-      }
-      validateLocalFile(`integrations[${index}].documentation.source`, source);
-    }
-    return issues;
-  }
-
-  function validateSemanticReferences(draft) {
-    const issues = semanticReferenceIssues(draft);
-    if (issues.length) fail(issues.join("\n  - "));
-  }
-
-  function normalizedDraftScenarios(spec) {
-    if (Array.isArray(spec.scenarios)) return spec.scenarios;
-    return (spec.scenario || spec.when || spec.then)
-      ? [{ name: spec.scenario, when: spec.when, then: spec.then }]
-      : [];
-  }
+  const {
+    semanticReferenceIssues, validateSemanticReferences, normalizedDraftScenarios
+  } = createSemanticReferences({
+    fail, pathInside, root
+  });
 
   function renderDraftRequirement(spec) {
     return renderRequirementMarkdown(spec, normalizedDraftScenarios(spec));

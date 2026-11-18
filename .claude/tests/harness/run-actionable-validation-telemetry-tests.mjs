@@ -6,7 +6,7 @@ import test from "node:test";
 
 import {
   claimContractIssues, taskContractIssues
-} from "../../harness/runtime/workflow/change/change-validation.mjs";
+} from "../../harness/runtime/workflow/change/validation-preflight.mjs";
 import {
   eventUsageRecoveryActions, normalizedTelemetryHost, usageAvailability
 } from "../../harness/runtime/observability/metrics-runtime.mjs";

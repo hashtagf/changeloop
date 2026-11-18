@@ -6,20 +6,11 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import {
-  assertValidationPreflight,
-  createChangeValidationRuntime,
-  lockValidatedGrounding,
-  normalizeValidationAcceptance,
-  openSpecStrictLintApplies,
-  proposalClassificationIssues,
-  reportDeclaredSurfaceForecast,
-  reportValidationReviewAssurance,
-  validateImplementationTasks,
-  validationChangeDirectory,
-  validationDocumentBudgets,
-  validationPreflightIssues,
-  warnValidationDocumentBudgets
+  createChangeValidationRuntime, lockValidatedGrounding, reportDeclaredSurfaceForecast, reportValidationReviewAssurance, validationDocumentBudgets, warnValidationDocumentBudgets
 } from "../runtime/workflow/change/change-validation.mjs";
+import {
+  assertValidationPreflight, normalizeValidationAcceptance, openSpecStrictLintApplies, proposalClassificationIssues, validateImplementationTasks, validationChangeDirectory, validationPreflightIssues
+} from "../runtime/workflow/change/validation-preflight.mjs";
 import {
   createSpecDeltaValidator,
   existingCapabilityRequirementFindings

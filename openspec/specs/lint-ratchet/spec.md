@@ -73,7 +73,7 @@ gate แบบ deterministic ที่กัน anti-pattern ใหม่ใน�
 
 ### Requirement: ไฟล์ใหญ่และ composition root ห้ามโต
 
-ระบบ SHALL ล้มเมื่อไฟล์ใน size baseline มีจำนวนบรรทัดเกิน baseline หรือไฟล์อื่นในขอบเขตเกินเพดาน `sizeCeiling` ของ baseline (ตอนนี้ 1000 บรรทัด)
+ระบบ SHALL ล้มเมื่อไฟล์ใน size baseline มีจำนวนบรรทัดเกิน baseline หรือไฟล์อื่นในขอบเขตเกินเพดาน `sizeCeiling` ของ baseline (ตอนนี้ 800 บรรทัด)
 
 - foundation.mjs อยู่ใน size baseline เสมอเพราะต้องเป็น composition root
 

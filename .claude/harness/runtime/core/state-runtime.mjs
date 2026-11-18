@@ -15,6 +15,7 @@ import { withoutGitIgnored } from "./git-ignore.mjs";
 import { taskBlocks, taskMetadata } from "../contracts/change-artifacts.mjs";
 import { normalizeLifecycleState } from "./lifecycle-reducer.mjs";
 import { bestEffort } from "./best-effort.mjs";
+import { createSnapshotDigests } from "./snapshot-digests.mjs";
 
 // Read-only git subcommands that need a repository to answer at all.
 const NO_REPOSITORY_QUERIES = new Set([
@@ -500,40 +501,9 @@ export function createStateRuntime({
     return { state, workspace, contractRevision, ignored, cacheKey };
   }
 
-  function snapshotDigests() {
-    return {
-      hash: createHash("sha256"),
-      codeHash: createHash("sha256"),
-      reviewHash: createHash("sha256"),
-      packetReviewHash: createHash("sha256")
-    };
-  }
-
-  function foldSnapshotEntry(digests, id, workspace, rel, contentIdentity) {
-    const reviewVolatile = new Set(["execution.yaml", "handoffs.yaml"]);
-    for (const [name, digest] of Object.entries(digests)) {
-      if (name === "codeHash" && isChangePacketPath(rel, id)) continue;
-      if (name === "packetReviewHash" && !isChangePacketPath(rel, id)) continue;
-      if (["reviewHash", "packetReviewHash"].includes(name) &&
-          isChangePacketPath(rel, id) &&
-          reviewVolatile.has(rel.slice(currentChangeRelativePath(id).length + 1)))
-        continue;
-      let identity = contentIdentity;
-      if (["reviewHash", "packetReviewHash"].includes(name) &&
-          rel === `${currentChangeRelativePath(id)}/tasks.md`) {
-        const path = join(workspace, rel);
-        if (existsSync(path)) {
-          const normalized = readFileSync(path, "utf8")
-            .replace(/^(\s*-\s*)\[[ xX]\]/gm, "$1[ ]");
-          identity = createHash("sha256").update(normalized).digest("hex");
-        }
-      }
-      digest.update(rel);
-      digest.update("\0");
-      digest.update(identity);
-      digest.update("\0");
-    }
-  }
+  const { snapshotDigests, foldSnapshotEntry } = createSnapshotDigests({
+    currentChangeRelativePath
+  });
 
   function snapshotPathPolicy(id, ignored, declared) {
     return (rel, { gitAware = false, tracked = false } = {}) => {

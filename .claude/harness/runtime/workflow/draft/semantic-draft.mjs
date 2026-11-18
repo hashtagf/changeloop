@@ -15,11 +15,11 @@ import { unique } from "../../core/values.mjs";
 import {
   comparableLabel, placeholderIssue, rawScenarioEntries, stringList, text, textList
 } from "./semantic-draft-text.mjs";
-import { plainObject } from "./semantic-draft-minimal.mjs";
 import {
   deriveRepositoryTaskDependencies, derivedExecution, normalizeTasks,
   unknownTaskFieldWarnings
 } from "./semantic-draft-tasks.mjs";
+import { rejectedAlternatives, decisionMetadataIssues, applyDecisionRationale, SETTLED_REASON } from "./semantic-draft-decisions.mjs";
 
 const OPERATIONS = new Set(["added", "modified", "removed"]);
 
@@ -218,85 +218,6 @@ export function semanticRapidCandidate(source) {
 // capability proves the boundary is a judgment the compiler must not make.
 export function semanticEvidenceDefaultable(source) {
   return !securityTriggerList(source).length;
-}
-
-// Alternatives the decision set aside. Only a decision that rejected one owes
-// a reason; a settled fact with nothing to choose between does not.
-function rejectedAlternatives(decision) {
-  const choice = text(decision?.choice);
-  const listed = decision?.rejected ?? decision?.alternatives;
-  return (Array.isArray(listed) ? stringList(listed) : textList(listed))
-    .filter((option) => option !== choice && !/^none$/i.test(option));
-}
-
-export const DECISION_STATUSES = Object.freeze(["proposed", "accepted", "superseded"]);
-
-// A decision without a status keeps today's meaning: it is accepted.
-export function decisionStatus(decision) {
-  return text(decision?.status).toLowerCase() || "accepted";
-}
-
-// The optional ADR fields: drivers, options with pros and cons, how the
-// decision is confirmed, what it supersedes, and which requirements a durable
-// decision governs. Older decisions without them stay valid.
-function decisionMetadataIssues(decision, label) {
-  const issues = [];
-  if (decision?.status !== undefined && !DECISION_STATUSES.includes(decisionStatus(decision)))
-    issues.push(`${label}.status must be proposed, accepted, or superseded`);
-  const stringArray = (value) => Array.isArray(value) && value.every((item) => text(item));
-  if (decision?.drivers !== undefined && !stringArray(decision.drivers))
-    issues.push(`${label}.drivers must be an array of non-empty strings`);
-  if (decision?.requirements !== undefined && !stringArray(decision.requirements))
-    issues.push(`${label}.requirements must be an array of requirement keys`);
-  if (decision?.durable !== undefined && typeof decision.durable !== "boolean")
-    issues.push(`${label}.durable must be true or false`);
-  for (const field of ["confirmation", "supersedes"])
-    if (decision?.[field] !== undefined && typeof decision[field] !== "string")
-      issues.push(`${label}.${field} must be a string`);
-  if (decision?.options !== undefined) {
-    if (!Array.isArray(decision.options)) issues.push(`${label}.options must be an array`);
-    else for (const [index, option] of decision.options.entries()) {
-      if (typeof option === "string" ? !text(option) : !text(option?.option))
-        issues.push(`${label}.options[${index}].option is required`);
-      for (const list of ["pros", "cons"])
-        if (option && typeof option === "object" && option[list] !== undefined &&
-            !(typeof option[list] === "string" || stringArray(option[list])))
-          issues.push(`${label}.options[${index}].${list} must be a string or an array of strings`);
-    }
-  }
-  return issues;
-}
-
-// An accepted durable decision states its reason under each requirement it
-// governs, so the reason survives archive into the living spec.
-function applyDecisionRationale(source, requirements, issues) {
-  for (const [index, decision] of (Array.isArray(source?.decisions) ? source.decisions : []).entries()) {
-    const keys = Array.isArray(decision?.requirements) ? stringList(decision.requirements) : [];
-    for (const key of keys)
-      if (!requirements.some((row) => row.key === key))
-        issues.push(`semantic draft decisions[${index}].requirements references unknown requirement '${key}'`);
-    if (decision?.durable !== true || decisionStatus(decision) !== "accepted" || !text(decision?.choice))
-      continue;
-    const reason = authoredDecisionReason(decision);
-    const line = `- **Rationale (${text(decision.id) || text(decision.key)}):** ${text(decision.choice)}` +
-      (reason ? ` — ${reason}` : "");
-    for (const row of requirements.filter((requirement) => keys.includes(requirement.key)))
-      row.spec.rationale = [...(row.spec.rationale || []), line];
-  }
-}
-
-export const SETTLED_REASON = "No alternative was open; recorded as settled";
-
-// A default the agent chose without asking (stack, storage) is recorded, not
-// approved: it is reported with the agreement but never forces design.md.
-export function agentDecision(decision) {
-  return text(decision?.decidedBy).toLowerCase() === "agent";
-}
-
-// The author's stated reason, without the compiler's settled-fact filler.
-export function authoredDecisionReason(decision) {
-  const reason = text(decision?.reason) || text(decision?.why);
-  return reason === SETTLED_REASON ? "" : reason;
 }
 
 // A benchmark provider compares head with base over alternating runs; fewer
@@ -574,81 +495,6 @@ function assignClaimIds(requirements, pending, reservedClaimIds, issues) {
 // (intent + requirements[{description, scenarios[{when, then}]}] +
 // tasks[{outcome, verify, paths}]) is expanded here, before intake, into an
 // ordinary v4 draft. Explicit drafts (any `version`) are never touched.
-
-// ---- Partial revision ---------------------------------------------------------
-// `change revise --merge` applies a patch to the draft the change was compiled
-// from instead of requiring the whole draft again. Objects merge recursively
-// and `null` deletes a key (JSON Merge Patch). An array whose base entries all
-// carry an identity field (key, dimension, or name) merges by identity: a patch
-// entry names its item by any of those fields every base entry has (the first
-// it provides, in that order), merges into the matching entry, `"$remove":
-// true` drops it, and any other entry is appended. A `$remove` that matches no
-// entry is an error, never a silent no-op. Every other array is replaced.
-const MERGE_IDENTITIES = ["key", "dimension", "name"];
-
-function mergeIdentities(base) {
-  if (!Array.isArray(base) || !base.length || !base.every(plainObject)) return [];
-  return MERGE_IDENTITIES.filter((field) => base.every((row) => text(row[field])));
-}
-
-function mergeArray(base, patch) {
-  const fields = mergeIdentities(base);
-  if (!fields.length || !patch.every(plainObject)) return structuredClone(patch);
-  const result = base.map((row) => structuredClone(row));
-  for (const entry of patch) {
-    const field = fields.find((name) => text(entry[name]));
-    const identity = field ? text(entry[field]) : "";
-    const index = identity ? result.findIndex((row) => text(row[field]) === identity) : -1;
-    if (entry.$remove === true) {
-      if (index < 0)
-        throw new Error(identity
-          ? `"$remove" names ${field} '${identity}', which matches no existing entry`
-          : `"$remove" entry names no ${fields.join(" or ")} to identify what it removes`);
-      result.splice(index, 1);
-      continue;
-    }
-    const { $remove: _flag, ...value } = entry;
-    if (index >= 0) result[index] = mergeValue(result[index], value);
-    else result.push(structuredClone(value));
-  }
-  return result;
-}
-
-function mergeValue(base, patch) {
-  if (Array.isArray(patch))
-    return Array.isArray(base) ? mergeArray(base, patch) : structuredClone(patch);
-  if (!plainObject(patch)) return patch;
-  const result = plainObject(base) ? structuredClone(base) : {};
-  for (const [key, value] of Object.entries(patch)) {
-    if (value === null) delete result[key];
-    else result[key] = mergeValue(result[key], value);
-  }
-  return result;
-}
-
-function requirementKeySet(draft) {
-  return new Set((Array.isArray(draft?.requirements) ? draft.requirements : [])
-    .map((row) => text(row?.key)).filter(Boolean));
-}
-
-export function mergeSemanticDraft(base, patch) {
-  if (!plainObject(base)) throw new Error("partial revision requires the change's prior draft");
-  if (!plainObject(patch)) throw new Error("partial revision patch must be a JSON object");
-  const merged = mergeValue(base, patch);
-  // A removed requirement takes its evidence entry and task coverage with it;
-  // the compiler owns those links. A task left covering nothing is reported.
-  const kept = requirementKeySet(merged);
-  const removed = [...requirementKeySet(base)].filter((key) => !kept.has(key));
-  if (removed.length) {
-    if (plainObject(merged.evidence))
-      for (const key of removed) delete merged.evidence[key];
-    if (Array.isArray(merged.tasks))
-      merged.tasks = merged.tasks.map((task) => plainObject(task) && Array.isArray(task.covers)
-        ? { ...task, covers: task.covers.filter((key) => !removed.includes(text(key))) }
-        : task);
-  }
-  return merged;
-}
 
 // Authors naturally key overviews by capability:
 // `{ "<capability>": { title, overview } }` or `{ "<capability>": "overview" }`.

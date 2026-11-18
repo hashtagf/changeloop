@@ -21,6 +21,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Changed
 
+- Maintainers: no harness runtime file exceeds 800 lines (the lint ratchet's
+  ceiling, down from 1,000); `foundation.mjs` keeps only composition, with
+  the running command's record in `runtime/composition/operation-state.mjs`.
+
 - The website, docs site, demo, dashboard, and Pi team web UI use one type
   and corner-radius scale (`DESIGN.md`); sizes and radii moved to the nearest
   step, so some text is slightly larger or smaller and 8px labels are now 9px.
