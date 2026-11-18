@@ -684,6 +684,24 @@ test("derived evidence commands preserve the prepared PATH and explicit executio
     .draft.execution, explicit);
 });
 
+test("an authored execution without a test provider keeps the derived test provider", () => {
+  const draft = semanticDraft();
+  const screenshots = { version: 1, providers: {
+    browser: { adapter: "command", capability: "browser", command: ["node", "shot.mjs"], inputMode: "browser-automation" },
+    visual: { capability: "visual", screenshots: ["out/**"], dependsOn: ["browser"] }
+  } };
+  const wired = normalizeSemanticDraft({ ...draft, execution: screenshots }, slugify).draft.execution;
+  assert.deepEqual(Object.keys(wired.providers).sort(), ["browser", "test", "visual"]);
+  assert.equal(wired.providers.test.adapter, "test-discovery", "it still counts the tests (discovery)");
+  assert.deepEqual(wired.providers.visual, screenshots.providers.visual);
+  // A wired test or discovery provider is the author's: nothing is added.
+  for (const test of [{ test: { adapter: "command", command: ["npm", "test"] } },
+    { unit: { adapter: "test-discovery", capability: "test", command: ["npm", "test"] } }]) {
+    const own = { version: 1, providers: { ...screenshots.providers, ...test } };
+    assert.deepEqual(normalizeSemanticDraft({ ...draft, execution: own }, slugify).draft.execution, own);
+  }
+});
+
 // Build runs a repository task's verify in that repository's sandbox; the
 // provider derived from it must run there too (issues #39/#40).
 test("a derived provider runs in the single repository its tasks belong to", () => {

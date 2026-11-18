@@ -11,6 +11,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- A draft that authors `execution` (for example only the screenshot and
+  `visual` providers a prototype needs) keeps the test provider derived from
+  its task verifies when it wires none, so Prove no longer asks the user for
+  outside test-count (discovery) evidence.
 - A required provider now brings the configured providers it `dependsOn`:
   a strict prototype's `visual` provider no longer stops Build with "depends on
   unknown node provider:browser" when no claim declares `browser` itself.

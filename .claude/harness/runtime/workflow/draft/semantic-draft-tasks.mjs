@@ -220,8 +220,7 @@ export function verifyChain(commands) {
         segments: [...commands] };
 }
 
-export function derivedExecution(source, claims, tasks) {
-  if (source.execution) return source.execution;
+function derivedProviders(claims, tasks) {
   const commands = unique(tasks.map((task) => task.verify).filter(Boolean));
   const { command, segments } = verifyChain(commands);
   const capabilities = unique(claims.flatMap((claim) => claim.capabilities));
@@ -246,5 +245,22 @@ export function derivedExecution(source, claims, tasks) {
         }
       : { adapter: "command", capability, command, claims: "declared", ...repository };
   }
-  return { version: 1, providers, services: {} };
+  return providers;
+}
+
+// The draft's evidence wiring. Without an authored `execution` every claimed
+// capability is derived from the task verifies. An authored one is kept as
+// written, with one exception: when it wires no test provider (say, only the
+// screenshot and visual providers a prototype needs), the test provider the
+// verifies give is added, so wiring something else never drops the test run
+// and the test count (discovery) the claims owe.
+export function derivedExecution(source, claims, tasks) {
+  const derived = derivedProviders(claims, tasks);
+  if (!source.execution) return { version: 1, providers: derived, services: {} };
+  const authored = source.execution.providers || {};
+  const wiresTest = Object.entries(authored).some(([name, config]) =>
+    ["test", "discovery"].includes(config?.capability || name) || config?.adapter === "test-discovery");
+  return derived.test && !wiresTest
+    ? { ...source.execution, providers: { test: derived.test, ...authored } }
+    : source.execution;
 }
