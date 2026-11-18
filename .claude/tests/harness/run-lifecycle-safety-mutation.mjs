@@ -65,7 +65,7 @@ const CASES = [
   },
   {
     id: "MUT-SEMANTIC-REFERENCE-REALPATH-DROPPED",
-    sourcePath: ".claude/harness/runtime/workflow/change/change-lifecycle.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/change/semantic-references.mjs",
     expectedKiller: "CASE-SEMANTIC-REFERENCE-CONTAINMENT",
     detector: SEMANTIC_DETECTOR,
     before: "const canonical = realpathSync(path);",
@@ -73,7 +73,7 @@ const CASES = [
   },
   {
     id: "MUT-SEMANTIC-REFERENCE-HTTPS-DROPPED",
-    sourcePath: ".claude/harness/runtime/workflow/change/change-lifecycle.mjs",
+    sourcePath: ".claude/harness/runtime/workflow/change/semantic-references.mjs",
     expectedKiller: "CASE-SEMANTIC-REFERENCE-HTTPS",
     detector: SEMANTIC_DETECTOR,
     before: "if (url.protocol !== \"https:\")",

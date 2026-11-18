@@ -10,9 +10,7 @@ import { delimiter, join } from "node:path";
 
 import { routeRuntimeCommand } from "../../harness/runtime/core/cli-router.mjs";
 import { createFlagParser } from "../../harness/runtime/core/cli-flags.mjs";
-import {
-  assertOpenSpecStrictValid
-} from "../../harness/runtime/workflow/change/change-validation.mjs";
+import { assertOpenSpecStrictValid } from "../../harness/runtime/workflow/change/validation-preflight.mjs";
 import {
   groundingTaskOverlapFindings, groundingInteractionRequirements,
   groundingMissingReadSourceRecovery, groundingPathRowShapeIssue,

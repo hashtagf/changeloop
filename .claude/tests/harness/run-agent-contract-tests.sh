@@ -73,7 +73,7 @@ assert_file_contains "dispatch leaves the group's leases to the harness" \
   "$ROOT/.claude/commands/references/build-dispatch.md" \
   '`advance` holds every lease of the returned group'
 assert_file_contains "dispatch keeps workers away from the task ledger" \
-  "$ROOT/.claude/harness/runtime/workflow/packet/packet-runtime.mjs" 'edit-task-ledger'
+  "$ROOT/.claude/harness/runtime/workflow/packet/task-execution-context.mjs" 'edit-task-ledger'
 assert_file_contains "dispatch keeps worker reports non-authoritative" \
   "$ROOT/.claude/commands/references/build-dispatch.md" 'report is not evidence'
 assert_file_contains "dispatch keeps lease bookkeeping out of the agent" \

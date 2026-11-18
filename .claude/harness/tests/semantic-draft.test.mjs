@@ -9,9 +9,9 @@ import { dirname, isAbsolute, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 import {
-  derivedCapabilityPurpose, mergeSemanticDraft, normalizeSemanticDraft,
-  renderRequirementMarkdown, renderSpecHeading
+  derivedCapabilityPurpose, normalizeSemanticDraft, renderRequirementMarkdown, renderSpecHeading
 } from "../runtime/workflow/draft/semantic-draft.mjs";
+import { mergeSemanticDraft } from "../runtime/workflow/draft/semantic-draft-merge.mjs";
 import {
   deriveRepositoryTaskDependencies, TASK_FIELDS, unknownTaskFieldWarnings
 } from "../runtime/workflow/draft/semantic-draft-tasks.mjs";

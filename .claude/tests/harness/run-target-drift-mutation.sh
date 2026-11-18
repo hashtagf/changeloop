@@ -24,7 +24,7 @@ SOURCE="$WORK/source"
 create_mutation_fixture "$ROOT" "$SOURCE"
 mutation_v2_begin "$WORK"
 REPLAY="$SOURCE/.claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs"
-LANDABLE="$SOURCE/.claude/harness/runtime/workflow/land/land-runtime.mjs"
+LANDABLE="$SOURCE/.claude/harness/runtime/workflow/land/land-target-readiness.mjs"
 SNAPSHOT="$SOURCE/.claude/harness/runtime/workflow/repository/repository-snapshot.mjs"
 
 restore() {
@@ -40,7 +40,7 @@ if grep -rl "FOUNDATION-INJECTED-FAULT" "$SOURCE/.claude/harness" 2>/dev/null | 
 fi
 
 cp "$REPLAY" "$WORK/sandbox-runtime.mjs"
-cp "$LANDABLE" "$WORK/land-runtime.mjs"
+cp "$LANDABLE" "$WORK/land-target-readiness.mjs"
 cp "$SNAPSHOT" "$WORK/repository-snapshot.mjs"
 
 suite_passes() {
@@ -115,10 +115,10 @@ else
   killed_2=true
   killed=$((killed + 1))
 fi
-cp "$WORK/land-runtime.mjs" "$LANDABLE"
-restored_2=false; cmp -s "$WORK/land-runtime.mjs" "$LANDABLE" && restored_2=true
+cp "$WORK/land-target-readiness.mjs" "$LANDABLE"
+restored_2=false; cmp -s "$WORK/land-target-readiness.mjs" "$LANDABLE" && restored_2=true
 result_2=survived killer_2=""; [ "$killed_2" != true ] || { result_2=killed; killer_2=CASE-TARGET-DRIFT-SUITE; }
-mutation_v2_record "MUT-LAND-TARGET-GUARD-REMOVED" ".claude/harness/runtime/workflow/land/land-runtime.mjs" \
+mutation_v2_record "MUT-LAND-TARGET-GUARD-REMOVED" ".claude/harness/runtime/workflow/land/land-target-readiness.mjs" \
   "$applied_2" "$compiled_2" "$result_2" "CASE-TARGET-DRIFT-SUITE" "$killer_2" "$restored_2"
 
 # Fault 3: commit identity is folded back into the composite content hash, so a
@@ -154,7 +154,7 @@ mutation_v2_record "MUT-CONTENT-IDENTITY-BINDS-HEAD" ".claude/harness/runtime/wo
   "$applied_3" "$compiled_3" "$result_3" "CASE-TARGET-DRIFT-SUITE" "$killer_3" "$restored_3"
 
 if ! cmp -s "$WORK/sandbox-runtime.mjs" "$REPLAY" ||
-   ! cmp -s "$WORK/land-runtime.mjs" "$LANDABLE" ||
+   ! cmp -s "$WORK/land-target-readiness.mjs" "$LANDABLE" ||
    ! cmp -s "$WORK/repository-snapshot.mjs" "$SNAPSHOT"; then
   echo "FAIL: a mutated source was not restored byte for byte"
   echo "FOUNDATION_MUTATION_RESULT=not-applied"
