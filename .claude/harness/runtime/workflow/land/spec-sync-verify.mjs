@@ -196,7 +196,7 @@ export const PRE_ARCHIVE_SPEC_SYNC_KINDS = Object.freeze([
   "removed-requirement-absent", "modified-scenario-deleted"
 ]);
 
-export function predictSpecSync({ before, delta } = {}) {
+export function predictSpecSync(/** @type {{ before?: any, delta?: any }} */ { before, delta } = {}) {
   const violations = verifySpecSync({ before, after: before, delta }).violations
     .filter((violation) => PRE_ARCHIVE_SPEC_SYNC_KINDS.includes(violation.kind));
   return { valid: violations.length === 0, violations };

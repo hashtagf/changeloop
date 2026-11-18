@@ -331,6 +331,7 @@ export function createMetricsRuntime({
       contextByKind[row.kind] ||= [];
       contextByKind[row.kind].push(bytes);
     }
+    /** @type {Record<string, Record<string, any>>} */
     const context = Object.fromEntries(Object.entries(contextByKind)
       .map(([kind, values]) => {
         const sorted = [...values].sort((left, right) => left - right);

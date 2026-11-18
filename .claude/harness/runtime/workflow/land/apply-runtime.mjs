@@ -143,7 +143,7 @@ export function createApplyRuntime({
   // Archive appendix inputs. All optional: an unwired reader contributes no
   // rows. `reviewAttemptRecords(id)` must not migrate state;
   // `rolloutGates(id)` reads the active packet, so it runs before the move.
-  reviewAttemptRecords = () => [],
+  reviewAttemptRecords = (_id) => [],
   rolloutGates = () => [],
   // Every repository the topology declares under root, selected or not: its
   // gitlink is its own pointer, never root projection content.
@@ -400,13 +400,11 @@ export function createApplyRuntime({
   // repository is selected; single-repository Apply never constructs it.
   let repositoryDeliverySaga = null;
   const repositoryDelivery = () => repositoryDeliverySaga ||= createRepositoryDeliverySaga({
-    root,
     transactions,
     loadRuntime,
     saveRuntime,
     selectedRepositories,
     git,
-    gitHead,
     fileDigest,
     directoryHash,
     pathInside,
@@ -436,7 +434,6 @@ export function createApplyRuntime({
       return projectionHash(stableHash, entries) === state.workspace.apply.projectionHash
         ? null : entries;
     },
-    cleanupRoot: cleanupApplyTransaction,
     fail
   });
 

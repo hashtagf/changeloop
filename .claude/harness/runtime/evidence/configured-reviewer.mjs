@@ -700,7 +700,7 @@ export function createConfiguredReviewerRuntime({
   // An injected synchronous spawn (tests, doctors) stays authoritative for the
   // asynchronous path too; production uses a real non-blocking child.
   const reviewSpawnAsync = spawnAsync || (spawn === spawnSync
-    ? spawnCapturedAsync : async (...args) => spawn(...args));
+    ? spawnCapturedAsync : async (command, args, options) => spawn(command, args, options));
   const reviewerConfig = reviewerConfigValue.bind(null, { foundationPolicy, fail });
 
   function collectUsage(config, changeId, sessionId, envelope, suffix = "") {

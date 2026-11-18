@@ -113,6 +113,7 @@ function toolPath(input) {
 
 export function toolCallCategory(name, input = {}) {
   const tool = String(name || "");
+  /** @type {Record<string, any>} */
   const args = input && typeof input === "object" ? input : {};
   if (tool === "Bash") {
     const command = String(args.command || "");

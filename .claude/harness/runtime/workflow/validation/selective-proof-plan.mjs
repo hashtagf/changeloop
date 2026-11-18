@@ -150,7 +150,7 @@ function preservationDecision(provider, receipt, current, priorRevision, current
  * identities. A contract-stale receipt is reusable only when the contract is
  * the sole invalidation reason. Everything uncertain is routed to proof again.
  */
-export function planSelectiveProofRecovery({
+export function planSelectiveProofRecovery(/** @type {{ changeId?: string, invalidation?: any, requiredProviders?: any, receiptBindings?: any, currentBindings?: any, priorContractRevision?: any, currentContractRevision?: any }} */ {
   changeId, invalidation, requiredProviders, receiptBindings, currentBindings,
   priorContractRevision, currentContractRevision
 } = {}) {
@@ -282,7 +282,7 @@ export function demoteSelectivePreservation(plan, provider, code) {
 }
 
 /** Build the only receipt mutation authorized by a READY selective plan. */
-export function rebindSelectiveProofReceipt({
+export function rebindSelectiveProofReceipt(/** @type {{ receipt?: any, provider?: any, plan?: any, fromContractFingerprint?: any, toContractFingerprint?: any, reboundAt?: any }} */ {
   receipt, provider, plan, fromContractFingerprint, toContractFingerprint, reboundAt
 } = {}) {
   if (!receipt || typeof receipt !== "object" || Array.isArray(receipt))

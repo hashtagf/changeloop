@@ -648,7 +648,7 @@ function rewriteRequirementBlock(dir, key, scenarios, replacement, target = null
 // Every proposal and design edit is computed before any file is written, so a
 // section that cannot be placed leaves the packet unchanged; the caller stages
 // the packet and rolls back if a later spec rewrite fails.
-export function writeSemanticAmendment(dir, compiled, slugify, {
+export function writeSemanticAmendment(dir, compiled, slugify, /** @type {{ schema?: any, revision?: any, date?: any }} */ {
   schema, revision = null, date = null
 } = {}) {
   const proposalPath = join(dir, "proposal.md");

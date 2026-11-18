@@ -68,7 +68,7 @@ export function waiveGateOperation(context, id, flags = {}) {
 // reference, bound to the current workspace and contract revision), and the
 // row keeps the differences the user accepted, so proof and Land report a
 // mismatch the user accepted rather than a pass.
-export function recordVisualDriftWaiver(context, id, { decisionRef, reason } = {}) {
+export function recordVisualDriftWaiver(context, id, /** @type {{ decisionRef?: any, reason?: any }} */ { decisionRef, reason } = {}) {
   const request = waiverRequest({ capability: "visual", "decision-ref": decisionRef, reason },
     context.fail);
   if (!request.reason) context.fail("accepting visual differences requires a reason");

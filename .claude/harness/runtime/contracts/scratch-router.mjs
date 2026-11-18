@@ -60,6 +60,7 @@ export const ARTIFACTS = Object.freeze({
 
 const has = (s, ...keys) => keys.some((key) => s.has(key));
 // [id, key, name, group, detect(signals), artifacts, roles]
+/** @type {Array<[number, string, string, string, (signals: Set<string>) => boolean, string[], string[]]>} */
 const DOMAIN_ROWS = [
   [1, "requirement", "Requirement / Product", "product", (s) => has(s, "feature", "experiment"), ["flow"], ["product-owner"]],
   [2, "ux-ui", "UX/UI Design", "product", (s) => has(s, "ui"), ["flow", "ui"], ["product-owner"]],
@@ -100,6 +101,7 @@ export const DOMAINS = Object.freeze(DOMAIN_ROWS.map(([id, key, name, group, , a
 // Paths a change touches can reveal a risk its draft did not declare. They only
 // raise routing (level, domains, artifacts, approval lanes); discovery and
 // review still follow the declared signals.
+/** @type {ReadonlyArray<[string, RegExp]>} */
 const PATH_SIGNALS = Object.freeze([
   ["persisted-data-change", /(^|\/)(migrations?|migrate|prisma)\/|(^|\/)schema\.[a-z]+$|\.sql$/i],
   ["access-control", /(^|\/)(auth|authz|permissions?|rbac|acl)(\/|[._-])/i],

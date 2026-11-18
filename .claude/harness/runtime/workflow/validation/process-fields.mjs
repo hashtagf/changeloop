@@ -59,7 +59,7 @@ export function validateDecisionLog(value, path = "decisionLog") {
   return issues;
 }
 
-export function renderDecisionLog(value, { language } = {}) {
+export function renderDecisionLog(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!Array.isArray(value) || value.length === 0) return "";
   const l = labels(language);
   return table([l.date, l.question, l.options, l.answer, l.by], value.filter(isObject).map((row) => {
@@ -96,7 +96,7 @@ export function validateCommunication(value, path = "communication") {
   return issues;
 }
 
-export function renderCommunication(value, { language } = {}) {
+export function renderCommunication(value, /** @type {{ language?: string }} */ { language } = {}) {
   const parts = communicationParts(value);
   const l = labels(language);
   const blocks = [];
@@ -133,7 +133,7 @@ export function validateReleaseNote(value, path = "releaseNote") {
   return issues;
 }
 
-export function renderReleaseNote(value, { language } = {}) {
+export function renderReleaseNote(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (typeof value === "string") return value.trim();
   if (!isObject(value)) return "";
   const l = labels(language);
@@ -203,7 +203,7 @@ export function complianceAction(value, { enabled = false, path = "compliance" }
   return { owner: "agent", kind: "edit", issues };
 }
 
-export function renderComplianceRecord(value, { language } = {}) {
+export function renderComplianceRecord(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const rows = COMPLIANCE_KEYS.filter((key) => key === "emergency" ? typeof value.emergency === "boolean" : present(value[key]))
@@ -251,7 +251,7 @@ function findingText(finding) {
 // The review record: one row per finding of every completed review attempt,
 // with the round that fixed it (a later attempt that verified its id, or the
 // first later attempt that no longer reports it). "" when no review ran.
-export function renderReviewRecord(attempts, { language } = {}) {
+export function renderReviewRecord(attempts, /** @type {{ language?: string }} */ { language } = {}) {
   const l = archiveLabels(language);
   const completed = (Array.isArray(attempts) ? attempts : [])
     .filter((attempt) => isObject(attempt) && attempt.status === "completed")
@@ -279,7 +279,7 @@ export function renderReviewRecord(attempts, { language } = {}) {
 
 // Deferred post-release provider gates (release health, experiment
 // guardrails): visible after Land without ever blocking proof or Land.
-export function renderRolloutGates(gates, { language } = {}) {
+export function renderRolloutGates(gates, /** @type {{ language?: string }} */ { language } = {}) {
   const rows = (Array.isArray(gates) ? gates : []).filter(isObject);
   if (rows.length === 0) return "";
   const l = archiveLabels(language);
@@ -289,7 +289,7 @@ export function renderRolloutGates(gates, { language } = {}) {
 }
 
 // The compliance change record plus the recorded spec-approval decision.
-export function renderComplianceChangeRecord(value, { language, approvalRef } = {}) {
+export function renderComplianceChangeRecord(value, /** @type {{ language?: string, approvalRef?: string }} */ { language, approvalRef } = {}) {
   const record = renderComplianceRecord(value, { language });
   const approval = present(approvalRef) ? `${archiveLabels(language).approval}: \`${text(approvalRef)}\`` : "";
   return [record, approval].filter(Boolean).join("\n\n");
@@ -336,7 +336,7 @@ function durationText(ms) {
 // row per receipt, advisories, and where the review record is. A receipt that
 // cannot be read keeps its provider and digest with status `unavailable`;
 // it never reads as a pass. "" when there is no proof run.
-export function renderVerificationRecord({ language, proof, receipts = {}, reviewAttempts = [] } = {}) {
+export function renderVerificationRecord(/** @type {{ language?: string, proof?: any, receipts?: any, reviewAttempts?: any[] }} */ { language, proof, receipts = {}, reviewAttempts = [] } = {}) {
   if (!isObject(proof) || !present(proof.proofRunId)) return "";
   const l = language === "th" ? VERIFICATION_LABELS.th : VERIFICATION_LABELS.en;
   const summary = table([l.proofRun, l.status, l.workspaceHash, l.contractFingerprint], [[

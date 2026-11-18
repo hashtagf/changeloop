@@ -148,8 +148,8 @@ export function parseRunnerSummaryOutput(value) {
     const totalTests = Number(unittest[1]);
     if (!Number.isSafeInteger(totalTests)) return null;
     const failed = unittest[2] === "OK" ? 0 :
-      (unittest[3].match(/(?:failures|errors)=(\d+)/g) || [])
-        .reduce((sum, part) => sum + Number(part.split("=")[1]), 0) || 1;
+      [...unittest[3].matchAll(/(?:failures|errors)=(\d+)/g)]
+        .reduce((sum, part) => sum + Number(part[1]), 0) || 1;
     return { totalTests, passed: Math.max(0, totalTests - failed), failed,
       format: "unittest-summary", criticalCases: [] };
   }
@@ -199,6 +199,7 @@ export function parseAssertionSummaryOutput(value) {
 // also printed by linters and builders, so it counts only beside node's own
 // runner summary reporting at least one test.
 const NODE_RUNNER_SUMMARY = /^(?:ℹ|#) (?:tests|pass)\s+[1-9]\d*\s*$/m;
+/** @type {ReadonlyArray<[string, RegExp, RegExp?]>} */
 const EXECUTED_TEST_MARKERS = Object.freeze([
   ["node-spec-pass", /^\s*✔\s+\S/m, NODE_RUNNER_SUMMARY],
   ["tap-ok", /^\s*ok\s+[1-9]\d*\b/m],

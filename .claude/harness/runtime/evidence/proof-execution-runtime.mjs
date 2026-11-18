@@ -253,7 +253,7 @@ export function createProofExecutionRuntime({
   collectableExecutionNodes, startRequiredServices, runExecutionDag,
   durableArtifact, pendingTasks, proofPreflight, prove, proofAudit,
   readJson, writeJson = (..._args) => {}, proofPath, proofAdvancePath = (..._args) => null,
-  proofAdvanceLockPath = (..._args) => null, providerCapability = (provider) => provider,
+  proofAdvanceLockPath = (..._args) => null, providerCapability = (provider, _config) => provider,
   providerConfig = (..._args) => null, providerWorkspaceHash = () => null,
   reviewPolicy = (..._args) => ({ tier: "low", requiresHumanFinal: false }),
   deliveredAiAttempts = (..._args) => [], recordDeterministicReviewClosure = (..._args) => null,
@@ -261,7 +261,7 @@ export function createProofExecutionRuntime({
   // (id, request, command) => Promise | null. Starts the harness-runnable
   // configured review in the foreground; null means the route is a handoff.
   startConcurrentReview = null,
-  stableHash = (value) => JSON.stringify(value), die, markBlocked = () => {},
+  stableHash = (value) => JSON.stringify(value), die, markBlocked = (_stop) => {},
   // (id) => boolean. Whether the retained proof binds the current receipts;
   // advance treats a proven change whose receipts were re-earned as stale.
   deliveryProofCurrent = (..._args) => true,
@@ -273,7 +273,7 @@ export function createProofExecutionRuntime({
   testDiscrimination = null,
   // (id, provider) => finding | null. The performance-regression finding a
   // failed benchmark receipt carries (benchmark-runtime.mjs).
-  performanceRegression = () => null,
+  performanceRegression = (_id, _provider) => null,
   // (id, provider) => receipt | null. A visual receipt carries the reviewer's
   // differences; receipts live beside proof.json.
   visualReceipt = (id, provider) => {

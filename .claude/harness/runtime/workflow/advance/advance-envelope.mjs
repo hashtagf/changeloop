@@ -244,6 +244,7 @@ export function repairTargetFromError(error) {
   const lines = String(error?.message || error || "").split("\n")
     .map((line) => line.replace(/^\s*-\s+/, "").trim()).filter(Boolean);
   const field = "(-{0,2}[A-Za-z_$][\\w$.\\[\\]-]*)";
+  /** @type {Array<[RegExp, (match: RegExpMatchArray) => string]>} */
   const patterns = [
     [new RegExp(`['\`]?${field}['\`]? must (?:be|equal|use) ([^;\\n]+?)(?:[;.]\\s|[;.]?$)`), (m) => m[2].trim()],
     [new RegExp(`requires (?:a )?non-empty ['\`]${field}['\`]( array)?`), (m) => m[2] ? "a non-empty array" : "a non-empty value"],

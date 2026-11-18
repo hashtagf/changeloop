@@ -338,7 +338,7 @@ export function reviewDispatchScope(details, reviewerType, aiAttempts,
 
 export function reviewDispatchAttemptValue(context, id, details, history,
   reviewerType, scopeMode) {
-  const attempt = {
+  /** @type {Record<string, any>} */ const attempt = {
     version: 2, changeId: id,
     attempt: Number(history.totalAttempts || 0) + 1,
     reviewerType,
@@ -681,7 +681,7 @@ export function createReviewAttemptStore({
     } else {
       const total = Math.max(evidenced, RECOVERED_DELIVERED_FLOOR);
       for (const attempt of [total - 1, total]) {
-        const placeholder = {
+        /** @type {Record<string, any>} */ const placeholder = {
           version: 1, changeId: id, attempt,
           reviewerType: "ai", status: "inconclusive",
           workspaceHash: null, reviewBinding: null,

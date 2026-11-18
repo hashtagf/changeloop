@@ -165,6 +165,7 @@ export function createAgentDispatchRuntime({
   }
 
   function showDispatch(id, flags = {}) {
+    /** @type {Record<string, any>} */
     let value = dispatchValue(id);
     const pretty = Boolean(flags.pretty);
     const limit = Number(policy().execution.planSummaryBytes);

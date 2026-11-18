@@ -51,6 +51,7 @@ const ML_PATH = /(?:^|\/)(?:prompts|evals)\//i;
 // A pipeline definition is pipeline work only: a `config.yml` inside .circleci
 // is not application configuration.
 const CICD_PATH = /(?:^|\/)\.github\/workflows\/|(?:^|\/)\.gitlab-ci\.ya?ml$|(?:^|\/)Jenkinsfile$|(?:^|\/)azure-pipelines\.ya?ml$|(?:^|\/)\.circleci\//;
+/** @type {Array<[string, RegExp]>} */
 const PATH_TYPES = [
   ["ui", /(?:^|\/)(?:components?|pages|views|screens|ui|layouts?)\//i],
   ["api", /\.(?:proto|graphql|gql)$|openapi|swagger|(?:^|\/)(?:api|routes?|controllers?|handlers?|endpoints?|resolvers?)\//i],
@@ -65,6 +66,7 @@ const PATH_TYPES = [
 // Paths that carry no product code of their own: package manifests and
 // lockfiles (dependency work), documentation, tests, and repository
 // housekeeping. A change made only of these infers its kind from them.
+/** @type {Array<[string, RegExp]>} */
 const LIGHT_PATHS = [
   ["dependency", /(?:^|\/)(?:package(?:-lock)?\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?|go\.(?:mod|sum)|Cargo\.(?:toml|lock)|requirements(?:[-.][\w-]+)?\.txt|Pipfile(?:\.lock)?|poetry\.lock|uv\.lock|Gemfile(?:\.lock)?|composer\.(?:json|lock))$/],
   ["docs", /\.(?:md|mdx|rst|txt)$|(?:^|\/)docs?\//i],
@@ -481,6 +483,7 @@ function mermaidSources(draft) {
 
 // Typed declarations that name a work type the draft must also declare.
 // Prose is never read; only these fields decide.
+/** @type {ReadonlyArray<[string, (draft: any) => boolean, string]>} */
 const WORK_TYPE_SIGNALS = Object.freeze([
   ["integration", (draft) => (Array.isArray(draft?.integrations) && draft.integrations.length > 0) ||
     riskSignalsOf(draft).includes("external-integration"), "integrations or riskSignals external-integration"],
@@ -526,6 +529,7 @@ function taskIdsFor(path, tasks) {
     .map((task) => task.id).filter(Boolean);
 }
 
+/** @type {Array<[RegExp, string]>} */
 const CHANGE_MARK = [
   [/^(?:add|new|create)/i, "+"],
   [/^(?:delete|remove)/i, "-"]

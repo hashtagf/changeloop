@@ -187,7 +187,7 @@ export function resolveExecWorkspace({
   if (explicit) return start(explicit, located(explicit));
   const byCaller = [...sandboxes.keys()].filter((name) => name !== "root")
     .map((name) => ({ repository: name, ...sandboxes.get(name) }))
-    .map((sandbox) => [sandbox, located(sandbox)])
+    .map((sandbox) => /** @type {[any, string]} */ ([sandbox, located(sandbox)]))
     .filter(([, cwd]) => cwd)
     .sort((left, right) => right[1].length - left[1].length);
   if (byCaller.length) return start(...byCaller[0]);
@@ -222,7 +222,7 @@ export function createExecRuntime({
   // repository paths) before a check runs in one of them.
   prepareWorkspace = (..._args) => {}
 }) {
-  function execObserved(id, commandArgs, { phase, repository = null, task = null } = {}) {
+  function execObserved(id, commandArgs, /** @type {{ phase?: any, repository?: any, task?: any }} */ { phase, repository = null, task = null } = {}) {
     const state = loadRuntime(id);
     assertApproval?.(id, state);
     if (state.status === "archived")

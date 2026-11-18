@@ -52,7 +52,7 @@ export function verifyTestFileReferences(command) {
  * `tasks` rows carry { key|semanticKey|id, verify, paths, repository? };
  * `scopes` adds paths owned by tasks outside this batch.
  */
-export function verifyPathIssues(tasks, { exists, scopes = [], label = "task" } = {}) {
+export function verifyPathIssues(tasks, /** @type {{ exists?: any, scopes?: any[], label?: string }} */ { exists, scopes = [], label = "task" } = {}) {
   const rows = Array.isArray(tasks) ? tasks.filter((task) => task && typeof task === "object") : [];
   const owned = [...stringList(scopes), ...rows.flatMap((task) => stringList(task.paths))];
   const issues = [];
@@ -200,7 +200,7 @@ function selectionIds(selection) {
  * outside its task repository. `repositories` are catalog rows
  * ({id, relativePath, path}); `selection` is the draft's `repositories`.
  */
-export function taskRepositoryIssues(tasks, {
+export function taskRepositoryIssues(tasks, /** @type {{ repositories?: any[], selection?: any, exists?: any, label?: string, selectionSource?: string }} */ {
   repositories = [], selection, exists = (..._args) => false, label = "task", selectionSource = "draft"
 } = {}) {
   const rows = Array.isArray(tasks) ? tasks.filter((task) => task && typeof task === "object") : [];

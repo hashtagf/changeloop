@@ -311,6 +311,8 @@ export function createRepositoryDeliverySaga({
     node.status = "rolled-back";
   }
 
+  // One journal entry per changed path; Land adds `backup` when it stages it.
+  /** @returns {Array<Record<string, any>>} */
   function childProjection(repository, record, runtime) {
     return childDiffNames(git, repository, record, fail).map((path) => ({
       path,

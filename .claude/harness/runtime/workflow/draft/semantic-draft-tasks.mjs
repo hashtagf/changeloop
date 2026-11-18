@@ -149,7 +149,7 @@ function repositoryContains(outer, inner) {
  * `repositories`, whose `dependsOn` overrides the catalog's. `consumers`, when
  * given, limits which task ids may receive edges (an amendment's added tasks).
  */
-export function deriveRepositoryTaskDependencies(tasks, {
+export function deriveRepositoryTaskDependencies(tasks, /** @type {{ repositories?: any[], selection?: any, consumers?: any }} */ {
   repositories = [], selection, consumers = null
 } = {}) {
   const rows = (Array.isArray(tasks) ? tasks : []).map((task) => ({

@@ -94,7 +94,7 @@ export function deliveryNamingValues({ changeId, narrative = /** @type {Record<s
   };
 }
 
-function fillTemplate(template, setting, values, transform = (value) => value) {
+function fillTemplate(template, setting, values, transform = (value, _name) => value) {
   const names = templatePlaceholders(template, setting);
   if (names.includes("ticket") && !values.ticket)
     throw namingInvalid(values.ticketConfigured

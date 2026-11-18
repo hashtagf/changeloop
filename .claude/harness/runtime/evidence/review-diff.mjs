@@ -149,7 +149,7 @@ export const MEDIUM_TIER_SPEED_SAFE_TRIGGERS = Object.freeze([
   "independence-waived-self-review"
 ]);
 
-export function reviewModelClass({
+export function reviewModelClass(/** @type {{ tier?: any, deliveredAiCount?: number, triggers?: any[], declaredReview?: boolean, settings?: any }} */ {
   tier, deliveredAiCount = 0, triggers = [], declaredReview = false, settings = /** @type {Record<string, any>} */ ({})
 } = {}) {
   if (!["low", "medium"].includes(tier) || Number(deliveredAiCount) > 0)
@@ -406,7 +406,7 @@ export function parseSpecGaps(review) {
 // already-structured object). Returns null when no block exists. Unknown or
 // malformed statuses stay null and count as unsure; with `expectedIds`, an id
 // the reviewer did not answer is unsure too. Coverage is never inferred.
-export function parseScenarioCoverage(review, { expectedIds } = {}) {
+export function parseScenarioCoverage(review, /** @type {{ expectedIds?: any }} */ { expectedIds } = {}) {
   let block = null;
   if (review && typeof review === "object" && Array.isArray(review.scenarioCoverage)) block = review;
   else if (typeof review === "string") block = coverageCandidates(review).at(-1) || null;

@@ -111,7 +111,7 @@ function surfacePresent(draft, surface) {
 // both languages, the draft fields that source it, and whether the draft
 // specifies them. `present: false` means the draft does not say; the page
 // writes "unknown" there and never invents an endpoint, table, or number.
-export function checklistFor(draft, { workTypes } = {}) {
+export function checklistFor(draft, /** @type {{ workTypes?: any }} */ { workTypes } = {}) {
   const types = workTypes && workTypes.length ? workTypes : declaredWorkTypes(draft);
   const wanted = new Set(types.flatMap((type) => TYPE_SURFACES[type] || []));
   if (!wanted.size) wanted.add("ba");
@@ -139,7 +139,7 @@ export function prototypeExample(draft) {
 //   unknown  the example declares no `covers`
 //   covered  the example lists the key
 //   missing  the example declares `covers` without the key
-export function coverageReport(draft, { workTypes } = {}) {
+export function coverageReport(draft, /** @type {{ workTypes?: any }} */ { workTypes } = {}) {
   const items = checklistFor(draft, { workTypes });
   const example = prototypeExample(draft);
   const declared = example && Array.isArray(example.covers) ? new Set(example.covers.map(String)) : null;
@@ -185,7 +185,7 @@ export function coversIssues(draft) {
 // One advisory line for `change start`: what the page still owes, or nothing.
 // Never a repair and never a gate. A change whose only surface is before/after
 // (docs, chore) owes nothing more and prints nothing.
-export function checklistNoteLine(draft, { workTypes } = {}) {
+export function checklistNoteLine(draft, /** @type {{ workTypes?: any }} */ { workTypes } = {}) {
   const report = coverageReport(draft, { workTypes });
   if (report.total <= 1 && report.state === "none") return "";
   const names = (items) => items.map((item) => item.key).join(", ");

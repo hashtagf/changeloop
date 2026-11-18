@@ -357,11 +357,11 @@ export async function startRequiredServicesOperation(context, id, nodes, proofRu
       const failures = [];
       for (let index = 0; index < batch.length; index += 1) {
         pending.splice(pending.indexOf(batch[index].name), 1);
-        if (results[index].status === "fulfilled") {
-          sessions.push(results[index].value);
+        const settled = results[index];
+        if (settled.status === "fulfilled") {
+          sessions.push(settled.value);
           completed.add(batch[index].name);
-        } else failures.push(`${batch[index].name}: ${
-          results[index].reason?.message || results[index].reason}`);
+        } else failures.push(`${batch[index].name}: ${settled.reason?.message || settled.reason}`);
       }
       if (failures.length) throw new Error(`service startup failed: ${failures.join("; ")}`);
     }
@@ -1032,11 +1032,11 @@ export function createAdapterRuntime({
       return executeContractDigest(id, provider, config, proofRunId);
     if (config.adapter === "benchmark")
       return executeBenchmark(id, provider, config, proofRunId);
-    const execution = adapterExecutionContext(
+    const context = adapterExecutionContext(
       id, provider, config, proofRunId, commandCache);
-    execution.result = await execution.cached.result;
-    execution.commandExecutionId = execution.cached.commandExecutionId;
-    execution.reusedTaskCheck = execution.cached.reusedTaskCheck || null;
+    const execution = { ...context, result: await context.cached.result,
+      commandExecutionId: context.cached.commandExecutionId,
+      reusedTaskCheck: context.cached.reusedTaskCheck || null };
     assertReadRepositories(provider, execution.repositoryManifest.rows);
     const evidenceRow = adapterEvidence(id, provider, config, execution);
     const baseFlags = adapterBaseFlags(
