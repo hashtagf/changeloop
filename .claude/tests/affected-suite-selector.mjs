@@ -121,6 +121,23 @@ const RULES = [
   ]]
 ];
 
+// Slow-tier suites the default gate still runs when these files change: each
+// is the only local check of what the edit alters, and CI once caught what the
+// default gate could not (printed CLI output read by the installer smoke).
+export const PROMOTED = [
+  [/^\.claude\/harness\/runtime\/(?:core\/cli-router|workflow\/draft\/(?:semantic-draft-templates|amendment-tasks)|workflow\/change\/change-materialize)\.mjs$|^\.claude\/harness\/commands\.json$|^cli\.sh$/,
+    ["installer smoke"]]
+];
+
+export function promotedSuites(files, suiteLabels) {
+  const known = new Set(suiteLabels);
+  const selected = new Set();
+  for (const file of new Set(files))
+    for (const [pattern, labels] of PROMOTED)
+      if (pattern.test(file)) for (const label of labels) if (known.has(label)) selected.add(label);
+  return [...selected].sort();
+}
+
 const CROSS_CUTTING = /^(?:\.claude\/harness\/(?:foundation\.mjs|protocol\.json)|\.claude\/harness\/runtime\/(?:version\.mjs|core\/cli-router\.mjs|core\/workspace-policy\.mjs)|\.claude\/tests\/lib\/)/;
 
 function addKnown(target, labels, known) {
@@ -232,6 +249,10 @@ if (invokedDirectly) {
   const files = Object.hasOwn(process.env, "FOUNDATION_CHANGED_FILES")
     ? process.env.FOUNDATION_CHANGED_FILES.split("\n").filter(Boolean)
     : changedFiles(root, process.env.FOUNDATION_TEST_BASE || null);
+  if (process.argv[3] === "--promoted") {
+    for (const label of promotedSuites(files, labels)) console.log(label);
+    process.exit(0);
+  }
   const result = selectAffectedSuites(files, labels,
     process.env.FOUNDATION_SUITE_REGISTRY || "", {
       releaseOnly: String(process.env.FOUNDATION_RELEASE_ONLY_SUITES || "")

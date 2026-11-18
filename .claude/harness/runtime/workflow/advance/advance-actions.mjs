@@ -7,6 +7,17 @@ import {
   repositoryWorkspace, resume, taskCheckCommand, taskVerification
 } from "./advance-envelope.mjs";
 
+// The proof run for this pass: the flags a recorded answer carries (used once
+// per invocation) and the cursor a quiet proof left for its next run.
+export function proofRunOperation(runProof, proofFlags, automation) {
+  const answered = proofFlags && !automation.proofFlagsUsed ? proofFlags : null;
+  if (answered) automation.proofFlagsUsed = true;
+  const cursor = typeof automation.proofCursorToken === "string"
+    ? { "cursor-token": automation.proofCursorToken } : {};
+  const flags = { ...(answered || {}), ...cursor };
+  return Object.keys(flags).length ? (change) => runProof(change, flags) : runProof;
+}
+
 // An exhausted request keeps replaying until its consumed attempts are
 // acknowledged; name the supported command so nobody moves request files.
 export function reviewInfrastructureAlternatives(id) {

@@ -114,8 +114,9 @@ grep -q 'openspec native benchmark' "$WORK/missing-dependencies-list.out" || {
 # Two tiers. The default is the fast local gate: it keeps ordinary suites and
 # drops the slow tier and the exclusive benchmark; `--quick` is the same gate.
 # `--full` (CI) owns every non-release row, and `--release` adds the sentinel.
-sh "$HERE/../run-all.sh" --list > "$WORK/default-list.out"
-sh "$HERE/../run-all.sh" --quick --list > "$WORK/quick-list.out"
+# An empty change set keeps the default list independent of the working tree.
+FOUNDATION_CHANGED_FILES= sh "$HERE/../run-all.sh" --list > "$WORK/default-list.out"
+FOUNDATION_CHANGED_FILES= sh "$HERE/../run-all.sh" --quick --list > "$WORK/quick-list.out"
 sh "$HERE/../run-all.sh" --full --list > "$WORK/full-list.out"
 sh "$HERE/../run-all.sh" --release --list > "$WORK/release-list.out"
 cmp -s "$WORK/default-list.out" "$WORK/quick-list.out" || {
@@ -159,6 +160,16 @@ while IFS= read -r label; do
   grep -qFx -- "$label" "$WORK/default-list.out" || {
     echo "FAIL: EARLY suite is not in the default gate: $label"; exit 1; }
 done < "$WORK/tier-EARLY.out"
+# A file only a slow suite checks locally promotes that suite into the default
+# gate (printed CLI output and the installer smoke); other edits do not.
+promoted="$(FOUNDATION_CHANGED_FILES='.claude/harness/runtime/workflow/draft/semantic-draft-templates.mjs' \
+  sh "$RUN_ALL" --list 2>/dev/null)"
+printf '%s\n' "$promoted" | grep -qFx 'installer smoke' || {
+  echo "FAIL: a CLI output edit did not promote the installer smoke into the default gate"; exit 1; }
+unpromoted="$(FOUNDATION_CHANGED_FILES='README.md' sh "$RUN_ALL" --list 2>/dev/null)"
+if printf '%s\n' "$unpromoted" | grep -qFx 'installer smoke'; then
+  echo "FAIL: an unrelated edit promoted the installer smoke"; exit 1
+fi
 slow_affected="$(FOUNDATION_CHANGED_FILES='.claude/tests/harness/run-installer-tests.sh' \
   sh "$RUN_ALL" --affected --list)"
 printf '%s\n' "$slow_affected" | grep -qFx 'installer smoke' || {

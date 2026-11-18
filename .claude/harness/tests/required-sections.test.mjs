@@ -3,8 +3,10 @@ import test from "node:test";
 import { normalizeSemanticDraft } from "../runtime/workflow/draft/semantic-draft.mjs";
 import { semanticIntakeAction } from "../runtime/workflow/validation/semantic-intake.mjs";
 import {
-  devDocumentIssues, requiredDevSections
+  devDocumentIssues, devDocumentShapeIssues, requiredDevSections
 } from "../runtime/workflow/validation/dev-document.mjs";
+import { designBlueprintIssues } from "../runtime/workflow/validation/design-blueprints.mjs";
+import { semanticDraftTemplate } from "../runtime/workflow/draft/semantic-draft-templates.mjs";
 
 const slugify = (value) => String(value).toLowerCase()
   .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -218,4 +220,50 @@ test("ml, experiment, and infra require the fields that were only recommended", 
   assert.match(named[0], /experimentDesign\.stopRules/);
   assert.ok(issuesOf({ infraPlan: { planDiff: "+1", blastRadius: "b", environments: ["staging"] } })
     .some((issue) => issue.includes("infraPlan.costDelta is required")));
+});
+
+// A required free-text field can always be answered honestly: 'none: <reason>'
+// passes, so an author never invents a value to satisfy the shape. Walks every
+// string field of every work-type example, nested objects and rows included.
+// Only fields whose value is a fixed classification are exempt.
+const CLASSIFICATION_FIELDS = new Set([
+  "bugfix.variant", "boundaries[].mode", "libraryContract.semver", "nfr[].characteristic",
+  "threatModel.threats[].stride", "threatModel.threats[].likelihood", "threatModel.threats[].impact"
+]);
+
+function stringFields(value, path = "") {
+  if (typeof value === "string") return [path];
+  if (Array.isArray(value)) return value.flatMap((row, index) =>
+    stringFields(row, `${path}[${index}]`));
+  if (value && typeof value === "object") return Object.entries(value).flatMap(([key, item]) =>
+    stringFields(item, path ? `${path}.${key}` : key));
+  return [];
+}
+
+function setAt(target, path, value) {
+  const parts = path.match(/[^.[\]]+/g);
+  const last = parts.pop();
+  const parent = parts.reduce((node, part) => node[part], target);
+  parent[last] = value;
+}
+
+test("every required free-text field accepts 'none: <reason>'", () => {
+  const { workTypeExamples, workType: _type, userFlow: _flow, ...base } = semanticDraftTemplate();
+  const rejected = [];
+  let checked = 0;
+  for (const [name, block] of Object.entries(workTypeExamples)) {
+    if (name === "use") continue;
+    const type = name.startsWith("bugfix") ? "bugfix" : name;
+    for (const field of stringFields(block)) {
+      if (CLASSIFICATION_FIELDS.has(field.replace(/\[\d+\]/g, "[]"))) continue;
+      const copy = structuredClone(block);
+      setAt(copy, field, "none: nothing of this kind applies to the change");
+      const draft = { ...base, workType: [type], ...copy };
+      const issues = [...devDocumentIssues(draft), ...designBlueprintIssues(draft), ...devDocumentShapeIssues(draft)];
+      checked += 1;
+      if (issues.length) rejected.push(`${name} ${field}: ${issues[0]}`);
+    }
+  }
+  assert.ok(checked > 100, `walked ${checked} fields`);
+  assert.deepEqual(rejected, [], "accept 'none: <reason>' (explicit-absence.mjs) or list a classification field");
 });

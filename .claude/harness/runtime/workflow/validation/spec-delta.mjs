@@ -70,15 +70,26 @@ export function createSpecDeltaValidator({ root, activeChangePath, walk, fail })
       `${left.path}:${left.name}`.localeCompare(`${right.path}:${right.name}`));
   }
 
-  function droppedScenarioFindings(id, dir = activeChangePath(id)) {
+  // Each delta spec of the change with its capability, its path, and the
+  // canonical spec it applies to (null for a new capability).
+  function deltaSpecs(dir) {
     const specsRoot = join(dir, "specs");
-    const findings = [];
-    if (!existsSync(specsRoot)) return findings;
+    const deltas = [];
+    if (!existsSync(specsRoot)) return deltas;
     walk(specsRoot, (path) => {
       if (!path.endsWith(".md")) return;
       const capability = relative(specsRoot, path).replaceAll("\\", "/").split("/")[0];
       const currentPath = join(root, "openspec", "specs", capability, "spec.md");
-      if (!existsSync(currentPath)) return;
+      deltas.push({ capability, path, relativePath: relative(root, path).replaceAll("\\", "/"),
+        currentPath: existsSync(currentPath) ? currentPath : null });
+    });
+    return deltas;
+  }
+
+  function droppedScenarioFindings(id, dir = activeChangePath(id)) {
+    const findings = [];
+    for (const { capability, path, relativePath, currentPath } of deltaSpecs(dir)) {
+      if (!currentPath) continue;
       const current = new Map(parseSpecRequirements(readFileSync(currentPath, "utf8"))
         .map((requirement) => [requirement.name, requirement.scenarios]));
       for (const requirement of parseSpecRequirements(readFileSync(path, "utf8"))) {
@@ -86,54 +97,38 @@ export function createSpecDeltaValidator({ root, activeChangePath, walk, fail })
         const declared = new Set(requirement.scenarios);
         for (const scenario of current.get(requirement.name) || [])
           if (!declared.has(scenario))
-            findings.push({
-              capability,
-              requirement: requirement.name,
-              scenario,
-              path: relative(root, path).replaceAll("\\", "/")
-            });
+            findings.push({ capability, requirement: requirement.name, scenario, path: relativePath });
       }
-    });
+    }
     return findings;
   }
 
   function newCapabilityOperationFindings(id, dir = activeChangePath(id)) {
-    const specsRoot = join(dir, "specs");
     const findings = [];
-    if (!existsSync(specsRoot)) return findings;
-    walk(specsRoot, (path) => {
-      if (!path.endsWith(".md")) return;
-      const capability = relative(specsRoot, path).replaceAll("\\", "/").split("/")[0];
-      const currentPath = join(root, "openspec", "specs", capability, "spec.md");
-      if (existsSync(currentPath)) return;
+    for (const { capability, path, relativePath, currentPath } of deltaSpecs(dir)) {
+      if (currentPath) continue;
       for (const requirement of parseSpecRequirements(readFileSync(path, "utf8"))) {
         if (/^ADDED\b/i.test(requirement.section || "")) continue;
         findings.push({
           capability,
           operation: requirement.section || "an ungrouped requirement",
           requirement: requirement.name,
-          path: relative(root, path).replaceAll("\\", "/")
+          path: relativePath
         });
       }
-    });
+    }
     return findings;
   }
 
   function existingCapabilityOperationFindings(id, dir = activeChangePath(id)) {
-    const specsRoot = join(dir, "specs");
     const findings = [];
-    if (!existsSync(specsRoot)) return findings;
-    walk(specsRoot, (path) => {
-      if (!path.endsWith(".md")) return;
-      const capability = relative(specsRoot, path).replaceAll("\\", "/").split("/")[0];
-      const currentPath = join(root, "openspec", "specs", capability, "spec.md");
-      if (!existsSync(currentPath)) return;
+    for (const { capability, path, currentPath } of deltaSpecs(dir)) {
+      if (!currentPath) continue;
       const current = new Set(parseSpecDocument(readFileSync(currentPath, "utf8"))
         .map((requirement) => requirement.name));
-      const requirements = parseSpecDocument(readFileSync(path, "utf8"));
       findings.push(...existingCapabilityRequirementFindings(
-        capability, current, requirements));
-    });
+        capability, current, parseSpecDocument(readFileSync(path, "utf8"))));
+    }
     return findings;
   }
 

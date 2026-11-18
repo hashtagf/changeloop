@@ -128,12 +128,13 @@ export function duplicationWindow(provider) {
   return window;
 }
 
-// Lines that carry meaning: blank lines, lone brackets, and minified lines
-// never make two blocks look alike.
+// Lines that carry meaning: blank lines, lone brackets, minified lines, and
+// bare name lists (an import, export, or dependency list repeats names, not
+// logic) never make two blocks look alike.
 function significantLines(text) {
   return text.split("\n").map((raw, index) => ({ text: raw.trim().replace(/\s+/g, " "), line: index + 1 }))
     .filter((row) => row.text.length >= 3 && row.text.length <= MAXIMUM_LINE_CHARACTERS &&
-      !/^[\s{}()[\];,]*$/.test(row.text));
+      !/^[\s{}()[\];,]*$/.test(row.text) && !/^[\w$][\w$, ]*,?$/.test(row.text));
 }
 
 // A run of `window` significant lines that appears earlier (in path order, or

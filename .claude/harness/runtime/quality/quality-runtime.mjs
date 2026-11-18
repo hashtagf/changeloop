@@ -320,6 +320,39 @@ export function createQualityRuntime({
         reason: "changed path is outside the declared change surface" }));
   }
 
+  // Compare a lane's fresh result with its baseline: CRAP and mutation on the
+  // changed surface (every path with --full), findings across the repository.
+  function evaluateLane(lane, { repository, capability, full, configuredChanged, config }) {
+    writeJson(providerResultPath(root, repository.id, capability), lane.result);
+    const basePath = baselinePath(root, repository.id, capability);
+    const baseline = existsSync(basePath) ? readJsonFile(basePath) : null;
+    if (capability === "crap") lane.evaluation = evaluateCrapRatchet({
+      current: lane.result, baseline, changedPaths: full
+        ? new Set(lane.result.functions.map((fn) => fn.path)) : configuredChanged,
+      policy: config.policy, exceptions: config.exceptions
+    });
+    if (capability === "automated-mutation") {
+      const mutationPaths = full
+        ? new Set(lane.result.mutants.map((mutant) => mutant.path))
+        : configuredChanged;
+      lane.result = classifyMutationSurfaces(lane.result, mutationPaths);
+      writeJson(providerResultPath(root, repository.id, capability), lane.result);
+      lane.evaluation = evaluateMutationRatchet({ current: lane.result, baseline,
+        policy: config.policy, exceptions: config.exceptions });
+    }
+    if (FINDINGS_CAPABILITIES.has(capability) && lane.result.findings) {
+      lane.evaluation = evaluateFindingsRatchet({ current: lane.result, baseline });
+      if (lane.evaluation.assurance === "reduced") {
+        lane.assurance = "reduced";
+        lane.reason = lane.evaluation.reason;
+      }
+    }
+    if (lane.evaluation?.status === "fail" || lane.evaluation?.summary?.fail > 0) {
+      lane.status = "fail";
+      lane.reason = lane.evaluation?.reason || "quality ratchet failed";
+    }
+  }
+
   function run(options = {}) {
     const config = configured();
     const shardCount = options["shard-count"] === undefined ? 1 : Number(options["shard-count"]);
@@ -355,36 +388,8 @@ export function createQualityRuntime({
         const laneStarted = performance.now();
         const lane = runQualityProvider({ repository, capability, provider, git, pathInside,
           environment: { FOUNDATION_QUALITY_CHANGE: activeChange || "" }, policy: config.policy });
-        if (lane.result) {
-          writeJson(providerResultPath(root, repository.id, capability), lane.result);
-          const basePath = baselinePath(root, repository.id, capability);
-          const baseline = existsSync(basePath) ? readJsonFile(basePath) : null;
-          if (capability === "crap") lane.evaluation = evaluateCrapRatchet({
-            current: lane.result, baseline, changedPaths: options.full
-              ? new Set(lane.result.functions.map((fn) => fn.path)) : configuredChanged,
-            policy: config.policy, exceptions: config.exceptions
-          });
-          if (capability === "automated-mutation") {
-            const mutationPaths = options.full
-              ? new Set(lane.result.mutants.map((mutant) => mutant.path))
-              : configuredChanged;
-            lane.result = classifyMutationSurfaces(lane.result, mutationPaths);
-            writeJson(providerResultPath(root, repository.id, capability), lane.result);
-            lane.evaluation = evaluateMutationRatchet({ current: lane.result, baseline,
-              policy: config.policy, exceptions: config.exceptions });
-          }
-          if (FINDINGS_CAPABILITIES.has(capability) && lane.result.findings) {
-            lane.evaluation = evaluateFindingsRatchet({ current: lane.result, baseline });
-            if (lane.evaluation.assurance === "reduced") {
-              lane.assurance = "reduced";
-              lane.reason = lane.evaluation.reason;
-            }
-          }
-          if (lane.evaluation?.status === "fail" || lane.evaluation?.summary?.fail > 0) {
-            lane.status = "fail";
-            lane.reason = lane.evaluation?.reason || "quality ratchet failed";
-          }
-        }
+        if (lane.result)
+          evaluateLane(lane, { repository, capability, full: options.full, configuredChanged, config });
         lane.durationMs = performance.now() - laneStarted;
         lanes.push(lane);
       }

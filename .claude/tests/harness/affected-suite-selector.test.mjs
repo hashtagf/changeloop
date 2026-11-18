@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import {
-  changedFiles, selectAffectedSuites, suiteRunnerLabels
+  changedFiles, promotedSuites, selectAffectedSuites, suiteRunnerLabels
 } from "../affected-suite-selector.mjs";
 
 const labels = [
@@ -30,6 +30,16 @@ const labels = [
   "target drift", "spec sync land gate", "model drift land gate",
   "workspace surface"
 ];
+
+test("printed CLI output sources promote the installer smoke; other edits do not", () => {
+  const labels = ["installer smoke", "lint ratchet"];
+  for (const file of [".claude/harness/runtime/workflow/draft/semantic-draft-templates.mjs",
+    ".claude/harness/runtime/workflow/draft/amendment-tasks.mjs", ".claude/harness/runtime/core/cli-router.mjs",
+    ".claude/harness/runtime/workflow/change/change-materialize.mjs", ".claude/harness/commands.json", "cli.sh"])
+    assert.deepEqual(promotedSuites([file], labels), ["installer smoke"], file);
+  assert.deepEqual(promotedSuites(["README.md", ".claude/harness/runtime/workflow/draft/semantic-draft.mjs"], labels), []);
+  assert.deepEqual(promotedSuites(["cli.sh"], ["lint ratchet"]), [], "an unregistered suite is never promoted");
+});
 
 test("every change selects the lint ratchet", () => {
   const known = [...labels, "lint ratchet", "lint rules"];

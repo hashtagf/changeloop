@@ -91,7 +91,7 @@ TypeScript imports only), `workaround-comments` (one `comment/<marker>`
 finding per comment line with an upper-case `TODO`, `FIXME`, `HACK`, or `XXX`,
 or the word workaround), and `duplication` (one `duplication/block` finding per
 run of at least `window` significant lines, default 8, repeated from earlier
-in path order), and `nesting-depth` (one `complexity/nesting` finding per file
+in path order; blank lines, lone brackets, and bare name lists do not count), and `nesting-depth` (one `complexity/nesting` finding per file
 whose deepest line nests more than `maxDepth` levels, default 5, carrying that
 depth: braces with strings and comments removed, indentation for Python and
 Ruby, shell and SQL skipped; a rough line scan, not a parser). They scan common

@@ -411,7 +411,7 @@ review repair attempt store|node --test "$ROOT/.claude/harness/tests/review-repa
 review guard reconciliation|node "$HERE/harness/run-review-guard-fix-tests.mjs"
 current hook contracts|sh "$HERE/hooks/run-hook-tests.sh"
 phase mutation guard|sh "$HERE/hooks/run-phase-mutation-guard-tests.sh"
-standalone contracts|node --test "$ROOT/.claude/harness/tests/implied-change.test.mjs" "$ROOT/.claude/harness/tests/security-policy.test.mjs" "$ROOT/.claude/harness/tests/authority-lock-process.test.mjs" "$ROOT/.claude/harness/tests/opencode-plugin-session.test.mjs" "$ROOT/.claude/tests/hooks/dev-terminal-guard.test.mjs" "$ROOT/.claude/tests/e2e/consumer-crap-provider.test.mjs" "$HERE/harness/test-registration.test.mjs"
+standalone contracts|node --test "$ROOT/.claude/harness/tests/implied-change.test.mjs" "$ROOT/.claude/harness/tests/security-policy.test.mjs" "$ROOT/.claude/harness/tests/authority-lock-process.test.mjs" "$ROOT/.claude/harness/tests/opencode-plugin-session.test.mjs" "$ROOT/.claude/tests/hooks/dev-terminal-guard.test.mjs" "$ROOT/.claude/tests/e2e/consumer-crap-provider.test.mjs" "$HERE/harness/test-registration.test.mjs" "$HERE/harness/test-readme-coverage.test.mjs"
 instruction contracts|sh "$HERE/harness/run-instruction-contract-tests.sh"
 instruction provenance and host execution|sh "$HERE/harness/run-provenance-contract-tests.sh"
 blocked decision contracts|node "$HERE/harness/run-blocked-decision-tests.mjs"
@@ -434,14 +434,24 @@ label_of() { _l="${1%%|*}"; printf '%s' "${_l#!}"; }
 exclusive() { case "$1" in !*) return 0 ;; *) return 1 ;; esac; }
 named_in() { printf '%s\n' "$1" | grep -qFx -- "$2"; }
 
+# Slow suites the default gate still runs because a changed file is something
+# only they check locally (affected-suite-selector.mjs PROMOTED).
+PROMOTED_LABELS=""
+if [ "$selection_mode" = "fast" ]; then
+  PROMOTED_LABELS="$(FOUNDATION_SUITE_LABELS="$(suites | while IFS='|' read -r label _command; do label_of "$label"; printf '\n'; done)" \
+    node "$HERE/affected-suite-selector.mjs" "$ROOT" --promoted 2>/dev/null || true)"
+  [ -z "$PROMOTED_LABELS" ] || printf 'default gate: also running %s for the changed files it alone checks\n' \
+    "$(printf '%s' "$PROMOTED_LABELS" | tr '\n' ',' | sed 's/,/, /g')" >&2
+fi
+
 # Whether a table line runs in a fixed (non-affected) selection mode: `fast`
 # drops exclusive, SLOW, and RELEASE_ONLY suites, `full` drops RELEASE_ONLY
 # suites, and `release` runs every row.
 in_mode() {
   _mode_label="$(label_of "$2")"
   case "$1" in
-    fast) ! exclusive "$2" && ! named_in "$SLOW" "$_mode_label" &&
-      ! named_in "$RELEASE_ONLY" "$_mode_label" ;;
+    fast) ! exclusive "$2" && ! named_in "$RELEASE_ONLY" "$_mode_label" &&
+      { ! named_in "$SLOW" "$_mode_label" || named_in "$PROMOTED_LABELS" "$_mode_label"; } ;;
     full) ! named_in "$RELEASE_ONLY" "$_mode_label" ;;
     *) return 0 ;;
   esac

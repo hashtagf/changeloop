@@ -18,7 +18,7 @@ import {
   noProgressOutput, resume, testAdequacyInstruction, withSignals
 } from "./advance-envelope.mjs";
 import {
-  coordinatorAction, landOperationAction, proofOperationAction
+  coordinatorAction, landOperationAction, proofOperationAction, proofRunOperation
 } from "./advance-actions.mjs";
 
 const THROUGH_ORDER = ["build", "proven", "archived"];
@@ -616,12 +616,7 @@ export function createAdvanceRuntime({
               ["proven", "archived"].includes(through)) {
             if (!runProof) return finish(targetResume(value));
             stage = "prove";
-            const answered = proofFlags && !automation.proofFlagsUsed ? proofFlags : null;
-            if (answered) automation.proofFlagsUsed = true;
-            const flags = { ...(answered || {}),
-              ...(typeof automation.proofCursorToken === "string"
-                ? { "cursor-token": automation.proofCursorToken } : {}) };
-            operation = Object.keys(flags).length ? (change) => runProof(change, flags) : runProof;
+            operation = proofRunOperation(runProof, proofFlags, automation);
           } else if (value.legacyAction === "LAND_READY" && through === "archived") {
             // The explicit archived target authorizes Land only once the exact
             // proof is ready. Earlier phases and inspection grant nothing.

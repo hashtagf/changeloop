@@ -18,7 +18,7 @@ import { recordedPhaseContext } from "./phase-state.mjs";
 import { devPrompt } from "./dev-terminal-guard.mjs";
 import {
   devArgumentsRequestDelivery, gitPublicationOperations, governingDevArguments, isApprovalReply,
-  promptExchange, promptRequestsDelivery, requestedGitPublication
+  promptExchange, promptRequestsDelivery, promptText, requestedGitPublication
 } from "./prompt-authority.mjs";
 import {
   workspaceCapabilityValue, workspaceMutationDecision
@@ -608,19 +608,8 @@ function latestTypedPrompt(source) {
         latest = row.lastPrompt.trim();
         return;
       }
-      if (row.type !== "user" || row.isMeta) return;
-      const content = row.message?.content;
-      const text = typeof content === "string" ? content
-        : Array.isArray(content) && !content.some((part) => part?.type === "tool_result")
-          ? content.filter((part) => part?.type === "text").map((part) => part.text).join("\n")
-          : "";
-      const command = text.match(/<command-name>\s*(\/[\w:-]+)\s*<\/command-name>/);
-      if (command) {
-        const args = text.match(/<command-args>([\s\S]*?)<\/command-args>/)?.[1]?.trim();
-        latest = args ? `${command[1]} ${args}` : command[1];
-      } else if (text.trim() && !/^<(?:local-command|system-reminder)/.test(text.trim())) {
-        latest = text.trim();
-      }
+      const typed = promptText(row);
+      if (typed) latest = typed;
     });
   }
   return latest;
@@ -649,8 +638,10 @@ function governingDevArgumentsAt(path) {
   catch { return null; }
 }
 
-function currentTranscriptIsDeliver(path) {
-  if (!path || !existsSync(path)) return false;
+// The transcript's latest `last-prompt` row ("" when it has none), or null
+// when the transcript is missing or unreadable.
+function lastRecordedPrompt(path) {
+  if (!path || !existsSync(path)) return null;
   try {
     const source = readFileSync(path, "utf8");
     let latest = "";
@@ -662,28 +653,20 @@ function currentTranscriptIsDeliver(path) {
           latest = row.lastPrompt.trim();
       }); // tolerate a partially flushed final line
     }
-    return /^\/deliver(?:\s|$)/.test(latest);
-  } catch { return false; }
+    return latest;
+  } catch { return null; }
+}
+
+function currentTranscriptIsDeliver(path) {
+  const latest = lastRecordedPrompt(path);
+  return latest !== null && /^\/deliver(?:\s|$)/.test(latest);
 }
 
 function currentTranscriptIsInvestigate(path) {
-  if (!path || !existsSync(path)) return { active: false, compare: false };
-  try {
-    const source = readFileSync(path, "utf8");
-    let latest = "";
-    for (const line of source.split("\n")) {
-      if (!line.trim()) continue;
-      bestEffort(() => {
-        const row = JSON.parse(line);
-        if (row.type === "last-prompt" && typeof row.lastPrompt === "string")
-          latest = row.lastPrompt.trim();
-      }); // tolerate a partially flushed final line
-    }
-    return {
-      active: /^\/investigate(?:\s|$)/.test(latest),
-      compare: /^\/investigate(?:\s|$)/.test(latest) && /(?:^|\s)--compare(?:\s|$)/.test(latest)
-    };
-  } catch { return { active: false, compare: false }; }
+  const latest = lastRecordedPrompt(path);
+  if (latest === null) return { active: false, compare: false };
+  const active = /^\/investigate(?:\s|$)/.test(latest);
+  return { active, compare: active && /(?:^|\s)--compare(?:\s|$)/.test(latest) };
 }
 
 function appendStringPath(paths, value) {

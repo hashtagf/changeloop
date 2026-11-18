@@ -75,7 +75,10 @@ export function gitPublicationOperations(command) {
     operation === "git commit" || operation === "git push");
 }
 
-function promptText(row) {
+// What the user typed in a transcript row: a slash command with its
+// arguments, or plain text; "" for tool results, meta rows, and local-command
+// or system-reminder echoes.
+export function promptText(row) {
   if (row.type !== "user" || row.isMeta) return "";
   const content = row.message?.content;
   const text = typeof content === "string" ? content
