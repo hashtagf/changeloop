@@ -14,7 +14,7 @@ const UI_DEPENDENCIES = new Set([
 const UI_EXTENSIONS = new Set([".tsx", ".jsx", ".vue", ".svelte", ".astro", ".html"]);
 const A11Y_LINT = new Set([
   "eslint-plugin-jsx-a11y", "eslint-plugin-vuejs-accessibility", "@angular-eslint/eslint-plugin-template",
-  "eslint-plugin-lit-a11y", "eslint-plugin-astro", "svelte-check", "@biomejs/biome"
+  "eslint-plugin-lit-a11y", "eslint-plugin-astro", "svelte-check", "@biomejs/biome", "@html-eslint/eslint-plugin"
 ]);
 const RENDERED = new Set([
   "@playwright/test", "playwright", "puppeteer", "cypress", "@storybook/test-runner", "webdriverio"

@@ -123,7 +123,7 @@ export const CRITERIA = Object.freeze([
   clear("workaround-comments-clear", "static", "No stopgap comments remain", "workaround-comments"),
   ui("ui-a11y-lint", "static", "An accessibility lint covers the UI", "a11yLint",
     "add the framework's accessibility lint (eslint-plugin-jsx-a11y, eslint-plugin-vuejs-accessibility, " +
-    "svelte-check, @angular-eslint template rules, or Biome) to the lint lane"),
+    "svelte-check, @angular-eslint template rules, @html-eslint for plain HTML, or Biome) to the lint lane"),
   {
     id: "tests", layer: "verification", label: "A test lane proves behavior",
     evaluate: (/** @type {{ lanes?: Record<string, string> }} */ { lanes = {} }) => lanes.test && lanes.test !== "no-lane"

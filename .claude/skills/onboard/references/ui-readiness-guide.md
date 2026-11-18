@@ -7,7 +7,7 @@ interface (a UI framework dependency, or `.tsx`, `.jsx`, `.vue`, `.svelte`,
 | Row | Layer | Met by |
 |---|---|---|
 | `ui-tokens` | codebase | A token source (tokens file, CSS custom properties, or the Tailwind config) and no color literal in a stylesheet outside a custom-property definition |
-| `ui-a11y-lint` | static | The framework's accessibility lint: `eslint-plugin-jsx-a11y`, `eslint-plugin-vuejs-accessibility`, `svelte-check`, `@angular-eslint` template rules, `eslint-plugin-astro`, or Biome |
+| `ui-a11y-lint` | static | The framework's accessibility lint: `eslint-plugin-jsx-a11y`, `eslint-plugin-vuejs-accessibility`, `svelte-check`, `@angular-eslint` template rules, `eslint-plugin-astro`, `@html-eslint/eslint-plugin` (plain HTML), or Biome |
 | `ui-rendered` | verification | A browser check: Playwright, Cypress, Puppeteer, or a `screenshot`/`e2e` script |
 | `ui-accessibility` | verification | An accessibility check on rendered pages: `@axe-core/playwright`, `jest-axe`, `pa11y`, or a `test:accessibility` script |
 | `ui-design-doc` | prose | One `DESIGN.md` (root or `docs/`) with the direction, tokens, components, and states |

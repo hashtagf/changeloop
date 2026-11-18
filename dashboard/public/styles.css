@@ -542,7 +542,7 @@ body::before {
 .ins-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
 .panel--wide { grid-column: 1 / -1; }
-.panel h3 { font-size: 14px; font-weight: 600; margin: 0 0 14px; color: var(--ink-soft); }
+.panel h2 { font-size: 14px; font-weight: 600; margin: 0 0 14px; color: var(--ink-soft); }
 
 /* --- Bar chart ------------------------------------------------------------ */
 .bars { display: flex; flex-direction: column; gap: 9px; }

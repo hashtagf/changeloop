@@ -1436,7 +1436,7 @@ kbd {
   box-shadow: var(--shadow);
 }
 
-.help-card h3 {
+.help-card h2 {
   margin: 0 0 16px;
   font-size: 1.1rem;
 }

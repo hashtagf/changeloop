@@ -45,7 +45,7 @@
 <div id="welcome" class="welcome"><div class="welcome-symbol">π</div><h1>A place for every thread.</h1><p>Select a session to continue its conversation.<br>Agents keep working while you switch.</p>
 </div>
 <section id="conversation" class="conversation" aria-label="Conversation" tabindex="-1" hidden>
-<div class="chat-heading"><div><div class="eyebrow" id="worktree-title">WORKTREE</div><h1 id="chat-title"></h1></div><span id="agent-status" class="pill"></span></div>
+<div class="chat-heading"><div><div class="eyebrow" id="worktree-title">WORKTREE</div><h1 id="chat-title">Conversation</h1></div><span id="agent-status" class="pill"></span></div>
 <div id="messages" class="messages" aria-live="off"></div>
 <div id="activity-line" class="activity-line" role="status"></div>
 </section>
@@ -54,7 +54,7 @@
 <div id="attachments" class="attachments"></div>
 <form id="composer" class="composer"><label class="sr-only" for="prompt">Message this session</label>
 <textarea id="prompt" rows="2" placeholder="Message Pi, or use an extension /command…" aria-describedby="compose-hint"></textarea>
-<div class="composer-toolbar"><div><button type="button" id="attach" class="icon" title="Attach files or paste images" aria-label="Attach files">＋</button><input id="file-input" type="file" multiple hidden><select id="delivery" aria-label="Message delivery"><option value="followUp">Queue after task</option><option value="steer">Steer next turn</option></select></div><div><button id="stop" type="button" class="stop" hidden>■ Stop</button><button id="send" type="submit" class="primary">Send ↑</button></div></div></form>
+<div class="composer-toolbar"><div><button type="button" id="attach" class="icon" title="Attach files or paste images" aria-label="Attach files">＋</button><input id="file-input" type="file" multiple hidden aria-label="Attach files"><select id="delivery" aria-label="Message delivery"><option value="followUp">Queue after task</option><option value="steer">Steer next turn</option></select></div><div><button id="stop" type="button" class="stop" hidden>■ Stop</button><button id="send" type="submit" class="primary">Send ↑</button></div></div></form>
 <div class="compose-meta"><span id="model"></span><span id="compose-hint">Enter send · Shift Enter newline · drop files to attach</span></div></div>
 <div id="announcer" class="sr-only" aria-live="polite" role="status"></div>
 </main>
