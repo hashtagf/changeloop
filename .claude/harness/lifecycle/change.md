@@ -737,8 +737,13 @@ A selected prototype can bind the UI a change delivers. The draft's
 project, for example an investigation prototype under
 `.foundation/prototypes/<id>/` or an HTML page or artifact the agent saved into
 the project), the requirement keys it shows (`covers`), and a `mode`: `strict`
-(the default) or `advisory`. A `covers` key that names no requirement, or
-another mode, is an intake `EDIT`. The compiler copies the file into the packet
+(the default) or `advisory`. Optional `excludes` lists prototype elements the
+agreement does not adopt, each with its reason (`"BETA banner: legal forbids
+it"`): design.md shows them for approval, the builder sees them beside the
+copy, and the visual reviewer never asks for them and reports one the real UI
+shows as a blocker. Use it whenever the issue or the user rejects part of the
+picture, instead of leaving it to a drift decision. A `covers` key that names
+no requirement, another mode, or an empty exclusion is an intake `EDIT`. The compiler copies the file into the packet
 as `openspec/changes/<id>/prototype/<name>` and writes `prototype/binding.json`
 with its digest, mode, requirements, and the claims and tasks those requirements
 reach. Save an artifact or pasted HTML into the project before naming it; use
@@ -746,7 +751,11 @@ reach. Save an artifact or pasted HTML into the project before naming it; use
 screenshot provider (capability `browser`, with an `inputMode`) and the
 `visual` provider in the draft's `execution` `{"version": 1, "providers": {...}}`,
 in `change.json` or in `execution.yaml` beside it, never both
-([evidence](../../../.claude/harness/EVIDENCE.md#visual)). Because spec approval binds every packet byte, editing the copy after
+([evidence](../../../.claude/harness/EVIDENCE.md#visual)). A `strict` selection
+without a visual provider that has `screenshots` and depends on an existing
+screenshot provider is an intake `EDIT` carrying that wiring, so the gap
+surfaces at Change rather than as an `inconclusive` Prove; `change start
+--template` shows the same shape. Because spec approval binds every packet byte, editing the copy after
 approval needs approval again; a revision without a prototype removes it. A
 copy that no longer matches its bound digest, or is missing, never drops the
 check: `visual` stays required and its provider reports the drift with its
@@ -759,7 +768,9 @@ recovery (restore the copy, or `change revise` before Build).
   capability. The harness-owned `visual` provider gives an agent reviewer the
   prototype and the screenshots the project's browser or Playwright provider
   produced, and records a receipt listing each difference by screen, what
-  differs, and severity. No screenshot is `inconclusive`, never a pass. The
+  differs, and severity. The reviewer also receives the approved scenario of
+  each bound claim and the exclusions; where the agreement and the picture
+  disagree, the agreement wins. No screenshot is `inconclusive`, never a pass. The
   receipt binds the prototype and screenshots as inputs, so an unchanged pair
   is reused without asking the reviewer again ([evidence](../../../.claude/harness/EVIDENCE.md#visual)).
   In `advisory` mode the provider reports differences but `visual` is not

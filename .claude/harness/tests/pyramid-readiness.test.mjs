@@ -11,6 +11,7 @@ import {
 } from "../runtime/quality/pyramid-readiness.mjs";
 import { createPyramidReadinessCommand } from "../runtime/composition/pyramid-readiness-command.mjs";
 import { registryIssues, ruleRegistrySummary } from "../runtime/quality/rule-registry.mjs";
+import { uiReadinessFacts } from "../runtime/quality/ui-readiness.mjs";
 
 const ALL_LANES = ["file-size", "nesting-depth", "duplication", "module-boundaries", "lint", "type-check",
   "workaround-comments", "test", "crap", "automated-mutation"];
@@ -171,4 +172,41 @@ test("an unregistered guide rule and a closed incident without a regression are 
   assert.match(row("guide-rules").detail, /1 rule sentence\(s\) in CLAUDE.md\/AGENTS.md have no registry row/);
   assert.equal(row("incident-regressions").status, "unmet");
   assert.match(row("incident-regressions").detail, /1 closed incident\(s\) without an existing regression: 2026-01-02-b/);
+});
+
+test("UI criteria apply only to a project with a user interface", (t) => {
+  const uiRows = (value) => value.criteria.filter((row) => row.id.startsWith("ui-"));
+  const without = pyramidReadiness({ ...ready(), ui: { present: false } });
+  assert.ok(uiRows(without).every((row) => row.status === "not-applicable"));
+  assert.ok(without.layers.every((layer) => layer.percent === 100), "not-applicable is neither measured nor met");
+  assert.doesNotMatch(readinessText(without), /ui-|design tokens|DESIGN\.md/);
+
+  const bare = { present: true, framework: "react", uiFiles: 3 };
+  const gaps = pyramidReadiness({ ...ready(), ui: bare });
+  assert.deepEqual(uiRows(gaps).map((row) => [row.id, row.layer, row.status]), [
+    ["ui-tokens", "codebase", "unmet"], ["ui-a11y-lint", "static", "unmet"],
+    ["ui-rendered", "verification", "unmet"], ["ui-accessibility", "verification", "unmet"],
+    ["ui-design-doc", "prose", "unmet"]]);
+  assert.ok(uiRows(gaps).every((row) => row.next), "each unmet UI criterion names its next step");
+  const guarded = pyramidReadiness({ ...ready(), ui: { ...bare, tokens: "src/tokens.css",
+    a11yLint: "eslint-plugin-jsx-a11y", rendered: "@playwright/test", a11yCheck: "@axe-core/playwright",
+    design: "DESIGN.md" } });
+  assert.ok(guarded.layers.every((layer) => layer.percent === 100));
+  assert.equal(pyramidReadiness({ ...ready(), ui: null }).criteria.find((row) => row.id === "ui-tokens").status,
+    "unmeasured");
+
+  const app = project(t, {
+    "package.json": JSON.stringify({ dependencies: { react: "19" },
+      devDependencies: { "eslint-plugin-jsx-a11y": "6", "@playwright/test": "1" },
+      scripts: { "test:a11y": "playwright test a11y" } }),
+    "src/App.tsx": "export const App = () => null;\n",
+    "src/theme.css": ":root { --space-1: 4px; }\n",
+    "docs/DESIGN.md": "# Design\n"
+  });
+  assert.deepEqual(uiReadinessFacts(app), { present: true, framework: "react", uiFiles: 1,
+    tokens: "src/theme.css", a11yLint: "eslint-plugin-jsx-a11y", rendered: "@playwright/test",
+    a11yCheck: "test:a11y", design: "docs/DESIGN.md" });
+  const html = project(t, { "index.html": "<main></main>\n", "test/fixture.html": "<p></p>\n" });
+  assert.equal(uiReadinessFacts(html).uiFiles, 1, "test fixtures are not UI");
+  assert.deepEqual(uiReadinessFacts(project(t, { "src/a.js": "1\n" })), { present: false });
 });

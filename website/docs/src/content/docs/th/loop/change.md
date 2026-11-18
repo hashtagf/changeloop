@@ -156,7 +156,8 @@ hotfix ที่สร้างใหม่ (`bugfix.variant: "hotfix"`) ต้�
 ตรวจว่าไฟล์ที่ผูกไว้ล้มบนโค้ดเดิม ([/prove](/docs/th/loop/prove/)) scenario ที่ตั้ง
 `regression: true` ใช้กันพฤติกรรมเดิม จึงผ่านอยู่แล้วได้
 
-ชนิดงานยังเลือก evidence capability ด้วย ส่วน skill นั้น agent เลือกเองจากคำอธิบายของ
+ชนิดงานยังเลือก evidence capability ด้วย งานชนิด `ui` ต้องมี accessibility ซึ่งถ้าโปรเจกต์ไม่มีตัวตรวจ
+ของตัวเอง ระบบใช้ตัวตรวจในตัวที่อ่าน markup ส่วนที่แก้ ส่วน skill นั้น agent เลือกเองจากคำอธิบายของ
 skill ที่อ้างถึง `workType`, `riskSignals`, requirement และ scenario รายการครบทั้ง 23 ชนิดอยู่ใน
 `.claude/harness/lifecycle/change.md` หัวข้อ "Work types and required sections" ส่วน capability อยู่ใน
 `.claude/harness/EVIDENCE.md` หัวข้อ "Work-type capabilities"
@@ -187,7 +188,8 @@ Decisions to ratify ของ proposal เพื่อให้คุณ ratify 
   อยู่นอก `paths` เป็น design warning
 - `decisions` สำหรับมติที่มีผลต่อ implementation พร้อมผลที่ตามมา
 - diagram แบบ Mermaid หรืออ้าง SVG/PNG
-- `prototypeSelection` ที่ชี้ไป selection note ที่มีจริง
+- `prototypeSelection` ที่ชี้ไป selection note ที่มีจริง และใส่ `excludes` ได้ (ไม่บังคับ)
+  สำหรับส่วนของ prototype ที่ agreement ไม่รับ พร้อมเหตุผล เพื่อให้การตรวจภาพไม่เรียกหาส่วนนั้น
 - `integrations` พร้อมแหล่ง/เวอร์ชันเอกสาร requirement ที่เกี่ยวข้อง และ concern
   ด้าน security, resilience, compatibility โดย scenario ที่เกี่ยวข้องต้องระบุ
   `"kind": "success"` และ `"kind": "failure"`

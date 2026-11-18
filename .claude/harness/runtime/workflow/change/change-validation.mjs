@@ -1,4 +1,5 @@
 import { carryApprovalAcrossBookkeeping, currentWaivers } from "../../core/user-decisions.mjs";
+import { builtInCovers, builtInOwedCapabilities, inferredAdvisoryNext } from "./built-in-capabilities.mjs";
 import { spawnSync } from "node:child_process";
 import { openSpecEnvironment } from '../../core/project-installation.mjs';
 import { existsSync, readFileSync } from "node:fs";
@@ -697,9 +698,9 @@ export function createChangeValidationRuntime({
   // "external" (`evidence-contract`), so the required set grew past the point
   // where the contract could still be negotiated and Prove stopped on a gate
   // that had no way to pass. Enforce an inferred capability only where the
-  // project actually wired a provider for it, or where the author declared the
-  // same capability on a claim; otherwise carry it as an advisory that is
-  // reported and recorded but does not block.
+  // project wired a provider for it, the author declared it on a claim, or the
+  // declared work type owes it and a harness-owned provider can produce it;
+  // otherwise carry it as an advisory that is reported but does not block.
   //
   // `review` is deliberately unaffected: `reviewPolicy` reads the same inferred
   // set and adds review itself, and it owns a documented waiver
@@ -712,12 +713,13 @@ export function createChangeValidationRuntime({
     const enforced = [];
     const advisory = [];
     const state = loadRuntime(id);
+    const owed = builtInOwedCapabilities(policyProviderSetupActions(id, []), (name) => providerConfig(id, name));
     for (const capability of policyCapabilities(id)) {
       const trigger = policyCapabilityTrigger(id, capability) || "";
       const npmManifestChanged = capability === "dependency-supply-chain" &&
         /(?:^|\/)package\.json$/.test(trigger) &&
         existsSync(join(state.workspace?.path || root, "package-lock.json"));
-      (configured.has(capability) || declared.has(capability) || npmManifestChanged
+      (configured.has(capability) || declared.has(capability) || npmManifestChanged || owed.has(capability)
         ? enforced : advisory)
         .push(capability);
     }
@@ -729,10 +731,9 @@ export function createChangeValidationRuntime({
     resolvedAcceptance, policyCapabilitySplit, foundationPolicy
   });
 
-  // Advisories are the record that the downgrade above happened. Dropping an
-  // inferred capability silently would make "the policy saw nothing" and "the
-  // policy saw something nobody wired" identical in the evidence, which is
-  // exactly the distinction a later reader needs.
+  // Advisories record the downgrade above: dropping one silently would make
+  // "the policy saw nothing" and "the policy saw something nobody wired"
+  // identical in the evidence, the distinction a later reader needs.
   // Advisories are reporting, never a gate, so they must not be able to fail a
   // command. The changed surface is unresolvable in states that are not errors
   // — a multi-repository change before its sandboxes exist cannot answer "what
@@ -768,8 +769,7 @@ export function createChangeValidationRuntime({
       capability,
       trigger: policyCapabilityTrigger(id, capability),
       reason: "policy-inferred-unwired",
-      next: `configure a project-owned ${capability} provider in openspec/changes/${
-        id}/execution.yaml, or accept the advisory`
+      next: inferredAdvisoryNext(id, capability)
     }));
     return [
       ...reviewCoveredRows(id, active),
@@ -789,7 +789,7 @@ export function createChangeValidationRuntime({
     const configured = Object.entries(contract?.providers || {})
       .map(([provider, config]) => providerCapability(provider, config)).filter(Boolean);
     return (policyProviderSetupActions(id, configured) || [])
-      .filter((action) => !seen.has(action.capability))
+      .filter((action) => !seen.has(action.capability) && !builtInCovers(providerConfig(id, action.capability)))
       .map((action) => ({
         ...action,
         reason: "work-type-provider-missing",

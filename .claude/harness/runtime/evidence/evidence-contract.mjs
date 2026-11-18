@@ -12,6 +12,7 @@ import {
   withVisualRequirement
 } from "./visual-review.mjs";
 import { relativeInside } from "../core/paths.mjs";
+import { builtInCommandProvider } from "./built-in-providers.mjs";
 import { bestEffort } from "../core/best-effort.mjs";
 import { collectReviewSignals, fingerprintedReviewPolicy, assembleReviewPolicy } from "./review-policy.mjs";
 import {
@@ -693,26 +694,9 @@ export function createEvidenceContract({
       const binding = reconcileVisualBinding(readVisualBinding(dir), claimIds);
       return binding ? builtInVisualConfig(id, dir, binding) : null;
     }
-    if (provider !== "dependency-supply-chain") return null;
-    let repositories;
-    try { repositories = selectedRepositories(id).filter((row) => row.mode === "write"); }
-    catch { return null; }
-    const candidates = repositories.filter((repository) =>
-      existsSync(join(repository.workspacePath, "package.json")) &&
-      existsSync(join(repository.workspacePath, "package-lock.json")));
-    if (candidates.length !== 1) return null;
-    const repository = candidates[0];
-    return {
-      adapter: "command",
-      capability: "dependency-supply-chain",
-      version: "2",
-      command: ["node", projectResource(ROOT, ".claude", "harness", "runtime", "evidence",
-        "npm-lockfile-check.mjs")],
-      repository: repository.id === "root" ? undefined : repository.id,
-      // Workspace/local manifests and npm configuration affect the install
-      // plan too. Whole-workspace binding avoids reusing incomplete evidence.
-      builtIn: "npm-lockfile-consistency-v2"
-    };
+    const script = (name) => projectResource(ROOT, ".claude", "harness", "runtime", "evidence", name);
+    return builtInCommandProvider(provider, script,
+      () => selectedRepositories(id).filter((row) => row.mode === "write"));
   }
 
   // A specialist capability wired to a test provider's own command observes

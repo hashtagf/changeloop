@@ -38,7 +38,7 @@ test("suite ยาวอื่นยังได้ 600 วินาที", () 
   for (const label of ["installer smoke", "pull request delivery",
     "proof loop end to end", "apply conflict", "concurrent repositories seam",
     "harness contracts (topology siblings)", "upgrade from 3.7.0",
-    "upgrade from 3.7.0 (legacy review)"])
+    "upgrade from 3.7.0 (legacy review)", "harness coverage ratchet"])
     assert.equal(limitOf(label), "600", label);
 });
 

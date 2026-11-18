@@ -64,6 +64,23 @@ test("enforced high-risk policy requires changed quality and mutation providers"
   assert.deepEqual(result, ["mutants", "quality"]);
 });
 
+test("a required provider brings the configured providers it depends on", () => {
+  const wired = {
+    shots: { adapter: "command", capability: "browser", command: ["node", "shot.mjs"] },
+    visual: { capability: "visual", screenshots: ["out/**"], dependsOn: ["shots", "missing"] },
+    unused: { adapter: "command", capability: "performance", command: ["true"] }
+  };
+  const result = requiredProvidersOperation({
+    loadRuntime: () => ({ waivers: [] }),
+    evidence: () => ({ providers: wired, claims: [{ id: "c", capabilities: ["visual"] }] }),
+    providerCapability: capability,
+    reviewPolicy: () => ({ required: false }),
+    resolvedAcceptance: () => ({ required: false }),
+    policyCapabilitySplit: () => ({ enforced: [] })
+  }, "change-a");
+  assert.deepEqual(result, ["shots", "visual"], "an unknown dependency stays the graph's error to report");
+});
+
 test("high-risk claim validation follows the configured quality mode", () => {
   const enforce = { quality: { changeGate: "enforce-high-risk" } };
   assert.deepEqual(missingHighRiskQualityCapabilities(

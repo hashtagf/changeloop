@@ -4,7 +4,8 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 import {
-  PROTOTYPE_BINDING, materializePrototype, prototypeSelectionIssues, readPrototypeBinding
+  PROTOTYPE_BINDING, VISUAL_WIRING_EXAMPLE, materializePrototype, prototypeSelectionIssues,
+  prototypeWiringIssues, readPrototypeBinding
 } from "../runtime/workflow/prototype/prototype-binding.mjs";
 import { packetIdentity } from "../runtime/core/user-decisions.mjs";
 import { renderDraftDesign } from "../runtime/workflow/change/change-lifecycle.mjs";
@@ -70,6 +71,33 @@ test("covers naming an unknown requirement or an invalid mode is a draft issue",
     /covers must be an array/);
   assert.match(prototypeSelectionIssues({ mode: "loose" }, []).join("\n"), /mode must be strict\|advisory/);
   assert.deepEqual(prototypeSelectionIssues({ mode: "advisory" }, []), []);
+  assert.deepEqual(prototypeSelectionIssues({ excludes: ["BETA banner: legal forbids it"] }, []), []);
+  assert.match(prototypeSelectionIssues({ excludes: "BETA banner" }, []).join("\n"),
+    /excludes must be an array/);
+  assert.match(prototypeSelectionIssues({ covers: ["ghost"], excludes: [""] }, []).join("\n"),
+    /unknown requirement keys: ghost[\s\S]*excludes must be an array/);
+});
+
+test("the binding records the bound scenarios and the elements the agreement excludes", (t) => {
+  const { root, basePath } = project(t);
+  const binding = materializePrototype({
+    root, basePath, tasks,
+    claims: claims.map((claim) => ({ ...claim, scenario: `${claim.id} works` })),
+    selection: { reference: ".foundation/prototypes/inv-1/board.html", selected: "A", covers: ["board"],
+      excludes: ["BETA banner: legal forbids it", " "] }
+  });
+  assert.deepEqual(binding.agreement, [
+    { claim: "board-empty", requirement: "board", scenario: "board-empty works" },
+    { claim: "board-renders", requirement: "board", scenario: "board-renders works" }
+  ]);
+  assert.deepEqual(binding.excludes, ["BETA banner: legal forbids it"]);
+  assert.deepEqual(readPrototypeBinding(basePath).excludes, ["BETA banner: legal forbids it"]);
+  const plain = materializePrototype({
+    root, basePath, claims, tasks,
+    selection: { reference: ".foundation/prototypes/inv-1/board.html", selected: "A", covers: ["board"] }
+  });
+  assert.equal("excludes" in plain, false, "no exclusion writes no field");
+  assert.equal("agreement" in plain, false, "claims without scenarios write no agreement");
 });
 
 test("editing the packet copy after approval changes the agreement identity", (t) => {
@@ -100,11 +128,35 @@ test("design.md links the packet copy with its mode and requirements", () => {
     workType: ["ui"],
     prototypeSelection: {
       selected: "Board A", reference: ".foundation/prototypes/inv-1/board.html",
-      reason: "clearest", covers: ["board"], mode: "advisory"
+      reason: "clearest", covers: ["board"], mode: "advisory",
+      excludes: ["BETA banner: legal forbids it"]
     },
     tasks: [{ id: "T001", outcome: "Board", paths: ["src/board.js"], verify: "npm test" }]
   });
   assert.match(design, /\[prototype\/board\.html\]\(prototype\/board\.html\)/);
   assert.match(design, /\*\*Mode:\*\* advisory/);
   assert.match(design, /\*\*Requirements:\*\* `board`/);
+  assert.match(design, /\*\*Not adopted from the prototype:\*\*\n  - BETA banner: legal forbids it/);
+});
+
+test("a strict prototype without screenshot wiring is a draft issue that carries the wiring", () => {
+  const selection = { reference: "p.html", selected: "A", covers: ["board"] };
+  const [issue] = prototypeWiringIssues(selection, {});
+  assert.match(issue, /must screenshot the bound screens/);
+  assert.ok(issue.includes(JSON.stringify(VISUAL_WIRING_EXAMPLE)), "the issue carries a copyable snippet");
+  assert.match(issue, /advisory/);
+  assert.deepEqual(prototypeWiringIssues(selection, structuredClone(VISUAL_WIRING_EXAMPLE)), []);
+  // A visual provider without screenshots, or depending on a provider that does not exist, is not wired.
+  assert.equal(prototypeWiringIssues(selection, { visual: { capability: "visual", dependsOn: ["browser"] },
+    browser: VISUAL_WIRING_EXAMPLE.browser }).length, 1);
+  assert.equal(prototypeWiringIssues(selection, { visual: VISUAL_WIRING_EXAMPLE.visual }).length, 1);
+  // A named visual instance counts by its capability.
+  assert.deepEqual(prototypeWiringIssues(selection, { shots: VISUAL_WIRING_EXAMPLE.browser,
+    "settings-visual": { capability: "visual", screenshots: ["out/*"], dependsOn: ["shots"] } }), []);
+  // Advisory bindings and changes without a prototype owe nothing.
+  assert.deepEqual(prototypeWiringIssues({ ...selection, mode: "advisory" }, {}), []);
+  assert.deepEqual(prototypeWiringIssues(undefined, {}), []);
+  // Draft validation reports it with the other selection issues.
+  assert.match(prototypeSelectionIssues(selection, ["board"]).join("\n"), /must screenshot the bound screens/);
+  assert.deepEqual(prototypeSelectionIssues(selection, ["board"], VISUAL_WIRING_EXAMPLE), []);
 });

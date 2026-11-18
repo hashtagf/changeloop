@@ -9,6 +9,12 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Fixed
+
+- A required provider now brings the configured providers it `dependsOn`:
+  a strict prototype's `visual` provider no longer stops Build with "depends on
+  unknown node provider:browser" when no claim declares `browser` itself.
+
 ### Changed
 
 - Review packets give the root and contract inspection rows `pathCount` and
@@ -36,6 +42,31 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- Built-in accessibility check: a project with no accessibility command gets
+  a static read of the markup a change touched (images without alt text,
+  unlabelled controls, unnamed buttons and links, missing `lang`, positive
+  `tabindex`, click handlers without keyboard support), judged on added or
+  edited lines only. Work type `ui` now requires `accessibility`, so this check
+  gates proof instead of becoming an advisory nobody runs; a UI path changed
+  without that work type stays advisory. A project-owned `test:accessibility`
+  or `test:a11y` script replaces the built-in. Hand-recorded accessibility
+  evidence (a manual audit) now needs `accessibility: {"adapter": "external"}`
+  declared in `execution.yaml`.
+- `prototypeSelection.excludes` lists prototype elements the agreement does not
+  adopt, each with its reason. design.md shows them for approval, Build opens
+  them beside the prototype, and the visual reviewer never asks for them and
+  reports one the real UI shows as a blocker. The reviewer also receives the
+  approved scenario of each bound claim, and the agreement wins where it and
+  the picture disagree; before, a forbidden element was judged only from the
+  picture.
+- `change start --template` shows how to bind a prototype (`prototypeSelection`
+  with `excludes`) and the screenshot and `visual` providers it needs, and a
+  strict selection without that wiring is a draft issue carrying the snippet,
+  instead of an `inconclusive` visual check at Prove.
+- `quality readiness` adds five UI rows for a project with a user interface:
+  design tokens, an accessibility lint, a rendered browser check, an
+  accessibility check on rendered pages, and one `DESIGN.md`; `onboard`
+  proposes what each unmet row needs. Projects without a UI see none.
 - `quality readiness`: per-layer pyramid readiness of the project (codebase,
   static, verification, prose, review) with the next step for the weakest
   layer; `doctor` shows it as the `pyramid` setup row, `onboard` drafts

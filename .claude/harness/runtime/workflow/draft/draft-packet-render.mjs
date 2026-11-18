@@ -8,7 +8,7 @@ import { isSemanticVersion } from "../validation/draft-version.mjs";
 import { assembleReviewPolicy, collectReviewSignals } from "../../evidence/review-policy.mjs";
 import { classifyReviewRisk } from "../../evidence/review-routing.mjs";
 import { reviewModelClass } from "../../evidence/review-diff.mjs";
-import { PROTOTYPE_DIR, prototypeCovers, prototypeMode } from "../prototype/prototype-binding.mjs";
+import { PROTOTYPE_DIR, prototypeCovers, prototypeExcludes, prototypeMode } from "../prototype/prototype-binding.mjs";
 import {
   DESIGN_FIELDS, draftHasBlueprints, draftWorkTypes, renderDesignBlueprints, renderFailureMatrixBody,
   renderFileMapBody, renderJobContractBody, renderTestMapBody, renderUiStatesBody, renderWorkType
@@ -423,11 +423,13 @@ export function renderDraftDesign(draft) {
       const name = String(prototype.reference || "").split(/[\\/]/).pop();
       const copy = `${PROTOTYPE_DIR}/${name === "binding.json" ? "prototype-binding.json" : name}`;
       const covers = prototypeCovers(prototype);
+      const excludes = prototypeExcludes(prototype);
       return `- **Selected:** ${prototype.selected}\n- **Reference:** [${copy}](${copy}) ` +
         `(copied from \`${prototype.reference}\`)\n` +
         `- **Mode:** ${prototypeMode(prototype)}\n` +
         (covers.length ? `- **Requirements:** ${covers.map((key) => `\`${key}\``).join(", ")}\n` : "") +
-        `- **Reason:** ${prototype.reason || "Recorded in the selection reference"}`;
+        `- **Reason:** ${prototype.reason || "Recorded in the selection reference"}` +
+        (excludes.length ? `\n- **Not adopted from the prototype:**\n${excludes.map((row) => `  - ${row}`).join("\n")}` : "");
     }
   };
   const context = { workTypes: declared.length ? declared : inferred, language };

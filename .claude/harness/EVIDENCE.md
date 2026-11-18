@@ -220,6 +220,28 @@ not raise the review tier or force review on its own: `compatibility` from
 `api` alone leaves review at the tier the change's real risk selects. The same
 capability required by a changed path still raises it.
 
+### Built-in accessibility check
+
+A project without an accessibility command still gets one. When no provider is
+wired, `accessibility` resolves to a harness-owned static read
+(`runtime/evidence/accessibility-check.mjs`, built-in `accessibility-static-v1`)
+of the markup the change touched (`.html`, `.jsx`, `.tsx`, `.vue`, `.svelte`,
+`.astro`, and markup built in `.js`/`.ts` files). It declares no inputs, so it
+binds the whole workspace and passes when the change touched no markup. It reports images without alt text, form controls without a label,
+buttons and links without a name, `<html>` without `lang`, positive
+`tabindex`, and click handlers on elements a keyboard cannot reach, each with
+its file and line. Only lines the change added or edited are judged (against
+the repository's base head, or the project copy when there is no Git base), so
+a touched legacy file owes nothing for its old lines. It cannot see contrast,
+focus order, or rendered behavior; those need the project's own rendered check.
+
+With work type `ui`, `accessibility` is required and this check gates proof.
+A UI path changed without that work type keeps it an advisory, as before.
+Detection still looks for a project-owned `test:accessibility`, `test:a11y`,
+`accessibility`, or `a11y` script; when it finds one, that command replaces the
+built-in read. To record accessibility evidence by hand (a manual audit),
+declare `"accessibility": {"adapter": "external"}` in `execution.yaml`.
+
 Six capabilities exist for these work types:
 
 | Capability | Proves | Default adapter | Phase | Bootstrap scripts |
@@ -882,8 +904,11 @@ structured report at `.foundation/visual/<change>.json`; a receipt without that
 report is `inconclusive`. Without a wired provider, the built-in one has no
 screenshots and asks the agent to set `screenshots`.
 
-An agent reviewer reads the packet's prototype copy and those screenshots and
-returns `pass`, `fail`, or `inconclusive` with one finding per difference: the
+An agent reviewer reads the packet's prototype copy and those screenshots,
+with the approved scenario of each bound claim and the binding's `excludes`
+(prototype elements the agreement does not adopt; the agreement wins where it
+and the picture disagree, an excluded element is never asked for, and one the
+real UI shows is a blocker), and returns `pass`, `fail`, or `inconclusive` with one finding per difference: the
 screen, what differs, a severity of `blocker`, `major`, or `minor`, and the
 claims it affects. A `pass` with a blocker or major finding, or a `fail` with
 no findings, is an `error`. A fail whose findings are all minor passes with the

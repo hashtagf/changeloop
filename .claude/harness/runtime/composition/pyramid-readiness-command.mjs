@@ -8,6 +8,7 @@ import { join } from "node:path";
 import { pyramidReadiness, readinessText } from "../quality/pyramid-readiness.mjs";
 import { ruleRegistrySummary } from "../quality/rule-registry.mjs";
 import { incidentSummary } from "../quality/incident-records.mjs";
+import { uiReadinessFacts } from "../quality/ui-readiness.mjs";
 import {
   readProjectFeatureMap, validateProjectFeatureMap
 } from "../workflow/validation/project-feature-map.mjs";
@@ -41,6 +42,7 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
         unregistered: registry.unregistered.length
       },
       incidents: attempt(() => incidentSummary(root)),
+      ui: attempt(() => uiReadinessFacts(root)),
       outcomes: Array.isArray(changes) ? {
         archived: changes.length,
         measured: changes.filter((change) => change.firstProofPass !== null).length,

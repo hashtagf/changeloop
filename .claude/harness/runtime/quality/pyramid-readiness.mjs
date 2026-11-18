@@ -60,6 +60,19 @@ function clear(id, layer, label, capability) {
   };
 }
 
+// A UI criterion applies only to a project with a user interface; without one
+// it is not applicable, which is neither measured nor listed.
+function ui(id, layer, label, field, next) {
+  return {
+    id, layer, label,
+    evaluate: ({ ui: facts }) => facts === undefined || facts === null
+      ? { status: "unmeasured", detail: "UI surface not read" }
+      : !facts.present ? { status: "not-applicable", detail: "no user interface" }
+        : facts[field] ? { status: "met", detail: `${facts[field]}` }
+          : { status: "unmet", detail: `UI (${facts.framework || `${facts.uiFiles} UI file(s)`}) without it`, next }
+  };
+}
+
 function rate(numerator, denominator) {
   return denominator ? numerator / denominator : null;
 }
@@ -83,12 +96,18 @@ export const CRITERIA = Object.freeze([
         : { status: "unmet", detail: featureMap ? `${featureMap.features} feature(s), ${featureMap.issues || 0} issue(s)` : "no feature map",
           next: "onboard the project (skill: onboard) to draft openspec/feature-map.json, then cloop features --strict" }
   },
+  ui("ui-tokens", "codebase", "UI values come from design tokens", "tokens",
+    "define colors, type, and spacing once (a tokens file, CSS custom properties in a theme file, or the Tailwind config) " +
+    "and reference them; skill ux-ui-principles drafts DESIGN.md and tokens from the code"),
   lane("lint", "static", "Lint findings ratchet", "lint"),
   clear("lint-clear", "static", "No lint findings remain", "lint"),
   lane("type-check", "static", "Type findings ratchet", "type-check"),
   clear("type-check-clear", "static", "No type findings remain", "type-check"),
   lane("workaround-comments", "static", "Stopgap comments ratchet", "workaround-comments"),
   clear("workaround-comments-clear", "static", "No stopgap comments remain", "workaround-comments"),
+  ui("ui-a11y-lint", "static", "An accessibility lint covers the UI", "a11yLint",
+    "add the framework's accessibility lint (eslint-plugin-jsx-a11y, eslint-plugin-vuejs-accessibility, " +
+    "svelte-check, @angular-eslint template rules, or Biome) to the lint lane"),
   {
     id: "tests", layer: "verification", label: "A test lane proves behavior",
     evaluate: (/** @type {{ lanes?: Record<string, string> }} */ { lanes = {} }) => lanes.test && lanes.test !== "no-lane"
@@ -97,6 +116,12 @@ export const CRITERIA = Object.freeze([
   },
   lane("coverage", "verification", "Coverage or CRAP ratchets", "crap", ["coverage"]),
   lane("mutation", "verification", "Mutation testing ratchets", "automated-mutation"),
+  ui("ui-rendered", "verification", "The UI is checked rendered in a browser", "rendered",
+    "add a browser check that saves screenshots (Playwright, or a 'screenshot' script); prototype-bound " +
+    "changes feed those screenshots to the visual check"),
+  ui("ui-accessibility", "verification", "Accessibility is checked on the rendered UI", "a11yCheck",
+    "add an accessibility check on rendered pages (@axe-core/playwright, jest-axe, or pa11y) as a " +
+    "'test:accessibility' script; Prove runs it as the accessibility provider"),
   {
     id: "lessons", layer: "prose", label: "Every recurring lesson has a check or a recorded judgment",
     evaluate: ({ lessons }) => !lessons ? { status: "unmeasured", detail: "lessons not read" }
@@ -118,6 +143,9 @@ export const CRITERIA = Object.freeze([
           : { status: "unmet", detail: `${rules.prose} of ${rules.registered} rule(s) are prose only`,
             next: "enforce each prose-only rule with a test, lint rule, or type, or record judgment: <why>" }
   },
+  ui("ui-design-doc", "prose", "UI rules live in one DESIGN.md", "design",
+    "write DESIGN.md (direction, tokens, components, states) so agents follow one source; skill " +
+    "ux-ui-principles can extract it from the code"),
   {
     id: "incident-regressions", layer: "review", label: "Every closed incident names a regression test that exists",
     evaluate: ({ incidents }) => incidents === undefined || incidents === null
@@ -159,12 +187,13 @@ export const CRITERIA = Object.freeze([
  *   lessons?: { recurring: number, pending: number } | null,
  *   rules?: { registered: number, prose: number, issues?: number, unregistered?: number } | null,
  *   incidents?: { total: number, closed: number, missing: string[] } | null,
- *   outcomes?: { archived: number, measured: number, firstProofPasses: number, escapedDefects: number } | null }} facts
+ *   outcomes?: { archived: number, measured: number, firstProofPasses: number, escapedDefects: number } | null,
+ *   ui?: { present: boolean, framework?: string | null, uiFiles?: number } & Record<string, any> | null }} facts
  */
 export function pyramidReadiness(facts = {}) {
   const criteria = CRITERIA.map(({ id, layer, label, evaluate }) => ({ id, layer, label, ...evaluate(facts) }));
   const layers = LAYERS.map((layer) => {
-    const rows = criteria.filter((row) => row.layer === layer);
+    const rows = criteria.filter((row) => row.layer === layer && row.status !== "not-applicable");
     const met = rows.filter((row) => row.status === "met").length;
     const measured = rows.filter((row) => row.status !== "unmeasured").length;
     return { layer, met, measured, total: rows.length,
@@ -180,7 +209,7 @@ export function readinessText(value) {
   const lines = ["Pyramid readiness (measured criteria met per layer):"];
   value.layers.forEach((layer, index) => lines.push(`  ${index + 1} ${layer.layer.padEnd(12)} ${
     layer.percent === null ? "unmeasured" : `${String(layer.percent).padStart(3)}%`}  (${layer.met}/${layer.measured} measured, ${layer.total} total)`));
-  for (const row of value.criteria.filter((row) => row.status !== "met"))
+  for (const row of value.criteria.filter((row) => !["met", "not-applicable"].includes(row.status)))
     lines.push(`  - [${row.layer}] ${row.label}: ${row.status}, ${row.detail}${row.next ? `\n      next: ${row.next}` : ""}`);
   if (value.focus) lines.push(`Focus: ${value.focus.layer}; ${value.focus.next}`);
   return lines.join("\n");

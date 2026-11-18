@@ -64,6 +64,19 @@ export function requiredProvidersOperation(context, id) {
   if (reviewRequired)
     for (const row of reviewCoveredProviders(contract.providers))
       capabilityContext.required.delete(row.provider);
+  // A required provider cannot run without the configured providers it
+  // depends on (the visual reviewer reads the screenshots a browser provider
+  // writes), so they are required with it.
+  const pending = [...capabilityContext.required];
+  while (pending.length) {
+    const dependencies = capabilityContext.providers[pending.pop()]?.dependsOn;
+    for (const dependency of Array.isArray(dependencies) ? dependencies : [])
+      if (Object.hasOwn(capabilityContext.providers, dependency) &&
+          !capabilityContext.required.has(dependency)) {
+        capabilityContext.required.add(dependency);
+        pending.push(dependency);
+      }
+  }
   // Post-release signals (release health, experiment guardrails) arrive only
   // after the change ships, so they gate the rollout and never proof or Land.
   return splitPostReleaseProviders([...capabilityContext.required].sort(),
