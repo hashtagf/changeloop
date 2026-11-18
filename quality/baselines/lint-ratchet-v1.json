@@ -3,7 +3,7 @@
   "sizeCeiling": 1000,
   "violations": {},
   "sizes": {
-    ".claude/harness/foundation.mjs": 2376,
+    ".claude/harness/foundation.mjs": 899,
     ".claude/harness/runtime/evidence/adapter-runtime.mjs": 917,
     ".claude/harness/runtime/evidence/configured-reviewer.mjs": 750,
     ".claude/harness/runtime/evidence/evidence-contract.mjs": 900,
