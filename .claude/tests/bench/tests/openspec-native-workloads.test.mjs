@@ -17,6 +17,7 @@ import {
 import {
   BETA_BANNER_MUTANTS, SETTINGS_SCREEN_MUTANTS, repairSettingsScreen
 } from "./fixtures/visual-prototype-repairs.mjs";
+import { TASK_BOARD_MUTANTS, repairTaskBoard } from "./fixtures/interactive-ui-repairs.mjs";
 
 const TASKS = fileURLToPath(new URL("../tasks", import.meta.url));
 const MATRIX = JSON.parse(readFileSync(
@@ -1322,4 +1323,14 @@ test("prototype drift oracle requires the screen and rejects the forbidden BETA 
   verifyWorkload("43-visual-prototype-drift", repairSettingsScreen);
   verifyMutants("43-visual-prototype-drift", "src/settings.js", repairSettingsScreen,
     [...SETTINGS_SCREEN_MUTANTS, ...BETA_BANNER_MUTANTS]);
+});
+
+test("interactive UI oracle drives every state, the add form, and phone width", () => {
+  verifyWorkload("44-interactive-ui-states", repairTaskBoard);
+  verifyMutants("44-interactive-ui-states", "src/tasks.js", repairTaskBoard, TASK_BOARD_MUTANTS);
+});
+
+test("interactive UI oracle rejects a stylesheet wider than a phone", () => {
+  verifyMutants("44-interactive-ui-states", "styles.css", repairTaskBoard,
+    [["CASE_PHONE_WIDTH", "fixed 640px width", [["max-width: 640px", "width: 640px"]]]]);
 });

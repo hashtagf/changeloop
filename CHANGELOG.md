@@ -32,6 +32,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
   a slightly deeper orange for the headline accent, and dark text on the
   Install button. Maintainers: `scripts/ui/rendered-check.mjs` checks the
   repository's own pages in Chrome with axe-core.
+- Maintainers: paid scenario `interactive-ui-states` (task 44) covers an
+  interactive UI with loading, empty, error/retry, and loaded states, a
+  validated add form, and phone width, without a prototype or wiring in the
+  prompt; its oracle drives the screen in happy-dom. Not yet run.
 
 - Maintainers: no harness runtime file exceeds 800 lines (the lint ratchet's
   ceiling, down from 1,000); `foundation.mjs` keeps only composition, with

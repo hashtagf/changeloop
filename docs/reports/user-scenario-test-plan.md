@@ -50,8 +50,9 @@ digests are frozen by the deterministic sentinel.
 | `order-inventory-lifecycle` | The order/inventory contract plus a mid-flight requirement update, a stacked second change, SIGKILL in Build and Land | high | Oracle 27/27 across scopes, lifecycle checks, both changes archived in order |
 | `visual-prototype-match` | Static Settings screen bound strictly to a prototype; headless-Chromium screenshot provider feeds the `visual` reviewer | standard | Oracle 7/7, passing `visual` receipt, clean npm install, archived |
 | `visual-prototype-drift` | Same screen, but the prototype shows a BETA banner the issue forbids, and the prompt names no wiring | standard | The agent binds the prototype with the banner in `prototypeSelection.excludes` and wires screenshots itself; passing `visual` receipt without a `visual-drift` decision, oracle 8/8 (banner absent), archived |
+| `interactive-ui-states` | Tasks screen with loading, empty, error/Retry, and loaded states, an add form with an empty-title alert, and phone width; no prototype, no wiring in the prompt | standard | Oracle 10/10 (each state and the form driven in happy-dom, stylesheet within 390px), grown passing suite, archived; not yet run |
 
-Twelve lanes use paid model execution. The budget/resume lane is
+Thirteen lanes use paid model execution. The budget/resume lane is
 deterministic and must not spend model budget.
 
 ### Larger workload: order and inventory (levels 1–2)

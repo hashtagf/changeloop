@@ -517,6 +517,14 @@ arm refuses a seed containing `.foundation/`. The `visual` reviewer is a
 separate `claude` process, so its spend is outside the host's
 `--max-budget-usd` ceiling and the scorecard cost.
 
+`interactive-ui-states` (task 44, `cost_usd: 10`) has no prototype and names no
+wiring: a Tasks screen with loading, empty, error-with-Retry, and loaded
+states, an add form whose empty title shows an alert, and a 390px phone
+width. Its hidden oracle mounts the delivered screen in happy-dom and drives
+each state and the form like a user, and checks the stylesheet at phone width;
+`openspec-native-workloads.test.mjs` proves a reference delivery passes and
+eight plausible wrong ones fail. It has not been run with a paid model yet.
+
 Budget exhaustion is a resumable user-decision boundary in this manifest. It
 may not be converted into either completed work or a permanent blocked result.
 
