@@ -2,9 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { createProviderScheduler } from "../runtime/evidence/provider-scheduler.mjs";
-import {
-  assertProofCollectionOutcomes, createProofExecutionRuntime
-} from "../runtime/evidence/proof-execution-runtime.mjs";
+import { createProofExecutionRuntime } from "../runtime/evidence/proof-execution-runtime.mjs";
+import { assertProofCollectionOutcomes } from "../runtime/evidence/proof-execution-steps.mjs";
 
 const VISUAL = { adapter: "command", capability: "visual", command: ["node", "visual-review.mjs"],
   builtIn: "visual-review-v1" };

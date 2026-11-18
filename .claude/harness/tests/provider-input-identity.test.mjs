@@ -1,12 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  collectProviderInputFiles,
-  normalizedProviderInputPatterns,
-  providerInputIdentityOperation,
-  providerInputRoots,
-  sortProviderInputFiles
-} from "../runtime/evidence/evidence-contract.mjs";
+  collectProviderInputFiles, normalizedProviderInputPatterns, providerInputIdentityOperation, providerInputRoots, sortProviderInputFiles
+} from "../runtime/evidence/provider-inputs.mjs";
 
 function entry(name, kind = "file") {
   return {

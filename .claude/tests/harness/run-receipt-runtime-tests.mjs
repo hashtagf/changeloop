@@ -6,9 +6,11 @@ import { join } from "node:path";
 import test from "node:test";
 
 import {
-  createReceiptRuntime, executedReceiptFlake, groundedRepairBinding, normalizedReviewFinding,
-  proofPlanOperation, receiptBindingNote
+  createReceiptRuntime, proofPlanOperation, receiptBindingNote
 } from "../../harness/runtime/evidence/receipt-runtime.mjs";
+import {
+  executedReceiptFlake, groundedRepairBinding, normalizedReviewFinding
+} from "../../harness/runtime/evidence/review-closure-receipts.mjs";
 
 const stableHash = (value) => createHash("sha256")
   .update(JSON.stringify(value)).digest("hex");

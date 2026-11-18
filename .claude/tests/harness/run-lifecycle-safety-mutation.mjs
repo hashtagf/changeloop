@@ -97,7 +97,7 @@ const CASES = [
   },
   {
     id: "MUT-PROOF-REPOSITORY-INFRASTRUCTURE-SKIPPED",
-    sourcePath: ".claude/harness/runtime/evidence/proof-readiness.mjs",
+    sourcePath: ".claude/harness/runtime/evidence/evidence-recovery.mjs",
     expectedKiller: "CASE-PROOF-REPOSITORY-INFRASTRUCTURE",
     detector: INFRASTRUCTURE_DETECTOR,
     before: "if (!gitHead(runtime.path))",
@@ -113,7 +113,7 @@ const CASES = [
   },
   {
     id: "MUT-PROOF-INCOMPLETE-REPOSITORY-BINDING-ALLOWED",
-    sourcePath: ".claude/harness/runtime/evidence/proof-readiness.mjs",
+    sourcePath: ".claude/harness/runtime/evidence/evidence-recovery.mjs",
     expectedKiller: "CASE-PROOF-COMPLETE-REPOSITORY-BINDING",
     detector: INFRASTRUCTURE_DETECTOR,
     before: "for (const field of [\"targetPath\", \"baseHead\", \"access\"])",
@@ -121,7 +121,7 @@ const CASES = [
   },
   {
     id: "MUT-PROOF-PRIMARY-BINDING-RESULT-OVERWRITTEN",
-    sourcePath: ".claude/harness/runtime/evidence/proof-readiness.mjs",
+    sourcePath: ".claude/harness/runtime/evidence/evidence-recovery.mjs",
     expectedKiller: "CASE-PROOF-PRIMARY-BINDING-ORDER",
     detector: INFRASTRUCTURE_DETECTOR,
     before: "if (issues.length) return [...new Set(issues)];",

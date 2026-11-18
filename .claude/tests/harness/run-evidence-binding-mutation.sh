@@ -24,7 +24,7 @@ SOURCE="$WORK/source"
 . "$ROOT/.claude/tests/lib/mutation-v2.sh"
 create_mutation_fixture "$ROOT" "$SOURCE"
 mutation_v2_begin "$WORK"
-CONTRACT="$SOURCE/.claude/harness/runtime/evidence/evidence-contract.mjs"
+CONTRACT="$SOURCE/.claude/harness/runtime/evidence/provider-inputs.mjs"
 STATE="$SOURCE/.claude/harness/runtime/core/state-runtime.mjs"
 
 restore() {
@@ -43,7 +43,7 @@ if grep -rl "FOUNDATION-INJECTED-FAULT" "$SOURCE/.claude/harness" 2>/dev/null | 
   exit 1
 fi
 
-cp "$CONTRACT" "$WORK/evidence-contract.mjs"
+cp "$CONTRACT" "$WORK/provider-inputs.mjs"
 cp "$STATE" "$WORK/state-runtime.mjs"
 
 # Kept, not discarded: a baseline that fails for its own reasons is the one
@@ -149,14 +149,14 @@ else
   killed_2=true
   killed=$((killed + 1))
 fi
-cp "$WORK/evidence-contract.mjs" "$CONTRACT"
-restored_2=false; cmp -s "$WORK/evidence-contract.mjs" "$CONTRACT" && restored_2=true
+cp "$WORK/provider-inputs.mjs" "$CONTRACT"
+restored_2=false; cmp -s "$WORK/provider-inputs.mjs" "$CONTRACT" && restored_2=true
 result_2=survived killer_2=""; [ "$killed_2" != true ] || { result_2=killed; killer_2=CASE-FEEDBACK-REVIEW-SUITE; }
-mutation_v2_record "MUT-REVIEW-BINDS-CODE-HASH" ".claude/harness/runtime/evidence/evidence-contract.mjs" \
+mutation_v2_record "MUT-REVIEW-BINDS-CODE-HASH" ".claude/harness/runtime/evidence/provider-inputs.mjs" \
   "$applied_2" "$compiled_2" "$result_2" "CASE-FEEDBACK-REVIEW-SUITE" "$killer_2" "$restored_2"
 
 if ! cmp -s "$WORK/state-runtime.mjs" "$STATE" ||
-   ! cmp -s "$WORK/evidence-contract.mjs" "$CONTRACT"; then
+   ! cmp -s "$WORK/provider-inputs.mjs" "$CONTRACT"; then
   echo "FAIL: a mutated source was not restored byte for byte"
   echo "FOUNDATION_MUTATION_RESULT=not-applied"
   exit 1

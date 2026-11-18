@@ -1,11 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  claimsForCapability,
-  claimsForProviderOperation,
-  claimsInRepositories,
-  providerClaimRepositories
-} from "../runtime/evidence/evidence-contract.mjs";
+  claimsForCapability, claimsForProviderOperation, claimsInRepositories, providerClaimRepositories
+} from "../runtime/evidence/provider-inputs.mjs";
 
 const claims = [
   { id: "review", capabilities: ["review"], repositories: ["root"] },

@@ -1,7 +1,7 @@
 import { sha256Hex as digest } from "../core/trust.mjs";
 import { readFileSync, realpathSync } from "node:fs";
 import { relative, resolve } from "node:path";
-import { normalizeReviewFindingPaths, validReview } from "./configured-reviewer.mjs";
+import { normalizeReviewFindingPaths, validReview } from "./review-result-validation.mjs";
 import { relativeInside } from "../core/paths.mjs";
 
 function readReport(root, changeId, reference) {

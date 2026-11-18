@@ -5,18 +5,8 @@ import {
   DEFAULT_PROVIDER_TIMEOUT_MS, providerTimeoutDetail, providerTimeoutMs
 } from "../runtime/evidence/provider-catalog.mjs";
 import {
-  assertProofCollectionOutcomes,
-  assertExecutionAvailable,
-  executionAvailabilityError,
-  prepareProofExecution,
-  proofExecutionAdvanceValue,
-  proofExecutionResult,
-  proofRunExecutionStops,
-  proofRunOutcome,
-  runProofExecutionNodes,
-  stopProofRun,
-  writeProofExecutionAdvance
-} from "../runtime/evidence/proof-execution-runtime.mjs";
+  assertProofCollectionOutcomes, assertExecutionAvailable, executionAvailabilityError, prepareProofExecution, proofExecutionAdvanceValue, proofExecutionResult, proofRunExecutionStops, proofRunOutcome, runProofExecutionNodes, stopProofRun, writeProofExecutionAdvance
+} from "../runtime/evidence/proof-execution-steps.mjs";
 
 function preparationFixture(overrides = {}) {
   const calls = [];

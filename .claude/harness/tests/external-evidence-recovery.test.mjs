@@ -1,11 +1,8 @@
 import assert from "node:assert/strict";
+import { wiringChoiceOperation } from "../runtime/evidence/proof-readiness.mjs";
 import {
-  acceptanceEvidenceRecovery,
-  externalEvidenceRecoveryOperation,
-  genericExternalEvidenceRecovery,
-  reviewEvidenceRecovery,
-  wiringChoiceOperation
-} from "../runtime/evidence/proof-readiness.mjs";
+  acceptanceEvidenceRecovery, externalEvidenceRecoveryOperation, genericExternalEvidenceRecovery, reviewEvidenceRecovery
+} from "../runtime/evidence/evidence-recovery.mjs";
 
 const review = reviewEvidenceRecovery("c", "reviewer");
 assert.equal(review.provider, "reviewer");

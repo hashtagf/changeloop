@@ -7,9 +7,9 @@ import { join } from "node:path";
 import test from "node:test";
 
 import {
-  assertReadRepositoriesUnchanged, createAdapterRuntime, criticalCaseResult,
-  discoveryCountRepair, providerRepositoryManifestValue, repositoryStatus
+  assertReadRepositoriesUnchanged, createAdapterRuntime, providerRepositoryManifestValue, repositoryStatus
 } from "../../harness/runtime/evidence/adapter-runtime.mjs";
+import { criticalCaseResult, discoveryCountRepair } from "../../harness/runtime/evidence/adapter-results.mjs";
 import {
   numericReportValue, parseExecutedTestEvidence, parseNodeTestSpecOutput, parseTapOutput,
   playwrightReportSummary

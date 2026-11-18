@@ -6,7 +6,7 @@ import {
   capabilityPhase, evaluationResult, isPostReleaseCapability, providerCapability,
   splitPostReleaseProviders
 } from "../runtime/evidence/provider-catalog.mjs";
-import { evaluationAdapterResult } from "../runtime/evidence/adapter-runtime.mjs";
+import { evaluationAdapterResult } from "../runtime/evidence/adapter-results.mjs";
 import { parseLastJsonLine } from "../runtime/evidence/evidence-results.mjs";
 
 test("an evaluation result after log lines is read from the last JSON line", () => {

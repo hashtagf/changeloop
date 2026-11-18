@@ -1,4 +1,4 @@
-import { deltaClosureIssue } from "../../evidence/configured-reviewer.mjs";
+import { deltaClosureIssue } from "../../evidence/review-result-validation.mjs";
 
 export function acceptanceResponseEvidence(context, request) {
   const claimRows = context.expandList(request.packet?.claims);

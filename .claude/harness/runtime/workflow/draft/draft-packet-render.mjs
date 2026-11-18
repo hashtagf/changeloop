@@ -5,7 +5,7 @@ import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { agentDecision, authoredDecisionReason, renderSpecHeading } from "./semantic-draft.mjs";
 import { isSemanticVersion } from "../validation/draft-version.mjs";
-import { assembleReviewPolicy, collectReviewSignals } from "../../evidence/evidence-contract.mjs";
+import { assembleReviewPolicy, collectReviewSignals } from "../../evidence/review-policy.mjs";
 import { classifyReviewRisk } from "../../evidence/review-routing.mjs";
 import { reviewModelClass } from "../../evidence/review-diff.mjs";
 import { PROTOTYPE_DIR, prototypeCovers, prototypeMode } from "../prototype/prototype-binding.mjs";

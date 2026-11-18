@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const sourcePath = resolve(".claude/harness/runtime/evidence/adapter-runtime.mjs");
+const sourcePath = resolve(".claude/harness/runtime/evidence/adapter-results.mjs");
 const source = readFileSync(sourcePath, "utf8");
 const guard = "row.expectedKiller && row.killedBy === row.expectedKiller &&\n      passedKillers.has(row.expectedKiller)";
 const fault = "row.expectedKiller && Boolean(row.killedBy) &&\n      passedKillers.has(row.expectedKiller)";

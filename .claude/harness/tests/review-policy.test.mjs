@@ -1,11 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  assembleReviewPolicy,
-  collectReviewSignals,
-  createEvidenceContract
-} from "../runtime/evidence/evidence-contract.mjs";
+import { createEvidenceContract } from "../runtime/evidence/evidence-contract.mjs";
+import { assembleReviewPolicy, collectReviewSignals } from "../runtime/evidence/review-policy.mjs";
 import { classifyReviewRisk } from "../runtime/evidence/review-routing.mjs";
 
 const lowRoute = {

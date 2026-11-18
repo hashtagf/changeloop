@@ -11,7 +11,7 @@ import {
 } from "../runtime/core/user-decisions.mjs";
 import { leaseAuthorityIsStale, leaseContractChanged, sameLeaseRenewalAuthority }
   from "../runtime/workflow/authority/lease-runtime.mjs";
-import { approvedDecisionRevision } from "../runtime/evidence/receipt-runtime.mjs";
+import { approvedDecisionRevision } from "../runtime/evidence/review-closure-receipts.mjs";
 import { workspaceCapabilityValue } from "../runtime/core/execution-contract.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
 

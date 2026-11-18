@@ -5,7 +5,7 @@ import { acquireProcessLock } from "../../core/process-lock.mjs";
 import { effectiveReviewAttemptLimit } from "../../core/authority-policy.mjs";
 import {
   deltaClosureIssue, reviewFindingIssues, reviewPacketIssues, validReview
-} from "../../evidence/configured-reviewer.mjs";
+} from "../../evidence/review-result-validation.mjs";
 import { openHumanReviewClosure } from "../../evidence/review-attempt-store.mjs";
 import {
   reviewAgreementValue, reviewDepthForTier, reviewDiffValue, reviewScenarioChecklist

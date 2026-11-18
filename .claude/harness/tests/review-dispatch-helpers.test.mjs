@@ -1,14 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { assertReviewDispatchHistory } from "../runtime/evidence/review-attempt-store.mjs";
 import {
-  assertReviewDispatchHistory,
-  reviewDispatchAttemptValue,
-  reviewDispatchScope,
-  reviewDispatchType,
-  reviewHistoryAfterDispatch,
-  validateReviewDispatchBudget
-} from "../runtime/evidence/review-attempt-store.mjs";
+  reviewDispatchAttemptValue, reviewDispatchScope, reviewDispatchType, reviewHistoryAfterDispatch, validateReviewDispatchBudget
+} from "../runtime/evidence/review-attempt-values.mjs";
 
 const fail = (message) => { throw new Error(message); };
 

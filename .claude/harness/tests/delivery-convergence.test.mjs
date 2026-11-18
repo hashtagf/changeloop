@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtempSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync, rmSync } from "node:fs";
+import {
+  mkdtempSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync, rmSync
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,7 +19,7 @@ import { createFeedbackRuntime, readinessProjection } from "../runtime/observabi
 import { archivedResumeSource, resumePacketValue } from "../runtime/workflow/packet/resume-packet.mjs";
 import { createPacketRuntime } from "../runtime/workflow/packet/packet-runtime.mjs";
 import { createReceiptValidity } from "../runtime/evidence/receipt-validity.mjs";
-import { reviewEvidenceRecovery } from "../runtime/evidence/proof-readiness.mjs";
+import { reviewEvidenceRecovery } from "../runtime/evidence/evidence-recovery.mjs";
 import { advanceRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 const stableHash = (value) => JSON.stringify(value);

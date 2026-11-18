@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 
-import { fingerprintedReviewPolicy } from "../runtime/evidence/evidence-contract.mjs";
-import { recordDeterministicReviewClosureOperation } from "../runtime/evidence/receipt-runtime.mjs";
+import { fingerprintedReviewPolicy } from "../runtime/evidence/review-policy.mjs";
+import { recordDeterministicReviewClosureOperation } from "../runtime/evidence/review-closure-receipts.mjs";
 
 const canonical = (value) => Array.isArray(value) ? value.map(canonical)
   : value && typeof value === "object"

@@ -2,19 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  completeReviewAttemptOperation,
-  completedReviewAttemptValue,
-  createRepairClosureAttempt,
-  matchingRepairClosure,
-  normalizeReviewCompletionFindings,
-  openHumanReviewClosure,
-  recordRepairClosureAttemptOperation,
-  repairClosureSource,
-  repairClosureVerifiedFindingIds,
-  reviewCompletionIdentity,
-  validateFinalReviewFindings,
-  validateReviewCompletionFindings
+  createRepairClosureAttempt, matchingRepairClosure, openHumanReviewClosure, recordRepairClosureAttemptOperation, repairClosureSource, repairClosureVerifiedFindingIds
 } from "../runtime/evidence/review-attempt-store.mjs";
+import {
+  completeReviewAttemptOperation, completedReviewAttemptValue, normalizeReviewCompletionFindings, reviewCompletionIdentity, validateFinalReviewFindings, validateReviewCompletionFindings
+} from "../runtime/evidence/review-attempt-values.mjs";
 
 const hash = (value) => JSON.stringify(value);
 const fail = (message) => { throw new Error(message); };
