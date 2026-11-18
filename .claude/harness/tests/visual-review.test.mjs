@@ -220,3 +220,37 @@ test("the visual provider declares the prototype and screenshots as its inputs",
     assert.match(visualReviewPrompt({ prototype: spec.prototype, screenshots: ["s.png"] }), /s\.png/);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+test("the reviewer holds the screens to the agreement and never asks for excluded elements", () => {
+  const dir = packet();
+  try {
+    const record = JSON.parse(readFileSync(join(dir, "prototype", "binding.json"), "utf8"));
+    writeFileSync(join(dir, "prototype", "binding.json"), JSON.stringify({ ...record,
+      agreement: [{ claim: "C-a", requirement: "A", scenario: "Settings shows no banner" }],
+      excludes: ["BETA banner: legal forbids it"] }));
+    const binding = readVisualBinding(dir);
+    const config = visualProviderConfig({
+      changeId: "change", packetPath: dir, packetRelative: "openspec/changes/change",
+      binding, scriptPath: SCRIPT, base: { screenshots: ["test-results/**"] }
+    });
+    const spec = JSON.parse(config.command[2]);
+    assert.deepEqual(spec.excludes, ["BETA banner: legal forbids it"]);
+    assert.equal(spec.agreement[0].scenario, "Settings shows no banner");
+    let prompt = "";
+    runVisualReview({
+      workspace: dir, prototype: spec.prototype, prototypeSha256: spec.prototypeSha256,
+      screenshots: ["s.png"], claimIds: spec.claims, agreement: spec.agreement, excludes: spec.excludes,
+      runner: (request) => { prompt = request.prompt; return { status: "pass", summary: "same", findings: [] }; }
+    });
+    assert.match(prompt, /the agreement\nwins/);
+    assert.match(prompt, /- C-a \(A\): Settings shows no banner/);
+    assert.match(prompt, /Never report their absence[\s\S]*blocker[\s\S]*- BETA banner: legal forbids it/);
+    // A binding without either adds nothing, so its provider fingerprint is unchanged.
+    const plain = JSON.parse(visualProviderConfig({
+      changeId: "change", packetPath: dir, packetRelative: "openspec/changes/change",
+      binding: { ...binding, agreement: [], excludes: [] }, scriptPath: SCRIPT, base: {}
+    }).command[2]);
+    assert.equal("excludes" in plain || "agreement" in plain, false);
+    assert.doesNotMatch(visualReviewPrompt({ prototype: "p", screenshots: [] }), /agreement\nwins|excludes/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

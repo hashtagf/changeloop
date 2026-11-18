@@ -36,6 +36,13 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- `prototypeSelection.excludes` lists prototype elements the agreement does not
+  adopt, each with its reason. design.md shows them for approval, Build opens
+  them beside the prototype, and the visual reviewer never asks for them and
+  reports one the real UI shows as a blocker. The reviewer also receives the
+  approved scenario of each bound claim, and the agreement wins where it and
+  the picture disagree; before, a forbidden element was judged only from the
+  picture.
 - `quality readiness`: per-layer pyramid readiness of the project (codebase,
   static, verification, prose, review) with the next step for the weakest
   layer; `doctor` shows it as the `pyramid` setup row, `onboard` drafts

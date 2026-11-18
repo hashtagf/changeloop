@@ -239,7 +239,9 @@ Add complexity only when the work needs it:
   A task whose own tests sit outside its `paths` is a design warning
 - `decisions` for load-bearing choices, each with its consequences
 - Mermaid or referenced SVG/PNG `diagrams`
-- `prototypeSelection` pointing at an existing selection note
+- `prototypeSelection` pointing at an existing selection note, with optional
+  `excludes` for prototype elements the agreement does not adopt (each with its
+  reason), so the visual check never asks for them
 - `integrations` with documentation source/version, linked requirements, and
   security/resilience/compatibility concerns; related scenarios explicitly use
   `"kind": "success"` and `"kind": "failure"`

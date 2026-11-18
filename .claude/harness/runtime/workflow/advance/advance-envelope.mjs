@@ -2,7 +2,7 @@ import { behaviorChangingWork } from "../../evidence/test-discrimination.mjs";
 import { shellDisplayArgument } from "../../core/shell-mutation-policy.mjs";
 import { pathInside } from "../../core/paths.mjs";
 import { drainSignals } from "../../core/signals.mjs";
-import { readPrototypeBinding } from "../prototype/prototype-binding.mjs";
+import { PROTOTYPE_BINDING, readPrototypeBinding } from "../prototype/prototype-binding.mjs";
 import {
   lifecycleOutcome, lifecycleUserProjection, lifecycleUserState
 } from "../../core/lifecycle-outcome.mjs";
@@ -125,9 +125,12 @@ export function envelopeContextFiles({
   // It is never added to the writable scope.
   const binding = readPrototypeBinding(packetDir);
   const boundClaims = new Set(binding?.claims || []);
+  // The binding record joins it when it lists elements the agreement
+  // excludes, so the builder never copies them from the picture.
   const prototype = binding?.present && (
     tasks.some((task) => (binding.tasks || []).includes(task.id)) ||
-    repairClaims.some((claim) => boundClaims.has(claim))) ? [binding.path] : [];
+    repairClaims.some((claim) => boundClaims.has(claim)))
+    ? [binding.path, ...(binding.excludes?.length ? [join(packetDir, PROTOTYPE_BINDING)] : [])] : [];
   // The harness ticks the isolated workspace's ledger; the main checkout's
   // copy stays unticked until Land, so it would report finished work pending.
   const isolatedLedger = ["worktree", "copy"].includes(state.workspace?.mode) &&

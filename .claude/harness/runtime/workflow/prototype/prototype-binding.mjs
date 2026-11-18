@@ -22,6 +22,14 @@ export function prototypeCovers(selection) {
   return Array.isArray(selection?.covers) ? unique(selection.covers.map(text).filter(Boolean)) : [];
 }
 
+// Prototype elements the agreement does not adopt ("BETA banner: legal forbids
+// it"). The visual reviewer never asks for them and treats their presence in
+// the real UI as a blocker, so a forbidden element is decided by the approved
+// agreement, not by a reviewer's severity guess.
+export function prototypeExcludes(selection) {
+  return Array.isArray(selection?.excludes) ? unique(selection.excludes.map(text).filter(Boolean)) : [];
+}
+
 // Shape and link issues. Existence and containment of the reference are
 // checked with the other referenced files.
 export function prototypeSelectionIssues(selection, requirementKeys = []) {
@@ -38,6 +46,10 @@ export function prototypeSelectionIssues(selection, requirementKeys = []) {
     if (unknown.length)
       issues.push(`semantic draft prototypeSelection.covers names unknown requirement keys: ${unknown.join(", ")}`);
   }
+  if (selection?.excludes !== undefined && (!Array.isArray(selection.excludes) ||
+      selection.excludes.some((value) => !text(value))))
+    issues.push("semantic draft prototypeSelection.excludes must be an array of prototype elements " +
+      "the agreement does not adopt, each with its reason");
   return issues;
 }
 
@@ -76,8 +88,15 @@ export function materializePrototype({ root, basePath, selection, claims = [], t
   copyFileSync(source, target);
   const requirements = prototypeCovers(selection);
   const wanted = new Set(requirements);
-  const claimIds = unique(claims.filter((claim) => wanted.has(text(claim?.requirementKey)))
-    .map((claim) => claim.id)).sort();
+  const bound = claims.filter((claim) => wanted.has(text(claim?.requirementKey)));
+  const claimIds = unique(bound.map((claim) => claim.id)).sort();
+  // What the reviewer must hold the screens to besides the picture: the
+  // approved scenario of every bound claim.
+  const agreement = claimIds.map((id) => {
+    const claim = bound.find((row) => row.id === id);
+    return { claim: id, requirement: text(claim?.requirementKey), scenario: text(claim?.scenario) };
+  }).filter((row) => row.scenario);
+  const excludes = prototypeExcludes(selection);
   const claimSet = new Set(claimIds);
   const taskIds = unique(tasks.filter((task) => (task?.claims || []).some((id) => claimSet.has(id)))
     .map((task) => task.id)).sort();
@@ -89,7 +108,9 @@ export function materializePrototype({ root, basePath, selection, claims = [], t
     mode: prototypeMode(selection),
     requirements,
     claims: claimIds,
-    tasks: taskIds
+    tasks: taskIds,
+    ...(agreement.length ? { agreement } : {}),
+    ...(excludes.length ? { excludes } : {})
   };
   writeFileSync(join(basePath, PROTOTYPE_BINDING), `${JSON.stringify(binding, null, 2)}\n`);
   return binding;

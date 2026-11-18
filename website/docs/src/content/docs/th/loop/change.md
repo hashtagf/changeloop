@@ -187,7 +187,8 @@ Decisions to ratify ของ proposal เพื่อให้คุณ ratify 
   อยู่นอก `paths` เป็น design warning
 - `decisions` สำหรับมติที่มีผลต่อ implementation พร้อมผลที่ตามมา
 - diagram แบบ Mermaid หรืออ้าง SVG/PNG
-- `prototypeSelection` ที่ชี้ไป selection note ที่มีจริง
+- `prototypeSelection` ที่ชี้ไป selection note ที่มีจริง และใส่ `excludes` ได้ (ไม่บังคับ)
+  สำหรับส่วนของ prototype ที่ agreement ไม่รับ พร้อมเหตุผล เพื่อให้การตรวจภาพไม่เรียกหาส่วนนั้น
 - `integrations` พร้อมแหล่ง/เวอร์ชันเอกสาร requirement ที่เกี่ยวข้อง และ concern
   ด้าน security, resilience, compatibility โดย scenario ที่เกี่ยวข้องต้องระบุ
   `"kind": "success"` และ `"kind": "failure"`

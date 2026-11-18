@@ -97,6 +97,7 @@ Prototype ที่ผูกกับ change กลายเป็น design ref
 
 - screenshot มาจาก artifact ของ provider browser หรือ playwright ของโปรเจกต์
 - receipt ผูก digest ของ prototype และ screenshot เป็น inputs เพื่อใช้ซ้ำเมื่อไม่มีอะไรเปลี่ยน
+- reviewer ได้ scenario ที่อนุมัติของ claim ที่ผูก และรายการ `prototypeSelection.excludes` (ส่วนของ prototype ที่ agreement ไม่รับ พร้อมเหตุผล); เมื่อ agreement กับ prototype ขัดกัน agreement ชนะ
 
 #### Scenario: ภาพตรงกัน
 
@@ -109,6 +110,18 @@ Prototype ที่ผูกกับ change กลายเป็น design ref
 - **GIVEN** screenshot ปุ่มหลักอยู่คนละตำแหน่งกับ prototype
 - **WHEN** provider visual รัน
 - **THEN** receipt มี status fail และ finding ระบุหน้าจอ จุดที่ต่าง และ severity
+
+#### Scenario: prototype มีส่วนที่ agreement ไม่รับ
+
+- **GIVEN** prototype มี BETA banner และ `prototypeSelection.excludes` ระบุ "BETA banner: ฝ่ายกฎหมายห้าม"
+- **WHEN** provider visual รันกับ UI ที่ไม่มี banner
+- **THEN** การไม่มี banner ไม่ถูกนับเป็นความต่าง และ design.md แสดงรายการที่ไม่รับให้ผู้ใช้อนุมัติ
+
+#### Scenario: UI แสดงส่วนที่ agreement ไม่รับ
+
+- **GIVEN** `prototypeSelection.excludes` ระบุ BETA banner
+- **WHEN** screenshot ของ UI จริงแสดง banner นั้น
+- **THEN** reviewer รายงานเป็นความต่างระดับ blocker และ receipt มี status fail
 
 #### Scenario: ไม่มี screenshot
 

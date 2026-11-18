@@ -1263,7 +1263,7 @@ test("envelope context keeps only files inside the workspace or repository bases
 });
 
 // A bound prototype is read-only context for the work it constrains.
-async function prototypePacket(t, { withBinding = true } = {}) {
+async function prototypePacket(t, { withBinding = true, excludes = null } = {}) {
   const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import("node:fs");
   const { tmpdir } = await import("node:os");
   const { join } = await import("node:path");
@@ -1279,10 +1279,12 @@ async function prototypePacket(t, { withBinding = true } = {}) {
     writeFileSync(join(packet, "prototype", "board.html"), "<main></main>\n");
     writeFileSync(join(packet, "prototype", "binding.json"), JSON.stringify({
       version: 1, file: "prototype/board.html", sha256: "x", mode: "strict",
-      requirements: ["board"], claims: ["board-renders"], tasks: ["T001"]
+      requirements: ["board"], claims: ["board-renders"], tasks: ["T001"],
+      ...(excludes ? { excludes } : {})
     }));
   }
-  return { packet, workspace, file: join(packet, "prototype", "board.html") };
+  return { packet, workspace, file: join(packet, "prototype", "board.html"),
+    record: join(packet, "prototype", "binding.json") };
 }
 
 test("a task covering a bound requirement opens the prototype without gaining write scope", async (t) => {
@@ -1292,6 +1294,17 @@ test("a task covering a bound requirement opens the prototype without gaining wr
   assert.ok(value.contextFiles.includes(file));
   assert.deepEqual(task.allowedPaths, ["src/board.js"]);
   assert.ok(!value.newFiles.includes(file));
+});
+
+test("a binding that excludes prototype elements is opened with the prototype", async (t) => {
+  const plain = await prototypePacket(t);
+  const task = { id: "T001", allowedPaths: ["src/board.js"] };
+  assert.ok(!envelopeContextFiles({ packetDir: plain.packet, state: { workspace: { path: plain.workspace } },
+    tasks: [task] }).contextFiles.includes(plain.record));
+  const { packet, workspace, record } = await prototypePacket(t, { excludes: ["BETA banner: legal forbids it"] });
+  const value = envelopeContextFiles({ packetDir: packet, state: { workspace: { path: workspace } }, tasks: [task] });
+  assert.ok(value.contextFiles.includes(record));
+  assert.ok(!value.newFiles.includes(record));
 });
 
 test("a task outside the prototype's requirements does not open it", async (t) => {

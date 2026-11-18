@@ -53,12 +53,20 @@ export function readVisualBinding(packetDir) {
     ...binding,
     mode: text(binding.mode) || "strict",
     claims: Array.isArray(binding.claims) ? unique(binding.claims.map(text).filter(Boolean)).sort() : [],
+    agreement: agreementRows(binding.agreement),
+    excludes: Array.isArray(binding.excludes) ? unique(binding.excludes.map(text).filter(Boolean)) : [],
     path: file,
     present,
     intact: digested && present &&
       createHash("sha256").update(readFileSync(file)).digest("hex") === binding.sha256,
     ...(digested ? {} : { bindingIssue: `prototype/binding.json records no valid sha256; ${BINDING_RECOVERY}` })
   };
+}
+
+function agreementRows(rows) {
+  return (Array.isArray(rows) ? rows : [])
+    .map((row) => ({ claim: text(row?.claim), requirement: text(row?.requirement), scenario: text(row?.scenario) }))
+    .filter((row) => row.claim && row.scenario);
 }
 
 // A strict binding must name claims the contract has. One that names none, or
@@ -145,6 +153,8 @@ export function visualProviderConfig({
     ...(text(binding.source) ? { prototypeSource: text(binding.source) } : {}),
     ...(binding.bindingIssue ? { bindingIssue: binding.bindingIssue } : {}),
     claims: binding.claims,
+    ...(binding.agreement?.length ? { agreement: binding.agreement } : {}),
+    ...(binding.excludes?.length ? { excludes: binding.excludes } : {}),
     screenshots,
     report,
     ...(text(base.model) ? { model: text(base.model) } : {})
@@ -228,7 +238,11 @@ export const VISUAL_REVIEW_SCHEMA = {
   }
 };
 
-export function visualReviewPrompt({ prototype, screenshots = [], claimIds = [] }) {
+export function visualReviewPrompt({
+  prototype, screenshots = [], claimIds = [], agreement = [], excludes = []
+}) {
+  const scenarios = agreementRows(agreement);
+  const excluded = (Array.isArray(excludes) ? excludes : []).map(text).filter(Boolean);
   return [
     "You are the visual reviewer of a Change Loop change. Read the approved prototype and every",
     "screenshot of the real UI listed below with the Read tool, then compare them.",
@@ -237,6 +251,18 @@ export function visualReviewPrompt({ prototype, screenshots = [], claimIds = [] 
     "Screenshots of the implemented UI:",
     ...screenshots.map((path) => `- ${path}`),
     `Claims the prototype is bound to: ${claimIds.join(", ") || "none"}`,
+    ...(scenarios.length ? [
+      "",
+      "The approved agreement for these claims. Where it and the prototype disagree, the agreement",
+      "wins: a screen that follows the agreement is not a difference.",
+      ...scenarios.map((row) => `- ${row.claim}${row.requirement ? ` (${row.requirement})` : ""}: ${row.scenario}`)
+    ] : []),
+    ...(excluded.length ? [
+      "",
+      "Prototype elements the agreement excludes. Never report their absence. If a screenshot",
+      "shows one of them, report it as a blocker difference.",
+      ...excluded.map((value) => `- ${value}`)
+    ] : []),
     "",
     "Report every difference in layout, hierarchy, placement, content, or state that a user would",
     "notice. Ignore differences that only come from sample data, fonts, or viewport size.",
@@ -333,7 +359,7 @@ export function prototypeDriftIssue({ prototype, prototypeSha256 = null, prototy
 
 export function runVisualReview({
   workspace = process.cwd(), prototype, prototypeSha256 = null, prototypeSource = null,
-  bindingIssue = null, screenshots = [], claimIds = [], runner
+  bindingIssue = null, screenshots = [], claimIds = [], agreement = [], excludes = [], runner
 }) {
   const drift = text(bindingIssue) ||
     prototypeDriftIssue({ prototype, prototypeSha256, prototypeSource });
@@ -342,7 +368,7 @@ export function runVisualReview({
     return { status: "inconclusive", summary: NO_SCREENSHOT_SUMMARY, findings: [], screenshots };
   const prompt = visualReviewPrompt({
     prototype, screenshots: screenshots.map((path) => isAbsolute(path) ? path : join(workspace, path)),
-    claimIds
+    claimIds, agreement, excludes
   });
   let review;
   try { review = runner({ prompt, schema: VISUAL_REVIEW_SCHEMA, workspace }); }
@@ -477,6 +503,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
       bindingIssue: spec.bindingIssue || null,
       screenshots: matchScreenshots(workspace, spec.screenshots),
       claimIds: spec.claims || [],
+      agreement: spec.agreement || [],
+      excludes: spec.excludes || [],
       runner: claudeVisualRunner({ model: spec.model || null })
     });
   } catch (error) {

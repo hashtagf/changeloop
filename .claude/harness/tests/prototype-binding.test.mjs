@@ -70,6 +70,33 @@ test("covers naming an unknown requirement or an invalid mode is a draft issue",
     /covers must be an array/);
   assert.match(prototypeSelectionIssues({ mode: "loose" }, []).join("\n"), /mode must be strict\|advisory/);
   assert.deepEqual(prototypeSelectionIssues({ mode: "advisory" }, []), []);
+  assert.deepEqual(prototypeSelectionIssues({ excludes: ["BETA banner: legal forbids it"] }, []), []);
+  assert.match(prototypeSelectionIssues({ excludes: "BETA banner" }, []).join("\n"),
+    /excludes must be an array/);
+  assert.match(prototypeSelectionIssues({ covers: ["ghost"], excludes: [""] }, []).join("\n"),
+    /unknown requirement keys: ghost[\s\S]*excludes must be an array/);
+});
+
+test("the binding records the bound scenarios and the elements the agreement excludes", (t) => {
+  const { root, basePath } = project(t);
+  const binding = materializePrototype({
+    root, basePath, tasks,
+    claims: claims.map((claim) => ({ ...claim, scenario: `${claim.id} works` })),
+    selection: { reference: ".foundation/prototypes/inv-1/board.html", selected: "A", covers: ["board"],
+      excludes: ["BETA banner: legal forbids it", " "] }
+  });
+  assert.deepEqual(binding.agreement, [
+    { claim: "board-empty", requirement: "board", scenario: "board-empty works" },
+    { claim: "board-renders", requirement: "board", scenario: "board-renders works" }
+  ]);
+  assert.deepEqual(binding.excludes, ["BETA banner: legal forbids it"]);
+  assert.deepEqual(readPrototypeBinding(basePath).excludes, ["BETA banner: legal forbids it"]);
+  const plain = materializePrototype({
+    root, basePath, claims, tasks,
+    selection: { reference: ".foundation/prototypes/inv-1/board.html", selected: "A", covers: ["board"] }
+  });
+  assert.equal("excludes" in plain, false, "no exclusion writes no field");
+  assert.equal("agreement" in plain, false, "claims without scenarios write no agreement");
 });
 
 test("editing the packet copy after approval changes the agreement identity", (t) => {
@@ -100,11 +127,13 @@ test("design.md links the packet copy with its mode and requirements", () => {
     workType: ["ui"],
     prototypeSelection: {
       selected: "Board A", reference: ".foundation/prototypes/inv-1/board.html",
-      reason: "clearest", covers: ["board"], mode: "advisory"
+      reason: "clearest", covers: ["board"], mode: "advisory",
+      excludes: ["BETA banner: legal forbids it"]
     },
     tasks: [{ id: "T001", outcome: "Board", paths: ["src/board.js"], verify: "npm test" }]
   });
   assert.match(design, /\[prototype\/board\.html\]\(prototype\/board\.html\)/);
   assert.match(design, /\*\*Mode:\*\* advisory/);
   assert.match(design, /\*\*Requirements:\*\* `board`/);
+  assert.match(design, /\*\*Not adopted from the prototype:\*\*\n  - BETA banner: legal forbids it/);
 });

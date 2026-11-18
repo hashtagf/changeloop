@@ -882,8 +882,11 @@ structured report at `.foundation/visual/<change>.json`; a receipt without that
 report is `inconclusive`. Without a wired provider, the built-in one has no
 screenshots and asks the agent to set `screenshots`.
 
-An agent reviewer reads the packet's prototype copy and those screenshots and
-returns `pass`, `fail`, or `inconclusive` with one finding per difference: the
+An agent reviewer reads the packet's prototype copy and those screenshots,
+with the approved scenario of each bound claim and the binding's `excludes`
+(prototype elements the agreement does not adopt; the agreement wins where it
+and the picture disagree, an excluded element is never asked for, and one the
+real UI shows is a blocker), and returns `pass`, `fail`, or `inconclusive` with one finding per difference: the
 screen, what differs, a severity of `blocker`, `major`, or `minor`, and the
 claims it affects. A `pass` with a blocker or major finding, or a `fail` with
 no findings, is an `error`. A fail whose findings are all minor passes with the
