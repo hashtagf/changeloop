@@ -49,6 +49,21 @@ Rules:
 4. Pure white and black stay exact (`--white`, `--black`); they are never
    merged with a tinted neighbour.
 
+## Type and radius scale
+
+Every font size and corner radius in the landing page, docs brand styles,
+demo, dashboard, and Pi team web UI is a token from one scale, defined in
+each stylesheet's `:root`:
+
+- Type: `--text-<px>` on the steps 9, 10, 11, 12, 13, 14, 16, 18, 20, 24, 30,
+  36, 42, 48, 56, 64 (the docs site writes them in rem). Fluid headings are
+  `--text-display-<n>` (their `clamp()` unchanged).
+- Radius: `--radius-<px>` on 2, 4, 6, 8, 12, 16, 20, 24, 32, 48, plus
+  `--radius-pill` (999px) and `--radius-round` (50%). Role radii such as
+  `--radius` and `--cf-radius` stay.
+- A new size or radius picks the nearest step. Relative sizes (`em`, `%`) and
+  `0` stay literal. `node scripts/lint/ui-scale.mjs` reports any px/rem literal.
+
 ## Accessibility
 
 - Markup of every surface passes `node scripts/lint/ui-a11y.mjs` (headings
@@ -63,9 +78,6 @@ Rules:
 Recorded so nobody mistakes it for intent; each moves to tokens when its
 surface is next restyled, with the owner's approval:
 
-- Font sizes: landing and docs use about 37 distinct sizes, the dashboard 20,
-  the Pi web UI 21; no type scale exists.
-- Radii: 10–13 distinct values per surface beside `--radius`.
 - The landing and dashboard palettes differ slightly (`--paper` `#f2eee5` vs
   `#f4f1ea`); they are separate products and are not merged here.
 
@@ -73,4 +85,5 @@ surface is next restyled, with the owner's approval:
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-11-18 | Font sizes and radii snapped to one scale (nearest step by ratio, ties larger; 8px text became 9px, half-pixel sizes whole) | Up to 28 sizes and 13 radii per surface had no system; the largest shift is about one step |
 | 2026-11-18 | Every stylesheet color became a token; near-duplicates within ΔE 6 merged into the most used one (78 colors moved, largest ΔE 5.8) | One token source, as the UI readiness row requires; ΔE ≤ 6 is hard to see side by side |
