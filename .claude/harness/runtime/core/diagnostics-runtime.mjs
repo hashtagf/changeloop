@@ -47,6 +47,19 @@ export function changeListingRow(id, {
   return `${id}\t${view.readiness}\t${view.schema}\t${nextCommand(view.readiness, id, state)}`;
 }
 
+// One selected repository's doctor row: present and Git-backed, or why not.
+function repositoryCheck(repository, gitHead) {
+  const available = existsSync(repository.path);
+  const initialized = available && Boolean(gitHead(repository.path));
+  return {
+    level: initialized ? "ok" : (repository.mode === "write" ? "error" : "warn"),
+    name: `repository:${repository.id}`,
+    detail: !available ? "missing"
+      : initialized ? `${repository.type}; ${repository.mode}; ${repository.relativePath}`
+        : "not initialized as Git"
+  };
+}
+
 export function createDiagnosticsRuntime({
   root,
   version,
@@ -201,6 +214,54 @@ export function createDiagnosticsRuntime({
         timeoutMs: 120000
       }
     }));
+  }
+
+  function playwrightProviderChecks(checks, stage, config, providerCwd) {
+    if (config.adapter !== "playwright") return;
+    const providerPlaywright = playwrightAvailability(providerCwd);
+    checks.push({
+      level: providerPlaywright.packageOwned && providerPlaywright.binaryAvailable
+        ? "ok" : (stage === "prove" ? "error" : "info"),
+      name: "playwright:package",
+      detail: providerPlaywright.packageOwned && providerPlaywright.binaryAvailable
+        ? "project-owned dependency available"
+        : "install and lock @playwright/test in the project"
+    });
+    checks.push({
+      level: providerPlaywright.config ? "ok" : "warn",
+      name: "playwright:config",
+      detail: providerPlaywright.config || "no config found; command must provide complete setup"
+    });
+    checks.push({
+      level: config.readiness?.url ? "ok" : "info",
+      name: "playwright:readiness",
+      detail: config.readiness?.url || "delegated to Playwright webServer configuration"
+    });
+  }
+  // One provider's doctor rows: an external receipt's state, or the
+  // command's availability and, for Playwright, the project setup.
+  function providerChecks(checks, stage, requestedChange, provider) {
+    const config = providerConfig(requestedChange, provider);
+    const current = receiptValidity(requestedChange, provider);
+    // A provider without a harness-run command proves by an external receipt.
+    if (!config || config.adapter === "external") {
+      const valid = current.validity === "valid";
+      checks.push({ level: valid ? "ok" : "warn", name: `provider:${provider}`,
+        detail: valid ? "external receipt valid"
+          : config ? "awaiting external receipt" : "no executable adapter; external receipt required" });
+      return;
+    }
+    const executable = config.command?.[0];
+    const providerCwd = providerWorkspace(requestedChange, provider, config);
+    const commandAvailable = commandExists(executable, providerCwd);
+    checks.push({
+      level: commandAvailable ? "ok" : (stage === "prove" ? "error" : "info"),
+      name: `provider:${provider}:command`,
+      detail: commandAvailable
+        ? executable
+        : `${executable || "missing"} ${stage === "prove" ? "unavailable" : "planned"}`
+    });
+    playwrightProviderChecks(checks, stage, config, providerCwd);
   }
 
   function doctor(flags = {}) {
@@ -388,73 +449,19 @@ export function createDiagnosticsRuntime({
           delivery: { authoritative: false, proofStatus: "unchanged", ...delivery }
         });
       }
+      // `external` describes topology/containment, not a weaker isolation
+      // contract. Every selected repository must still be Git-backed so the
+      // sandbox can pin it to a commit.
       function collectRepositoryChecks() {
-      for (const repository of selected) {
-        const available = existsSync(repository.path);
-        // `external` describes topology/containment, not a weaker isolation
-        // contract. Every selected repository must still be Git-backed so the
-        // sandbox can pin it to a commit.
-        const initialized = available && Boolean(gitHead(repository.path));
-        checks.push({
-          level: initialized ? "ok" : (repository.mode === "write" ? "error" : "warn"),
-          name: `repository:${repository.id}`,
-          detail: !available ? "missing"
-            : initialized ? `${repository.type}; ${repository.mode}; ${repository.relativePath}`
-              : "not initialized as Git"
-        });
-      }
+      for (const repository of selected) checks.push(repositoryCheck(repository, gitHead));
       }
       collectRepositoryChecks();
-      function collectPlaywrightProviderChecks(config, providerCwd) {
-        if (config.adapter !== "playwright") return;
-        const providerPlaywright = playwrightAvailability(providerCwd);
-        checks.push({
-          level: providerPlaywright.packageOwned && providerPlaywright.binaryAvailable
-            ? "ok" : (stage === "prove" ? "error" : "info"),
-          name: "playwright:package",
-          detail: providerPlaywright.packageOwned && providerPlaywright.binaryAvailable
-            ? "project-owned dependency available"
-            : "install and lock @playwright/test in the project"
-        });
-        checks.push({
-          level: providerPlaywright.config ? "ok" : "warn",
-          name: "playwright:config",
-          detail: providerPlaywright.config || "no config found; command must provide complete setup"
-        });
-        checks.push({
-          level: config.readiness?.url ? "ok" : "info",
-          name: "playwright:readiness",
-          detail: config.readiness?.url || "delegated to Playwright webServer configuration"
-        });
-      }
       function collectProviderChecks() {
       // Keep the eager host inspection from the original diagnostics path.
       playwrightAvailability(workspace);
       const contractProviders = compiled?.evidence?.providers ||
         requiredProviders(requestedChange);
-      for (const provider of contractProviders) {
-        const config = providerConfig(requestedChange, provider);
-        const current = receiptValidity(requestedChange, provider);
-        // A provider without a harness-run command proves by an external receipt.
-        if (!config || config.adapter === "external") {
-          const valid = current.validity === "valid";
-          checks.push({ level: valid ? "ok" : "warn", name: `provider:${provider}`,
-            detail: valid ? "external receipt valid"
-              : config ? "awaiting external receipt" : "no executable adapter; external receipt required" });
-          continue;
-        }
-        const executable = config.command?.[0];
-        const providerCwd = providerWorkspace(requestedChange, provider, config);
-        const commandAvailable = commandExists(executable, providerCwd);
-        checks.push({
-          level: commandAvailable ? "ok" : (stage === "prove" ? "error" : "info"),
-          name: `provider:${provider}:command`,
-          detail: commandAvailable
-            ? executable
-            : `${executable || "missing"} ${stage === "prove" ? "unavailable" : "planned"}`
-        });
-        collectPlaywrightProviderChecks(config, providerCwd);
-      }
+      for (const provider of contractProviders) providerChecks(checks, stage, requestedChange, provider);
       }
       collectProviderChecks();
       // A required test capability with no runnable script cannot be proven;
@@ -501,10 +508,8 @@ export function createDiagnosticsRuntime({
         // Naming the file that pulled a capability in makes a surprising
         // requirement diagnosable in one read.
         detail: policy.length
-          ? policy.map((capability) => {
-            const trigger = policyCapabilityTrigger(requestedChange, capability);
-            return trigger ? `${capability} (from ${trigger})` : capability;
-          }).join(", ")
+          ? policy.map((capability) => [capability, policyCapabilityTrigger(requestedChange, capability)])
+            .map(([capability, trigger]) => trigger ? `${capability} (from ${trigger})` : capability).join(", ")
           : "none inferred from changed surface"
       });
       // Policy infers from the surface a change has *already* touched, so at

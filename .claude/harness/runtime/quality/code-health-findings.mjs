@@ -67,30 +67,80 @@ export function maxNestingDepth(provider) {
   return depth;
 }
 
-// Brace depth per line with strings and comments removed. Object literals
-// count like blocks: deep data and deep control flow are both hard to change.
+// A `{` opens a block when it follows `)`, `=>`, or a word other than one
+// that starts an expression (`else`, `try`, a class name); after anything else
+// (`(`, `,`, `:`, `=`, `[`, `?`, `return`) it opens an object literal.
+// `import {` and `export {` open name lists, not blocks.
+const EXPRESSION_WORDS = new Set(["return", "typeof", "yield", "await", "in", "of", "case", "default", "new", "void",
+  "import", "export"]);
+function opensBlock(before) {
+  const text = before.trimEnd();
+  if (!text) return false;
+  if (text.endsWith("=>") || text.endsWith(")")) return true;
+  const word = text.match(/([A-Za-z_$][\w$]*)$/)?.[1];
+  return Boolean(word) && !EXPRESSION_WORDS.has(word);
+}
+
+// Where a `/` starts a regular expression rather than a division.
+const REGEX_PRECEDES = /(?:^|[(,=:[!&|?{};+\-*%<>~^]|\b(?:return|typeof|case|in|of|void|yield|await))\s*$/;
+
+// Control-flow depth per line from a character scan that skips strings,
+// template text (but not `${}` expressions), regular expressions, and
+// comments: functions, branches, loops, and class bodies count; object and
+// array literals do not, so a nested schema or configuration value is not
+// mistaken for deep logic.
 function braceDepths(text) {
-  let depth = 0;
-  let inBlockComment = false;
-  return text.split("\n").map((raw) => {
-    let line = raw;
-    if (inBlockComment) {
-      const end = line.indexOf("*/");
-      if (end < 0) return depth;
-      line = line.slice(end + 2);
-      inBlockComment = false;
+  const depths = [];
+  const braces = [];
+  const resume = [];
+  let mode = "code";
+  let blocks = 0;
+  let deepest = 0;
+  let recent = "";
+  const remember = (value) => { recent = (recent + value).slice(-48); };
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    const next = text[index + 1];
+    if (character === "\n") {
+      depths.push(deepest);
+      deepest = blocks;
+      if (mode === "line") mode = "code";
+      if (mode === "code") remember(" ");
+      continue;
     }
-    line = line.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/g, "")
-      .replace(/\/\*.*?\*\//g, "").replace(/\/\/.*$/, "");
-    const open = line.indexOf("/*");
-    if (open >= 0) { line = line.slice(0, open); inBlockComment = true; }
-    let deepest = depth;
-    for (const character of line) {
-      if (character === "{") deepest = Math.max(deepest, ++depth);
-      else if (character === "}") depth = Math.max(0, depth - 1);
+    if (mode === "line") continue;
+    if (mode === "block") { if (character === "*" && next === "/") { mode = "code"; index += 1; } continue; }
+    if (mode === "single" || mode === "double" || mode === "regex") {
+      if (character === "\\") { index += 1; continue; }
+      const closes = { single: "'", double: '"', regex: "/" }[mode];
+      if (character === closes) { remember(mode === "regex" ? "/" : "\"\""); mode = "code"; }
+      continue;
     }
-    return deepest;
-  });
+    if (mode === "template") {
+      if (character === "\\") { index += 1; continue; }
+      if (character === "`") { mode = resume.pop() || "code"; remember("\"\""); continue; }
+      if (character === "$" && next === "{") { braces.push("expression"); resume.push("template"); mode = "code"; index += 1; }
+      continue;
+    }
+    if (character === "/" && next === "/") { mode = "line"; index += 1; continue; }
+    if (character === "/" && next === "*") { mode = "block"; index += 1; continue; }
+    if (character === "/" && REGEX_PRECEDES.test(recent)) { mode = "regex"; continue; }
+    if (character === "'") { mode = "single"; continue; }
+    if (character === '"') { mode = "double"; continue; }
+    if (character === "`") { resume.push("code"); mode = "template"; continue; }
+    if (character === "{") {
+      const block = opensBlock(recent);
+      braces.push(block ? "block" : "literal");
+      if (block) deepest = Math.max(deepest, ++blocks);
+    } else if (character === "}") {
+      const closed = braces.pop();
+      if (closed === "expression") { mode = resume.pop() || "code"; continue; }
+      if (closed === "block") blocks = Math.max(0, blocks - 1);
+    }
+    remember(character);
+  }
+  depths.push(deepest);
+  return depths;
 }
 
 // Indentation depth per line, in units of the file's smallest indent.

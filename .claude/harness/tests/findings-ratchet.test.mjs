@@ -174,6 +174,19 @@ test("nesting depth is one finding per file over the limit, ignoring braces in s
   assert.deepEqual(grown.regressions.map((row) => [row.path, row.baseline, row.current]), [["src/deep.js", 6, 7]]);
 });
 
+// Depth is control flow: a nested schema or configuration value is data, and
+// a multi-line template, a `${}` expression, or a regular expression never
+// shifts the count for the code after it.
+test("nesting depth counts blocks, not object literals, templates, or regular expressions", async () => {
+  const { nestingIn } = await import("../runtime/quality/code-health-findings.mjs");
+  const depth = (source) => nestingIn("a.mjs", source, 0)[0]?.value ?? 0;
+  assert.equal(depth("const schema = { a: { b: { c: { d: { e: { f: 1 } } } } } };\n"), 0);
+  assert.equal(depth("function f() {\n  return { a: [{ b: { c: 1 } }] };\n}\n"), 1);
+  assert.equal(depth("function f() {\n  if (x) {\n    for (const y of z) {\n      g(() => {\n        h();\n      });\n    }\n  } else {\n  }\n}\n"), 4);
+  assert.equal(depth("function f() {\n  const m = `a ${\n    b({ c: 1 })\n  } {`;\n  const r = /[{]{2}/;\n}\nfunction g() {\n  if (x) {\n  }\n}\n"), 2);
+  assert.equal(depth("import { a, b } from \"x\";\nexport { a };\nclass K {\n  m() {\n  }\n}\n"), 2);
+});
+
 test("a later lane setting joins the digest only when set, so existing baselines keep comparing", (t) => {
   const root = project(t, { "a.js": "x\n" });
   const repository = { id: "root", path: root };

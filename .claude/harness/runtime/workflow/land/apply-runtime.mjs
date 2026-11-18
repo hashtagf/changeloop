@@ -595,17 +595,16 @@ export function createApplyRuntime({
       saveRuntime(state);
       failSpecSync(outstanding);
     }
-    if (!state.deliveryIntegrity && Array.isArray(state.specSyncInputs) &&
-        typeof pathIdentity === "function") {
-      const archivedPath = state.archivedChangePath || archivedChangeRelativePath(id);
-      if (archivedPath) {
-        stripArchiveAppendix(state, archivedPath);
-        assertRetainedArchiveIntegrity(id, state, archivedPath);
-        appendArchiveAppendix(state, archivedPath);
-        recordDeliveryIntegrity(state, archivedPath, state.specSyncInputs,
-          Array.isArray(state.land?.archivePacketEntries));
-        saveRuntime(state);
-      }
+    const integrityPending = !state.deliveryIntegrity && Array.isArray(state.specSyncInputs) &&
+      typeof pathIdentity === "function";
+    const archivedPath = integrityPending ? state.archivedChangePath || archivedChangeRelativePath(id) : null;
+    if (archivedPath) {
+      stripArchiveAppendix(state, archivedPath);
+      assertRetainedArchiveIntegrity(id, state, archivedPath);
+      appendArchiveAppendix(state, archivedPath);
+      recordDeliveryIntegrity(state, archivedPath, state.specSyncInputs,
+        Array.isArray(state.land?.archivePacketEntries));
+      saveRuntime(state);
     }
     if (state.specSyncViolations || Array.isArray(state.specSyncInputs)) {
       delete state.specSyncViolations;

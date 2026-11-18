@@ -147,9 +147,9 @@ helper เดียว) และการซ้อนลึกสุด 10 → 
 ## งานระยะยาวที่เหลือ
 
 1. กลับทิศ dependency เพื่อตัดวงระหว่าง runtime แล้วจึงแยก `foundation.mjs`
-2. type error เหลือ 0 แล้ว (PR ถัดจาก #16); ขั้นต่อไปคือเปิด `strict` ทีละโดเมน
+2. type error เหลือ 0 แล้ว และเปิด `strictFunctionTypes`, `strictBindCallApply`, `noImplicitThis`, `alwaysStrict`; ยังไม่เปิด `strictNullChecks` (913 จุด) และ `noImplicitAny` (ราว 12,950 จุด) เพราะส่วนใหญ่เป็นการใส่ annotation ให้ JS ไม่ใช่บั๊ก
 3. ลดไฟล์ที่ยังเกิน 1,000 บรรทัดให้ต่ำกว่าเพดาน แล้วลดเพดานเป็น 800
-4. ลดไฟล์ที่ซ้อนเกิน 5 ชั้น (39 ไฟล์ ลึกสุด 7) ส่วนใหญ่เป็น object literal ใน factory
+4. (เสร็จแล้ว) การซ้อนนับเฉพาะ control flow ไม่นับ object literal; ไฟล์ที่ซ้อนเกิน 5 ชั้นเหลือ 0
 5. (เสร็จแล้ว) ทุกไฟล์เทสต์มี row ใน `.claude/tests/README.md`; baseline ว่างและต้องว่างต่อไป
 6. เพิ่มเทสต์ `advance` ของ change เดียวกันที่รันพร้อมกันหลาย process
 

@@ -7,6 +7,10 @@
     "moduleResolution": "nodenext",
     "target": "esnext",
     "strict": false,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
     "skipLibCheck": true,
     "types": ["node"],
     "pretty": false

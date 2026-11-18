@@ -16,6 +16,7 @@ import {
 } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { measuredNumber } from "../core/measured-number.mjs";
+import { acquireRollupLock, foldContextEvent, normalizedContextRollup } from "./context-rollup.mjs";
 import {
   normalizeClaudeUserTransition,
   normalizeTelemetryRow,
@@ -757,26 +758,6 @@ export function readCompleteJsonLinesOperation({
   return { rows, nextOffset: start + newline + 1 };
 }
 
-export function normalizedContextRollup(id, loaded) {
-  const rollup = {
-    version: 1,
-    changeId: id,
-    count: measuredNumber(loaded.count) ?? 0,
-    totalBytes: measuredNumber(loaded.totalBytes) ?? 0,
-    byKind: {}
-  };
-  const archivedKinds = loaded.byKind && typeof loaded.byKind === "object"
-    ? Object.entries(loaded.byKind) : [];
-  for (const [kind, archived] of archivedKinds) {
-    const count = measuredNumber(archived?.count);
-    const totalBytes = measuredNumber(archived?.totalBytes);
-    const maxBytes = measuredNumber(archived?.maxBytes);
-    if (count === null || totalBytes === null || maxBytes === null) continue;
-    rollup.byKind[kind] = { count, totalBytes, maxBytes };
-  }
-  return rollup;
-}
-
 export function createTelemetryRuntime({
   root,
   logs,
@@ -821,14 +802,7 @@ export function createTelemetryRuntime({
       const lockPath = join(logs, id, "context-rollup.lock");
       let lock = null;
       try {
-        try {
-          lock = openSync(lockPath, "wx");
-        } catch {
-          if (existsSync(lockPath) && Date.now() - statSync(lockPath).mtimeMs > 300000) {
-            rmSync(lockPath, { force: true });
-            lock = openSync(lockPath, "wx");
-          }
-        }
+        lock = acquireRollupLock(lockPath);
         if (lock === null) return;
         const rollupPath = join(logs, id, "context-rollup.json");
         // A re-read rollup is external input: a non-numeric counter would
@@ -842,20 +816,7 @@ export function createTelemetryRuntime({
         const rollup = normalizedContextRollup(id, loaded);
         for (const entry of entries.slice(0, 500)) {
           const path = join(dir, entry);
-          const row = readJson(path, {});
-          const bytes = measuredNumber(row.bytes);
-          if (row.kind && bytes !== null) {
-            rollup.count += 1;
-            rollup.totalBytes += bytes;
-            const summary = rollup.byKind[row.kind] ||= {
-              count: 0,
-              totalBytes: 0,
-              maxBytes: 0
-            };
-            summary.count += 1;
-            summary.totalBytes += bytes;
-            summary.maxBytes = Math.max(summary.maxBytes, bytes);
-          }
+          foldContextEvent(rollup, readJson(path, {}));
           rmSync(path, { force: true });
         }
         rollup.updatedAt = now();

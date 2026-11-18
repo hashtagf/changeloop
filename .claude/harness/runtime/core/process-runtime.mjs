@@ -216,11 +216,8 @@ export function createProcessRuntime({ root, logs, now, resolveServiceCwd }) {
       let closed = false;
       const observeReadiness = async () => {
         while (!closed && !readinessObserved) {
-          if (await readinessMatches(options.readiness)) {
-            readinessObserved = true;
-            return;
-          }
-          if (!closed) await delay(100, { unref: true });
+          readinessObserved = Boolean(await readinessMatches(options.readiness));
+          if (!readinessObserved && !closed) await delay(100, { unref: true });
         }
       };
       const child = spawn(command, args, {

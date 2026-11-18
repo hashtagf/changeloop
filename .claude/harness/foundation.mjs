@@ -2029,7 +2029,7 @@ const { advanceValue, advanceThrough, showAdvance } = createAdvanceRuntime({
       const config = providerConfig(id, provider);
       if (config && config.adapter !== "external") return [];
       if (["review", "acceptance"].includes(providerCapability(provider, config))) return [];
-      const recovery = externalEvidenceRecovery(id, provider);
+      const recovery = /** @type {Record<string, any>} */ (externalEvidenceRecovery(id, provider));
       if (recovery.kind !== "user-decision" ||
           recovery.wiring?.kind === "configure-provider") return [];
       return [{

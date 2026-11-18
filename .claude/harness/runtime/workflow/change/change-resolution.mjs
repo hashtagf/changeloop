@@ -14,6 +14,24 @@ import {
 } from "../draft/draft-packet-render.mjs";
 import { formatApprovalDelta } from "./amendment-record.mjs";
 
+// The spec approval after one consent. Without a role it is the whole
+// approval and covers every lane required now (a lane a later revision adds is
+// asked again). A role's lane added after the whole approval extends it and
+// never revokes it; otherwise the approval completes once every required lane
+// has consented.
+function specApprovalValue({ role, required, lanes, prior, priorComplete, consent, decisionRef }) {
+  if (role === null) {
+    for (const lane of required) lanes[lane] = consent;
+    return { required: true, ...consent, ...(required.length ? { lanes, requiredLanes: required } : {}) };
+  }
+  lanes[role] = consent;
+  if (priorComplete) return { ...prior, lanes, requiredLanes: required };
+  if (!required.every((lane) => lanes[lane])) return { required: true, lanes, requiredLanes: required };
+  return { required: true, ...consent,
+    decisionRef: required.map((lane) => lanes[lane].decisionRef).join(",") || decisionRef,
+    lanes, requiredLanes: required };
+}
+
 export function createChangeResolution(ctx) {
   const {
     approvalLanes, approvalPacketRootFor, atomicStep, changePath, fail, loadRuntime,
@@ -294,17 +312,14 @@ export function createChangeResolution(ctx) {
         const amended = approvalRoot !== root &&
           amendedAgreementMatches(current, approvalRoot, id);
         const amendedSource = amendedPacketSource(root, current);
-        if (approvalRoot !== root && !amended &&
-            agreementIdentity(approvalRoot, id) !== agreementIdentity(root, id) &&
-            (amendedSource || !repairWhitespaceDrift(root, approvalRoot, id))) {
-          const restored = restoreDriftedAgreement(root, approvalRoot, id, Date.now(),
-            amendedSource || undefined);
-          if (restored) console.error(agreementRestoredNotice(id, restored));
-          else {
-            const drift = agreementDriftError(id, approvalRoot);
-            fail(drift.message, 1, { owner: drift.owner, boundary: drift.boundary, code: drift.code });
-          }
-        }
+        const drifted = approvalRoot !== root && !amended &&
+          agreementIdentity(approvalRoot, id) !== agreementIdentity(root, id) &&
+          (amendedSource || !repairWhitespaceDrift(root, approvalRoot, id));
+        const restored = drifted && restoreDriftedAgreement(root, approvalRoot, id, Date.now(),
+          amendedSource || undefined);
+        if (restored) console.error(agreementRestoredNotice(id, restored));
+        const drift = drifted && !restored ? agreementDriftError(id, approvalRoot) : null;
+        if (drift) fail(drift.message, 1, { owner: drift.owner, boundary: drift.boundary, code: drift.code });
         // Consent covers a settled agreement: an open question is answered and
         // revised into the change first, never approved around.
         const openQuestions = designOpenQuestions(id, approvalRoot);
@@ -319,25 +334,7 @@ export function createChangeResolution(ctx) {
         const lanes = Object.fromEntries(Object.entries(prior.lanes || {})
           .filter(([, lane]) => lane?.identity === consent.identity && Number(lane.revision) === consent.revision));
         const priorComplete = prior.identity === consent.identity && Number(prior.revision) === consent.revision;
-        if (role === null) {
-          // Approval without a role is the whole approval and covers every lane
-          // required now; a lane added by a later revision is asked again.
-          for (const lane of required) lanes[lane] = consent;
-          current.specApproval = { required: true, ...consent,
-            ...(required.length ? { lanes, requiredLanes: required } : {}) };
-        } else {
-          lanes[role] = consent;
-          if (priorComplete) {
-            // A lane recorded after the whole approval adds to it, never revokes it.
-            current.specApproval = { ...prior, lanes, requiredLanes: required };
-          } else {
-            const complete = required.every((lane) => lanes[lane]);
-            current.specApproval = complete
-              ? { required: true, ...consent, decisionRef: required.map((lane) => lanes[lane].decisionRef).join(",") || decisionRef,
-                lanes, requiredLanes: required }
-              : { required: true, lanes, requiredLanes: required };
-          }
-        }
+        current.specApproval = specApprovalValue({ role, required, lanes, prior, priorComplete, consent, decisionRef });
         approvedDelta = current.specApproval.identity ? current.pendingApprovalDelta || null : null;
         if (current.specApproval.identity) delete current.pendingApprovalDelta;
         saveRuntime(current);

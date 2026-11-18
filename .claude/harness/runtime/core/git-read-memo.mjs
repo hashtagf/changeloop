@@ -273,7 +273,7 @@ function install() {
     const end = once(endAsync);
     try {
       const handle = await openHandle.call(this, path, flags, ...rest);
-      handle.once("close", end);
+      /** @type {any} */ (handle).once("close", end);
       return handle;
     } catch (error) { end(); throw error; }
   };
@@ -299,11 +299,13 @@ function install() {
     };
   }
   const execSync = childProcess.execSync;
-  childProcess.execSync = function observedExecSync(...args) {
+  /** @this {any} */
+  function observedExecSync(...args) {
     invalidateGitReads();
-    try { return execSync.apply(this, args); }
+    try { return execSync.apply(this, /** @type {any} */ (args)); }
     finally { invalidateGitReads(); }
-  };
+  }
+  childProcess.execSync = /** @type {any} */ (observedExecSync);
   for (const name of ["spawn", "execFile", "exec", "fork"]) {
     const fn = childProcess[name];
     childProcess[name] = function observedChild(...args) {
@@ -322,7 +324,7 @@ function install() {
 
   const wait = Atomics.wait;
   Atomics.wait = function observedWait(...args) {
-    try { return wait.apply(this, args); }
+    try { return wait.apply(this, /** @type {any} */ (args)); }
     finally { invalidateGitReads(); }
   };
 
