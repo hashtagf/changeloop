@@ -1106,6 +1106,49 @@
       "expected_terminal": "completed",
       "expected_evidence": { "visual": "pass" },
       "baseline": null
+    },
+    {
+      "id": "interactive-ui-states",
+      "status": "ready",
+      "execution": "paid",
+      "workload": "interactive-ui-states",
+      "stack": "static-web",
+      "size": "small",
+      "fixture": ".claude/tests/bench/tasks/44-interactive-ui-states/seed",
+      "fixture_digest": "sha256:61963ec43581d83a1899e75e00e46c7bf6ab369eecdbea8b6b45919cf938a253",
+      "prompt": "/dev build the Tasks screen in ISSUE.md, with tests. I approve the spec as compiled (decision ref user-prompt:approve-tasks-spec); do not stop for spec approval.",
+      "host": "claude-code",
+      "risk": "standard",
+      "project_command": "node --test",
+      "clean_install_command": "npm install --ignore-scripts",
+      "critical_case_ids": [
+        "CASE_HEADING",
+        "CASE_LOADING",
+        "CASE_EMPTY",
+        "CASE_LOADED",
+        "CASE_ERROR_RETRY",
+        "CASE_ADD_TASK",
+        "CASE_ADD_FROM_EMPTY",
+        "CASE_EMPTY_TITLE_REFUSED",
+        "CASE_PHONE_WIDTH",
+        "CASE_TESTS_PASS"
+      ],
+      "oracle": {
+        "required": true,
+        "path": ".claude/tests/bench/tasks/44-interactive-ui-states/oracle/run.sh"
+      },
+      "quality_required": true,
+      "budget": {
+        "wall_ms": 2400000,
+        "cost_usd": 10,
+        "model_requests": 200,
+        "tool_calls": 200
+      },
+      "expected_terminal": "completed",
+      "expected_evidence": {
+        "accessibility": "pass"
+      },
+      "baseline": null
     }
   ]
 }

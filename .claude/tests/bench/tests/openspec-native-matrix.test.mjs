@@ -60,8 +60,8 @@ test("the versioned cross-domain matrix is valid and every workload is executabl
   const matrix = loadMatrix();
   assert.equal(matrix.protocol, "foundation-openspec-native-matrix-v2");
   assert.deepEqual(matrixIssues(matrix), []);
-  assert.equal(matrix.scenarios.length, 32);
-  assert.equal(matrix.scenarios.filter((scenario) => scenario.status === "ready").length, 32);
+  assert.equal(matrix.scenarios.length, 33);
+  assert.equal(matrix.scenarios.filter((scenario) => scenario.status === "ready").length, 33);
   assert.equal(matrix.scenarios.filter((scenario) => scenario.baseline !== null).length, 1);
 });
 
@@ -309,4 +309,15 @@ test("each work-type oracle fails the unmodified seed at a named critical case",
     assert.deepEqual(Object.keys(verdict.results).sort(), [...plan.criticalCaseIds].sort(), id);
     assert.ok(cases.some((value) => verdict.results[value] === "fail"), `${id}: no critical case failed`);
   }
+});
+
+test("the interactive UI lane names no wiring and its oracle drives every state", () => {
+  const plan = executionPlan(loadMatrix(), "interactive-ui-states");
+  assert.equal(plan.execution, "paid");
+  assert.match(plan.fixture, /44-interactive-ui-states\/seed$/);
+  assert.match(plan.oracle, /44-interactive-ui-states\/oracle\/run\.sh$/);
+  assert.doesNotMatch(plan.prompt, /execution\.yaml|provider|accessibility|workType/,
+    "the agent derives UI evidence from ISSUE.md and the template, never from the prompt");
+  for (const id of ["CASE_LOADING", "CASE_EMPTY", "CASE_ERROR_RETRY", "CASE_EMPTY_TITLE_REFUSED", "CASE_PHONE_WIDTH"])
+    assert.ok(plan.criticalCaseIds.includes(id), id);
 });

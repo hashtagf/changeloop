@@ -1,0 +1,10 @@
+{
+  "name": "task-board",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test",
+    "screenshot": "node scripts/screenshot.mjs"
+  }
+}
