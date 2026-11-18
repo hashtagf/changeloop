@@ -5,6 +5,7 @@
 // Change Loop's own repository and installed projects use the same file shape.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { unregisteredRuleSentences } from "./guide-rules.mjs";
 
 export const RULE_REGISTRY_PATH = "quality/rule-enforcement.json";
 export const RULE_CHECK_LAYERS = Object.freeze(["architecture", "type", "lint", "test", "mutation"]);
@@ -59,6 +60,8 @@ export function ruleRegistrySummary(root, registry = readRuleRegistry(root)) {
     enforcedShare: decidable ? Math.round(checked / decidable * 100) : null,
     proseOnly: rules.filter((rule) => rule.layer === "prose").map((rule) => rule.id),
     proseOnlyCeiling: registry.proseOnlyCeiling ?? null,
-    registryIssues: registryIssues(root, registry)
+    registryIssues: registryIssues(root, registry),
+    unregistered: unregisteredRuleSentences(root, registry),
+    unregisteredCeiling: registry.unregisteredRuleCeiling ?? null
   };
 }

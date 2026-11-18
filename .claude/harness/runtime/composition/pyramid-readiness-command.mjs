@@ -7,6 +7,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { pyramidReadiness, readinessText } from "../quality/pyramid-readiness.mjs";
 import { ruleRegistrySummary } from "../quality/rule-registry.mjs";
+import { incidentSummary } from "../quality/incident-records.mjs";
 import {
   readProjectFeatureMap, validateProjectFeatureMap
 } from "../workflow/validation/project-feature-map.mjs";
@@ -36,8 +37,10 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
         pending: lessons.filter((lesson) => PENDING_LESSONS.has(lesson.status)).length
       } : null,
       rules: registry === undefined ? undefined : registry && {
-        registered: registry.rules, prose: registry.proseOnly.length, issues: registry.registryIssues.length
+        registered: registry.rules, prose: registry.proseOnly.length, issues: registry.registryIssues.length,
+        unregistered: registry.unregistered.length
       },
+      incidents: attempt(() => incidentSummary(root)),
       outcomes: Array.isArray(changes) ? {
         archived: changes.length,
         measured: changes.filter((change) => change.firstProofPass !== null).length,

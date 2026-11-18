@@ -14,6 +14,9 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { RULE_LAYERS, ruleRegistrySummary } from "../../.claude/harness/runtime/quality/rule-registry.mjs";
 import { pyramidReadiness } from "../../.claude/harness/runtime/quality/pyramid-readiness.mjs";
+import { incidentSummary } from "../../.claude/harness/runtime/quality/incident-records.mjs";
+import { enforcedLessons, enforcementKind } from "../../.claude/harness/runtime/observability/lessons-runtime.mjs";
+import { COVERAGE_BASELINE } from "./coverage-ratchet.mjs";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 export const REPO_ROOT = resolve(HERE, "../..");
@@ -95,6 +98,17 @@ export function pyramid(root) {
 // This repository's facts for the pyramid readiness criteria Change Loop
 // ships to installed projects: the same criteria, read from the repository's
 // own ratchets instead of consumer quality lanes.
+// The repository's lessons are the rows of openspec/lessons.md; one counts as
+// enforced when its "Enforced by" cell names a file in the repository.
+export function repositoryLessons(root) {
+  const path = join(root, "openspec/lessons.md");
+  if (!existsSync(path)) return null;
+  const rows = enforcedLessons(readFileSync(path, "utf8"));
+  const pending = rows.filter((row) => !["check", "judgment"].includes(
+    enforcementKind(row.enforcedBy, (file) => existsSync(join(root, file)))));
+  return { recurring: rows.length, pending: pending.length };
+}
+
 export function repositoryReadiness(root, card) {
   const ratcheting = "ratcheting";
   const featureMap = existsSync(join(root, "docs/feature-map.json"))
@@ -108,6 +122,7 @@ export function repositoryReadiness(root, card) {
       "file-size": ratcheting, "nesting-depth": ratcheting,
       duplication: ratcheting, "module-boundaries": ratcheting, lint: ratcheting, "type-check": ratcheting,
       "workaround-comments": ratcheting, test: "configured",
+      ...(existsSync(join(root, COVERAGE_BASELINE)) ? { coverage: ratcheting } : {}),
       ...(mutationBaselines ? { "automated-mutation": ratcheting } : {})
     },
     // On a green build the committed baseline equals the code.
@@ -117,9 +132,11 @@ export function repositoryReadiness(root, card) {
       "type-check": card.code.typeFindings, "workaround-comments": card.code.workaroundComments
     },
     featureMap,
-    lessons: null,
+    lessons: repositoryLessons(root),
     rules: { registered: card.pyramid.rules, prose: card.pyramid.proseOnly.length,
-      issues: card.pyramid.registryIssues.length },
+      issues: card.pyramid.registryIssues.length, unregistered: card.pyramid.unregistered.length },
+    incidents: incidentSummary(root),
+    // Archived-change outcomes live in .foundation state, which CI does not have.
     outcomes: null
   });
 }
@@ -165,6 +182,10 @@ export function checkIssues(card) {
       "record a judgment call, or raise proseOnlyCeiling in a reviewed edit");
   if (Number.isInteger(proseOnlyCeiling) && proseOnly.length < proseOnlyCeiling)
     issues.push(`prose-only rules fell to ${proseOnly.length}: lower proseOnlyCeiling in ${RULES} to keep the gain`);
+  const { unregistered, unregisteredCeiling } = card.pyramid;
+  if (Number.isInteger(unregisteredCeiling) && unregistered.length > unregisteredCeiling)
+    issues.push(`${unregistered.length - unregisteredCeiling} new rule sentence(s) in the agent guides have no ${RULES} row: ` +
+      unregistered.slice(0, 3).map((row) => `${row.source}: "${row.sentence.slice(0, 80)}"`).join("; "));
   return issues;
 }
 

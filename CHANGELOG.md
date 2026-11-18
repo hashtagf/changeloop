@@ -41,6 +41,9 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
   layer; `doctor` shows it as the `pyramid` setup row, `onboard` drafts
   `quality/rule-enforcement.json`, and Change Loop's own scorecard uses the
   same criteria. Unmeasured criteria are never scored.
+- Readiness also requires a registry row for every imperative sentence in
+  `CLAUDE.md`/`AGENTS.md`, and a regression file that exists for every closed
+  incident in `openspec/incidents/`.
 - A draft's `enforces` names recurring lesson codes it adds a check for; a
   task must change a file that is not prose, so a lesson cannot be closed by a
   reminder alone.

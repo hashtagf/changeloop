@@ -108,9 +108,11 @@ set. Exit code 1 from a findings tool is accepted as
 strongest layer first: codebase (size, nesting, duplication, module
 boundaries, feature map), static (lint, types, stopgap comments), verification
 (a test lane, CRAP or coverage, mutation), prose (recurring lessons and
-`quality/rule-enforcement.json` rules have checks), and review (first-proof
-pass at least 70% and escaped defects at most 10% once three changes are
-archived). Each findings lane is judged twice: it ratchets, and its debt is
+`quality/rule-enforcement.json` rules have checks, and every imperative
+sentence in `CLAUDE.md`/`AGENTS.md` has a registry row), and review (every
+closed incident in `openspec/incidents/` names a regression file that exists;
+first-proof pass at least 70% and escaped defects at most 10% once three
+changes are archived). Each findings lane is judged twice: it ratchets, and its debt is
 clear. A criterion without a fact is unmeasured and is never scored; a layer's
 percent counts measured criteria only. `doctor` carries the same summary as
 the `pyramid` setup row with the next step for the weakest layer, and Change

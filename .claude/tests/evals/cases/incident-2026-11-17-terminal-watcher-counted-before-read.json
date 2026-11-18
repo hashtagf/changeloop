@@ -1,0 +1,19 @@
+{
+  "id": "incident-2026-11-17-terminal-watcher-counted-before-read",
+  "source": "incident:2026-11-17-terminal-watcher-counted-before-read",
+  "layer": "deterministic",
+  "description": "With the event loop stalled past the terminal write, the benchmark still counts the requests made before the terminal state.",
+  "command": [
+    "node",
+    "--test",
+    "--test-name-pattern",
+    "final-envelope grace",
+    ".claude/tests/bench/tests/openspec-native-cost.test.mjs"
+  ],
+  "expect": {
+    "exit": 0,
+    "stdoutIncludes": [
+      "✔ a final-envelope grace captures the host result without inflating wall time"
+    ]
+  }
+}

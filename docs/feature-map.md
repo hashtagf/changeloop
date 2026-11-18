@@ -389,7 +389,7 @@ Per-layer readiness (codebase, static checks, verification, prose, review) of th
 | CLI commands | `quality readiness` |
 | User states | — |
 | Runtime groups | — |
-| Code | `.claude/harness/runtime/quality/pyramid-readiness.mjs`, `.claude/harness/runtime/quality/rule-registry.mjs`, `.claude/harness/runtime/composition/pyramid-readiness-command.mjs` |
+| Code | `.claude/harness/runtime/quality/pyramid-readiness.mjs`, `.claude/harness/runtime/quality/rule-registry.mjs`, `.claude/harness/runtime/quality/guide-rules.mjs`, `.claude/harness/runtime/quality/incident-records.mjs`, `.claude/harness/runtime/composition/pyramid-readiness-command.mjs` |
 | Tests | `.claude/harness/tests/pyramid-readiness.test.mjs` |
 | Docs | `.claude/harness/CONSUMER-QUALITY.md`, `website/docs/src/content/docs/consumer-quality.md` |
 

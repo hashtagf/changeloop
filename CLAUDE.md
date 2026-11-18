@@ -301,7 +301,8 @@ rtk npm run build                         # from website/docs
 rtk npm run bench:openspec-native:sentinel
 rtk npm run release:preflight
 rtk git diff --check
-rtk npm run quality:scorecard            # code health and rule enforcement
+rtk npm run quality:scorecard            # code health, rule enforcement, pyramid readiness
+rtk node scripts/quality/coverage-ratchet.mjs  # harness coverage (slow tier, about 3 minutes)
 ```
 
 The default `run-all.sh` (fast tier, about three minutes) is the local gate
