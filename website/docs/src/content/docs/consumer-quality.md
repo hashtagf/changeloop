@@ -85,6 +85,10 @@ cloop quality run --change <change-id> --enforce
 
 Once the committed quality config exists, evidence bootstrap can wire the enforced run as a `static-analysis` provider. Its receipt records the aggregate assurance and retains the per-repository report in the command log.
 
+## How ready is the project
+
+`cloop quality readiness --pretty` scores the project against the testing pyramid, strongest layer first: **codebase** (file size, nesting, copied blocks, module boundaries, feature map), **static** (lint, types, stopgap comments), **verification** (tests, CRAP or coverage, mutation), **prose** (recurring lessons and the rules in `quality/rule-enforcement.json` have real checks), and **review** (most changes pass proof the first time, and few defects escape, once three changes are archived). A lane counts twice: once for stopping growth, once for clearing existing findings. Anything without a measurement is shown as unmeasured, never as zero or a pass. `cloop doctor` shows the same percentages and the next step for the weakest layer, and the `onboard` skill drafts what is missing. Change Loop scores its own repository with the same criteria.
+
 ## Language profiles
 
 | Surface | Profile | Appropriate controls |

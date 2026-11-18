@@ -12,18 +12,18 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { RULE_LAYERS, ruleRegistrySummary } from "../../.claude/harness/runtime/quality/rule-registry.mjs";
+import { pyramidReadiness } from "../../.claude/harness/runtime/quality/pyramid-readiness.mjs";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 export const REPO_ROOT = resolve(HERE, "../..");
 export const RULES = "quality/rule-enforcement.json";
 const LINT_BASELINE = "quality/baselines/lint-ratchet-v1.json";
 const SKILL_BASELINE = "quality/baselines/skill-contracts-v1.json";
-const CHECK_LAYERS = ["architecture", "type", "lint", "test", "mutation"];
-const LAYERS = [...CHECK_LAYERS, "judgment", "prose"];
+const LAYERS = RULE_LAYERS;
 const TEST_ROOTS = [".claude", "scripts", "dashboard"];
 
 const readJson = (root, path) => JSON.parse(readFileSync(join(root, path), "utf8"));
-const normalize = (text) => String(text).replace(/\s+/g, " ").trim();
 const sum = (values) => values.reduce((total, value) => total + value, 0);
 
 function walk(root, dir, keep) {
@@ -40,7 +40,7 @@ const lines = (text) => text.length ? text.split("\n").length - (text.endsWith("
 
 export function codeHealth(root) {
   const baseline = readJson(root, LINT_BASELINE);
-  const totals = { lint: 0, types: 0, nestingFiles: 0, nestingMax: 0, duplicateBlocks: 0 };
+  const totals = { lint: 0, types: 0, nestingFiles: 0, nestingMax: 0, duplicateBlocks: 0, workaroundComments: 0 };
   for (const rules of Object.values(baseline.violations))
     for (const [rule, count] of Object.entries(rules)) {
       if (rule.startsWith("types/")) totals.types += count;
@@ -48,7 +48,10 @@ export function codeHealth(root) {
         totals.nestingFiles += 1;
         totals.nestingMax = Math.max(totals.nestingMax, count);
       } else if (rule === "duplication/block") totals.duplicateBlocks += count;
-      else totals.lint += count;
+      else {
+        totals.lint += count;
+        if (rule === "changeloop/no-workaround-comment") totals.workaroundComments += count;
+      }
     }
   const sizes = Object.entries(baseline.sizes).sort(([, a], [, b]) => b - a);
   const ceiling = baseline.sizeCeiling;
@@ -62,6 +65,7 @@ export function codeHealth(root) {
     filesNestedOverLimit: totals.nestingFiles,
     deepestNesting: totals.nestingMax,
     duplicateBlocks: totals.duplicateBlocks,
+    workaroundComments: totals.workaroundComments,
     runtimeFiles: runtime.length,
     runtimeLines: sum(runtime.map((path) => lines(readFileSync(join(root, path), "utf8"))))
   };
@@ -82,52 +86,47 @@ export function testInventory(root) {
   };
 }
 
-// Repairs for the registry: each quote is still in its guide, each layer is
-// known, a check names files that exist, a judgment says why.
-export function registryIssues(root, registry) {
-  const issues = [];
-  const sources = new Map();
-  const ids = new Set();
-  for (const [index, rule] of (registry.rules || []).entries()) {
-    const at = `rules[${index}] ${rule.id || ""}`.trim();
-    if (!rule.id || ids.has(rule.id)) issues.push(`${at}: id is missing or repeated`);
-    ids.add(rule.id);
-    if (!LAYERS.includes(rule.layer)) issues.push(`${at}: layer must be one of ${LAYERS.join(", ")}`);
-    if (!sources.has(rule.source))
-      sources.set(rule.source, existsSync(join(root, rule.source || "")) ? normalize(readFileSync(join(root, rule.source), "utf8")) : null);
-    const text = sources.get(rule.source);
-    if (text === null) issues.push(`${at}: source ${rule.source} does not exist`);
-    else if (!normalize(rule.quote) || !text.includes(normalize(rule.quote)))
-      issues.push(`${at}: quote is no longer in ${rule.source}; update the quote or remove the rule`);
-    if (CHECK_LAYERS.includes(rule.layer)) {
-      const paths = Array.isArray(rule.enforcedBy) ? rule.enforcedBy : [];
-      if (!paths.length) issues.push(`${at}: a ${rule.layer} rule names the files that enforce it (enforcedBy)`);
-      for (const path of paths) if (!existsSync(join(root, path))) issues.push(`${at}: enforcedBy ${path} does not exist`);
-    }
-    if (rule.layer === "judgment" && !normalize(rule.judgment || "")) issues.push(`${at}: a judgment says why no check can catch it`);
-  }
-  return issues;
-}
+export { registryIssues } from "../../.claude/harness/runtime/quality/rule-registry.mjs";
 
 export function pyramid(root) {
-  const registry = readJson(root, RULES);
-  const byLayer = Object.fromEntries(LAYERS.map((layer) => [layer, 0]));
-  for (const rule of registry.rules) byLayer[rule.layer] = (byLayer[rule.layer] || 0) + 1;
-  const checked = sum(CHECK_LAYERS.map((layer) => byLayer[layer]));
-  const decidable = checked + byLayer.prose;
-  return {
-    rules: registry.rules.length,
-    byLayer,
-    // Rules a check could hold, and the share that one does.
-    enforcedShare: decidable ? Math.round(checked / decidable * 100) : null,
-    proseOnly: registry.rules.filter((rule) => rule.layer === "prose").map((rule) => rule.id),
-    proseOnlyCeiling: registry.proseOnlyCeiling ?? null,
-    registryIssues: registryIssues(root, registry)
-  };
+  return ruleRegistrySummary(root, readJson(root, RULES));
+}
+
+// This repository's facts for the pyramid readiness criteria Change Loop
+// ships to installed projects: the same criteria, read from the repository's
+// own ratchets instead of consumer quality lanes.
+export function repositoryReadiness(root, card) {
+  const ratcheting = "ratcheting";
+  const featureMap = existsSync(join(root, "docs/feature-map.json"))
+    ? { features: (readJson(root, "docs/feature-map.json").features || []).length } : null;
+  const mutationBaselines = existsSync(join(root, "quality/baselines"))
+    ? readdirSync(join(root, "quality/baselines")).filter((name) => /mutation/.test(name)).length : 0;
+  return pyramidReadiness({
+    lanes: {
+      // scripts/lint/ratchet.mjs holds lint, tsc, sizes, nesting, copies, and
+      // stopgap comments; architecture-check.mjs holds module boundaries.
+      "file-size": ratcheting, "nesting-depth": ratcheting,
+      duplication: ratcheting, "module-boundaries": ratcheting, lint: ratcheting, "type-check": ratcheting,
+      "workaround-comments": ratcheting, test: "configured",
+      ...(mutationBaselines ? { "automated-mutation": ratcheting } : {})
+    },
+    // On a green build the committed baseline equals the code.
+    findings: {
+      "file-size": card.code.filesOverSizeCeiling, "nesting-depth": card.code.filesNestedOverLimit,
+      duplication: card.code.duplicateBlocks, "module-boundaries": 0, lint: card.code.lintFindings,
+      "type-check": card.code.typeFindings, "workaround-comments": card.code.workaroundComments
+    },
+    featureMap,
+    lessons: null,
+    rules: { registered: card.pyramid.rules, prose: card.pyramid.proseOnly.length,
+      issues: card.pyramid.registryIssues.length },
+    outcomes: null
+  });
 }
 
 export function scorecard(root = REPO_ROOT) {
-  return { version: 1, code: codeHealth(root), tests: testInventory(root), pyramid: pyramid(root) };
+  const card = { version: 1, code: codeHealth(root), tests: testInventory(root), pyramid: pyramid(root) };
+  return { ...card, readiness: repositoryReadiness(root, card) };
 }
 
 export function markdown(card) {
@@ -149,7 +148,12 @@ export function markdown(card) {
     ...LAYERS.map((layer) => row(layer, rules.byLayer[layer])),
     row("Enforced share of checkable rules", `${rules.enforcedShare}%`),
     row("Prose only", rules.proseOnly.join(", ") || "none"),
-    ...(rules.registryIssues.length ? ["", "Registry issues:", ...rules.registryIssues.map((issue) => `- ${issue}`)] : [])
+    ...(rules.registryIssues.length ? ["", "Registry issues:", ...rules.registryIssues.map((issue) => `- ${issue}`)] : []),
+    "", "| Pyramid readiness | Measured criteria met |", "|---|---|",
+    ...card.readiness.layers.map((layer, index) => row(`${index + 1} ${layer.layer}`,
+      layer.percent === null ? "unmeasured" : `${layer.percent}% (${layer.met}/${layer.measured}; ${layer.total - layer.measured} unmeasured)`)),
+    ...card.readiness.criteria.filter((row) => row.status !== "met")
+      .map((item) => `- [${item.layer}] ${item.label}: ${item.status}, ${item.detail}`)
   ].join("\n");
 }
 

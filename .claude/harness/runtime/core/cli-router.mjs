@@ -105,7 +105,8 @@ export async function routeRuntimeCommand(command, values, api) {
     runQuality,
     showQualityReport,
     updateQualityBaseline,
-    showQualityDebt
+    showQualityDebt,
+    showQualityReadiness
   } = api;
   const die = fail;
   // A step that runs before an `advance --through` envelope keeps its human
@@ -367,6 +368,11 @@ export async function routeRuntimeCommand(command, values, api) {
       });
       if (rest.length) die(`unexpected quality baseline argument(s): ${rest.join(", ")}`);
       updateQualityBaseline({ ...flags, repository: flags.repo });
+    },
+    "quality-readiness": async () => {
+      const { flags, rest } = parseStrictCommandFlags(values, "quality readiness", { boolean: ["pretty"] });
+      if (rest.length) die("quality readiness takes no positional arguments");
+      showQualityReadiness(flags);
     },
     "quality-debt": async () => {
       const { flags, rest } = parseStrictCommandFlags(values, "quality debt");

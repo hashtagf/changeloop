@@ -135,7 +135,8 @@ function workflowDigest() {
   const gaps = setupGaps();
   if (gaps.length)
     lines.push(`  Project setup incomplete (${gaps.join(", ")}): offer once, when it fits the user's ` +
-      "request, to onboard the project (skill: onboard); `cloop doctor` lists each step.");
+      "request, to onboard the project (skill: onboard); `cloop quality readiness --pretty` scores " +
+      "each pyramid layer and names the next step.");
   const outside = outsideRootRepositories();
   if (outside.length)
     lines.push(`  Outside the working directory: ${

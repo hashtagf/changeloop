@@ -121,7 +121,7 @@
     }
   },
   "sizes": {
-    ".claude/harness/foundation.mjs": 2389,
+    ".claude/harness/foundation.mjs": 2380,
     ".claude/harness/runtime/evidence/adapter-runtime.mjs": 1070,
     ".claude/harness/runtime/evidence/configured-reviewer.mjs": 1043,
     ".claude/harness/runtime/evidence/evidence-contract.mjs": 1319,

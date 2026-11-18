@@ -546,6 +546,14 @@
       "description": "Show the latest per-repository consumer quality result."
     },
     {
+      "name": "quality readiness",
+      "usage": "quality readiness [--pretty]",
+      "audience": "conditional",
+      "kind": "read",
+      "idempotent": true,
+      "description": "Show the project's pyramid readiness: per layer (codebase, static, verification, prose, review), the measured criteria met, what is unmeasured, and the next step for the weakest layer, without writing state."
+    },
+    {
       "name": "quality baseline",
       "usage": "quality baseline [--repo <id>] [--capability crap|automated-mutation] [--write --decision-ref <ref> --reason <why>]",
       "audience": "admin",
@@ -783,6 +791,7 @@
     "quality-doctor",
     "quality-run",
     "quality-report",
+    "quality-readiness",
     "quality-baseline",
     "quality-debt",
     "agent-plan",

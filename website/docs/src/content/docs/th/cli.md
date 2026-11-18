@@ -72,6 +72,7 @@ recovery, administration และ host integration ด้านล่าง
 | `quality doctor [--change <id>] [--enforce]` | ตรวจ repository ที่เลือก, provider config, executable ที่พร้อมใช้ และ mutation isolation |
 | `quality run [--change <id>] [--repo <id>] [--capability <name>] [--full] [--shard-index <n> --shard-count <n>] [--enforce]` | รัน lane แยก repository และใช้ changed-code หรือ full-inventory ratchet |
 | `quality report` | อ่าน summary ล่าสุดแบบไม่เฉลี่ยกลบ repository |
+| `quality readiness [--pretty]` | ให้คะแนนโปรเจกต์แยกตามชั้นของ pyramid (ตัวโค้ด, ตัวตรวจ, เทสต์, เอกสาร, คนรีวิว) พร้อมขั้นต่อไปของชั้นที่อ่อนที่สุด เกณฑ์ที่ยังวัดไม่ได้จะไม่ถูกนับ |
 | `quality baseline [--repo <id>] [--capability <name>] [--write --decision-ref <ref> --reason <why>]` | preview หรืออนุมัติ versioned CRAP/mutation baseline อย่างชัดเจน |
 | `quality debt` | สร้าง debt แบบ JSON/Markdown จากรอบล่าสุดโดยไม่ขยาย Change scope |
 

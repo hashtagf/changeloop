@@ -11,7 +11,7 @@
   "outputs": [
     {
       "kind": "document",
-      "description": "quality/foundation-quality.json and openspec/feature-map.json drafted from the repository"
+      "description": "quality/foundation-quality.json, quality/rule-enforcement.json, and openspec/feature-map.json drafted from the repository"
     },
     {
       "kind": "decision-request",

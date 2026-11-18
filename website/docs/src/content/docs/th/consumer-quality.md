@@ -81,6 +81,10 @@ cloop quality run --change <change-id> --enforce
 
 เมื่อ commit quality config แล้ว evidence bootstrap สามารถต่อ enforced run เป็น provider `static-analysis` Receipt จะบันทึก aggregate assurance และเก็บ per-repository report ไว้ใน command log
 
+## โปรเจกต์พร้อมแค่ไหน
+
+`cloop quality readiness --pretty` ให้คะแนนโปรเจกต์ตาม pyramid โดยเริ่มจากชั้นที่แข็งที่สุด: **ตัวโค้ด** (ขนาดไฟล์, การซ้อน, โค้ดที่ copy ซ้ำ, ขอบเขตโมดูล, feature map), **ตัวตรวจอัตโนมัติ** (lint, type, คอมเมนต์แก้ขัด), **เทสต์** (มีเทสต์, CRAP หรือ coverage, mutation), **เอกสาร** (บทเรียนที่เกิดซ้ำและกฎใน `quality/rule-enforcement.json` มีตัวตรวจจริง) และ **คนรีวิว** (change ส่วนใหญ่ผ่าน proof รอบแรกและบั๊กหลุดน้อย เมื่อมี change ที่ archived แล้วอย่างน้อยสามตัว) แต่ละ lane นับสองครั้ง: ครั้งแรกคือหยุดไม่ให้เพิ่ม ครั้งที่สองคือเคลียร์ของเดิมหมด สิ่งที่ยังวัดไม่ได้จะแสดงว่ายังไม่วัด ไม่นับเป็นศูนย์หรือผ่าน `cloop doctor` แสดงเปอร์เซ็นต์เดียวกันพร้อมขั้นต่อไปของชั้นที่อ่อนที่สุด และ skill `onboard` ร่างส่วนที่ขาดให้ Change Loop ให้คะแนน repo ตัวเองด้วยเกณฑ์เดียวกัน
+
 ## Language profile
 
 | Surface | Profile | Control ที่เหมาะสม |

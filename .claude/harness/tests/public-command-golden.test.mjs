@@ -39,8 +39,8 @@ test("golden fixture freezes every public host and CLI command contract", () => 
 
 test("the frozen public surface includes the read-only cross-change rollups", () => {
   const rows = publicCliRows();
-  assert.equal(rows.length, 69);
-  for (const name of ["outcomes", "lessons", "features", "package"])
+  assert.equal(rows.length, 70);
+  for (const name of ["outcomes", "lessons", "features", "package", "quality readiness"])
     assert.deepEqual(rows.filter((row) => row.name === name).map(({ kind, idempotent }) =>
       ({ kind, idempotent })), [{ kind: "read", idempotent: true }], name);
   assert.deepEqual(rows.filter((row) => row.name === "preview").map(({ kind }) => kind), ["write"]);

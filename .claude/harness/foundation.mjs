@@ -17,6 +17,7 @@ import {
 import { createExecRuntime } from "./runtime/observability/exec-runtime.mjs";
 import { createOutcomesRuntime } from "./runtime/observability/outcomes-runtime.mjs";
 import { createLessonsRuntime, lessonsReadiness } from "./runtime/observability/lessons-runtime.mjs";
+import { createPyramidReadinessCommand } from "./runtime/composition/pyramid-readiness-command.mjs";
 import { createProjectFeaturesCommand, projectSetupReadiness } from "./runtime/workflow/validation/project-feature-map.mjs";
 import { createApprovalPackageRuntime, routeForState } from "./runtime/workflow/change/approval-package.mjs";
 import {
@@ -280,7 +281,7 @@ const READ_ONLY_OPERATIONS = new Set([
   "package", "budget-checkpoint",
   "packet", "agent-task", "audit-change", "authority-status",
   "handoff-list", "handoff-status", "handoff-packet", "evidence-detect", "evidence-doctor",
-  "doctor", "quality-discover", "quality-doctor", "quality-report",
+  "doctor", "quality-discover", "quality-doctor", "quality-report", "quality-readiness",
   "api-version", "version"
 ]);
 const commandPhaseRecorder = createCommandPhaseRecorder(() => ({
@@ -601,13 +602,9 @@ const {
 // cache invalidates with it or not at all.
 registerPolicyCacheClearer(clearPolicyCache);
 const {
-  showDiscovery: showQualityDiscovery,
-  initialize: initializeQuality,
-  doctor: qualityDoctor,
-  run: runQuality,
-  report: showQualityReport,
-  baseline: updateQualityBaseline,
-  debt: showQualityDebt, readiness: qualityReadiness
+  showDiscovery: showQualityDiscovery, initialize: initializeQuality, doctor: qualityDoctor, run: runQuality,
+  report: showQualityReport, baseline: updateQualityBaseline, debt: showQualityDebt, readiness: qualityReadiness,
+  laneStates: qualityLaneStates
 } = createQualityRuntime({
   root: ROOT,
   repositoryCatalog,
@@ -1577,7 +1574,8 @@ const {
   reviewerStatus,
   unverifiedDrift: (id) => modelDriftInspector.changeDrift(id).unverified,
   evidenceDetection: evidenceDetectionValue,
-  setupReadiness: () => [...qualityReadiness(), ...projectSetupReadiness(ROOT), lessonsReadiness(lessonsValue())],
+  setupReadiness: () => [...qualityReadiness(), ...projectSetupReadiness(ROOT), lessonsReadiness(lessonsValue()),
+    pyramidReadinessCommand.readinessRow()],
   fail: die
 });
 const {
@@ -2124,21 +2122,13 @@ const { showFeedback } = createFeedbackRuntime({
   packetValue: packetRuntime.inspectionPacketValue,
   nextAction: (id) => advanceValue(id, { inspect: true })
 });
-const { showOutcomes } = createOutcomesRuntime({
-  runtimeDir: RUNTIME,
-  evidenceDir: EVIDENCE_VAULT,
-  logsDir: LOGS,
-  changeWorkTypes: (id, state) => changeWorkTypes(activeChangePath(id, state)),
-  reviewAttemptRecords
-});
-const { lessonsValue, showLessons } = createLessonsRuntime({
-  runtimeDir: RUNTIME,
-  evidenceDir: EVIDENCE_VAULT,
-  logsDir: LOGS,
-  reviewAttemptRecords,
-  lessonsDocument: join(ROOT, "openspec", "lessons.md"), projectFileExists: (path) => existsSync(join(ROOT, path)),
-  fail: die
-});
+const { outcomesValue, showOutcomes } = createOutcomesRuntime({ runtimeDir: RUNTIME, evidenceDir: EVIDENCE_VAULT,
+  logsDir: LOGS, changeWorkTypes: (id, state) => changeWorkTypes(activeChangePath(id, state)), reviewAttemptRecords });
+const { lessonsValue, showLessons } = createLessonsRuntime({ runtimeDir: RUNTIME, evidenceDir: EVIDENCE_VAULT,
+  logsDir: LOGS, reviewAttemptRecords, lessonsDocument: join(ROOT, "openspec", "lessons.md"),
+  projectFileExists: (path) => existsSync(join(ROOT, path)), fail: die });
+const pyramidReadinessCommand = createPyramidReadinessCommand({ root: ROOT, laneStates: qualityLaneStates,
+  lessonsValue, outcomesValue });
 const { showFeatures } = createProjectFeaturesCommand({
   root: ROOT, loadRuntime, activeChangePath, canonicalChangedSurface, fail: die
 });
@@ -2385,5 +2375,6 @@ await routeRuntimeCommand(command, values, {
   runQuality: (options) => trapFailures(() => runQuality(options)),
   showQualityReport,
   updateQualityBaseline,
-  showQualityDebt
+  showQualityDebt,
+  showQualityReadiness: pyramidReadinessCommand.showReadiness
 });
