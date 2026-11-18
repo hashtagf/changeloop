@@ -749,7 +749,9 @@ with its digest, mode, requirements, and the claims and tasks those requirements
 reach. Save an artifact or pasted HTML into the project before naming it; use
 `advisory` when the user says the prototype is only a guide. Wire the
 screenshot provider (capability `browser`, with an `inputMode`) and the
-`visual` provider in the draft's `execution` `{"version": 1, "providers": {...}}`,
+`visual` provider in the draft's `execution` `{"version": 1, "providers": {...}}`
+(an authored `execution` without a test provider keeps the one derived from
+the task verifies, so leave test out),
 in `change.json` or in `execution.yaml` beside it, never both
 ([evidence](../../../.claude/harness/EVIDENCE.md#visual)). A `strict` selection
 without a visual provider that has `screenshots` and depends on an existing

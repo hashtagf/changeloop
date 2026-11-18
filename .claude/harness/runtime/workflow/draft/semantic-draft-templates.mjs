@@ -143,8 +143,8 @@ export const MINIMAL_DRAFT_WRITING = Object.freeze({
   prototype: "When the user approved a prototype or mockup for a UI change, bind it: prototypeSelection " +
     "{ reference (a file inside the project; save pasted HTML first), selected, reason, covers: [requirement keys it shows], " +
     "mode 'strict' or 'advisory' (only a guide), excludes: ['<element>: <reason>' for each part the request rejects] }. " +
-    "Strict needs execution.providers with a screenshot command and the harness visual reviewer: " +
-    `${JSON.stringify(VISUAL_WIRING_EXAMPLE)}`,
+    "Strict needs execution {\"version\":1,\"providers\":{...}} with a screenshot command and the harness visual " +
+    `reviewer (leave test out: the harness derives it from the task verifies): ${JSON.stringify(VISUAL_WIRING_EXAMPLE)}`,
   examples: "Optional typed examples with real values from the request, code, or data, never invented: " +
     `each { type, title, why?, postBuild?, capability? } where type is one of ${EXAMPLE_TYPES.join(", ")}`,
   limits: Object.freeze({ intentMaxCharacters: 70, whyMaxSentences: 3 })

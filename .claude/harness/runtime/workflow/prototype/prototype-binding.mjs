@@ -77,7 +77,8 @@ export function prototypeWiringIssues(selection, providers = {}) {
       config.dependsOn.every((name) => entries.some(([other]) => other === name)))));
   if (fed) return [];
   return ["semantic draft prototypeSelection is strict, so the change must screenshot the bound screens: " +
-    "add to execution.providers a screenshot provider and the visual provider that depends on it, for example " +
+    "add to execution ({\"version\":1,\"providers\":{...}}) a screenshot provider and the visual provider that " +
+    "depends on it (leave test out: it is derived from the task verifies), for example " +
     `${JSON.stringify(VISUAL_WIRING_EXAMPLE)} (use the project's own command that saves PNGs), ` +
     "or set prototypeSelection.mode 'advisory' when the prototype is only a guide"];
 }
