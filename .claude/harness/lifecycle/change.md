@@ -751,7 +751,11 @@ reach. Save an artifact or pasted HTML into the project before naming it; use
 screenshot provider (capability `browser`, with an `inputMode`) and the
 `visual` provider in the draft's `execution` `{"version": 1, "providers": {...}}`,
 in `change.json` or in `execution.yaml` beside it, never both
-([evidence](../../../.claude/harness/EVIDENCE.md#visual)). Because spec approval binds every packet byte, editing the copy after
+([evidence](../../../.claude/harness/EVIDENCE.md#visual)). A `strict` selection
+without a visual provider that has `screenshots` and depends on an existing
+screenshot provider is an intake `EDIT` carrying that wiring, so the gap
+surfaces at Change rather than as an `inconclusive` Prove; `change start
+--template` shows the same shape. Because spec approval binds every packet byte, editing the copy after
 approval needs approval again; a revision without a prototype removes it. A
 copy that no longer matches its bound digest, or is missing, never drops the
 check: `visual` stays required and its provider reports the drift with its

@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import { unique } from "../../core/values.mjs";
+import { providerCapability } from "../../evidence/provider-catalog.mjs";
 import { relativeInside } from "../../core/paths.mjs";
 
 export const PROTOTYPE_DIR = "prototype";
@@ -30,9 +31,10 @@ export function prototypeExcludes(selection) {
   return Array.isArray(selection?.excludes) ? unique(selection.excludes.map(text).filter(Boolean)) : [];
 }
 
-// Shape and link issues. Existence and containment of the reference are
-// checked with the other referenced files.
-export function prototypeSelectionIssues(selection, requirementKeys = []) {
+// Shape, link, and wiring issues. Existence and containment of the reference
+// are checked with the other referenced files. `providers` are the draft's
+// execution providers.
+export function prototypeSelectionIssues(selection, requirementKeys = [], providers = {}) {
   if (selection === undefined) return [];
   const issues = [];
   if (selection?.mode !== undefined && !PROTOTYPE_MODES.includes(selection.mode))
@@ -50,7 +52,34 @@ export function prototypeSelectionIssues(selection, requirementKeys = []) {
       selection.excludes.some((value) => !text(value))))
     issues.push("semantic draft prototypeSelection.excludes must be an array of prototype elements " +
       "the agreement does not adopt, each with its reason");
+  issues.push(...prototypeWiringIssues(selection, providers));
   return issues;
+}
+
+// The wiring a strict binding owes, as one copyable snippet: the project's
+// screenshot command feeds the harness-owned visual reviewer.
+export const VISUAL_WIRING_EXAMPLE = Object.freeze({
+  browser: { adapter: "command", command: ["node", "scripts/screenshot.mjs"], capability: "browser",
+    inputMode: "browser-automation" },
+  visual: { capability: "visual", screenshots: ["test-results/**"], dependsOn: ["browser"] }
+});
+
+// A strict binding makes `visual` required, and the reviewer sees only the
+// screenshots a project provider writes. Without that wiring the change could
+// not prove itself, so the draft says so at Change instead of at Prove.
+export function prototypeWiringIssues(selection, providers = {}) {
+  if (!selection || !text(selection.reference) || prototypeMode(selection) !== "strict") return [];
+  const entries = Object.entries(providers && typeof providers === "object" ? providers : {});
+  const visual = entries.filter(([name, config]) => providerCapability(name, config) === "visual");
+  const fed = visual.some(([, config]) => Array.isArray(config?.screenshots) &&
+    config.screenshots.some((value) => text(value)) &&
+    (config.command || (Array.isArray(config.dependsOn) && config.dependsOn.length &&
+      config.dependsOn.every((name) => entries.some(([other]) => other === name)))));
+  if (fed) return [];
+  return ["semantic draft prototypeSelection is strict, so the change must screenshot the bound screens: " +
+    "add to execution.providers a screenshot provider and the visual provider that depends on it, for example " +
+    `${JSON.stringify(VISUAL_WIRING_EXAMPLE)} (use the project's own command that saves PNGs), ` +
+    "or set prototypeSelection.mode 'advisory' when the prototype is only a guide"];
 }
 
 function sha256(path) {

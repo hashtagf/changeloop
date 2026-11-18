@@ -43,6 +43,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
   approved scenario of each bound claim, and the agreement wins where it and
   the picture disagree; before, a forbidden element was judged only from the
   picture.
+- `change start --template` shows how to bind a prototype (`prototypeSelection`
+  with `excludes`) and the screenshot and `visual` providers it needs, and a
+  strict selection without that wiring is a draft issue carrying the snippet,
+  instead of an `inconclusive` visual check at Prove.
 - `quality readiness`: per-layer pyramid readiness of the project (codebase,
   static, verification, prose, review) with the next step for the weakest
   layer; `doctor` shows it as the `pyramid` setup row, `onboard` drafts

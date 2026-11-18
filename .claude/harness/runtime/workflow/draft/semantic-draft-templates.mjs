@@ -2,6 +2,7 @@ import { EXAMPLE_TYPES } from "./scratch-fields.mjs";
 import { OUTLINE } from "../validation/outline-contract.mjs";
 import { DERIVED_IMPACT_RULE } from "../validation/draft-risk.mjs";
 import { HEAVY_RISK_SIGNALS } from "../../contracts/scratch-router.mjs";
+import { VISUAL_WIRING_EXAMPLE } from "../prototype/prototype-binding.mjs";
 
 // The smallest draft the compiler accepts: omit `version` and it infers keys,
 // capability, operation, scenario names, covers, and rapid defaults. Optional
@@ -139,6 +140,11 @@ export const MINIMAL_DRAFT_WRITING = Object.freeze({
     "cases with ';' (write another scenario, put preconditions in given, and extra outcomes in and)",
   modify: "To change a requirement that already exists, set operation 'modified' and requirement to its exact " +
     "'### Requirement:' name from openspec/specs/<capability>/spec.md (read that file first); a new key does not match it",
+  prototype: "When the user approved a prototype or mockup for a UI change, bind it: prototypeSelection " +
+    "{ reference (a file inside the project; save pasted HTML first), selected, reason, covers: [requirement keys it shows], " +
+    "mode 'strict' or 'advisory' (only a guide), excludes: ['<element>: <reason>' for each part the request rejects] }. " +
+    "Strict needs execution.providers with a screenshot command and the harness visual reviewer: " +
+    `${JSON.stringify(VISUAL_WIRING_EXAMPLE)}`,
   examples: "Optional typed examples with real values from the request, code, or data, never invented: " +
     `each { type, title, why?, postBuild?, capability? } where type is one of ${EXAMPLE_TYPES.join(", ")}`,
   limits: Object.freeze({ intentMaxCharacters: 70, whyMaxSentences: 3 })

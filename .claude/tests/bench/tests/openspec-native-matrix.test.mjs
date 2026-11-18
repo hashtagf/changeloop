@@ -181,7 +181,7 @@ test("the large project-tracker scenario binds its hidden oracle and budget", ()
   assert.ok(plan.criticalCaseIds.includes("CASE_NO_LOST_UPDATE"));
 });
 
-test("the prototype-bound visual lanes bind a strict prototype, screenshots, and the drift decision", () => {
+test("the prototype-bound visual lanes: one with dictated wiring, one the agent wires from the template", () => {
   const matrix = loadMatrix();
   for (const [id, task, wall, requests] of [
     ["visual-prototype-match", "42-visual-prototype-match", 2400000, 200],
@@ -195,18 +195,21 @@ test("the prototype-bound visual lanes bind a strict prototype, screenshots, and
     assert.match(plan.oracle, new RegExp(`${task}/oracle/run\\.sh$`));
     assert.match(plan.prompt, /^\/dev /);
     assert.match(plan.prompt, /\.foundation\/prototypes\/settings\/prototype\.html/);
-    assert.match(plan.prompt, /"mode":"strict"/);
-    assert.match(plan.prompt, /scripts\/screenshot\.mjs/);
-    assert.match(plan.prompt, /"dependsOn":\["browser"\]/);
     assert.match(plan.prompt, /approve the spec/);
     assert.ok(statSync(resolve(ROOT, plan.fixture, ".foundation/prototypes/settings/prototype.html")).isFile());
     assert.ok(statSync(resolve(ROOT, plan.fixture, "scripts/screenshot.mjs")).isFile());
   }
+  const match = executionPlan(matrix, "visual-prototype-match");
+  assert.match(match.prompt, /"mode":"strict"/);
+  assert.match(match.prompt, /"dependsOn":\["browser"\]/);
+  // The forbidden-banner lane names no wiring: the agent binds the prototype,
+  // excludes the banner the issue rejects, and wires screenshots from the
+  // start template, and the visual check passes without a drift decision.
   const drift = matrix.scenarios.find(({ id }) => id === "visual-prototype-drift");
-  assert.equal(drift.expected_decision.kind, "visual-drift");
-  assert.equal(drift.expected_decision.operator_answer, "accept");
+  assert.doesNotMatch(drift.prompt, /prototypeSelection|execution\.yaml|dependsOn|screenshot/);
+  assert.equal(drift.expected_decision, undefined);
+  assert.deepEqual(drift.expected_evidence, { visual: "pass" });
   assert.ok(drift.critical_case_ids.includes("CASE_NO_BETA_BANNER"));
-  assert.match(drift.prompt, /never ship it/);
   // Harness-feature lanes have no no-harness arm; the lab refuses before
   // preparing any project.
   assert.throws(() => runScenarioLab({ scenarioId: "visual-prototype-match", arm: "baseline",

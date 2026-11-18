@@ -521,7 +521,7 @@ export function createChangeLifecycle({
     for (const [field, value] of referencedPaths) validateLocalFile(field, value);
     const requirementKeys = draft._requirementKeys?.length ? draft._requirementKeys
       : (draft.claims || []).map((claim) => claim?.requirementKey).filter(Boolean);
-    issues.push(...prototypeSelectionIssues(draft.prototypeSelection, requirementKeys));
+    issues.push(...prototypeSelectionIssues(draft.prototypeSelection, requirementKeys, draft.execution?.providers));
     for (const [index, integration] of (draft.integrations || []).entries()) {
       const source = String(integration?.documentation?.source || "").trim();
       if (!source) continue;

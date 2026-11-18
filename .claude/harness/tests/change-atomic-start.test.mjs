@@ -1120,6 +1120,13 @@ test("the start template limits input-domain to outside values", (t) => {
 // the run, and a host truncates long tool output (Claude Code at 30,000
 // characters). Raise this ceiling only with a measured reason.
 const START_TEMPLATE_MAX_CHARACTERS = 22000;
+test("the start template shows how to bind a prototype and wire its visual check", (t) => {
+  const { minimalDraftWriting } = fixture(t).lifecycle.rapidStartTemplate();
+  assert.match(minimalDraftWriting.prototype, /prototypeSelection/);
+  assert.match(minimalDraftWriting.prototype, /excludes/);
+  assert.match(minimalDraftWriting.prototype, /"capability":"visual","screenshots"/);
+});
+
 test("the start template stays within its size budget", (t) => {
   const printed = JSON.stringify(fixture(t).lifecycle.rapidStartTemplate());
   assert.ok(printed.length <= START_TEMPLATE_MAX_CHARACTERS,

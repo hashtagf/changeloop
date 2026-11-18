@@ -502,15 +502,16 @@ strict `visual` gate end to end. Each seed carries a Settings prototype under
 `.foundation/prototypes/settings/` and a dependency-free
 `scripts/screenshot.mjs` that serves the project on an ephemeral port and
 writes `test-results/settings.png` with headless Chromium (`CHROME_PATH`, the
-Playwright browser cache, an installed Chrome/Chromium, or `PATH`). The prompt
-names the `prototypeSelection`, the `browser` command provider, and the
-command-less `visual` provider. `visual-prototype-match` should archive with a
-passing `visual` receipt. In `visual-prototype-drift` the prototype shows a
-banner the issue forbids, so after two repair rounds `advance` asks the
-`visual-drift` decision; the runner stops there as `needs-user-decision`
-(kind `visual-drift`). Run it with `--keep-project`, answer with the printed
-`cloop advance <change> --decision accept ...` command in the kept
-project, then continue with `--resume-project <path>`. Both rows set
+Playwright browser cache, an installed Chrome/Chromium, or `PATH`).
+`visual-prototype-match` names the `prototypeSelection`, the `browser` command
+provider, and the command-less `visual` provider, and should archive with a
+passing `visual` receipt. `visual-prototype-drift` names none of them: the
+prototype shows a banner the issue forbids, and the agent is expected to bind
+the prototype with that banner in `prototypeSelection.excludes` and wire the
+screenshots from `change start --template`, so `visual` passes and the change
+archives without a `visual-drift` decision. If one is asked anyway, the runner
+stops as `needs-user-decision` (kind `visual-drift`); that is a lane failure to
+investigate, not an answer to give. Both rows set
 `baseline_arm: false`: their prompts are harness-specific and the no-harness
 arm refuses a seed containing `.foundation/`. The `visual` reviewer is a
 separate `claude` process, so its spend is outside the host's

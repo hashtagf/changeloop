@@ -4,7 +4,8 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 import {
-  PROTOTYPE_BINDING, materializePrototype, prototypeSelectionIssues, readPrototypeBinding
+  PROTOTYPE_BINDING, VISUAL_WIRING_EXAMPLE, materializePrototype, prototypeSelectionIssues,
+  prototypeWiringIssues, readPrototypeBinding
 } from "../runtime/workflow/prototype/prototype-binding.mjs";
 import { packetIdentity } from "../runtime/core/user-decisions.mjs";
 import { renderDraftDesign } from "../runtime/workflow/change/change-lifecycle.mjs";
@@ -136,4 +137,26 @@ test("design.md links the packet copy with its mode and requirements", () => {
   assert.match(design, /\*\*Mode:\*\* advisory/);
   assert.match(design, /\*\*Requirements:\*\* `board`/);
   assert.match(design, /\*\*Not adopted from the prototype:\*\*\n  - BETA banner: legal forbids it/);
+});
+
+test("a strict prototype without screenshot wiring is a draft issue that carries the wiring", () => {
+  const selection = { reference: "p.html", selected: "A", covers: ["board"] };
+  const [issue] = prototypeWiringIssues(selection, {});
+  assert.match(issue, /must screenshot the bound screens/);
+  assert.ok(issue.includes(JSON.stringify(VISUAL_WIRING_EXAMPLE)), "the issue carries a copyable snippet");
+  assert.match(issue, /advisory/);
+  assert.deepEqual(prototypeWiringIssues(selection, structuredClone(VISUAL_WIRING_EXAMPLE)), []);
+  // A visual provider without screenshots, or depending on a provider that does not exist, is not wired.
+  assert.equal(prototypeWiringIssues(selection, { visual: { capability: "visual", dependsOn: ["browser"] },
+    browser: VISUAL_WIRING_EXAMPLE.browser }).length, 1);
+  assert.equal(prototypeWiringIssues(selection, { visual: VISUAL_WIRING_EXAMPLE.visual }).length, 1);
+  // A named visual instance counts by its capability.
+  assert.deepEqual(prototypeWiringIssues(selection, { shots: VISUAL_WIRING_EXAMPLE.browser,
+    "settings-visual": { capability: "visual", screenshots: ["out/*"], dependsOn: ["shots"] } }), []);
+  // Advisory bindings and changes without a prototype owe nothing.
+  assert.deepEqual(prototypeWiringIssues({ ...selection, mode: "advisory" }, {}), []);
+  assert.deepEqual(prototypeWiringIssues(undefined, {}), []);
+  // Draft validation reports it with the other selection issues.
+  assert.match(prototypeSelectionIssues(selection, ["board"]).join("\n"), /must screenshot the bound screens/);
+  assert.deepEqual(prototypeSelectionIssues(selection, ["board"], VISUAL_WIRING_EXAMPLE), []);
 });
