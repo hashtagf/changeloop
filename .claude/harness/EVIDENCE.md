@@ -226,7 +226,8 @@ A project without an accessibility command still gets one. When no provider is
 wired, `accessibility` resolves to a harness-owned static read
 (`runtime/evidence/accessibility-check.mjs`, built-in `accessibility-static-v1`)
 of the markup the change touched (`.html`, `.jsx`, `.tsx`, `.vue`, `.svelte`,
-`.astro`). It reports images without alt text, form controls without a label,
+`.astro`, and markup built in `.js`/`.ts` files). It declares no inputs, so it
+binds the whole workspace and passes when the change touched no markup. It reports images without alt text, form controls without a label,
 buttons and links without a name, `<html>` without `lang`, positive
 `tabindex`, and click handlers on elements a keyboard cannot reach, each with
 its file and line. Only lines the change added or edited are judged (against

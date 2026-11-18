@@ -8,7 +8,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
-  ACCESSIBILITY_BUILT_IN, MARKUP_INPUTS, accessibilityProviderConfig, accessibilityReport, changedMarkup,
+  ACCESSIBILITY_BUILT_IN, accessibilityProviderConfig, accessibilityReport, changedMarkup,
   markupFindings
 } from "../runtime/evidence/accessibility-check.mjs";
 import { builtInCommandProvider } from "../runtime/evidence/built-in-providers.mjs";
@@ -66,14 +66,15 @@ test("only lines the change added or edited are judged, in edited and new markup
   const { root, write, base } = repository(t);
   write("src/Old.tsx", "<main>\n  <img src=\"legacy.png\">\n  <input type=\"text\">\n</main>\n");
   write("src/New.vue", "<template><button></button></template>\n");
-  write("src/util.js", "export const x = 2;\n");
+  write("src/util.js", "export const x = 2;\nexport const view = () => '<img src=\"x.png\">';\n");
   const changed = changedMarkup(root, base);
-  assert.deepEqual([...changed.keys()].sort(), ["src/New.vue", "src/Old.tsx"]);
+  assert.deepEqual([...changed.keys()].sort(), ["src/New.vue", "src/Old.tsx", "src/util.js"]);
   assert.deepEqual([...changed.get("src/Old.tsx")], [3]);
   assert.equal(changed.get("src/New.vue"), null, "a new file is judged whole");
   const report = accessibilityReport({ root: { path: root, access: "write", baseHead: base } });
   assert.deepEqual(report.findings.map((row) => `${row.file}:${row.line}:${row.rule}`).sort(),
-    ["src/New.vue:1:button-name", "src/Old.tsx:3:control-label"], "the legacy image on line 2 owes nothing");
+    ["src/New.vue:1:button-name", "src/Old.tsx:3:control-label", "src/util.js:2:img-alt"],
+    "the legacy image on line 2 owes nothing; markup built in a script file counts");
   assert.equal(report.status, "fail");
   assert.equal(report.built, ACCESSIBILITY_BUILT_IN);
   assert.match(report.limits, /contrast/);
@@ -87,6 +88,7 @@ test("without a Git base a file is changed when it differs from the project copy
   t.after(() => rmSync(control, { recursive: true, force: true }));
   mkdirSync(join(control, "src"), { recursive: true });
   writeFileSync(join(control, "src", "Old.tsx"), "<main>\n  <img src=\"legacy.png\">\n</main>\n");
+  writeFileSync(join(control, "src", "util.js"), "export const x = 1;\n");
   assert.deepEqual([...changedMarkup(root, null, control).keys()], []);
   write("src/Old.tsx", "<main></main>\n");
   assert.deepEqual([...changedMarkup(root, null, control).keys()], ["src/Old.tsx"]);
@@ -110,7 +112,7 @@ test("the built-in provider stands in until the project wires its own check", ()
   const config = builtInCommandProvider("accessibility", (name) => `/h/${name}`, () => []);
   assert.deepEqual(config, accessibilityProviderConfig("/h/accessibility-check.mjs"));
   assert.equal(config.capability, "accessibility");
-  assert.deepEqual(config.inputs, [...MARKUP_INPUTS]);
+  assert.equal(config.inputs, undefined, "binds the whole workspace: a change may touch no markup file");
   assert.equal(builtInCommandProvider("performance", (name) => name, () => []), null);
   assert.ok(builtInCovers(config));
   assert.ok(!builtInCovers({ adapter: "command", command: ["npm", "run", "a11y"] }));

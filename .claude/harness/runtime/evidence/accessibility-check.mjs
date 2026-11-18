@@ -2,7 +2,7 @@
 
 // The harness-owned `accessibility` provider for projects that have no
 // accessibility check of their own. It reads the markup a change touched
-// (HTML, JSX/TSX, Vue, Svelte, Astro) and reports the defects a static read
+// (HTML, JSX/TSX, Vue, Svelte, Astro, and markup built in JS/TS) and reports the defects a static read
 // can establish: images without alt text, form controls without a label,
 // buttons and links without a name, a page without a language, positive
 // tabindex, and click handlers on elements a keyboard cannot reach. Only
@@ -16,15 +16,19 @@ import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 export const ACCESSIBILITY_BUILT_IN = "accessibility-static-v1";
-export const MARKUP_EXTENSIONS = Object.freeze([".html", ".htm", ".jsx", ".tsx", ".vue", ".svelte", ".astro"]);
-export const MARKUP_INPUTS = Object.freeze(MARKUP_EXTENSIONS.map((extension) => `**/*${extension}`));
+// Script files count too: markup is often built in strings or JSX inside
+// `.js`/`.ts` (a render function returning HTML), and only tags are read.
+export const MARKUP_EXTENSIONS = Object.freeze([".html", ".htm", ".jsx", ".tsx", ".vue", ".svelte", ".astro",
+  ".js", ".mjs", ".cjs", ".ts", ".mts"]);
 
 // Every change that owes accessibility has a check even when the project has
 // none. A project-owned accessibility command replaces it: detection treats
 // this provider as unwired and wires the project's command when it finds one.
+// It declares no inputs, so it binds the whole workspace: a change may touch
+// no markup file at all, and declared inputs that match nothing are refused.
 export function accessibilityProviderConfig(scriptPath) {
-  return { adapter: "command", capability: "accessibility", version: "1",
-    command: ["node", scriptPath], inputs: [...MARKUP_INPUTS], builtIn: ACCESSIBILITY_BUILT_IN };
+  return { adapter: "command", capability: "accessibility", version: "2",
+    command: ["node", scriptPath], builtIn: ACCESSIBILITY_BUILT_IN };
 }
 
 const NON_LABELLED_INPUTS = new Set(["hidden", "submit", "button", "reset", "image"]);

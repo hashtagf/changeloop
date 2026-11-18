@@ -9,6 +9,12 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Fixed
+
+- A required provider now brings the configured providers it `dependsOn`:
+  a strict prototype's `visual` provider no longer stops Build with "depends on
+  unknown node provider:browser" when no claim declares `browser` itself.
+
 ### Changed
 
 - Review packets give the root and contract inspection rows `pathCount` and
