@@ -340,6 +340,23 @@ function activeWorkspace(projectRoot, changeId, git = null) {
   };
 }
 
+// The tracked and discoverable paths of a repository for intake discovery:
+// untracked files that Git ignores, the excluded paths, and Change Loop state
+// are left out. Without Git (or when it fails) discovery walks the tree.
+function repositoryPaths(git, excludedPaths, repositoryRoot) {
+  if (typeof git !== "function") return { includedPaths: null, trackedPaths: [], excludedPaths };
+  const tracked = git(["ls-files", "-z"], repositoryRoot);
+  const included = git(["ls-files", "-z", "--cached", "--others", "--exclude-standard"], repositoryRoot);
+  if (tracked.status !== 0 || included.status !== 0)
+    return { includedPaths: null, trackedPaths: [], excludedPaths };
+  return {
+    trackedPaths: tracked.stdout.split("\0").filter(Boolean),
+    includedPaths: included.stdout.split("\0").filter(Boolean)
+      .filter((path) => !excludedPaths.includes(path) && !path.startsWith(".foundation/")),
+    excludedPaths
+  };
+}
+
 export function validateInvestigationBinding(/** @type {{ projectRoot?: string, binding?: any, git?: any }} */ { projectRoot, binding, git = null } = {}) {
   const issues = [];
   const root = realpathSync(resolve(projectRoot));
@@ -411,22 +428,9 @@ export function validateInvestigationBinding(/** @type {{ projectRoot?: string, 
       if (digest(record, "foundation-investigation-record:1") !== state.requestDigest) {
         issues.push("investigation binding request changed after the investigation completed");
       } else {
-        const excludedPaths = unique([state.requestPath, state.path,
-          ...investigationDiscoveryExclusions(sourceRoot, strings(record.sources))]);
-        let includedPaths = null;
-        let trackedPaths = [];
-        if (typeof git === "function") {
-          const tracked = git(["ls-files", "-z"], sourceRoot);
-          const included = git([
-            "ls-files", "-z", "--cached", "--others", "--exclude-standard"
-          ], sourceRoot);
-          if (tracked.status === 0 && included.status === 0) {
-            trackedPaths = tracked.stdout.split("\0").filter(Boolean);
-            includedPaths = included.stdout.split("\0").filter(Boolean)
-              .filter((candidate) => !excludedPaths.includes(candidate) &&
-                !candidate.startsWith(".foundation/"));
-          }
-        }
+        const { includedPaths, trackedPaths, excludedPaths } = repositoryPaths(git, unique([
+          state.requestPath, state.path, ...investigationDiscoveryExclusions(sourceRoot, strings(record.sources))
+        ]), sourceRoot);
         const repository = inspectRepositoryIntelligence({
           projectRoot: sourceRoot,
           query: repositoryQuery(record),
@@ -453,24 +457,6 @@ export function createInvestigationRuntime(/** @type {{ root?: string, readJson?
   const statePath = (id) => join(projectRoot, ".foundation", "investigations",
     `${id}.json`);
 
-  function repositoryPaths(excludedPaths, repositoryRoot = projectRoot) {
-    if (typeof git !== "function") return {
-      includedPaths: null, trackedPaths: [], excludedPaths
-    };
-    const tracked = git(["ls-files", "-z"], repositoryRoot);
-    const included = git(["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-      repositoryRoot);
-    if (tracked.status !== 0 || included.status !== 0) return {
-      includedPaths: null, trackedPaths: [], excludedPaths
-    };
-    return {
-      trackedPaths: tracked.stdout.split("\0").filter(Boolean),
-      includedPaths: included.stdout.split("\0").filter(Boolean)
-        .filter((path) => !excludedPaths.includes(path) && !path.startsWith(".foundation/")),
-      excludedPaths
-    };
-  }
-
   function inspectInvestigation(recordPath) {
     const absolute = safeExistingFile(projectRoot, recordPath);
     if (!absolute)
@@ -493,7 +479,7 @@ export function createInvestigationRuntime(/** @type {{ root?: string, readJson?
     const relativeRecord = relative(projectRoot, absolute).replaceAll("\\", "/");
     const relativeState = `.foundation/investigations/${id}.json`;
     const paths = sourceRoot
-      ? repositoryPaths(unique([relativeRecord, relativeState,
+      ? repositoryPaths(git, unique([relativeRecord, relativeState,
         ...investigationDiscoveryExclusions(sourceRoot, strings(record?.sources))]), sourceRoot)
       : { includedPaths: [], trackedPaths: [], excludedPaths: [] };
     const repository = sourceRoot ? inspectRepositoryIntelligence({

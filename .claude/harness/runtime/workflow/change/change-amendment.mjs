@@ -140,6 +140,59 @@ export function createChangeAmendment(ctx) {
     }))];
   }
 
+  // One preserved receipt after an amendment: kept as is when the contract
+  // did not move (demoted to a rerun when it was already stale), otherwise
+  // rebound to the new contract, revalidated, and audited. Returns the plan,
+  // which a demotion replaces.
+  function preserveSelectiveReceipt(context, provider, proofRecovery) {
+    const { id, receiptBackups, nextFingerprint, priorContractFingerprint, currentContractRevision,
+      rebindAuditPaths, rebindAudits } = context;
+    const priorReceipt = receiptBackups.get(provider);
+    if (!priorReceipt) throw new Error(`selective proof receipt '${provider}' disappeared`);
+    // A task-only amendment leaves the contract as it was: a receipt
+    // already bound to it needs no rebind, and one that is not is rerun.
+    if (nextFingerprint === priorContractFingerprint)
+      return priorReceipt.contractFingerprint === nextFingerprint ? proofRecovery
+        : demoteSelectivePreservation(proofRecovery, provider, "RECEIPT_STALE_FOR_UNCHANGED_CONTRACT");
+    const rebound = rebindSelectiveProofReceipt({
+      receipt: priorReceipt,
+      provider,
+      plan: proofRecovery,
+      fromContractFingerprint: priorContractFingerprint,
+      toContractFingerprint: nextFingerprint,
+      reboundAt: now()
+    });
+    writeJson(receiptPath(id, provider), rebound);
+    if (receiptValidity(id, provider).validity !== "valid")
+      throw new Error(`selective proof receipt '${provider}' failed post-rebind validation`);
+    const audit = {
+      version: 1,
+      kind: "semantic-amendment-receipt-rebind",
+      changeId: id,
+      provider,
+      recordedAt: rebound.contractRebind.reboundAt,
+      contract: proofRecovery.contract,
+      decision: proofRecovery.decisions.find((row) => row.provider === provider),
+      priorReceiptDigest: stableHash(priorReceipt),
+      reboundReceiptDigest: stableHash(rebound)
+    };
+    const auditDirectory = join(root, ".foundation", "evidence", id, "receipt-rebinds");
+    mkdirSync(auditDirectory, { recursive: true });
+    const providerKey = createHash("sha256").update(provider).digest("hex").slice(0, 12);
+    const auditPath = join(auditDirectory,
+      `${currentContractRevision}-${providerKey}-${stableHash(audit).slice(0, 12)}.json`);
+    writeFileSync(auditPath, `${JSON.stringify(audit, null, 2)}\n`, {
+      encoding: "utf8", flag: "wx"
+    });
+    rebindAuditPaths.push(auditPath);
+    rebindAudits.push({
+      provider,
+      path: relative(root, auditPath).replaceAll("\\", "/"),
+      digest: stableHash(audit)
+    });
+    return proofRecovery;
+  }
+
   function amendChangeUnlocked(id, amendmentPath, options, state, expectedRevision) {
     if (!isRecordedSemanticVersion(state.semanticDraftVersion))
       fail(`change amend requires a semantic-draft change; '${id}' is not one`);
@@ -312,54 +365,11 @@ export function createChangeAmendment(ctx) {
       compiled.invalidation.proofRecovery = proofRecovery;
       if (proofRecovery.status === "READY") {
         const nextFingerprint = contractFingerprint(id);
-        for (const provider of proofRecovery.providers.preserved) {
-          const priorReceipt = receiptBackups.get(provider);
-          if (!priorReceipt) throw new Error(`selective proof receipt '${provider}' disappeared`);
-          // A task-only amendment leaves the contract as it was: a receipt
-          // already bound to it needs no rebind, and one that is not is rerun.
-          if (nextFingerprint === priorContractFingerprint) {
-            if (priorReceipt.contractFingerprint !== nextFingerprint)
-              compiled.invalidation.proofRecovery = proofRecovery = demoteSelectivePreservation(
-                proofRecovery, provider, "RECEIPT_STALE_FOR_UNCHANGED_CONTRACT");
-            continue;
-          }
-          const rebound = rebindSelectiveProofReceipt({
-            receipt: priorReceipt,
-            provider,
-            plan: proofRecovery,
-            fromContractFingerprint: priorContractFingerprint,
-            toContractFingerprint: nextFingerprint,
-            reboundAt: now()
-          });
-          writeJson(receiptPath(id, provider), rebound);
-          if (receiptValidity(id, provider).validity !== "valid")
-            throw new Error(`selective proof receipt '${provider}' failed post-rebind validation`);
-          const audit = {
-            version: 1,
-            kind: "semantic-amendment-receipt-rebind",
-            changeId: id,
-            provider,
-            recordedAt: rebound.contractRebind.reboundAt,
-            contract: proofRecovery.contract,
-            decision: proofRecovery.decisions.find((row) => row.provider === provider),
-            priorReceiptDigest: stableHash(priorReceipt),
-            reboundReceiptDigest: stableHash(rebound)
-          };
-          const auditDirectory = join(root, ".foundation", "evidence", id, "receipt-rebinds");
-          mkdirSync(auditDirectory, { recursive: true });
-          const providerKey = createHash("sha256").update(provider).digest("hex").slice(0, 12);
-          const auditPath = join(auditDirectory,
-            `${currentContractRevision}-${providerKey}-${stableHash(audit).slice(0, 12)}.json`);
-          writeFileSync(auditPath, `${JSON.stringify(audit, null, 2)}\n`, {
-            encoding: "utf8", flag: "wx"
-          });
-          rebindAuditPaths.push(auditPath);
-          rebindAudits.push({
-            provider,
-            path: relative(root, auditPath).replaceAll("\\", "/"),
-            digest: stableHash(audit)
-          });
-        }
+        const context = { id, receiptBackups, nextFingerprint, priorContractFingerprint,
+          currentContractRevision, rebindAuditPaths, rebindAudits };
+        for (const provider of proofRecovery.providers.preserved)
+          compiled.invalidation.proofRecovery = proofRecovery =
+            preserveSelectiveReceipt(context, provider, proofRecovery);
       }
       const nextState = loadRuntime(id);
       if (compiled.investigationAgreement) nextState.investigationAgreement = compiled.investigationAgreement;

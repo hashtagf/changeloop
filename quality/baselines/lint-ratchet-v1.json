@@ -1,125 +1,7 @@
 {
   "version": 1,
   "sizeCeiling": 1000,
-  "violations": {
-    ".claude/harness/adapters/pi-extension.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/core/cli-router.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/core/diagnostics-runtime.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/core/process-runtime.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/core/runtime-environment.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/evidence/configured-reviewer.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/evidence/proof-execution-runtime.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/evidence/proof-execution/repair-stops.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/evidence/proof-readiness.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/evidence/provider-scheduler.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/evidence/receipt-runtime.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/evidence/receipt-validity.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/evidence/review-attempt-store.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/evidence/visual-review.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/observability/lessons-runtime.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/observability/telemetry-runtime.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/quality/quality-runtime.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/advance/advance-runtime.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/workflow/authority/authority-reviewer-run.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/authority/authority-runtime.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/workflow/authority/handoff-runtime.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/authority/session-lease.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/workflow/change/change-amendment.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/change/change-policy.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/change/change-resolution.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/workflow/change/change-revision.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/change/grounding-scope.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/delivery/pull-request-runtime.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/delivery/repository-delivery-saga.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/draft/amendment-sections.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/draft/semantic-draft-templates.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/investigation/investigation-runtime.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/land/apply-runtime.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/workflow/repository/repository-projection.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/sandbox/sandbox-repositories.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/workflow/sandbox/sandbox-sync.mjs": {
-      "complexity/nesting": 6
-    },
-    ".claude/harness/runtime/workflow/validation/dev-document.mjs": {
-      "complexity/nesting": 7
-    },
-    ".claude/harness/runtime/workflow/validation/repository-intelligence.mjs": {
-      "complexity/nesting": 6
-    }
-  },
+  "violations": {},
   "sizes": {
     ".claude/harness/foundation.mjs": 2380,
     ".claude/harness/runtime/evidence/adapter-runtime.mjs": 1070,
@@ -129,15 +11,15 @@
     ".claude/harness/runtime/evidence/proof-readiness.mjs": 1160,
     ".claude/harness/runtime/evidence/receipt-runtime.mjs": 1167,
     ".claude/harness/runtime/evidence/review-attempt-store.mjs": 1015,
-    ".claude/harness/runtime/observability/telemetry-runtime.mjs": 1090,
-    ".claude/harness/runtime/workflow/advance/advance-runtime.mjs": 719,
-    ".claude/harness/runtime/workflow/authority/authority-runtime.mjs": 918,
+    ".claude/harness/runtime/observability/telemetry-runtime.mjs": 1051,
+    ".claude/harness/runtime/workflow/advance/advance-runtime.mjs": 718,
+    ".claude/harness/runtime/workflow/authority/authority-runtime.mjs": 914,
     ".claude/harness/runtime/workflow/change/change-lifecycle.mjs": 832,
     ".claude/harness/runtime/workflow/change/change-validation.mjs": 940,
     ".claude/harness/runtime/workflow/delivery/pull-request-runtime.mjs": 919,
     ".claude/harness/runtime/workflow/draft/semantic-amendment.mjs": 713,
     ".claude/harness/runtime/workflow/draft/semantic-draft.mjs": 882,
-    ".claude/harness/runtime/workflow/land/apply-runtime.mjs": 1124,
+    ".claude/harness/runtime/workflow/land/apply-runtime.mjs": 1123,
     ".claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs": 640
   }
 }

@@ -1,6 +1,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { repositoryBaseHead } from "../../core/repository-binding.mjs";
+import { globRegExp } from "../../core/path-glob.mjs";
 import { isPostReleaseCapability } from "../../evidence/provider-catalog.mjs";
 import { changeWorkTypes as packetChangeWorkTypes } from "./task-change.mjs";
 
@@ -309,26 +310,26 @@ export function createChangePolicy({
     };
   }
 
-  function globToRegExp(glob) {
-    let out = "";
-    for (let i = 0; i < glob.length; i += 1) {
-      const character = glob[i];
-      if (character === "*") {
-        if (glob[i + 1] === "*") {
-          if (glob[i + 2] === "/") { out += "(?:.*/)?"; i += 2; } else { out += ".*"; i += 1; }
-        } else out += "[^/]*";
-        continue;
-      }
-      if (character === "?") { out += "[^/]"; continue; }
-      out += character.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+  const FORECAST_WALK_LIMIT = 5000;
+  // Files under `absolute` whose project path matches, counted against the
+  // shared walk budget so a broad glob cannot scan the whole tree.
+  function walkMatching(absolute, relativePath, matcher, paths, walk) {
+    if (walk.budget <= 0) return;
+    let entries;
+    try { entries = readdirSync(absolute, { withFileTypes: true }); } catch { return; }
+    for (const entry of entries) {
+      if (walk.budget <= 0) return;
+      if (entry.name === ".git" || entry.name === "node_modules") continue;
+      const next = relativePath ? `${relativePath}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) { walkMatching(join(absolute, entry.name), next, matcher, paths, walk); continue; }
+      walk.budget -= 1;
+      if (matcher.test(next)) paths.add(next);
     }
-    return new RegExp(`^${out}$`);
   }
 
-  const FORECAST_WALK_LIMIT = 5000;
   function expandDeclaredSurface(globs) {
     const paths = new Set();
-    let budget = FORECAST_WALK_LIMIT;
+    const walk = { budget: FORECAST_WALK_LIMIT };
     for (const glob of globs) {
       const declared = String(glob).replace(/^\.\//, "");
       if (!declared) continue;
@@ -339,21 +340,7 @@ export function createChangePolicy({
       const directory = prefix.endsWith("/") ? prefix : prefix.replace(/\/[^/]*$/, "");
       const base = directory ? join(root, directory) : root;
       if (!existsSync(base)) continue;
-      const matcher = globToRegExp(declared);
-      const walk = (absolute, relativePath) => {
-        if (budget <= 0) return;
-        let entries;
-        try { entries = readdirSync(absolute, { withFileTypes: true }); } catch { return; }
-        for (const entry of entries) {
-          if (budget <= 0) return;
-          if (entry.name === ".git" || entry.name === "node_modules") continue;
-          const next = relativePath ? `${relativePath}/${entry.name}` : entry.name;
-          if (entry.isDirectory()) { walk(join(absolute, entry.name), next); continue; }
-          budget -= 1;
-          if (matcher.test(next)) paths.add(next);
-        }
-      };
-      walk(base, directory.replace(/\/$/, ""));
+      walkMatching(base, directory.replace(/\/$/, ""), globRegExp(declared), paths, walk);
     }
     return [...paths];
   }

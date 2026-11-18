@@ -364,23 +364,19 @@ export function createAuthorityRuntime({
     // next review of either reviewer type and scope; AI-only chains keep the
     // closure chosen above.
     if (humanClosure) packet.closureFindings = closureFindingsValue(humanClosure);
-    if (reviewerType === "ai") {
-      // Diff-scoped by default: changed hunks plus the agreement, bound by
-      // the packet digest. Low risk before any delivered AI round is diff-only.
-      packet.reviewDepth = reviewDepthForTier(routing.tier, deliveredAi.length);
-      if (reviewDiffContext) {
-        packet.reviewDiff = reviewDiffValue(reviewDiffContext, scopeRows,
-          packet.changedSurface?.inspection || []);
-        packet.agreement = reviewAgreementValue(reviewDiffContext, packet);
-        // One checklist item per agreement scenario (N8), bound by the packet
-        // digest. A delta round reviews only its correction scope.
-        if (scopeMode === "full") {
-          const checklist = reviewScenarioChecklist({
-            ...reviewDiffContext, packetDir: packet.contractWorkspacePath });
-          if (checklist.items.length) packet.scenarioChecklist = checklist;
-        }
-      }
+    // Diff-scoped by default: changed hunks plus the agreement, bound by
+    // the packet digest. Low risk before any delivered AI round is diff-only.
+    if (reviewerType === "ai") packet.reviewDepth = reviewDepthForTier(routing.tier, deliveredAi.length);
+    if (reviewerType === "ai" && reviewDiffContext) {
+      packet.reviewDiff = reviewDiffValue(reviewDiffContext, scopeRows,
+        packet.changedSurface?.inspection || []);
+      packet.agreement = reviewAgreementValue(reviewDiffContext, packet);
     }
+    // One checklist item per agreement scenario (N8), bound by the packet
+    // digest. A delta round reviews only its correction scope.
+    const checklist = reviewerType === "ai" && reviewDiffContext && scopeMode === "full"
+      ? reviewScenarioChecklist({ ...reviewDiffContext, packetDir: packet.contractWorkspacePath }) : null;
+    if (checklist?.items.length) packet.scenarioChecklist = checklist;
     delete packet.packetDigest;
     packet.packetDigest = canonicalPacketDigest(packet);
     return packet;

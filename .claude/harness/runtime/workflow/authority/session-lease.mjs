@@ -348,32 +348,39 @@ export function createSessionLeaseRuntime({
     while (progressed) {
       progressed = false;
       for (const { taskId } of rows) {
-        if (verified.includes(taskId) || !checked(id, taskId)) continue;
-        if (activeChangeLeases(id).some((lease) =>
-          lease.taskId === taskId && !isSessionOwner(lease.owner))) continue;
-        const path = ledgerPath(id);
-        const check = path && existsSync(path)
-          ? taskCheck(readFileSync(path, "utf8"), taskId, { ticked: true }) : null;
-        if (check && runCheck) {
-          const result = runCheck(id, check);
-          if (result?.status !== "pass") {
-            failedChecks.set(`${id}\0${taskId}`, {
-              taskId, command: check.command, exitCode: result?.exitCode ?? null,
-              output: String(result?.output || "").slice(-2000)
-            });
-            continue;
-          }
-        }
-        const owner = sessionLeaseOwner(id, taskId, stableHash);
-        try {
-          const granted = acquire(id, taskId, { owner }, { quiet: true });
-          release(id, taskId, { owner, "lease-id": granted.leaseId }, { quiet: true });
-        } catch { continue; }
+        if (verified.includes(taskId) || !reverifyTask(id, taskId)) continue;
         verified.push(taskId);
         progressed = true;
       }
     }
     return verified;
+  }
+
+  // Whether one ticked task re-verified: no live worker holds it, its check
+  // (when it has one) passes, and a harness lease over it can be taken and
+  // released. A failing check is recorded for the plan.
+  function reverifyTask(id, taskId) {
+    if (!checked(id, taskId)) return false;
+    if (activeChangeLeases(id).some((lease) =>
+      lease.taskId === taskId && !isSessionOwner(lease.owner))) return false;
+    const path = ledgerPath(id);
+    const check = path && existsSync(path)
+      ? taskCheck(readFileSync(path, "utf8"), taskId, { ticked: true }) : null;
+    const ran = Boolean(check && runCheck);
+    const result = ran ? runCheck(id, check) : null;
+    if (ran && result?.status !== "pass") {
+      failedChecks.set(`${id}\0${taskId}`, {
+        taskId, command: check.command, exitCode: result?.exitCode ?? null,
+        output: String(result?.output || "").slice(-2000)
+      });
+      return false;
+    }
+    const owner = sessionLeaseOwner(id, taskId, stableHash);
+    try {
+      const granted = acquire(id, taskId, { owner }, { quiet: true });
+      release(id, taskId, { owner, "lease-id": granted.leaseId }, { quiet: true });
+      return true;
+    } catch { return false; }
   }
 
   // A parallel group runs in native workers, but its leases are the

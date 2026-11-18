@@ -497,161 +497,160 @@ export function createAdvanceRuntime({
       }
       return value;
     };
-    try {
-      return releaseStoppedLand(await captureAsync(async () => {
-        if (through && !["build", "proven", "archived"].includes(through))
-          throw new Error("advance --through must be build|proven|archived");
-        let initial = loadRuntime(id);
-        const legacy = legacyLandSagaAction(id, initial, through);
-        if (legacy) return legacy;
-        // Remember the furthest target asked for, so a route printed later
-        // (next:, resume hints) continues toward it instead of repeating a
-        // shorter one. Monotonic; Land authority is still its own grant.
-        if (through && initial.status !== "archived" &&
-            (THROUGH_ORDER.indexOf(through) > THROUGH_ORDER.indexOf(initial.requestedThrough))) {
-          initial.requestedThrough = through;
-          saveRuntime(initial);
+    const advanceLoop = async () => { // run under captureAsync; a throw becomes the failure action
+      if (through && !["build", "proven", "archived"].includes(through))
+        throw new Error("advance --through must be build|proven|archived");
+      let initial = loadRuntime(id);
+      const legacy = legacyLandSagaAction(id, initial, through);
+      if (legacy) return legacy;
+      // Remember the furthest target asked for, so a route printed later
+      // (next:, resume hints) continues toward it instead of repeating a
+      // shorter one. Monotonic; Land authority is still its own grant.
+      if (through && initial.status !== "archived" &&
+          (THROUGH_ORDER.indexOf(through) > THROUGH_ORDER.indexOf(initial.requestedThrough))) {
+        initial.requestedThrough = through;
+        saveRuntime(initial);
+      }
+      if (through === "archived") {
+        if (["proven", "applied", "archived"].includes(initial.status)) stage = "land";
+        if (initial.advanceRecovery?.pending?.paused)
+          return pendingAction(id, through, initial.advanceRecovery.pending);
+        if (await recoverArchive(id)) return done(id, "archived");
+      }
+      if (initial.status === "archived") return done(id, "archived");
+      if (initial.workspace?.amendmentReplay) {
+        if (initial.advanceRecovery?.pending?.paused)
+          return pendingAction(id, through, initial.advanceRecovery.pending);
+        // Approval belongs to the packet retained in replay staging. Restore
+        // verified bytes before checking it; never grant or refresh approval.
+        await recoverWorkspace(id);
+        initial = loadRuntime(id);
+      }
+      const explicitLand = through === "archived" && landableGrant(id);
+      if (!explicitLand) assertApproval(id, initial, { workspace: false });
+      const pending = recovery.pending(id);
+      if (pending && (pending.paused || pending.decision.kind !== "external-dependency"))
+        return pendingAction(id, through, pending);
+      // A recorded user answer to an advance-owned decision is consumed
+      // once, by the step that raised it: the agreement resolution by the
+      // synchronization, the indeterminate retry by the next proof run.
+      const answer = internal.answer;
+      if (answer) delete internal.answer;
+      if (answer?.kind === "visual-drift") {
+        const routed = visualDriftAnswer(id, answer, through);
+        if (routed) return finish(withContext(id, routed));
+      }
+      if (answer?.kind === "amended-agreement-conflict" && answer.choice !== "pause")
+        await synchronizeAgreement(id, { resolve: `openspec/changes/${id}` });
+      // An answer to a no-progress decision other than pause resumes the
+      // gate as a first observation, so it returns repair work, not the
+      // same question.
+      const proofFlags = answer?.kind === "indeterminate-execution" && answer.choice === "retry"
+        ? { "retry-indeterminate": true, "decision-ref": answer.reference }
+        : answer?.kind === "repair-no-progress" && answer.choice !== "pause"
+          ? { "reset-progress": true, "decision-ref": answer.reference } : null;
+      // Preparation is identity-reused and also owns recovery of failed
+      // sandbox setup. Re-enter it while Build is active so a prior setup
+      // failure cannot be bypassed by the next coordinator invocation.
+      if (!explicitLand && ["change", "building"].includes(initial.status)) {
+        recordActivePhase("build");
+        await prepareBuild(id);
+      }
+      // Resuming after a session task is its completion signal: release the
+      // harness-issued lease and record the task before dispatching again.
+      if (!explicitLand && loadRuntime(id).status === "building")
+        capture(() => settleSessionLeases(id));
+      // Implemented tasks whose execution record went stale are re-verified
+      // by the harness, never handed back as work to redo or diffs to split.
+      if (!explicitLand && loadRuntime(id).status === "building")
+        capture(() => reverifyCompletedTasks(id));
+      // Build preparation already synchronizes a revised agreement. After
+      // proof, the same safe sync replaces an operator `sandbox sync`: it
+      // invalidates only evidence the revision touched, and Land would
+      // otherwise refuse the edited packet.
+      if (loadRuntime(id).status === "proven")
+        await synchronizeAgreement(id);
+      if (!through) return finish(readAdvanceValue(id));
+      const targetResume = (value) => ({
+        ...value,
+        resume: resume(id, through)
+      });
+      let unchangedAutomations = 0;
+      const automation = { wiringAttempted: false };
+      while (true) {
+        const completed = reached(id, through);
+        if (completed) return done(id, completed);
+        let value = through === "archived" && landableGrant(id)
+          ? { action: "WORKING", legacyAction: "LAND_READY", actor: "harness",
+            reason: "explicit Land authority accepts the current assurance" }
+          : readAdvanceValue(id, {}, automation);
+        if (through !== "build" && value.legacyAction === "REPAIR_REVIEW_INFRASTRUCTURE") {
+          stage = "prove";
+          recordActivePhase("prove");
+          if (await recoverReviewBindings(id)) value = readAdvanceValue(id, {}, automation);
         }
-        if (through === "archived") {
-          if (["proven", "applied", "archived"].includes(initial.status)) stage = "land";
-          if (initial.advanceRecovery?.pending?.paused)
-            return pendingAction(id, through, initial.advanceRecovery.pending);
-          if (await recoverArchive(id)) return done(id, "archived");
-        }
-        if (initial.status === "archived") return done(id, "archived");
-        if (initial.workspace?.amendmentReplay) {
-          if (initial.advanceRecovery?.pending?.paused)
-            return pendingAction(id, through, initial.advanceRecovery.pending);
-          // Approval belongs to the packet retained in replay staging. Restore
-          // verified bytes before checking it; never grant or refresh approval.
-          await recoverWorkspace(id);
-          initial = loadRuntime(id);
-        }
-        const explicitLand = through === "archived" && landableGrant(id);
-        if (!explicitLand) assertApproval(id, initial, { workspace: false });
-        const pending = recovery.pending(id);
-        if (pending && (pending.paused || pending.decision.kind !== "external-dependency"))
-          return pendingAction(id, through, pending);
-        // A recorded user answer to an advance-owned decision is consumed
-        // once, by the step that raised it: the agreement resolution by the
-        // synchronization, the indeterminate retry by the next proof run.
-        const answer = internal.answer;
-        if (answer) delete internal.answer;
-        if (answer?.kind === "visual-drift") {
-          const routed = visualDriftAnswer(id, answer, through);
-          if (routed) return finish(withContext(id, routed));
-        }
-        if (answer?.kind === "amended-agreement-conflict" && answer.choice !== "pause")
-          await synchronizeAgreement(id, { resolve: `openspec/changes/${id}` });
-        // An answer to a no-progress decision other than pause resumes the
-        // gate as a first observation, so it returns repair work, not the
-        // same question.
-        const proofFlags = answer?.kind === "indeterminate-execution" && answer.choice === "retry"
-          ? { "retry-indeterminate": true, "decision-ref": answer.reference }
-          : answer?.kind === "repair-no-progress" && answer.choice !== "pause"
-            ? { "reset-progress": true, "decision-ref": answer.reference } : null;
-        // Preparation is identity-reused and also owns recovery of failed
-        // sandbox setup. Re-enter it while Build is active so a prior setup
-        // failure cannot be bypassed by the next coordinator invocation.
-        if (!explicitLand && ["change", "building"].includes(initial.status)) {
+        if (through === "build" && ["RUN_PROOF", "WIRE_EVIDENCE", "LAND_READY"].includes(value.legacyAction)) {
           recordActivePhase("build");
-          await prepareBuild(id);
+          return done(id, "build");
         }
-        // Resuming after a session task is its completion signal: release the
-        // harness-issued lease and record the task before dispatching again.
-        if (!explicitLand && loadRuntime(id).status === "building")
-          capture(() => settleSessionLeases(id));
-        // Implemented tasks whose execution record went stale are re-verified
-        // by the harness, never handed back as work to redo or diffs to split.
-        if (!explicitLand && loadRuntime(id).status === "building")
-          capture(() => reverifyCompletedTasks(id));
-        // Build preparation already synchronizes a revised agreement. After
-        // proof, the same safe sync replaces an operator `sandbox sync`: it
-        // invalidates only evidence the revision touched, and Land would
-        // otherwise refuse the edited packet.
-        if (loadRuntime(id).status === "proven")
-          await synchronizeAgreement(id);
-        if (!through) return finish(readAdvanceValue(id));
-        const targetResume = (value) => ({
-          ...value,
-          resume: resume(id, through)
-        });
-        let unchangedAutomations = 0;
-        const automation = { wiringAttempted: false };
-        while (true) {
-          const completed = reached(id, through);
-          if (completed) return done(id, completed);
-          let value = through === "archived" && landableGrant(id)
-            ? { action: "WORKING", legacyAction: "LAND_READY", actor: "harness",
-              reason: "explicit Land authority accepts the current assurance" }
-            : readAdvanceValue(id, {}, automation);
-          if (through !== "build" && value.legacyAction === "REPAIR_REVIEW_INFRASTRUCTURE") {
-            stage = "prove";
-            recordActivePhase("prove");
-            if (await recoverReviewBindings(id)) value = readAdvanceValue(id, {}, automation);
-          }
-          if (through === "build" && ["RUN_PROOF", "WIRE_EVIDENCE", "LAND_READY"].includes(value.legacyAction)) {
-            recordActivePhase("build");
-            return done(id, "build");
-          }
-          const phase = phaseForAction(value);
-          recordActivePhase(phase);
-          let operation = null;
-          let harnessOwned = false;
-          if (value.legacyAction === "WIRE_EVIDENCE" && value.automaticWiring &&
-              ["proven", "archived"].includes(through) && wireEvidence) {
-            // Once per invocation: wiring that did not clear the gap falls
-            // back to the external-evidence decision instead of repeating.
-            stage = "prove";
-            automation.wiringAttempted = true;
-            harnessOwned = true;
-            operation = (change) => wireEvidence(change, value.automaticWiring);
-          } else if (value.legacyAction === "RUN_CONFIGURED_REVIEW" && value.automaticReview &&
-              ["proven", "archived"].includes(through) && runReview) {
-            // Foreground and bounded by the review window, like `authority run`.
-            stage = "prove";
-            harnessOwned = true;
-            operation = (change) => runReview(change, value.automaticReview);
-          } else if (["RUN_PROOF", "RUN_INVALIDATED_EVIDENCE"].includes(value.legacyAction) &&
-              ["proven", "archived"].includes(through)) {
-            if (!runProof) return finish(targetResume(value));
-            stage = "prove";
-            operation = proofRunOperation(runProof, proofFlags, automation);
-          } else if (value.legacyAction === "LAND_READY" && through === "archived") {
-            // The explicit archived target authorizes Land only once the exact
-            // proof is ready. Earlier phases and inspection grant nothing.
-            if (!explicitLand && !hasLandGrant(id)) await authorizeLand(id);
-            if (!explicitLand && !hasLandGrant(id)) return finish(targetResume(value));
-            if (!runLand) return finish(targetResume(value));
-            stage = "land";
-            operation = runLand;
-          }
-          if (!operation) return finish(targetResume(value));
-          const fingerprint = harnessOwned ? reviewProgressFingerprint : convergenceFingerprint;
-          const before = fingerprint(id);
-          const operationResult = await operation(id);
-          // Archive may remove the sandbox and active agreement. Do not hash
-          // those retired paths after the authoritative lifecycle reached its
-          // target; the archived proof already retains its durable identity.
-          const completedAfterOperation = reached(id, through);
-          if (completedAfterOperation) return done(id, completedAfterOperation);
-          // An operation is the authoritative source for its own boundary.
-          // Consume it before consulting projections, otherwise quiet proof or
-          // Land composition can discard a decision and repeat the operation.
-          // Wiring and review results are consumed by the next proof pass.
-          const boundaryResult = harnessOwned ? null : stage === "land"
-            ? landOperationAction(id, operationResult)
-            : proofOperationAction(id, operationResult);
-          // A reviewer the harness can run is consumed by the next pass.
-          const reviewNext = boundaryResult?.automaticReview && runReview;
-          if (boundaryResult && boundaryResult.legacyAction !== "LAND_IN_PROGRESS" && !reviewNext)
-            return finish(targetResume(boundaryResult));
-          const after = fingerprint(id);
-          unchangedAutomations = before === after ? unchangedAutomations + 1 : 0;
-          if (unchangedAutomations >= 2) return noProgress(id, through, value, operationResult);
+        const phase = phaseForAction(value);
+        recordActivePhase(phase);
+        let operation = null;
+        let harnessOwned = false;
+        if (value.legacyAction === "WIRE_EVIDENCE" && value.automaticWiring &&
+            ["proven", "archived"].includes(through) && wireEvidence) {
+          // Once per invocation: wiring that did not clear the gap falls
+          // back to the external-evidence decision instead of repeating.
+          stage = "prove";
+          automation.wiringAttempted = true;
+          harnessOwned = true;
+          operation = (change) => wireEvidence(change, value.automaticWiring);
+        } else if (value.legacyAction === "RUN_CONFIGURED_REVIEW" && value.automaticReview &&
+            ["proven", "archived"].includes(through) && runReview) {
+          // Foreground and bounded by the review window, like `authority run`.
+          stage = "prove";
+          harnessOwned = true;
+          operation = (change) => runReview(change, value.automaticReview);
+        } else if (["RUN_PROOF", "RUN_INVALIDATED_EVIDENCE"].includes(value.legacyAction) &&
+            ["proven", "archived"].includes(through)) {
+          if (!runProof) return finish(targetResume(value));
+          stage = "prove";
+          operation = proofRunOperation(runProof, proofFlags, automation);
+        } else if (value.legacyAction === "LAND_READY" && through === "archived") {
+          // The explicit archived target authorizes Land only once the exact
+          // proof is ready. Earlier phases and inspection grant nothing.
+          if (!explicitLand && !hasLandGrant(id)) await authorizeLand(id);
+          if (!explicitLand && !hasLandGrant(id)) return finish(targetResume(value));
+          if (!runLand) return finish(targetResume(value));
+          stage = "land";
+          operation = runLand;
         }
-      }));
-    } catch (error) {
+        if (!operation) return finish(targetResume(value));
+        const fingerprint = harnessOwned ? reviewProgressFingerprint : convergenceFingerprint;
+        const before = fingerprint(id);
+        const operationResult = await operation(id);
+        // Archive may remove the sandbox and active agreement. Do not hash
+        // those retired paths after the authoritative lifecycle reached its
+        // target; the archived proof already retains its durable identity.
+        const completedAfterOperation = reached(id, through);
+        if (completedAfterOperation) return done(id, completedAfterOperation);
+        // An operation is the authoritative source for its own boundary.
+        // Consume it before consulting projections, otherwise quiet proof or
+        // Land composition can discard a decision and repeat the operation.
+        // Wiring and review results are consumed by the next proof pass.
+        const boundaryResult = harnessOwned ? null : stage === "land"
+          ? landOperationAction(id, operationResult)
+          : proofOperationAction(id, operationResult);
+        // A reviewer the harness can run is consumed by the next pass.
+        const reviewNext = boundaryResult?.automaticReview && runReview;
+        if (boundaryResult && boundaryResult.legacyAction !== "LAND_IN_PROGRESS" && !reviewNext)
+          return finish(targetResume(boundaryResult));
+        const after = fingerprint(id);
+        unchangedAutomations = before === after ? unchangedAutomations + 1 : 0;
+        if (unchangedAutomations >= 2) return noProgress(id, through, value, operationResult);
+      }
+    };
+    try { return releaseStoppedLand(await captureAsync(advanceLoop)); } catch (error) {
       markBlocked(error?.message || String(error));
       return releaseStoppedLand(await finish(failureAction(id, error, { stage, through })));
     }

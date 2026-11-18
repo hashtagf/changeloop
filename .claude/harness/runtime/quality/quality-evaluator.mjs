@@ -1,4 +1,5 @@
 import { mutationSummary } from "./quality-protocol.mjs";
+import { globRegExp } from "../core/path-glob.mjs";
 
 function functionKey(fn) { return `${fn.path}\0${fn.id}`; }
 
@@ -11,23 +12,8 @@ export function compatibleQualityBaseline(current, baseline) {
     current.tool?.configDigest === baseline.tool?.configDigest;
 }
 
-export function globToRegExp(glob) {
-  let out = "";
-  for (let index = 0; index < glob.length; index += 1) {
-    const character = glob[index];
-    if (character === "*") {
-      if (glob[index + 1] === "*") {
-        if (glob[index + 2] === "/") { out += "(?:.*/)?"; index += 2; }
-        else { out += ".*"; index += 1; }
-      } else out += "[^/]*";
-    } else if (character === "?") out += "[^/]";
-    else out += character.replace(/[.+^${}()|[\]\\]/g, "\\$&");
-  }
-  return new RegExp(`^${out}$`);
-}
-
 export function pathMatches(path, patterns = []) {
-  return patterns.some((pattern) => globToRegExp(pattern.replace(/^\.\//, "")).test(path));
+  return patterns.some((pattern) => globRegExp(pattern).test(path));
 }
 
 function exceptionFor(exceptions, repository, target, metric, now = new Date()) {

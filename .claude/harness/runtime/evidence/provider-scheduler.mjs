@@ -180,6 +180,21 @@ export function createProviderScheduler({
     const outcomes = [];
     const readySince = new Map();
     let wave = 0;
+    // An advisory node that cannot start (a dependency failed, never ran, or
+    // is missing) is skipped with its reason; it never aborts the run the
+    // required providers belong to.
+    const skipAdvisory = (node) => {
+      const failed = node.dependsOn.filter((dependency) => failedOutputs.has(dependency));
+      const unmet = node.dependsOn.filter((dependency) => !completed.has(dependency) &&
+        receiptValidity(id, dependency).validity !== "valid");
+      const reason = failed.length
+        ? `blocked by failed dependency ${failed.join(", ")}`
+        : `dependency ${unmet.join(", ") || "unresolved"} did not run`;
+      pending.delete(node.provider);
+      outcomes.push({ provider: node.provider, status: "skipped", advisory: true,
+        observations: [], detail: `advisory; ${reason}` });
+      logError(`PROVIDER ${node.provider}: skipped (advisory; ${reason})`);
+    };
     // A dependency may name a covered output of another pending node, not the
     // node's own provider id; resolve those to the owning node for cycle edges.
     const owner = new Map(nodes.flatMap((node) =>
@@ -203,23 +218,9 @@ export function createProviderScheduler({
             failed: node.dependsOn.filter((dependency) => failedOutputs.has(dependency))
           }))
           .filter((entry) => entry.failed.length);
-        // An advisory node that cannot start (a dependency failed, never ran,
-        // or is missing) is skipped with its reason; it never aborts the run
-        // the required providers belong to.
         const advisoryWaiting = [...pending.values()].filter((node) => node.advisory);
         if (advisoryWaiting.length) {
-          for (const node of advisoryWaiting) {
-            const failed = node.dependsOn.filter((dependency) => failedOutputs.has(dependency));
-            const unmet = node.dependsOn.filter((dependency) => !completed.has(dependency) &&
-              receiptValidity(id, dependency).validity !== "valid");
-            const reason = failed.length
-              ? `blocked by failed dependency ${failed.join(", ")}`
-              : `dependency ${unmet.join(", ") || "unresolved"} did not run`;
-            pending.delete(node.provider);
-            outcomes.push({ provider: node.provider, status: "skipped", advisory: true,
-              observations: [], detail: `advisory; ${reason}` });
-            logError(`PROVIDER ${node.provider}: skipped (advisory; ${reason})`);
-          }
+          advisoryWaiting.forEach(skipAdvisory);
           continue;
         }
         if (blocked.length)
