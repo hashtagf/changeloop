@@ -8,9 +8,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createExecRuntime } from "./runtime/observability/exec-runtime.mjs";
 import { routeForState } from "./runtime/workflow/change/approval-package.mjs";
-import { blockerTelemetryValue, createCommandPhaseRecorder } from "./runtime/observability/command-telemetry.mjs";
+import { createCommandPhaseRecorder } from "./runtime/observability/command-telemetry.mjs";
 import { createJsonlReader } from "./runtime/observability/telemetry.mjs";
-import { operationInputFingerprint } from "./runtime/observability/operation-profile.mjs";
 import { createFlagParser } from "./runtime/core/cli-flags.mjs";
 import {
   phaseForCommand, telemetryPhaseForCommand
@@ -34,6 +33,7 @@ import { createReceiptValidity } from "./runtime/evidence/receipt-validity.mjs";
 import { reviewRulesHash } from "./runtime/evidence/configured-reviewer.mjs";
 import { changeWorkTypes } from "./runtime/workflow/change/task-change.mjs";
 import { createConfiguredReviewerRuntime } from "./runtime/evidence/configured-reviewer.mjs";
+import { createOperationState } from "./runtime/composition/operation-state.mjs";
 import { createBlockedDecision, createDetachedBlockScope } from "./runtime/core/blocked-decision.mjs";
 import { prependFoundationToolPath } from "./runtime/core/tool-preparation.mjs";
 import { RUNTIME_MODULE_API } from "./runtime/version.mjs";
@@ -78,52 +78,11 @@ const CI_EVIDENCE_PROTOCOL_VERSION = "1";
 const QUALITY_CAPABILITIES_PROTOCOL_VERSION = "1";
 const CRAP_PROTOCOL_VERSION = "1";
 const AUTOMATED_MUTATION_PROTOCOL_VERSION = "1";
-// A refusal is a lifecycle stop, not a crash. Recording it as a failure would
-// bury real breakage under the guards that are working as designed.
-let operationBlocked = false;
-let operationBlocker = null;
-let trappedFailureDepth = 0;
 // Work that runs beside an operation (the concurrent review in `advance`)
-// records its own refusal here instead of marking the whole process blocked:
-// its failure is an open request the next pass routes, not this command's stop.
+// records its own refusal in this scope instead of blocking the whole process.
 const detachedBlockScope = createDetachedBlockScope();
-let operationChangeId = null;
-let operationName = null;
-let operationPhase = null;
-// A command that prints a structured non-ready result and returns has also
-// ended in a refusal, not a crash — but it never reaches `die`. `block()` is
-// that second spelling: it records the decision without exiting, so the exit
-// handler reports what the command decided instead of inferring it.
-function markBlocked(message) {
-  if (detachedBlockScope.capture(message)) return;
-  operationBlocked = true;
-  operationBlocker = blockerTelemetryValue(message, {
-    changeId: operationChangeId,
-    operationName,
-    phase: process.env.FOUNDATION_PUBLIC_OPERATION || operationPhase
-  });
-}
-/** @returns {never} */
-function die(message, code = 1, details = null) {
-  markBlocked(message);
-  if (trappedFailureDepth > 0) {
-    throw Object.assign(new Error(String(message)), { exitCode: code, foundationBlocked: true },
-      Object.fromEntries(["decision", "boundary", "owner", "code"]
-        .filter((key) => details?.[key]).map((key) => [key, details[key]])));
-  }
-  console.error(`BLOCKED: ${message}`);
-  process.exit(code);
-}
-function trapFailures(operation) {
-  trappedFailureDepth += 1;
-  try { return operation(); }
-  finally { trappedFailureDepth -= 1; }
-}
-async function trapFailuresAsync(operation) {
-  trappedFailureDepth += 1;
-  try { return await operation(); }
-  finally { trappedFailureDepth -= 1; }
-}
+const operation = createOperationState({ detachedBlockScope });
+const { markBlocked, die, trapFailures, trapFailuresAsync } = operation;
 const { parseFlags, parseStrictCommandFlags } = createFlagParser({ fail: die });
 const { blockWithDecision } = createBlockedDecision({ fail: die });
 
@@ -158,9 +117,6 @@ const { readJsonLines, readJsonLinesTolerant } = createJsonlReader({
   fail: die
 });
 
-const operationStartedAt = Date.now();
-let operationStatusAtStart = null;
-let operationFingerprint = null;
 // Commands that only read. They are observed in inspections.jsonl so the
 // benchmark can measure agent probing, but never enter operations.jsonl:
 // `showMetrics` treats that ledger as work the change performed for rework and
@@ -178,15 +134,15 @@ const READ_ONLY_OPERATIONS = new Set([
 const commandPhaseRecorder = createCommandPhaseRecorder(() => ({
     telemetryDisabled: process.env.FOUNDATION_TELEMETRY === "0",
     telemetryDebug: process.env.FOUNDATION_TELEMETRY_DEBUG === "1",
-    changeId: operationChangeId,
-    operationName,
-    operationPhase,
-    operationStatusAtStart,
-    operationInputFingerprint: operationFingerprint,
+    changeId: operation.state.changeId,
+    operationName: operation.state.name,
+    operationPhase: operation.state.phase,
+    operationStatusAtStart: operation.state.statusAtStart,
+    operationInputFingerprint: operation.state.fingerprint,
     publicOperation: process.env.FOUNDATION_PUBLIC_OPERATION,
-    blocked: operationBlocked,
-    blocker: operationBlocker,
-    operationStartedAt,
+    blocked: operation.state.blocked,
+    blocker: operation.state.blocker,
+    operationStartedAt: operation.state.startedAt,
     readOnlyOperations: READ_ONLY_OPERATIONS,
     logs: LOGS,
     mkdir: mkdirSync,
@@ -615,7 +571,7 @@ const {
   activeChangePath,
   loadRuntime,
   saveRuntime,
-  setOperationChangeId(id) { operationChangeId = id; },
+  setOperationChangeId: operation.setChangeId,
   initialBudget,
   git,
   gitHead,
@@ -646,7 +602,7 @@ const { inspectInvestigation, investigationRecordTemplate } = createInvestigatio
   writeJson,
   now,
   git,
-  setOperationChangeId(id) { operationChangeId = id; },
+  setOperationChangeId: operation.setChangeId,
   fail: die
 });
 const {
@@ -723,50 +679,14 @@ const telemetrySuppressed = command === "sandbox" && (
   (values[0] === "create" && unattendedMentioned)
 );
 if (telemetrySuppressed) process.env.FOUNDATION_TELEMETRY = "0";
-operationName = command || null;
-// Positional, so a flag in the change slot became a directory name:
-// `sandbox create --all <change>` created `.foundation/logs/--all/`.
-const namedChange = (value) =>
-  typeof value === "string" && !value.startsWith("-") ? value : null;
-const qualityChange = () => {
-  const index = values.findIndex((value) => value === "--change");
-  return namedChange(index >= 0 ? values[index + 1] : process.env.FOUNDATION_CHANGE_ID);
-};
-operationChangeId = command === "sandbox" ? namedChange(values[1]) :
-  ["resolve", "validate", "audit-change", "hash", "packet", "agent-plan", "agent-dispatch", "agent-task", "agent-acquire", "agent-release", "metrics", "feedback", "advance", "budget-checkpoint", "budget-continue", "proof-plan", "proof-readiness", "proof-advance", "proof-run", "proof-collect", "proof-preflight", "proof-execute", "proof-audit", "evidence-verify-ci", "authority-request", "authority-dispatch", "authority-run", "authority-abort", "authority-status", "authority-record", "authority-reset-infra", "authority-extend-review", "authority-reset-base-move", "receipt", "run-provider", "prove",
-    "evidence-detect", "evidence-init", "evidence-doctor", "handoff-status", "handoff-packet", "handoff-record", "land-check", "land-advance", "land-plan", "land-resume", "archive", "delivery-advance", "event", "telemetry-sync", "telemetry-import"].includes(command) ? namedChange(values[0]) :
-    command?.startsWith("quality-")
-      ? qualityChange()
-      : null;
-const operationStateAtStart = operationChangeId
-  ? readJson(runtimePath(operationChangeId), {}) : {};
-operationStatusAtStart = operationStateAtStart.status ?? null;
-if (operationChangeId) {
-  try {
-    const changeRoot = activeChangePath(operationChangeId, operationStateAtStart);
-    operationFingerprint = operationInputFingerprint({
-      operation: command,
-      values,
-      state: operationStateAtStart,
-      changeDigest: existsSync(changeRoot) ? directoryHash(changeRoot) : null,
-      foundationConfigDigest: existsSync(join(ROOT, "foundation.json"))
-        ? fileDigest(join(ROOT, "foundation.json")) : null,
-      projectPolicyDigest: existsSync(join(ROOT, ".foundation", "policy.json"))
-        ? fileDigest(join(ROOT, ".foundation", "policy.json")) : null
-    });
-  } catch {
-    // Profiling is observational. A damaged change must still reach the
-    // command that diagnoses or retires it; the row reports unavailable input
-    // identity rather than turning instrumentation into a new blocker.
-    operationFingerprint = null;
-  }
-}
+operation.begin({ command, values, root: ROOT, readJson, runtimePath, activeChangePath, directoryHash, fileDigest });
+const operationChangeId = operation.state.changeId;
 
 // One table, in `runtime/core/lifecycle-phase.mjs`, shared with the operations
 // row written on exit. The phase is derived here rather than read only from
 // FOUNDATION_PUBLIC_OPERATION so a direct runtime invocation buckets the same
 // way a `cli.sh` one does.
-operationPhase = phaseForCommand(command);
+operation.state.phase = phaseForCommand(command);
 const telemetryPhase = telemetryPhaseForCommand(command);
 // An archived change is finished evidence. Reading it back — `metrics` on a
 // landed run, say — must never append this session's telemetry to its log.
