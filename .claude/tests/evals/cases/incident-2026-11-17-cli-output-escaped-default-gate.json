@@ -1,0 +1,16 @@
+{
+  "id": "incident-2026-11-17-cli-output-escaped-default-gate",
+  "source": "incident:2026-11-17-cli-output-escaped-default-gate",
+  "layer": "deterministic",
+  "description": "A change to a file that prints CLI output promotes the slow-tier installer smoke into the default gate, so the escape CI caught is caught locally.",
+  "command": [
+    "sh",
+    ".claude/tests/harness/run-run-all-control-tests.sh"
+  ],
+  "expect": {
+    "exit": 0,
+    "stdoutIncludes": [
+      "run-all process control: PASS"
+    ]
+  }
+}

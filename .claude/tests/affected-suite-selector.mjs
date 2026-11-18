@@ -50,6 +50,7 @@ const RULES = [
     ["workflow documentation contracts"]],
   [/^dashboard\//, ["dashboard contracts"]],
   [/^scripts\/lint\/|^quality\/baselines\/lint-ratchet/, ["lint rules", "lint ratchet"]],
+  [/^scripts\/quality\/coverage-ratchet|^quality\/baselines\/harness-coverage/, ["harness coverage ratchet"]],
   [/^\.claude\/(?:skills|commands)\/|^scripts\/lint\/(?:skill-contracts|test\/(?:skill|lifecycle)-contracts)|^quality\/baselines\/skill-contracts/,
     ["skill contracts"]],
   // A case, its tooling, or an incident record that must keep an eval.

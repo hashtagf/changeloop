@@ -666,6 +666,8 @@
       "code": [
         ".claude/harness/runtime/quality/pyramid-readiness.mjs",
         ".claude/harness/runtime/quality/rule-registry.mjs",
+        ".claude/harness/runtime/quality/guide-rules.mjs",
+        ".claude/harness/runtime/quality/incident-records.mjs",
         ".claude/harness/runtime/composition/pyramid-readiness-command.mjs"
       ],
       "tests": [

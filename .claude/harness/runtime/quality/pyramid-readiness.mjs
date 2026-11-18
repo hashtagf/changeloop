@@ -10,7 +10,7 @@
 //   2 static        tools catch the rest: lint, types, stopgap comments
 //   3 verification  behavior is proven: tests, coverage, mutation
 //   4 prose         guidance is the last resort: recurring lessons and guide rules have checks
-//   5 review        people see what the layers above missed, and that stays rare
+//   5 review        people see what the layers above missed, that stays rare, and each escape becomes a regression
 //
 // A criterion is met, unmet (with the next step that meets it), or unmeasured
 // (no fact yet). A layer's percent counts only measured criteria; nothing
@@ -111,9 +111,22 @@ export const CRITERIA = Object.freeze([
         next: "list each rule from CLAUDE.md/AGENTS.md in quality/rule-enforcement.json with the check that enforces it" }
       : rules.issues > 0 ? { status: "unmet", detail: `${rules.issues} registry issue(s)`,
         next: "fix the rows quality/rule-enforcement.json reports (stale quote, missing check file)" }
+        : rules.unregistered > 0 ? { status: "unmet",
+          detail: `${rules.unregistered} rule sentence(s) in CLAUDE.md/AGENTS.md have no registry row`,
+          next: "add a quality/rule-enforcement.json row for each listed sentence (cloop quality readiness --pretty lists them)" }
         : rules.prose === 0 ? { status: "met", detail: `${rules.registered} rule(s), none prose-only` }
           : { status: "unmet", detail: `${rules.prose} of ${rules.registered} rule(s) are prose only`,
             next: "enforce each prose-only rule with a test, lint rule, or type, or record judgment: <why>" }
+  },
+  {
+    id: "incident-regressions", layer: "review", label: "Every closed incident names a regression test that exists",
+    evaluate: ({ incidents }) => incidents === undefined || incidents === null
+      ? { status: "unmeasured", detail: "no openspec/incidents records" }
+      : incidents.closed === 0 ? { status: "unmeasured", detail: `${incidents.total} incident(s), none closed` }
+        : incidents.missing.length === 0
+          ? { status: "met", detail: `${incidents.closed} closed incident(s), each with a regression` }
+          : { status: "unmet", detail: `${incidents.missing.length} closed incident(s) without an existing regression: ${incidents.missing.slice(0, 3).join(", ")}`,
+            next: "name the test that fails without the fix in each incident's Regression row (a path in backticks)" }
   },
   {
     id: "first-proof-pass", layer: "review", label: "Most changes pass proof on the first run",
@@ -144,7 +157,8 @@ export const CRITERIA = Object.freeze([
 /**
  * @param {{ lanes?: Record<string, string>, findings?: Record<string, number>, featureMap?: { features: number, issues?: number } | null,
  *   lessons?: { recurring: number, pending: number } | null,
- *   rules?: { registered: number, prose: number, issues?: number } | null,
+ *   rules?: { registered: number, prose: number, issues?: number, unregistered?: number } | null,
+ *   incidents?: { total: number, closed: number, missing: string[] } | null,
  *   outcomes?: { archived: number, measured: number, firstProofPasses: number, escapedDefects: number } | null }} facts
  */
 export function pyramidReadiness(facts = {}) {

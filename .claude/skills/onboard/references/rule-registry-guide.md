@@ -37,6 +37,8 @@ in prose is the last layer and is the first to be ignored.
 - `quote` is copied exactly from the guide; a reworded guide fails the check
   until the quote matches again.
 - A check layer names the project files that fail when the rule is broken.
+- Every imperative sentence (must, never, always, do not, only, requires) in
+  `CLAUDE.md` and `AGENTS.md` needs a row; readiness lists the ones without.
 - Draft every row, then ask the user to confirm the layers. Never mark a rule
   as a check without a file that enforces it; prose-only is an honest answer.
 
