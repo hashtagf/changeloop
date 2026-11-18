@@ -29,7 +29,7 @@ export function documentedNames(readme) {
 
 // The files run-all.sh rows run by name; a glob row is documented as a group.
 export function registeredFiles(runAll) {
-  return [...new Set([...runAll.matchAll(/\$(?:HERE|ROOT)"?\/([\w./{}-]+\.(?:mjs|sh|js|py))/g)]
+  return [...new Set([...runAll.matchAll(/\$(?:HERE|ROOT)"?\/([\w./{}-]+\.(?:mjs|sh|js|py))(?![\w.])/g)]
     .map((match) => match[1]))].sort();
 }
 
