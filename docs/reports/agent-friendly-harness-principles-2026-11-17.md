@@ -133,9 +133,6 @@ helper เดียว) และการซ้อนลึกสุด 10 → 
 
 ## สิ่งที่ตัดสินใจไม่ทำ และเหตุผล
 
-- **แยก `foundation.mjs`:** ยังมี 6 จุดที่ runtime พึ่งกันเป็นวงจริง เรียงใหม่แล้วยังเหลือ
-  58 statement ในวงเดียว แต่ละชิ้นที่แยกต้องรับ dependency 60–135 ตัว ต้องกลับทิศ
-  dependency ระหว่าง runtime ก่อน
 - **เทสต์ฆ่า process ตรง checkpoint ของ Land:** ต้องเพิ่ม hook ทดสอบในโค้ดที่ส่งให้ผู้ใช้
   และมีเทสต์จำลองการสะดุดครบทั้ง 14 checkpoint กับเทสต์ e2e ที่ตรวจว่า HEAD และ index
   ไม่เปลี่ยนอยู่แล้ว
@@ -146,9 +143,9 @@ helper เดียว) และการซ้อนลึกสุด 10 → 
 
 ## งานระยะยาวที่เหลือ
 
-1. กลับทิศ dependency เพื่อตัดวงระหว่าง runtime แล้วจึงแยก `foundation.mjs`
+1. (เสร็จแล้ว) `foundation.mjs` จาก 2,380 เหลือ 899 บรรทัด: wiring ย้ายไป `composition/*-wiring.mjs` ทีละช่วงที่ไม่มีการอ้างค่าที่ยังไม่ถูกสร้าง; ที่เหลือคือ state ของ operation (`let`) และ statement ที่อ้าง runtime ซึ่งสร้างทีหลังใน closure ขั้นต่อไปคือย้าย operation state เป็นโมดูลที่มี getter/setter
 2. type error เหลือ 0 แล้ว และเปิด `strictFunctionTypes`, `strictBindCallApply`, `noImplicitThis`, `alwaysStrict`; ยังไม่เปิด `strictNullChecks` (913 จุด) และ `noImplicitAny` (ราว 12,950 จุด) เพราะส่วนใหญ่เป็นการใส่ annotation ให้ JS ไม่ใช่บั๊ก
-3. ลดไฟล์ที่ยังเกิน 1,000 บรรทัดให้ต่ำกว่าเพดาน แล้วลดเพดานเป็น 800
+3. (เสร็จแล้ว) ไม่มีไฟล์เกิน 1,000 บรรทัด ขั้นต่อไปคือลดเพดานเป็น 800
 4. (เสร็จแล้ว) การซ้อนนับเฉพาะ control flow ไม่นับ object literal; ไฟล์ที่ซ้อนเกิน 5 ชั้นเหลือ 0
 5. (เสร็จแล้ว) ทุกไฟล์เทสต์มี row ใน `.claude/tests/README.md`; baseline ว่างและต้องว่างต่อไป
 6. เพิ่มเทสต์ `advance` ของ change เดียวกันที่รันพร้อมกันหลาย process

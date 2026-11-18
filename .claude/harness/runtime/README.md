@@ -1,7 +1,10 @@
 # Harness runtime architecture
 
-`foundation.mjs` is the compatibility entrypoint and composition root. Runtime
-implementation is grouped by domain:
+`foundation.mjs` is the compatibility entrypoint and composition root: it
+holds the process-wide operation state (the change and command being run, and
+whether it was refused) and delegates wiring to `composition/*-wiring.mjs`,
+one `compose*` function per lifecycle area that constructs runtimes from
+explicit dependencies. Runtime implementation is grouped by domain:
 
 - `core/` — CLI parsing/routing, process execution, shared trust, the compiled
   execution contract, convergent gates, authority policy, lifecycle reducer,

@@ -2,156 +2,51 @@
 // First: installs the mutation observer behind the Git read memo before any
 // other module can capture an unobserved fs or child_process function.
 import "./runtime/core/git-read-memo.mjs";
-import { isSharedProject } from './runtime/core/project-installation.mjs';
-import { assertSpecApproval, preserveSpecApprovalAcross } from "./runtime/core/user-decisions.mjs";
-
-import {
-  appendFileSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync
-} from "node:fs";
-import { spawnSync } from "node:child_process";
+import { assertSpecApproval } from "./runtime/core/user-decisions.mjs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  createMetricsRuntime, createSourceCohortProvider
-} from "./runtime/observability/metrics-runtime.mjs";
 import { createExecRuntime } from "./runtime/observability/exec-runtime.mjs";
-import { createOutcomesRuntime } from "./runtime/observability/outcomes-runtime.mjs";
-import { createLessonsRuntime, lessonsReadiness } from "./runtime/observability/lessons-runtime.mjs";
-import { createPyramidReadinessCommand } from "./runtime/composition/pyramid-readiness-command.mjs";
-import { createProjectFeaturesCommand, projectSetupReadiness } from "./runtime/workflow/validation/project-feature-map.mjs";
-import { createApprovalPackageRuntime, routeForState } from "./runtime/workflow/change/approval-package.mjs";
-import {
-  createFeedbackRuntime, FEEDBACK_SCHEMA_VERSION
-} from "./runtime/observability/feedback-runtime.mjs";
-import { createTelemetryRuntime } from "./runtime/observability/telemetry-runtime.mjs";
+import { routeForState } from "./runtime/workflow/change/approval-package.mjs";
 import { blockerTelemetryValue, createCommandPhaseRecorder } from "./runtime/observability/command-telemetry.mjs";
 import { createJsonlReader } from "./runtime/observability/telemetry.mjs";
 import { operationInputFingerprint } from "./runtime/observability/operation-profile.mjs";
-import {
-  createHostExecutionImporter, createHostExecutionStore, createModelDriftInspector,
-  resolveHostExecutionSource
-} from "./runtime/observability/host-execution-contract.mjs";
-import { createHostAttestationRuntime } from "./runtime/evidence/attestation.mjs";
-import { validateSignedCiEnvelope } from "./runtime/evidence/signed-ci.mjs";
-import { createAuthorityStore } from "./runtime/workflow/authority/authority.mjs";
-import { createBudgetRuntime } from "./runtime/workflow/authority/budget.mjs";
-import {
-  createBudgetContinuation, createBudgetReporter
-} from "./runtime/workflow/authority/budget-commands.mjs";
-import {
-  adapterResources as resultAdapterResources,
-  configuredCommand,
-  mutationProtocolResult,
-  numericReportValue,
-  parseNodeTestSpecOutput,
-  parseJsonOutput,
-  parseTapOutput,
-  playwrightReportSummary,
-  resourcesConflict
-} from "./runtime/evidence/evidence-results.mjs";
 import { createFlagParser } from "./runtime/core/cli-flags.mjs";
-import { createCommandRegistry } from "./runtime/core/command-registry.mjs";
-import {
-  createRuntimeEnvironment, policyExecutionLimit
-} from "./runtime/core/runtime-environment.mjs";
 import {
   phaseForCommand, telemetryPhaseForCommand
 } from "./runtime/core/lifecycle-phase.mjs";
 import { createProcessRuntime, serviceWorkspace } from "./runtime/core/process-runtime.mjs";
-import { createInstructionRecorder } from "./runtime/core/instruction-recorder.mjs";
-import { createAgentPlanner, createModelRouter } from "./runtime/workflow/authority/agent-planning.mjs";
-import { createAgentDispatchRuntime } from "./runtime/workflow/authority/agent-dispatch.mjs";
-import {
-  createAdvanceRuntime, hasValidLandGrant, prepareAdvanceBuild, runAdvanceProof
-} from "./runtime/workflow/advance/advance-runtime.mjs";
-import { ADVANCE_PROTOCOL_VERSION, advanceFailureAction } from "./runtime/workflow/advance/advance-envelope.mjs";
-import { automaticReviewRun, currentDeliveryProof } from "./runtime/workflow/advance/advance-recovery.mjs";
-import { createSandboxRuntime } from "./runtime/workflow/sandbox/sandbox-runtime.mjs";
-import { copySandboxEntries, sandboxCopyPlan } from "./runtime/workflow/sandbox/sandbox-copy.mjs";
-import { createPreviewRuntime } from "./runtime/workflow/prototype/preview-runtime.mjs";
-import { createSandboxCleanup } from "./runtime/workflow/sandbox/sandbox-cleanup.mjs";
-import { rollbackAtomicStart as rollbackAtomicStartOperation } from "./runtime/workflow/change/atomic-start-rollback.mjs";
-import { assertLandedProjection } from "./runtime/workflow/land/land-verification.mjs";
-import {
-  createLandJournal, transactionJournals as readTransactionJournals
-} from "./runtime/workflow/transaction/land-journal.mjs";
-import {
-  createProofRuntime, taskPacketWasPrecompletedOperation
-} from "./runtime/evidence/proof-runtime.mjs";
-import { createRepositoryTopology } from "./runtime/workflow/repository/repository-topology.mjs";
-import { nestedRepositoryRelativePaths } from "./runtime/core/repository-binding.mjs";
-import { createRepositorySnapshot } from "./runtime/workflow/repository/repository-snapshot.mjs";
+import { advanceFailureAction } from "./runtime/workflow/advance/advance-envelope.mjs";
+
 import { createPacketRuntime } from "./runtime/workflow/packet/packet-runtime.mjs";
-import { createChangePolicy } from "./runtime/workflow/change/change-policy.mjs";
 import { taskBlocks, taskMetadata } from "./runtime/contracts/change-artifacts.mjs";
 import { createChangeLifecycle } from "./runtime/workflow/change/change-lifecycle.mjs";
 import { amendTaskVerifyOperation } from "./runtime/workflow/draft/amendment-verify.mjs";
 import { createInvestigationRuntime } from "./runtime/workflow/investigation/investigation-runtime.mjs";
-import { createLeaseRuntime } from "./runtime/workflow/authority/lease-runtime.mjs";
-import { createAuthorityRuntime } from "./runtime/workflow/authority/authority-runtime.mjs";
-import { createHandoffRuntime } from "./runtime/workflow/authority/handoff-runtime.mjs";
-import {
-  advanceLandOperation, assertOpenSpecCli, createLandRuntime, openSpecCliStatus,
-  recordedDeliveryReferences, targetProjectionObservationValue
-} from "./runtime/workflow/land/land-runtime.mjs";
-import { createApplyRuntime } from "./runtime/workflow/land/apply-runtime.mjs";
-import { createApplyRecovery } from "./runtime/workflow/transaction/apply-recovery.mjs";
-import { createDiagnosticsRuntime } from "./runtime/core/diagnostics-runtime.mjs";
+
 import { authorityPreflightValue } from "./runtime/core/authority-policy.mjs";
 import { compileExecutionContractValue } from "./runtime/core/execution-contract.mjs";
-import { createStateRuntime } from "./runtime/core/state-runtime.mjs";
-import { createEvidenceContract } from "./runtime/evidence/evidence-contract.mjs";
-import { REVIEW_FORCING_CAPABILITIES, REVIEW_DIVERSITY_CAPABILITIES } from "./runtime/evidence/review-policy.mjs";
 import { createChangeValidationRuntime } from "./runtime/workflow/change/change-validation.mjs";
-import { postReleaseRolloutGates } from "./runtime/workflow/change/required-providers.mjs";
 import { routeRuntimeCommand } from "./runtime/core/cli-router.mjs";
 import { impliedChangeValues } from "./runtime/core/implied-change.mjs";
-import { createProviderScheduler } from "./runtime/evidence/provider-scheduler.mjs";
-import { createReviewProtocol } from "./runtime/evidence/review-protocol.mjs";
-import { createArtifactStore } from "./runtime/evidence/artifact-store.mjs";
-import { createReviewAttemptStore } from "./runtime/evidence/review-attempt-store.mjs";
-import {
-  createProofReadinessRuntime
-} from "./runtime/evidence/proof-readiness.mjs";
 import { createReceiptRuntime } from "./runtime/evidence/receipt-runtime.mjs";
 import { createReceiptValidity } from "./runtime/evidence/receipt-validity.mjs";
 import { reviewRulesHash } from "./runtime/evidence/configured-reviewer.mjs";
-import { createAdapterRuntime } from "./runtime/evidence/adapter-runtime.mjs";
-import { createProofExecutionRuntime } from "./runtime/evidence/proof-execution-runtime.mjs";
-import {
-  createTestDiscriminationRuntime, prepareBaseTree
-} from "./runtime/evidence/test-discrimination.mjs";
-import {
-  createBenchmarkRuntime, receiptRegressionFinding
-} from "./runtime/evidence/benchmark-runtime.mjs";
-import { changeWorkTypes, taskChangeIssue } from "./runtime/workflow/change/task-change.mjs";
-import { lightKind } from "./runtime/workflow/validation/dev-document.mjs";
-import { repositoryBaseHead } from "./runtime/core/repository-binding.mjs";
+import { changeWorkTypes } from "./runtime/workflow/change/task-change.mjs";
 import { createConfiguredReviewerRuntime } from "./runtime/evidence/configured-reviewer.mjs";
 import { createBlockedDecision, createDetachedBlockScope } from "./runtime/core/blocked-decision.mjs";
-import { createLandGrantRuntime } from "./runtime/core/land-grant.mjs";
-import {
-  assertExecutionPreparationReady, ensureProjectOpenSpec,
-  executionPreparationValue, prependFoundationToolPath
-} from "./runtime/core/tool-preparation.mjs";
-import { createAbandonRuntime } from "./runtime/workflow/change/abandon-runtime.mjs";
-import { createLandUndo } from "./runtime/workflow/land/land-undo.mjs";
+import { prependFoundationToolPath } from "./runtime/core/tool-preparation.mjs";
 import { RUNTIME_MODULE_API } from "./runtime/version.mjs";
 import { createBootstrap } from "./runtime/composition/bootstrap.mjs";
-import {
-  EXCLUDED_WORKSPACE_DIRS, SANDBOX_COPY_EXCLUDED_DIRS
-} from "./runtime/core/workspace-policy.mjs";
-import {
-  ADAPTERS, INPUT_MODES, PROVIDER_CONTRACTS, PROVIDERS, providerCapability
-} from "./runtime/evidence/provider-catalog.mjs";
+import { INPUT_MODES, PROVIDERS, providerCapability } from "./runtime/evidence/provider-catalog.mjs";
 import { SECURITY_TERMS } from "./runtime/workflow/authority/security-policy.mjs";
-import { targetEditsForState } from "./runtime/workflow/transaction/target-edits.mjs";
-import {
-  createSessionLeaseRuntime, isSessionOwner, runTaskCheck
-} from "./runtime/workflow/authority/session-lease.mjs";
-import { createQualityRuntime } from "./runtime/quality/quality-runtime.mjs";
-import { createPullRequestRuntime } from "./runtime/workflow/delivery/pull-request-runtime.mjs";
-import { DELIVERY_PROTOCOL_VERSION, DELIVERY_RECEIPT_SCHEMA_VERSION } from "./runtime/workflow/delivery/delivery-projection.mjs";
+
+import { composeBuildRuntimes } from "./runtime/composition/build-wiring.mjs";
+import { composeEvidenceExecution } from "./runtime/composition/evidence-execution-wiring.mjs";
+import { composeStateRuntimes } from "./runtime/composition/state-wiring.mjs";
+import { composeEnvironment } from "./runtime/composition/environment-wiring.mjs";
+import { composeLifecycleRuntimes } from "./runtime/composition/lifecycle-wiring.mjs";
+import { composeEvidenceState } from "./runtime/composition/evidence-state-wiring.mjs";
 
 const VERSION = "3.7.5";
 const RUNTIME_API_VERSION = "42";
@@ -300,71 +195,19 @@ const commandPhaseRecorder = createCommandPhaseRecorder(() => ({
     timestamp: Date.now,
     warn: console.error
 }));
-process.on("exit", (code) => commandPhaseRecorder.finish(code));
-
 const {
-  describeCommand,
-  assertRegisteredRuntimeCommand
-} = createCommandRegistry({
-  path: join(dirname(fileURLToPath(import.meta.url)), "commands.json"),
-  readJson,
-  fail: die
-});
-
-const {
-  protocolDescriptor,
-  commandExists,
-  playwrightAvailability,
-  foundationPolicy,
-  reviewAssurancePosture
-} = createRuntimeEnvironment({
-  root: ROOT,
-  // During Foundation's own Build, state remains pinned to the control root
-  // while the candidate entrypoint runs from its sandbox. Protocol integrity
-  // belongs to that executable bundle, not to the state root it operates on.
-  protocolPath: join(dirname(fileURLToPath(import.meta.url)), "protocol.json"),
-  policyPath: isSharedProject(ROOT) ? join(ROOT, 'foundation.json') : join(dirname(fileURLToPath(import.meta.url)), "..", "..", "foundation.json"),
-  protocols: {
-    runtime: VERSION,
-    runtimeApi: RUNTIME_API_VERSION,
-    providerProtocol: PROVIDER_PROTOCOL_VERSION,
-    adapterProtocol: ADAPTER_PROTOCOL_VERSION,
-    proofProtocol: PROOF_PROTOCOL_VERSION,
-    packetSchema: PACKET_SCHEMA_VERSION,
-    agentPlanSchema: AGENT_PLAN_SCHEMA_VERSION,
-    contextEventSchema: CONTEXT_EVENT_SCHEMA_VERSION,
-    metricsSchema: METRICS_SCHEMA_VERSION,
-    advanceProtocol: String(ADVANCE_PROTOCOL_VERSION),
-    feedbackSchema: String(FEEDBACK_SCHEMA_VERSION),
-    commandTelemetrySchema: COMMAND_TELEMETRY_SCHEMA_VERSION,
-    reviewProtocol: REVIEW_PROTOCOL_VERSION,
-    acceptanceProtocol: ACCEPTANCE_PROTOCOL_VERSION,
-    semanticAcceptanceProtocol: SEMANTIC_ACCEPTANCE_PROTOCOL_VERSION,
-    reviewPacketSchema: REVIEW_PACKET_SCHEMA_VERSION,
-    attestationProtocol: ATTESTATION_PROTOCOL_VERSION,
-    authorityProtocol: AUTHORITY_PROTOCOL_VERSION,
-    ciEvidenceProtocol: CI_EVIDENCE_PROTOCOL_VERSION,
-    qualityCapabilitiesProtocol: QUALITY_CAPABILITIES_PROTOCOL_VERSION,
-    crapProtocol: CRAP_PROTOCOL_VERSION,
-    automatedMutationProtocol: AUTOMATED_MUTATION_PROTOCOL_VERSION,
-    deliveryProtocol: String(DELIVERY_PROTOCOL_VERSION),
-    deliveryReceiptSchema: String(DELIVERY_RECEIPT_SCHEMA_VERSION)
-  },
-  readJson,
-  fail: die
-});
-const maxParallelProviders = policyExecutionLimit.bind(
-  null, foundationPolicy, "maxParallelProviders");
-
-const sourceCohort = createSourceCohortProvider({
-  runtimeVersion: VERSION,
-  protocolBundle: protocolDescriptor(),
-  directory: dirname(fileURLToPath(import.meta.url))
-});
-const { recordInstructionManifest } = createInstructionRecorder({
-  root: ROOT,
-  foundationVersion: VERSION,
-  instructionManifests: INSTRUCTION_MANIFESTS,
+  assertRegisteredRuntimeCommand, commandExists, describeCommand, foundationPolicy,
+  maxParallelProviders, playwrightAvailability, protocolDescriptor, recordInstructionManifest,
+  reviewAssurancePosture, sourceCohort
+} = composeEnvironment({
+  ACCEPTANCE_PROTOCOL_VERSION, ADAPTER_PROTOCOL_VERSION, AGENT_PLAN_SCHEMA_VERSION,
+  ATTESTATION_PROTOCOL_VERSION, AUTHORITY_PROTOCOL_VERSION,
+  AUTOMATED_MUTATION_PROTOCOL_VERSION, CI_EVIDENCE_PROTOCOL_VERSION,
+  COMMAND_TELEMETRY_SCHEMA_VERSION, CONTEXT_EVENT_SCHEMA_VERSION, CRAP_PROTOCOL_VERSION,
+  INSTRUCTION_MANIFESTS, METRICS_SCHEMA_VERSION, PACKET_SCHEMA_VERSION, PROOF_PROTOCOL_VERSION,
+  PROVIDER_PROTOCOL_VERSION, QUALITY_CAPABILITIES_PROTOCOL_VERSION,
+  REVIEW_PACKET_SCHEMA_VERSION, REVIEW_PROTOCOL_VERSION, ROOT, RUNTIME_API_VERSION,
+  SEMANTIC_ACCEPTANCE_PROTOCOL_VERSION, VERSION, commandPhaseRecorder, die, readJson,
   writeJson
 });
 const {
@@ -383,141 +226,26 @@ const {
   }),
   fail: die
 });
-const stateRuntime = createStateRuntime({
-  root: ROOT,
-  runtime: RUNTIME,
-  changes: CHANGES,
-  receipts: RECEIPTS,
-  evidenceVault: EVIDENCE_VAULT,
-  snapshots: SNAPSHOTS,
-  excludedWorkspaceDirs: EXCLUDED_WORKSPACE_DIRS,
-  readJson,
-  writeJson,
-  canonicalPath,
-  now,
-  fail: die
-});
 const {
-  runtimePath,
-  changePath,
-  receiptPath,
-  proofPath,
-  proofRunRoot,
-  snapshotPath,
-  currentChangeRelativePath,
-  isCurrentChangePath,
-  activeChangePath,
-  archivedChangeRelativePath,
-  slugify,
-  loadRuntime,
-  saveRuntime,
-  activeChanges,
-  orphanRuntimeChanges,
-  walk,
-  filesystemEntryIdentity,
-  directoryHash,
-  stableHash,
-  serializedJson,
-  compactList,
-  compactStrings,
-  expandList,
-  listCount,
-  fileDigest,
-  singleRelevantSnapshot,
-  inspectSnapshots,
-  writeSnapshot,
-  clearSnapshotCache,
-  registerPolicyCacheClearer,
-  workspaceManifest,
-  declaredSurfaceMatcher,
-  preexistingDirty,
-  porcelainStatusRecords,
-  git,
-  gitBuffer,
-  gitHead
-} = stateRuntime;
-const {
-  flagValues,
-  provenanceResult: reviewProvenanceResult,
-  receiptBinding: reviewReceiptBinding,
-  subjectProvenance,
-  attemptIsValid: reviewAttemptIsValid
-} = createReviewProtocol({ stableHash, fail: die });
-const {
-  reviewHistoryState,
-  reviewAttemptByDigest,
-  assertReviewDispatchAllowed,
-  dispatchReviewAttempt,
-  completeReviewAttempt,
-  recordRepairClosureAttempt,
-  reviewAttempts,
-  deliveredAiAttempts,
-  acknowledgeInfrastructureAttempts,
-  grantExtraAiWave,
-  acknowledgeBaseMoveAttempts,
-  autoReleaseReviewBudget
-} = createReviewAttemptStore({
-  receiptsRoot: RECEIPTS,
-  evidenceVault: EVIDENCE_VAULT,
-  readJson,
-  writeJson,
-  loadRuntime,
-  saveRuntime,
-  stableHash,
-  reviewReceiptBinding,
-  now,
-  fail: die
-});
-const hostAttestation = createHostAttestationRuntime({
-  root: ROOT,
-  attestations: ATTESTATIONS,
-  protocolVersion: ATTESTATION_PROTOCOL_VERSION,
-  loadRuntime,
-  changePath,
-  directoryHash,
-  stableHash,
-  readJson,
-  writeJson,
-  now
-});
-const authorityStore = createAuthorityStore({
-  root: AUTHORITY,
-  protocolVersion: AUTHORITY_PROTOCOL_VERSION,
-  readJson,
-  writeJson,
-  now
-});
-const {
-  budgetWindow,
-  initialBudget,
-  ensureBudgetState,
-  calibrationForState,
-  budgetDecision,
-  applyBudgetDecision,
-  eventUsage,
-  synchronizeBudgetUsage
-} = createBudgetRuntime({ policy: foundationPolicy, now });
-const { reportBudget } = createBudgetReporter({
-  applyBudgetDecision,
-  watchdogEnabled: () => foundationPolicy().execution.budgetWatchdog === true
-});
-const { metricsValue, showMetrics } = createMetricsRuntime({
-  logs: LOGS,
-  receipts: RECEIPTS,
-  readJson,
-  readJsonLines,
-  readJsonLinesTolerant,
-  loadRuntime,
-  ensureBudgetState,
-  budgetDecision,
-  calibrationForState,
-  instructionManifests: INSTRUCTION_MANIFESTS,
-  activeChangePath,
-  policy: foundationPolicy,
-  taskBlocks,
-  taskMetadata,
-  metricsSchemaVersion: Number(METRICS_SCHEMA_VERSION),
-  sourceCohort
+  acknowledgeBaseMoveAttempts, acknowledgeInfrastructureAttempts, activeChangePath,
+  activeChanges, applyBudgetDecision, archivedChangeRelativePath, assertReviewDispatchAllowed,
+  authorityStore, autoReleaseReviewBudget, budgetDecision, budgetWindow, changePath,
+  clearSnapshotCache, compactList, compactStrings, completeReviewAttempt,
+  currentChangeRelativePath, declaredSurfaceMatcher, deliveredAiAttempts, directoryHash,
+  dispatchReviewAttempt, ensureBudgetState, eventUsage, expandList, fileDigest,
+  filesystemEntryIdentity, flagValues, git, gitBuffer, gitHead, grantExtraAiWave,
+  hostAttestation, initialBudget, inspectSnapshots, isCurrentChangePath, listCount,
+  loadRuntime, metricsValue, orphanRuntimeChanges, porcelainStatusRecords, preexistingDirty,
+  proofPath, proofRunRoot, receiptPath, recordRepairClosureAttempt, registerPolicyCacheClearer,
+  reportBudget, reviewAttemptByDigest, reviewAttemptIsValid, reviewAttempts,
+  reviewHistoryState, reviewProvenanceResult, runtimePath, saveRuntime, serializedJson,
+  showMetrics, singleRelevantSnapshot, slugify, snapshotPath, stableHash, subjectProvenance,
+  synchronizeBudgetUsage, walk, workspaceManifest, writeSnapshot
+} = composeStateRuntimes({
+  ATTESTATIONS, ATTESTATION_PROTOCOL_VERSION, AUTHORITY, AUTHORITY_PROTOCOL_VERSION, CHANGES,
+  EVIDENCE_VAULT, INSTRUCTION_MANIFESTS, LOGS, METRICS_SCHEMA_VERSION, RECEIPTS, ROOT, RUNTIME,
+  SNAPSHOTS, canonicalPath, die, foundationPolicy, now, readJson, readJsonLines,
+  readJsonLinesTolerant, sourceCohort, writeJson
 });
 const { execObserved } = createExecRuntime({
   assertApproval: (id, state) => assertSpecApproval(ROOT, id, state),
@@ -535,214 +263,31 @@ const { execObserved } = createExecRuntime({
   prepareWorkspace: (id) => projectRootRepositories(id),
   fail: die
 });
-const repositoryTopology = createRepositoryTopology({
-  root: ROOT,
-  slugify,
-  readJson,
-  canonicalPath,
-  pathInside,
-  activeChangePath,
-  loadRuntime,
-  git,
-  gitHead,
-  fail: die
-});
 const {
-  catalog: repositoryCatalog,
-  selectionIdsAt: repositorySelectionIdsAt,
-  selected: selectedRepositories,
-  byId: repositoryById,
-  show: showRepositories
-} = repositoryTopology;
-// Every declared nested repository's root-relative path; its gitlink in the
-// root workspace is that repository's pointer, never root task content.
-const declaredRepositoryPaths = () => nestedRepositoryRelativePaths(repositoryCatalog());
-const { relevantSnapshot, relevantHash } = createRepositorySnapshot({
-  root: ROOT,
-  runtimePath,
-  snapshotPath,
-  readJson,
-  writeJson: writeSnapshot,
-  singleRelevantSnapshot,
-  selectedRepositories,
-  gitHead,
-  stableHash,
-  now
-});
-const {
-  canonicalChangedSurface,
-  changedSurfaceResolvable,
-  policyCapabilities,
-  policyRolloutCapabilities,
-  policyCapabilityTrigger,
-  forecastCapabilities,
-  policyProviderSetupActions,
-  clearPolicyCache
-} = createChangePolicy({
-  root: ROOT,
-  excludedWorkspaceDirs: EXCLUDED_WORKSPACE_DIRS,
-  providers: PROVIDERS,
-  gitHead,
-  git,
-  porcelainStatusRecords,
-  workspaceManifest,
-  loadRuntime,
-  selectedRepositories,
-  isCurrentChangePath,
-  readJson,
-  fileDigest,
-  fail: die,
-  declaredRepositoryPaths
-});
-// clearSnapshotCache is what every surface mutation already calls; the policy
-// cache invalidates with it or not at all.
-registerPolicyCacheClearer(clearPolicyCache);
-const {
-  showDiscovery: showQualityDiscovery, initialize: initializeQuality, doctor: qualityDoctor, run: runQuality,
-  report: showQualityReport, baseline: updateQualityBaseline, debt: showQualityDebt, readiness: qualityReadiness,
-  laneStates: qualityLaneStates
-} = createQualityRuntime({
-  root: ROOT,
-  repositoryCatalog,
-  selectedRepositories,
-  canonicalChangedSurface,
-  declaredSurfaceMatcher,
-  loadRuntime,
-  git,
-  gitHead,
-  readJson,
-  writeJson,
-  pathInside,
-  workspaceManifest,
-  fail: die
-});
-const {
-  appendTelemetryRows,
-  bindClaudeSession,
-  importTelemetry,
-  modelUsageRecorded,
-  telemetryReadiness,
-  prepareClaudeTelemetry,
-  recordContextMetric,
-  recordEvent,
-  recordPhaseContext,
-  syncClaudeTelemetry
-} = createTelemetryRuntime({
-  root: ROOT,
-  logs: LOGS,
-  contextEventSchemaVersion: CONTEXT_EVENT_SCHEMA_VERSION,
-  stableHash,
-  now,
-  readJson,
-  writeJson,
-  readJsonLines,
-  readJsonLinesTolerant,
-  loadRuntime,
-  saveRuntime,
-  synchronizeBudgetUsage,
-  reportBudget,
-  snapshotPath,
-  parseFlags,
-  activeChangePath,
-  repositoryById,
-  taskBlocks,
-  fail: die
-});
-const hostExecutionStore = createHostExecutionStore({ root: ROOT, now });
-const importHostExecution = createHostExecutionImporter({
-  loadRuntime,
-  resolveSource: resolveHostExecutionSource.bind(null, process.cwd()),
-  exists: existsSync,
-  store: hostExecutionStore,
-  readJson,
-  appendTelemetryRows,
-  snapshotPath,
-  fail: die,
-  log: console.log
-});
-const handoffRuntime = createHandoffRuntime({
-  root: ROOT,
-  handoffsRoot: HANDOFFS,
-  activeChangePath,
-  loadRuntime,
-  readJson,
-  writeJson,
-  stableHash,
-  defaultOwner: () => foundationPolicy().workflow.handoffDefaultOwner,
-  now,
-  fail: die,
-  capture: trapFailures
-});
-const {
-  handoffContract,
-  handoffReadiness,
-  showHandoffPacket,
-  showHandoffStatus,
-  recordHandoff
-} = handoffRuntime;
-const evidenceContract = createEvidenceContract({
-  ROOT,
-  PROVIDERS,
-  ADAPTERS,
-  INPUT_MODES,
-  EXCLUDED_WORKSPACE_DIRS,
-  ADAPTER_PROTOCOL_VERSION,
-  PROVIDER_PROTOCOL_VERSION,
-  activeChangePath,
-  readJson,
-  repositoryById,
-  selectedRepositories,
-  providerCapability,
-  canonicalPath,
-  loadRuntime,
-  relevantHash,
-  relevantSnapshot,
-  singleRelevantSnapshot,
-  fileDigest,
-  filesystemEntryIdentity,
-  stableHash,
-  policyCapabilities,
-  policyCapabilityTrigger,
-  foundationPolicy,
-  handoffContract,
-  git,
-  declaredSurfaceMatcher,
-  die
-});
-const {
-  rawExecution,
-  scopedReviewClaims,
-  evidence,
-  claimsForProvider,
-  providerConfig,
-  providerClaims,
-  providerRepository,
-  providerRepositories,
-  providerWorkspace,
-  providerWorkspaceHash,
-  providerInputIdentity,
-  environmentDescriptor,
-  adapterFingerprint,
-  contractFingerprint,
-  resolvedAcceptance,
-  reviewPolicy,
-  executionFingerprint
-} = evidenceContract;
-const {
-  rejectPrototypeEvidenceInputs,
-  receiptPrototypeEvidence,
-  durableArtifact,
+  adapterFingerprint, appendTelemetryRows, bindClaudeSession, canonicalChangedSurface,
+  changedSurfaceResolvable, claimsForProvider, contractFingerprint, declaredRepositoryPaths,
+  durableArtifact, environmentDescriptor, evidence, executionFingerprint, forecastCapabilities,
+  handoffContract, handoffReadiness, importHostExecution, importTelemetry, initializeQuality,
+  modelUsageRecorded, policyCapabilities, policyCapabilityTrigger, policyProviderSetupActions,
+  policyRolloutCapabilities, prepareClaudeTelemetry, providerClaims, providerConfig,
+  providerInputIdentity, providerRepositories, providerRepository, providerWorkspace,
+  providerWorkspaceHash, qualityDoctor, qualityLaneStates, qualityReadiness, rawExecution,
+  receiptPrototypeEvidence, recordContextMetric, recordEvent, recordHandoff,
+  recordPhaseContext, rejectPrototypeEvidenceInputs, relevantHash, relevantSnapshot,
+  repositoryById, repositoryCatalog, repositorySelectionIdsAt, resolvedAcceptance,
+  reviewPolicy, runQuality, scopedReviewClaims, selectedRepositories, showHandoffPacket,
+  showHandoffStatus, showQualityDebt, showQualityDiscovery, showQualityReport,
+  showRepositories, syncClaudeTelemetry, telemetryReadiness, updateQualityBaseline,
   validateArtifact
-} = createArtifactStore({
-  root: ROOT,
-  prototypesRoot: PROTOTYPES,
-  evidenceVault: EVIDENCE_VAULT,
-  canonicalPath,
-  providerWorkspace,
-  proofRunRoot,
-  pathInside,
-  fileDigest,
-  fail: die
+} = composeEvidenceState({
+  ADAPTER_PROTOCOL_VERSION, CONTEXT_EVENT_SCHEMA_VERSION, EVIDENCE_VAULT, HANDOFFS, LOGS,
+  PROTOTYPES, PROVIDER_PROTOCOL_VERSION, ROOT, activeChangePath, canonicalPath,
+  declaredSurfaceMatcher, die, fileDigest, filesystemEntryIdentity, foundationPolicy, git,
+  gitHead, isCurrentChangePath, loadRuntime, now, parseFlags, pathInside,
+  porcelainStatusRecords, proofRunRoot, readJson, readJsonLines, readJsonLinesTolerant,
+  registerPolicyCacheClearer, reportBudget, runtimePath, saveRuntime, singleRelevantSnapshot,
+  slugify, snapshotPath, stableHash, synchronizeBudgetUsage, trapFailures, workspaceManifest,
+  writeJson, writeSnapshot
 });
 const { receiptValidity } = createReceiptValidity({
   evidenceVault: EVIDENCE_VAULT,
@@ -938,90 +483,17 @@ const receiptRuntime = createReceiptRuntime({
   die
 });
 const {
-  proofPlan,
-  rebindReusableReceipt,
-  rebindDiffBoundReceipt,
-  recordReceipt,
-  recordDeterministicReviewClosure,
-  decisionGateNotice
-} = receiptRuntime;
-const { measure: measureBenchmark } = createBenchmarkRuntime({
-  prepareBaseTree,
-  isProductPath: (path) => !lightKind(path),
-  fileDigest,
-  runCommand,
-  removeTree: (path) => rmSync(path, { recursive: true, force: true }),
-  stableHash
-});
-const adapterRuntime = createAdapterRuntime({
-  ROOT,
-  LOGS,
-  PROVIDERS,
-  providerCapability,
-  providerConfig,
-  parseFlags,
-  providerWorkspace,
-  recordReceipt,
-  startServiceSession,
-  evidence,
-  resultAdapterResources,
-  loadRuntime,
-  providerRepository,
-  providerRepositories,
-  repositoryById,
-  fileDigest,
-  pathInside,
-  configuredCommand,
-  stableHash,
-  runCommand,
-  providerWorkspaceHash,
-  providerClaims,
-  parseJsonOutput,
-  parseTapOutput,
-  parseNodeTestSpecOutput,
-  numericReportValue,
-  playwrightReportSummary,
-  requiredProviders,
-  mutationProtocolResult,
-  now,
-  serviceResourcesConflict: resourcesConflict,
-  maxParallelServices: maxParallelProviders,
-  recordScheduler: commandPhaseRecorder.scheduler,
-  timestamp: Date.now,
-  measureBenchmark,
-  die,
-  clearSnapshotCache
-});
-const {
-  runProvider,
-  startRequiredServices,
-  adapterResources,
-  executeAdapter
-} = adapterRuntime;
-const {
-  executionNodes,
-  runExecutionDag,
-  collectableExecutionNodes
-} = createProviderScheduler({
-  requiredProviders,
-  receiptValidity,
-  providerConfig,
-  commandExists,
-  providerWorkspace,
-  playwrightAvailability,
-  evidence,
-  providerCapability,
-  adapterResources,
-  resourcesConflict,
-  executeAdapter,
-  maxParallelProviders,
-  recordScheduler: commandPhaseRecorder.scheduler,
-  timestamp: Date.now,
-});
-const { modelForTask } = createModelRouter({
-  loadRuntime,
-  policy: foundationPolicy,
-  fail: die
+  adapterResources, adapterRuntime, collectableExecutionNodes, decisionGateNotice,
+  executionNodes, modelForTask, proofPlan, rebindDiffBoundReceipt, rebindReusableReceipt,
+  recordDeterministicReviewClosure, recordReceipt, runExecutionDag, runProvider,
+  startRequiredServices
+} = composeEvidenceExecution({
+  LOGS, ROOT, clearSnapshotCache, commandExists, commandPhaseRecorder, die, evidence,
+  fileDigest, foundationPolicy, loadRuntime, maxParallelProviders, now, parseFlags, pathInside,
+  playwrightAvailability, providerClaims, providerConfig, providerRepositories,
+  providerRepository, providerWorkspace, providerWorkspaceHash, receiptRuntime,
+  receiptValidity, repositoryById, requiredProviders, runCommand, stableHash,
+  startServiceSession
 });
 const packetRuntime = createPacketRuntime({
   inspectSnapshots,
@@ -1075,353 +547,40 @@ const packetRuntime = createPacketRuntime({
   fail: die
 });
 const {
-  reviewPacketValue,
-  showPacket
-} = packetRuntime;
-const {
-  requestAuthority,
-  dispatchAuthority,
-  runAuthorityReviewer,
-  runAuthorityReviewerAsync,
-  abortAuthority,
-  resetInfrastructureAuthority,
-  extendReviewAuthority,
-  recoverReviewBindings,
-  resetBaseMoveAuthority,
-  authorityStatusValue,
-  showAuthorityStatus,
-  recordAuthority,
-  recordVerifiedCi
-} = createAuthorityRuntime({
-  root: ROOT,
-  protocolVersion: AUTHORITY_PROTOCOL_VERSION,
-  ciEvidenceProtocolVersion: CI_EVIDENCE_PROTOCOL_VERSION,
-  authorityStore,
-  requiredProviders,
-  providerCapability,
-  providerConfig,
-  reviewPacketValue,
-  loadRuntime,
-  evidence,
-  resolvedAcceptance,
-  relevantHash,
-  validate,
-  pendingTasks,
-  claimsForProvider,
-  stableHash,
-  now,
-  reviewPolicy,
-  readJson,
-  expandList,
-  listCount,
-  dispatchReviewAttempt,
-  completeReviewAttempt,
-  reviewHistoryState,
-  reviewAttempts,
-  deliveredAiAttempts,
-  reviewAttemptByDigest,
-  assertReviewDispatchAllowed,
-  foundationPolicy,
-  reviewerConfig,
-  reviewerStatus,
-  reviewerInstalled,
-  runConfiguredReview,
-  runConfiguredReviewAsync,
-  acknowledgeInfrastructureAttempts,
-  grantExtraAiWave,
-  acknowledgeBaseMoveAttempts,
-  autoReleaseReviewBudget,
-  clearSnapshotCache,
-  writeJson,
-  receiptPath,
-  recordReceipt,
-  receiptValidity,
-  fileDigest,
-  providerWorkspaceHash,
-  providerRepository,
-  providerWorkspace,
-  gitHead,
-  validateSignedCiEnvelope,
-  providerClaims,
-  fail: die,
-  reviewDiffContext: {
-    git,
-    pathExists: existsSync,
-    readFile: readFileSync,
-    readDirectory: readdirSync,
-    isDirectory: (path) => lstatSync(path).isDirectory()
-  }
-});
-const {
-  planValue: agentPlanValue,
-  showPlan: showAgentPlan,
-  showTask: showAgentTask,
-  activeRepositoryConflicts
-} = createAgentPlanner({
-  root: ROOT,
-  plans: PLANS,
-  runtime: RUNTIME,
-  schemaVersion: AGENT_PLAN_SCHEMA_VERSION,
-  validate,
-  loadRuntime,
-  policy: foundationPolicy,
-  selectedRepositories,
-  // Reading *another* change's topology must not end this process when that
-  // change's selection is stale — see activeRepositoryConflicts.
-  safeSelectedRepositories: (id, state) => {
-    try {
-      return selectedRepositories(id, state, (message) => { throw new Error(message); });
-    } catch { return null; }
-  },
-  taskBlocks,
-  taskMetadata,
-  activeChangePath,
-  evidence,
-  providerCapability,
-  claimsForProvider,
-  requiredProviders,
-  providerConfig,
-  providerRepositories,
-  authorityPreflight,
-  executionContract,
-  taskResult: (id, taskId) => {
-    const path = join(LEASES, "results", id, `${taskId}.json`);
-    return existsSync(path) ? { path, value: readJson(path, null) } : null;
-  },
-  taskLease: (id, taskId) => {
-    const path = join(LEASES, "tasks", id, `${taskId}.json`);
-    return existsSync(path) ? readJson(path, null) : null;
-  },
-  taskPacketWasPrecompleted: (id) => taskPacketWasPrecompletedOperation({
-    loadRuntime, activeChangePath, exists: existsSync, fileDigest
-  }, id),
-  relevantHash,
-  contractFingerprint,
-  stableHash,
-  now,
-  readJson,
-  writeJson,
-  compactStrings,
-  serializedJson,
-  recordContextMetric,
-  recordInstructionManifest,
-  modelForTask,
-  showPacket,
-  recordScheduler: commandPhaseRecorder.scheduler,
-  fail: die
-});
-const {
-  acquire: acquireAgentLease,
-  release: releaseAgentLease,
-  discard: discardAgentLease,
-  park: parkAgentLease,
-  active: activeChangeLeases,
-  cleanup: cleanupChangeLeases
-} = createLeaseRuntime({
-  leases: LEASES,
-  stableHash,
-  agentPlanValue,
-  policy: foundationPolicy,
-  readJson,
-  writeJson,
-  now,
-  observedTaskSurface: (id, task) => {
-    const state = loadRuntime(id);
-    const repository = repositoryById(id, task.repository || "root", state);
-    return canonicalChangedSurface(id, state)
-      .filter((row) => row.repositoryId === repository.id)
-      .map((row) => {
-        const path = join(repository.workspacePath, row.path);
-        return {
-          path: row.path,
-          identity: lstatSync(path, { throwIfNoEntry: false })
-            ? filesystemEntryIdentity(path) : "deleted"
-        };
-      });
-  },
-  fail: die
-});
-const {
-  dispatchValue: agentDispatchValue,
-  showDispatch: showAgentDispatch
-} = createAgentDispatchRuntime({
-  agentPlanValue,
-  // A lease `advance` holds for its session task is not a live worker: the
-  // same task is still the frontier and dispatch returns it again.
-  activeChangeLeases: (id) => activeChangeLeases(id)
-    .filter((lease) => !isSessionOwner(lease.owner)),
-  stableHash,
-  policy: foundationPolicy,
-  serializedJson,
-  fail: die
-});
-
-const targetEditsFor = targetEditsForState.bind(null, {
-  root: ROOT, transactions: TRANSACTIONS, readJson,
-  transactionJournals: (id) => readTransactionJournals(TRANSACTIONS, id, readJson),
-  preexistingDirty, trapFailures,
-  canonicalChangedSurface
-});
-
-const {
-  changedSurfaceIssues,
-  externalEvidenceRecovery,
-  proofPreflight,
-  proofReadiness,
-  proofReadinessValue,
-  readinessBudgetPolicy,
-  topologyIssues,
-  workspaceIsolationIssues
-} = createProofReadinessRuntime({
-  root: ROOT,
-  targetEditIssues: (state) => targetEditsFor(state).issues,
-  markBlocked,
-  evidence,
-  loadRuntime,
-  taskBlocks,
-  activeChangePath,
-  taskMetadata,
-  canonicalChangedSurface,
-  selectedRepositories,
-  providerCapability,
-  providerConfig,
-  providerRepositories,
-  requiredProviders,
-  git,
-  gitHead,
-  advisoryCapabilities,
-  evidenceDetectionValue,
-  validate,
-  relevantHash,
-  executionNodes,
-  pendingTasks,
-  handoffReadiness,
-  activeChangeLeases,
-  activeRepositoryConflicts,
-  agentPlanValue,
-  saveRuntime,
-  authorityPreflight,
-  executionContract,
-  clearSnapshotCache,
-  fail: die
-});
-const { continueBudget, checkpointBudget } = createBudgetContinuation({
-  logs: LOGS,
-  loadRuntime,
-  saveRuntime,
-  ensureBudgetState,
-  applyBudgetDecision,
-  changeArtifactGaps,
-  activeChangePath,
-  pendingTasks,
-  readinessBudgetPolicy,
-  proofReadinessValue,
-  eventUsage,
-  budgetWindow,
-  readJsonLines,
-  now,
-  blockWithDecision,
-  fail: die
-});
-const {
-  cleanupAppliedSandbox,
-  cleanupRepositorySandboxes
-} = createSandboxCleanup({ root: ROOT, canonicalPath, git, now });
-const sandboxRuntime = createSandboxRuntime({
-  markBlocked,
-  recordScheduler: commandPhaseRecorder.scheduler,
-  declaredSurfaceMatcher,
-  root: ROOT,
-  policy: foundationPolicy,
-  excludedWorkspaceDirs: EXCLUDED_WORKSPACE_DIRS,
-  sandboxCopyExcludedDirs: SANDBOX_COPY_EXCLUDED_DIRS,
-  hostAttestation,
-  loadRuntime,
-  saveRuntime,
-  canonicalPath,
-  workspaceManifest,
-  directoryHash,
-  fileDigest,
-  changePath,
-  gitHead,
-  git,
-  gitBuffer,
-  porcelainStatusRecords,
-  selectedRepositories,
-  repositoryCatalog,
-  cleanupRepositorySandboxes,
-  cleanupAppliedSandbox,
-  clearSnapshotCache,
-  validate,
-  repositorySelectionIdsAt,
-  contractFingerprint,
-  executionFingerprint,
-  taskBlocks,
-  proofPath,
-  proofAdvancePath: (id) => join(EVIDENCE_VAULT, id, "proof-advance.json"),
-  relevantHash,
-  now,
-  fail: die
-});
-const {
-  createChallenge: createAttestationChallenge,
-  inspect: isolationInspection,
-  showInspection: showSandboxInspection,
-  create: createSandbox,
-  prepareBuild: prepareBuildSandbox,
-  mergeTaskProgress,
-  sync: syncSandbox
-} = sandboxRuntime;
-// Root checks consume declared nested repositories through their root path.
-// Every exec, task check, and proof run first brings those paths current, and
-// reinstalls Build dependencies whose manifest or lockfile changed since setup.
-function projectRootRepositories(id) {
-  const projected = sandboxRuntime.projectRepositories(id);
-  sandboxRuntime.refreshChangedDependencies(id);
-  return projected;
-}
-const rollbackAtomicStart = rollbackAtomicStartOperation.bind(null, {
-  root: ROOT, readJson, runtimePath, changePath, snapshotPath, trapFailures,
-  selectedRepositories, cleanupRepositorySandboxes, cleanupAppliedSandbox,
-  ownedPaths: (id) => [join(RECEIPTS, id), join(EVIDENCE_VAULT, id), join(HANDOFFS, id)]
-});
-const approvalPackage = createApprovalPackageRuntime({
-  root: ROOT,
-  runtimeDir: RUNTIME,
-  previewsDir: PREVIEWS,
-  receiptsDir: RECEIPTS,
-  loadRuntime,
-  saveRuntime,
-  activeChangePath,
-  changeWorkTypes,
-  evidence,
-  providerCapability,
-  receiptValidity,
-  fail: die,
-  trap: trapFailures
-});
-// The approval page is a file the prototype skill writes; the harness only
-// reads it (and records its digest), so the link never writes anything.
-const approvalPackageLink = (id) => trapFailures(() => approvalPackage.approvalPageLink(id));
-const recordPrototypeSync = (id) => trapFailures(() => approvalPackage.recordPrototypeSync(id));
-const preview = createPreviewRuntime({
-  root: ROOT,
-  runtimeDir: RUNTIME,
-  previewsDir: PREVIEWS,
-  loadRuntime,
-  evidence,
-  providerCapability,
-  // A preview copy never carries Git or harness state: it is a scratch tree.
-  copyWorkspace: (source, destination) => copySandboxEntries({
-    root: source, requestedPath: destination, fail: die,
-    plan: sandboxCopyPlan({
-      root: source, carriesGit: false, git,
-      sandboxCopyExcludedDirs: SANDBOX_COPY_EXCLUDED_DIRS,
-      excludedWorkspaceDirs: EXCLUDED_WORKSPACE_DIRS
-    })
-  }),
-  now,
-  fail: die
+  abortAuthority, acquireAgentLease, activeChangeLeases, agentDispatchValue, agentPlanValue,
+  approvalPackage, approvalPackageLink, authorityStatusValue, changedSurfaceIssues,
+  checkpointBudget, cleanupAppliedSandbox, cleanupChangeLeases, cleanupRepositorySandboxes,
+  continueBudget, createAttestationChallenge, createSandbox, discardAgentLease,
+  dispatchAuthority, extendReviewAuthority, externalEvidenceRecovery, isolationInspection,
+  mergeTaskProgress, parkAgentLease, prepareBuildSandbox, preview, projectRootRepositories,
+  proofPreflight, proofReadiness, proofReadinessValue, recordAuthority, recordPrototypeSync,
+  recordVerifiedCi, recoverReviewBindings, releaseAgentLease, requestAuthority,
+  resetBaseMoveAuthority, resetInfrastructureAuthority, rollbackAtomicStart,
+  runAuthorityReviewer, runAuthorityReviewerAsync, sandboxRuntime, showAgentDispatch,
+  showAgentPlan, showAgentTask, showAuthorityStatus, showPacket, showSandboxInspection,
+  syncSandbox, targetEditsFor, topologyIssues, workspaceIsolationIssues
+} = composeBuildRuntimes({
+  AGENT_PLAN_SCHEMA_VERSION, AUTHORITY_PROTOCOL_VERSION, CI_EVIDENCE_PROTOCOL_VERSION,
+  EVIDENCE_VAULT, HANDOFFS, LEASES, LOGS, PLANS, PREVIEWS, RECEIPTS, ROOT, RUNTIME,
+  TRANSACTIONS, acknowledgeBaseMoveAttempts, acknowledgeInfrastructureAttempts,
+  activeChangePath, advisoryCapabilities, applyBudgetDecision, assertReviewDispatchAllowed,
+  authorityPreflight, authorityStore, autoReleaseReviewBudget, blockWithDecision, budgetWindow,
+  canonicalChangedSurface, canonicalPath, changeArtifactGaps, changePath, claimsForProvider,
+  clearSnapshotCache, commandPhaseRecorder, compactStrings, completeReviewAttempt,
+  contractFingerprint, declaredSurfaceMatcher, deliveredAiAttempts, die, directoryHash,
+  dispatchReviewAttempt, ensureBudgetState, eventUsage, evidence, evidenceDetectionValue,
+  executionContract, executionFingerprint, executionNodes, expandList, fileDigest,
+  filesystemEntryIdentity, foundationPolicy, git, gitBuffer, gitHead, grantExtraAiWave,
+  handoffReadiness, hostAttestation, listCount, loadRuntime, markBlocked, modelForTask, now,
+  packetRuntime, pendingTasks, porcelainStatusRecords, preexistingDirty, proofPath,
+  providerClaims, providerConfig, providerRepositories, providerRepository, providerWorkspace,
+  providerWorkspaceHash, readJson, readJsonLines, receiptPath, receiptValidity,
+  recordContextMetric, recordInstructionManifest, recordReceipt, relevantHash, repositoryById,
+  repositoryCatalog, repositorySelectionIdsAt, requiredProviders, resolvedAcceptance,
+  reviewAttemptByDigest, reviewAttempts, reviewHistoryState, reviewPolicy, reviewerConfig,
+  reviewerInstalled, reviewerStatus, runConfiguredReview, runConfiguredReviewAsync,
+  runtimePath, saveRuntime, selectedRepositories, serializedJson, snapshotPath, stableHash,
+  trapFailures, validate, workspaceManifest, writeJson
 });
 const {
   createChange,
@@ -1490,692 +649,56 @@ const { inspectInvestigation, investigationRecordTemplate } = createInvestigatio
   setOperationChangeId(id) { operationChangeId = id; },
   fail: die
 });
-function unresolvedApplyTransactions(id) {
-  return readTransactionJournals(TRANSACTIONS, id, readJson).filter((journal) =>
-    ["prepared", "applying", "rolling-back", "manual-recovery", "recovering-backup",
-      "settling-current"]
-      .includes(journal.status));
-}
-const modelDriftInspector = createModelDriftInspector({
-  logs: LOGS,
-  instructionManifests: INSTRUCTION_MANIFESTS,
-  activeChangePath,
-  policy: foundationPolicy,
-  taskBlocks,
-  taskMetadata
-});
 const {
-  doctor,
-  showChanges,
-  showCurrent,
-  showProviders,
-  usage
-} = createDiagnosticsRuntime({
-  root: ROOT,
-  unresolvedApplyTransactions,
-  deliveryObservation: (_id, state) => ({
-    ...targetProjectionObservationValue({ root: ROOT, state, git, fileDigest }),
-    references: recordedDeliveryReferences(state)
-  }),
-  authorityPreflight,
-  executionContract,
-  version: VERSION,
-  runtimeApiVersion: RUNTIME_API_VERSION,
-  providerProtocolVersion: PROVIDER_PROTOCOL_VERSION,
-  adapterProtocolVersion: ADAPTER_PROTOCOL_VERSION,
-  proofProtocolVersion: PROOF_PROTOCOL_VERSION,
-  packetSchemaVersion: PACKET_SCHEMA_VERSION,
-  agentPlanSchemaVersion: AGENT_PLAN_SCHEMA_VERSION,
-  contextEventSchemaVersion: CONTEXT_EVENT_SCHEMA_VERSION,
-  metricsSchemaVersion: METRICS_SCHEMA_VERSION,
-  commandTelemetrySchemaVersion: COMMAND_TELEMETRY_SCHEMA_VERSION,
-  reviewProtocolVersion: REVIEW_PROTOCOL_VERSION,
-  acceptanceProtocolVersion: ACCEPTANCE_PROTOCOL_VERSION,
-  semanticAcceptanceProtocolVersion: SEMANTIC_ACCEPTANCE_PROTOCOL_VERSION,
-  reviewPacketSchemaVersion: REVIEW_PACKET_SCHEMA_VERSION,
-  attestationProtocolVersion: ATTESTATION_PROTOCOL_VERSION,
-  authorityProtocolVersion: AUTHORITY_PROTOCOL_VERSION,
-  ciEvidenceProtocolVersion: CI_EVIDENCE_PROTOCOL_VERSION,
-  providerContracts: PROVIDER_CONTRACTS,
-  activeChanges,
-  orphanRuntimeChanges,
-  runtimePath,
-  proofPath,
-  readJson,
-  readJsonOrNull,
-  relevantHash,
-  protocolDescriptor,
-  repositoryCatalog,
-  foundationPolicy,
-  reviewAssurancePosture,
-  isolationInspection,
-  openSpecCliStatus,
-  loadRuntime,
-  evidence,
-  selectedRepositories,
-  gitHead,
-  playwrightAvailability,
-  requiredProviders,
-  providerConfig,
-  receiptValidity,
-  providerWorkspace,
-  commandExists,
-  topologyIssues,
-  policyCapabilities,
-  policyCapabilityTrigger,
-  forecastCapabilities,
-  reviewForcingCapabilities: REVIEW_FORCING_CAPABILITIES,
-  reviewDiversityCapabilities: REVIEW_DIVERSITY_CAPABILITIES,
-  providerCapability,
-  reviewerStatus,
-  unverifiedDrift: (id) => modelDriftInspector.changeDrift(id).unverified,
-  evidenceDetection: evidenceDetectionValue,
-  setupReadiness: () => [...qualityReadiness(), ...projectSetupReadiness(ROOT), lessonsReadiness(lessonsValue()),
-    pyramidReadinessCommand.readinessRow()],
-  fail: die
+  abandonChange, advanceLand, advanceValue, applySandbox, archive, command, doctor,
+  guardedAbortAuthority, guardedDispatchAuthority, guardedExtendReviewAuthority,
+  guardedRecordAuthority, guardedRecordReceipt, guardedRecordVerifiedCi,
+  guardedRequestAuthority, guardedResetBaseMoveAuthority, guardedResetInfrastructureAuthority,
+  guardedRunAuthorityReviewer, guardedRunProvider, landCheck, landGrantRuntime, proofAdvance,
+  proofAudit, proofCollect, proofExecute, proofFinalize, proofRun, prove,
+  pyramidReadinessCommand, recordTargetRestore, recoverLand, resumeLand, sessionLeases,
+  showAdvance, showChanges, showCurrent, showDeliveryAdvance, showFeatures, showFeedback,
+  showLandPlan, showLessons, showOutcomes, showProviders, undoLand, usage, values
+} = composeLifecycleRuntimes({
+  ACCEPTANCE_PROTOCOL_VERSION, ADAPTER_PROTOCOL_VERSION, AGENT_PLAN_SCHEMA_VERSION,
+  ATTESTATIONS, ATTESTATION_PROTOCOL_VERSION, AUTHORITY, AUTHORITY_PROTOCOL_VERSION, CHANGES,
+  CI_EVIDENCE_PROTOCOL_VERSION, COMMAND_TELEMETRY_SCHEMA_VERSION, CONTEXT_EVENT_SCHEMA_VERSION,
+  DELIVERIES, EVIDENCE_VAULT, HANDOFFS, INSTRUCTION_MANIFESTS, LEASES, LOGS,
+  METRICS_SCHEMA_VERSION, PACKAGES, PACKET_SCHEMA_VERSION, PLANS, PREVIEWS,
+  PROOF_PROTOCOL_VERSION, PROVIDER_PROTOCOL_VERSION, RECEIPTS, RECOVERY, REVIEWS,
+  REVIEW_PACKET_SCHEMA_VERSION, REVIEW_PROTOCOL_VERSION, ROOT, RUNTIME, RUNTIME_API_VERSION,
+  SEMANTIC_ACCEPTANCE_PROTOCOL_VERSION, SNAPSHOTS, TRANSACTIONS, VERSION, abortAuthority,
+  acquireAgentLease, activeChangeLeases, activeChangePath, activeChanges, adapterRuntime,
+  advisoryCapabilities, agentDispatchValue, agentPlanValue, approvalPackageLink,
+  archivedChangeRelativePath, assertNoDroppedScenarios, authorityPreflight,
+  authorityStatusValue, blockWithDecision, canonicalChangedSurface, changePath,
+  changedSurfaceIssues, changedSurfaceResolvable, cleanupAppliedSandbox, cleanupChangeLeases,
+  cleanupRepositorySandboxes, clearSnapshotCache, collectableExecutionNodes, commandExists,
+  commandPhaseRecorder, contractFingerprint, currentChangeRelativePath,
+  declaredRepositoryPaths, declaredSurfaceMatcher, deliveredAiAttempts, detachedBlockScope,
+  die, directoryHash, discardAgentLease, dispatchAuthority, durableArtifact, evidence,
+  evidenceDetectionValue, executionContract, executionFingerprint, executionNodes,
+  extendReviewAuthority, externalEvidenceRecovery, fileDigest, forecastCapabilities,
+  foundationPolicy, git, gitBuffer, gitHead, handoffReadiness, initializeEvidence,
+  inspectSnapshots, isolationInspection, loadRuntime, markBlocked, mergeTaskProgress,
+  metricsValue, modelUsageRecorded, now, orphanRuntimeChanges, packetRuntime, parkAgentLease,
+  pathInside, pendingTasks, playwrightAvailability, policyCapabilities,
+  policyCapabilityTrigger, policyRolloutCapabilities, prepareBuildSandbox,
+  projectRootRepositories, proofPath, proofPreflight, proofReadinessValue, proofRunRoot,
+  protocolDescriptor, providerConfig, providerRepository, providerWorkspace,
+  providerWorkspaceHash, qualityLaneStates, qualityReadiness, readJson, readJsonLines,
+  readJsonOrNull, rebindDiffBoundReceipt, rebindReusableReceipt, receiptPath, receiptValidity,
+  recordAuthority, recordDeterministicReviewClosure, recordInstructionManifest,
+  recordPhaseContext, recordReceipt, recordVerifiedCi, recoverReviewBindings,
+  releaseAgentLease, relevantHash, relevantSnapshot, repositoryById, repositoryCatalog,
+  requestAuthority, requiredProviders, resetBaseMoveAuthority, resetInfrastructureAuthority,
+  reviewAssurancePosture, reviewPolicy, reviewerStatus, runAuthorityReviewer,
+  runAuthorityReviewerAsync, runExecutionDag, runProvider, runtimePath, sandboxRuntime,
+  saveRuntime, selectedRepositories, stableHash, startRequiredServices, syncClaudeTelemetry,
+  syncSandbox, targetEditsFor, telemetryReadiness, topologyIssues, trapFailures,
+  trapFailuresAsync, validate, validateArtifact, workspaceIsolationIssues, workspaceManifest,
+  writeJson
 });
-const {
-  pathIdentity,
-  pathMode,
-  safeRootPath,
-  copyPath,
-  transactionRoot: applyTransactionRoot,
-  journalPath: transactionJournalPath,
-  save: saveApplyJournal,
-  applyEntry: applyTransactionEntry,
-  rollback: rollbackApplyTransaction,
-  settle: settleApplyTransaction,
-  verify: verifyAppliedProjection,
-  cleanup: cleanupApplyTransaction
-} = createLandJournal({
-  root: ROOT,
-  transactions: TRANSACTIONS,
-  fileDigest,
-  directoryHash,
-  pathInside,
-  readJson,
-  writeJson,
-  now
-});
-const { recoverPendingApply, pendingApplyTransactions } = createApplyRecovery({
-  transactions: TRANSACTIONS,
-  transactionJournalPath,
-  readJson,
-  verifyAppliedProjection,
-  saveApplyJournal,
-  rollbackApplyTransaction,
-  settleApplyTransaction,
-  saveRuntime,
-  clearSnapshotCache,
-  now,
-  blockWithDecision,
-  fail: die
-});
-const taskPacketWasPrecompleted = taskPacketWasPrecompletedOperation.bind(null, {
-  loadRuntime, activeChangePath, exists: existsSync, fileDigest
-});
-// One set of deferred post-release gates for Prove and the archive appendix.
-function changeRolloutGates(id) {
-  return postReleaseRolloutGates(
-    { evidence, providerCapability, policyRolloutCapabilities, loadRuntime, relevantHash }, id);
-}
-const { finalize: prove, audit: proofAudit } = createProofRuntime({
-  rolloutGates: changeRolloutGates,
-  root: ROOT,
-  protocolVersion: PROOF_PROTOCOL_VERSION,
-  loadRuntime,
-  saveRuntime,
-  validate,
-  changedSurfaceIssues,
-  activeChangeLeases,
-  pendingTasks,
-  clearSnapshotCache,
-  relevantSnapshot,
-  requiredProviders,
-  advisoryCapabilities,
-  receiptValidity,
-  proofRunRoot,
-  receiptPath,
-  fileDigest,
-  protocolDescriptor,
-  contractFingerprint,
-  executionFingerprint,
-  proofPath,
-  writeJson,
-  readJson,
-  pathInside,
-  validateArtifact,
-  instructionProvenance: (id) => {
-    const manifest = recordInstructionManifest(id, "prove", { scope: "proof" });
-    return manifest ? {
-      schemaVersion: manifest.schemaVersion,
-      manifestDigest: manifest.manifestDigest
-    } : null;
-  },
-  agentPlanValue,
-  savedAgentPlan: (id) => readJson(join(PLANS, `${id}.json`), {}),
-  taskResult: (id, taskId) => {
-    const path = join(LEASES, "results", id, `${taskId}.json`);
-    return existsSync(path) ? { path, value: readJson(path, null) } : null;
-  },
-  taskLease: (id, taskId) => {
-    const path = join(LEASES, "tasks", id, `${taskId}.json`);
-    return existsSync(path) ? readJson(path, null) : null;
-  },
-  taskPacketWasPrecompleted,
-  selectedRepositories,
-  git,
-  now,
-  fail: die
-});
-const testDiscrimination = createTestDiscriminationRuntime({
-  LOGS, requiredProviders, providerConfig, providerCapability, providerRepository,
-  selectedRepositories, repositoryBaseHead,
-  changedSurface: (id, state) => canonicalChangedSurface(id, state),
-  pathKind: lightKind,
-  changeWorkTypes: (id) => changeWorkTypes(activeChangePath(id)),
-  receiptValidity, configuredCommand, fileDigest, stableHash, loadRuntime
-});
-const {
-  authorityNext,
-  guardProofMutation,
-  proofAdvance,
-  proofCollect,
-  proofExecute,
-  proofFinalize,
-  proofRun
-} = createProofExecutionRuntime({
-  markBlocked,
-  deliveryProofCurrent: (id) => currentDeliveryProof({
-    proofAudit, relevantHash, requiredProviders, receiptValidity, receiptPath, fileDigest
-  }, id),
-  proofReadinessValue,
-  relevantSnapshot,
-  loadRuntime,
-  saveRuntime,
-  now,
-  requiredProviders,
-  receiptValidity,
-  rebindReusableReceipt,
-  rebindDiffBoundReceipt,
-  executionNodes,
-  collectableExecutionNodes,
-  startRequiredServices,
-  runExecutionDag,
-  durableArtifact,
-  pendingTasks,
-  proofPreflight,
-  prove,
-  proofAudit,
-  readJson,
-  writeJson,
-  proofPath,
-  proofAdvancePath: (id) => join(EVIDENCE_VAULT, id, "proof-advance.json"),
-  proofAdvanceLockPath: (id) => join(ROOT, ".foundation", "locks", `proof-${id}.lock`),
-  providerCapability,
-  providerConfig,
-  providerWorkspaceHash,
-  reviewPolicy,
-  deliveredAiAttempts,
-  recordDeterministicReviewClosure,
-  authorityStatusValue,
-  requestAuthority,
-  // Only the exact placeholder-free `authority run` route `advance` would run
-  // inline qualifies; it runs under the proof lock the caller already holds.
-  startConcurrentReview: (id, _request, command, proofRun = null) => {
-    const flags = automaticReviewRun(id, command);
-    return flags ? detachedBlockScope.run(() => trapFailuresAsync(() =>
-      runAuthorityReviewerAsync(id, { ...flags, ...(proofRun ? { proofRun } : {}) })))
-      : null;
-  },
-  stableHash,
-  prepareWorkspace: projectRootRepositories,
-  // An unresolvable surface or repository is no verdict: it never blocks.
-  testDiscrimination: async (id, workspaceHash) => {
-    try {
-      if (!changedSurfaceResolvable(id)) return null;
-      return await trapFailuresAsync(() => testDiscrimination.evaluateAsync(id, workspaceHash));
-    } catch { return null; }
-  },
-  performanceRegression: (id, provider) =>
-    receiptRegressionFinding(provider, readJsonOrNull(receiptPath(id, provider))),
-  die
-});
-const guardPublicProofMutation = (command, operation) =>
-  (id, ...args) => guardProofMutation(id, command, () => operation(id, ...args));
-const guardedRecordVerifiedCi = guardPublicProofMutation(
-  "evidence verify-ci", recordVerifiedCi);
-const guardedRequestAuthority = guardPublicProofMutation(
-  "authority request", requestAuthority);
-const guardedDispatchAuthority = guardPublicProofMutation(
-  "authority dispatch", dispatchAuthority);
-const guardedRunAuthorityReviewer = guardPublicProofMutation(
-  "authority run", runAuthorityReviewer);
-const guardedAbortAuthority = guardPublicProofMutation(
-  "authority abort", abortAuthority);
-const guardedResetInfrastructureAuthority = guardPublicProofMutation(
-  "authority reset-infra", resetInfrastructureAuthority);
-const guardedExtendReviewAuthority = guardPublicProofMutation(
-  "authority extend-review", extendReviewAuthority);
-const guardedResetBaseMoveAuthority = guardPublicProofMutation(
-  "authority reset-base-move", resetBaseMoveAuthority);
-const guardedRecordAuthority = guardPublicProofMutation(
-  "authority record", recordAuthority);
-const guardedRecordReceipt = guardPublicProofMutation(
-  "evidence receipt", recordReceipt);
-const guardedRunProvider = guardPublicProofMutation(
-  "evidence run-provider", runProvider);
-const {
-  landCheck,
-  recoverLand,
-  landPlanValue,
-  showLandPlan,
-  resumeLand,
-  assertMultiRepositoryArchiveReady
-} = createLandRuntime({
-  root: ROOT,
-  transactions: TRANSACTIONS,
-  loadRuntime,
-  pendingApplyTransactions,
-  recoverPendingApply,
-  assertNoDroppedScenarios,
-  blockingDrift: (...args) => modelDriftInspector.blockingDrift(...args),
-  proofAudit,
-  proofPath,
-  readJson,
-  writeJson,
-  clearSnapshotCache,
-  relevantHash,
-  workspaceIsolationIssues,
-  targetEditNotices: (state) => targetEditsFor(state).notices,
-  reviewPolicy,
-  requiredProviders,
-  receiptValidity,
-  fileDigest,
-  receiptPath,
-  handoffReadiness,
-  telemetryReadiness,
-  verifyAppliedProjection,
-  selectedRepositories,
-  git,
-  gitHead,
-  stableHash,
-  agentPlanValue,
-  executionContract,
-  now,
-  blockWithDecision,
-  deliveryObservation: (_id, state) =>
-    targetProjectionObservationValue({ root: ROOT, state, git, fileDigest }),
-  // One preflight for `land check` and Land: the landed-projection binding
-  // first (an uninitialized submodule answers Git for its superproject), then
-  // every Apply, repository-delivery, and spec-sync refusal.
-  landPreflight: (id, state, options) => {
-    assertLandedProjection({ root: ROOT, id, state, fail: die, preflight: true });
-    applyRuntime.landPreflight(id, state, options);
-  },
-  assertApproval: (id, state, options) => assertSpecApproval(ROOT, id, state, options),
-  fail: die
-});
-const landGrantRuntime = createLandGrantRuntime({
-  transactions: TRANSACTIONS,
-  loadRuntime,
-  selectedRepositories,
-  proofPath,
-  readJson,
-  writeJson,
-  stableHash,
-  now,
-  landCheck,
-  workspaceHash: (id) => relevantHash(id, null, true),
-  archiveRecoveryReady: (id) => applyRuntime.archiveRecoveryReady(id)
-});
-// Cross-change rollups read the store directly and never write it: the
-// attempt reader below bypasses reviewHistoryState, which may migrate state.
-const reviewAttemptRecords = (id) => {
-  const dir = join(EVIDENCE_VAULT, id, "review-attempts");
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir).filter((name) => name.endsWith(".json")).sort()
-    .map((name) => readJsonOrNull(join(dir, name)))
-    .filter((value) => value && typeof value === "object");
-};
-const applyRuntime = createApplyRuntime({
-  // Archive appendices: review rounds and post-release rollout gates.
-  reviewAttemptRecords: (id) => reviewAttemptRecords(id),
-  rolloutGates: changeRolloutGates,
-  root: ROOT,
-  transactions: TRANSACTIONS,
-  loadRuntime,
-  saveRuntime,
-  selectedRepositories,
-  mergeTaskProgress,
-  workspaceManifest,
-  declaredSurfaceMatcher,
-  currentChangeRelativePath,
-  changePath,
-  safeRootPath,
-  pathIdentity,
-  pathMode,
-  directoryHash,
-  fileDigest,
-  pathInside,
-  applyTransactionRoot,
-  copyPath,
-  proofPath,
-  readJson,
-  writeJson,
-  stableHash,
-  syncClaudeTelemetry,
-  modelUsageRecorded,
-  telemetryReadiness,
-  foundationPolicy,
-  saveApplyJournal,
-  transactionJournalPath,
-  verifyAppliedProjection,
-  rollbackApplyTransaction,
-  applyTransactionEntry,
-  cleanupApplyTransaction,
-  git,
-  gitBuffer,
-  gitHead,
-  cleanupAppliedSandbox,
-  cleanupRepositorySandboxes,
-  recoverPendingApply,
-  landCheck,
-  // Records say what Land applied; the target says what landed. Both must agree.
-  assertMultiRepositoryArchiveReady: (id, state) => {
-    assertMultiRepositoryArchiveReady(id, state);
-    assertLandedProjection({ root: ROOT, id, state, fail: die });
-  },
-  archivedChangeRelativePath,
-  assertOpenSpecCli,
-  cleanupChangeLeases,
-  now,
-  measure: commandPhaseRecorder.measure,
-  assertLandGrant: landGrantRuntime.assert,
-  consumeLandGrant: landGrantRuntime.consume,
-  blockWithDecision,
-  fail: die,
-  declaredRepositoryPaths
-});
-const {
-  recordTargetRestore,
-  applySandbox,
-  archive
-} = applyRuntime;
-const pullRequestRuntime = createPullRequestRuntime({
-  root: ROOT,
-  deliveriesRoot: DELIVERIES,
-  loadRuntime,
-  activeChangePath,
-  proofPath,
-  transactionJournalPath,
-  pathIdentity,
-  readJson,
-  writeJson,
-  stableHash,
-  git,
-  transactions: TRANSACTIONS,
-  selectedRepositories,
-  foundationPolicy,
-  // `/deliver` on a proven change is Land authority: the normal Land route.
-  landChange: (id) => advanceThrough(id, "archived"),
-  now,
-  fail: die
-});
-const { showAdvance: showDeliveryAdvance } = pullRequestRuntime;
-const advanceLand = advanceLandOperation.bind(null, {
-  loadRuntime, landCheck, archive, landPlanValue,
-  selectedRepositories,
-  prepareExecution: (id, options) => prepareExecution(id, options)
-});
-
-function preparationPlanPath(id) {
-  return join(PLANS, `${id}-preparation.json`);
-}
-
-function preparationProviders(id) {
-  return requiredProviders(id).map((provider) => {
-    const config = providerConfig(id, provider) || {};
-    return {
-      id: provider,
-      repository: config.repository || null,
-      adapter: config.adapter || "external",
-      command: config.command || null
-    };
-  });
-}
-
-function prepareExecution(id, { stage = "build" } = {}) {
-  if (stage !== "land") projectRootRepositories(id);
-  const state = loadRuntime(id);
-  const repositories = selectedRepositories(id, state);
-  const openSpec = ensureProjectOpenSpec({
-    root: ROOT,
-    status: openSpecCliStatus,
-    spawn: spawnSync,
-    stage
-  });
-  const prior = readJsonOrNull(preparationPlanPath(id));
-  const plan = executionPreparationValue({
-    id,
-    state,
-    repositories,
-    providers: preparationProviders(id),
-    openSpec,
-    stableHash,
-    prior,
-    now
-  });
-  plan.stage = stage;
-  writeJson(preparationPlanPath(id), plan);
-  return assertExecutionPreparationReady(plan);
-}
-async function runAdvanceQuietly(operation) {
-  const priorLog = console.log;
-  const priorExitCode = process.exitCode;
-  console.log = () => {};
-  try {
-    const result = await operation();
-    // Primitive proof commands retain their diagnostic non-zero exits. The
-    // unified lifecycle transports the same structured boundary successfully
-    // so the host consumes it instead of retrying a command it thinks crashed.
-    process.exitCode = priorExitCode;
-    return result;
-  } finally {
-    console.log = priorLog;
-  }
-}
-const sessionLeases = createSessionLeaseRuntime({
-  loadRuntime, activeChangeLeases, stableHash, saveRuntime, agentPlanValue,
-  // D5: advance runs the handed-off task's own verify check and ticks it.
-  runCheck: (id, check) => commandPhaseRecorder.measure("build.task-check", () => {
-    projectRootRepositories(id);
-    return adapterRuntime.runTaskCheckAsEvidence(id, check) ||
-      runTaskCheck({ loadRuntime }, id, check);
-  }),
-  taskChangeIssue: (id, taskId) => {
-    try {
-      const state = loadRuntime(id);
-      const task = (agentPlanValue(id)?.tasks || []).find((row) => row.id === taskId);
-      if (!task || !changedSurfaceResolvable(id, state)) return null;
-      const repositoryId = trapFailures(() =>
-        repositoryById(id, task.repository || "root", state).id);
-      return taskChangeIssue({
-        workTypes: changeWorkTypes(activeChangePath(id)), task, changeId: id,
-        changedPaths: trapFailures(() => canonicalChangedSurface(id, state))
-          .filter((row) => row.repositoryId === repositoryId).map((row) => row.path)
-      });
-    } catch { return null; }
-  },
-  acquire: acquireAgentLease, release: releaseAgentLease, discard: discardAgentLease,
-  park: parkAgentLease
-});
-const { advanceValue, advanceThrough, showAdvance } = createAdvanceRuntime({
-  approvalPackageLink,
-  pendingApprovalDecisions: (id) => trapFailures(() => {
-    const preflight = authorityPreflight(id);
-    const authority = preflight.status === "READY" ? [] : preflight.blockers.map((blocker) => ({
-      code: blocker.code, summary: blocker.summary, next: blocker.next
-    }));
-    // External evidence nobody can wire automatically is the same Prove-time
-    // question; review and acceptance have their own routes.
-    const state = loadRuntime(id);
-    const providers = changedSurfaceResolvable(id, state) ? requiredProviders(id) : [];
-    const external = providers.flatMap((provider) => {
-      const config = providerConfig(id, provider);
-      if (config && config.adapter !== "external") return [];
-      if (["review", "acceptance"].includes(providerCapability(provider, config))) return [];
-      const recovery = /** @type {Record<string, any>} */ (externalEvidenceRecovery(id, provider));
-      if (recovery.kind !== "user-decision" ||
-          recovery.wiring?.kind === "configure-provider") return [];
-      return [{
-        code: "EXTERNAL_EVIDENCE_REQUIRED", summary: recovery.decision.summary,
-        next: `wire provider '${provider}' in openspec/changes/${id}/execution.yaml or agree how its external result will be supplied`
-      }];
-    });
-    return [...authority, ...external];
-  }),
-  settleSessionLeases: sessionLeases.settle,
-  reverifyCompletedTasks: (id) => {
-    sessionLeases.tickAccepted(id, agentPlanValue(id, { inspect: true }).resultReady || []);
-    return sessionLeases.reverify(id, agentPlanValue(id, { inspect: true }).verification || []);
-  },
-  issueSessionLease: sessionLeases.issue,
-  changePath,
-  assertApproval: (id, state, options) => assertSpecApproval(ROOT, id, state, options),
-  inspectSnapshots,
-  capture: trapFailures,
-  captureAsync: trapFailuresAsync,
-  markBlocked,
-  loadRuntime,
-  saveRuntime,
-  recoverSandbox: (id) => commandPhaseRecorder.measureAsync("advance.sandbox-sync",
-    () => runAdvanceQuietly(() => syncSandbox(id))),
-  // Non-destructive interrupted-apply resolutions only (settle|keep-current),
-  // recorded under the Land route that started the apply.
-  recoverApply: (id, resolution) => runAdvanceQuietly(() => recoverLand(id, {
-    "decision-ref": `harness:automatic-apply-recovery:${resolution}`,
-    ...(resolution === "settle" ? {} : { resolution })
-  })),
-  synchronizeAgreement: async (id, flags = {}) => flags.resolve || sandboxRuntime.agreementStale(id)
-    ? commandPhaseRecorder.measureAsync("advance.sandbox-sync",
-      () => runAdvanceQuietly(() => sandboxRuntime.synchronizeAgreement(id, flags)))
-    : false,
-  // Detected provider wiring is a write, not a question: write the
-  // recommended providers, then sync the revised agreement
-  // into Build so Land never sees an edited-after-sync packet.
-  wireEvidence: (id) => commandPhaseRecorder.measureAsync("advance.evidence-wiring",
-    () => runAdvanceQuietly(async () => {
-      // Wiring-only: an approval valid before the write stays valid; the
-      // agreement's behavior did not change.
-      preserveSpecApprovalAcross(ROOT, id, { loadRuntime, saveRuntime, now },
-        () => initializeEvidence(id, { write: true }), "evidence-wiring");
-      if (loadRuntime(id).status === "building") prepareBuildSandbox(id);
-      else await sandboxRuntime.synchronizeAgreement(id);
-    })),
-  runReview: (id, flags) => commandPhaseRecorder.measureAsync("advance.review-run",
-    () => runAdvanceQuietly(() => guardedRunAuthorityReviewer(id, { ...flags }))),
-  recoverWorkspace: (id) => runAdvanceQuietly(() => sandboxRuntime.recoverReplay(id)),
-  recoverArchive: (id) => runAdvanceQuietly(() =>
-    applyRuntime.recoverArchive(id, landGrantRuntime.issue)),
-  proofIsCurrent: currentDeliveryProof.bind(null, {
-    proofAudit, relevantHash, requiredProviders, receiptValidity, receiptPath, fileDigest
-  }),
-  agentDispatchValue,
-  agentPlanValue,
-  relevantHash,
-  deliveredAiAttempts,
-  authorityStatusValue,
-  authorityNext,
-  proofReadinessValue,
-  hasLandGrant: hasValidLandGrant.bind(null, landGrantRuntime),
-  authorizeLand: (id) => runAdvanceQuietly(() => landGrantRuntime.issue(id)),
-  prepareBuild: prepareAdvanceBuild.bind(null, {
-    measureAsync: commandPhaseRecorder.measureAsync,
-    runQuietly: runAdvanceQuietly, prepareBuildSandbox, prepareExecution
-  }),
-  runProof: runAdvanceProof.bind(null, {
-    measureAsync: commandPhaseRecorder.measureAsync,
-    runQuietly: runAdvanceQuietly, prepareExecution, proofAdvance
-  }),
-  recoverReviewBindings,
-  runLand: (id) => runAdvanceQuietly(() => advanceLand(id)),
-  recordPhase: (id, phase) => {
-    commandPhaseRecorder.transition(phase);
-    recordPhaseContext(id, phase);
-  },
-  readJson,
-  proofAdvancePath: (id) => join(EVIDENCE_VAULT, id, "proof-advance.json"),
-  stableHash
-});
-const { showFeedback } = createFeedbackRuntime({
-  inspectSnapshots,
-  logs: LOGS,
-  evidenceVault: EVIDENCE_VAULT,
-  readJson,
-  readJsonLines,
-  metricsValue,
-  packetValue: packetRuntime.inspectionPacketValue,
-  nextAction: (id) => advanceValue(id, { inspect: true })
-});
-const { outcomesValue, showOutcomes } = createOutcomesRuntime({ runtimeDir: RUNTIME, evidenceDir: EVIDENCE_VAULT,
-  logsDir: LOGS, changeWorkTypes: (id, state) => changeWorkTypes(activeChangePath(id, state)), reviewAttemptRecords });
-const { lessonsValue, showLessons } = createLessonsRuntime({ runtimeDir: RUNTIME, evidenceDir: EVIDENCE_VAULT,
-  logsDir: LOGS, reviewAttemptRecords, lessonsDocument: join(ROOT, "openspec", "lessons.md"),
-  projectFileExists: (path) => existsSync(join(ROOT, path)), fail: die });
-const pyramidReadinessCommand = createPyramidReadinessCommand({ root: ROOT, laneStates: qualityLaneStates,
-  lessonsValue, outcomesValue });
-const { showFeatures } = createProjectFeaturesCommand({
-  root: ROOT, loadRuntime, activeChangePath, canonicalChangedSurface, fail: die
-});
-const abandonRuntime = createAbandonRuntime({
-  root: ROOT,
-  paths: {
-    recovery: RECOVERY,
-    runtime: RUNTIME,
-    receipts: RECEIPTS,
-    evidenceVault: EVIDENCE_VAULT,
-    transactions: TRANSACTIONS,
-    snapshots: SNAPSHOTS,
-    plans: PLANS,
-    handoffs: HANDOFFS,
-    authority: AUTHORITY,
-    reviews: REVIEWS,
-    instructionManifests: INSTRUCTION_MANIFESTS,
-    attestations: ATTESTATIONS,
-    deliveries: DELIVERIES,
-    previews: PREVIEWS,
-    packages: PACKAGES,
-    logs: LOGS,
-    changes: CHANGES
-  },
-  loadRuntime,
-  cleanupChangeLeases,
-  cleanupAppliedSandbox,
-  cleanupRepositorySandboxes,
-  transactionJournals: (id) => readTransactionJournals(TRANSACTIONS, id, readJson),
-  rollbackApplyTransaction,
-  writeJson,
-  now,
-  blockWithDecision,
-  fail: die
-});
-const { abandonChange } = abandonRuntime;
-const { undoLand } = createLandUndo({
-  root: ROOT,
-  paths: {
-    recovery: RECOVERY, runtime: RUNTIME, receipts: RECEIPTS, evidenceVault: EVIDENCE_VAULT,
-    transactions: TRANSACTIONS, snapshots: SNAPSHOTS, plans: PLANS, handoffs: HANDOFFS,
-    logs: LOGS, authority: AUTHORITY, reviews: REVIEWS,
-    instructionManifests: INSTRUCTION_MANIFESTS, attestations: ATTESTATIONS,
-    deliveries: DELIVERIES, previews: PREVIEWS, packages: PACKAGES
-  },
-  loadRuntime, saveRuntime, readJson, writeJson, now, gitHead, git, gitBuffer,
-  pathIdentity, pathMode, safeRootPath, copyPath,
-  transactionRoot: applyTransactionRoot, journalPath: transactionJournalPath,
-  cleanupChangeLeases, fail: die
-});
-const [command, ...values] = process.argv.slice(2);
 // Help is answered before anything else. It must never be parsed as a change
 // id, and it must never depend on the command's arguments being valid.
 if (command === "--help" || command === "-h" || command === "help") {

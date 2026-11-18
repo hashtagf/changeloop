@@ -12,7 +12,7 @@
 // operation logged a phase only when it arrived through the CLI, and `metrics`
 // split one change's rollup into two disjoint halves.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -59,7 +59,12 @@ const readOnlyBlock = foundation.slice(
 );
 check(() => assert.match(readOnlyBlock, /["']handoff-list["']/,
   "handoff-list must remain classified as a read-only operation"));
-check(() => assert.match(foundation,
+// The composition root delegates runtime construction to its wiring modules.
+const compositionDirectory = join(ROOT, ".claude", "harness", "runtime", "composition");
+const composition = [foundation, ...readdirSync(compositionDirectory)
+  .filter((name) => name.endsWith("-wiring.mjs")).sort()
+  .map((name) => readFileSync(join(compositionDirectory, name), "utf8"))].join("\n");
+check(() => assert.match(composition,
   /createHandoffRuntime\(\{[\s\S]*?capture:\s*trapFailures[\s\S]*?\}\);/,
   "the shipped handoff runtime must trap fail-fast errors during aggregate listing"));
 
