@@ -11,6 +11,13 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- `cloop outcomes` and the readiness row "Most changes pass proof on the first
+  run" counted the finalized proof manifest as a second run, so every change
+  proven through `advance` read as a repeat (0% first-proof pass). A run is
+  now an execution root that holds provider artifacts, and first-proof pass is
+  read from that first execution's exit statuses; re-proving after a later
+  amendment no longer counts against it. Change Loop's own store now measures
+  82% over 39 archived changes.
 - A draft that authors `execution` (for example only the screenshot and
   `visual` providers a prototype needs) keeps the test provider derived from
   its task verifies when it wires none, so Prove no longer asks the user for

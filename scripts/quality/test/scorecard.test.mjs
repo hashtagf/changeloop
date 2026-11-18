@@ -61,3 +61,20 @@ test("the markdown summary lists every layer and the prose-only rules", () => {
   assert.match(text, /\| Enforced share of checkable rules \| \d+% \|/);
   assert.match(text, /\| Files nesting over 5 levels \| \d+ \(deepest \d+\) \|/);
 });
+
+test("the review layer is measured from a local change store and unmeasured without one", async (t) => {
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { repositoryOutcomes } = await import("../scorecard.mjs");
+  const root = mkdtempSync(join(tmpdir(), "scorecard-outcomes-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  assert.equal(repositoryOutcomes(root), null);
+  const put = (path, text) => { mkdirSync(join(root, path, ".."), { recursive: true }); writeFileSync(join(root, path), text); };
+  put(".foundation/runtime/a.json", JSON.stringify({ id: "a", status: "archived" }));
+  put(".foundation/runtime/b.json", JSON.stringify({ id: "b", status: "archived", fixes: ["a"] }));
+  put(".foundation/evidence/a/collect-1/artifacts/test/x.log", "status=0\n");
+  put(".foundation/evidence/b/collect-1/artifacts/test/x.log", "status=1\n");
+  put(".foundation/evidence/b/collect-2/artifacts/test/x.log", "status=0\n");
+  assert.deepEqual(repositoryOutcomes(root), { archived: 2, measured: 2, firstProofPasses: 1, escapedDefects: 1 });
+});

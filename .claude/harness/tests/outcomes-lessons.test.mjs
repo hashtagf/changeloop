@@ -115,6 +115,30 @@ test("outcomes counts advance collect-* proof runs like proof-* runs", (t) => {
   assert.deepEqual([twice.proofRuns, twice.firstProofPass], [2, false]);
 });
 
+test("a finalized proof manifest is not a second run; the first execution's exit statuses decide", (t) => {
+  const fixture = project(t);
+  // The advance route: an execution root with provider logs, then the
+  // finalized proof root (manifest only). Later re-proofs do not count against it.
+  const advance = (id, statuses) => {
+    statuses.forEach((status, index) => {
+      write(join(fixture.store, "evidence", id, `collect-${100 + index}`, "artifacts", "test",
+        `x-command-${100 + index}-1-test.log`), `status=${status} signal= timedOut=false\n`);
+      write(join(fixture.store, "evidence", id, `proof-${101 + index}`, "manifest.json"), { status: "pass" });
+    });
+  };
+  fixture.change("clean", {});
+  fixture.change("reproved", {});
+  fixture.change("failed-first", {});
+  advance("clean", [0]);
+  advance("reproved", [0, 0, 0]);
+  advance("failed-first", [1, 0]);
+  const rows = Object.fromEntries(outcomes(fixture).changes.map((row) => [row.id, row]));
+  assert.deepEqual([rows.clean.proofRuns, rows.clean.firstProofPass], [1, true]);
+  assert.deepEqual([rows.reproved.proofRuns, rows.reproved.firstProofPass], [3, true],
+    "re-proving after later edits is not a failed first proof");
+  assert.deepEqual([rows["failed-first"].proofRuns, rows["failed-first"].firstProofPass], [2, false]);
+});
+
 test("outcomes summarizes archived changes and a cohort rate over known values", (t) => {
   const fixture = project(t);
   fixture.change("a", {}, { proofRuns: 1, attempts: [{ status: "completed", resultStatus: "pass" }],
