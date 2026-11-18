@@ -8,20 +8,11 @@ import test from "node:test";
 import { blockedOutcomeReason, blockedOutcomeStop } from "../runtime/core/blocked-decision.mjs";
 import { blockerMetrics } from "../runtime/observability/metrics-runtime.mjs";
 import {
-  activeTelemetryRunId,
-  appendTelemetryJsonLines,
-  blockerTelemetryValue,
-  sanitizedBlockerReason,
-  commandTelemetryEligible,
-  commandTelemetryRow,
-  commandTelemetryStatus,
-  createTelemetryRuntime,
-  createCommandPhaseRecorder,
-  normalizeTelemetryBatch,
-  recordCommandTelemetry,
-  rebindTelemetryWindow,
-  replaceTelemetryJsonLines
+  activeTelemetryRunId, appendTelemetryJsonLines, createTelemetryRuntime, normalizeTelemetryBatch, rebindTelemetryWindow, replaceTelemetryJsonLines
 } from "../runtime/observability/telemetry-runtime.mjs";
+import {
+  blockerTelemetryValue, sanitizedBlockerReason, commandTelemetryEligible, commandTelemetryRow, commandTelemetryStatus, createCommandPhaseRecorder, recordCommandTelemetry
+} from "../runtime/observability/command-telemetry.mjs";
 import {
   lifecycleSchedulerMetrics, lifecycleStageMetrics
 } from "../runtime/observability/metrics-runtime.mjs";

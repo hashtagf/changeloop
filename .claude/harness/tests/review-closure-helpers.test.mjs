@@ -2,17 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  approvedDecisionRevision,
-  decisionGateNoticeOperation,
-  currentRepairProviders,
-  deterministicClosureIsBound,
-  deterministicRepairClosureValue,
-  deterministicReviewClosureSource,
-  recordDeterministicReviewClosureOperation,
-  repairClosureBindingsComplete,
-  repairClosureEvidenceBindings,
-  uniqueRepairEvidenceBindings
-} from "../runtime/evidence/receipt-runtime.mjs";
+  approvedDecisionRevision, decisionGateNoticeOperation, currentRepairProviders, deterministicClosureIsBound, deterministicRepairClosureValue, deterministicReviewClosureSource, recordDeterministicReviewClosureOperation, repairClosureBindingsComplete, repairClosureEvidenceBindings, uniqueRepairEvidenceBindings
+} from "../runtime/evidence/review-closure-receipts.mjs";
 
 test("approved decision revision supports only current non-grounding spec approval", () => {
   const state = {

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 import { createReviewAttemptStore } from "../runtime/evidence/review-attempt-store.mjs";
 import { createReviewProtocol } from "../runtime/evidence/review-protocol.mjs";
-import { reviewFindingIssues } from "../runtime/evidence/configured-reviewer.mjs";
+import { reviewFindingIssues } from "../runtime/evidence/review-result-validation.mjs";
 import { createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
 import { createAuthorityStore } from "../runtime/workflow/authority/authority.mjs";
 import { createAuthorityRuntime } from "../runtime/workflow/authority/authority-runtime.mjs";

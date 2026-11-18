@@ -6,11 +6,10 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
+import { createReviewAttemptStore } from "../runtime/evidence/review-attempt-store.mjs";
 import {
-  createReviewAttemptStore,
-  reviewHistoryAttemptValid,
-  reviewHistoryChainValidOperation
-} from "../runtime/evidence/review-attempt-store.mjs";
+  reviewHistoryAttemptValid, reviewHistoryChainValidOperation
+} from "../runtime/evidence/review-attempt-values.mjs";
 import { createReviewProtocol } from "../runtime/evidence/review-protocol.mjs";
 import { createAuthorityRuntime } from "../runtime/workflow/authority/authority-runtime.mjs";
 

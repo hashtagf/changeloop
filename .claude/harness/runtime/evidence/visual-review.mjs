@@ -10,9 +10,9 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 import {
-  CLAUDE_READ_ONLY_TOOLS, claudeResultEnvelope, claudeReviewerEnvironment,
-  claudeReviewerFailure, claudeStructuredReview
+  CLAUDE_READ_ONLY_TOOLS, claudeReviewerEnvironment, claudeReviewerFailure, claudeStructuredReview
 } from "./configured-reviewer.mjs";
+import { claudeResultEnvelope } from "./review-result-validation.mjs";
 import { unique } from "../core/values.mjs";
 
 export const VISUAL_CAPABILITY = "visual";

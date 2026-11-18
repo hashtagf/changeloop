@@ -2,11 +2,11 @@ import { REVIEW_DISPATCH_TIMEOUT_MS } from "../../core/user-decisions.mjs";
 import { join } from "node:path";
 import { acquireProcessLock, isProcessAlive } from "../../core/process-lock.mjs";
 import { authorityRunCommand, authorityStatusCommand } from "../../core/authority-run-command.mjs";
-import { deltaClosureIssue } from "../../evidence/configured-reviewer.mjs";
+import { deltaClosureIssue } from "../../evidence/review-result-validation.mjs";
 import {
   checkpointReviewResult, recoverReviewResult
 } from "../../evidence/review-result-recovery.mjs";
-import { normalizeReviewCompletionFindings } from "../../evidence/review-attempt-store.mjs";
+import { normalizeReviewCompletionFindings } from "../../evidence/review-attempt-values.mjs";
 import { reviewModelClass } from "../../evidence/review-diff.mjs";
 
 export function createAuthorityReviewerRun(ctx) {

@@ -6,10 +6,10 @@ import {
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 
+import { createReceiptRuntime, receiptReviewRulesHash } from "../runtime/evidence/receipt-runtime.mjs";
 import {
-  approvedGroundingRevision, createReceiptRuntime, groundedRepairBinding,
-  receiptReviewRulesHash, repairClosureFindings
-} from "../runtime/evidence/receipt-runtime.mjs";
+  approvedGroundingRevision, groundedRepairBinding, repairClosureFindings
+} from "../runtime/evidence/review-closure-receipts.mjs";
 import { createReceiptValidity } from "../runtime/evidence/receipt-validity.mjs";
 import { createReviewAttemptStore } from "../runtime/evidence/review-attempt-store.mjs";
 import { createReviewProtocol } from "../runtime/evidence/review-protocol.mjs";

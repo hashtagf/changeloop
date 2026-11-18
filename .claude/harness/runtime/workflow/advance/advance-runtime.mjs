@@ -5,7 +5,7 @@ import { recordVisualDriftWaiver } from "../change/gate-waivers.mjs";
 import { advisoryVisualLine } from "../../evidence/visual-review.mjs";
 import { inconclusiveLine } from "../../evidence/test-discrimination.mjs";
 import { changeWorkTypes } from "../change/task-change.mjs";
-import { proofCursorToken } from "../../evidence/proof-execution-runtime.mjs";
+import { proofCursorToken } from "../../evidence/proof-execution-steps.mjs";
 import { recordSignal } from "../../core/signals.mjs";
 import {
   lifecycleOutcome, lifecycleUserProjection, lifecycleUserState

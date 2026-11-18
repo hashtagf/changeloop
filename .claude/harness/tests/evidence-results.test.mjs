@@ -22,7 +22,7 @@ import {
   resourcesConflict,
   visitPlaywrightReport
 } from "../runtime/evidence/evidence-results.mjs";
-import { criticalCaseResult } from "../runtime/evidence/adapter-runtime.mjs";
+import { criticalCaseResult } from "../runtime/evidence/adapter-results.mjs";
 
 test("shell summary counts remain measured through host output filtering", () => {
   assert.deepEqual(parseAssertionSummaryOutput(

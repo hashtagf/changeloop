@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { requestSummary } from "../runtime/evidence/proof-execution-runtime.mjs";
+import { requestSummary } from "../runtime/evidence/proof-execution-steps.mjs";
 
 test("proof request summary preserves null and normalizes every absent field", () => {
   assert.equal(requestSummary("change", null), null);

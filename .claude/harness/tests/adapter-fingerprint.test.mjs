@@ -2,10 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  adapterConfigurationIdentity,
-  adapterServiceIdentity,
-  createAdapterFingerprint
-} from "../runtime/evidence/evidence-contract.mjs";
+  adapterConfigurationIdentity, adapterServiceIdentity, createAdapterFingerprint
+} from "../runtime/evidence/provider-inputs.mjs";
 
 test("adapter configuration identity preserves defaults", () => {
   assert.deepEqual(adapterConfigurationIdentity(), {

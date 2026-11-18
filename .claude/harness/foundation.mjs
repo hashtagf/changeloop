@@ -23,9 +23,8 @@ import { createApprovalPackageRuntime, routeForState } from "./runtime/workflow/
 import {
   createFeedbackRuntime, FEEDBACK_SCHEMA_VERSION
 } from "./runtime/observability/feedback-runtime.mjs";
-import {
-  blockerTelemetryValue, createTelemetryRuntime, createCommandPhaseRecorder
-} from "./runtime/observability/telemetry-runtime.mjs";
+import { createTelemetryRuntime } from "./runtime/observability/telemetry-runtime.mjs";
+import { blockerTelemetryValue, createCommandPhaseRecorder } from "./runtime/observability/command-telemetry.mjs";
 import { createJsonlReader } from "./runtime/observability/telemetry.mjs";
 import { operationInputFingerprint } from "./runtime/observability/operation-profile.mjs";
 import {
@@ -101,11 +100,8 @@ import { createDiagnosticsRuntime } from "./runtime/core/diagnostics-runtime.mjs
 import { authorityPreflightValue } from "./runtime/core/authority-policy.mjs";
 import { compileExecutionContractValue } from "./runtime/core/execution-contract.mjs";
 import { createStateRuntime } from "./runtime/core/state-runtime.mjs";
-import {
-  createEvidenceContract,
-  REVIEW_FORCING_CAPABILITIES,
-  REVIEW_DIVERSITY_CAPABILITIES
-} from "./runtime/evidence/evidence-contract.mjs";
+import { createEvidenceContract } from "./runtime/evidence/evidence-contract.mjs";
+import { REVIEW_FORCING_CAPABILITIES, REVIEW_DIVERSITY_CAPABILITIES } from "./runtime/evidence/review-policy.mjs";
 import { createChangeValidationRuntime } from "./runtime/workflow/change/change-validation.mjs";
 import { postReleaseRolloutGates } from "./runtime/workflow/change/required-providers.mjs";
 import { routeRuntimeCommand } from "./runtime/core/cli-router.mjs";

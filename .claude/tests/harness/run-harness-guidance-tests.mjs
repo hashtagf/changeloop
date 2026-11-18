@@ -5,7 +5,7 @@ import { dirname } from "node:path";
 import {
   createSourceCohortProvider, normalizedTelemetryHost, usageAvailability
 } from "../../harness/runtime/observability/metrics-runtime.mjs";
-import { blockerTelemetryValue } from "../../harness/runtime/observability/telemetry-runtime.mjs";
+import { blockerTelemetryValue } from "../../harness/runtime/observability/command-telemetry.mjs";
 import { reviewRepairIntervals } from "../../harness/runtime/observability/feedback-runtime.mjs";
 import { derivedReviewRepairGraph } from "../../harness/runtime/evidence/repair-runtime.mjs";
 import { coordinatorAction } from "../../harness/runtime/workflow/advance/advance-actions.mjs";

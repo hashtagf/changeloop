@@ -4,14 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import {
-  createProofReadinessRuntime,
-  filesystemLiteralSearch,
-  proofReadinessValueOperation,
-  readinessGraph,
-  readinessNext,
-  readinessStatus,
-  workspaceIsolationIssuesValue
+  createProofReadinessRuntime, filesystemLiteralSearch, proofReadinessValueOperation, workspaceIsolationIssuesValue
 } from "../runtime/evidence/proof-readiness.mjs";
+import { readinessGraph, readinessNext, readinessStatus } from "../runtime/evidence/provider-topology.mjs";
 import { proofReadinessRuntimeDeps } from "./fixtures/runtime-deps.mjs";
 
 test("copy-mode critical-case scan is bounded to declared inputs", () => {

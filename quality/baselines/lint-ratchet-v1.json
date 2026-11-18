@@ -3,15 +3,15 @@
   "sizeCeiling": 1000,
   "violations": {},
   "sizes": {
-    ".claude/harness/foundation.mjs": 2380,
-    ".claude/harness/runtime/evidence/adapter-runtime.mjs": 1070,
-    ".claude/harness/runtime/evidence/configured-reviewer.mjs": 1043,
-    ".claude/harness/runtime/evidence/evidence-contract.mjs": 1319,
-    ".claude/harness/runtime/evidence/proof-execution-runtime.mjs": 1265,
-    ".claude/harness/runtime/evidence/proof-readiness.mjs": 1160,
-    ".claude/harness/runtime/evidence/receipt-runtime.mjs": 1167,
-    ".claude/harness/runtime/evidence/review-attempt-store.mjs": 1015,
-    ".claude/harness/runtime/observability/telemetry-runtime.mjs": 1051,
+    ".claude/harness/foundation.mjs": 2376,
+    ".claude/harness/runtime/evidence/adapter-runtime.mjs": 917,
+    ".claude/harness/runtime/evidence/configured-reviewer.mjs": 750,
+    ".claude/harness/runtime/evidence/evidence-contract.mjs": 900,
+    ".claude/harness/runtime/evidence/proof-execution-runtime.mjs": 973,
+    ".claude/harness/runtime/evidence/proof-readiness.mjs": 822,
+    ".claude/harness/runtime/evidence/receipt-runtime.mjs": 792,
+    ".claude/harness/runtime/evidence/review-attempt-store.mjs": 795,
+    ".claude/harness/runtime/observability/telemetry-runtime.mjs": 797,
     ".claude/harness/runtime/workflow/advance/advance-runtime.mjs": 718,
     ".claude/harness/runtime/workflow/authority/authority-runtime.mjs": 914,
     ".claude/harness/runtime/workflow/change/change-lifecycle.mjs": 832,
@@ -19,7 +19,7 @@
     ".claude/harness/runtime/workflow/delivery/pull-request-runtime.mjs": 919,
     ".claude/harness/runtime/workflow/draft/semantic-amendment.mjs": 713,
     ".claude/harness/runtime/workflow/draft/semantic-draft.mjs": 882,
-    ".claude/harness/runtime/workflow/land/apply-runtime.mjs": 1123,
+    ".claude/harness/runtime/workflow/land/apply-runtime.mjs": 974,
     ".claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs": 640
   }
 }

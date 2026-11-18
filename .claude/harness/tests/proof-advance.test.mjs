@@ -3,19 +3,12 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { createProofExecutionRuntime } from "../runtime/evidence/proof-execution-runtime.mjs";
 import {
-  assertProofCollectionOutcomes,
-  beginProofCollection,
-  createProofExecutionRuntime,
-  persistProofCollectionArtifacts,
-  proofCollectionOutcome,
-  proofCursorToken,
-  rebindProofCollectionReceipts,
-  settleProofCollection,
-  stopProofCollection
-} from "../runtime/evidence/proof-execution-runtime.mjs";
+  assertProofCollectionOutcomes, beginProofCollection, persistProofCollectionArtifacts, proofCollectionOutcome, proofCursorToken, rebindProofCollectionReceipts, settleProofCollection, stopProofCollection
+} from "../runtime/evidence/proof-execution-steps.mjs";
 import { createReceiptValidity } from "../runtime/evidence/receipt-validity.mjs";
-import { recordDeterministicReviewClosureOperation } from "../runtime/evidence/receipt-runtime.mjs";
+import { recordDeterministicReviewClosureOperation } from "../runtime/evidence/review-closure-receipts.mjs";
 
 function fixture(options = {}) {
   let state = { version: 2, id: "change-a", status: "building" };

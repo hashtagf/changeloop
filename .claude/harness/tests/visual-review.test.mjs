@@ -12,7 +12,7 @@ import {
   runVisualReview, visualProviderConfig, visualReceiptResult, visualReviewOutcome,
   visualReviewPrompt, withVisualRequirement
 } from "../runtime/evidence/visual-review.mjs";
-import { claimsForCapability } from "../runtime/evidence/evidence-contract.mjs";
+import { claimsForCapability } from "../runtime/evidence/provider-inputs.mjs";
 import { PROVIDERS, providerCapability } from "../runtime/evidence/provider-catalog.mjs";
 import { requiredProvidersOperation } from "../runtime/workflow/change/required-providers.mjs";
 

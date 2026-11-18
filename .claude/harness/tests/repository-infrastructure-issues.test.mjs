@@ -1,9 +1,7 @@
 import assert from "node:assert/strict";
 import {
-  repositoryInfrastructureIssueRows,
-  repositoryInfrastructureIssuesOperation,
-  repositoryRuntimeState
-} from "../runtime/evidence/proof-readiness.mjs";
+  repositoryInfrastructureIssueRows, repositoryInfrastructureIssuesOperation, repositoryRuntimeState
+} from "../runtime/evidence/evidence-recovery.mjs";
 
 const base = {
   provider: "test",

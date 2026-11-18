@@ -1,12 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  providerDependencyIssues,
-  providerReportIssues,
-  serviceResourceIssues,
-  topologyIssuesOperation,
-  visitProviderTopology
-} from "../runtime/evidence/proof-readiness.mjs";
+  providerDependencyIssues, providerReportIssues, serviceResourceIssues, topologyIssuesOperation, visitProviderTopology
+} from "../runtime/evidence/provider-topology.mjs";
 
 test("provider dependency analysis names cycles and ignores unknown dependencies", () => {
   const providers = {

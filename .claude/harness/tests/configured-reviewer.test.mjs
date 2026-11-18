@@ -7,12 +7,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
-  REVIEW_SCHEMA, claudeResultEnvelope, configuredReviewPrompt,
-  createConfiguredReviewerRuntime, reviewFindingIssues, validReview,
-  validReviewFinding, normalizeReviewFindingPaths, reviewerUsageRow,
-  spawnCapturedAsync
-} from
-  "../runtime/evidence/configured-reviewer.mjs";
+  configuredReviewPrompt, createConfiguredReviewerRuntime, reviewerUsageRow, spawnCapturedAsync
+} from "../runtime/evidence/configured-reviewer.mjs";
+import {
+  REVIEW_SCHEMA, claudeResultEnvelope, reviewFindingIssues, validReview, validReviewFinding, normalizeReviewFindingPaths
+} from "../runtime/evidence/review-result-validation.mjs";
 import { createRuntimeEnvironment } from
   "../runtime/core/runtime-environment.mjs";
 import { checkpointReviewResult, recoverReviewResult } from

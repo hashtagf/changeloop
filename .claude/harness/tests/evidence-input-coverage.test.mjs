@@ -5,7 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 import {
   commandWorkspaceFiles, uncoveredCommandWorkspaceFiles
-} from "../runtime/evidence/evidence-contract.mjs";
+} from "../runtime/evidence/provider-inputs.mjs";
 import { safePackageScriptInputs } from
   "../runtime/evidence/evidence-bootstrap.mjs";
 

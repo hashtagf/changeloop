@@ -2,15 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  REVIEW_SCHEMA,
-  claudeReviewerArguments,
-  claudeReviewerEnvironment,
-  claudeReviewerFailure,
-  claudeStructuredReview,
-  driveReviewSteps,
-  reviewerSessionIsForbidden,
-  runClaudeReviewSteps
+  claudeReviewerArguments, claudeReviewerEnvironment, claudeReviewerFailure, claudeStructuredReview, driveReviewSteps, reviewerSessionIsForbidden, runClaudeReviewSteps
 } from "../runtime/evidence/configured-reviewer.mjs";
+import { REVIEW_SCHEMA } from "../runtime/evidence/review-result-validation.mjs";
 
 const runClaudeReviewOperation = (context, ...args) =>
   driveReviewSteps(runClaudeReviewSteps(context, ...args), context.spawn);

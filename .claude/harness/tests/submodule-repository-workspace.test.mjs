@@ -15,7 +15,7 @@ import { shellMutationViolation } from "../runtime/core/shell-mutation-policy.mj
 import { reviewChangedSurface } from "../runtime/workflow/packet/packet-runtime.mjs";
 import {
   normalizeReviewFindingPaths, reviewFindingIssues
-} from "../runtime/evidence/configured-reviewer.mjs";
+} from "../runtime/evidence/review-result-validation.mjs";
 
 // One location per task repository. A consumer keeps product code in a Git
 // submodule declared as its own repository; the shared sandbox holds only an

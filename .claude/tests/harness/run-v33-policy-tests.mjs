@@ -8,12 +8,13 @@ import { join } from "node:path";
 import {
   classifyReviewRisk, highReviewRiskTriggers, mediumReviewRiskTriggers
 } from "../../harness/runtime/evidence/review-routing.mjs";
+import { providerExecutionEnvironment } from "../../harness/runtime/evidence/adapter-runtime.mjs";
 import {
-  criticalCaseResult, enforceCriticalCases, mutationReceiptClassification,
-  mutationV2Result, providerExecutionEnvironment
-} from "../../harness/runtime/evidence/adapter-runtime.mjs";
-import { providerEvidencePolicy, providerReceiptWriterConflicts } from
-  "../../harness/runtime/evidence/evidence-contract.mjs";
+  criticalCaseResult, enforceCriticalCases, mutationReceiptClassification, mutationV2Result
+} from "../../harness/runtime/evidence/adapter-results.mjs";
+import {
+  providerEvidencePolicy, providerReceiptWriterConflicts
+} from "../../harness/runtime/evidence/provider-inputs.mjs";
 import { createConfiguredReviewerRuntime } from "../../harness/runtime/evidence/configured-reviewer.mjs";
 import { createRuntimeEnvironment } from "../../harness/runtime/core/runtime-environment.mjs";
 import { effectiveReviewAttemptLimit } from "../../harness/runtime/core/authority-policy.mjs";

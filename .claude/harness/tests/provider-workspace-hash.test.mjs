@@ -2,11 +2,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  providerHashExplicitlyScoped,
-  providerHashField,
-  providerWorkspaceHashOperation,
-  repositoryFieldHash
-} from "../runtime/evidence/evidence-contract.mjs";
+  providerHashExplicitlyScoped, providerHashField, providerWorkspaceHashOperation, repositoryFieldHash
+} from "../runtime/evidence/provider-inputs.mjs";
 
 test("provider hash field follows review and packet-bound semantics", () => {
   assert.equal(providerHashField("review", false), "reviewHash");
