@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { RULE_LAYERS, ruleRegistrySummary } from "../../.claude/harness/runtime/quality/rule-registry.mjs";
 import { pyramidReadiness } from "../../.claude/harness/runtime/quality/pyramid-readiness.mjs";
 import { incidentSummary } from "../../.claude/harness/runtime/quality/incident-records.mjs";
+import { createOutcomesRuntime } from "../../.claude/harness/runtime/observability/outcomes-runtime.mjs";
 import { uiReadinessFacts } from "../../.claude/harness/runtime/quality/ui-readiness.mjs";
 import { enforcedLessons, enforcementKind } from "../../.claude/harness/runtime/observability/lessons-runtime.mjs";
 import { COVERAGE_BASELINE } from "./coverage-ratchet.mjs";
@@ -110,6 +111,29 @@ export function repositoryLessons(root) {
   return { recurring: rows.length, pending: pending.length };
 }
 
+// The local change store's archived outcomes, summarized as readiness reads
+// them; null when the checkout has no store.
+export function repositoryOutcomes(root) {
+  const store = join(root, ".foundation");
+  if (!existsSync(join(store, "runtime"))) return null;
+  const evidenceDir = join(store, "evidence");
+  const changes = createOutcomesRuntime({
+    runtimeDir: join(store, "runtime"), evidenceDir, logsDir: join(store, "logs"),
+    changeWorkTypes: () => [],
+    reviewAttemptRecords: (id) => {
+      const dir = join(evidenceDir, id, "review-attempts");
+      return existsSync(dir) ? readdirSync(dir).filter((name) => name.endsWith(".json")).sort()
+        .flatMap((name) => { try { return [JSON.parse(readFileSync(join(dir, name), "utf8"))]; } catch { return []; } }) : [];
+    }
+  }).outcomesValue().changes;
+  return {
+    archived: changes.length,
+    measured: changes.filter((change) => change.firstProofPass !== null).length,
+    firstProofPasses: changes.filter((change) => change.firstProofPass === true).length,
+    escapedDefects: changes.reduce((total, change) => total + (change.escapedDefects || 0), 0)
+  };
+}
+
 export function repositoryReadiness(root, card) {
   const ratcheting = "ratcheting";
   const featureMap = existsSync(join(root, "docs/feature-map.json"))
@@ -138,8 +162,9 @@ export function repositoryReadiness(root, card) {
       issues: card.pyramid.registryIssues.length, unregistered: card.pyramid.unregistered.length },
     incidents: incidentSummary(root),
     ui: uiReadinessFacts(root),
-    // Archived-change outcomes live in .foundation state, which CI does not have.
-    outcomes: null
+    // Archived-change outcomes live in .foundation state: a maintainer's
+    // checkout measures them, CI (no state) reports them unmeasured.
+    outcomes: repositoryOutcomes(root)
   });
 }
 

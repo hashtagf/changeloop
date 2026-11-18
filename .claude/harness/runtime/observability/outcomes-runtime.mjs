@@ -57,15 +57,49 @@ export function reviewAttemptResult(attempt) {
   return ["pass", "fail", "inconclusive"].includes(result) ? result : null;
 }
 
-// Operator proof runs use `proof-<ts>` roots; the advance route collects under
-// `collect-<ts>`. Each root is one proof run.
+// Proof execution roots: the advance route executes under `collect-<ts>` and
+// then finalizes a passing proof under `proof-<ts>` (a manifest, no
+// artifacts); the operator route executes under `proof-<ts>`. A root that ran
+// providers holds `artifacts/`, so a finalized manifest is never counted as a
+// second run. Roots without artifacts (older stores) count as runs.
 const PROOF_RUN_PREFIXES = ["proof-", "collect-"];
 
-function proofRunCount(evidenceDir, id) {
+function proofRunTimestamp(name) {
+  return Number(name.slice(name.indexOf("-") + 1)) || 0;
+}
+
+function proofExecutions(evidenceDir, id) {
   const dir = join(evidenceDir, id);
   if (!existsSync(dir)) return null;
-  return directoryEntries(dir).filter((entry) => entry.isDirectory() &&
-    PROOF_RUN_PREFIXES.some((prefix) => entry.name.startsWith(prefix))).length;
+  const roots = directoryEntries(dir).filter((entry) => entry.isDirectory() &&
+    PROOF_RUN_PREFIXES.some((prefix) => entry.name.startsWith(prefix))).map((entry) => entry.name)
+    .sort((left, right) => proofRunTimestamp(left) - proofRunTimestamp(right));
+  const executed = roots.filter((name) => existsSync(join(dir, name, "artifacts")));
+  return (executed.length ? executed : roots).map((name) => join(dir, name));
+}
+
+// Whether every provider command of one execution exited 0, from the
+// `status=<code>` line each artifact log starts with; null when it ran none.
+function executionPassed(root) {
+  const statuses = directoryEntries(join(root, "artifacts")).filter((entry) => entry.isDirectory())
+    .flatMap((provider) => directoryEntries(join(root, "artifacts", provider.name))
+      .filter((entry) => entry.isFile() && entry.name.endsWith(".log"))
+      .map((entry) => {
+        try { return readFileSync(join(root, "artifacts", provider.name, entry.name), "utf8").match(/^status=(-?\d+)/)?.[1]; }
+        catch { return undefined; }
+      }))
+    .filter((value) => value !== undefined);
+  return statuses.length ? statuses.every((value) => value === "0") : null;
+}
+
+// Proof passed on its first execution with no review repair. Later executions
+// that re-prove after an amendment or a moved base do not make it a repeat;
+// without a readable first execution, a single execution is the evidence.
+function firstProofPassValue(executions, reviewRepairRounds) {
+  if (executions === null) return null;
+  if (reviewRepairRounds > 0) return false;
+  const first = executions.length ? executionPassed(executions[0]) : null;
+  return first === null ? executions.length === 1 : first;
 }
 
 function knownCost(logsDir, id) {
@@ -180,7 +214,8 @@ export function createOutcomesRuntime({
       .map(({ id, state }) => {
         let workTypes = [];
         try { workTypes = changeWorkTypes(id, state) || []; } catch { workTypes = []; }
-        const proofRuns = proofRunCount(evidenceDir, id);
+        const executions = proofExecutions(evidenceDir, id);
+        const proofRuns = executions === null ? null : executions.length;
         let attempts = [];
         try { attempts = reviewAttemptRecords(id) || []; } catch { attempts = []; }
         const reviewRepairRounds = proofRuns === null ? null
@@ -191,8 +226,7 @@ export function createOutcomesRuntime({
           ...cohortParts(state, workTypes),
           proofRuns,
           reviewRepairRounds,
-          firstProofPass: proofRuns === null ? null
-            : proofRuns === 1 && reviewRepairRounds === 0,
+          firstProofPass: firstProofPassValue(executions, reviewRepairRounds),
           amendments: count(state.amendments),
           userDecisions: count(state.advanceRecovery?.answers) + count(state.waivers) +
             count(state.groundingReopens),
@@ -206,7 +240,7 @@ export function createOutcomesRuntime({
       availability: {
         escapedDefects: "declared-only",
         cost: "known-events-only",
-        firstProofPass: "evidence-directory"
+        firstProofPass: "first-execution-artifacts"
       },
       changes,
       cohorts: outcomeCohorts(changes),

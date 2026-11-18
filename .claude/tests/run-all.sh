@@ -237,6 +237,7 @@ scratch nudges|node --test "$ROOT/.claude/harness/tests/scratch-nudges.test.mjs"
 preview runtime|node --test "$ROOT/.claude/harness/tests/preview-runtime.test.mjs"
 preview evidence|node --test "$ROOT/.claude/harness/tests/preview-evidence.test.mjs"
 preview-only providers|node --test "$ROOT/.claude/harness/tests/preview-only-provider.test.mjs"
+source references|node --test "$ROOT/.claude/tests/harness/source-references.test.mjs"
 operation state|node --test "$ROOT/.claude/harness/tests/operation-state.test.mjs"
 built-in accessibility check|node --test "$ROOT/.claude/harness/tests/accessibility-check.test.mjs"
 approval lanes|node --test "$ROOT/.claude/harness/tests/approval-lanes.test.mjs"
@@ -726,6 +727,16 @@ pool_size() {
   [ "$jobs" -lt 1 ] && jobs=1
   echo "$jobs"
 }
+
+# CI installs exactly what package-lock.json names; a local checkout (or a
+# worktree sharing another checkout's node_modules) can lag behind it, and the
+# suites that need the missing package then fail for a reason that is not the
+# code. Stop before any suite with the command that fixes it.
+if [ -f "$ROOT/package-lock.json" ] && ! (cd "$ROOT" && npm ls --depth=0 >/dev/null 2>&1); then
+  echo "installed packages differ from package-lock.json; run 'npm ci' (or 'npm install') in $ROOT first:" >&2
+  (cd "$ROOT" && npm ls --depth=0 2>&1 | grep -E 'missing|invalid|extraneous' | head -10) >&2
+  exit 1
+fi
 
 WORK="$(mktemp -d)"
 repository_status "$ROOT" > "$WORK/repository-before.status" || {
