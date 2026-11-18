@@ -18,11 +18,13 @@ const expand = (text) => {
   return brace ? brace[1].split(",").flatMap((part) => expand(text.replace(brace[0], part))) : [text];
 };
 
-// Basenames the README names in inline code, brace patterns expanded; fenced
-// command examples are not rows.
+// Basenames the README names in inline code, brace patterns expanded, with
+// and without the extension (a row may name `implied-change` for
+// implied-change.test.mjs); fenced command examples are not rows.
+const stem = (name) => basename(name).replace(/\.(?:test\.mjs|mjs|sh|js|py)$/, "");
 export function documentedNames(readme) {
   const prose = readme.replace(/^```[\s\S]*?^```/gm, "");
-  return new Set([...prose.matchAll(/`([^`\n]+)`/g)].flatMap((match) => expand(match[1])).map((name) => basename(name)));
+  return new Set([...prose.matchAll(/`([^`\n]+)`/g)].flatMap((match) => expand(match[1])).map(stem));
 }
 
 // The files run-all.sh rows run by name; a glob row is documented as a group.
@@ -34,11 +36,11 @@ export function registeredFiles(runAll) {
 export function coverage(readme, runAll, baseline) {
   const names = documentedNames(readme);
   const files = registeredFiles(runAll);
-  const undocumented = files.filter((file) => !names.has(basename(file)));
+  const undocumented = files.filter((file) => !names.has(stem(file)));
   const allowed = new Set(baseline);
   return {
     missing: undocumented.filter((file) => !allowed.has(file)),
-    stale: baseline.filter((file) => !files.includes(file) || names.has(basename(file)))
+    stale: baseline.filter((file) => !files.includes(file) || names.has(stem(file)))
   };
 }
 
@@ -50,8 +52,8 @@ test("every registered suite file has a README row, or is in the shrinking basel
 });
 
 test("coverage matches basenames and brace patterns and ratchets both ways", () => {
-  const readme = "| `harness/a-{one,two}.test.mjs` | x |\n```sh\n`not-a-row.test.mjs`\n```\n";
-  const runAll = 'a|node "$HERE/harness/a-one.test.mjs"\nb|node "$ROOT/x/b.test.mjs"\nc|sh "$HERE/not-a-row.test.mjs"\n';
+  const readme = "| `harness/a-{one,two}.test.mjs`, `short-name` | x |\n```sh\n`not-a-row.test.mjs`\n```\n";
+  const runAll = 'a|node "$HERE/harness/a-one.test.mjs" "$HERE/short-name.test.mjs"\nb|node "$ROOT/x/b.test.mjs"\nc|sh "$HERE/not-a-row.test.mjs"\n';
   assert.deepEqual(coverage(readme, runAll, ["x/b.test.mjs"]), { missing: ["not-a-row.test.mjs"], stale: [] });
   assert.deepEqual(coverage(readme, runAll, ["harness/a-one.test.mjs", "gone.mjs", "not-a-row.test.mjs", "x/b.test.mjs"]),
     { missing: [], stale: ["harness/a-one.test.mjs", "gone.mjs"] });

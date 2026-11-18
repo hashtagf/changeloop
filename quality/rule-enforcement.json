@@ -232,7 +232,7 @@
         ".claude/tests/harness/test-readme-coverage.test.mjs",
         "quality/baselines/test-readme-v1.json"
       ],
-      "scope": "registration is complete; README rows ratchet against a baseline of files that predate the check"
+      "scope": "registration and README rows are both complete; the README baseline is empty and may only stay empty"
     },
     {
       "id": "feature-map-entry",
