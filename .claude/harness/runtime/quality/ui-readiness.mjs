@@ -2,7 +2,7 @@
 // if so, which layer of the pyramid already guards it — design tokens, an
 // accessibility lint, a rendered (browser) check, an accessibility check on
 // rendered UI, and one DESIGN.md. Read-only and dependency-free: it reads the
-// repository inventory and every package.json, never runs a tool.
+// repository inventory, its stylesheets, and every package.json, never runs a tool.
 import { readFileSync } from "node:fs";
 import { basename, extname, join } from "node:path";
 import { inventoryRepository } from "./quality-discovery.mjs";
@@ -27,6 +27,8 @@ const A11Y_SCRIPTS = new Set(["test:accessibility", "test:a11y", "accessibility"
 const RENDERED_SCRIPTS = new Set(["screenshot", "screenshots", "e2e", "test:e2e", "test:browser"]);
 const RENDERED_CONFIG = /(^|\/)(playwright|cypress)\.config\.[cm]?[jt]s$/;
 const TOKENS = /(^|\/)((design-)?tokens?(\.[a-z]+)?\.(json|css|scss|ts|js|mjs)|tailwind\.config\.[cm]?[jt]s|theme\.(css|json))$/i;
+const STYLESHEET = /\.(css|scss|sass|less)$/i;
+const COLOR_LITERAL = /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(/g;
 const DESIGN_DOC = /^(docs\/)?design\.md$/i;
 const TEST_PATH = /(^|\/)(tests?|__tests__|fixtures?|e2e)\//;
 
@@ -34,6 +36,45 @@ function packages(root, files) {
   return files.filter((path) => basename(path) === "package.json").flatMap((path) => {
     try { return [JSON.parse(readFileSync(join(root, path), "utf8"))]; } catch { return []; }
   });
+}
+
+// Color literals written outside a custom-property definition: the values a
+// design token should carry. `--accent: #2946e8` defines a token; `color:
+// #2946e8` bypasses it. Comments are ignored; declarations are split on `;`,
+// `{`, and `}` outside parentheses, so minified stylesheets count the same.
+export function rawColorLiterals(text) {
+  const source = String(text).replace(/\/\*[\s\S]*?\*\//g, " ");
+  let count = 0;
+  let start = 0;
+  let depth = 0;
+  for (let index = 0; index <= source.length; index++) {
+    const char = source[index];
+    if (char === "(") depth++;
+    else if (char === ")") depth = Math.max(0, depth - 1);
+    if (index < source.length && (depth > 0 || !";{}".includes(char))) continue;
+    const piece = source.slice(start, index);
+    start = index + 1;
+    const colon = piece.indexOf(":");
+    if (char === "{" || colon <= 0 || piece.slice(0, colon).trim().startsWith("--")) continue;
+    count += (piece.slice(colon + 1).match(COLOR_LITERAL) || []).length;
+  }
+  return count;
+}
+
+function definesTokens(text) {
+  return /(^|[;{\s])--[\w-]+\s*:/.test(String(text).replace(/\/\*[\s\S]*?\*\//g, " "));
+}
+
+// Where the design tokens live and how many colors bypass them, per stylesheet.
+function tokenFacts(root, files) {
+  const sheets = files.filter((path) => STYLESHEET.test(path) && !TEST_PATH.test(path)).flatMap((path) => {
+    try { return [{ path, text: readFileSync(join(root, path), "utf8") }]; } catch { return []; }
+  });
+  const source = files.find((path) => TOKENS.test(path) && !TEST_PATH.test(path)) ||
+    sheets.find((sheet) => definesTokens(sheet.text))?.path || null;
+  const raw = sheets.map((sheet) => ({ path: sheet.path, count: rawColorLiterals(sheet.text) }))
+    .filter((row) => row.count > 0).sort((left, right) => right.count - left.count || left.path.localeCompare(right.path));
+  return { source, rawColors: raw.reduce((total, row) => total + row.count, 0), rawColorFiles: raw };
 }
 
 function firstNamed(names, wanted) {
@@ -58,7 +99,7 @@ export function uiReadinessFacts(root) {
     present: true,
     framework,
     uiFiles: uiFiles.length,
-    tokens: inventory.files.find((path) => TOKENS.test(path) && !TEST_PATH.test(path)) || null,
+    tokens: tokenFacts(root, inventory.files),
     a11yLint: firstNamed(dependencies, A11Y_LINT),
     rendered: firstNamed(dependencies, RENDERED) || firstNamed(scripts, RENDERED_SCRIPTS) ||
       inventory.files.find((path) => RENDERED_CONFIG.test(path)) || null,

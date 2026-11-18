@@ -11,7 +11,7 @@ import {
 } from "../runtime/quality/pyramid-readiness.mjs";
 import { createPyramidReadinessCommand } from "../runtime/composition/pyramid-readiness-command.mjs";
 import { registryIssues, ruleRegistrySummary } from "../runtime/quality/rule-registry.mjs";
-import { uiReadinessFacts } from "../runtime/quality/ui-readiness.mjs";
+import { rawColorLiterals, uiReadinessFacts } from "../runtime/quality/ui-readiness.mjs";
 
 const ALL_LANES = ["file-size", "nesting-depth", "duplication", "module-boundaries", "lint", "type-check",
   "workaround-comments", "test", "crap", "automated-mutation"];
@@ -188,7 +188,8 @@ test("UI criteria apply only to a project with a user interface", (t) => {
     ["ui-rendered", "verification", "unmet"], ["ui-accessibility", "verification", "unmet"],
     ["ui-design-doc", "prose", "unmet"]]);
   assert.ok(uiRows(gaps).every((row) => row.next), "each unmet UI criterion names its next step");
-  const guarded = pyramidReadiness({ ...ready(), ui: { ...bare, tokens: "src/tokens.css",
+  const guarded = pyramidReadiness({ ...ready(), ui: { ...bare,
+    tokens: { source: "src/tokens.css", rawColors: 0, rawColorFiles: [] },
     a11yLint: "eslint-plugin-jsx-a11y", rendered: "@playwright/test", a11yCheck: "@axe-core/playwright",
     design: "DESIGN.md" } });
   assert.ok(guarded.layers.every((layer) => layer.percent === 100));
@@ -200,13 +201,36 @@ test("UI criteria apply only to a project with a user interface", (t) => {
       devDependencies: { "eslint-plugin-jsx-a11y": "6", "@playwright/test": "1" },
       scripts: { "test:a11y": "playwright test a11y" } }),
     "src/App.tsx": "export const App = () => null;\n",
-    "src/theme.css": ":root { --space-1: 4px; }\n",
+    "src/theme.css": ":root { --space-1: 4px; --ink: #111; }\n",
     "docs/DESIGN.md": "# Design\n"
   });
   assert.deepEqual(uiReadinessFacts(app), { present: true, framework: "react", uiFiles: 1,
-    tokens: "src/theme.css", a11yLint: "eslint-plugin-jsx-a11y", rendered: "@playwright/test",
+    tokens: { source: "src/theme.css", rawColors: 0, rawColorFiles: [] }, a11yLint: "eslint-plugin-jsx-a11y", rendered: "@playwright/test",
     a11yCheck: "test:a11y", design: "docs/DESIGN.md" });
   const html = project(t, { "index.html": "<main></main>\n", "test/fixture.html": "<p></p>\n" });
   assert.equal(uiReadinessFacts(html).uiFiles, 1, "test fixtures are not UI");
   assert.deepEqual(uiReadinessFacts(project(t, { "src/a.js": "1\n" })), { present: false });
+});
+
+test("design tokens are met only when no color is written outside a token definition", (t) => {
+  assert.equal(rawColorLiterals(":root{--ink:#111;--soft:rgba(0,0,0,.1)}\n/* #fff */a{color:var(--ink)}"), 0);
+  assert.equal(rawColorLiterals("a { color: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 1px hsl(0 0% 0%); }"), 3);
+  assert.equal(rawColorLiterals(".x{background:linear-gradient(rgba(1,2,3,.1) 1px,transparent 1px)}"), 1,
+    "a semicolon-free function argument stays one declaration");
+  assert.equal(rawColorLiterals("a{color:currentColor;border-color:transparent}"), 0, "keywords are not literals");
+  const row = (tokens) => pyramidReadiness({ ...ready(), ui: { present: true, framework: "react", uiFiles: 1,
+    tokens } }).criteria.find((criterion) => criterion.id === "ui-tokens");
+  assert.equal(row({ source: null, rawColors: 0, rawColorFiles: [] }).status, "unmet");
+  const drift = row({ source: "src/theme.css", rawColors: 5,
+    rawColorFiles: [{ path: "src/a.css", count: 4 }, { path: "src/b.css", count: 1 }] });
+  assert.equal(drift.status, "unmet");
+  assert.match(drift.detail, /5 color literal\(s\) outside token definitions: src\/a\.css 4, src\/b\.css 1/);
+  assert.match(drift.next, /named token/);
+  const app = project(t, {
+    "src/App.tsx": "export const App = () => null;\n",
+    "src/base.css": ":root { --ink: #111; }\nbody { color: var(--ink); background: #fafafa; }\n",
+    "test/fixture.css": "a { color: red; background: #000; }\n"
+  });
+  assert.deepEqual(uiReadinessFacts(app).tokens, { source: "src/base.css", rawColors: 1,
+    rawColorFiles: [{ path: "src/base.css", count: 1 }] }, "custom properties are a source; test fixtures are skipped");
 });

@@ -125,7 +125,11 @@ rows, read from its files and every `package.json` (`runtime/quality/ui-readines
 design tokens (codebase), an accessibility lint (static), a rendered browser
 check and an accessibility check on rendered pages (verification), and one
 `DESIGN.md` (prose). A project without a user interface shows none of them;
-they are not applicable, never unmet.
+they are not applicable, never unmet. The tokens row is met only when a token
+source exists (a tokens or theme file, the Tailwind config, or CSS custom
+properties) and no stylesheet (`.css`, `.scss`, `.sass`, `.less` outside
+tests) writes a color literal outside a custom-property definition; its detail
+names the count per file.
 
 ## Baseline and debt authority
 
