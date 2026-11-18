@@ -728,6 +728,16 @@ pool_size() {
   echo "$jobs"
 }
 
+# CI installs exactly what package-lock.json names; a local checkout (or a
+# worktree sharing another checkout's node_modules) can lag behind it, and the
+# suites that need the missing package then fail for a reason that is not the
+# code. Stop before any suite with the command that fixes it.
+if [ -f "$ROOT/package-lock.json" ] && ! (cd "$ROOT" && npm ls --depth=0 >/dev/null 2>&1); then
+  echo "installed packages differ from package-lock.json; run 'npm ci' (or 'npm install') in $ROOT first:" >&2
+  (cd "$ROOT" && npm ls --depth=0 2>&1 | grep -E 'missing|invalid|extraneous' | head -10) >&2
+  exit 1
+fi
+
 WORK="$(mktemp -d)"
 repository_status "$ROOT" > "$WORK/repository-before.status" || {
   echo "unable to capture repository status before foundation tests" >&2
