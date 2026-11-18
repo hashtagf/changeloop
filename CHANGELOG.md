@@ -36,6 +36,16 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- Built-in accessibility check: a project with no accessibility command gets
+  a static read of the markup a change touched (images without alt text,
+  unlabelled controls, unnamed buttons and links, missing `lang`, positive
+  `tabindex`, click handlers without keyboard support), judged on added or
+  edited lines only. Work type `ui` now requires `accessibility`, so this check
+  gates proof instead of becoming an advisory nobody runs; a UI path changed
+  without that work type stays advisory. A project-owned `test:accessibility`
+  or `test:a11y` script replaces the built-in. Hand-recorded accessibility
+  evidence (a manual audit) now needs `accessibility: {"adapter": "external"}`
+  declared in `execution.yaml`.
 - `prototypeSelection.excludes` lists prototype elements the agreement does not
   adopt, each with its reason. design.md shows them for approval, Build opens
   them beside the prototype, and the visual reviewer never asks for them and

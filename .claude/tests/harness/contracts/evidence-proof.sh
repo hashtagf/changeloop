@@ -246,6 +246,11 @@ sed -i.bak \
   's/"capabilities": \["test"\]/"capabilities": ["static-analysis", "data-migration", "accessibility", "resilience", "observability", "deployment", "dependency-supply-chain"]/' \
   openspec/changes/production-provider-coverage/evidence.yaml
 rm openspec/changes/production-provider-coverage/evidence.yaml.bak
+# Accessibility has a built-in executed check; evidence recorded by hand
+# (a manual audit) needs the provider declared external explicitly.
+jq '.providers.accessibility = {"adapter":"external"}' \
+  openspec/changes/production-provider-coverage/execution.yaml > "$TMP/a11y-execution.json"
+cp "$TMP/a11y-execution.json" openspec/changes/production-provider-coverage/execution.yaml
 assert_cmd_zero "production provider capabilities validate" \
   node .claude/harness/foundation.mjs validate production-provider-coverage
 plan="$(node .claude/harness/foundation.mjs proof-plan production-provider-coverage)"

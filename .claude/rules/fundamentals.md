@@ -59,7 +59,6 @@ reference only when its named decision is active.
 | User flows, hierarchy, forms, navigation, accessibility, responsive layout | `ux-ui-principles` |
 | Look up product, style, palette, typography, chart guidance | `ui-ux-pro-max` |
 | Implement or polish web UI after UX direction is settled | `frontend-design` |
-| UI change inside Change Loop: an approved prototype, screenshots, accessibility evidence | `change` (`prototypeSelection`, `visual`, `accessibility` providers) |
 | Shared Tailwind v4 tokens, variants, themes, v3 migration | `tailwind-design-system` |
 | Nontrivial local logic, types, state, error paths, module boundary, abstraction depth | `programming-fundamentals` |
 | Threads, async tasks, locks, shared mutable state, cancellation, races | `concurrency-fundamentals` |

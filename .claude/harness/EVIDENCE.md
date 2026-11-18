@@ -220,6 +220,27 @@ not raise the review tier or force review on its own: `compatibility` from
 `api` alone leaves review at the tier the change's real risk selects. The same
 capability required by a changed path still raises it.
 
+### Built-in accessibility check
+
+A project without an accessibility command still gets one. When no provider is
+wired, `accessibility` resolves to a harness-owned static read
+(`runtime/evidence/accessibility-check.mjs`, built-in `accessibility-static-v1`)
+of the markup the change touched (`.html`, `.jsx`, `.tsx`, `.vue`, `.svelte`,
+`.astro`). It reports images without alt text, form controls without a label,
+buttons and links without a name, `<html>` without `lang`, positive
+`tabindex`, and click handlers on elements a keyboard cannot reach, each with
+its file and line. Only lines the change added or edited are judged (against
+the repository's base head, or the project copy when there is no Git base), so
+a touched legacy file owes nothing for its old lines. It cannot see contrast,
+focus order, or rendered behavior; those need the project's own rendered check.
+
+With work type `ui`, `accessibility` is required and this check gates proof.
+A UI path changed without that work type keeps it an advisory, as before.
+Detection still looks for a project-owned `test:accessibility`, `test:a11y`,
+`accessibility`, or `a11y` script; when it finds one, that command replaces the
+built-in read. To record accessibility evidence by hand (a manual audit),
+declare `"accessibility": {"adapter": "external"}` in `execution.yaml`.
+
 Six capabilities exist for these work types:
 
 | Capability | Proves | Default adapter | Phase | Bootstrap scripts |

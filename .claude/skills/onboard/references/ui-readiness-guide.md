@@ -20,7 +20,9 @@ How to propose each:
 - Rendered check: a script that serves the app and saves PNG screenshots. A
   change bound to a prototype feeds them to the `visual` check
   (`change start --template` shows the wiring).
-- A11y check: a `test:accessibility` script; Prove runs it as the
-  `accessibility` provider without further wiring.
+- A11y check: a `test:accessibility` or `test:a11y` script that checks rendered
+  pages; Prove runs it as the `accessibility` provider without further wiring.
+  Without one, `ui` changes still get the built-in static markup read, which
+  cannot see contrast, focus order, or rendered behavior.
 
 Each is product code or project configuration, so it goes through `/change`.

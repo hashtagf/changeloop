@@ -156,7 +156,8 @@ hotfix ที่สร้างใหม่ (`bugfix.variant: "hotfix"`) ต้�
 ตรวจว่าไฟล์ที่ผูกไว้ล้มบนโค้ดเดิม ([/prove](/docs/th/loop/prove/)) scenario ที่ตั้ง
 `regression: true` ใช้กันพฤติกรรมเดิม จึงผ่านอยู่แล้วได้
 
-ชนิดงานยังเลือก evidence capability ด้วย ส่วน skill นั้น agent เลือกเองจากคำอธิบายของ
+ชนิดงานยังเลือก evidence capability ด้วย งานชนิด `ui` ต้องมี accessibility ซึ่งถ้าโปรเจกต์ไม่มีตัวตรวจ
+ของตัวเอง ระบบใช้ตัวตรวจในตัวที่อ่าน markup ส่วนที่แก้ ส่วน skill นั้น agent เลือกเองจากคำอธิบายของ
 skill ที่อ้างถึง `workType`, `riskSignals`, requirement และ scenario รายการครบทั้ง 23 ชนิดอยู่ใน
 `.claude/harness/lifecycle/change.md` หัวข้อ "Work types and required sections" ส่วน capability อยู่ใน
 `.claude/harness/EVIDENCE.md` หัวข้อ "Work-type capabilities"

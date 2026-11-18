@@ -3,6 +3,7 @@ import { isAbsolute, join } from "node:path";
 import { checkNpmWorkspace } from "./npm-lockfile-check.mjs";
 import { isSharedProject, projectResource } from '../core/project-installation.mjs';
 import { aliasedTestProvider } from "./provider-catalog.mjs";
+import { ACCESSIBILITY_BUILT_IN } from "./accessibility-check.mjs";
 
 const PROVIDER_SCRIPT_ALIASES = {
   "static-analysis": ["check", "typecheck", "type-check", "lint"],
@@ -11,7 +12,7 @@ const PROVIDER_SCRIPT_ALIASES = {
   performance: ["test:performance", "performance", "bench"],
   concurrency: ["test:concurrency", "concurrency"],
   "security-static": ["security", "security:static", "scan:security"],
-  accessibility: ["test:accessibility", "accessibility", "a11y"],
+  accessibility: ["test:accessibility", "test:a11y", "accessibility", "a11y"],
   "data-migration": ["test:migration", "migration:check"],
   resilience: ["test:resilience", "resilience"],
   observability: ["test:observability", "observability"],
@@ -313,7 +314,8 @@ export function discoverMissingEvidence({
           rows.some((row) => row.config?.adapter === "test-discovery"))
         discoveryCovered.add(repository.id);
     }
-    if (!found && capability !== "discovery") unresolved.push({
+    if (!found && capability !== "discovery" &&
+        providerConfig(requiredProvider)?.builtIn !== ACCESSIBILITY_BUILT_IN) unresolved.push({
       provider: requiredProvider, capability,
       repository: targets.length === 1 ? targets[0].id : null,
       reason: "no-safe-project-command", owner: "agent",
@@ -357,9 +359,11 @@ export function detectEvidenceWiring({
   const configured = configuredEvidenceProviders({
     contract, repositories, providerCapability, commandExists, root
   });
+  // The built-in accessibility read stands in only while the project has no
+  // accessibility command of its own, so detection still looks for one.
   const missing = required.filter((provider) => {
     const config = providerConfig(provider);
-    return !config || Boolean(config.aliasOf);
+    return !config || Boolean(config.aliasOf) || config.builtIn === ACCESSIBILITY_BUILT_IN;
   });
   const discovered = discoverMissingEvidence({
     missing, providerConfig, providerCapability, knownProviders, repositories, contract,
