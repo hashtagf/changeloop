@@ -15,7 +15,7 @@ function appendixLanguage(value) {
 // already holds: the review attempts, the compiled-from draft's compliance
 // data (only when openspec/config.yaml enables it) with the spec-approval
 // decision, and the deferred post-release rollout gates. "" when none apply.
-export function archiveAppendixMarkdown({
+export function archiveAppendixMarkdown(/** @type {{ language?: string, reviewAttempts?: any[], complianceEnabled?: boolean, compliance?: any, approvalRef?: string, rolloutGates?: any[] }} */ {
   language, reviewAttempts = [], complianceEnabled = false, compliance = null,
   approvalRef = null, rolloutGates = []
 } = {}) {

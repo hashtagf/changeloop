@@ -340,7 +340,7 @@ function activeWorkspace(projectRoot, changeId, git = null) {
   };
 }
 
-export function validateInvestigationBinding({ projectRoot, binding, git = null } = {}) {
+export function validateInvestigationBinding(/** @type {{ projectRoot?: string, binding?: any, git?: any }} */ { projectRoot, binding, git = null } = {}) {
   const issues = [];
   const root = realpathSync(resolve(projectRoot));
   if (!binding || ![1, 2].includes(binding.version)) return ["investigation binding version must be 1|2"];
@@ -446,7 +446,7 @@ export function validateInvestigationBinding({ projectRoot, binding, git = null 
   return unique(issues);
 }
 
-export function createInvestigationRuntime({
+export function createInvestigationRuntime(/** @type {{ root?: string, readJson?: any, writeJson?: any, now?: any, fail?: any, git?: any, setOperationChangeId?: any }} */ {
   root, readJson, writeJson, now, fail, git = null, setOperationChangeId = null
 } = {}) {
   const projectRoot = realpathSync(resolve(root));
@@ -663,6 +663,7 @@ export function createInvestigationRuntime({
       action.pendingQuestions = frontier.open;
       action.staleExperiments = frontier.staleExperiments.map((e) => e.key);
     }
+    /** @type {Record<string, any>} */
     const state = {
       version: record?.version === 2 || previous?.validatedIntake ? INVESTIGATION_STATE_VERSION : 1,
       ...(record?.version === 2 || previous?.validatedIntake ? {

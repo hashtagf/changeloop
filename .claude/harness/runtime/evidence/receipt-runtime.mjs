@@ -537,7 +537,7 @@ export function createReceiptRuntime({
   reviewProvenanceResult, readJson, flagValues, reviewHistoryState,
   reviewAttemptByDigest, reviewAttemptIsValid,
   recordRepairClosureAttempt, deliveredAiAttempts,
-  groundingForReview = () => null, die
+  groundingForReview = (_id) => null, die
 }) {
   // What a provider is bound to decides what re-running proof will cost, and
   // the plan is where that is cheap to learn. `stale` alone told an operator to
@@ -919,7 +919,7 @@ export function createReceiptRuntime({
     const prior = existsSync(receiptPath(id, provider))
       ? readJson(receiptPath(id, provider), {}) : null;
     const scopePaths = [...new Set(flagValues(flags, "scope-path"))].sort();
-    const { history, dispatched } = dispatchedReviewScope(id, flags, identity);
+    const { history, dispatched } = dispatchedReviewScope(id, flags);
     const nextAttempt = dispatched?.attempt || Number(history.totalAttempts || 0) + 1;
     const scopeMode = dispatched?.scope?.mode ||
       (nextAttempt === 1 || scopePaths.length === 0 ? "full" : "changed");

@@ -33,6 +33,7 @@ function nullableTimestamp(value, field) {
   return new Date(value).toISOString();
 }
 
+/** @param {Record<string, any> | null} [usage] */
 export function normalizedUsage(usage = {}) {
   if (usage === null) usage = {};
   if (typeof usage !== "object" || Array.isArray(usage))

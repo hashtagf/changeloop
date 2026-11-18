@@ -23,6 +23,7 @@ function text(value) {
 const rows = (value) => Array.isArray(value) ? value : isObject(value) && Array.isArray(value.entities) ? value.entities : [];
 
 // [source named on the page, reader]
+/** @type {ReadonlyArray<[string, (draft: any) => string | null]>} */
 export const UNDO_FIELDS = Object.freeze([
   ["rollout", (draft) => text(draft?.rollout?.rollback)],
   ["dataModel", (draft) => text(rows(draft?.dataModel).map((row) => row?.rollback))],

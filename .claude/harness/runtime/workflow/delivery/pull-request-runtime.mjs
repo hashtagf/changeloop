@@ -42,7 +42,7 @@ export function createPullRequestRuntime({
   landChange = null,
   now = () => new Date().toISOString(),
   run = spawnSync,
-  fail = (message) => { throw new Error(message); }
+  fail = (message, _code = 1, _details = null) => { throw new Error(message); }
 }) {
   const integrity = createDeliveryIntegrity({ git, run, runChecked, gitOutput });
   const merger = createDeliveryMerge({ run, root });

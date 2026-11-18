@@ -92,7 +92,7 @@ function propagateProviders(rows, seeds) {
  * explicit `claims`; otherwise claim coverage is derived from capabilities.
  * This keeps policy/provider resolution outside this pure planner.
  */
-export function planAmendmentInvalidation({
+export function planAmendmentInvalidation(/** @type {{ claims?: any, tasks?: any, providers?: any, coverageDelta?: any, priorClaims?: any }} */ {
   claims, tasks, providers, coverageDelta, priorClaims
 } = {}) {
   const findings = [];

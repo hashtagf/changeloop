@@ -96,7 +96,7 @@ export function semanticSourceFreshnessFindings(baseline, current) {
  * Build a deterministic, read-only inventory for explicitly declared local files.
  * Filesystem functions are injectable so path and freshness behavior stays unit-testable.
  */
-export function inspectSemanticSources({
+export function inspectSemanticSources(/** @type {{ projectRoot?: string, sourcePaths?: any[], baseline?: any, limits?: any, fs?: any }} */ {
   projectRoot,
   sourcePaths = [],
   baseline = null,

@@ -211,17 +211,13 @@ function markBlocked(message) {
     phase: process.env.FOUNDATION_PUBLIC_OPERATION || operationPhase
   });
 }
+/** @returns {never} */
 function die(message, code = 1, details = null) {
   markBlocked(message);
   if (trappedFailureDepth > 0) {
-    const error = new Error(String(message));
-    error.exitCode = code;
-    error.foundationBlocked = true;
-    if (details?.decision) error.decision = details.decision;
-    if (details?.boundary) error.boundary = details.boundary;
-    if (details?.owner) error.owner = details.owner;
-    if (details?.code) error.code = details.code;
-    throw error;
+    throw Object.assign(new Error(String(message)), { exitCode: code, foundationBlocked: true },
+      Object.fromEntries(["decision", "boundary", "owner", "code"]
+        .filter((key) => details?.[key]).map((key) => [key, details[key]])));
   }
   console.error(`BLOCKED: ${message}`);
   process.exit(code);

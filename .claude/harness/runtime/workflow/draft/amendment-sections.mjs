@@ -205,7 +205,7 @@ export function replaceRemovedRequirements(content, compiled) {
 }
 
 // One history line per amendment: revision, date, and reason.
-export function appendAmendmentHistory(content, compiled, { revision, date } = {}) {
+export function appendAmendmentHistory(content, compiled, /** @type {{ revision?: any, date?: any }} */ { revision, date } = {}) {
   const row = outlineRow("proposal", "amendments");
   const headings = rowHeadings(row);
   const prior = blockOf(content, headings);

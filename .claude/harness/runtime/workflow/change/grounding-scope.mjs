@@ -131,6 +131,7 @@ export function hasObservableSecurityControl(claim) {
     .test(`${claim?.id || ""} ${claim?.scenario || ""}`);
 }
 
+/** @param {{ coupling?: string, repositoryCount?: number, capabilities?: string[] | Set<string>, semantics?: string }} [input] */
 export function groundingInteractionRequirements({
   coupling = "isolated", repositoryCount = 1, capabilities = [], semantics = ""
 } = {}) {

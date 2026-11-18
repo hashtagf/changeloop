@@ -96,7 +96,7 @@ function validateVersionSkew(value, path, issues) {
   }
 }
 
-export function validateRollout(value, path = "rollout", { impact } = {}) {
+export function validateRollout(value, path = "rollout", /** @type {{ impact?: any }} */ { impact } = {}) {
   if (!present(value)) return [];
   if (!isObject(value)) return [`${path} must be an object`];
   const issues = [];
@@ -138,7 +138,7 @@ function renderSkew(rows, l) {
   ]));
 }
 
-export function renderRollout(value, { language } = {}) {
+export function renderRollout(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const parts = [];
@@ -192,7 +192,7 @@ export function validateTestStrategy(value, path = "testStrategy") {
   return issues;
 }
 
-export function renderTestStrategy(value, { language } = {}) {
+export function renderTestStrategy(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const parts = [];
@@ -227,7 +227,7 @@ export function validateDependencies(value, path = "dependencies") {
   return issues;
 }
 
-export function renderDependencies(value, { language } = {}) {
+export function renderDependencies(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!Array.isArray(value)) return "";
   const rows = value.filter(isObject);
   if (rows.length === 0) return "";
@@ -245,7 +245,7 @@ export function validateRecovery(value, path = "recovery") {
   return issues;
 }
 
-export function renderRecovery(value, { language } = {}) {
+export function renderRecovery(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   return ["backup", "rpo", "rto", "restoreTest", "regionFailure"]

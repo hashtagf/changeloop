@@ -188,6 +188,12 @@ export function deliveryEnvelope(changeId, action, fields = {}) {
 // A Deliver question in the blocked-decision shape: typed options with
 // outcomes, a recommendation, and a preserved pause. `options` keeps the
 // legacy id list for existing hosts.
+/**
+ * @param {string} changeId
+ * @param {{ boundary: string, reason: string, options: Array<[string, string]>, recommended?: string,
+ *   [field: string]: any }} question
+ * @returns {Record<string, any>}
+ */
 export function deliveryDecision(changeId, { boundary, reason, options, recommended, ...fields }) {
   const choices = [...options, ["pause", "Keep the current state and deliver nothing for now."]];
   return deliveryEnvelope(changeId, "ASK_USER", {

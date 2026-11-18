@@ -118,7 +118,12 @@ Change Loop เอง เอกสารนี้ไม่ใช่สัญญ�
 (ลึกสุด 10), block ซ้ำ 34, กฎ 28 ข้อ: ตัวตรวจ 19, judgment 5, เอกสารอย่างเดียว 4
 (สัดส่วนที่บังคับได้ 83%)
 
-หลัง PR ถัดมา: กฎที่เป็นเอกสารอย่างเดียวเหลือ 0 (บังคับได้ 100%, `proseOnlyCeiling` 0),
+type error 251 → 0: 69 จุดเป็น parameter แบบ destructure ที่ default เป็น `{}` จึงใส่ชนิดของ key,
+ที่เหลือเป็นชนิดของตาราง tuple, record ที่เติม field ภายหลัง, default callback ที่ลืม parameter และ
+argument ที่ไม่มีใครรับ (ลบทิ้ง) พบความไม่สอดคล้องจริง 1 จุด: packet ของ review ใส่ inspection ของ root
+และ contract โดยไม่มี `pathCount`/`truncated` ซึ่งทางอื่นมี
+
+หลัง PR #16: กฎที่เป็นเอกสารอย่างเดียวเหลือ 0 (บังคับได้ 100%, `proseOnlyCeiling` 0),
 block ซ้ำ 34 → 0 (29 จุดเป็นรายการชื่อใน import หรือ dependency ซึ่งตัวตรวจไม่นับแล้ว อีก 5 จุดรวมเป็น
 helper เดียว) และการซ้อนลึกสุด 10 → 7 ส่วน default gate รัน installer smoke เองเมื่อแก้ไฟล์ที่
 พิมพ์ output ของ CLI
@@ -142,7 +147,7 @@ helper เดียว) และการซ้อนลึกสุด 10 → 
 ## งานระยะยาวที่เหลือ
 
 1. กลับทิศ dependency เพื่อตัดวงระหว่าง runtime แล้วจึงแยก `foundation.mjs`
-2. ลด type error 251 จุดที่เหลือทีละโดเมน แล้วเปิด `strict` ในโดเมนที่สะอาดแล้ว
+2. type error เหลือ 0 แล้ว (PR ถัดจาก #16); ขั้นต่อไปคือเปิด `strict` ทีละโดเมน
 3. ลดไฟล์ที่ยังเกิน 1,000 บรรทัดให้ต่ำกว่าเพดาน แล้วลดเพดานเป็น 800
 4. ลดไฟล์ที่ซ้อนเกิน 5 ชั้น (39 ไฟล์ ลึกสุด 7) ส่วนใหญ่เป็น object literal ใน factory
 5. เขียน row ใน `.claude/tests/README.md` ให้ไฟล์เทสต์ 163 ไฟล์ใน `quality/baselines/test-readme-v1.json`

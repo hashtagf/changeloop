@@ -573,6 +573,7 @@ export function createPacketRuntime({
     const providers = compactList(providerRows, 30);
     const claimPayload = packetClaimRows(claims, packetType);
     const reviewTier = reviewPolicy(id, state, contract).tier || null;
+    /** @type {Record<string, any>} */
     const packet = {
       version: Number(PACKET_SCHEMA_VERSION),
       packetType, changeId: id, intent: state.intent, schema: state.schema,
@@ -649,13 +650,14 @@ export function createPacketRuntime({
         // The control workspace may hold the contract without being a selected
         // product repository. This empty inspection grants no product scope.
         baseHead: repositoryBaseHead({ id: "root" }, state),
-        paths: []
+        paths: [], pathCount: 0, truncated: false
       });
     if (reviewArtifactManifest.length) changedSurface.inspection.push({
       repositoryId: "contract",
       workspacePath: activePath,
       baseHead: null,
-      paths: reviewArtifactManifest.map((row) => row.relativePath)
+      paths: reviewArtifactManifest.map((row) => row.relativePath),
+      pathCount: reviewArtifactManifest.length, truncated: false
     });
     const packet = {
       version: Number(REVIEW_PACKET_SCHEMA_VERSION),
@@ -717,6 +719,7 @@ export function createPacketRuntime({
   }
 
   function packetForRequest(id, flags) {
+    /** @type {Record<string, any>} */
     const value = flags.phase === "review"
       ? reviewPacketValue(id) : packetValue(id, flags.repo || null, flags.task || null);
     if (flags.phase !== "review")

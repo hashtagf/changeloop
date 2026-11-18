@@ -55,7 +55,6 @@ export function createProofRepairStops(ctx) {
     // An unchanged coding repair cycle is a strategy change for the agent, not
     // a user decision; the advance recovery ladder counts repetitions.
     const stall = noProgress ? noProgressRepair({
-      changeId: id,
       phase: "prove",
       gate,
       progress,

@@ -29,7 +29,7 @@ function headingIndex(document) {
 
 // Splits one markdown file into { key: body } by level-2 headings. A body is
 // the exact text between its heading line and the next heading line.
-export function splitProse(document, text, { language, file = `${document}.md` } = {}) {
+export function splitProse(document, text, /** @type {{ language?: string, file?: any }} */ { language, file = `${document}.md` } = {}) {
   const index = headingIndex(document);
   const accepted = OUTLINE[document]
     .filter((row) => row.owner === "author")

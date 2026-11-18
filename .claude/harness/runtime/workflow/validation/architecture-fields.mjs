@@ -61,7 +61,7 @@ export function validateBoundaries(value, path = "boundaries") {
   return issues;
 }
 
-export function renderBoundaries(value, { language } = {}) {
+export function renderBoundaries(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (absenceKind(value) === "reasoned") return text(value);
   if (!Array.isArray(value) || value.length === 0) return "";
   const l = labels(language);
@@ -104,7 +104,7 @@ export function validateTenancy(value, path = "tenancy") {
   return issues;
 }
 
-export function renderTenancy(value, { language } = {}) {
+export function renderTenancy(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const lines = [];
@@ -151,7 +151,7 @@ export function validateDomain(value, path = "domain") {
   return issues;
 }
 
-export function renderDomain(value, { language } = {}) {
+export function renderDomain(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const parts = [];

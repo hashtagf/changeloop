@@ -30,7 +30,7 @@ const AUTHORITY_RUN = /\b(?:cloop|foundation\.mjs)\s+authority(?:-|\s+)run\b/;
 const quote = (value) => `'${String(value).replaceAll("'", "'\\''")}'`;
 const ID = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 
-function execute(command, args, { cwd, env, input, signal, timeout = 10000 } = {}) {
+function execute(command, args, /** @type {{ cwd?: any, env?: any, input?: any, signal?: any, timeout?: number }} */ { cwd, env, input, signal, timeout = 10000 } = {}) {
   return new Promise((done, reject) => {
     const child = spawn(command, args, { cwd, env, signal, stdio: ["pipe", "pipe", "pipe"] });
     let stdout = "", stderr = "", failure;
@@ -95,6 +95,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   };
 
   const environment = (ctx, base = process.env) => {
+    /** @type {NodeJS.ProcessEnv} */
     const env = { ...base, CLAUDE_PROJECT_DIR: root,
       CLAUDE_FOUNDATION_PROJECT: root, FOUNDATION_HOST: "pi",
       FOUNDATION_SESSION_ID: ctx.sessionManager.getSessionId(),

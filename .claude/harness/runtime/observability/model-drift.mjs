@@ -66,7 +66,7 @@ export function resolveFamily(modelId, policy) {
 }
 
 /** Compare the planned model tier against the model the host actually ran. */
-export function classifyDrift({ requestedTier, actualModelId, actualFamily, policy } = {}) {
+export function classifyDrift(/** @type {{ requestedTier?: any, actualModelId?: any, actualFamily?: any, policy?: any }} */ { requestedTier, actualModelId, actualFamily, policy } = {}) {
   const requested = typeof requestedTier === "string" ? requestedTier : null;
   const families = tierFamilies(policy);
   const requestedFamily = requested ? families.get(requested) ?? null : null;

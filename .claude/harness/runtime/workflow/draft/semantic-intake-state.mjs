@@ -145,7 +145,7 @@ function invalidatedIdentity(previous) {
 // ledger. Calling it without an action records draft movement and makes a stale
 // ASK_USER/EDIT result impossible to replay. Calling it with an action records
 // the newly inspected frontier against the exact draft bytes and resume route.
-export function reduceSemanticIntakeState(previous, {
+export function reduceSemanticIntakeState(previous, /** @type {{ draft?: any, action?: any, resumeRoute?: any, sourceInventory?: any, effectiveness?: any }} */ {
   draft, action = null, resumeRoute, sourceInventory = null, effectiveness = null
 } = {}) {
   const route = text(resumeRoute || action?.resume);

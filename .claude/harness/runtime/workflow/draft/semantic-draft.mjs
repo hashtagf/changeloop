@@ -72,7 +72,7 @@ function readableScenarioIssues(requirement, operation, label, issues) {
       issues.push(`${at}.name repeats WHEN; use a short title and keep the trigger in 'when'`);
     else if (name && name.length > 80)
       issues.push(`${at}.name is longer than 80 characters; shorten it to a title`);
-    const fields = [
+    /** @type {Array<[string, string[]]>} */ const fields = [
       ["given", textList(scenario.given)], ["when", [when]],
       ["then", [text(scenario.then) || text(scenario.outcome)]], ["and", textList(scenario.and)]
     ];

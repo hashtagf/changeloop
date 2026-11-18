@@ -129,7 +129,7 @@ export function validateNfr(value, path = "nfr") {
   return issues;
 }
 
-export function renderNfr(value, { language } = {}) {
+export function renderNfr(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!Array.isArray(value) || value.length === 0) return "";
   const l = labels(language);
   return table(
@@ -164,7 +164,7 @@ export function validateThreatModel(value, path = "threatModel") {
   return issues;
 }
 
-export function renderThreatModel(value, { language } = {}) {
+export function renderThreatModel(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const parts = [];
@@ -201,7 +201,7 @@ export function validateObservability(value, path = "observability") {
   return issues;
 }
 
-export function renderObservability(value, { language } = {}) {
+export function renderObservability(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const parts = [];
@@ -229,7 +229,7 @@ export function validateTrackingPlan(value, path = "trackingPlan") {
   return issues;
 }
 
-export function renderTrackingPlan(value, { language } = {}) {
+export function renderTrackingPlan(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!Array.isArray(value) || value.length === 0) return "";
   const l = labels(language);
   return table(
@@ -252,7 +252,7 @@ export function validateCapacity(value, path = "capacity") {
   return issues;
 }
 
-export function renderCapacity(value, { language } = {}) {
+export function renderCapacity(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const rows = CAPACITY_FIELDS.filter((field) => present(value[field]))

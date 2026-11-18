@@ -23,7 +23,7 @@ export function createPreviewRuntime({
   root, runtimeDir, previewsDir, loadRuntime, evidence, providerCapability,
   copyWorkspace, now, fail, spawn = spawnSync
 }) {
-  function runPreview(id, { provider, decisionRef = null } = {}) {
+  function runPreview(id, /** @type {{ provider?: any, decisionRef?: any }} */ { provider, decisionRef = null } = {}) {
     if (!existsSync(join(runtimeDir, `${id}.json`))) fail(`preview: unknown change '${id}'`);
     if (!provider) fail("preview requires --provider <name>");
     // The name is used in receipt and artifact paths; never let it leave them.

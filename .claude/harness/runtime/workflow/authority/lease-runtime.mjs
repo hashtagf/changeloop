@@ -367,7 +367,7 @@ export function createLeaseRuntime({
   readJson,
   writeJson,
   now,
-  observedTaskSurface = () => [],
+  observedTaskSurface = (_id, _task) => [],
   fail,
   // Parallel workers release at nearly the same moment and the critical
   // section is a few file writes, so contention waits briefly instead of

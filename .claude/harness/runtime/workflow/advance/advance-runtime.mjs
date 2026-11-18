@@ -516,9 +516,9 @@ export function createAdvanceRuntime({
           if (["proven", "applied", "archived"].includes(initial.status)) stage = "land";
           if (initial.advanceRecovery?.pending?.paused)
             return pendingAction(id, through, initial.advanceRecovery.pending);
-          if (await recoverArchive(id)) return done(id, "archived", through);
+          if (await recoverArchive(id)) return done(id, "archived");
         }
-        if (initial.status === "archived") return done(id, "archived", through);
+        if (initial.status === "archived") return done(id, "archived");
         if (initial.workspace?.amendmentReplay) {
           if (initial.advanceRecovery?.pending?.paused)
             return pendingAction(id, through, initial.advanceRecovery.pending);
@@ -580,7 +580,7 @@ export function createAdvanceRuntime({
         const automation = { wiringAttempted: false };
         while (true) {
           const completed = reached(id, through);
-          if (completed) return done(id, completed, through);
+          if (completed) return done(id, completed);
           let value = through === "archived" && landableGrant(id)
             ? { action: "WORKING", legacyAction: "LAND_READY", actor: "harness",
               reason: "explicit Land authority accepts the current assurance" }
@@ -592,7 +592,7 @@ export function createAdvanceRuntime({
           }
           if (through === "build" && ["RUN_PROOF", "WIRE_EVIDENCE", "LAND_READY"].includes(value.legacyAction)) {
             recordActivePhase("build");
-            return done(id, "build", through);
+            return done(id, "build");
           }
           const phase = phaseForAction(value);
           recordActivePhase(phase);
@@ -634,7 +634,7 @@ export function createAdvanceRuntime({
           // those retired paths after the authoritative lifecycle reached its
           // target; the archived proof already retains its durable identity.
           const completedAfterOperation = reached(id, through);
-          if (completedAfterOperation) return done(id, completedAfterOperation, through);
+          if (completedAfterOperation) return done(id, completedAfterOperation);
           // An operation is the authoritative source for its own boundary.
           // Consume it before consulting projections, otherwise quiet proof or
           // Land composition can discard a decision and repeat the operation.

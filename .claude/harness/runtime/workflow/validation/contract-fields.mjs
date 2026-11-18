@@ -271,7 +271,7 @@ function apiOperation(row, l) {
   return parts.join("\n\n");
 }
 
-export function renderApiContracts(value, { language } = {}) {
+export function renderApiContracts(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!Array.isArray(value) || value.length === 0) return "";
   const l = labels(language);
   return value.filter(isObject).map((row) => apiOperation(row, l)).join("\n\n");
@@ -316,7 +316,7 @@ function eventContract(row, l) {
   return body ? `${heading}\n\n${body}` : heading;
 }
 
-export function renderEventContracts(value, { language } = {}) {
+export function renderEventContracts(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!Array.isArray(value) || value.length === 0) return "";
   const l = labels(language);
   return value.filter(isObject).map((row) => eventContract(row, l)).join("\n\n");
@@ -511,7 +511,7 @@ function recoveryText(value, l) {
   return lines ? `**${l.recovery}:**\n\n${lines}` : "";
 }
 
-export function renderDataModel(value, { language } = {}) {
+export function renderDataModel(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!present(value)) return "";
   const l = labels(language);
   const { entities, model } = dataModelParts(value);
@@ -600,7 +600,7 @@ function validationPlanText(value, l) {
   return `**${l.validationPlan}:** ${line}`;
 }
 
-export function renderUi(value, { language } = {}) {
+export function renderUi(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const states = Array.isArray(value.states) ? value.states.filter(isObject) : [];
@@ -636,7 +636,7 @@ export function validateConfigContract(value, path = "configContract") {
   return issues;
 }
 
-export function renderConfigContract(value, { language } = {}) {
+export function renderConfigContract(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!Array.isArray(value) || value.length === 0) return "";
   const l = labels(language);
   return table(

@@ -316,7 +316,7 @@ function projectLessonsSeed(projectRoot, fs) {
     bestEffort(() => fs.stat(resolve(projectRoot, path)).isFile(), false));
 }
 
-export function inspectRepositoryIntelligence({
+export function inspectRepositoryIntelligence(/** @type {{ projectRoot?: string, query?: any[], seedPaths?: any[], excludedDirectories?: any, trackedPaths?: any[], includedPaths?: any, excludedPaths?: any[], managedPaths?: any, limits?: any, fs?: any }} */ {
   projectRoot,
   query = [],
   seedPaths = [],
@@ -353,7 +353,7 @@ export function inspectRepositoryIntelligence({
   let upstream = false;
   try { upstream = Boolean(fs.stat?.(resolve(root, "install.sh"))?.isFile?.()); }
   catch { upstream = false; }
-  const managed = upstream ? [] : normalizedPathSet(managedPaths);
+  const managed = upstream ? new Set() : normalizedPathSet(managedPaths);
   const isManaged = (path) => [...managed].some((prefix) =>
     (path === prefix || path.startsWith(`${prefix}/`)) &&
     ![...seeds].some((seed) => seed === path || seed.startsWith(`${path}/`) || path.startsWith(`${seed}/`)));

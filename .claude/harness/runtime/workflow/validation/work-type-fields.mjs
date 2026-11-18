@@ -208,7 +208,7 @@ function incidentPart(value, key) {
   return isObject(value.incident) && present(value.incident[key]) ? value.incident[key] : value[key];
 }
 
-export function renderBugfix(value, { language } = {}) {
+export function renderBugfix(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const blocks = [partTable([
@@ -245,7 +245,7 @@ export function validateRefactor(value, path = "refactor") {
   return issues;
 }
 
-export function renderRefactor(value, { language } = {}) {
+export function renderRefactor(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const steps = Array.isArray(value.steps) && value.steps.length
@@ -284,7 +284,7 @@ export function validateLibraryContract(value, path = "libraryContract") {
   return issues;
 }
 
-export function renderLibraryContract(value, { language } = {}) {
+export function renderLibraryContract(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const blocks = [partTable([
@@ -317,7 +317,7 @@ export function validateMigrationPlan(value, path = "migrationPlan") {
   return issues;
 }
 
-export function renderMigrationPlan(value, { language } = {}) {
+export function renderMigrationPlan(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const parity = isObject(value.parity)
@@ -372,7 +372,7 @@ function integrationDetail(row, l) {
   ], l);
 }
 
-export function renderIntegrations(value, { language } = {}) {
+export function renderIntegrations(value, /** @type {{ language?: string }} */ { language } = {}) {
   const rows = (Array.isArray(value) ? value : []).filter(isObject);
   if (!rows.length) return "";
   const l = labels(language);
@@ -406,7 +406,7 @@ export function validatePerformanceAnalysis(value, path = "performanceAnalysis")
   return issues;
 }
 
-export function renderPerformanceAnalysis(value, { language } = {}) {
+export function renderPerformanceAnalysis(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const baseline = isObject(value.baseline)
@@ -496,7 +496,7 @@ export function validateDataFix(value, path = "dataFix") {
   return issues;
 }
 
-export function renderDataFix(value, { language } = {}) {
+export function renderDataFix(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   return partTable([
@@ -512,7 +512,7 @@ export function validateHardening(value, path = "hardening") {
   return issues;
 }
 
-export function renderHardening(value, { language } = {}) {
+export function renderHardening(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   return partTable([
@@ -527,7 +527,7 @@ export function validatePipelinePlan(value, path = "pipelinePlan") {
   return issues;
 }
 
-export function renderPipelinePlan(value, { language } = {}) {
+export function renderPipelinePlan(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   return partTable([
@@ -567,7 +567,7 @@ function dependencyTable(row, l) {
   ], l);
 }
 
-export function renderDependencyChange(value, { language } = {}) {
+export function renderDependencyChange(value, /** @type {{ language?: string }} */ { language } = {}) {
   const l = labels(language);
   if (Array.isArray(value)) {
     const rows = value.filter((row) => isObject(row) && present(row));
@@ -591,7 +591,7 @@ export function validateDeprecationPlan(value, path = "deprecationPlan") {
   return issues;
 }
 
-export function renderDeprecationPlan(value, { language } = {}) {
+export function renderDeprecationPlan(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   return [partTable([
@@ -613,7 +613,7 @@ export function validateInfraPlan(value, path = "infraPlan") {
   return issues;
 }
 
-export function renderInfraPlan(value, { language } = {}) {
+export function renderInfraPlan(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   return [partTable([
@@ -656,7 +656,7 @@ export function validatePrivacyAssessment(value, path = "privacyAssessment") {
   return issues;
 }
 
-export function renderPrivacyAssessment(value, { language } = {}) {
+export function renderPrivacyAssessment(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const blocks = [];
@@ -684,7 +684,7 @@ export function validateExperimentDesign(value, path = "experimentDesign") {
   return issues;
 }
 
-export function renderExperimentDesign(value, { language } = {}) {
+export function renderExperimentDesign(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   return [partTable([
@@ -707,7 +707,7 @@ export function validateReleasePlan(value, path = "releasePlan") {
   return issues;
 }
 
-export function renderReleasePlan(value, { language } = {}) {
+export function renderReleasePlan(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   return [partTable([
@@ -759,7 +759,7 @@ export function validateModelCard(value, path = "modelCard") {
   return issues;
 }
 
-export function renderModelCard(value, { language } = {}) {
+export function renderModelCard(value, /** @type {{ language?: string }} */ { language } = {}) {
   if (!isObject(value) || !present(value)) return "";
   const l = labels(language);
   const model = isObject(value.model) ? pick(value.model, ["provider", "name", "id"]) : value.model;

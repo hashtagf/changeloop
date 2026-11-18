@@ -150,9 +150,9 @@ export function withDerivedRisk(input) {
   const derived = deriveDraftRisk(source);
   const result = { ...source };
   const derivation = { declared: {} };
-  for (const [key, rank, fallback] of [
-    ["impact", IMPACT_RANK, "low"], ["coupling", COUPLING_RANK, "isolated"]
-  ]) {
+  /** @type {Array<[string, Record<string, number>, string]>} */
+  const scales = [["impact", IMPACT_RANK, "low"], ["coupling", COUPLING_RANK, "isolated"]];
+  for (const [key, rank, fallback] of scales) {
     const declared = text(source[key]).toLowerCase() || fallback;
     if (!(declared in rank) || rank[derived[key]] <= rank[declared]) continue;
     derivation.declared[key] = source[key];

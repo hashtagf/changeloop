@@ -441,6 +441,7 @@ export function createTestDiscriminationRuntime({
       for (const job of planned) if (!job.cached) job.outcome = "unavailable";
       return settle();
     }
+    /** @type {import("node:child_process").SpawnSyncOptionsWithStringEncoding} */
     const options = {
       cwd: prepared.tree, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
       timeout: providerTimeoutMs(config),

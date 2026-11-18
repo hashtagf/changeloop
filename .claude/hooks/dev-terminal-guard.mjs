@@ -92,9 +92,10 @@ function pendingTerminalBoundary(changeId, hostBoundary, nextActionFor) {
   };
 }
 
+/** @returns {Record<string, any>} */
 export function evaluateDevTerminal({
   prompt, activeIds, proofFor, currentHash, auditProof,
-  nextActionFor = () => null, hostBoundary = null, selectedChangeId = null,
+  nextActionFor = (_id) => null, hostBoundary = null, selectedChangeId = null,
   archivedThisSession = []
 }) {
   if (!prompt) return { applies: false, complete: true };
@@ -193,7 +194,8 @@ function runCli(root, ...args) {
         FOUNDATION_READ_ONLY_INSPECTION: "1"
       }
     });
-  if (child.error?.code === "ETIMEDOUT" || child.signal) checks.timedOut = true;
+  if (/** @type {NodeJS.ErrnoException | undefined} */ (child.error)?.code === "ETIMEDOUT" || child.signal)
+    checks.timedOut = true;
   return child;
 }
 
@@ -293,6 +295,7 @@ async function main() {
       return child.status === 0 ? String(child.stdout || "").trim().split("\n").at(-1) : "";
     }
   });
+  /** @type {Record<string, any>} */
   const result = {
     ...evaluated,
     ...(checks.timedOut && !evaluated.complete ? {

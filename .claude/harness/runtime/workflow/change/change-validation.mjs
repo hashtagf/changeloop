@@ -491,7 +491,7 @@ export function createChangeValidationRuntime({
     return missing;
   }
 
-  const scaffoldPatterns = [
+  /** @type {Array<[string, RegExp]>} */ const scaffoldPatterns = [
     ["replace-with marker", /replace-with/i],
     ["unresolved clarification", /\[NEEDS CLARIFICATION(?::[^\]]*)?\]/i],
     ["unresolved TODO/TBD", /\b(?:TODO|TBD)\b/],

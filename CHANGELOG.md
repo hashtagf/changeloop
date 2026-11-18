@@ -11,6 +11,9 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Changed
 
+- Review packets give the root and contract inspection rows `pathCount` and
+  `truncated`, like every other inspection row.
+
 - `duplication` ignores bare name lists (import, export, and dependency
   lists repeat names, not logic).
 - `workaround-comments` counts a marker only when it opens the comment or is

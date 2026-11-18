@@ -363,7 +363,7 @@ export function createChangeLifecycle({
         : repositoryPaths.includedPaths.filter((path) => !excluded.has(path)),
       limits: { maxReadSet: 48 }
     });
-    const graph = repository.graph || {};
+    /** @type {Record<string, any>} */ const graph = repository.graph || {};
     const surfaces = graph.surfaces || {};
     const depth = planSemanticIntakeDepth(source, { repository: {
       candidateFileCount: repository.candidates?.length || 0,

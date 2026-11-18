@@ -52,7 +52,7 @@ const productPaths = (paths) => (Array.isArray(paths) ? paths : [])
  * whose verify only runs no-op or lint/format/typecheck commands. Tasks rows
  * carry { semanticKey|key|id, verify, paths }.
  */
-export function verifyShapeIssues(tasks, { workTypes, label = "task" } = {}) {
+export function verifyShapeIssues(tasks, /** @type {{ workTypes?: any, label?: string }} */ { workTypes, label = "task" } = {}) {
   if (!behaviorChangingTypes(workTypes)) return [];
   const issues = [];
   (Array.isArray(tasks) ? tasks : []).forEach((task, index) => {
