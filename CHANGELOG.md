@@ -21,6 +21,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Changed
 
+- The website, docs site, demo, dashboard, and Pi team web UI use one type
+  and corner-radius scale (`DESIGN.md`); sizes and radii moved to the nearest
+  step, so some text is slightly larger or smaller and 8px labels are now 9px.
+
 - Review packets give the root and contract inspection rows `pathCount` and
   `truncated`, like every other inspection row.
 
