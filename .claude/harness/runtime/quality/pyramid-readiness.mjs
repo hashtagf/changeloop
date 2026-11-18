@@ -62,15 +62,32 @@ function clear(id, layer, label, capability) {
 
 // A UI criterion applies only to a project with a user interface; without one
 // it is not applicable, which is neither measured nor listed.
+function uiOutsideScope(facts) {
+  if (facts === undefined || facts === null) return { status: "unmeasured", detail: "UI surface not read" };
+  return facts.present ? null : { status: "not-applicable", detail: "no user interface" };
+}
+
 function ui(id, layer, label, field, next) {
   return {
     id, layer, label,
-    evaluate: ({ ui: facts }) => facts === undefined || facts === null
-      ? { status: "unmeasured", detail: "UI surface not read" }
-      : !facts.present ? { status: "not-applicable", detail: "no user interface" }
-        : facts[field] ? { status: "met", detail: `${facts[field]}` }
-          : { status: "unmet", detail: `UI (${facts.framework || `${facts.uiFiles} UI file(s)`}) without it`, next }
+    evaluate: ({ ui: facts }) => uiOutsideScope(facts) || (facts[field] ? { status: "met", detail: `${facts[field]}` }
+      : { status: "unmet", detail: `UI (${facts.framework || `${facts.uiFiles} UI file(s)`}) without it`, next })
   };
+}
+
+const TOKENS_NEXT = "define colors, type, and spacing once (a tokens file, CSS custom properties, or the Tailwind " +
+  "config) and reference them; skill ux-ui-principles drafts DESIGN.md and tokens from the code";
+
+// Tokens are met only when colors actually go through them: a token source
+// alone, with colors still written inline beside it, is not.
+function tokensVerdict(facts) {
+  const { source, rawColors = 0, rawColorFiles = [] } = facts.tokens || {};
+  if (!source) return { status: "unmet", detail: "no design-token source", next: TOKENS_NEXT };
+  if (rawColors === 0) return { status: "met", detail: `${source}; no color written outside a token` };
+  return { status: "unmet", detail: `${rawColors} color literal(s) outside token definitions: ${
+    rawColorFiles.slice(0, 3).map((row) => `${row.path} ${row.count}`).join(", ")}`,
+  next: "move each color into a named token (one per role, near-duplicates merged with the owner's approval) " +
+    "and reference it with var(); skill ux-ui-principles extracts the palette from the code" };
 }
 
 function rate(numerator, denominator) {
@@ -96,9 +113,8 @@ export const CRITERIA = Object.freeze([
         : { status: "unmet", detail: featureMap ? `${featureMap.features} feature(s), ${featureMap.issues || 0} issue(s)` : "no feature map",
           next: "onboard the project (skill: onboard) to draft openspec/feature-map.json, then cloop features --strict" }
   },
-  ui("ui-tokens", "codebase", "UI values come from design tokens", "tokens",
-    "define colors, type, and spacing once (a tokens file, CSS custom properties in a theme file, or the Tailwind config) " +
-    "and reference them; skill ux-ui-principles drafts DESIGN.md and tokens from the code"),
+  { id: "ui-tokens", layer: "codebase", label: "UI colors come from design tokens",
+    evaluate: ({ ui: facts }) => uiOutsideScope(facts) || tokensVerdict(facts) },
   lane("lint", "static", "Lint findings ratchet", "lint"),
   clear("lint-clear", "static", "No lint findings remain", "lint"),
   lane("type-check", "static", "Type findings ratchet", "type-check"),
@@ -107,7 +123,7 @@ export const CRITERIA = Object.freeze([
   clear("workaround-comments-clear", "static", "No stopgap comments remain", "workaround-comments"),
   ui("ui-a11y-lint", "static", "An accessibility lint covers the UI", "a11yLint",
     "add the framework's accessibility lint (eslint-plugin-jsx-a11y, eslint-plugin-vuejs-accessibility, " +
-    "svelte-check, @angular-eslint template rules, or Biome) to the lint lane"),
+    "svelte-check, @angular-eslint template rules, @html-eslint for plain HTML, or Biome) to the lint lane"),
   {
     id: "tests", layer: "verification", label: "A test lane proves behavior",
     evaluate: (/** @type {{ lanes?: Record<string, string> }} */ { lanes = {} }) => lanes.test && lanes.test !== "no-lane"

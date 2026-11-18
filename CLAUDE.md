@@ -70,7 +70,8 @@ stale evidence. Change Loop makes completion content-bound and resumable:
 | Current scenario/release status | `docs/reports/user-scenario-release-status.md` |
 | Scenario acceptance portfolio | `docs/reports/user-scenario-test-plan.md` |
 | Release procedure | `RELEASING.md` |
-| Advisory review rules and severity | `REVIEW.md` |
+| Advisory review rules and severity | `DESIGN.md` | Visual rules for the repository's own interfaces (landing, docs site, demo, dashboard, Pi team web UI, examples): surfaces, color tokens, accessibility lint | A surface's tokens, palette, or visual rules change | Consumer-facing design guidance and product contracts |
+| `REVIEW.md` |
 | Code and policy owners | `.github/CODEOWNERS` |
 | Incidents and durable lessons | `openspec/incidents/`, `openspec/lessons.md` |
 

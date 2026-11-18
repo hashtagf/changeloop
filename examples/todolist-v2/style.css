@@ -1,5 +1,11 @@
 /* ── Design tokens ── */
 :root {
+  /* palette: colors used below, named by hue and lightness */
+  --black: #000000;
+  --gray-50: #ede9fe;
+  --red-450: #ec4899;
+  --violet-550: #7c3aed;
+
   --priority-high: #EF4444;
   --priority-med:  #F59E0B;
   --priority-low:  #22C55E;
@@ -54,7 +60,7 @@ body {
   align-items: flex-start;
   gap: 8px;
   padding: 10px 16px;
-  background: rgba(220, 38, 38, 0.10);
+  background: color-mix(in srgb, var(--error) 10%, transparent);
   border-left: 3px solid var(--error);
   color: var(--error);
   font-size: 0.875rem;
@@ -103,7 +109,7 @@ body {
   font-size: clamp(1.5rem, 5vw, 2.25rem);
   font-weight: 800;
   letter-spacing: -0.5px;
-  background: linear-gradient(135deg, var(--accent) 0%, #EC4899 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--red-450) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -134,7 +140,7 @@ body {
 
 .btn--accent {
   background: var(--accent);
-  color: #fff;
+  color: var(--surface);
 }
 
 .btn--accent:hover {
@@ -162,7 +168,7 @@ body {
 
 .btn--sort[aria-pressed="true"] {
   background: var(--accent);
-  color: #fff;
+  color: var(--surface);
   border-color: var(--accent);
 }
 
@@ -173,7 +179,7 @@ body {
 
 .btn--sort[aria-pressed="true"]:hover {
   background: var(--accent-dark);
-  color: #fff;
+  color: var(--surface);
 }
 
 .btn--icon {
@@ -205,7 +211,7 @@ body {
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--black) 6%, transparent);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -298,7 +304,7 @@ body {
   border: 1px solid var(--border);
   padding: 12px 16px;
   margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--black) 4%, transparent);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -350,7 +356,7 @@ body {
   background: var(--surface);
   color: var(--accent);
   font-weight: 700;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.10);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--black) 10%, transparent);
 }
 
 /* ── Tag filter ── */
@@ -429,19 +435,19 @@ body {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--black) 4%, transparent);
   transition: box-shadow 0.15s ease, opacity 0.15s ease;
   /* Slide-in animation for new items */
   animation: slide-in 0.2s ease;
 }
 
 .todo-item:hover {
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--black) 8%, transparent);
 }
 
 .todo-item.completed {
   /* Use explicit muted colour instead of opacity to maintain accessible contrast */
-  background: #F9FAFB;
+  background: var(--bg);
 }
 
 /* ── Checkbox ── */
@@ -484,7 +490,7 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #fff;
+  color: var(--surface);
   flex-shrink: 0;
 }
 
@@ -533,8 +539,8 @@ body {
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  background: #EDE9FE;
-  color: #7C3AED;
+  background: var(--gray-50);
+  color: var(--violet-550);
 }
 
 /* ── Item actions ── */
