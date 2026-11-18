@@ -654,8 +654,8 @@
       },
       "phase": "cross-phase",
       "summary": {
-        "en": "Per-layer readiness (codebase, static checks, verification, prose, review) of the user project, the same criteria Change Loop's own scorecard uses, with the next step for the weakest layer.",
-        "th": "ความพร้อมของโปรเจกต์ผู้ใช้แยกตามชั้น (ตัวโค้ด, ตัวตรวจอัตโนมัติ, เทสต์, เอกสาร, คนรีวิว) ด้วยเกณฑ์เดียวกับ scorecard ของ Change Loop เอง พร้อมขั้นต่อไปของชั้นที่อ่อนที่สุด"
+        "en": "Per-layer readiness (codebase, static checks, verification, prose, review) of the user project, the same criteria Change Loop's own scorecard uses, with the next step for the weakest layer; a project with a user interface also gets UI rows (tokens, accessibility lint, rendered and accessibility checks, DESIGN.md).",
+        "th": "ความพร้อมของโปรเจกต์ผู้ใช้แยกตามชั้น (ตัวโค้ด, ตัวตรวจอัตโนมัติ, เทสต์, เอกสาร, คนรีวิว) ด้วยเกณฑ์เดียวกับ scorecard ของ Change Loop เอง พร้อมขั้นต่อไปของชั้นที่อ่อนที่สุด; โปรเจกต์ที่มีหน้าจอได้เกณฑ์ UI เพิ่ม (design token, lint ด้าน a11y, ตรวจหน้าจอจริงและ a11y, DESIGN.md)"
       },
       "slashCommands": [],
       "cliCommands": [
@@ -668,6 +668,7 @@
         ".claude/harness/runtime/quality/rule-registry.mjs",
         ".claude/harness/runtime/quality/guide-rules.mjs",
         ".claude/harness/runtime/quality/incident-records.mjs",
+        ".claude/harness/runtime/quality/ui-readiness.mjs",
         ".claude/harness/runtime/composition/pyramid-readiness-command.mjs"
       ],
       "tests": [

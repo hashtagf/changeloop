@@ -47,6 +47,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
   with `excludes`) and the screenshot and `visual` providers it needs, and a
   strict selection without that wiring is a draft issue carrying the snippet,
   instead of an `inconclusive` visual check at Prove.
+- `quality readiness` adds five UI rows for a project with a user interface:
+  design tokens, an accessibility lint, a rendered browser check, an
+  accessibility check on rendered pages, and one `DESIGN.md`; `onboard`
+  proposes what each unmet row needs. Projects without a UI see none.
 - `quality readiness`: per-layer pyramid readiness of the project (codebase,
   static, verification, prose, review) with the next step for the weakest
   layer; `doctor` shows it as the `pyramid` setup row, `onboard` drafts

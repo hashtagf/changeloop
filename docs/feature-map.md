@@ -379,9 +379,9 @@ Optional CRAP, mutation, lint, type-check, file-size, and module-boundary checks
 
 **Phase:** cross-phase
 
-Per-layer readiness (codebase, static checks, verification, prose, review) of the user project, the same criteria Change Loop's own scorecard uses, with the next step for the weakest layer.
+Per-layer readiness (codebase, static checks, verification, prose, review) of the user project, the same criteria Change Loop's own scorecard uses, with the next step for the weakest layer; a project with a user interface also gets UI rows (tokens, accessibility lint, rendered and accessibility checks, DESIGN.md).
 
-ความพร้อมของโปรเจกต์ผู้ใช้แยกตามชั้น (ตัวโค้ด, ตัวตรวจอัตโนมัติ, เทสต์, เอกสาร, คนรีวิว) ด้วยเกณฑ์เดียวกับ scorecard ของ Change Loop เอง พร้อมขั้นต่อไปของชั้นที่อ่อนที่สุด
+ความพร้อมของโปรเจกต์ผู้ใช้แยกตามชั้น (ตัวโค้ด, ตัวตรวจอัตโนมัติ, เทสต์, เอกสาร, คนรีวิว) ด้วยเกณฑ์เดียวกับ scorecard ของ Change Loop เอง พร้อมขั้นต่อไปของชั้นที่อ่อนที่สุด; โปรเจกต์ที่มีหน้าจอได้เกณฑ์ UI เพิ่ม (design token, lint ด้าน a11y, ตรวจหน้าจอจริงและ a11y, DESIGN.md)
 
 | | |
 |---|---|
@@ -389,7 +389,7 @@ Per-layer readiness (codebase, static checks, verification, prose, review) of th
 | CLI commands | `quality readiness` |
 | User states | — |
 | Runtime groups | — |
-| Code | `.claude/harness/runtime/quality/pyramid-readiness.mjs`, `.claude/harness/runtime/quality/rule-registry.mjs`, `.claude/harness/runtime/quality/guide-rules.mjs`, `.claude/harness/runtime/quality/incident-records.mjs`, `.claude/harness/runtime/composition/pyramid-readiness-command.mjs` |
+| Code | `.claude/harness/runtime/quality/pyramid-readiness.mjs`, `.claude/harness/runtime/quality/rule-registry.mjs`, `.claude/harness/runtime/quality/guide-rules.mjs`, `.claude/harness/runtime/quality/incident-records.mjs`, `.claude/harness/runtime/quality/ui-readiness.mjs`, `.claude/harness/runtime/composition/pyramid-readiness-command.mjs` |
 | Tests | `.claude/harness/tests/pyramid-readiness.test.mjs` |
 | Docs | `.claude/harness/CONSUMER-QUALITY.md`, `website/docs/src/content/docs/consumer-quality.md` |
 

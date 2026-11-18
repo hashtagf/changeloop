@@ -119,6 +119,14 @@ the `pyramid` setup row with the next step for the weakest layer, and Change
 Loop's own repository is scored with the same criteria
 (`runtime/quality/pyramid-readiness.mjs`).
 
+A project with a user interface (a UI framework dependency, or `.tsx`, `.jsx`,
+`.vue`, `.svelte`, `.astro`, or `.html` files outside tests) also gets five UI
+rows, read from its files and every `package.json` (`runtime/quality/ui-readiness.mjs`):
+design tokens (codebase), an accessibility lint (static), a rendered browser
+check and an accessibility check on rendered pages (verification), and one
+`DESIGN.md` (prose). A project without a user interface shows none of them;
+they are not applicable, never unmet.
+
 ## Baseline and debt authority
 
 ```bash

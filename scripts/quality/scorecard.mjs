@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { RULE_LAYERS, ruleRegistrySummary } from "../../.claude/harness/runtime/quality/rule-registry.mjs";
 import { pyramidReadiness } from "../../.claude/harness/runtime/quality/pyramid-readiness.mjs";
 import { incidentSummary } from "../../.claude/harness/runtime/quality/incident-records.mjs";
+import { uiReadinessFacts } from "../../.claude/harness/runtime/quality/ui-readiness.mjs";
 import { enforcedLessons, enforcementKind } from "../../.claude/harness/runtime/observability/lessons-runtime.mjs";
 import { COVERAGE_BASELINE } from "./coverage-ratchet.mjs";
 
@@ -136,6 +137,7 @@ export function repositoryReadiness(root, card) {
     rules: { registered: card.pyramid.rules, prose: card.pyramid.proseOnly.length,
       issues: card.pyramid.registryIssues.length, unregistered: card.pyramid.unregistered.length },
     incidents: incidentSummary(root),
+    ui: uiReadinessFacts(root),
     // Archived-change outcomes live in .foundation state, which CI does not have.
     outcomes: null
   });
@@ -169,7 +171,7 @@ export function markdown(card) {
     "", "| Pyramid readiness | Measured criteria met |", "|---|---|",
     ...card.readiness.layers.map((layer, index) => row(`${index + 1} ${layer.layer}`,
       layer.percent === null ? "unmeasured" : `${layer.percent}% (${layer.met}/${layer.measured}; ${layer.total - layer.measured} unmeasured)`)),
-    ...card.readiness.criteria.filter((row) => row.status !== "met")
+    ...card.readiness.criteria.filter((row) => !["met", "not-applicable"].includes(row.status))
       .map((item) => `- [${item.layer}] ${item.label}: ${item.status}, ${item.detail}`)
   ].join("\n");
 }

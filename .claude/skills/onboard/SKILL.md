@@ -24,9 +24,10 @@ user decides what becomes binding.
 6. Lessons: offer each warned lesson's `adoption.draft` through `/change`.
 7. Rules: draft `quality/rule-enforcement.json` per
    `references/rule-registry-guide.md`; the user confirms each layer.
-8. Verify with `cloop features --strict`, `cloop quality run`, and
+8. UI rows: propose fixes (`references/ui-readiness-guide.md`) via `/change`.
+9. Verify with `cloop features --strict`, `cloop quality run`, and
    `cloop quality readiness --pretty`; report each layer's percent and next step.
-9. Hand a missing or stale `CLAUDE.md`/`AGENTS.md` to `claude-md`.
+10. Hand a missing or stale `CLAUDE.md`/`AGENTS.md` to `claude-md`.
 
 ## Harness
 
@@ -39,3 +40,4 @@ Without Change Loop installed: stop; `cloop init` comes first.
 - `references/feature-map-guide.md` — choosing features and the JSON shape.
 - `references/rule-registry-guide.md` — pyramid layers, what counts as a check,
   and the registry shape.
+- `references/ui-readiness-guide.md` — UI rows.
