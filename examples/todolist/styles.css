@@ -1,6 +1,9 @@
 /* Todolist example — single-column, no framework. */
 
 :root {
+  /* palette: colors used below, named by hue and lightness */
+  --gray-50: #fbecea;
+
   --bg: #f6f7f9;
   --surface: #ffffff;
   --border: #e3e6ea;
@@ -68,7 +71,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 1rem;
-  background: #fff;
+  background: var(--surface);
 }
 
 .new-task input[type="text"]:focus {
@@ -82,7 +85,7 @@ body {
   border: 1px solid var(--accent);
   border-radius: 6px;
   background: var(--accent);
-  color: #fff;
+  color: var(--surface);
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
@@ -155,7 +158,7 @@ body {
 
 .task .delete-btn:hover {
   color: var(--danger);
-  background: #fbecea;
+  background: var(--gray-50);
 }
 
 .empty-state {
@@ -173,7 +176,7 @@ body {
   gap: 12px;
   padding: 12px 20px;
   border-top: 1px solid var(--border);
-  background: #fafbfc;
+  background: var(--bg);
   font-size: 0.85rem;
   color: var(--muted);
   flex-wrap: wrap;
