@@ -61,7 +61,7 @@ export async function checkPages({ pages = PAGES, viewports = VIEWPORTS, root = 
       await tab.addStyleTag({ content: "*,*::before,*::after{animation:none!important;transition:none!important}" });
       await tab.addScriptTag({ content: AXE });
       const result = await tab.evaluate(() => globalThis.axe.run(document,
-        { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] } }));
+        { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"] } }));
       for (const violation of result.violations) {
         const row = { page: page.name, viewport: viewport.name, rule: violation.id, impact: violation.impact,
           detail: `${violation.help}: ${violation.nodes.slice(0, 3).map((node) => node.target.join(" ")).join(", ")}` +

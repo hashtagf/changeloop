@@ -210,6 +210,8 @@ test("UI criteria apply only to a project with a user interface", (t) => {
   const html = project(t, { "index.html": "<main></main>\n", "test/fixture.html": "<p></p>\n" });
   assert.equal(uiReadinessFacts(html).uiFiles, 1, "test fixtures are not UI");
   assert.deepEqual(uiReadinessFacts(project(t, { "src/a.js": "1\n" })), { present: false });
+  assert.equal(uiReadinessFacts(project(t, { "index.html": "<main></main>\n", "uxui.md": "# uxui.md\n" })).design,
+    "uxui.md", "the ux-design skill's uxui.md is the design document");
 });
 
 test("design tokens are met only when no color is written outside a token definition", (t) => {

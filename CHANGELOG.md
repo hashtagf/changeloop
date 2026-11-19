@@ -73,6 +73,19 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- Skill `prd`: writes `PRD.md` in an 18-section template (goal, problem,
+  stories, Given/When/Then acceptance, glossary, rules, Mermaid flows,
+  functional spec, NFR, ADRs and review rounds, scope, dependencies, data and
+  permissions, feature mapping, errors, open questions) with `[Data]` /
+  `[Assumption]` labels; `prd-check.mjs` enforces the sections and the links
+  between stories, criteria, features, and ADRs, and `prd-html.mjs` renders
+  `prd.html` with no dependencies.
+- Skill `ux-design`: UX/UI in confirmed phases (brief, `uxui.md`, a
+  `design-system.html` with every base component, copyable snippets, and a
+  versioned Token Block, then page or feature artifacts with Design QA);
+  `uxui-check.mjs` enforces the sections, labels, base components, verbatim
+  Token Blocks, and Changelog and Artifact Index entries. `quality readiness`
+  counts `uxui.md` as the design document.
 - Built-in accessibility check: a project with no accessibility command gets
   a static read of the markup a change touched (images without alt text,
   unlabelled controls, unnamed buttons and links, missing `lang`, positive

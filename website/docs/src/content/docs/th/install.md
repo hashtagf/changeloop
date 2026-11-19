@@ -115,6 +115,14 @@ cloop doctor --stage change
 `doctor` บอก ร่าง feature map และขอบเขตโมดูล (ถ้าต้องการ) จากโค้ดของคุณ แล้วถามให้คุณยืนยัน
 และถามว่าจะใช้ finding ที่มีวันนี้เป็น baseline ไหม คุณเป็นคนตัดสิน ไม่มีอะไรมีผลบังคับโดยที่คุณไม่รู้
 
+งาน product ที่เริ่มก่อนจะมี change มี skill 2 ตัวที่เขียนข้อมูลตั้งต้นให้ Change Loop ใช้ต่อ `prd`
+เขียน `PRD.md` และ `prd.html` (18 หัวข้อ: goal, user story, acceptance แบบ Given/When/Then,
+business rule, flow, NFR, ADR, scope, data และ permission, error, open question) และตรวจว่า
+แต่ละส่วนอ้างถึงกันครบ PRD ที่อนุมัติแล้วส่งต่อให้ `grill-task-gu` แล้วจึง `/feature` หรือ `/change`
+ส่วน `ux-design` ทำ UX/UI ทีละ phase โดยให้คุณยืนยันทีละขั้น: `uxui.md`, `design-system.html`
+ที่มีเลขเวอร์ชัน และ artifact ของแต่ละหน้าหรือฟีเจอร์ที่ใช้ Token Block ชุดเดียวกัน artifact
+ที่อนุมัติแล้วกลายเป็น `prototypeSelection` ของ change ซึ่งการตรวจภาพจะเทียบ UI ที่สร้างจริงกับมัน
+
 ## Commit การติดตั้ง
 
 ถ้าเป็น Git project installer จะ stage ไฟล์ setup ที่ดูแลให้ แต่จะไม่ commit
