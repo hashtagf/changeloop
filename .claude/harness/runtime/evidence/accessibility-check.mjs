@@ -146,7 +146,10 @@ function walkFiles(root, prefix = "") {
   });
 }
 
-const isMarkup = (path) => MARKUP_EXTENSIONS.includes(extname(path).toLowerCase());
+// Test files hold markup as assertions and fixtures (`/<button>Save<\/button>/`),
+// never as a page a user sees, so they are not judged.
+const TEST_FILE = /(^|\/)(tests?|__tests__|spec|e2e|fixtures?)\/|\.(test|spec)\.[cm]?[jt]sx?$/i;
+export const isMarkup = (path) => MARKUP_EXTENSIONS.includes(extname(path).toLowerCase()) && !TEST_FILE.test(path);
 
 // Changed markup files of one repository with the lines the change added or
 // edited (`null` = every line: a new file, or no Git base to diff against).

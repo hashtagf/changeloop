@@ -111,6 +111,19 @@ test("a copied workspace that is not a Git repository is walked, not skipped", (
   assert.deepEqual(report.findings.map((row) => row.rule), ["control-label"]);
 });
 
+test("test files are not pages: markup in assertions and fixtures is not judged", (t) => {
+  const copy = mkdtempSync(join(tmpdir(), "a11y-tests-"));
+  t.after(() => rmSync(copy, { recursive: true, force: true }));
+  for (const path of ["test/settings.test.mjs", "src/view.spec.tsx", "e2e/flow.js", "__tests__/a.jsx", "src/fixtures/page.html"]) {
+    mkdirSync(dirname(join(copy, path)), { recursive: true });
+    writeFileSync(join(copy, path), "assert.match(html, /<button[^>]*>Save<\\/button>/); const f = '<img src=\"x.png\">';\n");
+  }
+  mkdirSync(join(copy, "src"), { recursive: true });
+  writeFileSync(join(copy, "src", "contest.js"), "export const v = () => '<button></button>';\n");
+  assert.deepEqual([...changedMarkup(copy, null, null).keys()], ["src/contest.js"],
+    "a source file whose name merely contains 'test' is still judged");
+});
+
 test("the command reads the provider repository manifest and fails on findings", (t) => {
   const { root, write, base } = repository(t);
   const manifest = join(root, ".manifest.json");

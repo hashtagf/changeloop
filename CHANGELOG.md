@@ -11,6 +11,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- The built-in accessibility check read test files as pages: a test asserting
+  `/<button>Save<\/button>/` was reported as a button without a name. Test
+  files and fixtures are no longer judged. Found by paid lane 43, where it cost
+  a repair round.
 - Prove refused the visual wiring the start template shows ("provider
   'browser' has no declared claims"): a browser provider whose screenshots
   feed the visual review now covers the prototype-bound claims. Found by paid
