@@ -83,6 +83,12 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- Post-release measurement: a PRD's success metrics are `KPI-nn` rows with a
+  target; `cloop product measure` records an observed value with its source,
+  and `cloop product status` shows each metric met, missed, or unmeasured with
+  its value before and after the feature's release. A hotfix's incident is
+  shown on the product items it owes. The `prd` checker requires `KPI-nn` in
+  section 1.
 - `cloop product status` shows every item of the project's PRD and uxui
   documents as not started, in a change, proven, or archived (grouped by
   feature, with deferrals and their reasons), and names changes compiled

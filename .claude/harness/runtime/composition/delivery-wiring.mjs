@@ -247,7 +247,7 @@ export function composeDeliveryRuntimes({
   const { showFeatures } = createProjectFeaturesCommand({
     root: ROOT, loadRuntime, activeChangePath, canonicalChangedSurface, fail: die
   });
-  const { showProductProgress } = createProductProgressCommand({ root: ROOT, fail: die });
+  const { measureProduct, showProductProgress } = createProductProgressCommand({ root: ROOT, fail: die });
   const abandonRuntime = createAbandonRuntime({
     root: ROOT,
     paths: {
@@ -299,6 +299,6 @@ export function composeDeliveryRuntimes({
   return {
     abandonChange, advanceLand, advanceThrough, advanceValue, command, lessonsValue,
     pyramidReadinessCommand, sessionLeases, showAdvance, showDeliveryAdvance, showFeatures,
-    showFeedback, showLessons, showOutcomes, showProductProgress, undoLand, values
+    showFeedback, showLessons, showOutcomes, showProductProgress, measureProduct, undoLand, values
   };
 }

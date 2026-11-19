@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
@@ -84,4 +84,56 @@ test("strict fails while an item is in no change; a project without documents sa
 
 test("uxui documents contribute screen states and microcopy rows", () => {
   assert.deepEqual(documentItems(UXUI).map((item) => item.id), ["MC-01", "screen:Cart/empty", "screen:Cart/error"]);
+});
+
+test("success metrics: target verdicts, values before and after the feature's release, and sources", async (t) => {
+  const { documentMetrics, targetMet } = await import("../runtime/workflow/validation/product-measures.mjs");
+  const root = fixture(t);
+  write(root, "docs/PRD.md", `${PRD}
+## Success metrics
+| ID | Metric | Target |
+|---|---|---|
+| KPI-01 | Cart conversion (F-01) | ≥ 2.5% |
+| KPI-02 | Refund rate | <= 2% |
+| KPI-03 | Delight | qualitative |
+`);
+  const metrics = documentMetrics(readFileSync(join(root, "docs/PRD.md"), "utf8"));
+  assert.deepEqual(metrics.map((row) => [row.id, row.target]), [
+    ["KPI-01", { op: "≥", value: 2.5, unit: "%" }], ["KPI-02", { op: "≤", value: 2, unit: "%" }], ["KPI-03", null]]);
+  assert.equal(targetMet({ op: "≥", value: 2.5 }, 2.5), true);
+  assert.equal(targetMet(null, 3), null);
+  const failures = [];
+  const command = createProductProgressCommand({ root, log: () => {}, fail: (message) => failures.push(message) });
+  command.measureProduct("KPI-01", { value: "1.9", source: "GA4 funnel Oct", at: "2026-10-20" });
+  command.measureProduct("KPI-01", { value: "2.8", source: "GA4 funnel Nov", at: "2026-11-10" });
+  command.measureProduct("KPI-02", { value: "3", source: "refund export", at: "2026-11-10" });
+  command.measureProduct("KPI-01", { value: "abc", source: "x" });
+  command.measureProduct("KPI-01", { value: "2", source: " " });
+  command.measureProduct("KPI-09", { value: "2", source: "x" });
+  assert.deepEqual(failures, ["product measure: --value must be a number",
+    "product measure: --source must name where the value came from (a dashboard, query, or export)",
+    "KPI-09 is not a success metric (KPI-nn) in any product document"]);
+  const [doc] = productProgress(root).documents;
+  const byId = Object.fromEntries(doc.metrics.map((row) => [row.id, row]));
+  assert.equal(byId["KPI-01"].status, "met");
+  assert.equal(byId["KPI-01"].released, "2026-11-01", "F-01 was archived by the cart change");
+  assert.deepEqual([byId["KPI-01"].before.value, byId["KPI-01"].after.value], [1.9, 2.8]);
+  assert.equal(byId["KPI-02"].status, "missed");
+  assert.equal(byId["KPI-03"].status, "unmeasured");
+  const lines = productProgressLines(productProgress(root)).join("\n");
+  assert.match(lines, /Success metrics: 1 met, 1 missed, 1 unmeasured/);
+  assert.match(lines, /KPI-01 .* 2\.8 on 2026-11-10 \(GA4 funnel Nov\): met; 1\.9 before the 2026-11-01 release, 2\.8 after/);
+});
+
+test("a hotfix's incident is shown on the items it owes", async (t) => {
+  const { handoffRecordFor } = await import("../runtime/workflow/validation/handoff-binding.mjs");
+  const root = fixture(t);
+  const hotfix = handoffRecordFor(root, { bugfix: { incident: { link: "INC-212" } },
+    requirements: [{ description: "AC-01 caps at stock again", scenarios: [{ name: "AC-01", when: "x", then: "y" }] }] },
+  { prd: "docs/PRD.md", scope: ["F-01"] });
+  assert.equal(hotfix.incident, "INC-212");
+  write(root, "openspec/changes/archive/2026-11-12-stock-hotfix/handoff.json", hotfix);
+  const item = productProgress(root).documents[0].items.find((row) => row.id === "AC-01");
+  assert.ok(item.owedBy.some((row) => row.change === "stock-hotfix" && row.incident === "INC-212"));
+  assert.match(productProgressLines(productProgress(root)).join("\n"), /AC-01 .*stock-hotfix \(archived, fixes incident INC-212\)/);
 });

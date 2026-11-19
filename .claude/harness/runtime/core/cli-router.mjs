@@ -43,6 +43,7 @@ export async function routeRuntimeCommand(command, values, api) {
     showLessons,
     showFeatures,
     showProductProgress,
+    measureProduct,
     showPackage,
     showPreview,
     execObserved,
@@ -456,6 +457,13 @@ export async function routeRuntimeCommand(command, values, api) {
       });
       if (rest.length) die("product status takes no positional arguments; use --document <path>");
       showProductProgress(flags);
+    },
+    "product-measure": async () => {
+      const { flags, rest } = parseStrictCommandFlags(values, "product measure", {
+        boolean: ["pretty"], value: ["value", "source", "at", "unit", "note", "document"]
+      });
+      if (rest.length !== 1) die("product measure requires exactly one success metric id (KPI-nn)");
+      measureProduct(rest[0], flags);
     },
     "package": async () => {
       const { flags, rest } = parseStrictCommandFlags(values, "package", { boolean: ["pretty"] });

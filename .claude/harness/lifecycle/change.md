@@ -797,7 +797,15 @@ them. Every amendment rebuilds the proposal's coverage table from the record
 and the amended packet, so it names where each owed item is now cited.
 `cloop product status` reads every packet's record and shows each item of the
 documents as not started, in a change, proven, or archived, so an item no
-change picked up stays visible; `--strict` fails while one is left. A document in another shape is converted with the `prd` or `ux-design`
+change picked up stays visible; `--strict` fails while one is left. A hotfix
+(`bugfix.incident.link`) that names the documents shows its incident on the
+items it owes. After a release, `cloop product measure KPI-nn --value <n>
+--source <ref>` records a success metric's observed value in
+`openspec/product-measurements.jsonl` (project-owned, committed); the status
+then shows each `KPI-nn` row's target, latest value, met or missed, and its
+value before and after the last archived change of the feature it names. A
+value without a source is refused, a metric with none recorded stays
+unmeasured, and a target with no comparison gets no verdict. A document in another shape is converted with the `prd` or `ux-design`
 skill's import step first; the PRD's Definition of Done is project-level and
 not owed by a single change.
 

@@ -68,6 +68,7 @@ export function prdFindings(text) {
   if (body(14) && !ids(body(14), "DEP").size) findings.push("section 14 names no dependency (DEP-nn)");
   if (body(15) && !ids(body(15), "PERM").size) findings.push("section 15 names no permission row (PERM-nn)");
   if (body(15) && !ids(body(15), "DATA").size) findings.push("section 15 names no data entity (DATA-nn)");
+  if (body(1) && !ids(body(1), "KPI").size) findings.push("section 1 names no success metric (KPI-nn)");
   if (!/^\s*-\s*\[[ x]\]/m.test(body(4))) findings.push("section 4 has no Definition of Done checklist (- [ ])");
   if (!/\|/.test(body(15)) || !/permission|สิทธิ์|role/i.test(body(15)))
     findings.push("section 15 has no permission matrix");

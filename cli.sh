@@ -110,7 +110,7 @@ run_runtime() {
   local phase=""
   case "${1:-}" in
     investigate) phase="investigate" ;;
-    new|start|resolve|amend|revise|validate|audit-change|abandon|waive|evidence-detect|evidence-init|evidence-doctor|quality-discover|quality-init|quality-doctor|quality-readiness|product-status|preview) phase="change" ;;
+    new|start|resolve|amend|revise|validate|audit-change|abandon|waive|evidence-detect|evidence-init|evidence-doctor|quality-discover|quality-init|quality-doctor|quality-readiness|product-status|product-measure|preview) phase="change" ;;
     sandbox|agent-plan|agent-dispatch|agent-acquire|agent-release) phase="build" ;;
     proof-plan|proof-readiness|proof-advance|proof-run|proof-collect|proof-preflight|proof-execute|proof-audit|prove|receipt|run-provider|evidence-verify-ci|authority-request|authority-dispatch|authority-run|authority-abort|authority-status|authority-record|authority-reset-infra|authority-reset-base-move|authority-extend-review|quality-run|quality-report|quality-baseline|quality-debt) phase="prove" ;;
     handoff-list|handoff-status|handoff-packet|handoff-record|land-check|land-advance|land-recover|land-plan|land-resume|archive) phase="land" ;;
@@ -358,7 +358,8 @@ case "${1:-}" in
     sub="${1:-}"; [ "$#" -gt 0 ] && shift
     case "$sub" in
       status) run_runtime read product-status "$@" ;;
-      *) fail "product requires 'status'" ;;
+      measure) run_runtime write product-measure "$@" ;;
+      *) fail "product requires 'status' or 'measure'" ;;
     esac ;;
   package)
     shift

@@ -716,12 +716,13 @@
       },
       "phase": "cross-phase",
       "summary": {
-        "en": "A PM's PRD and a designer's uxui.md, in any layout with IDs, are found in the project; every change names the documents it comes from and must cover each owed item or exclude it with a reason, validation stops when a document changes after approval or an amendment drops an item, and product status shows every item across all changes.",
-        "th": "PRD ของ PM และ uxui.md ของ designer ที่มี ID เขียนแบบไหนก็ได้ ระบบหาเจอในโปรเจกต์ ทุก change ต้องบอกว่ามาจากเอกสารไหนและต้องครอบคลุมทุกข้อที่ต้องทำหรือตัดออกพร้อมเหตุผล การตรวจจะหยุดเมื่อเอกสารถูกแก้หลังอนุมัติหรือ amendment ทำให้ข้อหาย และ product status แสดงทุกข้อข้ามทุก change"
+        "en": "A PM's PRD and a designer's uxui.md, in any layout with IDs, are found in the project; every change names the documents it comes from and must cover each owed item or exclude it with a reason, validation stops when a document changes after approval or an amendment drops an item, and product status shows every item across all changes. After release, product measure records each success metric's value and source.",
+        "th": "PRD ของ PM และ uxui.md ของ designer ที่มี ID เขียนแบบไหนก็ได้ ระบบหาเจอในโปรเจกต์ ทุก change ต้องบอกว่ามาจากเอกสารไหนและต้องครอบคลุมทุกข้อที่ต้องทำหรือตัดออกพร้อมเหตุผล การตรวจจะหยุดเมื่อเอกสารถูกแก้หลังอนุมัติหรือ amendment ทำให้ข้อหาย และ product status แสดงทุกข้อข้ามทุก change หลังปล่อย product measure บันทึกค่าตัวชี้วัดความสำเร็จพร้อมแหล่งที่มา"
       },
       "slashCommands": [],
       "cliCommands": [
-        "product status"
+        "product status",
+        "product measure"
       ],
       "states": [],
       "groups": [],
@@ -730,7 +731,8 @@
         ".claude/harness/runtime/workflow/validation/handoff-binding.mjs",
         ".claude/harness/runtime/workflow/validation/product-progress.mjs",
         ".claude/skills/prd/SKILL.md",
-        ".claude/skills/ux-design/SKILL.md"
+        ".claude/skills/ux-design/SKILL.md",
+        ".claude/harness/runtime/workflow/validation/product-measures.mjs"
       ],
       "tests": [
         ".claude/harness/tests/product-handoff.test.mjs",

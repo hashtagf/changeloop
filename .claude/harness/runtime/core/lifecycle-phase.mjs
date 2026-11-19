@@ -40,6 +40,7 @@ export const PHASE_BY_COMMAND = {
   "quality-doctor": "change",
   "quality-readiness": "change",
   "product-status": "change",
+  "product-measure": "change",
   preview: "change",
 
   sandbox: "build",

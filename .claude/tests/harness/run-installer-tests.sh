@@ -332,8 +332,9 @@ assert_cmd_zero "command registry has one unique entry per public name" \
 # read-only approval package; `preview` is the optional pre-Build run whose
 # receipts never count as evidence. `current` is the read-only lookup of the one
 # active change. `features` is the read-only check of the project's feature map.
-# `product status` is the read-only view of the product documents across changes.
-assert_eq "agent command surface is bounded" "27" \
+# `product status` is the read-only view of the product documents across changes;
+# `product measure` records a success metric's observed value with its source.
+assert_eq "agent command surface is bounded" "28" \
   "$(jq '[.commands[] | select(.audience == "agent")] | length' \
     "$TARGET/.claude/harness/commands.json")"
 # 22 includes explicit authority dispatch/abort/configured-reviewer/reset routes, the

@@ -15,7 +15,7 @@ const { BASE_COMPONENTS, projectFindings, uxuiFindings } = await import(join(SKI
 
 function prd({ drop = null, ac = "AC-01 (US-01, US-02)" } = {}) {
   const body = {
-    1: "Shoppers buy in three minutes [Assumption]. Metric: conversion ≥ 2.5%.",
+    1: "Shoppers buy in three minutes [Assumption].\n\n| ID | Metric | Target |\n|---|---|---|\n| KPI-01 | Conversion | ≥ 2.5% |",
     2: "Traffic peaks on the main site [Data] (analytics, 2026-11).",
     3: "| Pain | Who | Label |\n|---|---|---|\n| Shop is hidden | fans | [Data] |",
     4: "Landing plus checkout.\n\n- [ ] Every AC passes\n- [ ] Sign-off",
@@ -49,7 +49,8 @@ test("a complete PRD has no finding; each broken contract is named", () => {
   assert.ok(prdFindings(prd().replace("NFR-01", "N1")).includes("section 11 names no requirement (NFR-nn)"));
   assert.ok(prdFindings(prd().replace("ERR-01", "E1")).includes("section 17 names no error case (ERR-nn)"));
   assert.ok(prdFindings(prd().replace("PERM-01", "P1")).includes("section 15 names no permission row (PERM-nn)"));
-  assert.ok(prdFindings(prd().replace("[Assumption]. Metric", ". Metric")).includes(
+  assert.ok(prdFindings(prd().replace("KPI-01", "K1")).includes("section 1 names no success metric (KPI-nn)"));
+  assert.ok(prdFindings(prd().replace(" [Assumption].\n", ".\n")).includes(
     "section 1 carries no [Data]/[Assumption]/[Decision] label"));
 });
 
