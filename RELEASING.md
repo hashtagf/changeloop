@@ -8,10 +8,10 @@ For the current backend simplification, start with the concise
 separates implementation completion from paid and production evidence; the test
 plan defines the executable portfolio without repeating implementation history.
 
-The formula (`Formula/claude-foundation.rb`) ships **two** install paths:
+The formula (`Formula/cloop.rb`) ships **two** install paths:
 
-- **Stable** — `url` + `sha256` pinned to a tagged release tarball. `brew install claude-foundation` and `brew upgrade claude-foundation` use this. This is what the steps below bump.
-- **HEAD** — `head "…git", branch: "main"`. `brew install --HEAD claude-foundation` tracks `main` and never needs a release.
+- **Stable** — `url` + `sha256` pinned to a tagged release tarball. `brew install hashtagf/changeloop/cloop` and `brew upgrade hashtagf/changeloop/cloop` use this. This is what the steps below bump.
+- **HEAD** — `head "…git", branch: "main"`. `brew install --HEAD hashtagf/changeloop/cloop` tracks `main` and never needs a release.
 
 We follow [Semantic Versioning](https://semver.org/) and [Keep a Changelog](https://keepachangelog.com/). Tags are `vMAJOR.MINOR.PATCH` (e.g. `v1.3.0`).
 
@@ -164,13 +164,13 @@ Use this if the workflow is unavailable or you're releasing by hand. Replace `X.
      | shasum -a 256
    ```
 
-4. **Update the formula.** In `Formula/claude-foundation.rb`, set the `url` to the new tag tarball and replace `sha256` with the value from step 3. Keep the `head` block. Component order must stay `desc → homepage → url → sha256 → license → head` (Homebrew `brew style` enforces it).
+4. **Update the formula.** In `Formula/cloop.rb`, set the `url` to the new tag tarball and replace `sha256` with the value from step 3. Keep the `head` block. Component order must stay `desc → homepage → url → sha256 → license → head` (Homebrew `brew style` enforces it).
 
 5. **Validate the formula:**
    ```bash
-   ruby -c Formula/claude-foundation.rb          # syntax
-   brew style Formula/claude-foundation.rb       # lint (must be 0 offenses)
-   brew audit --strict --formula Formula/claude-foundation.rb   # run from within the tap; warnings OK for a private tap
+   ruby -c Formula/cloop.rb          # syntax
+   brew style Formula/cloop.rb       # lint (must be 0 offenses)
+   brew audit --strict --formula Formula/cloop.rb   # run from within the tap; warnings OK for a private tap
    ```
 
 6. **Commit the changelog + formula** (one PR), e.g. `chore(release): vX.Y.Z`, and merge to `main`.
@@ -180,7 +180,7 @@ Use this if the workflow is unavailable or you're releasing by hand. Replace `X.
    gh release create vX.Y.Z --title "vX.Y.Z" --notes-file <(sed -n '/## \[X.Y.Z\]/,/## \[/p' CHANGELOG.md)
    ```
 
-8. **Ship the bottle** (skips Homebrew's Xcode/CLT check — see below). Publishing the release in step 7 fires `.github/workflows/bottle.yml` on a `macos-latest` runner. It checks out the formula from `main` for its *shape* but **rewrites `url`/`sha256` to the tag being bottled** before building (so release order can't produce a wrong-payload bottle — the v2.8.1 lesson), builds a per-platform bottle, uploads it to the `vX.Y.Z` release, and prints a `bottle do` block in the job summary. Copy/merge that block into `Formula/claude-foundation.rb` **right after the `head` line**, then commit + merge (a formula-only commit — no re-tag needed; `root_url` points at the already-published release):
+8. **Ship the bottle** (skips Homebrew's Xcode/CLT check — see below). Publishing the release in step 7 fires `.github/workflows/bottle.yml` on a `macos-latest` runner. It checks out the formula from `main` for its *shape* but **rewrites `url`/`sha256` to the tag being bottled** before building (so release order can't produce a wrong-payload bottle — the v2.8.1 lesson), builds a per-platform bottle, uploads it to the `vX.Y.Z` release, and prints a `bottle do` block in the job summary. Copy/merge that block into `Formula/cloop.rb` **right after the `head` line**, then commit + merge (a formula-only commit — no re-tag needed; `root_url` points at the already-published release):
    ```ruby
    bottle do
      root_url "https://github.com/hashtagf/changeloop/releases/download/vX.Y.Z"
@@ -192,8 +192,8 @@ Use this if the workflow is unavailable or you're releasing by hand. Replace `X.
 9. **Verify the upgrade path** on a machine that has the tap:
    ```bash
    brew update
-   brew upgrade claude-foundation          # pours the bottle on a matching platform — no toolchain check
-   brew info claude-foundation             # confirm it reports the new version
+   brew upgrade hashtagf/changeloop/cloop          # pours the bottle on a matching platform — no toolchain check
+   brew info hashtagf/changeloop/cloop             # confirm it reports the new version
    ```
 
 ## Why the bottle (skips the Xcode/CLT check)

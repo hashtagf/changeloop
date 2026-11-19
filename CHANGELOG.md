@@ -9,6 +9,18 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Changed
+
+- The Homebrew formula is now canonically `cloop`. Install it with
+  `brew install hashtagf/changeloop/cloop`; users of the same tap can upgrade
+  from the former formula name through Homebrew's rename mapping.
+
+### Documentation
+
+- The English and Thai installation guides now explain how to upgrade an
+  existing `claude-foundation` project using the new Homebrew tap or source
+  repository, and how to verify the project after the upgrade.
+
 ### Fixed
 
 - Test discrimination waited the whole ten-minute provider timeout when the

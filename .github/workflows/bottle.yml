@@ -2,7 +2,7 @@ name: Build Homebrew bottle
 
 # Why this exists
 # ---------------
-# claude-foundation's formula compiles nothing — `install` only copies files.
+# The cloop formula compiles nothing — `install` only copies files.
 # Homebrew still runs its fatal "Xcode/CLT too outdated" check on every
 # build-from-source install (formula_installer.rb:
 #   `if !pour_bottle? && DevelopmentTools.installed?` -> perform_build_from_source_checks).
@@ -61,25 +61,25 @@ jobs:
           SRC_URL="https://github.com/${GITHUB_REPOSITORY}/archive/refs/tags/${TAG}.tar.gz"
           curl -fsSL "$SRC_URL" -o src.tar.gz
           SRC_SHA="$(shasum -a 256 src.tar.gz | cut -d' ' -f1)"
-          sed -i '' -E "s|^( *url ).*|\1\"${SRC_URL}\"|" Formula/claude-foundation.rb
-          sed -i '' -E "s|^( *sha256 )\"[0-9a-f]{64}\"|\1\"${SRC_SHA}\"|" Formula/claude-foundation.rb
-          grep -q "tags/${TAG}.tar.gz" Formula/claude-foundation.rb  # sanity: rewrite landed
+          sed -i '' -E "s|^( *url ).*|\1\"${SRC_URL}\"|" Formula/cloop.rb
+          sed -i '' -E "s|^( *sha256 )\"[0-9a-f]{64}\"|\1\"${SRC_SHA}\"|" Formula/cloop.rb
+          grep -q "tags/${TAG}.tar.gz" Formula/cloop.rb  # sanity: rewrite landed
 
           # Put the patched formula into a local tap so brew can build it.
           brew tap-new "$TAP" --no-git
-          cp Formula/claude-foundation.rb "$(brew --repository "$TAP")/Formula/"
+          cp Formula/cloop.rb "$(brew --repository "$TAP")/Formula/"
 
           # --build-bottle installs from the released source tarball (the formula's
           # `url`); brew bottle emits a per-platform bottle + a DSL block on stdout.
           # --root-url bakes the release-download URL into that block.
-          brew install --build-bottle "$TAP/claude-foundation"
-          brew test "$TAP/claude-foundation"
+          brew install --build-bottle "$TAP/cloop"
+          brew test "$TAP/cloop"
           brew bottle --json --no-rebuild \
             --root-url "$ROOT_URL" \
-            "$TAP/claude-foundation" | tee bottle.out
+            "$TAP/cloop" | tee bottle.out
 
           echo "Built artifacts:"
-          ls -1 claude-foundation--*.bottle.tar.gz
+          ls -1 cloop--*.bottle.tar.gz
 
       - name: Upload the bottle to the release
         run: |
@@ -87,10 +87,10 @@ jobs:
           # brew writes the file as `name--version` (double dash), but a custom
           # root_url downloads via url_encode = `name-version` (single dash).
           # Rename so the uploaded asset matches the URL brew will request.
-          for f in claude-foundation--*.bottle.tar.gz; do
+          for f in cloop--*.bottle.tar.gz; do
             mv "$f" "${f/--/-}"
           done
-          gh release upload "$TAG" claude-foundation-*.bottle.tar.gz \
+          gh release upload "$TAG" cloop-*.bottle.tar.gz \
             --clobber --repo "$GITHUB_REPOSITORY"
 
       - name: Emit the bottle block to paste into the formula
@@ -100,7 +100,7 @@ jobs:
             echo "## Bottle built for \`${TAG}\`"
             echo
             echo "Uploaded to the \`${TAG}\` release. Paste/merge this block into"
-            echo "\`Formula/claude-foundation.rb\` right after the \`head\` line, then"
+            echo "\`Formula/cloop.rb\` right after the \`head\` line, then"
             echo "commit + merge (see RELEASING.md):"
             echo
             echo '```ruby'

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import test from "node:test";
 
@@ -8,7 +8,7 @@ import { REQUIRED_ARCHIVE_PATHS, cliHelpStatus, rehearsalStatus,
 
 test("local release rehearsal requires runtime, installer, formula, and site sources", () => {
   for (const path of ["VERSION", "install.sh", "cli.sh", ".claude/harness/foundation.mjs",
-    "Formula/claude-foundation.rb", "website/docs/package.json"])
+    "Formula/cloop.rb", "website/docs/package.json"])
     assert.ok(REQUIRED_ARCHIVE_PATHS.includes(path), path);
 });
 
@@ -33,8 +33,16 @@ test("rehearsal checks compact intent help and full compatibility help separatel
   assert.equal(cliHelpStatus(compact, { status: 1, stdout: full.stdout }), "fail");
 });
 
+test("Homebrew installs cloop directly and resolves the former formula name for existing users", () => {
+  const renames = JSON.parse(readFileSync(resolve("formula_renames.json"), "utf8"));
+  assert.equal(renames["claude-foundation"], "cloop");
+  assert.match(readFileSync(resolve("Formula/cloop.rb"), "utf8"), /^class Cloop < Formula\b/m);
+  assert.ok(!existsSync(resolve("Formula/claude-foundation.rb")));
+  assert.ok(!existsSync(resolve("Aliases/cloop")));
+});
+
 test("Homebrew test checks compact and full CLI help at their owning surfaces", () => {
-  const formula = readFileSync(resolve("Formula/claude-foundation.rb"), "utf8");
+  const formula = readFileSync(resolve("Formula/cloop.rb"), "utf8");
   assert.match(formula, /help = shell_output\("#\{bin\}\/cloop --help"\)/);
   assert.match(formula, /assert_match "change start", help/);
   assert.match(formula, /assert_match "advance", help/);

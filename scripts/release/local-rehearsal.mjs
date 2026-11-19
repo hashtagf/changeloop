@@ -10,7 +10,7 @@ import { spawnSync } from "node:child_process";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 export const REQUIRED_ARCHIVE_PATHS = ["VERSION", "install.sh", "cli.sh", "foundation.json",
   ".claude/harness/foundation.mjs", ".claude/harness/commands.json",
-  "Formula/claude-foundation.rb", "website/docs/package.json"];
+  "Formula/cloop.rb", "website/docs/package.json"];
 
 function run(command, args, cwd = ROOT) {
   return spawnSync(command, args, { cwd, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
@@ -75,10 +75,10 @@ export function runLocalRehearsal(outputDir = resolve(ROOT, ".foundation/test-re
     const helpAll = run("bash", [join(extract, "cli.sh"), "help", "--all"], extract);
     checks.cliHelp = { status: cliHelpStatus(help, helpAll),
       detail: help.stderr || helpAll.stderr };
-    const ruby = run("ruby", ["-c", join(extract, "Formula/claude-foundation.rb")], extract);
+    const ruby = run("ruby", ["-c", join(extract, "Formula/cloop.rb")], extract);
     checks.formulaSyntax = { status: ruby.status === 0 ? "pass" : "fail", detail: ruby.stdout || ruby.stderr };
     const brewAvailable = run("sh", ["-c", "command -v brew >/dev/null"]).status === 0;
-    const style = brewAvailable ? run("brew", ["style", join(extract, "Formula/claude-foundation.rb")], extract) : null;
+    const style = brewAvailable ? run("brew", ["style", join(extract, "Formula/cloop.rb")], extract) : null;
     checks.formulaStyle = brewAvailable
       ? { status: style.status === 0 ? "pass" : "fail", detail: style.stdout || style.stderr }
       : { status: "unavailable", required: false, detail: "brew unavailable on this host" };

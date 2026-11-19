@@ -172,4 +172,4 @@ jobs:
           bash cli.sh help --all | grep -F "change new"
           bash cli.sh help --all | grep -F "proof run"
           bash cli.sh help --all | grep -F "land check"
-          ruby -c Formula/claude-foundation.rb
+          ruby -c Formula/cloop.rb

@@ -150,7 +150,7 @@
     brew:
       "brew tap hashtagf/changeloop \\\n" +
       "  https://github.com/hashtagf/changeloop\n" +
-      "brew install cloop\n" +
+      "brew install hashtagf/changeloop/cloop\n" +
       "cloop init /path/to/project --yes",
     source:
       "npm install -g @fission-ai/openspec@1.7.0\n" +

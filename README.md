@@ -48,7 +48,7 @@ required if it is not already available.
 ```bash
 brew tap hashtagf/changeloop \
   https://github.com/hashtagf/changeloop
-brew install cloop
+brew install hashtagf/changeloop/cloop
 cloop init /path/to/your-project --yes
 ```
 

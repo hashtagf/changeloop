@@ -10,7 +10,7 @@ import {
 test("release lanes classify runtime, instruction, shipping, and repository work", () => {
   assert.equal(classifyReleasePath(".claude/harness/runtime/core/a.mjs"), "runtime");
   assert.equal(classifyReleasePath(".claude/commands/build.md"), "instruction");
-  assert.equal(classifyReleasePath("Formula/claude-foundation.rb"), "shipping");
+  assert.equal(classifyReleasePath("Formula/cloop.rb"), "shipping");
   assert.equal(classifyReleasePath("scripts/release/upgrade-matrix.mjs"), "shipping");
   assert.equal(classifyReleasePath(".claude/tests/run-all.sh"), "repository-only");
   assert.equal(classifyReleasePath("dashboard/app.js"), "release-review");

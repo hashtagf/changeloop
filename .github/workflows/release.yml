@@ -266,9 +266,9 @@ jobs:
           # v2.9.2 failed on exactly that (formula still at v2.8.1, PREV=2.9.1).
           # Rewrite the whole url line, not just the version: the source moved
           # to hashtagf/changeloop, and the tarball sha above is for $URL.
-          perl -0pi -e "s#^  url \".*\"\$#  url \"$URL\"#m" Formula/claude-foundation.rb
-          perl -0pi -e "s/^  sha256 \"[0-9a-f]{64}\"/  sha256 \"$SHA\"/m" Formula/claude-foundation.rb
-          grep -q "v$NEW.tar.gz" Formula/claude-foundation.rb && grep -q "sha256 \"$SHA\"" Formula/claude-foundation.rb \
+          perl -0pi -e "s#^  url \".*\"\$#  url \"$URL\"#m" Formula/cloop.rb
+          perl -0pi -e "s/^  sha256 \"[0-9a-f]{64}\"/  sha256 \"$SHA\"/m" Formula/cloop.rb
+          grep -q "v$NEW.tar.gz" Formula/cloop.rb && grep -q "sha256 \"$SHA\"" Formula/cloop.rb \
             || { echo "::error::formula url/sha not updated"; exit 1; }
 
       - name: Publish the GitHub release
@@ -286,44 +286,45 @@ jobs:
           # source archive from the rewritten worktree so the formula exercises
           # the candidate version and files instead of the previous release.
           if [ "$DRY" = "true" ]; then
-            ARCHIVE="$RUNNER_TEMP/claude-foundation-$NEW.tar.gz"
+            ARCHIVE="$RUNNER_TEMP/cloop-$NEW.tar.gz"
             tar --exclude=.git --exclude=node_modules -czf "$ARCHIVE" .
             SHA=$(shasum -a 256 "$ARCHIVE" | awk '{print $1}')
-            perl -0pi -e "s#^  url \".*\"\$#  url \"file://$ARCHIVE\"#m" Formula/claude-foundation.rb
-            perl -0pi -e "s/^  sha256 \"[0-9a-f]{64}\"/  sha256 \"$SHA\"/m" Formula/claude-foundation.rb
+            perl -0pi -e "s#^  url \".*\"\$#  url \"file://$ARCHIVE\"#m" Formula/cloop.rb
+            perl -0pi -e "s/^  sha256 \"[0-9a-f]{64}\"/  sha256 \"$SHA\"/m" Formula/cloop.rb
           fi
 
           brew tap-new "$TAP" --no-git
-          cp Formula/claude-foundation.rb "$(brew --repository "$TAP")/Formula/"
-          brew install --build-bottle "$TAP/claude-foundation"
-          brew test "$TAP/claude-foundation"
-          brew bottle --json --no-rebuild --root-url "$ROOT_URL" "$TAP/claude-foundation" | tee bottle.out
+          cp Formula/cloop.rb "$(brew --repository "$TAP")/Formula/"
+          brew install --build-bottle "$TAP/cloop"
+          brew test "$TAP/cloop"
+          brew bottle --json --no-rebuild --root-url "$ROOT_URL" "$TAP/cloop" | tee bottle.out
 
           # brew writes name--version (double dash); a custom root_url downloads
           # via url_encode = name-version (single dash). Rename to match.
-          for f in claude-foundation--*.bottle.tar.gz; do mv "$f" "${f/--/-}"; done
+          for f in cloop--*.bottle.tar.gz; do mv "$f" "${f/--/-}"; done
 
-          # Replace the formula's existing bottle block with the generated one.
+          # Replace any existing bottle block, or add the first one after head.
           sed -n '/^  bottle do$/,/^  end$/p' bottle.out > bottle_block.txt
           grep -q 'sha256 cellar:' bottle_block.txt || { echo "::error::failed to extract bottle block"; exit 1; }
           awk '
-            /^  bottle do$/ { while ((getline line < "bottle_block.txt") > 0) print line; skip=1; next }
+            /^  bottle do$/ { skip=1; next }
             skip && /^  end$/ { skip=0; next }
             skip { next }
             { print }
-          ' Formula/claude-foundation.rb > Formula/claude-foundation.rb.tmp && mv Formula/claude-foundation.rb.tmp Formula/claude-foundation.rb
+            /^  head / { print ""; while ((getline line < "bottle_block.txt") > 0) print line }
+          ' Formula/cloop.rb > Formula/cloop.rb.tmp && mv Formula/cloop.rb.tmp Formula/cloop.rb
 
-          ruby -c Formula/claude-foundation.rb
-          brew style Formula/claude-foundation.rb
+          ruby -c Formula/cloop.rb
+          brew style Formula/cloop.rb
 
           if [ "$DRY" = "true" ]; then
             echo "::notice::DRY RUN — built the bottle and rewrote the formula but pushed nothing. Diff:"
-            git --no-pager diff -- Formula/claude-foundation.rb
+            git --no-pager diff -- Formula/cloop.rb
             exit 0
           fi
 
-          gh release upload "v$NEW" claude-foundation-*.bottle.tar.gz --clobber
-          git add Formula/claude-foundation.rb
+          gh release upload "v$NEW" cloop-*.bottle.tar.gz --clobber
+          git add Formula/cloop.rb
           git commit -m "chore(brew): formula for v$NEW (url/sha + bottle)"
           git push origin HEAD:main
 

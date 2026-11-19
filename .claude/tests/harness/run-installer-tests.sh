@@ -8,7 +8,7 @@ ROOT="$(cd "$HERE/../../.." && pwd)"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT HUP INT TERM
 assert_file_contains "Homebrew source package includes required model policy" \
-  "$ROOT/Formula/claude-foundation.rb" '"foundation.json"'
+  "$ROOT/Formula/cloop.rb" '"foundation.json"'
 cli_help="$(bash "$ROOT/cli.sh" help)"
 cli_help_all="$(bash "$ROOT/cli.sh" help --all)"
 assert_contains "CLI help documents proof readiness" \

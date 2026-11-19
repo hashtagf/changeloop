@@ -84,7 +84,7 @@ function updateActions(status) {
   if (["cli-update-available", "both-outdated"].includes(status))
     actions.push({
       type: "upgrade-cli",
-      command: "brew update && brew upgrade claude-foundation"
+      command: "brew update && brew upgrade hashtagf/changeloop/cloop"
     });
   if (["project-refresh-required", "both-outdated"].includes(status))
     actions.push({

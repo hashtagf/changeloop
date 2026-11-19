@@ -19,8 +19,7 @@ the implementation, and project-owned providers such as test runners,
 Playwright, linters, or security scanners produce evidence.
 
 The product and workflow are called **Change Loop**; its CLI is `cloop`, used
-by people and agents alike. The Homebrew formula keeps the package name
-`claude-foundation` (`brew upgrade claude-foundation`).
+by people and agents alike. The Homebrew formula is `cloop` (`brew upgrade hashtagf/changeloop/cloop`).
 
 ## Using Change Loop
 

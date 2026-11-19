@@ -44,17 +44,37 @@ cd changeloop
 ```bash
 brew tap hashtagf/changeloop \
   https://github.com/hashtagf/changeloop
-brew install cloop
+brew install hashtagf/changeloop/cloop
 cloop init /path/to/your-project --yes
 ```
 
 `cloop init` คือ installer ตัวเดียวกัน ส่วน `--yes` คือข้ามการถามยืนยัน
-เวลาอัปเกรดให้รัน `brew upgrade cloop` แล้วรัน `init` ในแต่ละโปรเจกต์
+เวลาอัปเกรดให้รัน `brew upgrade hashtagf/changeloop/cloop` แล้วรัน `init` ในแต่ละโปรเจกต์
 ที่ต้องการรีเฟรช
 
 :::tip
 เปิด session ของ agent **ใหม่** ในโปรเจกต์ปลายทางหลังติดตั้งเสร็จ เพื่อให้ slash command ถูกลงทะเบียน
 :::
+
+## ย้ายจาก claude-foundation
+
+Change Loop ย้ายมาอยู่ที่ [hashtagf/changeloop](https://github.com/hashtagf/changeloop) และเปลี่ยนมาใช้คำสั่ง `cloop` อัปเกรดในโปรเจกต์เดิมได้เลย ไม่ต้องสร้างใหม่ แต่การติดตั้ง CLI ใหม่อย่างเดียวยังไม่อัปเกรดโปรเจกต์
+
+**ถ้าเคยติดตั้งด้วย Homebrew** ให้ใช้ tap ใหม่ การรัน `brew upgrade` จาก tap เดิมจะไม่ย้ายมา Change Loop
+
+```bash
+brew tap hashtagf/changeloop https://github.com/hashtagf/changeloop
+brew install hashtagf/changeloop/cloop
+cloop init /path/to/existing-project
+```
+
+ตั้งแต่ Homebrew 6 การติดตั้งด้วยชื่อสูตรเต็มจะให้ความเชื่อถือเฉพาะ `cloop` ไม่ต้องรัน `brew trust` แยก ถ้าเคยติดตั้งจาก `hashtagf/changeloop` ด้วยชื่อสูตรเดิม ให้รัน `brew update` แล้วรัน `brew upgrade hashtagf/changeloop/cloop` แทนการติดตั้งใหม่ ดู [คู่มือ Tap Trust ของ Homebrew](https://docs.brew.sh/Tap-Trust)
+
+**ถ้าเคยติดตั้งจากซอร์ส** ให้ทำตามหัวข้อ [ติดตั้งจาก source](#ติดตั้งจาก-source) โดยใช้รีโปใหม่ แล้วรัน `install.sh` โดยระบุพาธของโปรเจกต์เดิม ไม่ใช่โฟลเดอร์ใหม่
+
+ทำขั้นตอนอัปเกรดซ้ำกับแต่ละโปรเจกต์ที่ต้องการย้าย ตัวติดตั้งจะอัปเดตคำสั่ง hook และไฟล์รันไทม์ที่ระบบดูแล โดยเก็บ OpenSpec spec, change ที่ยังทำอยู่ และสถานะเดิมของโปรเจกต์ไว้ ถ้าเคยแก้ไฟล์ที่ระบบดูแล ให้เก็บสำเนาส่วนที่แก้ก่อนอัปเกรด ดู [ไฟล์ที่ตัวติดตั้งดูแล](/docs/th/artifacts/) เพื่อเช็กว่าไฟล์ไหนจะถูกแทนที่
+
+ในโปรเจกต์ที่อัปเกรดแล้ว ให้รัน `cloop doctor --stage change` และแก้ปัญหาที่ระบบแจ้ง จากนั้นเปิด Claude Code session ใหม่เพื่อโหลด slash command ที่อัปเดตแล้ว
 
 ## agent host อื่นนอกจาก Claude Code
 

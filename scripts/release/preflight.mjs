@@ -127,7 +127,7 @@ export function releasePreflight({ evidenceReady = false } = {}) {
   }, {});
   const checks = structuralReleaseChecks({
     version, protocol, foundationSource: read(".claude/harness/foundation.mjs"),
-    changelog: read("CHANGELOG.md"), formula: read("Formula/claude-foundation.rb"),
+    changelog: read("CHANGELOG.md"), formula: read("Formula/cloop.rb"),
     workflow: read(".github/workflows/release.yml"),
     packageJson: JSON.parse(read("package.json")),
     pathExists: (path) => existsSync(resolve(ROOT, path))

@@ -364,7 +364,7 @@ usage streams).
 
 Routing lives in `/cli.sh` (top-level): `dashboard*` subcommands →
 `dashboard/client.sh`, everything else → `install.sh`. The Homebrew formula
-(`Formula/claude-foundation.rb`) installs `cli.sh` + the `dashboard/` dir into
-libexec and the `claude-foundation` bin execs `cli.sh`. `DEFAULT_SERVER` in
+(`Formula/cloop.rb`) installs `cli.sh` + the `dashboard/` dir into
+libexec and the `cloop` bin execs `cli.sh`. `DEFAULT_SERVER` in
 `client.sh` points at the deployed Railway URL, so teammates only need
 `brew install … && cloop dashboard-up --key=<key>`.

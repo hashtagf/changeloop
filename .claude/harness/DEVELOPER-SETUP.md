@@ -29,7 +29,7 @@ is `42`. A delta between the two is advisory while both doctors still pass:
    the CLI forwards to the runtime installed in the project, so an older CLI
    prints `warning: project runtime API … differs from CLI API …` and keeps
    working. Only a doctor that exits non-zero is a blocked machine.
-3. When the CLI itself is behind, upgrade it: `brew upgrade claude-foundation`.
+3. When the CLI itself is behind, upgrade it: `brew upgrade hashtagf/changeloop/cloop`.
    If instead the pinned source is absent, clone tag `v3.7.5` from
    `hashtagf/changeloop` into
    `~/.local/share/claude-foundation/3.7.5`.

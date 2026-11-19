@@ -1,0 +1,91 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "legacy-upgrade-guide-cli-homebrew-tap",
+      "requirementKey": "legacy-upgrade-guide",
+      "scenario": "อัปเกรดจาก Homebrew tap เดิม",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "legacy-upgrade-guide-2",
+      "requirementKey": "legacy-upgrade-guide",
+      "scenario": "อัปเกรดจากซอร์ส",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "legacy-upgrade-guide-installer",
+      "requirementKey": "legacy-upgrade-guide",
+      "scenario": "ตรวจผลหลังอัปเกรด",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    },
+    {
+      "id": "canonical-cloop-homebrew-formula-homebrew-tap-hashtagf-changeloo",
+      "requirementKey": "canonical-cloop-homebrew-formula",
+      "scenario": "ติดตั้งด้วยชื่อสูตรจริง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "canonical-cloop-homebrew-formula-homebrew-tap",
+      "requirementKey": "canonical-cloop-homebrew-formula",
+      "scenario": "อัปเกรดจากชื่อสูตรเดิม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "canonical-cloop-homebrew-formula-release-candidate",
+      "requirementKey": "canonical-cloop-homebrew-formula",
+      "scenario": "ออก bottle ชื่อใหม่",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "canonical-cloop-homebrew-formula-4",
+      "requirementKey": "canonical-cloop-homebrew-formula",
+      "scenario": "อ่านคำสั่งติดตั้งใหม่",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "static-analysis": {
+      "adapter": "command",
+      "capability": "static-analysis",
+      "command": [
+        "sh",
+        "-c",
+        "rtk test bash .claude/tests/docs/run-doc-consistency.sh && rtk npm --prefix website/docs run build"
+      ],
+      "claims": "declared"
+    },
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(rtk test bash .claude/tests/docs/run-doc-consistency.sh && rtk npm --prefix website/docs run build) && (rtk proxy ruby -c Formula/cloop.rb && rtk proxy node --test .claude/tests/harness/release-preflight.test.mjs .claude/tests/harness/local-release-rehearsal.test.mjs && rtk test bash .claude/tests/docs/run-doc-consistency.sh && rtk npm --prefix website/docs run build)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

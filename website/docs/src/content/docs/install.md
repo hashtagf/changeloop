@@ -47,17 +47,37 @@ cd changeloop
 ```bash
 brew tap hashtagf/changeloop \
   https://github.com/hashtagf/changeloop
-brew install cloop
+brew install hashtagf/changeloop/cloop
 cloop init /path/to/your-project --yes
 ```
 
 `cloop init` is the same installer; `--yes` skips the confirmation prompt.
-Later upgrades use `brew upgrade cloop`, followed by `init` for each
+Later upgrades use `brew upgrade hashtagf/changeloop/cloop`, followed by `init` for each
 project you want to refresh.
 
 :::tip
 Open a **new** agent session in the target project after installing, so the slash commands are registered.
 :::
+
+## Upgrade from claude-foundation
+
+Change Loop moved to [hashtagf/changeloop](https://github.com/hashtagf/changeloop), and the CLI is now `cloop`. Upgrade each existing project in place; installing the new CLI alone does not update your projects.
+
+**If you installed with Homebrew**, use the new tap. Running `brew upgrade` against the old tap will not switch you to Change Loop.
+
+```bash
+brew tap hashtagf/changeloop https://github.com/hashtagf/changeloop
+brew install hashtagf/changeloop/cloop
+cloop init /path/to/existing-project
+```
+
+On Homebrew 6 and later, installing by the full formula name trusts only `cloop`; no separate `brew trust` is needed. If you already installed from `hashtagf/changeloop` under the former formula name, run `brew update`, then `brew upgrade hashtagf/changeloop/cloop` instead of installing again. See [Homebrew Tap Trust](https://docs.brew.sh/Tap-Trust).
+
+**If you installed from source**, follow [Install from source](#install-from-source) using the new repository. Point `install.sh` at your existing project, not a new directory.
+
+Repeat the project step for each project you want to upgrade. The installer refreshes managed commands, hooks, and runtime files while preserving OpenSpec specs, active changes, and project state. Save any custom edits to managed files before upgrading. See [file ownership](/docs/artifacts/) for what the installer replaces.
+
+In the upgraded project, run `cloop doctor --stage change` and address any reported problems. Then open a new Claude Code session so it loads the updated slash commands.
 
 ## Other agent hosts
 

@@ -1,4 +1,7 @@
-class ClaudeFoundation < Formula
+# frozen_string_literal: true
+
+# Installs the Change Loop CLI and its project installer.
+class Cloop < Formula
   desc "OpenSpec-native change harness for AI coding agents"
   homepage "https://changeloop.ai/"
   url "https://github.com/hashtagf/changeloop/archive/refs/tags/v3.7.5.tar.gz"
@@ -6,22 +9,7 @@ class ClaudeFoundation < Formula
   license "MIT"
   head "https://github.com/hashtagf/changeloop.git", branch: "main"
 
-  # This formula compiles nothing — `install` only copies files. But Homebrew
-  # runs its fatal "Xcode/CLT too outdated" check on every *build-from-source*
-  # install (formula_installer.rb: `!pour_bottle? && DevelopmentTools.installed?`),
-  # so without a bottle, users on a newer macOS with an older Xcode are blocked
-  # for a toolchain they never need. The bottle below makes `pour_bottle?` true
-  # on a matching platform and skips that check there.
-  #
-  # The `bin` wrapper bakes an absolute prefix, so brew produces a *per-platform*
-  # bottle (not an `:all` one). An older-macOS bottle pours on newer macOS
-  # (forward-compatible), so arm64_sequoia also covers arm64_tahoe; add a
-  # `sha256 … <tag>:` line per platform (see .github/workflows/bottle.yml +
-  # RELEASING.md). Platforms with no line fall back to build-from-source.
-  bottle do
-    root_url "https://github.com/hashtagf/changeloop/releases/download/v3.7.5"
-    sha256 cellar: :any_skip_relocation, arm64_sequoia: "167072a34ef52df4314ee83c0fae40443e7b95f4b49d8be3f51a6bb897197152"
-  end
+  # Add bottle metadata only after a bottle under the cloop name is published.
 
   def install
     libexec.install ".claude", ".foundation", "openspec",
