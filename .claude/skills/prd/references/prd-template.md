@@ -43,9 +43,9 @@ A prototype or reference URL is evidence: open it, record what it shows as
 | 11 | Non-functional Requirements | Table: `NFR-nn`, category, requirement with a number, how it is measured (performance, load, availability, accessibility WCAG 2.2 AA, security, privacy, localization, SEO, observability, browsers) |
 | 12 | Decision Rule / ADR and review rounds | Which decisions need an ADR and who approves; ADR table (`ADR-nn`, options, proposal, status, approver); review rounds with participants and exit |
 | 13 | Scope / Out of scope | In scope by feature ID; out of scope with the reason or the question that could change it |
-| 14 | Dependencies and constraints | Table: type, item, impact |
-| 15 | Data and Permission Requirements | Entity table (fields, personal data, retention) and a role × action permission matrix |
-| 16 | Feature mapping | Table: feature → stories → criteria → rules → NFR → errors → screens → flow; Change Loop reads it to decide what a change owes |
+| 14 | Dependencies and constraints | Table: `DEP-nn`, type, item, impact |
+| 15 | Data and Permission Requirements | Entity table with `DATA-nn` (fields, personal data, retention) and a permission matrix with one `PERM-nn` row per action × roles |
+| 16 | Feature mapping | Table: feature → stories → criteria → rules → NFR → errors → permissions → data → dependencies → screens → flow; Change Loop reads it to decide what a change owes |
 | 17 | Error Handling | Table: `ERR-nn`, situation, what the user sees, what the system does |
 | 18 | Open Questions | Table: `Q-nn` or `Qn`, question, what it affects, who must answer |
 
@@ -58,8 +58,19 @@ End with a Changelog table (version, date, change).
   without a source carries it.
 - `[Decision]` — approved in a review round; name the round or approver.
 - Every `US` has at least one `AC`; every `F` names its stories; every `ADR`
-  has a status; NFR and error rows carry `NFR-nn` and `ERR-nn`. The checker
-  enforces these links.
+  has a status; NFR, error, dependency, data, and permission rows carry
+  `NFR-nn`, `ERR-nn`, `DEP-nn`, `DATA-nn`, and `PERM-nn`. Glossary terms are
+  written "Thai (English)" so either name is recognised. The checker enforces
+  these.
+
+## Importing an existing document
+
+A PM document in another shape becomes `PRD.md` without losing anything: copy
+each statement into its template section (adding IDs), put what has no section
+under `## Not carried over` with the reason, and run
+`node <skill>/scripts/import-check.mjs <original> PRD.md`; it lists every
+statement missing from both. The same check applies to a UX document imported
+into `uxui.md`.
 
 ## Handoff to Change Loop
 
@@ -75,7 +86,17 @@ the draft until every in-scope item is covered or excluded with a reason:
 row names, the criteria of those stories, and the open questions that mention
 them. Stories go in requirements, criteria in scenarios (so each becomes a
 test), rules in requirements or scenarios, NFR in `nfr`, errors in failure
-scenarios or the failure matrix, ADRs and open questions in decisions.
+scenarios or the failure matrix, permissions in scenarios (who may and may
+not), data in `dataModel`, dependencies in `dependencies` or decisions, ADRs
+and open questions in decisions, and every glossary term the owed items use
+in `domainLanguage`. A project with a PRD makes every change declare
+`productHandoff` (or `{ "none": "<why>" }`); the packet records each
+document's digest, and a document edited after approval, or an owed ID an
+amendment dropped, stops validation until the change is amended with the same
+`productHandoff`.
+
+The Definition of Done (section 4) is project-level and is not owed by a
+single change.
 
 ## Review
 

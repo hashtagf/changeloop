@@ -191,6 +191,8 @@ Decisions to ratify ของ proposal เพื่อให้คุณ ratify 
 - `productHandoff` ที่ระบุ `PRD.md` และ `uxui.md` ที่งานนี้มาจาก พร้อม `scope` ขั้น intake จะไม่รับ draft
   จนกว่า user story, acceptance criteria, business rule, NFR, error case, decision และ state ของหน้าจอ
   ทุกข้อในขอบเขตจะถูกอ้างในหัวข้อที่ถูกต้อง หรือถูกตัดออกพร้อมเหตุผล และ proposal แสดงตารางความครอบคลุม
+  โปรเจกต์ที่มี `PRD.md` หรือ `uxui.md` ทุก draft ต้องระบุเอกสารนั้น (หรือบอกเหตุผลว่าไม่เกี่ยว) และการตรวจจะหยุด
+  ถ้าเอกสารถูกแก้หลังอนุมัติ หรือ amendment ทำให้ข้อที่ต้องทำหายไป
 - `prototypeSelection` ที่ชี้ไป selection note ที่มีจริง และใส่ `excludes` ได้ (ไม่บังคับ)
   สำหรับส่วนของ prototype ที่ agreement ไม่รับ พร้อมเหตุผล เพื่อให้การตรวจภาพไม่เรียกหาส่วนนั้น
 - `integrations` พร้อมแหล่ง/เวอร์ชันเอกสาร requirement ที่เกี่ยวข้อง และ concern

@@ -11,8 +11,10 @@ OpenSpec packet a change compiles from it.
 ## Steps
 
 1. Ask the brief questions in `references/prd-template.md` §0 that sources
-   cannot answer; read every reference, prototype, and existing product the
-   user names, and cite what you observed.
+   cannot answer; read every reference, prototype, and existing product named.
+   An existing PRD in another shape is imported: rewrite it into the template,
+   then `node <skill>/scripts/import-check.mjs <original> PRD.md` must report
+   nothing dropped.
 2. Write `PRD.md` with the 18 sections in template order. Label every fact
    `[Data]` (observed, with source), `[Assumption]`, or `[Decision]`; never
    state an assumption as fact. Give stories, criteria, rules, features, and

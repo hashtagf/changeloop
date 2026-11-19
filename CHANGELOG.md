@@ -73,6 +73,15 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- Product handoff is enforced end to end: a project with `PRD.md` or
+  `uxui.md` makes every new draft declare `productHandoff` (or why not);
+  coverage now also owes dependencies (`DEP-nn`), data (`DATA-nn`), PRD and
+  uxui permissions (`PERM-nn`, `UP-nn`, as scenarios), microcopy (`MC-nn`),
+  and every glossary term the owed items use (in `domainLanguage`); the packet
+  records each document's digest and owed IDs in `handoff.json`, and
+  validation stops when a document changed after approval or an amendment
+  dropped an owed ID. The `prd` skill's `import-check.mjs` proves a document
+  converted into the template kept every statement.
 - `productHandoff` in the change draft names the `PRD.md` and `uxui.md` a
   change comes from, with a feature scope. Intake refuses the draft until every
   in-scope story, acceptance criterion (as a scenario, so it becomes a test),

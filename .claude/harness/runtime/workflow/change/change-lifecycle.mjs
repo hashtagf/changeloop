@@ -544,7 +544,7 @@ export function createChangeLifecycle({
           structural: !normalized.issues.length, regressionRequired
         }).issues
         : []),
-      ...semanticReferenceIssues(normalized.draft),
+      ...semanticReferenceIssues(normalized.draft, { discover: validateCompiledDraft }),
       ...extraIssues,
       ...(source.investigation !== undefined
         ? validateInvestigationBinding({ projectRoot: root, binding: source.investigation, git })

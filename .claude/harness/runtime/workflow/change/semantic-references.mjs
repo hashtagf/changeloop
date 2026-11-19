@@ -5,11 +5,12 @@ import { readFileSync, realpathSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { prototypeSelectionIssues } from "../prototype/prototype-binding.mjs";
 import { productHandoffCoverage, productHandoffShapeIssues } from "../validation/product-handoff.mjs";
+import { undeclaredHandoffIssues } from "../validation/handoff-binding.mjs";
 
 export function createSemanticReferences({
   fail, pathInside, root
 }) {
-  function semanticReferenceIssues(draft) {
+  function semanticReferenceIssues(draft, { discover = true } = {}) {
     const issues = [];
     const validateLocalFile = (field, value) => {
       const path = resolve(root, value);
@@ -24,7 +25,7 @@ export function createSemanticReferences({
     };
     const referencedPaths = [];
     const handoffIssues = productHandoffShapeIssues(draft.productHandoff);
-    issues.push(...handoffIssues);
+    issues.push(...handoffIssues, ...(discover ? undeclaredHandoffIssues(root, draft.productHandoff) : []));
     for (const field of ["prd", "uxui"])
       if (!handoffIssues.length && typeof draft.productHandoff?.[field] === "string" && draft.productHandoff[field].trim())
         referencedPaths.push([`productHandoff.${field}`, draft.productHandoff[field]]);
@@ -52,7 +53,8 @@ export function createSemanticReferences({
       }
     }
     for (const [field, value] of referencedPaths) validateLocalFile(field, value);
-    if (draft.productHandoff && !handoffIssues.length && !issues.some((issue) => issue.includes("productHandoff.")))
+    if (draft.productHandoff && draft.productHandoff.none === undefined && !handoffIssues.length &&
+        !issues.some((issue) => issue.includes("productHandoff.")))
       issues.push(...handoffCoverageIssues(draft));
     const requirementKeys = draft._requirementKeys?.length ? draft._requirementKeys
       : (draft.claims || []).map((claim) => claim?.requirementKey).filter(Boolean);

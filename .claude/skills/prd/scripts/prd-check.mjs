@@ -65,6 +65,9 @@ export function prdFindings(text) {
 
   if (body(11) && !ids(body(11), "NFR").size) findings.push("section 11 names no requirement (NFR-nn)");
   if (body(17) && !ids(body(17), "ERR").size) findings.push("section 17 names no error case (ERR-nn)");
+  if (body(14) && !ids(body(14), "DEP").size) findings.push("section 14 names no dependency (DEP-nn)");
+  if (body(15) && !ids(body(15), "PERM").size) findings.push("section 15 names no permission row (PERM-nn)");
+  if (body(15) && !ids(body(15), "DATA").size) findings.push("section 15 names no data entity (DATA-nn)");
   if (!/^\s*-\s*\[[ x]\]/m.test(body(4))) findings.push("section 4 has no Definition of Done checklist (- [ ])");
   if (!/\|/.test(body(15)) || !/permission|สิทธิ์|role/i.test(body(15)))
     findings.push("section 15 has no permission matrix");

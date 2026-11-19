@@ -10,6 +10,7 @@ import test from "node:test";
 const SKILLS = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "skills");
 const { prdFindings } = await import(join(SKILLS, "prd/scripts/prd-check.mjs"));
 const { page, inline } = await import(join(SKILLS, "prd/scripts/prd-html.mjs"));
+const { droppedStatements, statements } = await import(join(SKILLS, "prd/scripts/import-check.mjs"));
 const { BASE_COMPONENTS, projectFindings, uxuiFindings } = await import(join(SKILLS, "ux-design/scripts/uxui-check.mjs"));
 
 function prd({ drop = null, ac = "AC-01 (US-01, US-02)" } = {}) {
@@ -27,8 +28,8 @@ function prd({ drop = null, ac = "AC-01 (US-01, US-02)" } = {}) {
     11: "| ID | Category | Requirement | Measure |\n|---|---|---|---|\n| NFR-01 | Performance | LCP ≤ 2.5 s | Lighthouse |",
     12: "| ADR | Topic | Status |\n|---|---|---|\n| ADR-01 | Where the shop lives | Proposed |",
     13: "In scope: F-01, F-02. Out of scope: mobile app.",
-    14: "| Type | Item | Impact |\n|---|---|---|\n| Dependency | Payment gateway | checkout |",
-    15: "| Role | View | Edit |\n|---|---|---|\n| Admin (permission) | ✓ | ✓ |",
+    14: "| ID | Type | Item | Impact |\n|---|---|---|---|\n| DEP-01 | Dependency | Payment gateway | checkout |",
+    15: "| ID | Entity | Personal |\n|---|---|---|\n| DATA-01 | Order | yes |\n\n| ID | Permission | Admin |\n|---|---|---|\n| PERM-01 | Edit (role) | ✓ |",
     16: "| Feature | Stories |\n|---|---|\n| F-01 | US-01 |\n| F-02 | US-02 |",
     17: "| ID | Situation | User sees | System does |\n|---|---|---|---|\n| ERR-01 | Card declined | Try another card | Keep order |",
     18: "| # | Question | Who |\n|---|---|---|\n| Q1 | What is sold? | Owner |"
@@ -47,6 +48,7 @@ test("a complete PRD has no finding; each broken contract is named", () => {
   assert.ok(prdFindings(prd().replace("| Proposed |", "| |")).includes("ADR-01 has no status"));
   assert.ok(prdFindings(prd().replace("NFR-01", "N1")).includes("section 11 names no requirement (NFR-nn)"));
   assert.ok(prdFindings(prd().replace("ERR-01", "E1")).includes("section 17 names no error case (ERR-nn)"));
+  assert.ok(prdFindings(prd().replace("PERM-01", "P1")).includes("section 15 names no permission row (PERM-nn)"));
   assert.ok(prdFindings(prd().replace("[Assumption]. Metric", ". Metric")).includes(
     "section 1 carries no [Data]/[Assumption]/[Decision] label"));
 });
@@ -79,7 +81,9 @@ Goal.
 ## 3. Information Architecture
 Tree.
 ## 4. Permission Matrix
-| Role | View |
+| ID | Feature | Role | View |
+|---|---|---|---|
+| UP-01 | Orders | Admin | ✓ |
 ## 5. User Journey
 - Stage: find order [Data]
 ## 6. User Flow
@@ -90,6 +94,9 @@ Flow.
 | Orders | ${status} |
 ## 8. Content & Microcopy Guideline
 Tone.
+| ID | Screen | Kind | Text |
+|---|---|---|---|
+| MC-01 | Orders | empty | "No orders yet" |
 ## 9. Design Rules
 Rules.
 ## 10. Artifact Index
@@ -114,7 +121,7 @@ test("a consistent ux-design folder has no finding", (t) => {
 
 test("each broken design contract is a finding", (t) => {
   const findings = projectFindings(project(t, {
-    "uxui.md": uxui("finished").replace("- Busy admin [Assumption]", "- Busy admin").replace("## 4. Permission Matrix\n| Role | View |\n", ""),
+    "uxui.md": uxui("finished").replace("- Busy admin [Assumption]", "- Busy admin").replace("## 4. Permission Matrix\n| ID | Feature | Role | View |\n|---|---|---|---|\n| UP-01 | Orders | Admin | ✓ |\n", ""),
     "design-system.html": system("1.1", BASE_COMPONENTS.filter((name) => name !== "date-picker")),
     "orders.html": artifact("1.0", '<div data-component="kanban"></div>'),
     "stale.html": artifact("1.1").replace("--primary:#123", "--primary:#456")
@@ -133,4 +140,14 @@ test("each broken design contract is a finding", (t) => {
 
 test("uxui.md without a work type line is a finding", () => {
   assert.ok(uxuiFindings("# uxui.md\n").some((finding) => finding.includes("Work type")));
+});
+
+test("an import keeps every statement of the original or lists it as not carried over", () => {
+  const original = "# Shop brief\n\nShoppers pay by PromptPay. Refunds take 7 days.\n\n- Guests can check out\n\n| Rule | Note |\n|---|---|\n| Free shipping from 990 | Thailand only |\n";
+  assert.deepEqual(statements(original), ["Shoppers pay by PromptPay.", "Refunds take 7 days.", "Guests can check out",
+    "Free shipping from 990", "Thailand only"]);
+  const converted = "## 5. User Stories\n| US-01 | Guests can check out |\n## 8. Business Rules\n| BR-01 | Free shipping from 990, Thailand only |\n" +
+    "## 6. Acceptance\nShoppers pay by PromptPay\n";
+  assert.deepEqual(droppedStatements(original, converted), ["Refunds take 7 days."]);
+  assert.deepEqual(droppedStatements(original, `${converted}\n## Not carried over\n- Refunds take 7 days: owned by the returns policy\n`), []);
 });
