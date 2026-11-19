@@ -6,20 +6,19 @@
 // contract — or be excluded with a reason the approver sees. Pure: the caller
 // reads the files.
 
-// Which section of the PRD template defines each ID kind, and where the
-// change must cite it.
+// Each ID kind (its prefix) and where the change must cite it.
 export const PRD_KINDS = Object.freeze({
-  US: { section: 5, label: "User stories", places: ["requirements", "userStories"] },
-  AC: { section: 6, label: "Acceptance criteria", places: ["scenarios"] },
-  BR: { section: 8, label: "Business rules", places: ["requirements", "scenarios"] },
-  F: { section: 10, label: "Features", places: ["requirements", "tasks"] },
-  NFR: { section: 11, label: "Non-functional requirements", places: ["nfr", "requirements", "scenarios"] },
-  ADR: { section: 12, label: "Decisions (ADR)", places: ["decisions"] },
-  DEP: { section: 14, label: "Dependencies", places: ["dependencies", "decisions", "requirements"] },
-  DATA: { section: 15, label: "Data", places: ["dataModel", "requirements"] },
-  PERM: { section: 15, label: "Permissions", places: ["scenarios"] },
-  ERR: { section: 17, label: "Error handling", places: ["failureScenarios", "failureMatrix"] },
-  Q: { section: 18, label: "Open questions", places: ["decisions", "openQuestions"] }
+  US: { label: "User stories", places: ["requirements", "userStories"] },
+  AC: { label: "Acceptance criteria", places: ["scenarios"] },
+  BR: { label: "Business rules", places: ["requirements", "scenarios"] },
+  F: { label: "Features", places: ["requirements", "tasks"] },
+  NFR: { label: "Non-functional requirements", places: ["nfr", "requirements", "scenarios"] },
+  ADR: { label: "Decisions (ADR)", places: ["decisions"] },
+  DEP: { label: "Dependencies", places: ["dependencies", "decisions", "requirements"] },
+  DATA: { label: "Data", places: ["dataModel", "requirements"] },
+  PERM: { label: "Permissions", places: ["scenarios"] },
+  ERR: { label: "Error handling", places: ["failureScenarios", "failureMatrix"] },
+  Q: { label: "Open questions", places: ["decisions", "openQuestions"] }
 });
 export const SCREEN_LABEL = "Screens and states";
 
@@ -63,49 +62,98 @@ export function namedIds(value) {
 const tableRows = (body) => body.split("\n").filter((line) => /^\|/.test(line) && !/^\|[\s:|-]+\|?\s*$/.test(line));
 const cells = (row) => row.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim());
 
-// Items the PRD defines: each ID with its text and section, and the feature
-// mapping (section 16) row of each feature.
+// Items the PRD defines, read from any shape: the ID prefix names the kind,
+// so an ID is defined where a line, table row, list item, bold run, or heading
+// starts with it, wherever it sits. Feature relations come from the PRD's
+// feature mapping (a table row that starts with a feature and names other IDs),
+// from an item's own row naming a feature, and from nesting under a feature
+// heading; a criterion's stories from "AC-03 (US-04)", a story named in the
+// criterion's row, or nesting under a story heading.
+const DEFINED = /^(?:(?:\|\s*|[-*+]\s+(?:\[[ x]\]\s+)?|\d+[.)]\s+|#{1,6}\s+)(?:\*\*)?|\*\*)?((?:US|AC|BR|F|NFR|ADR|ERR|DEP|DATA|PERM)-\d+)(?![\d])/i;
+const DEFINED_Q = /^(?:\|\s*|[-*+]\s+|\d+[.)]\s+|#{1,6}\s+|\*\*)(?:\*\*)?(Q-?\d+)(?![\d])/;
+const kindOf = (id) => id.replace(/-?\d+$/, "");
+const GLOSSARY_TITLE = /glossary|terms\b|terminology|vocabulary|definitions|อภิธาน|ศัพท์|นิยาม/i;
+
 export function parsePrd(markdown) {
-  const list = sections(markdown);
+  const source = String(markdown).replace(/\r\n/g, "\n");
   const items = new Map();
-  for (const [kind, { section }] of Object.entries(PRD_KINDS)) {
-    const body = list.find((row) => row.number === section)?.body || "";
-    const lines = body.split("\n");
-    for (const line of lines) {
-      const head = line.match(kind === "Q" ? /^\|\s*(Q-?\d+)\s*\|/ : new RegExp(`^(?:\\|\\s*|\\*\\*|#+\\s*)(${kind}-\\d+)\\b`));
-      if (!head || items.has(head[1])) continue;
-      const body = line.replace(/^[|*#\s]+|[|*\s]+$/g, "").replace(/\s*\|\s*/g, " · ")
-        .replace(new RegExp(`^${head[1]}\\b\\s*(·\\s*)?`), "");
-      items.set(head[1], { id: head[1], kind, text: body.slice(0, 160) });
-    }
-  }
+  const mappingRows = new Map();
   const mapping = new Map();
-  const mappingBody = list.find((row) => row.number === 16)?.body || "";
-  for (const row of tableRows(mappingBody)) {
-    const ids = namedIds(row);
-    for (const feature of [...ids].filter((id) => id.startsWith("F-"))) mapping.set(feature, ids);
-  }
-  // Glossary terms (section 7): each row's first cell, with its aliases
-  // ("ตะกร้า (Cart)" is both "ตะกร้า" and "Cart").
-  const glossary = tableRows(list.find((row) => row.number === 7)?.body || "").slice(1).map(cells)
-    .map((row) => row[0]).filter(Boolean).map((term) => ({ term,
-      aliases: term.split(/[()/,]/).map((alias) => alias.trim()).filter((alias) => alias.length >= 2) }));
-  // A criterion's stories: "AC-03 (US-04)".
   const criteria = new Map();
-  for (const match of String(list.find((row) => row.number === 6)?.body || "").matchAll(/\b(AC-\d+)\s*\(([^)]*)\)/g))
-    criteria.set(match[1], namedIds(match[2]));
-  return { items, mapping, criteria, glossary };
+  const relate = (map, key, id) => { if (!map.has(key)) map.set(key, new Set()); map.get(key).add(id); };
+  const headings = [];
+  const headingFeatures = new Map();
+  let fence = false;
+  for (const raw of source.split("\n")) {
+    const line = raw.trim();
+    if (/^```/.test(line)) { fence = !fence; continue; }
+    if (fence) continue;
+    const heading = line.match(/^(#{1,6})\s/);
+    if (heading) {
+      while (headings.length && headings.at(-1).level >= heading[1].length) headings.pop();
+      headings.push({ level: heading[1].length, ids: namedIds(line) });
+      for (const feature of [...namedIds(line)].filter((id) => id.startsWith("F-")))
+        if (!headingFeatures.has(feature)) headingFeatures.set(feature, line.replace(/^#+\s*/, ""));
+    }
+    const head = (line.match(DEFINED) || line.match(DEFINED_Q))?.[1]?.toUpperCase();
+    if (!head || !PRD_KINDS[kindOf(head)]) continue;
+    const kind = kindOf(head);
+    const named = namedIds(line);
+    const others = [...named].filter((id) => id !== head);
+    // A feature row that names other IDs is the feature's mapping row.
+    if (kind === "F" && /^\|/.test(line) && others.some((id) => !id.startsWith("F-"))) {
+      for (const feature of [...named].filter((id) => id.startsWith("F-"))) {
+        if (!mappingRows.has(feature)) mappingRows.set(feature, line);
+        for (const id of named) relate(mapping, feature, id);
+      }
+      continue;
+    }
+    const enclosing = heading ? headings.slice(0, -1) : headings;
+    for (const id of [...others, ...enclosing.flatMap((entry) => [...entry.ids])].filter((id) => id.startsWith("F-")))
+      relate(mapping, id, head);
+    if (kind === "AC")
+      for (const story of [...others, ...enclosing.flatMap((entry) => [...entry.ids])].filter((id) => id.startsWith("US-")))
+        relate(criteria, head, story);
+    if (items.has(head)) continue;
+    const body = line.replace(/^[|*#\-+\s]+|[|*\s]+$/g, "").replace(/^\d+[.)]\s+/, "").replace(/\s*\|\s*/g, " · ")
+      .replace(new RegExp(`^${head}\\b\\**\\s*[:·–—-]?\\s*`, "i"), "");
+    items.set(head, { id: head, kind, text: body.slice(0, 160) });
+  }
+  // A feature defined only by its mapping row.
+  for (const [feature, line] of mappingRows) if (!items.has(feature))
+    items.set(feature, { id: feature, kind: "F", text: line.replace(/^[|\s]+|[|\s]+$/g, "").replace(/\s*\|\s*/g, " · ")
+      .replace(new RegExp(`^${feature}\\s*·?\\s*`), "").slice(0, 160) });
+  // A feature named only in a heading ("## Cart (F-01)").
+  for (const [feature, title] of headingFeatures) if (!items.has(feature))
+    items.set(feature, { id: feature, kind: "F", text: title.slice(0, 160) });
+  for (const match of source.matchAll(/\b(AC-\d+)\s*\(([^)]*)\)/g))
+    for (const story of namedIds(match[2])) if (story.startsWith("US-")) relate(criteria, match[1], story);
+  return { items, mapping, criteria, glossary: parseGlossary(source) };
+}
+
+// Glossary terms from the section named Glossary (or its Thai name): each
+// table row's first cell or list item's term, with its aliases
+// ("ตะกร้า (Cart)" is both "ตะกร้า" and "Cart").
+function parseGlossary(source) {
+  const section = sections(source).find((row) => GLOSSARY_TITLE.test(row.title));
+  if (!section) return [];
+  const terms = [...tableRows(section.body).slice(1).map(cells).map((row) => row[0]),
+    ...[...section.body.matchAll(/^\s*[-*+]\s+(?:\*\*([^*]+)\*\*|([^:—–\n]+?)\s*[:—–])/gm)].map((match) => match[1] || match[2])];
+  return terms.map((term) => String(term || "").replace(/\*\*/g, "").trim()).filter(Boolean).map((term) => ({ term,
+    aliases: term.split(/[()/,]/).map((alias) => alias.trim()).filter((alias) => alias.length >= 2) }));
 }
 
 // Screen Inventory rows of uxui.md: screen, feature, and its states.
 export function parseUxui(markdown) {
   const list = sections(markdown);
-  const idRows = (pattern, prefix) => tableRows(list.find((row) => pattern.test(row.title))?.body || "")
+  // UP-nn and MC-nn rows count wherever they sit.
+  const idRows = (prefix) => tableRows(String(markdown))
     .map(cells).filter((row) => new RegExp(`^${prefix}-\\d+$`).test(row[0]))
     .map((row) => ({ id: row[0], text: row.slice(1).join(" · "),
       copy: [...row.join(" ").matchAll(/["“]([^"”]{3,})["”]/g)].map((match) => match[1]) }));
-  const extra = { permissions: idRows(/permission/i, "UP"), microcopy: idRows(/microcopy|content/i, "MC") };
-  const inventory = list.find((row) => /screen inventory/i.test(row.title));
+  const extra = { permissions: idRows("UP"), microcopy: idRows("MC") };
+  const inventory = list.find((row) => /screen inventory/i.test(row.title)) ||
+    list.find((row) => /screens?\b|หน้าจอ/i.test(row.title) && /\|[^\n]*(?:screen|หน้า)[^\n]*\|[^\n]*(?:state|สถานะ)/i.test(row.body));
   if (!inventory) return { screens: [], ...extra };
   const rows = tableRows(inventory.body);
   if (rows.length < 2) return { screens: [], ...extra };
@@ -208,7 +256,9 @@ export function productHandoffCoverage(draft, handoff, { prdText = null, uxuiTex
   }
   if (uxuiText !== null) {
     const { screens } = parseUxui(uxuiText);
-    if (!screens.length) issues.push("semantic draft productHandoff.uxui has no Screen Inventory rows: convert it with the " +
+    const { permissions, microcopy } = parseUxui(uxuiText);
+    if (!screens.length && !permissions.length && !microcopy.length)
+      issues.push("semantic draft productHandoff.uxui has no screen table (screen and state columns), UP-nn, or MC-nn row: convert it with the " +
       "ux-design skill's import step");
     const featureNames = handoff.scope && handoff.scope !== "all" && prdText !== null ? scopedFeatureNames(prdText, handoff.scope) : null;
     for (const row of screens) {

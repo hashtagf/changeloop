@@ -244,9 +244,12 @@ Add complexity only when the work needs it:
 - `productHandoff` naming the `PRD.md` and `uxui.md` the work came from, with a
   `scope`; intake refuses the draft until every in-scope story, acceptance
   criterion, rule, NFR, error case, decision, and screen state is cited in its
-  section or excluded with a reason, and the proposal lists the coverage. In a
-  project with a `PRD.md` or `uxui.md`, every draft must declare it (or say why
-  not), and validation stops if a document changes after approval or an
+  section or excluded with a reason, and the proposal lists the coverage. The
+  documents need not follow the templates: IDs (`US-01`, `AC-01` …) are read
+  wherever they start a line, row, or heading, and a document without them is
+  imported first. In a project with product documents (`PRD.md`, `uxui.md`, or
+  any Markdown file whose content is one), every draft must declare them (or
+  say why not), and validation stops if a document changes after approval or an
   amendment drops an owed item
 - `prototypeSelection` pointing at an existing selection note, with optional
   `excludes` for prototype elements the agreement does not adopt (each with its

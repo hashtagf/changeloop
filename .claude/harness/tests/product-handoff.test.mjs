@@ -241,3 +241,59 @@ test("the packet record catches an edited document and an owed ID an amendment d
   assert.match(handoffPacketIssues(root, packet).join("\n"), /PRD\.md changed after this agreement was compiled/);
   assert.equal(handoffRecordFor(root, {}, { none: "x" }), null);
 });
+
+// A PM's own shape: no template numbering, IDs in headings, bullets, and bold.
+const FREE_PRD = `# Shop requirements
+
+## Terms
+- **ตะกร้า (Cart)**: items chosen, stock not held
+- Order — created at checkout
+
+## Cart (F-01)
+### US-01 Shopper adds items
+- AC-01: adding beyond stock caps at the stock
+- **AC-02** price shown is the current price
+### Rules
+1. BR-01 Free shipping from 990
+- ERR-01: stock service down shows a retry
+
+## Checkout
+### F-02 Pay by PromptPay
+- US-02: shopper pays by QR
+  - AC-03 QR expires after 10 minutes
+
+## Open questions
+| # | Question |
+|---|---|
+| Q1 | Does F-01 hold stock? |
+`;
+
+test("a PRD in any shape is read by ID prefix, nesting, and section names", () => {
+  const prd = parsePrd(FREE_PRD);
+  assert.deepEqual([...prd.items.keys()].sort(), ["AC-01", "AC-02", "AC-03", "BR-01", "ERR-01", "F-01", "F-02", "Q1", "US-01", "US-02"]);
+  assert.equal(prd.items.get("F-01").text, "Cart (F-01)", "a feature named in a heading is defined by it");
+  assert.equal(prd.items.get("AC-02").text, "price shown is the current price");
+  assert.deepEqual([...prd.criteria.get("AC-01")], ["US-01"], "a criterion under a story heading belongs to it");
+  assert.deepEqual([...scopedItems(prd, ["F-02"])].sort(), ["AC-03", "F-02", "US-02"]);
+  assert.deepEqual([...scopedItems(prd, ["F-01"])].sort(), ["AC-01", "AC-02", "BR-01", "ERR-01", "F-01", "Q1", "US-01"],
+    "nested items and the open question that mentions F-01");
+  assert.deepEqual(prd.glossary.map((row) => row.term), ["ตะกร้า (Cart)", "Order"]);
+  const { issues } = productHandoffCoverage({ requirements: [] }, { prd: "requirements.md", scope: "all" }, { prdText: FREE_PRD });
+  for (const id of ["US-01", "AC-01", "AC-02", "AC-03", "BR-01", "ERR-01", "F-01", "F-02", "Q1"])
+    assert.ok(issues.some((issue) => issue.includes(`cover ${id} `)), `${id} is owed\n${issues.join("\n")}`);
+});
+
+test("product documents are found by content as well as by name", async (t) => {
+  const { productDocuments } = await import("../runtime/workflow/validation/handoff-binding.mjs");
+  const root = mkdtempSync(join(tmpdir(), "handoff-content-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const write = (path, value) => { mkdirSync(join(root, path, ".."), { recursive: true }); writeFileSync(join(root, path), value); };
+  write("docs/requirements.md", FREE_PRD);
+  write("docs/screens.md", "## Copy\n| ID | Text |\n|---|---|\n| MC-01 | \"Empty\" |\n| MC-02 | \"Saved\" |\n");
+  write("README.md", FREE_PRD);
+  write("docs/notes.md", "We talked about US-01 and AC-01 today.\n");
+  write("docs/templates/REQUIREMENT-TEMPLATE.md", FREE_PRD);
+  write(".workflow/0001/retro.md", FREE_PRD);
+  write("openspec/specs/cart/spec.md", FREE_PRD);
+  assert.deepEqual(productDocuments(root), ["docs/requirements.md", "docs/screens.md"]);
+});

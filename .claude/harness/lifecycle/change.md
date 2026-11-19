@@ -770,8 +770,21 @@ owed is an `EDIT`. The proposal's "Handoff coverage" section lists every owed
 item under the PRD headings with where the change covers it or why it is
 excluded, so the approver sees the handoff whole.
 
-In a project that has product documents (`PRD.md`, `uxui.md`, or
-`*.prd.md` / `*.uxui.md` outside tool and harness folders), every new draft
+The documents need not follow the `prd` or `ux-design` templates. An ID is
+read wherever a line, table row, list item, bold run, or heading starts with
+it; its prefix names its kind. A feature's items come from a mapping row, from
+naming the feature in their own row, or from sitting under the feature's
+heading; a criterion's stories come from `AC-03 (US-04)`, its own row, or its
+story heading. The glossary and screen table are found by section name. A
+document whose items carry no such IDs (none, or the project's own codes) is
+converted with the import step first.
+
+Product documents are found within four levels of the project, outside tool,
+harness, and dot-folders and `openspec/`: `PRD.md`, `uxui.md`, `*.prd.md`, and
+`*.uxui.md` by name, and any other Markdown file (not a template, example, or
+sample) whose content defines at least three stories, criteria, rules, or
+features of two kinds, or two uxui permission or microcopy rows. In such a
+project every new draft
 must declare `productHandoff`, or `{ "none": "<why this change is not from
 them>" }`; a handed-over change always uses the standard packet. The packet
 records each document's digest and the IDs it owes in `handoff.json`.

@@ -4,9 +4,9 @@
 // a document changed after the agreement was compiled or when an owed ID left
 // the compiled agreement (an amendment that dropped a scenario, say).
 import { createHash } from "node:crypto";
-import { existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { productHandoffCoverage } from "./product-handoff.mjs";
+import { parsePrd, parseUxui, productHandoffCoverage } from "./product-handoff.mjs";
 
 export const HANDOFF_RECORD = "handoff.json";
 const DOCUMENT = /^(?:prd|uxui)\.md$|\.(?:prd|uxui)\.md$/i;
@@ -15,11 +15,18 @@ const SKIPPED = new Set([".git", "node_modules", ".foundation", ".claude", "dist
 
 const digest = (path) => createHash("sha256").update(readFileSync(path)).digest("hex");
 
-// PRD.md, uxui.md, or *.prd.md / *.uxui.md within four levels of the project,
-// outside tool and harness directories and openspec/changes.
-export function productDocuments(root, { maxDepth = 4, limit = 20000 } = {}) {
+// Product documents within four levels of the project, outside tool and
+// harness directories, dot-directories, and openspec/: PRD.md, uxui.md, *.prd.md, *.uxui.md by
+// name, and any other Markdown file whose content is one, so a PM's
+// "requirements.md" is found too: at least three stories, criteria, rules, or
+// features in two kinds, or uxui permission or microcopy rows. Templates,
+// examples, and samples are never product documents by content.
+const MARKDOWN = /\.(?:md|markdown)$/i;
+const NOT_PRODUCT = /^(?:readme|changelog|contributing|license|security|agents|claude|design)\.md$|template|example|sample/i;
+export function productDocuments(root, { maxDepth = 4, limit = 20000, maxReads = 300, maxBytes = 1_000_000 } = {}) {
   const found = [];
   let budget = limit;
+  let reads = maxReads;
   const walk = (dir, depth) => {
     if (depth > maxDepth || budget <= 0) return;
     let entries;
@@ -29,12 +36,27 @@ export function productDocuments(root, { maxDepth = 4, limit = 20000 } = {}) {
       const path = join(dir, entry.name);
       const rel = relative(root, path).replaceAll("\\", "/");
       if (entry.isDirectory()) {
-        if (!SKIPPED.has(entry.name) && rel !== "openspec/changes") walk(path, depth + 1);
+        if (!SKIPPED.has(entry.name) && !entry.name.startsWith(".") && rel !== "openspec") walk(path, depth + 1);
       } else if (entry.isFile() && DOCUMENT.test(entry.name)) found.push(rel);
+      else if (entry.isFile() && MARKDOWN.test(entry.name) && !NOT_PRODUCT.test(entry.name) && reads-- > 0 &&
+        isProductDocument(path, maxBytes)) found.push(rel);
     }
   };
   walk(root, 0);
   return found.sort();
+}
+
+export function isProductDocument(path, maxBytes = 1_000_000) {
+  let content;
+  try {
+    if (statSync(path).size > maxBytes) return false;
+    content = readFileSync(path, "utf8");
+  } catch { return false; }
+  const { items } = parsePrd(content);
+  const core = [...items.values()].filter((item) => ["US", "AC", "BR", "F"].includes(item.kind));
+  if (core.length >= 3 && new Set(core.map((item) => item.kind)).size >= 2) return true;
+  const { permissions, microcopy } = parseUxui(content);
+  return permissions.length + microcopy.length >= 2;
 }
 
 // A draft in a project with product documents must say which it comes from,
@@ -43,7 +65,8 @@ export function undeclaredHandoffIssues(root, handoff) {
   if (handoff !== undefined) return [];
   const documents = productDocuments(root);
   if (!documents.length) return [];
-  return [`the project has product documents (${documents.join(", ")}); name the ones this change comes from in ` +
+  const named = documents.length > 5 ? `${documents.slice(0, 5).join(", ")}, and ${documents.length - 5} more` : documents.join(", ");
+  return [`the project has product documents (${named}); name the ones this change comes from in ` +
     'productHandoff { "prd", "uxui", "scope": "all" | ["F-nn"] } so intake checks the change covers them, or set ' +
     'productHandoff { "none": "<why this change is not from them>" }'];
 }
