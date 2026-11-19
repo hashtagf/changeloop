@@ -124,6 +124,16 @@ runs the commands `doctor` names, drafts the feature map and optional module
 boundaries from your code, and asks you to confirm them and to adopt today's
 findings as the baseline. You decide; nothing becomes binding silently.
 
+For product work that starts before any change, two skills write the inputs
+Change Loop builds from. `prd` writes `PRD.md` and `prd.html` (18 sections:
+goal, stories, Given/When/Then acceptance, rules, flows, NFR, ADRs, scope,
+data and permissions, errors, open questions) and checks the links between
+them; an approved PRD goes to `grill-task-gu` and then `/feature` or
+`/change`. `ux-design` runs UX/UI in phases you confirm one at a time:
+`uxui.md`, a versioned `design-system.html`, and page or feature artifacts
+that share its Token Block; an approved artifact becomes a change's
+`prototypeSelection`, which the visual check compares the built UI with.
+
 ## Commit the installation
 
 In a Git project, the installer stages the managed setup files but does not

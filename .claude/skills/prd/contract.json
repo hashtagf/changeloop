@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "skill": "prd",
+  "trigger": "A product requirement document must be written or revised ('write a PRD', 'เขียน PRD', a brief with a prototype or reference site)",
+  "inputs": [
+    "the user's brief and answers to the brief questions",
+    "every prototype, reference site, product, or dataset the user names",
+    "an earlier PRD.md version when revising"
+  ],
+  "action": "Ask only the brief questions sources cannot answer, read the references, write PRD.md in the 18-section template with evidence labels and linked IDs, check it with prd-check.mjs, render prd.html, and stop for review",
+  "outputs": [
+    {
+      "kind": "document",
+      "description": "PRD.md with the 18 sections and a Changelog, and prd.html rendered from it"
+    },
+    {
+      "kind": "decision-request",
+      "description": "the open questions that change scope or an ADR, asked together, with who must answer each"
+    },
+    {
+      "kind": "report",
+      "description": "the PRD version, its checker result, the assumptions awaiting review, and the remaining open questions"
+    }
+  ],
+  "handoff": [
+    {
+      "to": "skill:grill-task-gu",
+      "when": "the PRD is approved and must become a decision sheet and task backlog"
+    },
+    {
+      "to": "skill:brainstorming",
+      "when": "the product direction itself is still undecided"
+    },
+    {
+      "to": "user",
+      "when": "a business rule, money, personal-data, or scope choice needs a decision"
+    }
+  ],
+  "responsibility": {
+    "aiDoes": [
+      "reads the named references and records what they show as evidence",
+      "writes PRD.md, checks it, and renders prd.html",
+      "labels every unsourced target, rule, and persona detail as an assumption"
+    ],
+    "humanDoes": [
+      "supplies the brief, real data, and the reviewers for each round"
+    ],
+    "humanDecides": [
+      "scope, business rules, and every ADR",
+      "approval of each PRD version"
+    ]
+  }
+}

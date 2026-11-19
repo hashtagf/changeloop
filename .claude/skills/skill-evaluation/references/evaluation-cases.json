@@ -50,6 +50,15 @@
       "status": "not-run"
     },
     {
+      "id": "change-impact-analysis",
+      "positive": "ทำ endpoint นี้เป็น public แล้วจะกระทบ consumers และข้อมูลเดิมอะไรบ้าง",
+      "negative": "จัดลำดับ implementation ที่รู้ consumers และ compatibility ครบแล้ว",
+      "expectedSkill": "change-impact-analysis",
+      "expectedNegativeSkill": "plan-writing",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
       "id": "changes",
       "positive": "ตอนนี้ change ไหนติดอยู่ และต้องทำอะไรต่อ โดยยังไม่แก้",
       "negative": "ทำ task ที่ harness ส่งมาใน sandbox ให้เสร็จ",
@@ -158,24 +167,6 @@
       "status": "not-run"
     },
     {
-      "id": "onboard",
-      "positive": "We just installed Change Loop here; set up the quality baselines and the feature map so agents can work safely.",
-      "negative": "Rewrite our CLAUDE.md so it stays short and keeps the house rules.",
-      "expectedSkill": "onboard",
-      "expectedNegativeSkill": "claude-md",
-      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
-      "status": "not-run"
-    },
-    {
-      "id": "ux-ui-principles",
-      "positive": "ตรวจ UX flow นี้ด้วยหลักการที่เกี่ยวข้อง ระบุ failure/recovery, hierarchy และวิธีตรวจ โดยยังไม่ทำ frontend",
-      "negative": "Implement the already approved typography and spacing using existing components.",
-      "expectedSkill": "ux-ui-principles",
-      "expectedNegativeSkill": "frontend-design",
-      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
-      "status": "not-run"
-    },
-    {
       "id": "grill-task-gu",
       "positive": "Ground this approved PRD and produce one Decision Sheet and backlog.",
       "negative": "Implement the harness-returned approved task.",
@@ -248,11 +239,38 @@
       "status": "not-run"
     },
     {
+      "id": "onboard",
+      "positive": "We just installed Change Loop here; set up the quality baselines and the feature map so agents can work safely.",
+      "negative": "Rewrite our CLAUDE.md so it stays short and keeps the house rules.",
+      "expectedSkill": "onboard",
+      "expectedNegativeSkill": "claude-md",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
+      "id": "performance-investigation",
+      "positive": "API ช้าลง 30% ช่วยวัด baseline และหาคอขวด",
+      "negative": "ออกแบบ alert และ trace correlation ของ service",
+      "expectedSkill": "performance-investigation",
+      "expectedNegativeSkill": "observability-fundamentals",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
       "id": "plan-writing",
       "positive": "Sequence migration dependencies and rollback in the active OpenSpec design/tasks.",
       "negative": "Find unverified external consumers before deciding the migration.",
       "expectedSkill": "plan-writing",
       "expectedNegativeSkill": "change-impact-analysis",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
+      "id": "prd",
+      "positive": "เขียน PRD.md ร้านค้า online จาก brief นี้ ให้ครบ 18 หัวข้อพร้อม prd.html",
+      "negative": "แตก task จาก PRD ที่อนุมัติแล้วให้เป็น backlog",
+      "expectedSkill": "prd",
+      "expectedNegativeSkill": "grill-task-gu",
       "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
       "status": "not-run"
     },
@@ -311,60 +329,6 @@
       "status": "not-run"
     },
     {
-      "id": "tailwind-design-system",
-      "positive": "Migrate shared Tailwind v3 tokens and variants to the installed v4 setup.",
-      "negative": "Style one page with existing shared tokens and components.",
-      "expectedSkill": "tailwind-design-system",
-      "expectedNegativeSkill": "frontend-design",
-      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
-      "status": "not-run"
-    },
-    {
-      "id": "testing-fundamentals",
-      "positive": "Design a regression that fails for the bug rather than broken setup.",
-      "negative": "Execute the already configured evidence providers and freshness checks.",
-      "expectedSkill": "testing-fundamentals",
-      "expectedNegativeSkill": "prove",
-      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
-      "status": "not-run"
-    },
-    {
-      "id": "test-design",
-      "positive": "เขียน test case checklist และแผน UAT ให้ QA สำหรับฟีเจอร์คืนเงิน พร้อมเกณฑ์ go/no-go",
-      "negative": "Write a failing-first Vitest regression for this refund rounding bug.",
-      "expectedSkill": "test-design",
-      "expectedNegativeSkill": "testing-fundamentals",
-      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
-      "status": "not-run"
-    },
-    {
-      "id": "ui-ux-pro-max",
-      "positive": "Search the bundled product, style, palette and typography catalog to compare dashboard design directions.",
-      "negative": "Review the user's checkout decisions and error recovery without searching for a visual style.",
-      "expectedSkill": "ui-ux-pro-max",
-      "expectedNegativeSkill": "ux-ui-principles",
-      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
-      "status": "not-run"
-    },
-    {
-      "id": "change-impact-analysis",
-      "positive": "ทำ endpoint นี้เป็น public แล้วจะกระทบ consumers และข้อมูลเดิมอะไรบ้าง",
-      "negative": "จัดลำดับ implementation ที่รู้ consumers และ compatibility ครบแล้ว",
-      "expectedSkill": "change-impact-analysis",
-      "expectedNegativeSkill": "plan-writing",
-      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
-      "status": "not-run"
-    },
-    {
-      "id": "performance-investigation",
-      "positive": "API ช้าลง 30% ช่วยวัด baseline และหาคอขวด",
-      "negative": "ออกแบบ alert และ trace correlation ของ service",
-      "expectedSkill": "performance-investigation",
-      "expectedNegativeSkill": "observability-fundamentals",
-      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
-      "status": "not-run"
-    },
-    {
       "id": "skill-evaluation",
       "positive": "เปรียบเทียบ description เดิมกับใหม่ ด้วย prompts ที่ควรและไม่ควรเรียก",
       "negative": "ตรวจชื่อ skill กับ local references โดยไม่เรียกโมเดล",
@@ -379,6 +343,60 @@
       "negative": "ทดสอบพฤติกรรม skill เวอร์ชันใหม่กับ baseline จริง",
       "expectedSkill": "skill-suite-auditor",
       "expectedNegativeSkill": "skill-evaluation",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
+      "id": "tailwind-design-system",
+      "positive": "Migrate shared Tailwind v3 tokens and variants to the installed v4 setup.",
+      "negative": "Style one page with existing shared tokens and components.",
+      "expectedSkill": "tailwind-design-system",
+      "expectedNegativeSkill": "frontend-design",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
+      "id": "test-design",
+      "positive": "เขียน test case checklist และแผน UAT ให้ QA สำหรับฟีเจอร์คืนเงิน พร้อมเกณฑ์ go/no-go",
+      "negative": "Write a failing-first Vitest regression for this refund rounding bug.",
+      "expectedSkill": "test-design",
+      "expectedNegativeSkill": "testing-fundamentals",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
+      "id": "testing-fundamentals",
+      "positive": "Design a regression that fails for the bug rather than broken setup.",
+      "negative": "Execute the already configured evidence providers and freshness checks.",
+      "expectedSkill": "testing-fundamentals",
+      "expectedNegativeSkill": "prove",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
+      "id": "ui-ux-pro-max",
+      "positive": "Search the bundled product, style, palette and typography catalog to compare dashboard design directions.",
+      "negative": "Review the user's checkout decisions and error recovery without searching for a visual style.",
+      "expectedSkill": "ui-ux-pro-max",
+      "expectedNegativeSkill": "ux-ui-principles",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
+      "id": "ux-design",
+      "positive": "ออกแบบ UX/UI ทั้งโปรเจกต์เป็น phase: uxui.md, design system และหน้าแต่ละฟีเจอร์",
+      "negative": "ปุ่มนี้ควรใช้ modal หรือ drawer ตอบสั้นๆ",
+      "expectedSkill": "ux-design",
+      "expectedNegativeSkill": "ux-ui-principles",
+      "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
+      "status": "not-run"
+    },
+    {
+      "id": "ux-ui-principles",
+      "positive": "ตรวจ UX flow นี้ด้วยหลักการที่เกี่ยวข้อง ระบุ failure/recovery, hierarchy และวิธีตรวจ โดยยังไม่ทำ frontend",
+      "negative": "Implement the already approved typography and spacing using existing components.",
+      "expectedSkill": "ux-ui-principles",
+      "expectedNegativeSkill": "frontend-design",
       "expectedBehavior": "Follow the selected skill's scope, actual tool capabilities, and canonical harness ownership. Do not infer additional authority.",
       "status": "not-run"
     }

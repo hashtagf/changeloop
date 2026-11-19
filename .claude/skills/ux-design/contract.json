@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "skill": "ux-design",
+  "trigger": "A product's UX/UI must be designed end to end in confirmed phases ('design the UX/UI', 'ออกแบบ UX/UI ทั้งโปรเจกต์', uxui.md, a design system file, page or feature artifacts)",
+  "inputs": [
+    "the answers to the Phase 0 brief, including references and real user data",
+    "an existing design system or framework the user names",
+    "the confirmed outputs of earlier phases"
+  ],
+  "action": "Run the phases in order, building uxui.md, a versioned design-system.html, and the page or feature artifacts with the Token Block, checking each with uxui-check.mjs, and stopping for CONFIRM after every phase and feature",
+  "outputs": [
+    {
+      "kind": "document",
+      "description": "uxui.md, design-system.html with a versioned Token Block, and the HTML artifacts, each ending with Design QA"
+    },
+    {
+      "kind": "decision-request",
+      "description": "the CONFIRM at the end of each phase and feature, and every missing brief answer"
+    },
+    {
+      "kind": "report",
+      "description": "the phase summary, the uxui-check result, and what remains open"
+    }
+  ],
+  "handoff": [
+    {
+      "to": "skill:ux-ui-principles",
+      "when": "a design decision needs the principle, pattern, or verification procedure"
+    },
+    {
+      "to": "skill:change",
+      "when": "an approved artifact must be implemented; it becomes the change's prototypeSelection"
+    },
+    {
+      "to": "user",
+      "when": "a phase or feature is ready for CONFIRM or the brief lacks an answer"
+    }
+  ],
+  "responsibility": {
+    "aiDoes": [
+      "builds the design files and keeps their Token Block versions consistent",
+      "runs uxui-check.mjs and fixes every finding",
+      "labels persona and journey assumptions"
+    ],
+    "humanDoes": [
+      "answers the brief and supplies references and real user data"
+    ],
+    "humanDecides": [
+      "every phase and feature CONFIRM",
+      "style direction, tokens, and new components"
+    ]
+  }
+}

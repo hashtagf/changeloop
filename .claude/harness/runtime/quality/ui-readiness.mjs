@@ -29,7 +29,8 @@ const RENDERED_CONFIG = /(^|\/)(playwright|cypress)\.config\.[cm]?[jt]s$/;
 const TOKENS = /(^|\/)((design-)?tokens?(\.[a-z]+)?\.(json|css|scss|ts|js|mjs)|tailwind\.config\.[cm]?[jt]s|theme\.(css|json))$/i;
 const STYLESHEET = /\.(css|scss|sass|less)$/i;
 const COLOR_LITERAL = /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(/g;
-const DESIGN_DOC = /^(docs\/)?design\.md$/i;
+// DESIGN.md, or uxui.md as the ux-design skill writes it.
+const DESIGN_DOC = /^(docs\/)?(design|uxui)\.md$/i;
 const TEST_PATH = /(^|\/)(tests?|__tests__|fixtures?|e2e)\//;
 
 function packages(root, files) {
