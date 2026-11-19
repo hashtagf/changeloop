@@ -10,7 +10,7 @@
 // nothing for its old lines. It never renders the page: contrast, focus
 // order, and live behavior need the project's own rendered check, which
 // replaces this one when the project has it.
-import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { extname, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
@@ -133,6 +133,19 @@ function git(cwd, args) {
   return result.status === 0 ? result.stdout : null;
 }
 
+// Workspace files outside version control, tool, and harness directories.
+const SKIPPED = new Set([".git", "node_modules", ".foundation", ".claude", "openspec", "dist", "build",
+  "coverage", "test-results"]);
+function walkFiles(root, prefix = "") {
+  let entries;
+  try { entries = readdirSync(join(root, prefix), { withFileTypes: true }); } catch { return []; }
+  return entries.flatMap((entry) => {
+    const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) return SKIPPED.has(entry.name) ? [] : walkFiles(root, rel);
+    return entry.isFile() ? [rel] : [];
+  });
+}
+
 const isMarkup = (path) => MARKUP_EXTENSIONS.includes(extname(path).toLowerCase());
 
 // Changed markup files of one repository with the lines the change added or
@@ -158,7 +171,10 @@ export function changedMarkup(path, baseHead, controlPath = null) {
     return changed;
   }
   // No Git base (a copied workspace): a file differs from the project's copy.
-  for (const file of (git(path, ["ls-files", "--cached", "--others", "--exclude-standard"]) || "").split("\n")) {
+  // A workspace that is not a Git repository at all is walked directly, so a
+  // copied project is judged instead of passing with nothing read.
+  const listed = git(path, ["ls-files", "--cached", "--others", "--exclude-standard"]);
+  for (const file of (listed === null ? walkFiles(path) : listed.split("\n"))) {
     if (!file || !isMarkup(file)) continue;
     const original = controlPath && join(controlPath, file);
     if (!original || !existsSync(original) ||
