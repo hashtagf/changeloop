@@ -254,8 +254,10 @@ export function replaceRequirementBlock(content, scenarios, replacement) {
   return { found: true, matches: 1, content: text };
 }
 
-export function combinedChain(tasksContent) {
-  return verifyChain(unique(String(tasksContent).split("\n").map(taskVerify).filter(Boolean)));
+export function combinedChain(tasksContent, repository = null) {
+  const lines = String(tasksContent).split("\n").filter((line) => !repository ||
+    (line.match(/\[repo:([^\]]+)\]/i)?.[1]?.trim() || "root") === repository);
+  return verifyChain(unique(lines.map(taskVerify).filter(Boolean)));
 }
 
 export function combinedCommand(tasksContent) {
@@ -267,6 +269,17 @@ export function withChain(config, chain) {
   const { segments: _prior, ...rest } = config;
   return { ...rest, command: chain.command,
     ...(chain.segments && config.adapter === "test-discovery" ? { segments: chain.segments } : {}) };
+}
+
+// Only commands derived from task verifies follow changes to those verifies.
+export function updateDerivedProviderCommands(providers, tasksContent, nextTasks, allChain) {
+  for (const [name, config] of Object.entries(providers)) {
+    if (!["command", "test-discovery"].includes(config?.adapter)) continue;
+    const repository = config.repository || null;
+    const prior = combinedChain(tasksContent, repository);
+    if (JSON.stringify(config.command) === JSON.stringify(prior.command))
+      providers[name] = withChain(config, repository ? combinedChain(nextTasks, repository) : allChain);
+  }
 }
 
 export function amendmentList(amendment, field) {

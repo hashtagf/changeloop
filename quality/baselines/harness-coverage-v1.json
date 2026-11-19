@@ -1,7 +1,7 @@
 {
   "version": 1,
   "scope": "shipped runtime and hooks under the harness unit suites (.claude/harness/tests)",
-  "lines": 91.49,
+  "lines": 91.82,
   "branches": 85.15,
   "functions": 89.29
 }

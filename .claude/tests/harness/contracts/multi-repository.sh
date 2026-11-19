@@ -633,18 +633,7 @@ sibling_draft() { # <repository-of-the-sibling-task> <selection-json>
           then: "The marker is present" }], outcome: "The marker is present" }],
       tasks: [task("lib-marker", "lib"), task("sibling-marker", repository),
         task("root-marker", "root")],
-      evidence: { marker: { capabilities: ["test"] } },
-      // Each writable repository changes product code, so each needs its own
-      // test provider for Prove to show the change fails on the original code.
-      execution: { version: 1, services: {}, providers: Object.fromEntries(
-        ["root", "lib", repository].flatMap((repo) => {
-          const run = { adapter: "test-discovery", reportFormat: "auto", minimum: 1,
-            command: ["npm", "test"], ...(repo === "root" ? {} : { repository: repo }) };
-          return repo === "root" ? [["test", { ...run, capability: "test", claims: "declared" }]]
-            : [[`test-${repo}`, { ...run, capability: "test", claims: "declared",
-                discoveryProvider: `discovery-${repo}` }],
-              [`discovery-${repo}`, { ...run, capability: "discovery" }]];
-        })) } }));' "$@"
+      evidence: { marker: { capabilities: ["test"] } } }));' "$@"
 }
 mkdir -p .foundation/drafts
 sibling_draft ref '[{"id":"root"},{"id":"lib"},{"id":"ref"}]' \
@@ -684,6 +673,7 @@ for _ in 1 2 3 4 5; do
   sibling_build="$(node .claude/harness/foundation.mjs advance sibling-marker --through build 2>&1)"
   case "$sibling_build" in *'"reached":"build"'*) break ;; esac
 done
+case "$sibling_build" in *'"reached":"build"'*) ;; *) printf '%s\n' "$sibling_build" >&2 ;; esac
 assert_contains "Build completes tasks in root, submodule, and sibling" \
   "$sibling_build" '"reached":"build"'
 # Proof stops at the review handoff; the verdict is recorded through the

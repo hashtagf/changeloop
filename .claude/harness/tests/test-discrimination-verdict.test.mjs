@@ -155,14 +155,11 @@ test("discrimination-no-verdict-visible-verdict: a verdict leaves no no-verdict 
   assert.deepEqual(landAdvisoryLines({}), []);
 });
 
-test("discrimination-hung-base-run: a base run that hangs after its tests failed is a fails-on-base verdict, bounded on its own", (t) => {
+test("discrimination-hung-base-run: a base run is capped and partial output is not a verdict", (t) => {
   assert.equal(baseRunTimeoutMs({ timeoutMs: 600000 }), BASE_RUN_TIMEOUT_MS, "a base run does not inherit the ten-minute provider timeout");
   assert.equal(baseRunTimeoutMs({ timeoutMs: 30000 }), 30000);
-  assert.equal(baseRunTimeoutMs({ timeoutMs: 600000, discriminationTimeoutMs: 300000 }), 300000);
-  const timedOut = (stdout) => baseRunOutcome({ error: { code: "ETIMEDOUT" }, status: null, stdout, stderr: "" });
-  assert.equal(timedOut("✖ register returns public user only (24ms)\n"), "fails-on-base");
-  assert.equal(timedOut("not ok 1 - register\n"), "fails-on-base");
-  assert.equal(timedOut("✔ register (2ms)\n"), "timed-out", "only passing output before the bound is still no verdict");
+  assert.equal(baseRunOutcome({ error: { code: "ETIMEDOUT" }, status: null,
+    stdout: "not ok 1 - register\n" }), "timed-out");
   // A test that fails and then keeps a server open, as the base code does.
   const { root, repo } = fixture(t);
   writeFileSync(join(repo.workspacePath, "test/hangs.test.mjs"),
@@ -171,5 +168,6 @@ test("discrimination-hung-base-run: a base run that hangs after its tests failed
   const result = runtime(repo, join(root, "logs"), { timeoutMs: 4000, binding: [
     { claimId: "hangs", requirementKey: "greet", scenario: "hangs", regression: false, files: ["test/hangs.test.mjs"] }
   ] }).evaluate("change-a", "hash-b");
-  assert.equal(result.repositories[0].outcome, "fails-on-base", JSON.stringify(result.repositories[0]));
+  assert.deepEqual(result.repositories[0].files.find((row) => row.file === "test/hangs.test.mjs"),
+    { file: "test/hangs.test.mjs", outcome: "timed-out" });
 });
