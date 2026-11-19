@@ -12,6 +12,7 @@ import { createLandUndo } from "../workflow/land/land-undo.mjs";
 import { createLessonsRuntime } from "../observability/lessons-runtime.mjs";
 import { createOutcomesRuntime } from "../observability/outcomes-runtime.mjs";
 import { createProjectFeaturesCommand } from "../workflow/validation/project-feature-map.mjs";
+import { createProductProgressCommand } from "../workflow/validation/product-progress.mjs";
 import { createPyramidReadinessCommand } from "./pyramid-readiness-command.mjs";
 import { createSessionLeaseRuntime, runTaskCheck } from "../workflow/authority/session-lease.mjs";
 import { currentDeliveryProof } from "../workflow/advance/advance-recovery.mjs";
@@ -246,6 +247,7 @@ export function composeDeliveryRuntimes({
   const { showFeatures } = createProjectFeaturesCommand({
     root: ROOT, loadRuntime, activeChangePath, canonicalChangedSurface, fail: die
   });
+  const { showProductProgress } = createProductProgressCommand({ root: ROOT, fail: die });
   const abandonRuntime = createAbandonRuntime({
     root: ROOT,
     paths: {
@@ -297,6 +299,6 @@ export function composeDeliveryRuntimes({
   return {
     abandonChange, advanceLand, advanceThrough, advanceValue, command, lessonsValue,
     pyramidReadinessCommand, sessionLeases, showAdvance, showDeliveryAdvance, showFeatures,
-    showFeedback, showLessons, showOutcomes, undoLand, values
+    showFeedback, showLessons, showOutcomes, showProductProgress, undoLand, values
   };
 }

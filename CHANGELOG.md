@@ -83,6 +83,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- `cloop product status` shows every item of the project's PRD and uxui
+  documents as not started, in a change, proven, or archived (grouped by
+  feature, with deferrals and their reasons), and names changes compiled
+  against an earlier revision; `--strict` fails while any item is in no change.
 - Product handoff accepts a PM's own layout: IDs are read wherever a line,
   row, list item, bold run, or heading starts with them, with features and
   stories related by mapping rows, mentions, and heading nesting, and the
