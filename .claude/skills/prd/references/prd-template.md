@@ -74,6 +74,10 @@ into `uxui.md`.
 
 ## Handoff to Change Loop
 
+Change Loop reads the IDs, not the section numbers: a PM document in another
+layout works when its items start with these IDs (as a table row, list item,
+bold run, or heading). Without them it is imported first.
+
 A change built from the PRD names it in the draft, and `change start` refuses
 the draft until every in-scope item is covered or excluded with a reason:
 

@@ -73,6 +73,12 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- Product handoff accepts a PM's own layout: IDs are read wherever a line,
+  row, list item, bold run, or heading starts with them, with features and
+  stories related by mapping rows, mentions, and heading nesting, and the
+  glossary and screen table found by section name; product documents are also
+  found by content (a `requirements.md` with stories and criteria), skipping
+  templates, examples, and dot-folders.
 - Product handoff is enforced end to end: a project with `PRD.md` or
   `uxui.md` makes every new draft declare `productHandoff` (or why not);
   coverage now also owes dependencies (`DEP-nn`), data (`DATA-nn`), PRD and
