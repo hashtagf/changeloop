@@ -11,6 +11,16 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- Prove refused the visual wiring the start template shows ("provider
+  'browser' has no declared claims"): a browser provider whose screenshots
+  feed the visual review now covers the prototype-bound claims. Found by paid
+  lane 43, which then spent every review wave repairing it.
+- Test discrimination returned no verdict in every project without Git (the
+  copy workspace, and every paid benchmark lane): it now builds the base from
+  the copy's baseline and captured base bytes.
+- After an amendment, the proposal's handoff coverage table still listed the
+  rows the amendment removed; every amendment now rebuilds it.
+
 - The built-in accessibility check read no file in a copied workspace that is
   not a Git repository and passed with "0 changed markup files"; it now walks
   the workspace and compares it with the project copy.

@@ -18,6 +18,7 @@ import {
   BETA_BANNER_MUTANTS, SETTINGS_SCREEN_MUTANTS, repairSettingsScreen
 } from "./fixtures/visual-prototype-repairs.mjs";
 import { TASK_BOARD_MUTANTS, repairTaskBoard } from "./fixtures/interactive-ui-repairs.mjs";
+import { CART_MUTANTS, repairCart } from "./fixtures/product-handoff-repairs.mjs";
 
 const TASKS = fileURLToPath(new URL("../tasks", import.meta.url));
 const MATRIX = JSON.parse(readFileSync(
@@ -1333,4 +1334,9 @@ test("interactive UI oracle drives every state, the add form, and phone width", 
 test("interactive UI oracle rejects a stylesheet wider than a phone", () => {
   verifyMutants("44-interactive-ui-states", "styles.css", repairTaskBoard,
     [["CASE_PHONE_WIDTH", "fixed 640px width", [["max-width: 640px", "width: 640px"]]]]);
+});
+
+test("product handoff fixture proves every handed-over F-01 item and the archived handoff record", () => {
+  verifyWorkload("45-product-handoff", repairCart);
+  verifyMutants("45-product-handoff", "src/cart.js", repairCart, CART_MUTANTS);
 });

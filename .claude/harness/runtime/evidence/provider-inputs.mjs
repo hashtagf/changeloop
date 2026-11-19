@@ -268,6 +268,15 @@ export function claimsForCapability(context, id, claims, capability) {
     return claims.filter((claim) =>
       bound.has(claim.id) || claim.capabilities.includes(VISUAL_CAPABILITY));
   }
+  // A browser provider's screenshots feed the visual review, so it also covers
+  // the claims the prototype is bound to; otherwise the wiring the start
+  // template shows (a screenshot command the visual provider depends on)
+  // would have no claim to record.
+  if (capability === "browser") {
+    const bound = new Set(context.evidence(id).visualClaims || []);
+    return claims.filter((claim) => claim.capabilities.includes("browser") || bound.has(claim.id) ||
+      claim.capabilities.includes(VISUAL_CAPABILITY));
+  }
   if (capability === "acceptance") {
     const ids = context.resolvedAcceptance(
       id, context.loadRuntime(id), context.evidence(id)).claimIds;

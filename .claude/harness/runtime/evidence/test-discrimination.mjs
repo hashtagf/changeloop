@@ -10,6 +10,7 @@ import { providerTimeoutMs } from "./provider-catalog.mjs";
 import { environmentIdentity, taskCheckArgv } from "./task-check-evidence.mjs";
 import { spawnCapturedAsync } from "./configured-reviewer.mjs";
 import { scopeAllowsPath } from "../core/graph-execution.mjs";
+import { buildCopyScratch, copyBaseIdentity, copyChangedPaths } from "./copy-base-tree.mjs";
 // Work whose tests should pass before and after the change.
 import { BEHAVIOR_NEUTRAL_WORK } from "../contracts/work-types.mjs";
 
@@ -333,7 +334,7 @@ export function prepareBaseTree(workspace, baseHead, isProduct, fileDigest) {
 }
 
 export function createTestDiscriminationRuntime({
-  LOGS, requiredProviders, providerConfig, providerCapability, providerRepository,
+  root = null, copyBaseBytes = null, LOGS, requiredProviders, providerConfig, providerCapability, providerRepository,
   selectedRepositories, repositoryBaseHead, changedSurface, pathKind, changeWorkTypes,
   receiptValidity, configuredCommand, fileDigest, stableHash, loadRuntime,
   spawnCommandSync = spawnSync, spawnCommandAsync = spawnCapturedAsync, environment = process.env
@@ -380,6 +381,13 @@ export function createTestDiscriminationRuntime({
     return value;
   }
 
+  function copyWorkspaceBaseline(repository, state, workspace) {
+    if (!root || !workspace || repository.id !== "root" || repositoryBaseHead(repository, state)) return null;
+    const recorded = state.workspace;
+    if (recorded?.mode !== "copy" || !recorded.baseline) return null;
+    return { bytes: recorded.baseline, manifest: recorded.sandboxBaseline || recorded.baseline };
+  }
+
   function evaluateRepository(id, repository, rows, hash, state, asynchronous = false) {
     const base = { repositoryId: repository.id };
     const productPaths = rows.filter((row) => !pathKind(row.path)).map((row) => row.path);
@@ -390,9 +398,13 @@ export function createTestDiscriminationRuntime({
       return { ...base, provider: selected.ineligible, outcome: "test-provider-not-runnable-on-base" };
     if (selected.pending) return { ...base, provider: selected.pending, outcome: "test-evidence-pending" };
     const { provider, config } = selected;
-    const baseHead = repositoryBaseHead(repository, state);
     const workspace = repository.workspacePath;
-    const dirty = baseHead && workspace ? dirtyPaths(workspace, baseHead) : null;
+    // An isolated copy of a project without Git has no base head; its baseline
+    // manifest and captured base bytes describe the base instead.
+    const copy = copyWorkspaceBaseline(repository, state, workspace);
+    const baseHead = copy ? copyBaseIdentity(copy.bytes, productPaths) : repositoryBaseHead(repository, state);
+    const dirty = copy ? copyChangedPaths(workspace, copy.manifest)
+      : baseHead && workspace ? dirtyPaths(workspace, baseHead) : null;
     if (!dirty) return { ...base, provider, outcome: "unavailable" };
     const testFiles = rows.filter((row) => pathKind(row.path) === "test" &&
       lstatSync(join(workspace, row.path), { throwIfNoEntry: false })?.isFile())
@@ -436,7 +448,8 @@ export function createTestDiscriminationRuntime({
     });
     const settle = () => combineBaseRuns(row, planned, binding);
     if (planned.every((job) => job.cached)) return { ...settle(), cached: true };
-    const prepared = buildScratch(workspace, baseHead, overlay);
+    const prepared = copy ? buildCopyScratch(root, workspace, copy.bytes, productPaths, copyBaseBytes)
+      : buildScratch(workspace, baseHead, overlay);
     if (!prepared) {
       for (const job of planned) if (!job.cached) job.outcome = "unavailable";
       return settle();

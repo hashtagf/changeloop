@@ -6,7 +6,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { parsePrd, parseUxui, productHandoffCoverage } from "./product-handoff.mjs";
+import { parsePrd, parseUxui, productHandoffCoverage, renderProductHandoff } from "./product-handoff.mjs";
 
 export const HANDOFF_RECORD = "handoff.json";
 const DOCUMENT = /^(?:prd|uxui)\.md$|\.(?:prd|uxui)\.md$/i;
@@ -136,6 +136,41 @@ const present = (haystack, id) => {
     .filter((alias) => alias.length >= 2).some((alias) => haystack.includes(alias));
   return new RegExp(`(?<![a-z0-9-])${id.toLowerCase().replace(/[-]/g, "\\-")}(?!\\d)`).test(haystack);
 };
+
+const COVERAGE_SECTION = /^(## (?:Handoff coverage|ความครอบคลุมเอกสาร)[^\n]*\n)[\s\S]*?(?=^## |(?![\s\S]))/m;
+
+// After an amendment the proposal's coverage table is rebuilt from the record
+// and the amended packet, so the approver never reads a row the amendment
+// removed: each owed item shows where the agreement now cites it.
+export function refreshHandoffSection(root, basePath) {
+  const recordPath = join(basePath, HANDOFF_RECORD);
+  const proposalPath = join(basePath, "proposal.md");
+  if (!existsSync(recordPath) || !existsSync(proposalPath)) return false;
+  const record = JSON.parse(readFileSync(recordPath, "utf8"));
+  const handoff = { scope: record.scope, excluded: record.excluded || [] };
+  for (const document of record.documents || []) handoff[document.field] = document.path;
+  const read = (field) => handoff[field] && existsSync(join(root, handoff[field]))
+    ? readFileSync(join(root, handoff[field]), "utf8") : null;
+  const { rows } = productHandoffCoverage({}, handoff, { prdText: read("prd"), uxuiText: read("uxui") });
+  const text = packetText(basePath);
+  const places = [["specs", "specs"], ["tasks.md", "tasks"], ["design.md", "design"]];
+  for (const row of rows) if (row.excluded === null) {
+    row.coveredBy = places.filter(([file]) => {
+      const part = file === "specs" ? readAll(join(basePath, "specs"), /\.md$/).join("\n")
+        : existsSync(join(basePath, file)) ? readFileSync(join(basePath, file), "utf8") : "";
+      return present(part.toLowerCase(), row.id);
+    }).map(([, label]) => label);
+    if (!row.coveredBy.length && present(text.all, row.id)) row.coveredBy = ["proposal"];
+  }
+  const proposal = readFileSync(proposalPath, "utf8");
+  const match = proposal.match(COVERAGE_SECTION);
+  if (!match) return false;
+  const language = /ความครอบคลุม/.test(match[1]) ? "th" : "en";
+  const body = renderProductHandoff({ rows, documents: (record.documents || []).map((doc) => `\`${doc.path}\``).join(", ") },
+    { language });
+  writeFileSync(proposalPath, proposal.replace(COVERAGE_SECTION, `${match[1]}\n${body}\n\n`));
+  return true;
+}
 
 export function assertHandoffCovered(root, basePath, fail) {
   const issues = handoffPacketIssues(root, basePath);
