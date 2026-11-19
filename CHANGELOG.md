@@ -11,6 +11,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- After `proven`, an agent reworked the change for a non-blocking review
+  advisory, which re-opened review and stopped at the review-exhausted user
+  question (paid lane 43). `reviewAdvisories` now carries
+  `handling: "report-only: ..."` and `/prove` says not to edit for one.
 - The built-in accessibility check read test files as pages: a test asserting
   `/<button>Save<\/button>/` was reported as a button without a name. Test
   files and fixtures are no longer judged. Found by paid lane 43, where it cost

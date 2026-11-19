@@ -29,6 +29,11 @@ export function reviewInfrastructureAlternatives(id) {
   ];
 }
 
+// Review advisories are report-only: acting on one edits the proven workspace,
+// which starts a new review wave and can exhaust the bounded AI reviews.
+export const ADVISORY_HANDLING = "report-only: tell the user and stop at the reached target; do not edit code or " +
+  "tests for an advisory, because any edit re-opens proof and review. Closing one is a semantic amendment the user decides.";
+
 // A requested review no configured reviewer can start waits on a person; say
 // so, rather than look like a reviewer that is still working.
 export function unstartableReviewReason(id, requestId) {
