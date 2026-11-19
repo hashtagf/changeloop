@@ -256,6 +256,7 @@ upgrade from 3.7.0|sh "$HERE/harness/run-upgrade-from-3.7-tests.sh" default
 upgrade from 3.7.0 (legacy review)|sh "$HERE/harness/run-upgrade-from-3.7-tests.sh" legacy
 dashboard contracts|npm --prefix "$ROOT/dashboard" test
 quality tooling|node --test "$ROOT"/scripts/quality/test/*.test.mjs
+release lane results|node --test "$ROOT"/scripts/release/test/*.test.mjs
 consumer quality protocols|node --test "$HERE/harness/run-quality-protocol-tests.mjs"
 consumer quality policy|node --test "$HERE/harness/run-quality-policy-tests.mjs"
 consumer quality discovery|node --test "$HERE/harness/run-quality-discovery-tests.mjs"

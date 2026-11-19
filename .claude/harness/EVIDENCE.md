@@ -1171,8 +1171,10 @@ REPAIR as a failed provider (`stage: "tests-not-discriminating"`, route
 `AUTO_REPAIR`) naming each repository and test file, and the agent adds or
 strengthens a test that fails without the change. A behavior change with no
 changed test file needs an existing test that fails on base. Changed tests are
-progress; an unchanged rerun reaches the existing no-progress boundary. A spawn
-failure, timeout, missing `baseHead`, or unresolvable surface is no verdict and
+progress; an unchanged rerun reaches the existing no-progress boundary. A base
+run is bounded at 120 s (`discriminationTimeoutMs` on the provider raises it);
+stopped at that bound after its output reports a failing test, it fails on base.
+A spawn failure, timeout, missing `baseHead`, or unresolvable surface is no verdict and
 never blocks, but it is not silent: the row is kept on the change
 (`testDiscrimination.inconclusive`) and named in the Prove `DONE` outcome
 (`testDiscrimination`) and in the Land report as "test discrimination (no

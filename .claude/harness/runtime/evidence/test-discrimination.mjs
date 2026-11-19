@@ -120,10 +120,23 @@ export function scopedTestCommand(built, files) {
   return null;
 }
 
+// A base run is the change's tests against code that lacks the change, so a
+// server or handle the change would close can keep it alive after every test
+// has failed (paid lane project-tracker-api waited the full ten-minute
+// provider timeout). It is bounded on its own, and a run stopped at that
+// bound whose output already reports failing tests is a verdict: they fail on base.
+export const BASE_RUN_TIMEOUT_MS = 120000;
+const REPORTED_FAILURE = /^(?:not ok \d+|# fail [1-9]\d*|ℹ fail [1-9]\d*|\s*✖ (?!failing tests)\S)/m;
+
+export function baseRunTimeoutMs(config) {
+  return Math.min(providerTimeoutMs(config), Number(config?.discriminationTimeoutMs) || BASE_RUN_TIMEOUT_MS);
+}
+
 // spawnSync result → base observation. Only a clean exit 0 is a pass on base;
-// a spawn error or timeout is no verdict and never blocks.
+// a spawn error, or a timeout before any test failed, is no verdict and never blocks.
 export function baseRunOutcome(result) {
-  if (result?.error?.code === "ETIMEDOUT") return "timed-out";
+  if (result?.error?.code === "ETIMEDOUT")
+    return REPORTED_FAILURE.test(`${result.stdout || ""}\n${result.stderr || ""}`) ? "fails-on-base" : "timed-out";
   if (result?.error || result?.status === null || result?.status === undefined) return "unavailable";
   return result.status === 0 ? "passes-on-base" : "fails-on-base";
 }
@@ -457,7 +470,7 @@ export function createTestDiscriminationRuntime({
     /** @type {import("node:child_process").SpawnSyncOptionsWithStringEncoding} */
     const options = {
       cwd: prepared.tree, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
-      timeout: providerTimeoutMs(config),
+      timeout: baseRunTimeoutMs(config),
       env: providerExecutionEnvironment(environment, additions, prepared.tree)
     };
     const finish = (job, result) => {

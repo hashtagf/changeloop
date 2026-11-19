@@ -11,6 +11,12 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- Test discrimination waited the whole ten-minute provider timeout when the
+  change's tests failed on the base code but left a server open (paid lane
+  `project-tracker-api` on main took 15 minutes instead of 8). A base run is now
+  bounded at 120 s (`discriminationTimeoutMs` raises it), and a run stopped at
+  that bound whose output already reports a failing test is a fails-on-base
+  verdict.
 - After `proven`, an agent reworked the change for a non-blocking review
   advisory, which re-opened review and stopped at the review-exhausted user
   question (paid lane 43). `reviewAdvisories` now carries
