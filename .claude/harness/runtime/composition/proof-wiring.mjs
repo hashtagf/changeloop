@@ -1,5 +1,6 @@
 // Composition: proof execution, test discrimination, the Land journal, and
 // apply recovery. Wiring only.
+import { copyBaseBytes } from "../workflow/transaction/copy-base.mjs";
 import { changeWorkTypes } from "../workflow/change/task-change.mjs";
 import { configuredCommand } from "../evidence/evidence-results.mjs";
 import { createApplyRecovery } from "../workflow/transaction/apply-recovery.mjs";
@@ -118,7 +119,7 @@ export function composeProofRuntimes({
     fail: die
   });
   const testDiscrimination = createTestDiscriminationRuntime({
-    LOGS, requiredProviders, providerConfig, providerCapability, providerRepository,
+    root: ROOT, copyBaseBytes, LOGS, requiredProviders, providerConfig, providerCapability, providerRepository,
     selectedRepositories, repositoryBaseHead,
     changedSurface: (id, state) => canonicalChangedSurface(id, state),
     pathKind: lightKind,

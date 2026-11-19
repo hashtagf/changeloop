@@ -793,7 +793,8 @@ document changed after the agreement was compiled, or when an owed ID left the
 contract (stories, criteria, rules, features, and permissions must stay in the
 specs or tasks). An amendment that carries the same `productHandoff` re-reads
 the documents; the amended agreement must cite the new owed IDs or exclude
-them. A document in another shape is converted with the `prd` or `ux-design`
+them. Every amendment rebuilds the proposal's coverage table from the record
+and the amended packet, so it names where each owed item is now cited. A document in another shape is converted with the `prd` or `ux-design`
 skill's import step first; the PRD's Definition of Done is project-level and
 not owed by a single change.
 

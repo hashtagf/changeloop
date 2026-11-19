@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
@@ -468,4 +468,69 @@ test("per-file-discrimination-cached: an unchanged rerun reuses every per-file v
   assert.equal(again.status, "pass");
   assert.equal(again.repositories[0].cached, true);
   assert.equal(spawns.length, 2, "no base run repeats");
+});
+
+// A project without Git: the sandbox is a copy, and the baseline manifest of
+// the project (`file:regular:<sha256>` rows) plus its unchanged files are the base.
+function copyProject(root, base, change) {
+  const project = join(root, "project");
+  const sandbox = join(project, ".foundation", "sandboxes", "c");
+  write(project, base);
+  write(sandbox, base);
+  write(sandbox, change);
+  const row = (path) => `file:regular:${createHash("sha256").update(readFileSync(join(project, path))).digest("hex")}`;
+  const baseline = Object.fromEntries(Object.keys(base).map((path) => [path, row(path)]));
+  return { project, sandbox, baseline };
+}
+
+function copyHarness({ project, sandbox, baseline }, logs, spawns = []) {
+  const repository = { id: "root", mode: "write", workspacePath: sandbox };
+  const state = { workspace: { mode: "copy", path: sandbox, baseHead: null, baseline, sandboxBaseline: baseline } };
+  const surface = () => ["src/greet.js", ...Object.keys(GREET_CHANGE), "test/greet-format.test.js", "test/greet-more.test.js"]
+    .filter((path, index, all) => all.indexOf(path) === index && existsSync(join(sandbox, path)))
+    .map((path) => ({ repositoryId: "root", path }));
+  return createTestDiscriminationRuntime({
+    root: project, LOGS: logs,
+    requiredProviders: () => ["test-root"],
+    providerConfig: () => ({ adapter: "command", command: ["node", "--test"] }),
+    providerCapability: () => "test",
+    providerRepository: () => repository,
+    selectedRepositories: () => [repository],
+    repositoryBaseHead: () => null,
+    changedSurface: surface,
+    pathKind: lightKind,
+    changeWorkTypes: () => ["feature"],
+    receiptValidity: () => ({ validity: "valid" }),
+    configuredCommand, fileDigest, stableHash,
+    loadRuntime: () => state,
+    environment: Object.fromEntries(Object.entries(process.env).filter(([name]) => name !== "NODE_TEST_CONTEXT")),
+    spawnCommandSync: (command, args, options) => { spawns.push({ command, args, cwd: options.cwd }); return spawnSync(command, args, options); }
+  });
+}
+
+test("copy-workspace-discrimination: a project without Git gets a verdict from its baseline", (t) => {
+  const root = fixtureRoot(t);
+  const discriminating = copyProject(join(root, "a"), GREET_BASE, { ...GREET_CHANGE,
+    "test/greet-format.test.js": "import test from 'node:test';\nimport assert from 'node:assert/strict';\n" +
+      "import { greet } from '../src/greet.js';\ntest('formats', () => assert.equal(greet('Ada'), 'Hello, Ada!'));\n" });
+  const spawns = [];
+  const pass = copyHarness(discriminating, join(root, "logs-a"), spawns).evaluate("c", "h");
+  assert.equal(pass.repositories[0].outcome, "fails-on-base", JSON.stringify(pass));
+  assert.equal(pass.status, "pass");
+  assert.ok(!spawns[0].cwd.startsWith(discriminating.sandbox), "the base runs in a scratch copy");
+  assert.equal(readFileSync(join(discriminating.sandbox, "src/greet.js"), "utf8"), GREET_CHANGE["src/greet.js"],
+    "the sandbox keeps the change");
+
+  const hollow = copyProject(join(root, "b"), GREET_BASE, { ...GREET_CHANGE,
+    "test/greet-more.test.js": "import test from 'node:test';\nimport assert from 'node:assert/strict';\n" +
+      "import { greet } from '../src/greet.js';\ntest('mentions the name', () => assert.match(greet('Lin'), /Lin/));\n" });
+  const fail = copyHarness(hollow, join(root, "logs-b")).evaluate("c", "h");
+  assert.equal(fail.repositories[0].outcome, "passes-on-base");
+  assert.equal(fail.status, "fail");
+
+  // The project file changed since the copy and no base bytes were captured:
+  // the base cannot be proven, so there is no verdict rather than a guess.
+  write(hollow.project, { "src/greet.js": "export const greet = () => 'edited';\n" });
+  const unknown = copyHarness(hollow, join(root, "logs-c")).evaluate("c", "h2");
+  assert.equal(unknown.repositories[0].outcome, "unavailable");
 });

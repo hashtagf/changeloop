@@ -1,7 +1,7 @@
 // Product handoff coverage: a change built from PRD.md and uxui.md owes every
 // in-scope item, cited in the right section or excluded with a reason.
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -296,4 +296,29 @@ test("product documents are found by content as well as by name", async (t) => {
   write(".workflow/0001/retro.md", FREE_PRD);
   write("openspec/specs/cart/spec.md", FREE_PRD);
   assert.deepEqual(productDocuments(root), ["docs/requirements.md", "docs/screens.md"]);
+});
+
+test("an amendment rebuilds the proposal's coverage table from the record and the amended packet", async (t) => {
+  const { handoffRecordFor, refreshHandoffSection, writeHandoffRecord } =
+    await import("../runtime/workflow/validation/handoff-binding.mjs");
+  const root = mkdtempSync(join(tmpdir(), "handoff-refresh-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const packet = join(root, "openspec", "changes", "c");
+  mkdirSync(join(packet, "specs", "cart"), { recursive: true });
+  writeFileSync(join(root, "PRD.md"), PRD);
+  writeFileSync(join(packet, "specs", "cart", "spec.md"), "US-01 cart\nERR-01 BR-01\n");
+  writeFileSync(join(packet, "tasks.md"), "- [ ] T001 F-01 cart\n");
+  writeFileSync(join(packet, "design.md"), "NFR-01 Q1\n");
+  writeFileSync(join(packet, "proposal.md"),
+    "## Why\n\nx\n\n## Handoff coverage (PRD and UX/UI)\n\n| AC-01 | stale | scenario \"AC-01\" |\n\n## Impact\n\ny\n");
+  writeHandoffRecord(packet, handoffRecordFor(root, {}, { prd: "PRD.md", scope: ["F-01"],
+    excluded: [{ id: "AC-01", reason: "moved to checkout" }] }));
+  assert.equal(refreshHandoffSection(root, packet), true);
+  const proposal = readFileSync(join(packet, "proposal.md"), "utf8");
+  assert.match(proposal, /\| AC-01 \| .* \| Not in this change: moved to checkout \|/);
+  assert.match(proposal, /\| US-01 \| .* \| specs \|/);
+  assert.match(proposal, /\| F-01 \| .* \| tasks \|/);
+  assert.match(proposal, /## Why\n\nx\n\n## Handoff coverage/);
+  assert.match(proposal, /\n## Impact\n\ny\n$/, "the sections around it are kept");
+  assert.ok(!proposal.includes("stale"));
 });

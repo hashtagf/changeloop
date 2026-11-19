@@ -1129,7 +1129,12 @@ service or readiness probe) and runs its command once against the base source:
   that range, or the provider has no `segments`, its whole command runs as before;
   any other command (for example `npm test`) runs once as configured;
 - a test that imports a module the change adds fails on base and therefore
-  counts as failing on base.
+  counts as failing on base;
+- in a project without Git (an isolated copy), the base is the sandbox with
+  each changed product file put back to its base bytes (from the copy-base
+  store, or the project file while it still matches its baseline row) and each
+  added product file removed; a product file whose base cannot be proven is no
+  verdict.
 
 A non-zero exit on base passes the rule. A clean exit 0 means the change's
 tests pass on the original code: Prove returns the same convergent evidence
