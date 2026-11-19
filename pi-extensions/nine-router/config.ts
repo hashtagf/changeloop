@@ -18,7 +18,7 @@ export function normalizeBaseUrl(value: unknown): string | undefined {
   if (typeof value !== 'string' || !value.trim()) return undefined;
   let url: URL;
   try { url = new URL(value.trim()); } catch { return undefined; }
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') return undefined;
+  if (!/^https?:\/\//i.test(value.trim()) || url.username || url.password || url.href.includes('?') || url.href.includes('#')) return undefined;
   return url.toString().replace(/\/+$/, '');
 }
 

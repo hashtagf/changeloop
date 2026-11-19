@@ -7,15 +7,21 @@ extension only supplies the endpoint, the key and the model catalog.
 
 ## Configure
 
+In Pi, run `/login 9router`, enter the gateway's Base URL (for example,
+`https://router.example.com/v1`), then paste the API key from the 9router
+Dashboard. Open `/model` to pick a model; no reload is needed. To set a new
+URL through `/login`, enter the key for that endpoint again. Escape cancels
+without changing the saved settings.
+
 | What | Source, in order |
 |---|---|
-| Endpoint | `NINEROUTER_BASE_URL`, then `nineRouter.baseUrl` in `~/.config/pi-extensions/config.json` (`$XDG_CONFIG_HOME` honored), then `http://localhost:20128/v1` |
-| API key | `NINEROUTER_API_KEY`, else a key saved with `/login 9router` |
+| Endpoint | `NINEROUTER_BASE_URL`, then the URL saved by login, then `nineRouter.baseUrl` in `~/.config/pi-extensions/config.json` (`$XDG_CONFIG_HOME` honored), then `http://localhost:20128/v1` |
+| API key | Key saved by `/login`, then `NINEROUTER_API_KEY` |
 
-Copy the key from the 9router dashboard. Keep it in the environment or in
-Pi's `auth.json` via `/login`; never in the config file or the repository.
-Error messages name the URL and HTTP status, never the key. An endpoint that is
-not an `http(s)` URL is ignored with a warning.
+When `NINEROUTER_BASE_URL` is set to a valid URL, login shows the enforced
+endpoint instead of asking for a URL. Existing saved keys still work with the
+previous URL configuration until you log in again. Use HTTPS for a remote
+gateway and never put its key in the URL, shared config, or repository.
 
 ## Models
 

@@ -58,26 +58,7 @@ export function parseModelList(payload: unknown): ChatModelConfig[] {
 
 /** Full model records for Pi's persisted catalog (used offline, in pi -p and RPC). */
 export function toStored(models: ChatModelConfig[], provider: string, baseUrl: string) {
-  return models.map(model => ({ ...model, provider, api: 'openai-completions', baseUrl }));
-}
-
-/** Chat model configs from the persisted catalog snapshot, or none. */
-export function fromStored(stored: { models?: readonly any[] } | undefined, provider: string): ChatModelConfig[] {
-  const models: ChatModelConfig[] = [];
-  for (const entry of stored?.models ?? []) {
-    if (entry?.provider !== provider || (entry.type && entry.type !== 'chat')) continue;
-    if (typeof entry.id !== 'string' || !entry.id) continue;
-    models.push({
-      id: entry.id,
-      name: typeof entry.name === 'string' ? entry.name : entry.id,
-      reasoning: entry.reasoning === true,
-      input: Array.isArray(entry.input) && entry.input.includes('image') ? ['text', 'image'] : ['text'],
-      cost: { ...ZERO_COST },
-      contextWindow: positive(entry.contextWindow) ?? DEFAULT_CONTEXT_WINDOW,
-      maxTokens: positive(entry.maxTokens) ?? DEFAULT_MAX_TOKENS,
-    });
-  }
-  return models;
+  return models.map(model => ({ ...model, type: 'chat' as const, provider, api: 'openai-completions' as const, baseUrl }));
 }
 
 /** The stored /login key, else the env key (Pi may pass the unresolved $VAR form). */

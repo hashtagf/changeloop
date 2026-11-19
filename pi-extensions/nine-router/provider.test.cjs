@@ -21,7 +21,7 @@ function withConfigHome(content, run) {
 
 function register(env) {
   const calls = [];
-  const pi = { registerProvider: (name, config) => calls.push({ name, config }) };
+  const pi = { registerProvider: (provider, config) => calls.push(config ? config : provider) };
   const warn = console.warn; console.warn = () => {};
   try { nineRouter(pi, env); } finally { console.warn = warn; }
   assert.equal(calls.length, 1);
@@ -39,15 +39,79 @@ async function withServer(handler, run) {
 
 const json = body => (req, res) => { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify(body)); };
 
+function loginInteraction(values) {
+  const prompts = [];
+  return {
+    prompts, signal: new AbortController().signal, notify() {},
+    async prompt(prompt) {
+      prompts.push(prompt);
+      const value = values.shift();
+      if (value instanceof Error) throw value;
+      assert.notEqual(value, undefined, 'unexpected prompt');
+      return value;
+    },
+  };
+}
+
+async function runtime(env, store) {
+  const { createModels } = await import('@earendil-works/pi-ai');
+  const runtime = createModels({ modelsStore: store });
+  runtime.setProvider(register(env));
+  return runtime;
+}
+
+test('native login saves URL and key and refreshes the same Pi runtime', () => withServer(json({ data: [{ id: 'from-login' }] }), async (baseUrl, requests) => {
+  const models = await runtime({});
+  const interaction = loginInteraction([`${baseUrl}/`, 'new-key']);
+  const credential = await models.login('9router', 'api_key', interaction);
+  assert.equal(interaction.prompts[0].type, 'text');
+  assert.equal(interaction.prompts[1].type, 'secret');
+  assert.equal(credential.key, 'new-key');
+  assert.equal((await models.getAuth('9router')).auth.baseUrl, baseUrl);
+  const result = await models.refresh({ providers: ['9router'] });
+  assert.ifError(result.errors.get('9router'));
+  assert.deepEqual((await models.getAvailable('9router')).map(model => [model.id, model.baseUrl]), [['from-login', baseUrl]]);
+  assert.equal(requests[0].headers.authorization, 'Bearer new-key');
+}));
+
+test('invalid input is retried before asking for a key or saving', async () => {
+  const models = await runtime({});
+  const interaction = loginInteraction(['not a URL', 'https://user:secret@router.example/v1', 'https://router.example/v1?key=x', 'https://router.example/v1', 'key']);
+  await models.login('9router', 'api_key', interaction);
+  assert.deepEqual(interaction.prompts.map(prompt => prompt.type), ['text', 'text', 'text', 'text', 'secret']);
+  assert.equal((await models.getAuth('9router')).auth.baseUrl, 'https://router.example/v1');
+});
+
+test('cancelling after entering a URL retains the old credential and destination', async () => {
+  const models = await runtime({});
+  await models.login('9router', 'api_key', loginInteraction(['https://old.example/v1', 'old-key']));
+  await assert.rejects(models.login('9router', 'api_key', loginInteraction(['https://new.example/v1', new Error('Login cancelled')])), /Login cancelled/);
+  assert.deepEqual((await models.getAuth('9router')).auth, { baseUrl: 'https://old.example/v1', apiKey: 'old-key' });
+});
+
+test('an old stored key uses the configured URL without a new login', () => withConfigHome('{"nineRouter":{"baseUrl":"https://file.example/v1"}}', async home => {
+  const provider = register({ XDG_CONFIG_HOME: home });
+  const auth = await provider.auth.apiKey.resolve({ credential: { type: 'api_key', key: 'old-key' } });
+  assert.deepEqual(auth.auth, { apiKey: 'old-key', baseUrl: 'https://file.example/v1' });
+}));
+
+test('login shows the env-enforced URL and never prompts for an ineffective edit', async () => {
+  const models = await runtime({ NINEROUTER_BASE_URL: 'https://env.example/v1' });
+  const interaction = loginInteraction(['env-key']);
+  await models.login('9router', 'api_key', interaction);
+  assert.equal(interaction.prompts.length, 1);
+  assert.equal(interaction.prompts[0].type, 'secret');
+  assert.match(interaction.prompts[0].message, /https:\/\/env\.example\/v1/);
+  assert.equal((await models.getAuth('9router')).auth.baseUrl, 'https://env.example/v1');
+});
+
 // provider-registration
-test('env URL and key register an openai-completions provider named 9router', () => withConfigHome(undefined, home => {
-  const { name, config } = register({ XDG_CONFIG_HOME: home, NINEROUTER_BASE_URL: 'https://router.example.com/v1/', NINEROUTER_API_KEY: 'secret-key' });
-  assert.equal(name, '9router');
-  assert.equal(config.api, 'openai-completions');
-  assert.equal(config.baseUrl, 'https://router.example.com/v1');
-  assert.equal(config.apiKey, '$NINEROUTER_API_KEY');
-  assert.equal(typeof config.refreshModels, 'function');
-  assert.equal(config.models, undefined, 'no static catalog');
+test('env URL and key configure 9router without login', () => withConfigHome(undefined, async home => {
+  const provider = register({ XDG_CONFIG_HOME: home, NINEROUTER_BASE_URL: 'https://router.example.com/v1/', NINEROUTER_API_KEY: 'secret-key' });
+  assert.equal(provider.id, '9router');
+  assert.equal(provider.baseUrl, 'https://router.example.com/v1');
+  assert.equal((await provider.auth.apiKey.resolve({})).auth.apiKey, 'secret-key');
+  assert.deepEqual(provider.getModels(), []);
 }));
 
 test('the config file supplies the URL when the env var is unset', () => withConfigHome('{"nineRouter":{"baseUrl":"http://10.0.0.5:20128/v1"}}', home => {
@@ -55,9 +119,9 @@ test('the config file supplies the URL when the env var is unset', () => withCon
 }));
 
 test('no configuration uses the 9router default and leaves apiKey for /login', () => withConfigHome(undefined, home => {
-  const { config } = register({ XDG_CONFIG_HOME: home });
-  assert.equal(config.baseUrl, DEFAULT_BASE_URL);
-  assert.equal('apiKey' in config, false);
+  const provider = register({ XDG_CONFIG_HOME: home });
+  assert.equal(provider.baseUrl, DEFAULT_BASE_URL);
+  assert.equal(typeof provider.auth.apiKey.login, 'function');
 }));
 
 test('a non-http URL in the config file falls back with a key-free warning', () => withConfigHome('{"nineRouter":{"baseUrl":"ftp://x"}}', home => {
@@ -84,9 +148,10 @@ test('refreshModels maps the 9router catalog and sends the bearer key', () => wi
     { object: 'model' },
   ],
 }), async (baseUrl, requests) => {
-  const { config } = register({ XDG_CONFIG_HOME: home, NINEROUTER_BASE_URL: baseUrl });
+  const provider = register({ XDG_CONFIG_HOME: home, NINEROUTER_BASE_URL: baseUrl });
   const published = [];
-  const models = await config.refreshModels({ allowNetwork: true, signal: new AbortController().signal, credential: { type: 'api_key', key: 'test-key' }, publish: async p => { published.push(p); return true; } });
+  await provider.refreshModels({ allowNetwork: true, signal: new AbortController().signal, credential: { type: 'api_key', key: 'test-key' }, publish: async p => { published.push(p); p.update?.(); return true; } });
+  const models = provider.getModels().map(({ type, provider, api, baseUrl, ...model }) => model);
   assert.equal(published.length, 1);
   assert.deepEqual(published[0].persist.models.map(m => [m.provider, m.id, m.api, m.baseUrl]), [['9router', 'kr/claude-sonnet-4.5', 'openai-completions', baseUrl], ['9router', 'my-combo', 'openai-completions', baseUrl]]);
   assert.equal(typeof published[0].persist.checkedAt, 'number');
@@ -99,25 +164,26 @@ test('refreshModels maps the 9router catalog and sends the bearer key', () => wi
 })));
 
 test('without network refreshModels returns only the saved 9router models', () => withConfigHome(undefined, home => withServer(json({ data: [{ id: 'x' }] }), async (baseUrl, requests) => {
-  const { config } = register({ XDG_CONFIG_HOME: home, NINEROUTER_BASE_URL: baseUrl });
+  const provider = register({ XDG_CONFIG_HOME: home, NINEROUTER_BASE_URL: baseUrl });
   const stored = { models: [
     { id: 'kr/a', name: 'kr/a', provider: '9router', api: 'openai-completions', reasoning: true, input: ['text', 'image'], contextWindow: 200000, maxTokens: 8000 },
     { id: 'gpt-x', provider: 'openai', api: 'openai-completions' },
   ] };
-  const models = await config.refreshModels({ allowNetwork: false, stored, signal: new AbortController().signal, publish: async () => assert.fail('no publish offline') });
-  assert.deepEqual(models, [{ id: 'kr/a', name: 'kr/a', reasoning: true, input: ['text', 'image'], cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 }, contextWindow: 200000, maxTokens: 8000 }]);
+  await provider.refreshModels({ allowNetwork: false, stored, signal: new AbortController().signal, publish: async p => { assert.equal(p.persist, undefined); p.update(); return true; } });
+  assert.deepEqual(provider.getModels().map(model => model.id), ['kr/a']);
   assert.equal(requests.length, 0);
 })));
 
 test('without network and nothing saved refreshModels returns no models', () => withConfigHome(undefined, home => withServer(json({ data: [{ id: 'x' }] }), async (baseUrl, requests) => {
-  const { config } = register({ XDG_CONFIG_HOME: home, NINEROUTER_BASE_URL: baseUrl });
-  assert.deepEqual(await config.refreshModels({ allowNetwork: false, signal: new AbortController().signal }), []);
+  const provider = register({ XDG_CONFIG_HOME: home, NINEROUTER_BASE_URL: baseUrl });
+  await provider.refreshModels({ allowNetwork: false, signal: new AbortController().signal });
+  assert.deepEqual(provider.getModels(), []);
   assert.equal(requests.length, 0);
 })));
 
 test('a failed refresh does not publish over the saved catalog', () => withConfigHome(undefined, home => withServer((req, res) => { res.writeHead(401); res.end(); }, async baseUrl => {
-  const { config } = register({ XDG_CONFIG_HOME: home, NINEROUTER_BASE_URL: baseUrl });
-  await assert.rejects(config.refreshModels({ allowNetwork: true, signal: new AbortController().signal, credential: { type: 'api_key', key: 'k' }, publish: async () => assert.fail('must not publish') }), /401/);
+  const provider = register({ XDG_CONFIG_HOME: home, NINEROUTER_BASE_URL: baseUrl });
+  await assert.rejects(provider.refreshModels({ allowNetwork: true, signal: new AbortController().signal, credential: { type: 'api_key', key: 'k' }, publish: async () => assert.fail('must not publish') }), /401/);
 })));
 
 test('a rejected key reports the status and URL without the key', () => withServer((req, res) => { res.writeHead(401); res.end('{"error":"bad key"}'); }, async baseUrl => {

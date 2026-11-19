@@ -13,7 +13,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const PI = process.env.PI_BIN || 'pi';
-const EXTENSION = path.resolve(__dirname, '..', 'index.ts');
+const EXTENSION_ROOT = path.resolve(__dirname, '../..');
 const INTERACTIVE = path.join(__dirname, 'interactive.py');
 const MODEL = 'kr/fake-model';
 const KEY = 'e2e-test-key';
@@ -57,11 +57,13 @@ function run(command, args, options) {
   });
 }
 
-test('Pi chats through 9router after an interactive start saves the catalog', async () => {
+for (const useLogin of [false, true]) test(useLogin ? 'Pi /login saves the gateway and can chat after restart' : 'Pi chats through 9router after an interactive start saves the catalog', async () => {
   const { server, requests } = fakeRouter();
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'pi-ext-9r-e2e-'));
   const agentDir = path.join(scratch, 'agent');
+  const extensions = path.join(agentDir, 'extensions');
+  const extension = path.join(extensions, 'nine-router', 'index.ts');
   const options = {
     cwd: scratch,
     env: {
@@ -73,8 +75,19 @@ test('Pi chats through 9router after an interactive start saves the catalog', as
       NINEROUTER_API_KEY: KEY,
     },
   };
-  const print = () => run(PI, ['--no-extensions', '-e', EXTENSION, '--no-session', '--model', `9router/${MODEL}`, '-p', 'ping'], options);
+  const baseUrl = options.env.NINEROUTER_BASE_URL;
+  if (useLogin) {
+    delete options.env.NINEROUTER_BASE_URL;
+    delete options.env.NINEROUTER_API_KEY;
+  }
+  const print = () => run(PI, ['--no-extensions', '-e', extension, '--no-session', '--model', `9router/${MODEL}`, '-p', 'ping'], options);
   try {
+    // Match a local install outside the repo and its node_modules.
+    for (const file of ['nine-router/index.ts', 'nine-router/config.ts', 'nine-router/models.ts', 'ask-user/config.ts']) {
+      const target = path.join(extensions, file);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.copyFileSync(path.join(EXTENSION_ROOT, file), target);
+    }
     // Before any catalog refresh, print mode cannot see the router's models.
     const before = await print();
     assert.notEqual(before.code, 0);
@@ -82,7 +95,10 @@ test('Pi chats through 9router after an interactive start saves the catalog', as
     assert.equal(requests.filter(r => r.url === '/v1/chat/completions').length, 0);
 
     // An interactive start refreshes the catalog from the router and saves it.
-    const interactive = await run('python3', [INTERACTIVE, PI, EXTENSION, path.join(agentDir, 'models-store.json'), '9router'], options);
+    const store = path.join(agentDir, 'models-store.json');
+    const interactive = await run('python3', useLogin
+      ? [path.join(__dirname, 'interactive-start.py'), PI, extension, store, baseUrl, KEY]
+      : [INTERACTIVE, PI, extension, store, '9router'], options);
     assert.equal(interactive.code, 0, interactive.stderr);
     const discovery = requests.find(r => r.url === '/v1/models');
     assert.ok(discovery, 'catalog was discovered from the router');

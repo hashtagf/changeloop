@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "configure-from-pi-9router-login-base-url",
+      "requirementKey": "configure-from-pi",
+      "scenario": "ตั้งค่าผ่านเมนูเดิม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "configure-from-pi-url-url",
+      "requirementKey": "configure-from-pi",
+      "scenario": "ปฏิเสธปลายทางผิดรูปแบบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "configure-from-pi-esc",
+      "requirementKey": "configure-from-pi",
+      "scenario": "ยกเลิกได้",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "configure-from-pi-url",
+      "requirementKey": "configure-from-pi",
+      "scenario": "ค่าที่ตั้งไว้ยังใช้ได้",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "configure-from-pi-ninerouter-base-url",
+      "requirementKey": "configure-from-pi",
+      "scenario": "ปลายทางที่ผู้ใช้เห็นตรงกับปลายทางจริง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test pi-extensions/nine-router/provider.test.cjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

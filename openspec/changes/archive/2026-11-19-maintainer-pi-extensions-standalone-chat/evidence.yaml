@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "standalone-chat",
+      "requirementKey": "standalone-chat",
+      "scenario": "แชตผ่านส่วนขยายที่ติดตั้ง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test pi-extensions/nine-router/test/chat.test.cjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}
