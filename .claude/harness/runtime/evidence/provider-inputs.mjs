@@ -271,8 +271,8 @@ export function claimsForCapability(context, id, claims, capability) {
   // A browser provider's screenshots feed the visual review, so it also covers
   // the claims the prototype is bound to; otherwise the wiring the start
   // template shows (a screenshot command the visual provider depends on)
-  // would have no claim to record.
-  if (capability === "browser") {
+  // would have no claim to record. Work that owes browser (ui) covers every claim.
+  if (capability === "browser" && !context.policyCapabilities(id).includes("browser")) {
     const bound = new Set(context.evidence(id).visualClaims || []);
     return claims.filter((claim) => claim.capabilities.includes("browser") || bound.has(claim.id) ||
       claim.capabilities.includes(VISUAL_CAPABILITY));

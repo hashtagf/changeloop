@@ -340,12 +340,14 @@
       "code": [
         ".claude/harness/runtime/evidence/proof-execution-runtime.mjs",
         ".claude/harness/runtime/evidence/evidence-contract.mjs",
-        ".claude/harness/runtime/evidence/receipt-runtime.mjs"
+        ".claude/harness/runtime/evidence/receipt-runtime.mjs",
+        ".claude/harness/runtime/evidence/app-smoke-check.mjs"
       ],
       "tests": [
         ".claude/harness/tests/proof-advance.test.mjs",
         ".claude/harness/tests/proof-audit.test.mjs",
-        ".claude/harness/tests/signed-ci.test.mjs"
+        ".claude/harness/tests/signed-ci.test.mjs",
+        ".claude/harness/tests/app-smoke.test.mjs"
       ],
       "docs": [
         ".claude/harness/lifecycle/prove.md",

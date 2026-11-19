@@ -206,7 +206,9 @@ each bound file fails on the original code ([/prove](/docs/loop/prove/)). A
 scenario marked `regression: true` guards existing behavior and may already
 pass. Work types also select evidence capabilities; work type `ui` requires
 accessibility, which a built-in static read of the changed markup proves when
-the project has no accessibility check of its own. Agents choose
+the project has no accessibility check of its own, and a browser check, which
+a built-in run of the app in headless Chrome proves when the project serves one
+and has no browser tests of its own. Agents choose
 skills themselves from skill descriptions that name `workType`, `riskSignals`,
 requirements, and scenarios.
 The full catalog of 23 types is in `.claude/harness/lifecycle/change.md` under "Work types and

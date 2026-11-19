@@ -210,8 +210,8 @@ Run the project's own checks for every claim and bind each result to the exact c
 | CLI commands | `proof readiness`, `proof collect`, `proof advance`, `proof run`, `proof preflight`, `proof execute`, `proof finalize`, `proof audit`, `proof-plan`, `evidence detect`, `evidence init`, `evidence doctor`, `evidence run`, `evidence record`, `evidence verify-ci`, `hash` |
 | User states | — |
 | Runtime groups | `evidence` |
-| Code | `.claude/harness/runtime/evidence/proof-execution-runtime.mjs`, `.claude/harness/runtime/evidence/evidence-contract.mjs`, `.claude/harness/runtime/evidence/receipt-runtime.mjs` |
-| Tests | `.claude/harness/tests/proof-advance.test.mjs`, `.claude/harness/tests/proof-audit.test.mjs`, `.claude/harness/tests/signed-ci.test.mjs` |
+| Code | `.claude/harness/runtime/evidence/proof-execution-runtime.mjs`, `.claude/harness/runtime/evidence/evidence-contract.mjs`, `.claude/harness/runtime/evidence/receipt-runtime.mjs`, `.claude/harness/runtime/evidence/app-smoke-check.mjs` |
+| Tests | `.claude/harness/tests/proof-advance.test.mjs`, `.claude/harness/tests/proof-audit.test.mjs`, `.claude/harness/tests/signed-ci.test.mjs`, `.claude/harness/tests/app-smoke.test.mjs` |
 | Docs | `.claude/harness/lifecycle/prove.md`, `.claude/harness/EVIDENCE.md`, `website/docs/src/content/docs/loop/prove.md`, `website/docs/src/content/docs/evidence/receipts.md` |
 
 <a id="review"></a>
