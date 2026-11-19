@@ -104,14 +104,20 @@ await check("CASE_TESTS_PASS", () => {
   return delivered.ok && delivered.pass > seedTests;
 });
 
-// The archived change recorded the handoff: the requirements document, and
-// every F-01 item owed rather than excluded.
+// The change recorded the handoff: the requirements document, and every F-01
+// item owed rather than excluded. The backend runs this oracle before Land, so
+// the record is read from the active packet or, after Land, the archive.
 const F01 = ["US-01", "AC-01", "AC-02", "AC-03", "AC-04", "BR-01", "BR-02", "ERR-01", "F-01"];
+function packets(dir) {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && entry.name !== "archive")
+    .map((entry) => join(dir, entry.name));
+}
 await check("CASE_HANDOFF_RECORD", () => {
-  const archive = sandbox && join(sandbox, "openspec/changes/archive");
-  if (!archive || !existsSync(archive)) return false;
-  return readdirSync(archive).some((name) => {
-    const path = join(archive, name, "handoff.json");
+  if (!sandbox) return false;
+  const changes = join(sandbox, "openspec/changes");
+  return [...packets(changes), ...packets(join(changes, "archive"))].some((packet) => {
+    const path = join(packet, "handoff.json");
     if (!existsSync(path)) return false;
     const record = JSON.parse(readFileSync(path, "utf8"));
     return (record.documents || []).some((doc) => doc.path === "docs/requirements.md") &&

@@ -70,6 +70,9 @@ test("strict is the default: the bound claim requires visual", () => {
     assert.deepEqual(contract.claims.find((claim) => claim.id === "C-b").capabilities, ["test"]);
     assert.ok(required(contract).includes("visual"));
     assert.deepEqual(covered(contract, "visual"), ["C-a"]);
+    // The screenshot provider the visual review depends on covers the same
+    // bound claim, so the template's wiring records a receipt.
+    assert.deepEqual(covered(contract, "browser"), ["C-a"]);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 

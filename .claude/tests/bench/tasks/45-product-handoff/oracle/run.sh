@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Hidden oracle for 45-product-handoff: drives the delivered cart through every
 # item of feature F-01 in the handed-over requirements (stories, criteria,
-# rules, error case), checks the grown suite, and reads the archived packet's
+# rules, error case), checks the grown suite, and reads the change packet's
 # handoff record before the harness folders are removed.
 #
 #   sh run.sh <sandbox-dir>
