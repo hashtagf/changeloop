@@ -18,7 +18,7 @@ import {
   noProgressOutput, resume, testAdequacyInstruction, withSignals
 } from "./advance-envelope.mjs";
 import {
-  coordinatorAction, landOperationAction, proofOperationAction, proofRunOperation
+  ADVISORY_HANDLING, coordinatorAction, landOperationAction, proofOperationAction, proofRunOperation
 } from "./advance-actions.mjs";
 
 const THROUGH_ORDER = ["build", "proven", "archived"];
@@ -266,7 +266,7 @@ export function createAdvanceRuntime({
       legacyAction: stage === "archived" ? "ARCHIVED" : "TARGET_REACHED",
       reason: `${stage} target reached`, completed: true, reached: stage,
       resumeCommand: null,
-      ...(specGaps.length ? { reviewAdvisories: { specGaps } } : {}),
+      ...(specGaps.length ? { reviewAdvisories: { specGaps, handling: ADVISORY_HANDLING } } : {}),
       // Reported for the user; advisory results never count as passing evidence.
       ...(advisory.length ? { advisoryEvidence: {
         passingEvidence: false, rows: advisory, summary: advisory.map(advisoryVisualLine)

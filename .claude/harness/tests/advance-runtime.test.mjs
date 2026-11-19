@@ -482,7 +482,9 @@ test("a reached target reports the latest AI review's spec gaps without changing
   const result = await runtime.advanceThrough("change-a", "archived");
   assert.equal(result.action, "DONE");
   assert.equal(result.reached, "archived");
-  assert.deepEqual(result.reviewAdvisories, { specGaps: gaps });
+  assert.deepEqual(result.reviewAdvisories.specGaps, gaps);
+  assert.match(result.reviewAdvisories.handling, /^report-only: .*do not edit code or tests for an advisory/,
+    "the envelope tells the agent not to rework a proven change for an advisory");
   const clean = await createAdvanceRuntime(advanceRuntimeDeps({
     loadRuntime: () => ({ status: "archived" }), stableHash, deliveredAiAttempts: () => [{}]
   })).advanceThrough("change-a", "archived");

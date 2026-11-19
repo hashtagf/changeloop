@@ -638,7 +638,9 @@ attempt and dispatch record the model actually run plus `modelEscalation`
 input partitions or scenarios the change plausibly needs but the agreement does
 not name. They are bounded, recorded on the durable report and the completed
 attempt, and reported as `reviewAdvisories.specGaps` on a reached `proven` or
-`archived` target; they never become findings, change the verdict, or block.
+`archived` target with `handling: "report-only: ..."`; they never become
+findings, change the verdict, or block. The agent reports them and stops: an
+edit for one re-opens proof and review and can exhaust the bounded AI waves.
 Closing one is a semantic amendment the user decides.
 
 <a id="review-scope-discipline"></a>Every configured review prompt, at any depth, also checks scope discipline in
