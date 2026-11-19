@@ -30,6 +30,7 @@ keeping this map current are in [How the map is kept current](#how-the-map-is-ke
 | [Consumer quality gates](#consumer-quality) | quality gate ของโปรเจกต์ผู้ใช้ | cross-phase | `quality discover`, `quality init`, `quality doctor` |
 | [Pyramid readiness](#pyramid-readiness) | ความพร้อมตาม pyramid | cross-phase | `quality readiness` |
 | [Project feature map](#project-feature-map) | feature map ของโปรเจกต์ | cross-phase | `features` |
+| [Product documents (PRD and UX/UI)](#product-handoff) | เอกสาร product (PRD และ UX/UI) | cross-phase | `product status` |
 | [Install, hosts, and onboarding](#install-and-hosts) | ติดตั้ง เชื่อม host และ onboarding | setup | `init`, `models`, `host agent-contract` |
 | [Team dashboard](#team-dashboard) | dashboard ของทีม | setup | `dashboard`, `dashboard snapshot` |
 
@@ -412,6 +413,26 @@ The user project names its own features and the paths behind them in openspec/fe
 | Code | `.claude/harness/runtime/workflow/validation/project-feature-map.mjs`, `.claude/harness/templates/feature-map.json` |
 | Tests | `.claude/harness/tests/project-feature-map.test.mjs` |
 | Docs | `website/docs/src/content/docs/artifacts.md`, `WORKFLOW.md` |
+
+<a id="product-handoff"></a>
+
+## Product documents (PRD and UX/UI) — เอกสาร product (PRD และ UX/UI)
+
+**Phase:** cross-phase
+
+A PM's PRD and a designer's uxui.md, in any layout with IDs, are found in the project; every change names the documents it comes from and must cover each owed item or exclude it with a reason, validation stops when a document changes after approval or an amendment drops an item, and product status shows every item across all changes.
+
+PRD ของ PM และ uxui.md ของ designer ที่มี ID เขียนแบบไหนก็ได้ ระบบหาเจอในโปรเจกต์ ทุก change ต้องบอกว่ามาจากเอกสารไหนและต้องครอบคลุมทุกข้อที่ต้องทำหรือตัดออกพร้อมเหตุผล การตรวจจะหยุดเมื่อเอกสารถูกแก้หลังอนุมัติหรือ amendment ทำให้ข้อหาย และ product status แสดงทุกข้อข้ามทุก change
+
+| | |
+|---|---|
+| Slash commands | — |
+| CLI commands | `product status` |
+| User states | — |
+| Runtime groups | — |
+| Code | `.claude/harness/runtime/workflow/validation/product-handoff.mjs`, `.claude/harness/runtime/workflow/validation/handoff-binding.mjs`, `.claude/harness/runtime/workflow/validation/product-progress.mjs`, `.claude/skills/prd/SKILL.md`, `.claude/skills/ux-design/SKILL.md` |
+| Tests | `.claude/harness/tests/product-handoff.test.mjs`, `.claude/harness/tests/product-progress.test.mjs`, `.claude/tests/docs/pm-ux-skills.test.mjs` |
+| Docs | `.claude/harness/lifecycle/change.md`, `website/docs/src/content/docs/loop/change.md`, `website/docs/src/content/docs/cli.md` |
 
 <a id="install-and-hosts"></a>
 

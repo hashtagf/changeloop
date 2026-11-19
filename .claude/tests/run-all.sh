@@ -238,6 +238,7 @@ preview runtime|node --test "$ROOT/.claude/harness/tests/preview-runtime.test.mj
 preview evidence|node --test "$ROOT/.claude/harness/tests/preview-evidence.test.mjs"
 preview-only providers|node --test "$ROOT/.claude/harness/tests/preview-only-provider.test.mjs"
 product handoff coverage|node --test "$ROOT/.claude/harness/tests/product-handoff.test.mjs"
+product progress view|node --test "$ROOT/.claude/harness/tests/product-progress.test.mjs"
 pm and ux skills|node --test "$ROOT/.claude/tests/docs/pm-ux-skills.test.mjs"
 source references|node --test "$ROOT/.claude/tests/harness/source-references.test.mjs"
 operation state|node --test "$ROOT/.claude/harness/tests/operation-state.test.mjs"

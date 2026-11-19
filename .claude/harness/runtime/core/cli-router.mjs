@@ -42,6 +42,7 @@ export async function routeRuntimeCommand(command, values, api) {
     showOutcomes,
     showLessons,
     showFeatures,
+    showProductProgress,
     showPackage,
     showPreview,
     execObserved,
@@ -448,6 +449,13 @@ export async function routeRuntimeCommand(command, values, api) {
       });
       if (rest.length) die("features takes no positional arguments; use --change <id>");
       showFeatures(flags);
+    },
+    "product-status": async () => {
+      const { flags, rest } = parseStrictCommandFlags(values, "product status", {
+        boolean: ["pretty", "strict"], value: ["document"]
+      });
+      if (rest.length) die("product status takes no positional arguments; use --document <path>");
+      showProductProgress(flags);
     },
     "package": async () => {
       const { flags, rest } = parseStrictCommandFlags(values, "package", { boolean: ["pretty"] });

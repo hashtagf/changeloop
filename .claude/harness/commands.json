@@ -82,6 +82,14 @@
       "description": "Check the project's feature map (openspec/feature-map.json) and, with --change, name the features the change's task scopes and changed files touch, without writing state; --strict fails on map issues."
     },
     {
+      "name": "product status",
+      "usage": "product status [--document <path>] [--strict] [--pretty]",
+      "audience": "agent",
+      "kind": "read",
+      "idempotent": true,
+      "description": "Show every item of the project's product documents (PRD and uxui) as not started, in a change, proven, or archived, read from each change's handoff record, and name changes compiled against an earlier revision, without writing state; --strict fails while any item is in no change."
+    },
+    {
       "name": "lessons",
       "usage": "lessons [--min-changes <n>] [--pretty]",
       "audience": "agent",
@@ -806,6 +814,7 @@
     "outcomes",
     "lessons",
     "features",
+    "product-status",
     "package",
     "preview",
     "budget-checkpoint",

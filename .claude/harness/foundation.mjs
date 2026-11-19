@@ -128,7 +128,7 @@ const READ_ONLY_OPERATIONS = new Set([
   "package", "budget-checkpoint",
   "packet", "agent-task", "audit-change", "authority-status",
   "handoff-list", "handoff-status", "handoff-packet", "evidence-detect", "evidence-doctor",
-  "doctor", "quality-discover", "quality-doctor", "quality-report", "quality-readiness",
+  "doctor", "quality-discover", "quality-doctor", "quality-report", "quality-readiness", "product-status",
   "api-version", "version"
 ]);
 const commandPhaseRecorder = createCommandPhaseRecorder(() => ({
@@ -614,7 +614,7 @@ const {
   proofAudit, proofCollect, proofExecute, proofFinalize, proofRun, prove,
   pyramidReadinessCommand, recordTargetRestore, recoverLand, resumeLand, sessionLeases,
   showAdvance, showChanges, showCurrent, showDeliveryAdvance, showFeatures, showFeedback,
-  showLandPlan, showLessons, showOutcomes, showProviders, undoLand, usage, values
+  showLandPlan, showLessons, showOutcomes, showProductProgress, showProviders, undoLand, usage, values
 } = composeLifecycleRuntimes({
   ACCEPTANCE_PROTOCOL_VERSION, ADAPTER_PROTOCOL_VERSION, AGENT_PLAN_SCHEMA_VERSION,
   ATTESTATIONS, ATTESTATION_PROTOCOL_VERSION, AUTHORITY, AUTHORITY_PROTOCOL_VERSION, CHANGES,
@@ -709,7 +709,7 @@ await routeRuntimeCommand(command, values, {
   showRepositories, foundationPolicy, showAgentPlan, showAgentDispatch, showAgentTask,
   releaseAgentLease, prepareClaudeTelemetry, recordPhaseContext, showPacket, showMetrics,
   showAdvance, recordTargetRestore, undoLand, showFeedback, showOutcomes, showLessons,
-  showFeatures, execObserved, checkpointBudget, continueBudget, doctor, validate,
+  showFeatures, showProductProgress, execObserved, checkpointBudget, continueBudget, doctor, validate,
   showTraceabilityAudit, relevantHash, providerWorkspaceHash, proofPlan, proofReadiness,
   proofAdvance, proofRun, proofCollect, proofPreflight, proofExecute, proofAudit, proofFinalize,
   showEvidenceDetection, initializeEvidence, showEvidenceDoctor, showAuthorityStatus, prove,

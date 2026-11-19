@@ -794,7 +794,10 @@ contract (stories, criteria, rules, features, and permissions must stay in the
 specs or tasks). An amendment that carries the same `productHandoff` re-reads
 the documents; the amended agreement must cite the new owed IDs or exclude
 them. Every amendment rebuilds the proposal's coverage table from the record
-and the amended packet, so it names where each owed item is now cited. A document in another shape is converted with the `prd` or `ux-design`
+and the amended packet, so it names where each owed item is now cited.
+`cloop product status` reads every packet's record and shows each item of the
+documents as not started, in a change, proven, or archived, so an item no
+change picked up stays visible; `--strict` fails while one is left. A document in another shape is converted with the `prd` or `ux-design`
 skill's import step first; the PRD's Definition of Done is project-level and
 not owed by a single change.
 
