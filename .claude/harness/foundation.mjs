@@ -614,7 +614,7 @@ const {
   proofAudit, proofCollect, proofExecute, proofFinalize, proofRun, prove,
   pyramidReadinessCommand, recordTargetRestore, recoverLand, resumeLand, sessionLeases,
   showAdvance, showChanges, showCurrent, showDeliveryAdvance, showFeatures, showFeedback,
-  showLandPlan, showLessons, showOutcomes, showProductProgress, showProviders, undoLand, usage, values
+  showLandPlan, showLessons, showOutcomes, showProductProgress, measureProduct, showProviders, undoLand, usage, values
 } = composeLifecycleRuntimes({
   ACCEPTANCE_PROTOCOL_VERSION, ADAPTER_PROTOCOL_VERSION, AGENT_PLAN_SCHEMA_VERSION,
   ATTESTATIONS, ATTESTATION_PROTOCOL_VERSION, AUTHORITY, AUTHORITY_PROTOCOL_VERSION, CHANGES,
@@ -709,7 +709,7 @@ await routeRuntimeCommand(command, values, {
   showRepositories, foundationPolicy, showAgentPlan, showAgentDispatch, showAgentTask,
   releaseAgentLease, prepareClaudeTelemetry, recordPhaseContext, showPacket, showMetrics,
   showAdvance, recordTargetRestore, undoLand, showFeedback, showOutcomes, showLessons,
-  showFeatures, showProductProgress, execObserved, checkpointBudget, continueBudget, doctor, validate,
+  showFeatures, showProductProgress, measureProduct, execObserved, checkpointBudget, continueBudget, doctor, validate,
   showTraceabilityAudit, relevantHash, providerWorkspaceHash, proofPlan, proofReadiness,
   proofAdvance, proofRun, proofCollect, proofPreflight, proofExecute, proofAudit, proofFinalize,
   showEvidenceDetection, initializeEvidence, showEvidenceDoctor, showAuthorityStatus, prove,

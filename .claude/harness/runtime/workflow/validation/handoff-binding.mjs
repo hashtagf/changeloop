@@ -93,7 +93,11 @@ export function handoffRecordFor(root, draft, handoff) {
   const read = (field) => typeof handoff[field] === "string" && handoff[field].trim()
     ? readFileSync(join(root, handoff[field].trim()), "utf8") : null;
   const { rows } = productHandoffCoverage(draft, handoff, { prdText: read("prd"), uxuiText: read("uxui") });
-  return handoffRecordValue(root, handoff, rows);
+  const record = handoffRecordValue(root, handoff, rows);
+  // A hotfix names the incident it answers, so the product view can show
+  // which handed-over items an incident touched.
+  const incident = draft?.bugfix?.incident?.link;
+  return typeof incident === "string" && incident.trim() ? { ...record, incident: incident.trim() } : record;
 }
 
 export function writeHandoffRecord(basePath, record) {

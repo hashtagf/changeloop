@@ -30,7 +30,7 @@ keeping this map current are in [How the map is kept current](#how-the-map-is-ke
 | [Consumer quality gates](#consumer-quality) | quality gate ของโปรเจกต์ผู้ใช้ | cross-phase | `quality discover`, `quality init`, `quality doctor` |
 | [Pyramid readiness](#pyramid-readiness) | ความพร้อมตาม pyramid | cross-phase | `quality readiness` |
 | [Project feature map](#project-feature-map) | feature map ของโปรเจกต์ | cross-phase | `features` |
-| [Product documents (PRD and UX/UI)](#product-handoff) | เอกสาร product (PRD และ UX/UI) | cross-phase | `product status` |
+| [Product documents (PRD and UX/UI)](#product-handoff) | เอกสาร product (PRD และ UX/UI) | cross-phase | `product status`, `product measure` |
 | [Install, hosts, and onboarding](#install-and-hosts) | ติดตั้ง เชื่อม host และ onboarding | setup | `init`, `models`, `host agent-contract` |
 | [Team dashboard](#team-dashboard) | dashboard ของทีม | setup | `dashboard`, `dashboard snapshot` |
 
@@ -210,8 +210,8 @@ Run the project's own checks for every claim and bind each result to the exact c
 | CLI commands | `proof readiness`, `proof collect`, `proof advance`, `proof run`, `proof preflight`, `proof execute`, `proof finalize`, `proof audit`, `proof-plan`, `evidence detect`, `evidence init`, `evidence doctor`, `evidence run`, `evidence record`, `evidence verify-ci`, `hash` |
 | User states | — |
 | Runtime groups | `evidence` |
-| Code | `.claude/harness/runtime/evidence/proof-execution-runtime.mjs`, `.claude/harness/runtime/evidence/evidence-contract.mjs`, `.claude/harness/runtime/evidence/receipt-runtime.mjs` |
-| Tests | `.claude/harness/tests/proof-advance.test.mjs`, `.claude/harness/tests/proof-audit.test.mjs`, `.claude/harness/tests/signed-ci.test.mjs` |
+| Code | `.claude/harness/runtime/evidence/proof-execution-runtime.mjs`, `.claude/harness/runtime/evidence/evidence-contract.mjs`, `.claude/harness/runtime/evidence/receipt-runtime.mjs`, `.claude/harness/runtime/evidence/app-smoke-check.mjs` |
+| Tests | `.claude/harness/tests/proof-advance.test.mjs`, `.claude/harness/tests/proof-audit.test.mjs`, `.claude/harness/tests/signed-ci.test.mjs`, `.claude/harness/tests/app-smoke.test.mjs` |
 | Docs | `.claude/harness/lifecycle/prove.md`, `.claude/harness/EVIDENCE.md`, `website/docs/src/content/docs/loop/prove.md`, `website/docs/src/content/docs/evidence/receipts.md` |
 
 <a id="review"></a>
@@ -420,17 +420,17 @@ The user project names its own features and the paths behind them in openspec/fe
 
 **Phase:** cross-phase
 
-A PM's PRD and a designer's uxui.md, in any layout with IDs, are found in the project; every change names the documents it comes from and must cover each owed item or exclude it with a reason, validation stops when a document changes after approval or an amendment drops an item, and product status shows every item across all changes.
+A PM's PRD and a designer's uxui.md, in any layout with IDs, are found in the project; every change names the documents it comes from and must cover each owed item or exclude it with a reason, validation stops when a document changes after approval or an amendment drops an item, and product status shows every item across all changes. After release, product measure records each success metric's value and source.
 
-PRD ของ PM และ uxui.md ของ designer ที่มี ID เขียนแบบไหนก็ได้ ระบบหาเจอในโปรเจกต์ ทุก change ต้องบอกว่ามาจากเอกสารไหนและต้องครอบคลุมทุกข้อที่ต้องทำหรือตัดออกพร้อมเหตุผล การตรวจจะหยุดเมื่อเอกสารถูกแก้หลังอนุมัติหรือ amendment ทำให้ข้อหาย และ product status แสดงทุกข้อข้ามทุก change
+PRD ของ PM และ uxui.md ของ designer ที่มี ID เขียนแบบไหนก็ได้ ระบบหาเจอในโปรเจกต์ ทุก change ต้องบอกว่ามาจากเอกสารไหนและต้องครอบคลุมทุกข้อที่ต้องทำหรือตัดออกพร้อมเหตุผล การตรวจจะหยุดเมื่อเอกสารถูกแก้หลังอนุมัติหรือ amendment ทำให้ข้อหาย และ product status แสดงทุกข้อข้ามทุก change หลังปล่อย product measure บันทึกค่าตัวชี้วัดความสำเร็จพร้อมแหล่งที่มา
 
 | | |
 |---|---|
 | Slash commands | — |
-| CLI commands | `product status` |
+| CLI commands | `product status`, `product measure` |
 | User states | — |
 | Runtime groups | — |
-| Code | `.claude/harness/runtime/workflow/validation/product-handoff.mjs`, `.claude/harness/runtime/workflow/validation/handoff-binding.mjs`, `.claude/harness/runtime/workflow/validation/product-progress.mjs`, `.claude/skills/prd/SKILL.md`, `.claude/skills/ux-design/SKILL.md` |
+| Code | `.claude/harness/runtime/workflow/validation/product-handoff.mjs`, `.claude/harness/runtime/workflow/validation/handoff-binding.mjs`, `.claude/harness/runtime/workflow/validation/product-progress.mjs`, `.claude/skills/prd/SKILL.md`, `.claude/skills/ux-design/SKILL.md`, `.claude/harness/runtime/workflow/validation/product-measures.mjs` |
 | Tests | `.claude/harness/tests/product-handoff.test.mjs`, `.claude/harness/tests/product-progress.test.mjs`, `.claude/tests/docs/pm-ux-skills.test.mjs` |
 | Docs | `.claude/harness/lifecycle/change.md`, `website/docs/src/content/docs/loop/change.md`, `website/docs/src/content/docs/cli.md` |
 

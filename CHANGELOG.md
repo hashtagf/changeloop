@@ -83,10 +83,24 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- Post-release measurement: a PRD's success metrics are `KPI-nn` rows with a
+  target; `cloop product measure` records an observed value with its source,
+  and `cloop product status` shows each metric met, missed, or unmeasured with
+  its value before and after the feature's release. A hotfix's incident is
+  shown on the product items it owes. The `prd` checker requires `KPI-nn` in
+  section 1.
 - `cloop product status` shows every item of the project's PRD and uxui
   documents as not started, in a change, proven, or archived (grouped by
   feature, with deferrals and their reasons), and names changes compiled
   against an earlier revision; `--strict` fails while any item is in no change.
+- A built-in running-app check for UI work: work type `ui` now owes
+  `browser`, and a web project without a browser provider gets one that starts
+  the app (its `dev`/`start`/`serve`/`preview` script, or a static folder with
+  `index.html`), opens the home page and the pages it links to in headless
+  Chrome at desktop and phone width, and fails on load failures, uncaught
+  errors, console errors, failed requests, and phone-width overflow, saving
+  screenshots under `test-results/app-smoke/`. Dependency-free (Chrome over its
+  debugging pipe); without a servable app or Chrome it stays an advisory.
 - Product handoff accepts a PM's own layout: IDs are read wherever a line,
   row, list item, bold run, or heading starts with them, with features and
   stories related by mapping rows, mentions, and heading nesting, and the

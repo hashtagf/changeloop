@@ -351,7 +351,7 @@ export function composeLifecycleRuntimes({
   });
   const {
     abandonChange, advanceLand, advanceThrough, advanceValue, command, lessonsValue,
-    pyramidReadinessCommand, sessionLeases, showAdvance, showDeliveryAdvance, showFeatures, showProductProgress,
+    pyramidReadinessCommand, sessionLeases, showAdvance, showDeliveryAdvance, showFeatures, showProductProgress, measureProduct,
     showFeedback, showLessons, showOutcomes, undoLand, values
   } = composeDeliveryRuntimes({
     ATTESTATIONS, AUTHORITY, CHANGES, DELIVERIES, EVIDENCE_VAULT, HANDOFFS,
@@ -381,7 +381,7 @@ export function composeLifecycleRuntimes({
     landCheck, landGrantRuntime, proofAdvance, proofAudit, proofCollect, proofExecute,
     proofFinalize, proofRun, prove, pyramidReadinessCommand, recordTargetRestore, recoverLand,
     resumeLand, sessionLeases, showAdvance, showChanges, showCurrent, showDeliveryAdvance,
-    showFeatures, showFeedback, showLandPlan, showLessons, showOutcomes, showProductProgress, showProviders,
+    showFeatures, showFeedback, showLandPlan, showLessons, showOutcomes, showProductProgress, measureProduct, showProviders,
     undoLand, usage, values
   };
 }

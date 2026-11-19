@@ -90,6 +90,14 @@
       "description": "Show every item of the project's product documents (PRD and uxui) as not started, in a change, proven, or archived, read from each change's handoff record, and name changes compiled against an earlier revision, without writing state; --strict fails while any item is in no change."
     },
     {
+      "name": "product measure",
+      "usage": "product measure <KPI-nn> --value <number> --source <dashboard|query|export> [--at <date>] [--unit <unit>] [--note <text>] [--document <path>] [--pretty]",
+      "audience": "agent",
+      "kind": "write",
+      "idempotent": false,
+      "description": "Record one observed value of a product document's success metric (KPI-nn) with the source it came from in openspec/product-measurements.jsonl; product status then shows the metric's target, latest value, whether it is met, and its value before and after the last release of its feature."
+    },
+    {
       "name": "lessons",
       "usage": "lessons [--min-changes <n>] [--pretty]",
       "audience": "agent",
@@ -815,6 +823,7 @@
     "lessons",
     "features",
     "product-status",
+    "product-measure",
     "package",
     "preview",
     "budget-checkpoint",

@@ -63,7 +63,7 @@ export const WORK_TYPE_CAPABILITIES = Object.freeze({
   performance: Object.freeze(["performance"]),
   async: Object.freeze(["concurrency"]),
   integration: Object.freeze(["integration"]),
-  ui: Object.freeze(["accessibility"]),
+  ui: Object.freeze(["accessibility", "browser"]),
   dependency: Object.freeze(["dependency-supply-chain"]),
   infra: Object.freeze(["plan-check", "deployment"]),
   migration: Object.freeze(["parity"]),

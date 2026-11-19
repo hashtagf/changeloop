@@ -30,7 +30,7 @@ A prototype or reference URL is evidence: open it, record what it shows as
 
 | # | Section | Must hold |
 |---|---|---|
-| 1 | Goal | The end state in one paragraph; success metrics with targets and one guardrail metric |
+| 1 | Goal | The end state in one paragraph; success metrics as `KPI-nn` rows with a comparable target (`≥ 2.5%`, `≤ 3 min`) and the feature they measure, plus one guardrail metric |
 | 2 | Problem and goal (Why) | Why now, business goal, user goal |
 | 3 | Pain / Problem | Table: pain, who, evidence label |
 | 4 | Solution and Output, Definition of Done | The solution, the deliverables, and a DoD checklist (`- [ ]`) that names tests, NFR, and sign-off |
@@ -73,6 +73,12 @@ statement missing from both. The same check applies to a UX document imported
 into `uxui.md`.
 
 ## Handoff to Change Loop
+
+After a release, record each success metric's observed value with its source:
+`cloop product measure KPI-01 --value 2.8 --source "<dashboard or query>"`.
+`cloop product status` then shows every item's progress across changes and
+each metric's target, latest value, and the value before and after the
+feature's release.
 
 Change Loop reads the IDs, not the section numbers: a PM document in another
 layout works when its items start with these IDs (as a table row, list item,

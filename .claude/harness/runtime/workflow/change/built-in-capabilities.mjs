@@ -1,9 +1,11 @@
 // Capabilities a harness-owned provider can produce without project tooling.
-// Today that is accessibility: a static read of the markup a change touched.
+// Accessibility (a static read of the markup a change touched) and browser
+// (the running app, where the project serves one and Chrome is installed).
 import { ACCESSIBILITY_BUILT_IN } from "../../evidence/accessibility-check.mjs";
+import { APP_SMOKE_BUILT_IN } from "../../evidence/app-smoke-check.mjs";
 
 export function builtInCovers(config) {
-  return config?.builtIn === ACCESSIBILITY_BUILT_IN;
+  return [ACCESSIBILITY_BUILT_IN, APP_SMOKE_BUILT_IN].includes(config?.builtIn);
 }
 
 // A capability the declared work type owes is enforced as soon as a
@@ -16,6 +18,10 @@ export function builtInOwedCapabilities(workTypeActions, providerConfig) {
 
 // What a path-inferred capability nobody wired asks for.
 export function inferredAdvisoryNext(id, capability) {
+  if (capability === "browser")
+    return "the built-in running-app check needs a dev/start/serve/preview script or an index.html and Chrome " +
+      `(or CHROME_PATH); otherwise configure a project-owned browser provider in openspec/changes/${id}/execution.yaml, ` +
+      "or accept the advisory";
   return capability === "accessibility"
     ? "declare workType 'ui' to enforce the built-in accessibility check, configure a project-owned " +
       `accessibility command in openspec/changes/${id}/execution.yaml, or accept the advisory`

@@ -9,6 +9,9 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { HANDOFF_RECORD, productDocuments } from "./handoff-binding.mjs";
 import { parsePrd, parseUxui } from "./product-handoff.mjs";
+import {
+  documentMetrics, measurementIssues, metricLine, metricProgress, readMeasurements, recordMeasurement
+} from "./product-measures.mjs";
 
 export const PRODUCT_PROGRESS_SCHEMA_VERSION = 1;
 // Later states win when several changes owe one item.
@@ -45,7 +48,8 @@ export function handoffRecords(root) {
   }
   for (const name of directories(join(changes, "archive"))) {
     const record = readRecord(join(changes, "archive", name, HANDOFF_RECORD));
-    if (record) rows.push({ change: name.replace(/^\d{4}-\d{2}-\d{2}-/, ""), state: "archived", status: "archived", record });
+    if (record) rows.push({ change: name.replace(/^\d{4}-\d{2}-\d{2}-/, ""), state: "archived", status: "archived",
+      archivedOn: name.match(/^\d{4}-\d{2}-\d{2}/)?.[0] || null, record });
   }
   return rows;
 }
@@ -73,17 +77,19 @@ export function documentItems(text) {
 // `document` limits the view to one path.
 export function productProgress(root, { document = null } = {}) {
   const records = handoffRecords(root);
+  const measurements = readMeasurements(root);
   const paths = document ? [document] : [...new Set([...productDocuments(root),
     ...records.flatMap((row) => (row.record.documents || []).map((doc) => doc.path))])].sort();
   const documents = [];
   for (const path of paths) {
     const absolute = join(root, path);
-    if (!existsSync(absolute)) { documents.push({ path, missing: true, summary: null, items: [], changed: [] }); continue; }
+    if (!existsSync(absolute)) { documents.push({ path, missing: true, summary: null, items: [], changed: [], metrics: [] }); continue; }
     const digest = sha256(absolute);
     const citing = records.filter((row) => (row.record.documents || []).some((doc) => doc.path === path));
-    const items = documentItems(readFileSync(absolute, "utf8")).map((item) => {
+    const text = readFileSync(absolute, "utf8");
+    const items = documentItems(text).map((item) => {
       const owedBy = citing.filter((row) => row.record.owed.includes(item.id))
-        .map((row) => ({ change: row.change, state: row.state }));
+        .map((row) => ({ change: row.change, state: row.state, ...(row.record.incident ? { incident: row.record.incident } : {}) }));
       const deferredBy = citing.flatMap((row) => (row.record.excluded || []).filter((entry) => entry.id === item.id)
         .map((entry) => ({ change: row.change, reason: entry.reason })));
       const state = owedBy.reduce((best, row) =>
@@ -96,7 +102,14 @@ export function productProgress(root, { document = null } = {}) {
     // may have moved on since, so the view names it.
     const changed = citing.filter((row) => (row.record.documents || [])
       .some((doc) => doc.path === path && doc.sha256 !== digest)).map((row) => ({ change: row.change, state: row.state }));
-    documents.push({ path, summary, items, changed });
+    // The last release of each feature: the latest archive date of a change
+    // that owed it.
+    const releases = new Map();
+    for (const row of citing.filter((entry) => entry.archivedOn))
+      for (const id of row.record.owed.filter((owed) => /^F-\d+$/.test(owed)))
+        if (!releases.has(id) || releases.get(id) < row.archivedOn) releases.set(id, row.archivedOn);
+    const metrics = metricProgress(documentMetrics(text), measurements, path, releases);
+    documents.push({ path, summary, items, changed, metrics });
   }
   return { version: PRODUCT_PROGRESS_SCHEMA_VERSION, documents,
     next: documents.length ? null : "no product documents (PRD.md, uxui.md, or a Markdown file with US-/AC- IDs) were found" };
@@ -105,7 +118,8 @@ export function productProgress(root, { document = null } = {}) {
 const MARK = { "not-started": "[ ]", "in-change": "[~]", proven: "[p]", archived: "[x]" };
 
 function itemLine(item) {
-  const where = item.owedBy.length ? ` — ${item.owedBy.map((row) => `${row.change} (${row.state})`).join(", ")}`
+  const where = item.owedBy.length ? ` — ${item.owedBy.map((row) =>
+    `${row.change} (${row.state}${row.incident ? `, fixes incident ${row.incident}` : ""})`).join(", ")}`
     : item.deferredBy.length ? ` — deferred by ${item.deferredBy.map((row) => `${row.change}: ${row.reason}`).join("; ")}` : "";
   return `${MARK[item.state]} ${item.id} ${item.text.slice(0, 70)}${where}`;
 }
@@ -126,6 +140,12 @@ export function productProgressLines(value) {
       else if (members.length && features.length) lines.push("  (no feature)");
       for (const item of members) lines.push(`    ${itemLine(item)}`);
     }
+    if (doc.metrics.length) {
+      const counts = ["met", "missed", "measured", "unmeasured"].map((status) =>
+        [status, doc.metrics.filter((metric) => metric.status === status).length]).filter(([, count]) => count);
+      lines.push(`  Success metrics: ${counts.map(([status, count]) => `${count} ${status}`).join(", ")}`);
+      for (const metric of doc.metrics) lines.push(`    ${metricLine(metric)}`);
+    }
     for (const row of doc.changed)
       lines.push(`  ! ${row.change} (${row.state}) was compiled against an earlier ${doc.path}; check whether its items still match`);
   }
@@ -140,5 +160,22 @@ export function createProductProgressCommand({ root, log = console.log, fail }) 
     if (flags.strict && open) fail(`${open} product item(s) are not in any change`);
     return value;
   }
-  return { showProductProgress };
+  // Records one observed value of a success metric, with its source.
+  function measureProduct(kpi, flags = {}) {
+    const docs = productProgress(root, { document: flags.document || null }).documents
+      .filter((doc) => !doc.missing && doc.metrics.some((metric) => metric.id === kpi));
+    if (docs.length !== 1)
+      return fail(docs.length ? `${kpi} is defined in ${docs.map((doc) => doc.path).join(" and ")}; name one with --document`
+        : `${kpi} is not a success metric (KPI-nn) in any product document`);
+    const row = { kpi, document: docs[0].path, value: Number(flags.value), ...(flags.unit ? { unit: String(flags.unit) } : {}),
+      at: !flags.at ? new Date().toISOString() : Number.isNaN(Date.parse(flags.at)) ? String(flags.at) : new Date(flags.at).toISOString(), source: String(flags.source || "").trim(),
+      ...(flags.note ? { note: String(flags.note) } : {}) };
+    const issues = measurementIssues(row, docs[0].metrics);
+    if (issues.length) return fail(`product measure: ${issues.join("; ")}`);
+    recordMeasurement(root, row);
+    const metric = productProgress(root, { document: row.document }).documents[0].metrics.find((entry) => entry.id === kpi);
+    log(flags.pretty ? metricLine(metric) : JSON.stringify({ recorded: row, metric }, null, 2));
+    return metric;
+  }
+  return { measureProduct, showProductProgress };
 }

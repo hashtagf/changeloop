@@ -360,10 +360,11 @@ test("work types add their catalog capabilities to path-derived ones", () => {
     "observability", "data", "privacy", "docs"
   ]);
   assert.deepEqual(result.capabilities, [
-    "accessibility", "compatibility", "data-migration", "dependency-supply-chain",
+    "accessibility", "browser", "compatibility", "data-migration", "dependency-supply-chain",
     "deployment", "evaluation", "observability", "parity", "plan-check", "security-static"
   ]);
   assert.deepEqual(result.triggers.accessibility, ["ui/Button.tsx", "work-type:ui"]);
+  assert.deepEqual(result.triggers.browser, ["work-type:ui"]);
   assert.deepEqual(result.triggers.compatibility, ["work-type:api", "work-type:library"]);
   assert.deepEqual(result.postRelease, []);
 });

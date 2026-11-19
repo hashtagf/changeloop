@@ -242,6 +242,30 @@ Detection still looks for a project-owned `test:accessibility`, `test:a11y`,
 built-in read. To record accessibility evidence by hand (a manual audit),
 declare `"accessibility": {"adapter": "external"}` in `execution.yaml`.
 
+### Built-in running-app check
+
+Work type `ui` also owes `browser`. A web project without a browser provider of
+its own gets a harness-owned one (`runtime/evidence/app-smoke-check.mjs`,
+built-in `app-smoke-v1`) when its one writable repository serves an app and
+Chrome or Chromium is installed (or `CHROME_PATH` names it). The check starts
+the app the way the project runs it — the first of the `dev`, `start`, `serve`,
+or `preview` package scripts, with `PORT` set and the local URL it prints used,
+or a small static server for a folder with `index.html` (the root, `public/`,
+`dist/`, `build/`, or `site/`) — and drives headless Chrome over its debugging
+pipe (no extra dependency). It opens the home page and up to seven same-origin
+pages it links to, at 1440 px and 390 px, and fails on a page that does not
+load, an uncaught script error, a console error, a same-origin request that
+fails or answers 4xx/5xx, content wider than the phone screen, or a page with
+no text. Each page's screenshot is written under `test-results/app-smoke/`
+with `report.json`. A sandbox without `node_modules` borrows the project's for
+the run. An app that cannot start fails with the tail of its output; it is
+never a pass.
+
+It proves the app runs, not a scenario's flow: clicks and forms still need the
+project's own browser tests (Playwright with claim annotations, above), and a
+project-owned browser provider replaces the built-in. Without a servable app
+or Chrome there is no built-in check, and `browser` stays an advisory.
+
 Six capabilities exist for these work types:
 
 | Capability | Proves | Default adapter | Phase | Bootstrap scripts |
