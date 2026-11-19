@@ -24,13 +24,13 @@ function prd({ drop = null, ac = "AC-01 (US-01, US-02)" } = {}) {
     8: "| ID | Rule | Label |\n|---|---|---|\n| BR-01 | VAT included | [Assumption] |",
     9: "```mermaid\nflowchart TD\n  A --> B\n```",
     10: "| ID | Feature | Stories |\n|---|---|---|\n| F-01 | Landing | US-01 |\n| F-02 | Admin | US-02 |",
-    11: "| Category | Requirement | Measure |\n|---|---|---|\n| Performance | LCP ≤ 2.5 s | Lighthouse |",
+    11: "| ID | Category | Requirement | Measure |\n|---|---|---|---|\n| NFR-01 | Performance | LCP ≤ 2.5 s | Lighthouse |",
     12: "| ADR | Topic | Status |\n|---|---|---|\n| ADR-01 | Where the shop lives | Proposed |",
     13: "In scope: F-01, F-02. Out of scope: mobile app.",
     14: "| Type | Item | Impact |\n|---|---|---|\n| Dependency | Payment gateway | checkout |",
     15: "| Role | View | Edit |\n|---|---|---|\n| Admin (permission) | ✓ | ✓ |",
     16: "| Feature | Stories |\n|---|---|\n| F-01 | US-01 |\n| F-02 | US-02 |",
-    17: "| Situation | User sees | System does |\n|---|---|---|\n| Card declined | Try another card | Keep order |",
+    17: "| ID | Situation | User sees | System does |\n|---|---|---|---|\n| ERR-01 | Card declined | Try another card | Keep order |",
     18: "| # | Question | Who |\n|---|---|---|\n| Q1 | What is sold? | Owner |"
   };
   return "# PRD — Shop\n\n" + Object.entries(body).filter(([n]) => Number(n) !== drop)
@@ -45,6 +45,8 @@ test("a complete PRD has no finding; each broken contract is named", () => {
   assert.ok(prdFindings(prd().replace("| F-02 | US-02 |\n|", "|")).some((f) => f.includes("F-02 is missing")) ||
     prdFindings(prd().replace(/\| F-02 \| US-02 \|\n\n## 17/, "\n## 17")).some((f) => f.includes("F-02 is missing")));
   assert.ok(prdFindings(prd().replace("| Proposed |", "| |")).includes("ADR-01 has no status"));
+  assert.ok(prdFindings(prd().replace("NFR-01", "N1")).includes("section 11 names no requirement (NFR-nn)"));
+  assert.ok(prdFindings(prd().replace("ERR-01", "E1")).includes("section 17 names no error case (ERR-nn)"));
   assert.ok(prdFindings(prd().replace("[Assumption]. Metric", ". Metric")).includes(
     "section 1 carries no [Data]/[Assumption]/[Decision] label"));
 });

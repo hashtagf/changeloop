@@ -40,13 +40,13 @@ A prototype or reference URL is evidence: open it, record what it shows as
 | 8 | Business Rules | Table: `BR-nn`, rule, label |
 | 9 | Flow Diagram | Mermaid flowchart of the main path with its error path; a state diagram for any entity with a lifecycle |
 | 10 | PRD / Functional Specification | Table: `F-nn`, feature, detail, stories |
-| 11 | Non-functional Requirements | Table: category, requirement with a number, how it is measured (performance, load, availability, accessibility WCAG 2.2 AA, security, privacy, localization, SEO, observability, browsers) |
+| 11 | Non-functional Requirements | Table: `NFR-nn`, category, requirement with a number, how it is measured (performance, load, availability, accessibility WCAG 2.2 AA, security, privacy, localization, SEO, observability, browsers) |
 | 12 | Decision Rule / ADR and review rounds | Which decisions need an ADR and who approves; ADR table (`ADR-nn`, options, proposal, status, approver); review rounds with participants and exit |
 | 13 | Scope / Out of scope | In scope by feature ID; out of scope with the reason or the question that could change it |
 | 14 | Dependencies and constraints | Table: type, item, impact |
 | 15 | Data and Permission Requirements | Entity table (fields, personal data, retention) and a role × action permission matrix |
-| 16 | Feature mapping | Table: feature → stories → criteria → rules → screens → flow |
-| 17 | Error Handling | Table: situation, what the user sees, what the system does |
+| 16 | Feature mapping | Table: feature → stories → criteria → rules → NFR → errors → screens → flow; Change Loop reads it to decide what a change owes |
+| 17 | Error Handling | Table: `ERR-nn`, situation, what the user sees, what the system does |
 | 18 | Open Questions | Table: `Q-nn` or `Qn`, question, what it affects, who must answer |
 
 End with a Changelog table (version, date, change).
@@ -58,7 +58,24 @@ End with a Changelog table (version, date, change).
   without a source carries it.
 - `[Decision]` — approved in a review round; name the round or approver.
 - Every `US` has at least one `AC`; every `F` names its stories; every `ADR`
-  has a status. The checker enforces these links.
+  has a status; NFR and error rows carry `NFR-nn` and `ERR-nn`. The checker
+  enforces these links.
+
+## Handoff to Change Loop
+
+A change built from the PRD names it in the draft, and `change start` refuses
+the draft until every in-scope item is covered or excluded with a reason:
+
+```json
+"productHandoff": { "prd": "docs/PRD.md", "uxui": "design/uxui.md", "scope": ["F-04"],
+  "excluded": [{ "id": "US-07", "reason": "next change" }] }
+```
+
+`scope` is `"all"` or feature IDs; a feature owes everything its section 16
+row names, the criteria of those stories, and the open questions that mention
+them. Stories go in requirements, criteria in scenarios (so each becomes a
+test), rules in requirements or scenarios, NFR in `nfr`, errors in failure
+scenarios or the failure matrix, ADRs and open questions in decisions.
 
 ## Review
 

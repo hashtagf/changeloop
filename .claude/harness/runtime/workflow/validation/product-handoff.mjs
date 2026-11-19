@@ -1,0 +1,254 @@
+// Product handoff coverage: when a change is built from a PM's PRD.md and a
+// designer's uxui.md, every in-scope item those documents define must land in
+// the change — a story in a requirement, an acceptance criterion in a
+// scenario (so it becomes a test), a business rule, NFR, error case, ADR, and
+// open question in the matching section, and every screen state in the UI
+// contract — or be excluded with a reason the approver sees. Pure: the caller
+// reads the files.
+
+// Which section of the PRD template defines each ID kind, and where the
+// change must cite it.
+export const PRD_KINDS = Object.freeze({
+  US: { section: 5, label: "User stories", places: ["requirements", "userStories"] },
+  AC: { section: 6, label: "Acceptance criteria", places: ["scenarios"] },
+  BR: { section: 8, label: "Business rules", places: ["requirements", "scenarios"] },
+  F: { section: 10, label: "Features", places: ["requirements", "tasks"] },
+  NFR: { section: 11, label: "Non-functional requirements", places: ["nfr", "requirements", "scenarios"] },
+  ADR: { section: 12, label: "Decisions (ADR)", places: ["decisions"] },
+  ERR: { section: 17, label: "Error handling", places: ["failureScenarios", "failureMatrix"] },
+  Q: { section: 18, label: "Open questions", places: ["decisions", "openQuestions"] }
+});
+export const SCREEN_LABEL = "Screens and states";
+
+const PLACE_TEXT = {
+  requirements: "a requirement's description or outcome",
+  userStories: "a user story",
+  scenarios: "a scenario (name, given, when, or then)",
+  failureScenarios: 'a scenario with "kind": "failure"',
+  failureMatrix: "a failureMatrix row",
+  tasks: "a task",
+  nfr: "an nfr row",
+  decisions: "a decision",
+  openQuestions: "an openQuestions entry"
+};
+
+const text = (value) => typeof value === "string" ? value.trim() : "";
+
+function sections(markdown) {
+  const found = [...String(markdown).matchAll(/^##\s+(?:(\d{1,2})\.\s+)?(.+)$/gm)];
+  return found.map((match, index) => ({ number: match[1] ? Number(match[1]) : null, title: match[2].trim(),
+    body: markdown.slice(match.index, found[index + 1]?.index ?? markdown.length) }));
+}
+
+// IDs a text names, with ranges such as "AC-03–AC-06" expanded.
+export function namedIds(value) {
+  const out = new Set();
+  const source = String(value);
+  for (const match of source.matchAll(/\b([A-Z]{1,3})-(\d+)\s*[–-]\s*\1-(\d+)\b/g)) {
+    const width = match[2].length;
+    for (let n = Number(match[2]); n <= Number(match[3]); n += 1) out.add(`${match[1]}-${String(n).padStart(width, "0")}`);
+  }
+  for (const match of source.matchAll(/(?<![A-Za-z0-9-])((?:US|AC|BR|F|NFR|ADR|ERR)-\d+|Q-?\d+)(?!\d)/g)) out.add(match[1]);
+  return out;
+}
+
+const tableRows = (body) => body.split("\n").filter((line) => /^\|/.test(line) && !/^\|[\s:|-]+\|?\s*$/.test(line));
+const cells = (row) => row.trim().replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim());
+
+// Items the PRD defines: each ID with its text and section, and the feature
+// mapping (section 16) row of each feature.
+export function parsePrd(markdown) {
+  const list = sections(markdown);
+  const items = new Map();
+  for (const [kind, { section }] of Object.entries(PRD_KINDS)) {
+    const body = list.find((row) => row.number === section)?.body || "";
+    const lines = body.split("\n");
+    for (const line of lines) {
+      const head = line.match(kind === "Q" ? /^\|\s*(Q-?\d+)\s*\|/ : new RegExp(`^(?:\\|\\s*|\\*\\*|#+\\s*)(${kind}-\\d+)\\b`));
+      if (!head || items.has(head[1])) continue;
+      const body = line.replace(/^[|*#\s]+|[|*\s]+$/g, "").replace(/\s*\|\s*/g, " · ")
+        .replace(new RegExp(`^${head[1]}\\b\\s*(·\\s*)?`), "");
+      items.set(head[1], { id: head[1], kind, text: body.slice(0, 160) });
+    }
+  }
+  const mapping = new Map();
+  const mappingBody = list.find((row) => row.number === 16)?.body || "";
+  for (const row of tableRows(mappingBody)) {
+    const ids = namedIds(row);
+    for (const feature of [...ids].filter((id) => id.startsWith("F-"))) mapping.set(feature, ids);
+  }
+  // A criterion's stories: "AC-03 (US-04)".
+  const criteria = new Map();
+  for (const match of String(list.find((row) => row.number === 6)?.body || "").matchAll(/\b(AC-\d+)\s*\(([^)]*)\)/g))
+    criteria.set(match[1], namedIds(match[2]));
+  return { items, mapping, criteria };
+}
+
+// Screen Inventory rows of uxui.md: screen, feature, and its states.
+export function parseUxui(markdown) {
+  const inventory = sections(markdown).find((row) => /screen inventory/i.test(row.title));
+  if (!inventory) return { screens: [] };
+  const rows = tableRows(inventory.body);
+  if (rows.length < 2) return { screens: [] };
+  const header = cells(rows[0]).map((cell) => cell.toLowerCase());
+  const column = (...names) => header.findIndex((cell) => names.some((name) => cell.includes(name)));
+  const screen = column("screen", "หน้า", "ชื่อหน้า");
+  const feature = column("feature", "ฟีเจอร์");
+  const states = column("state", "สถานะของหน้า");
+  const screens = rows.slice(1).map(cells).map((row) => ({
+    screen: row[screen] || row[0],
+    feature: feature >= 0 ? row[feature] || "" : "",
+    states: states >= 0 ? (row[states] || "").split(/[,/·;]|\s+และ\s+/).map((value) => value.trim()).filter(Boolean) : []
+  })).filter((row) => row.screen);
+  return { screens };
+}
+
+// The items a change owes: every defined item for "all", otherwise the scoped
+// features with everything their mapping rows name, the criteria of their
+// stories, and the open questions that mention any of them.
+export function scopedItems(prd, scope) {
+  if (scope === "all" || scope === undefined) return new Set(prd.items.keys());
+  const owed = new Set();
+  for (const feature of scope) {
+    owed.add(feature);
+    for (const id of prd.mapping.get(feature) || []) owed.add(id);
+  }
+  for (const [criterion, stories] of prd.criteria)
+    if ([...stories].some((story) => owed.has(story))) owed.add(criterion);
+  for (const [id, item] of prd.items)
+    if (item.kind === "Q" && [...namedIds(item.text)].some((named) => owed.has(named))) owed.add(id);
+  return new Set([...owed].filter((id) => prd.items.has(id)));
+}
+
+// Where each place of the draft cites IDs, with a readable location.
+function draftPlaces(draft) {
+  const places = Object.fromEntries(Object.keys(PLACE_TEXT).map((place) => [place, []]));
+  const add = (place, where, value) => places[place].push({ where, ids: namedIds(JSON.stringify(value ?? "")) });
+  for (const requirement of draft.requirements || []) {
+    const where = `requirement ${text(requirement.key) || text(requirement.description).slice(0, 40)}`;
+    add("requirements", where, { description: requirement.description, outcome: requirement.outcome, key: requirement.key });
+    for (const scenario of requirement.scenarios || []) {
+      const named = `scenario "${text(scenario.name) || text(scenario.when).slice(0, 40)}"`;
+      add("scenarios", named, scenario);
+      if (scenario.kind === "failure") add("failureScenarios", named, scenario);
+    }
+  }
+  for (const story of draft.userStories || []) add("userStories", "user story", story);
+  for (const task of draft.tasks || []) add("tasks", `task ${text(task.key) || text(task.id) || text(task.outcome).slice(0, 40)}`, task);
+  for (const row of draft.nfr || []) add("nfr", `nfr ${text(row.key)}`, row);
+  for (const row of draft.failureMatrix || []) add("failureMatrix", "failure matrix", row);
+  for (const decision of draft.decisions || []) add("decisions", `decision ${text(decision.key)}`, decision);
+  for (const question of draft.openQuestions || []) add("openQuestions", "open question", question);
+  return places;
+}
+
+const normalized = (value) => String(value).toLowerCase().replace(/\s+/g, " ").trim();
+
+// Coverage of one change against its handoff documents.
+// `handoff` is the draft's productHandoff; `prdText` / `uxuiText` are the
+// file contents (null when the draft names none).
+export function productHandoffCoverage(draft, handoff, { prdText = null, uxuiText = null } = {}) {
+  const issues = [];
+  const rows = [];
+  const excluded = new Map();
+  for (const [index, row] of (Array.isArray(handoff?.excluded) ? handoff.excluded : []).entries()) {
+    if (!text(row?.id) || !text(row?.reason))
+      issues.push(`semantic draft productHandoff.excluded[${index}] needs an id and the reason it is not part of this change`);
+    else excluded.set(text(row.id), text(row.reason));
+  }
+  const used = new Set();
+  const places = draftPlaces(draft);
+  if (prdText !== null) {
+    const prd = parsePrd(prdText);
+    if (!prd.items.size) issues.push("semantic draft productHandoff.prd defines no ID (US-, AC-, BR-, F-, NFR-, ADR-, ERR-, Q-); write it with the prd skill");
+    const scope = handoff.scope === undefined || handoff.scope === "all" ? "all"
+      : Array.isArray(handoff.scope) ? handoff.scope.map(text).filter(Boolean) : null;
+    if (scope === null) issues.push('semantic draft productHandoff.scope must be "all" or a list of feature IDs (F-nn)');
+    for (const feature of Array.isArray(scope) ? scope : [])
+      if (!prd.items.has(feature)) issues.push(`semantic draft productHandoff.scope names ${feature}, which the PRD does not define`);
+    for (const id of [...scopedItems(prd, scope || [])].sort(compareIds)) {
+      const item = prd.items.get(id);
+      const allowed = PRD_KINDS[item.kind].places;
+      const coveredBy = allowed.flatMap((place) => places[place].filter((entry) => entry.ids.has(id)).map((entry) => entry.where));
+      // Excluding a story excludes the criteria written only for it.
+      const stories = item.kind === "AC" ? [...(prd.criteria.get(id) || [])] : [];
+      const viaStories = stories.length && stories.every((story) => excluded.has(story))
+        ? `with ${stories.join(", ")}: ${excluded.get(stories[0])}` : undefined;
+      const reason = excluded.get(id) ?? viaStories;
+      if (excluded.has(id)) used.add(id);
+      rows.push({ id, kind: item.kind, text: item.text, coveredBy: [...new Set(coveredBy)], excluded: reason ?? null });
+      if (!coveredBy.length && reason === undefined)
+        issues.push(`semantic draft does not cover ${id} from the PRD: cite "${id}" in ${
+          allowed.map((place) => PLACE_TEXT[place]).join(" or ")}, or add it to productHandoff.excluded with the reason`);
+    }
+  }
+  if (uxuiText !== null) {
+    const { screens } = parseUxui(uxuiText);
+    if (!screens.length) issues.push("semantic draft productHandoff.uxui has no Screen Inventory rows; write it with the ux-design skill");
+    const featureNames = handoff.scope && handoff.scope !== "all" && prdText !== null ? scopedFeatureNames(prdText, handoff.scope) : null;
+    for (const row of screens) {
+      if (featureNames && !featureNames.some((name) => normalized(row.feature).includes(name))) continue;
+      const contract = (draft.uiStates || []).find((entry) => normalized(entry.screen || "") === normalized(row.screen) ||
+        normalized(entry.screen || "").includes(normalized(row.screen)));
+      const declared = new Set((contract?.states || []).map((state) => normalized(state?.state || state)));
+      for (const state of row.states.length ? row.states : [""]) {
+        const id = state ? `screen:${row.screen}/${state}` : `screen:${row.screen}`;
+        const reason = excluded.get(id) ?? excluded.get(`screen:${row.screen}`);
+        if (reason !== undefined) used.add(excluded.has(id) ? id : `screen:${row.screen}`);
+        const covered = contract && (!state || declared.has(normalized(state)));
+        rows.push({ id, kind: "SCREEN", text: state ? `${row.screen} — ${state}` : row.screen,
+          coveredBy: covered ? [`UI states ${contract.screen}`] : [], excluded: reason ?? null });
+        if (!covered && reason === undefined)
+          issues.push(`semantic draft does not cover ${id} from uxui.md: add a uiStates row for screen "${row.screen}"${
+            state ? ` with state "${state}"` : ""}, or add "${id}" to productHandoff.excluded with the reason`);
+      }
+    }
+  }
+  for (const id of excluded.keys())
+    if (!used.has(id)) issues.push(`semantic draft productHandoff.excluded names ${id}, which is not owed by this change`);
+  return { rows, issues };
+}
+
+function scopedFeatureNames(prdText, scope) {
+  const prd = parsePrd(prdText);
+  return scope.flatMap((feature) => {
+    const name = (prd.items.get(feature)?.text || "").split(" · ")[0] || "";
+    return [normalized(feature), normalized(name)].filter(Boolean);
+  });
+}
+
+function compareIds(left, right) {
+  const order = Object.keys(PRD_KINDS);
+  const [lk, ln] = [left.replace(/-?\d+$/, ""), Number(left.match(/\d+$/)?.[0] || 0)];
+  const [rk, rn] = [right.replace(/-?\d+$/, ""), Number(right.match(/\d+$/)?.[0] || 0)];
+  return order.indexOf(lk) - order.indexOf(rk) || ln - rn;
+}
+
+export function productHandoffShapeIssues(handoff) {
+  if (handoff === undefined) return [];
+  if (!handoff || typeof handoff !== "object" || Array.isArray(handoff))
+    return ["semantic draft productHandoff must be an object { prd?, uxui?, scope?, excluded? }"];
+  const issues = [];
+  if (!text(handoff.prd) && !text(handoff.uxui))
+    issues.push("semantic draft productHandoff names neither prd nor uxui");
+  if (handoff.excluded !== undefined && !Array.isArray(handoff.excluded))
+    issues.push("semantic draft productHandoff.excluded must be an array of { id, reason }");
+  return issues;
+}
+
+// The proposal section: one table per PRD heading, then screens and states.
+export function renderProductHandoff(coverage, { language = "en" } = {}) {
+  if (!coverage?.rows?.length) return "";
+  const th = language === "th";
+  const groups = [...Object.entries(PRD_KINDS).map(([kind, { label }]) => [kind, label]), ["SCREEN", SCREEN_LABEL]];
+  const head = th ? "| ID | รายการ | อยู่ใน change ที่ |\n|---|---|---|" : "| ID | Item | Covered in this change by |\n|---|---|---|";
+  const cell = (value) => String(value).replace(/\|/g, "\\|");
+  const parts = [coverage.documents ? `${th ? "เอกสาร" : "Documents"}: ${coverage.documents}` : ""];
+  for (const [kind, label] of groups) {
+    const rows = coverage.rows.filter((row) => row.kind === kind);
+    if (!rows.length) continue;
+    parts.push(`### ${label}\n\n${head}\n${rows.map((row) => `| ${cell(row.id)} | ${cell(row.text)} | ${
+      row.excluded !== null ? `${th ? "ไม่อยู่ใน change นี้" : "Not in this change"}: ${cell(row.excluded)}` : cell(row.coveredBy.join(", "))} |`).join("\n")}`);
+  }
+  return parts.filter(Boolean).join("\n\n");
+}

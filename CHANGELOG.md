@@ -73,6 +73,14 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- `productHandoff` in the change draft names the `PRD.md` and `uxui.md` a
+  change comes from, with a feature scope. Intake refuses the draft until every
+  in-scope story, acceptance criterion (as a scenario, so it becomes a test),
+  business rule, NFR, error case, ADR, open question, and screen state is cited
+  in its section or excluded with a reason; the proposal gains a "Handoff
+  coverage" section that lists each item under the PRD headings. The `prd`
+  template now gives NFR and error rows IDs (`NFR-nn`, `ERR-nn`) and maps them
+  per feature.
 - Skill `prd`: writes `PRD.md` in an 18-section template (goal, problem,
   stories, Given/When/Then acceptance, glossary, rules, Mermaid flows,
   functional spec, NFR, ADRs and review rounds, scope, dependencies, data and

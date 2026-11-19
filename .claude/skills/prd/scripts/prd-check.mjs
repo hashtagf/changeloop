@@ -63,6 +63,8 @@ export function prdFindings(text) {
       findings.push(`${row.match(/ADR-\d+/)[0]} has no status`);
   if (!ids(body(12), "ADR").size) findings.push("section 12 has no ADR (ADR-nn)");
 
+  if (body(11) && !ids(body(11), "NFR").size) findings.push("section 11 names no requirement (NFR-nn)");
+  if (body(17) && !ids(body(17), "ERR").size) findings.push("section 17 names no error case (ERR-nn)");
   if (!/^\s*-\s*\[[ x]\]/m.test(body(4))) findings.push("section 4 has no Definition of Done checklist (- [ ])");
   if (!/\|/.test(body(15)) || !/permission|สิทธิ์|role/i.test(body(15)))
     findings.push("section 15 has no permission matrix");

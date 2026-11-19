@@ -28,7 +28,8 @@ OpenSpec packet a change compiles from it.
 ## Harness
 
 Writes only PRD.md and prd.html where the user asks; never starts a change.
-An approved PRD goes to `grill-task-gu`, then `/feature` or `/change`.
+An approved PRD goes to `grill-task-gu`, then `/feature` or `/change`, whose draft
+names it in `productHandoff` so nothing in scope is dropped.
 
 ## References
 
