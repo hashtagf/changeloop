@@ -224,16 +224,26 @@ function derivedProviders(claims, tasks) {
   const commands = unique(tasks.map((task) => task.verify).filter(Boolean));
   const { command, segments } = verifyChain(commands);
   const capabilities = unique(claims.flatMap((claim) => claim.capabilities));
-  // Build runs each task's verify in its repository's sandbox, so a command
-  // derived from those verifies runs there too. Only a single non-root
-  // repository is unambiguous; tasks spread across repositories keep the
-  // root-workspace provider they had.
+  // Derived test runs follow Build's task repository, not the control root.
   const repositories = unique(tasks.map((task) => text(task.repository) || "root"));
   const repository = repositories.length === 1 && repositories[0] !== "root"
     ? { repository: repositories[0] } : {};
   const providers = {};
   for (const capability of capabilities) {
     if (capability === "discovery") continue;
+    if (capability === "test" && repositories.length > 1) {
+      for (const id of repositories) {
+        const scoped = unique(tasks.filter((task) => (text(task.repository) || "root") === id)
+          .map((task) => task.verify).filter(Boolean));
+        if (!scoped.length) continue;
+        const discoveryProvider = `discovery-${id}`;
+        providers[`test-${id}`] = { adapter: "test-discovery", capability: "test", repository: id,
+          ...verifyChain(scoped), discoveryProvider, minimum: 1, reportFormat: "auto", claims: "declared" };
+        providers[discoveryProvider] = { adapter: "test-discovery", capability: "discovery", repository: id,
+          ...verifyChain(scoped), minimum: 1, reportFormat: "auto", claims: "declared" };
+      }
+      continue;
+    }
     if (AUTHORITY_CAPABILITIES.has(capability)) {
       providers[capability] = { adapter: "external", capability, claims: "declared" };
       continue;
@@ -260,7 +270,9 @@ export function derivedExecution(source, claims, tasks) {
   const authored = source.execution.providers || {};
   const wiresTest = Object.entries(authored).some(([name, config]) =>
     ["test", "discovery"].includes(config?.capability || name) || config?.adapter === "test-discovery");
-  return derived.test && !wiresTest
-    ? { ...source.execution, providers: { test: derived.test, ...authored } }
+  const testProviders = Object.fromEntries(Object.entries(derived).filter(([name, config]) =>
+    name === "test" || ["test", "discovery"].includes(config.capability)));
+  return Object.keys(testProviders).length && !wiresTest
+    ? { ...source.execution, providers: { ...testProviders, ...authored } }
     : source.execution;
 }

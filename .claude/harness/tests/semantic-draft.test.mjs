@@ -717,12 +717,17 @@ test("a derived provider runs in the single repository its tasks belong to", () 
   assert.equal(derived([]).test.repository, undefined);
   assert.equal(derived(Array(tasks).fill("root")).test.repository, undefined);
   if (tasks > 1)
-    assert.equal(derived(["svc", ...Array(tasks - 1).fill("lib")]).test.repository, undefined);
+    assert.equal(derived(["svc", ...Array(tasks - 1).fill("lib")])["test-svc"].repository, "svc");
   const mixed = semanticDraft();
   mixed.tasks = [...mixed.tasks, { ...mixed.tasks[0], key: "lib-task", repository: "lib" }]
     .map((task, index) => index === 0 ? { ...task, repository: "svc" } : task);
-  assert.equal(normalizeSemanticDraft(mixed, slugify).draft.execution.providers.test?.repository,
-    undefined);
+  mixed.tasks.at(-1).verify = "npm run test:lib";
+  const providers = normalizeSemanticDraft(mixed, slugify).draft.execution.providers;
+  assert.equal(providers.test, undefined, "do not run child verifies from the control root");
+  assert.equal(providers["test-svc"].repository, "svc");
+  assert.deepEqual(providers["test-lib"].command, ["sh", "-c", "npm run test:lib"]);
+  assert.equal(providers["test-lib"].discoveryProvider, "discovery-lib");
+  assert.equal(providers["discovery-lib"].repository, "lib");
 });
 
 // An amendment adding a root task to a change whose lib task already exists

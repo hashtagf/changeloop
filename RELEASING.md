@@ -37,6 +37,17 @@ scenarios. A single repeat is a smoke check, not a stable speedup claim or the
 repeated assurance gate. The portfolio's existing repeat requirements still
 apply to assurance promotion.
 
+Each release's lane results are kept so the next release pays only for the new
+version. After a checkpoint, `node scripts/release/lane-results.mjs record
+<version> <result-dir>` writes `docs/reports/benchmarks/<version>.json`: one
+row per lane with its fixture and prompt digest, commit, outcome, oracle score,
+wall time, cost (null when unmeasured) and model requests. Before the next
+checkpoint, `lane-results.mjs plan <previous-version>` lists the lanes to run:
+a lane whose fixture and prompt are unchanged and that the previous record
+holds runs on the candidate only; a changed or missing one runs on both. Then
+`lane-results.mjs compare <previous> <candidate> --markdown` totals the lanes
+with the same task for the dated report.
+
 Required delivery checks must pass: pre-Land hidden oracle, `archived`, measured
 quality, ordinary project command, clean install and post-install tests. Preserve
 failed runs and unknown measurements. Missing/failed candidate evidence is a

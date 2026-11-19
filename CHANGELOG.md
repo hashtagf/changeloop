@@ -11,6 +11,12 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- Test discrimination waited the whole ten-minute provider timeout when the
+  change's tests failed on the base code but left a server open (paid lane
+  `project-tracker-api` on main took 15 minutes instead of 8). A base run is now
+  bounded at 120 s and still reports a timeout as inconclusive.
+- Multi-repository drafts derive test and discovery providers per task repository,
+  instead of running child-repository tests in the control root.
 - After `proven`, an agent reworked the change for a non-blocking review
   advisory, which re-opened review and stopped at the review-exhausted user
   question (paid lane 43). `reviewAdvisories` now carries

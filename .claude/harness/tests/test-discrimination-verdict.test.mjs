@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 
 import {
-  createTestDiscriminationRuntime, inconclusiveLine
+  BASE_RUN_TIMEOUT_MS, baseRunOutcome, baseRunTimeoutMs, createTestDiscriminationRuntime, inconclusiveLine
 } from "../runtime/evidence/test-discrimination.mjs";
 import { configuredCommand } from "../runtime/evidence/evidence-results.mjs";
 import { lightKind } from "../runtime/workflow/validation/dev-document.mjs";
@@ -109,8 +109,9 @@ test("discrimination-no-verdict-visible-no-provider: a test provider that cannot
 test("discrimination-no-verdict-visible-timed-out: a timed-out bound file stays visible beside a file that fails on base", (t) => {
   const { root, repo } = fixture(t);
   writeFileSync(join(repo.workspacePath, "test/slow.test.mjs"),
-    "import test from 'node:test';\nawait new Promise((r) => setTimeout(r, 5000));\ntest('slow', () => {});\n");
-  const result = runtime(repo, join(root, "logs"), { timeoutMs: 1500, binding: [
+    "import test from 'node:test';\nawait new Promise((r) => setTimeout(r, 20000));\ntest('slow', () => {});\n");
+  // Wide enough for the other file's base run on a loaded machine.
+  const result = runtime(repo, join(root, "logs"), { timeoutMs: 6000, binding: [
     { claimId: "formats", requirementKey: "greet", scenario: "formats", regression: false, files: ["test/greet.test.mjs"] },
     { claimId: "slow", requirementKey: "greet", scenario: "slow", regression: false, files: ["test/slow.test.mjs"] }
   ] }).evaluate("change-a", "hash-a");
@@ -152,4 +153,21 @@ test("discrimination-no-verdict-visible-verdict: a verdict leaves no no-verdict 
   assert.equal(result.status, "pass");
   assert.deepEqual(result.inconclusive, []);
   assert.deepEqual(landAdvisoryLines({}), []);
+});
+
+test("discrimination-hung-base-run: a base run is capped and partial output is not a verdict", (t) => {
+  assert.equal(baseRunTimeoutMs({ timeoutMs: 600000 }), BASE_RUN_TIMEOUT_MS, "a base run does not inherit the ten-minute provider timeout");
+  assert.equal(baseRunTimeoutMs({ timeoutMs: 30000 }), 30000);
+  assert.equal(baseRunOutcome({ error: { code: "ETIMEDOUT" }, status: null,
+    stdout: "not ok 1 - register\n" }), "timed-out");
+  // A test that fails and then keeps a server open, as the base code does.
+  const { root, repo } = fixture(t);
+  writeFileSync(join(repo.workspacePath, "test/hangs.test.mjs"),
+    "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { createServer } from 'node:http';\n" +
+    "createServer().listen(0);\ntest('needs the change', () => assert.equal(1, 2));\n");
+  const result = runtime(repo, join(root, "logs"), { timeoutMs: 4000, binding: [
+    { claimId: "hangs", requirementKey: "greet", scenario: "hangs", regression: false, files: ["test/hangs.test.mjs"] }
+  ] }).evaluate("change-a", "hash-b");
+  assert.deepEqual(result.repositories[0].files.find((row) => row.file === "test/hangs.test.mjs"),
+    { file: "test/hangs.test.mjs", outcome: "timed-out" });
 });

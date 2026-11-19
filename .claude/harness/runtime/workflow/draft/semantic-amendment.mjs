@@ -11,11 +11,11 @@ import { amendmentCompileVersion, isRecordedSemanticVersion } from "../validatio
 import { unique } from "../../core/values.mjs";
 import {
   TASK_CONTRACT_FIELDS, amendmentList, appendRequirementToSpec, combinedChain,
-  combinedCommand, hasField, keyOf, missingEvidenceIssue, removalRef, renderRequirement, reopenTask,
+  hasField, keyOf, missingEvidenceIssue, removalRef, renderRequirement, reopenTask,
   replaceRequirementBlock, replaceTaskDepends, replaceTaskPaths, replaceTaskVerify,
   requirementBlocks, semanticTaskKey, stringList, taskClaims, taskCompleted,
   taskContractOnlyAmendment, taskDepends, taskId, taskPaths, taskVerify,
-  updateTaskClaimAnnotation, withChain
+  updateTaskClaimAnnotation, updateDerivedProviderCommands, withChain
 } from "./amendment-tasks.mjs";
 import {
   amendmentSectionIssues, appendAmendmentHistory, packetLanguage, replaceDiscoveryDelta,
@@ -483,7 +483,8 @@ export function compileSemanticAmendment({
   for (const [name, config] of Object.entries(normalized.draft.execution.providers || {})) {
     if (providers[name]) {
       if (providers[name].command && ["command", "test-discovery"].includes(providers[name].adapter))
-        providers[name] = withChain(providers[name], allChain);
+        providers[name] = withChain(providers[name], providers[name].repository
+          ? combinedChain(nextTasks, providers[name].repository) : allChain);
       continue;
     }
     // The agreement already names who proves this capability, and where; a
@@ -510,19 +511,12 @@ export function compileSemanticAmendment({
         "change's execution providers, then amend again");
       continue;
     }
-    providers[name] = { ...config, command: config.command ? allCommand : undefined };
+    providers[name] = config.command && config.repository
+      ? withChain(config, combinedChain(nextTasks, config.repository))
+      : { ...config, command: config.command ? allCommand : undefined };
   }
   if (issues.length) return { issues };
-  // A provider command derived from the task verify commands follows them;
-  // an explicitly configured command stays as the author wrote it.
-  if (taskContractChanges.some((change) => change.verify !== undefined) ||
-      removedTaskRows.length) {
-    const priorCommand = JSON.stringify(combinedCommand(tasksContent));
-    for (const [name, config] of Object.entries(providers))
-      if (["command", "test-discovery"].includes(config?.adapter) &&
-          JSON.stringify(config.command) === priorCommand)
-        providers[name] = withChain(config, allChain);
-  }
+  updateDerivedProviderCommands(providers, tasksContent, nextTasks, allChain);
   const taskContractTasks = taskContractChanges.map((change) => {
     const line = taskLines[change.index];
     return {

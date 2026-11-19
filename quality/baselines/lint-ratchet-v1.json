@@ -17,7 +17,7 @@
     ".claude/harness/runtime/workflow/change/change-lifecycle.mjs": 763,
     ".claude/harness/runtime/workflow/change/change-validation.mjs": 724,
     ".claude/harness/runtime/workflow/delivery/pull-request-runtime.mjs": 779,
-    ".claude/harness/runtime/workflow/draft/semantic-amendment.mjs": 713,
+    ".claude/harness/runtime/workflow/draft/semantic-amendment.mjs": 707,
     ".claude/harness/runtime/workflow/draft/semantic-draft.mjs": 728,
     ".claude/harness/runtime/workflow/land/apply-runtime.mjs": 756,
     ".claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs": 640
