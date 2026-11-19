@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "same-version-brew-migration",
+      "requirementKey": "same-version-brew-migration",
+      "scenario": "อัปเกรดรุ่นซอร์สเดียวกัน",
+      "impact": "low",
+      "capabilities": [
+        "static-analysis"
+      ]
+    }
+  ],
+  "providers": {
+    "static-analysis": {
+      "adapter": "command",
+      "capability": "static-analysis",
+      "command": [
+        "sh",
+        "-c",
+        "rtk proxy ruby -c Formula/cloop.rb && rtk proxy node --test .claude/tests/harness/local-release-rehearsal.test.mjs"
+      ],
+      "claims": "declared"
+    }
+  }
+}

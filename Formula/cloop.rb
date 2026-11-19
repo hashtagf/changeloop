@@ -7,6 +7,8 @@ class Cloop < Formula
   url "https://github.com/hashtagf/changeloop/archive/refs/tags/v3.7.5.tar.gz"
   sha256 "b5d8becb02b38d9b9e0f9e095004cfbc929ece450449fd403be1e9b51b65c382"
   license "MIT"
+  # Give the renamed formula a new keg even when the source version is unchanged.
+  revision 1
   head "https://github.com/hashtagf/changeloop.git", branch: "main"
 
   # Add bottle metadata only after a bottle under the cloop name is published.

@@ -41,6 +41,11 @@ test("Homebrew installs cloop directly and resolves the former formula name for 
   assert.ok(!existsSync(resolve("Aliases/cloop")));
 });
 
+test("Homebrew can install the renamed formula at a newer keg revision", () => {
+  const formula = readFileSync(resolve("Formula/cloop.rb"), "utf8");
+  assert.match(formula, /^  revision [1-9]\d*$/m);
+});
+
 test("Homebrew test checks compact and full CLI help at their owning surfaces", () => {
   const formula = readFileSync(resolve("Formula/cloop.rb"), "utf8");
   assert.match(formula, /help = shell_output\("#\{bin\}\/cloop --help"\)/);
