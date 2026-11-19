@@ -1149,6 +1149,46 @@
         "accessibility": "pass"
       },
       "baseline": null
+    },
+    {
+      "id": "product-handoff",
+      "status": "ready",
+      "execution": "paid",
+      "workload": "product-handoff",
+      "stack": "node",
+      "size": "small",
+      "fixture": ".claude/tests/bench/tasks/45-product-handoff/seed",
+      "fixture_digest": "sha256:8b5cb2d6b08b739c72290f0959e9286d4798430eba1cd2f97e9e741b371866b4",
+      "prompt": "/dev implement feature F-01 from the product team's docs/requirements.md as described in ISSUE.md, with tests. I approve the spec as compiled (decision ref user-prompt:approve-cart-spec); do not stop for spec approval.",
+      "host": "claude-code",
+      "risk": "standard",
+      "project_command": "node --test",
+      "clean_install_command": "npm install --ignore-scripts",
+      "critical_case_ids": [
+        "CASE_ADD",
+        "CASE_AC01_CAP_AT_STOCK",
+        "CASE_AC02_CURRENT_PRICE",
+        "CASE_AC03_REMOVE",
+        "CASE_AC04_SAME_ITEM_LINE_CAPPED",
+        "CASE_BR01_SHIPPING",
+        "CASE_BR02_LIMIT_TEN",
+        "CASE_ERR01_STOCK_DOWN",
+        "CASE_TESTS_PASS",
+        "CASE_HANDOFF_RECORD"
+      ],
+      "oracle": {
+        "required": true,
+        "path": ".claude/tests/bench/tasks/45-product-handoff/oracle/run.sh"
+      },
+      "quality_required": true,
+      "budget": {
+        "wall_ms": 2400000,
+        "cost_usd": 10,
+        "model_requests": 200,
+        "tool_calls": 200
+      },
+      "expected_terminal": "completed",
+      "baseline": null
     }
   ]
 }
