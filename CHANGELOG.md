@@ -11,6 +11,9 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- The built-in accessibility check read no file in a copied workspace that is
+  not a Git repository and passed with "0 changed markup files"; it now walks
+  the workspace and compares it with the project copy.
 - `cloop outcomes` and the readiness row "Most changes pass proof on the first
   run" counted the finalized proof manifest as a second run, so every change
   proven through `advance` read as a repeat (0% first-proof pass). A run is

@@ -94,6 +94,23 @@ test("without a Git base a file is changed when it differs from the project copy
   assert.deepEqual([...changedMarkup(root, null, control).keys()], ["src/Old.tsx"]);
 });
 
+test("a copied workspace that is not a Git repository is walked, not skipped", (t) => {
+  const copy = mkdtempSync(join(tmpdir(), "a11y-copy-"));
+  const control = mkdtempSync(join(tmpdir(), "a11y-copy-control-"));
+  t.after(() => { rmSync(copy, { recursive: true, force: true }); rmSync(control, { recursive: true, force: true }); });
+  for (const root of [copy, control]) mkdirSync(join(root, "src"), { recursive: true });
+  writeFileSync(join(control, "src", "view.js"), "export const view = () => '<main></main>';\n");
+  writeFileSync(join(copy, "src", "view.js"), "export const view = () => '<main><input id=\"q\"></main>';\n");
+  writeFileSync(join(copy, "src", "same.js"), "export const same = 1;\n");
+  writeFileSync(join(control, "src", "same.js"), "export const same = 1;\n");
+  mkdirSync(join(copy, "node_modules", "x"), { recursive: true });
+  writeFileSync(join(copy, "node_modules", "x", "y.html"), "<img src=\"a.png\">\n");
+  assert.deepEqual([...changedMarkup(copy, null, control).keys()], ["src/view.js"]);
+  const report = accessibilityReport({ root: { path: copy, access: "write", baseHead: null } }, control);
+  assert.equal(report.files, 1);
+  assert.deepEqual(report.findings.map((row) => row.rule), ["control-label"]);
+});
+
 test("the command reads the provider repository manifest and fails on findings", (t) => {
   const { root, write, base } = repository(t);
   const manifest = join(root, ".manifest.json");
