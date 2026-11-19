@@ -241,6 +241,10 @@ Add complexity only when the work needs it:
   A task whose own tests sit outside its `paths` is a design warning
 - `decisions` for load-bearing choices, each with its consequences
 - Mermaid or referenced SVG/PNG `diagrams`
+- `productHandoff` naming the `PRD.md` and `uxui.md` the work came from, with a
+  `scope`; intake refuses the draft until every in-scope story, acceptance
+  criterion, rule, NFR, error case, decision, and screen state is cited in its
+  section or excluded with a reason, and the proposal lists the coverage
 - `prototypeSelection` pointing at an existing selection note, with optional
   `excludes` for prototype elements the agreement does not adopt (each with its
   reason), so the visual check never asks for them

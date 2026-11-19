@@ -28,6 +28,7 @@ import {
   fileMapWithTasks, intakeDecisions, capabilityTable, discoveryAppendixBody, investigationAppendixBody,
   renderOpenQuestions, renderSuccessCriteria, renderUserStories
 } from "../validation/reader-guide.mjs";
+import { renderProductHandoff } from "../validation/product-handoff.mjs";
 
 const decisionTextList = (value) => (Array.isArray(value) ? value : [value])
   .map((item) => String(item ?? "").trim()).filter(Boolean);
@@ -248,6 +249,7 @@ export function renderDraftProposal(draft, state, context = {}) {
       })()].filter(Boolean).join("\n\n"),
     demo: () => fieldRender("demo"),
     acceptance: () => sectionBody(renderTraceability(draft)),
+    productHandoff: () => renderProductHandoff(draft._productHandoffCoverage, { language }),
     definitionOfDone: () => sectionBody(renderDefinitionOfDone(draft, context)),
     investigation: () => investigationAppendixBody(draft, title),
     discovery: () => discoveryAppendixBody(draft, language),

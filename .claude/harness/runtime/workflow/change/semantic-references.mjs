@@ -1,9 +1,10 @@
 // The files and scenarios a semantic draft refers to: local references must
 // be regular files inside the project, and draft scenarios are normalized
 // before the agreement is compiled.
-import { realpathSync, statSync } from "node:fs";
+import { readFileSync, realpathSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { prototypeSelectionIssues } from "../prototype/prototype-binding.mjs";
+import { productHandoffCoverage, productHandoffShapeIssues } from "../validation/product-handoff.mjs";
 
 export function createSemanticReferences({
   fail, pathInside, root
@@ -22,6 +23,11 @@ export function createSemanticReferences({
       }
     };
     const referencedPaths = [];
+    const handoffIssues = productHandoffShapeIssues(draft.productHandoff);
+    issues.push(...handoffIssues);
+    for (const field of ["prd", "uxui"])
+      if (!handoffIssues.length && typeof draft.productHandoff?.[field] === "string" && draft.productHandoff[field].trim())
+        referencedPaths.push([`productHandoff.${field}`, draft.productHandoff[field]]);
     if (draft.prototypeSelection?.reference)
       referencedPaths.push(["prototypeSelection.reference", draft.prototypeSelection.reference]);
     for (const [index, row] of (draft.discovery?.coverage || []).entries())
@@ -46,6 +52,8 @@ export function createSemanticReferences({
       }
     }
     for (const [field, value] of referencedPaths) validateLocalFile(field, value);
+    if (draft.productHandoff && !handoffIssues.length && !issues.some((issue) => issue.includes("productHandoff.")))
+      issues.push(...handoffCoverageIssues(draft));
     const requirementKeys = draft._requirementKeys?.length ? draft._requirementKeys
       : (draft.claims || []).map((claim) => claim?.requirementKey).filter(Boolean);
     issues.push(...prototypeSelectionIssues(draft.prototypeSelection, requirementKeys, draft.execution?.providers));
@@ -69,6 +77,17 @@ export function createSemanticReferences({
       validateLocalFile(`integrations[${index}].documentation.source`, source);
     }
     return issues;
+  }
+
+  // Every in-scope PRD and uxui.md item must land in the change or be
+  // excluded with a reason; the coverage is kept for the proposal.
+  function handoffCoverageIssues(draft) {
+    const read = (field) => typeof draft.productHandoff[field] === "string" && draft.productHandoff[field].trim()
+      ? readFileSync(resolve(root, draft.productHandoff[field]), "utf8") : null;
+    const coverage = productHandoffCoverage(draft, draft.productHandoff, { prdText: read("prd"), uxuiText: read("uxui") });
+    const documents = ["prd", "uxui"].map((field) => draft.productHandoff[field]).filter(Boolean).map((path) => `\`${path}\``).join(", ");
+    Object.defineProperty(draft, "_productHandoffCoverage", { value: { ...coverage, documents }, enumerable: false, configurable: true });
+    return coverage.issues;
   }
 
   function validateSemanticReferences(draft) {

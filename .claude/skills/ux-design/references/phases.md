@@ -83,6 +83,7 @@ before the final CONFIRM.
 
 An approved artifact is the design reference for implementation: the change
 draft names it in `prototypeSelection` (with `excludes` for anything the
-agreement rejects), declares work type `ui`, and wires screenshots so the
-`visual` check compares the built UI with it. uxui.md counts as the project's
+agreement rejects), names `uxui.md` in `productHandoff` so every Screen
+Inventory state must appear in the change's `uiStates`, declares work type
+`ui`, and wires screenshots so the `visual` check compares the built UI with it. uxui.md counts as the project's
 design document in `cloop quality readiness`.

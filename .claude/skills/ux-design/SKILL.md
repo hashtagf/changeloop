@@ -26,7 +26,8 @@ CONFIRM.
 
 ## Harness
 
-Writes design files only; an approved artifact enters Change as `prototypeSelection`.
+Writes design files only; Change names uxui.md in `productHandoff` and an
+approved artifact in `prototypeSelection`.
 Building product code is Change Loop's Build, never this skill.
 
 ## References

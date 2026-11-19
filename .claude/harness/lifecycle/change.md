@@ -728,6 +728,45 @@ written to `.foundation/backups/<id>/<timestamp>/<sandbox>/` (`commits.bundle`,
 sandbox whose content cannot be inspected, or whose backup cannot be written, is
 kept.
 
+<a id="product-handoff"></a>
+
+## Product handoff coverage
+
+Work that a product manager or designer handed over as documents names them in
+the draft so nothing in scope is dropped:
+
+```json
+"productHandoff": { "prd": "docs/PRD.md", "uxui": "design/uxui.md",
+  "scope": ["F-04"], "excluded": [{ "id": "US-07", "reason": "next change" }] }
+```
+
+`prd` is a `PRD.md` in the `prd` skill's template; `uxui` is a `uxui.md` from
+the `ux-design` skill; both must be regular files inside the project. `scope`
+is `"all"` or feature IDs: a feature owes every ID its Feature Mapping row
+names, the acceptance criteria of those stories, and the open questions that
+mention them; with `uxui`, every Screen Inventory screen of those features owes
+each of its states. Intake returns an agent `EDIT` naming every owed item the
+draft does not cite in its place:
+
+| PRD item | Cited in |
+|---|---|
+| `US-nn` story | a requirement's description or outcome, or `userStories` |
+| `AC-nn` criterion | a scenario's name, given, when, or then, so it becomes a bound test |
+| `BR-nn` rule | a requirement or a scenario |
+| `F-nn` feature | a requirement or a task |
+| `NFR-nn` | an `nfr` row, a requirement, or a scenario |
+| `ERR-nn` | a `"kind": "failure"` scenario or a `failureMatrix` row |
+| `ADR-nn`, `Qn` | a decision (open questions may also stay in `openQuestions`) |
+| screen state | a `uiStates` row for that screen with that state |
+
+An item outside this change goes in `excluded` with its reason; excluding a
+story excludes the criteria written only for it, and an exclusion that is not
+owed is an `EDIT`. The proposal's "Handoff coverage" section lists every owed
+item under the PRD headings with where the change covers it or why it is
+excluded, so the approver sees the handoff whole. Coverage is read when the
+draft is compiled; a PRD edited after approval is checked again by the next
+revision or amendment, not by Build.
+
 <a id="prototype-bound-visual-check"></a>
 
 ## Prototype-bound visual check

@@ -145,6 +145,9 @@ export const MINIMAL_DRAFT_WRITING = Object.freeze({
     "mode 'strict' or 'advisory' (only a guide), excludes: ['<element>: <reason>' for each part the request rejects] }. " +
     "Strict needs execution {\"version\":1,\"providers\":{...}} with a screenshot command and the harness visual " +
     `reviewer (leave test out: the harness derives it from the task verifies): ${JSON.stringify(VISUAL_WIRING_EXAMPLE)}`,
+  handoff: "When the work comes from a PRD.md or uxui.md, name them: productHandoff { prd, uxui, scope: \"all\" " +
+    "or [feature IDs], excluded: [{ id, reason }] }; cite each owed ID (US-, AC-, BR-, NFR-, ERR-, ADR-, Q-) in its " +
+    "section and give every uxui screen state a uiStates row, or the draft returns listing what is missing",
   examples: "Optional typed examples with real values from the request, code, or data, never invented: " +
     `each { type, title, why?, postBuild?, capability? } where type is one of ${EXAMPLE_TYPES.join(", ")}`,
   limits: Object.freeze({ intentMaxCharacters: 70, whyMaxSentences: 3 })

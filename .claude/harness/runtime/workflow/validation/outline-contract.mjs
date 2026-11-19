@@ -128,6 +128,8 @@ const PROPOSAL = [
   row(P, "demo", "How to verify", "วิธีตรวจด้วยตัวเอง", ["demo"], (draft) => has(draft, "demo")),
   row(P, "acceptance", "Acceptance traceability", "เกณฑ์ผ่าน", ["requirements", "tasks", "claims"], always,
     { owner: "derived" }),
+  row(P, "productHandoff", "Handoff coverage (PRD and UX/UI)", "ความครอบคลุมเอกสาร PRD และ UX/UI", ["productHandoff"],
+    (draft) => has(draft, "productHandoff"), { owner: "derived" }),
   row(P, "definitionOfDone", "Definition of done", "นิยามของงานเสร็จ", [], always, { owner: "derived" }),
   row(P, "investigation", "Appendix: Investigation", "ภาคผนวก: การสืบค้น", ["investigation"],
     (draft) => has(draft, "investigation"), { owner: "derived", appendix: true }),
