@@ -6,7 +6,7 @@ argument-hint: <change>
 Prove **$ARGUMENTS**. Shared rules: `.claude/harness/AGENT.md`.
 
 Run `cloop advance <change> --through proven`: no-op `DONE`
-when proof is current (Build runs it); otherwise stale proof is refreshed.
+when proof is current (Build runs it); else the coordinator reuses fresh receipts.
 
 Execute each protocol-v7 action, then its exact `resume`; apply a `REPAIR` or
 `EDIT` set whole. Stay in-session while a review runs: ending the reply kills
