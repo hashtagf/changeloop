@@ -1,4 +1,5 @@
 import { carryApprovalAcrossBookkeeping, currentWaivers } from "../../core/user-decisions.mjs";
+import { assertHandoffCovered } from "../validation/handoff-binding.mjs";
 import { builtInCovers, builtInOwedCapabilities, inferredAdvisoryNext } from "./built-in-capabilities.mjs";
 import { existsSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
@@ -317,11 +318,9 @@ export function createChangeValidationRuntime({
 
   function assertArchiveSafeArtifacts(id, dir) {
     const runnable = [];
-    // OpenSpec archives the complete packet under openspec/changes/archive.
-    // Runnable source copied here as "test topology" is then rediscovered by
-    // Node, pytest, Jest, and similar default test globs from an invalid cwd.
-    // A packet records source paths and digests in grounding.yaml; it never
-    // needs an executable copy of the inspected file.
+    // The archived packet is rediscovered by default test globs (Node, pytest,
+    // Jest) from an invalid cwd, so it never holds runnable source: it records
+    // source paths and digests in grounding.yaml instead.
     const executableExtensions = new Set([
       ".c", ".cc", ".cpp", ".cs", ".go", ".java", ".js", ".jsx",
       ".kt", ".mjs", ".cjs", ".php", ".py", ".rb", ".rs", ".sh",
@@ -349,6 +348,7 @@ export function createChangeValidationRuntime({
       fail(`change agreement classification failed:\n  - ${classificationIssues.join("\n  - ")}`);
     assertArchiveSafeArtifacts(id, dir);
     assertNoScaffolds(state, dir);
+    assertHandoffCovered(root, dir, fail);
     const contractDiagnostics = [];
     if (state.decisionMetadataRequired) {
       const design = readFileSync(join(dir, "design.md"), "utf8");

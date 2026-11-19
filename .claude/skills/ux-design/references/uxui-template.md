@@ -18,11 +18,11 @@ set and add the landing items 3–5 under `## Landing` after section 8.
 | 1 | Design Objective | Business goal, user goal, success metrics with numbers |
 | 2 | User Persona | 2–3 personas: goal, pain point, behaviour, context, device; every item `[Data]` or `[Assumption]` |
 | 3 | Information Architecture | Sitemap and menu as a tree or Mermaid |
-| 4 | Permission Matrix | Role × feature × view / create / edit / delete / approve |
+| 4 | Permission Matrix | One `UP-nn` row per feature × role: view / create / edit / delete / approve |
 | 5 | User Journey | Per persona: stage, action, thought, emotion, pain point, opportunity; labelled |
 | 6 | User Flow | Mermaid per main task with edge cases and the error path |
 | 7 | Screen Inventory | Table: screen, feature, purpose, main components, states (empty / loading / error / success / no permission), breakpoints, status (not started / in progress / done) |
-| 8 | Content & Microcopy Guideline | Tone of voice, glossary, button verbs, error, empty state, toast, confirmation dialog |
+| 8 | Content & Microcopy Guideline | Tone of voice and glossary, then a table of every message with `MC-nn`, screen, kind (button, error, empty state, toast, confirmation), and the exact text in quotes |
 | 9 | Design Rules | Empty until Phase 2 is confirmed |
 | 10 | Artifact Index | File, kind, feature or pages, design system version, status |
 | 11 | Changelog | Version, date, token or component change, artifacts to update |
@@ -37,11 +37,16 @@ set and add the landing items 3–5 under `## Landing` after section 8.
 | 3 | Section Structure | Sections in order, per page when there are several |
 | 4 | CTA Strategy | Primary and secondary CTA, position, text |
 | 5 | SEO Meta | Title, description, OG tags per page |
-| 6 | Content & Microcopy Guideline | As above |
+| 6 | Content & Microcopy Guideline | As above, with `MC-nn` rows |
 | 7 | Design Rules | Empty until Phase 2 is confirmed |
 | 8 | Artifact Index | As above |
 | 9 | Changelog | As above |
 | 10 | Open Questions | As above |
+
+Change Loop reads `UP-nn` rows (they become permission scenarios), `MC-nn`
+rows (a scenario or UI state cites the ID or uses the exact text), and every
+Screen Inventory state (a `uiStates` row) when a change names this file in
+`productHandoff`.
 
 Screen Inventory status values are exactly `not started`, `in progress`, or
 `done` (Thai: `ยังไม่เริ่ม`, `กำลังทำ`, `เสร็จ`); the checker reads them.

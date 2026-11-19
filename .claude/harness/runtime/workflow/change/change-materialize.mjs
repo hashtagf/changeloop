@@ -8,6 +8,7 @@ import { unknownTaskFieldWarnings } from "../draft/semantic-draft-tasks.mjs";
 import { isRecordedSemanticVersion, isSemanticVersion } from "../validation/draft-version.mjs";
 import { FIXES_DIMENSIONS, riskSignalDimensions } from "../validation/semantic-intake.mjs";
 import { materializePrototype } from "../prototype/prototype-binding.mjs";
+import { handoffRecordFor, writeHandoffRecord } from "../validation/handoff-binding.mjs";
 import { designBlueprintWarnings, verifyCountAdvisories } from "../validation/design-blueprints.mjs";
 import { docsOnlyDraft, withNewPaths } from "../validation/dev-document.mjs";
 import { readerGuideWarnings } from "../validation/reader-guide.mjs";
@@ -124,6 +125,7 @@ export function createChangeMaterializer(ctx) {
       root, basePath, selection: draft.prototypeSelection,
       claims: draft.claims || [], tasks: draft.tasks || []
     });
+    writeHandoffRecord(basePath, handoffRecordFor(root, draft, draft.productHandoff));
     const contract = readJson(join(basePath, "evidence.yaml"));
     contract.claims = draft.claims;
     if (isSemanticVersion(draft._semanticVersion) && draft._derivedExecution)

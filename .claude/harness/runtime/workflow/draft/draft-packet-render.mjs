@@ -491,12 +491,15 @@ export function semanticDraftKeepsDesign(draft, rapid) {
   // and neither is a default the agent recorded without asking. Purely
   // descriptive dev-document sections render compactly in a rapid proposal,
   // so they never move a low-risk change to standard; risk still does.
-  return Boolean(rapid) && isSemanticVersion(draft?._semanticVersion) &&
+  // Work handed over in product documents keeps every section they owe
+  // (glossary, NFR, decisions), which only the standard packet carries.
+  const handedOver = Boolean(draft?.productHandoff?.prd || draft?.productHandoff?.uxui);
+  return Boolean(rapid) && isSemanticVersion(draft?._semanticVersion) && (handedOver ||
     draftNeedsDesign({
       ...draft, workType: [],
       ...Object.fromEntries(RAPID_DESCRIPTIVE_SECTIONS.map((key) => [key, undefined])),
       decisions: (draft.decisions || []).filter((decision) => !agentDecision(decision))
-    });
+    }));
 }
 
 // Dev-document sections that describe the change rather than decide it.

@@ -757,15 +757,32 @@ draft does not cite in its place:
 | `NFR-nn` | an `nfr` row, a requirement, or a scenario |
 | `ERR-nn` | a `"kind": "failure"` scenario or a `failureMatrix` row |
 | `ADR-nn`, `Qn` | a decision (open questions may also stay in `openQuestions`) |
+| `DEP-nn` | a `dependencies` row, a decision, or a requirement |
+| `DATA-nn` | a `dataModel` row or a requirement |
+| `PERM-nn` (PRD), `UP-nn` (uxui) | a scenario, so who may and may not becomes a test |
+| `MC-nn` microcopy | a scenario or `uiStates` row citing the ID or using its exact text |
+| glossary term the owed items use | a `domainLanguage` row |
 | screen state | a `uiStates` row for that screen with that state |
 
 An item outside this change goes in `excluded` with its reason; excluding a
 story excludes the criteria written only for it, and an exclusion that is not
 owed is an `EDIT`. The proposal's "Handoff coverage" section lists every owed
 item under the PRD headings with where the change covers it or why it is
-excluded, so the approver sees the handoff whole. Coverage is read when the
-draft is compiled; a PRD edited after approval is checked again by the next
-revision or amendment, not by Build.
+excluded, so the approver sees the handoff whole.
+
+In a project that has product documents (`PRD.md`, `uxui.md`, or
+`*.prd.md` / `*.uxui.md` outside tool and harness folders), every new draft
+must declare `productHandoff`, or `{ "none": "<why this change is not from
+them>" }`; a handed-over change always uses the standard packet. The packet
+records each document's digest and the IDs it owes in `handoff.json`.
+Validation, which Build, Prove, and every amendment run, then stops when a
+document changed after the agreement was compiled, or when an owed ID left the
+contract (stories, criteria, rules, features, and permissions must stay in the
+specs or tasks). An amendment that carries the same `productHandoff` re-reads
+the documents; the amended agreement must cite the new owed IDs or exclude
+them. A document in another shape is converted with the `prd` or `ux-design`
+skill's import step first; the PRD's Definition of Done is project-level and
+not owed by a single change.
 
 <a id="prototype-bound-visual-check"></a>
 

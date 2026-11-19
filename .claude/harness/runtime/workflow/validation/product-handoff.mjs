@@ -15,6 +15,9 @@ export const PRD_KINDS = Object.freeze({
   F: { section: 10, label: "Features", places: ["requirements", "tasks"] },
   NFR: { section: 11, label: "Non-functional requirements", places: ["nfr", "requirements", "scenarios"] },
   ADR: { section: 12, label: "Decisions (ADR)", places: ["decisions"] },
+  DEP: { section: 14, label: "Dependencies", places: ["dependencies", "decisions", "requirements"] },
+  DATA: { section: 15, label: "Data", places: ["dataModel", "requirements"] },
+  PERM: { section: 15, label: "Permissions", places: ["scenarios"] },
   ERR: { section: 17, label: "Error handling", places: ["failureScenarios", "failureMatrix"] },
   Q: { section: 18, label: "Open questions", places: ["decisions", "openQuestions"] }
 });
@@ -29,8 +32,13 @@ const PLACE_TEXT = {
   tasks: "a task",
   nfr: "an nfr row",
   decisions: "a decision",
-  openQuestions: "an openQuestions entry"
+  openQuestions: "an openQuestions entry",
+  dependencies: "a dependencies row",
+  dataModel: "a dataModel row",
+  uiStates: "a uiStates row"
 };
+// Rows whose scope is the features they mention, as for open questions.
+const MENTION_SCOPED = new Set(["Q", "DEP", "DATA", "PERM"]);
 
 const text = (value) => typeof value === "string" ? value.trim() : "";
 
@@ -48,7 +56,7 @@ export function namedIds(value) {
     const width = match[2].length;
     for (let n = Number(match[2]); n <= Number(match[3]); n += 1) out.add(`${match[1]}-${String(n).padStart(width, "0")}`);
   }
-  for (const match of source.matchAll(/(?<![A-Za-z0-9-])((?:US|AC|BR|F|NFR|ADR|ERR)-\d+|Q-?\d+)(?!\d)/g)) out.add(match[1]);
+  for (const match of source.matchAll(/(?<![A-Za-z0-9-])((?:US|AC|BR|F|NFR|ADR|ERR|DEP|DATA|PERM|UP|MC)-\d+|Q-?\d+)(?!\d)/g)) out.add(match[1]);
   return out;
 }
 
@@ -77,19 +85,30 @@ export function parsePrd(markdown) {
     const ids = namedIds(row);
     for (const feature of [...ids].filter((id) => id.startsWith("F-"))) mapping.set(feature, ids);
   }
+  // Glossary terms (section 7): each row's first cell, with its aliases
+  // ("ตะกร้า (Cart)" is both "ตะกร้า" and "Cart").
+  const glossary = tableRows(list.find((row) => row.number === 7)?.body || "").slice(1).map(cells)
+    .map((row) => row[0]).filter(Boolean).map((term) => ({ term,
+      aliases: term.split(/[()/,]/).map((alias) => alias.trim()).filter((alias) => alias.length >= 2) }));
   // A criterion's stories: "AC-03 (US-04)".
   const criteria = new Map();
   for (const match of String(list.find((row) => row.number === 6)?.body || "").matchAll(/\b(AC-\d+)\s*\(([^)]*)\)/g))
     criteria.set(match[1], namedIds(match[2]));
-  return { items, mapping, criteria };
+  return { items, mapping, criteria, glossary };
 }
 
 // Screen Inventory rows of uxui.md: screen, feature, and its states.
 export function parseUxui(markdown) {
-  const inventory = sections(markdown).find((row) => /screen inventory/i.test(row.title));
-  if (!inventory) return { screens: [] };
+  const list = sections(markdown);
+  const idRows = (pattern, prefix) => tableRows(list.find((row) => pattern.test(row.title))?.body || "")
+    .map(cells).filter((row) => new RegExp(`^${prefix}-\\d+$`).test(row[0]))
+    .map((row) => ({ id: row[0], text: row.slice(1).join(" · "),
+      copy: [...row.join(" ").matchAll(/["“]([^"”]{3,})["”]/g)].map((match) => match[1]) }));
+  const extra = { permissions: idRows(/permission/i, "UP"), microcopy: idRows(/microcopy|content/i, "MC") };
+  const inventory = list.find((row) => /screen inventory/i.test(row.title));
+  if (!inventory) return { screens: [], ...extra };
   const rows = tableRows(inventory.body);
-  if (rows.length < 2) return { screens: [] };
+  if (rows.length < 2) return { screens: [], ...extra };
   const header = cells(rows[0]).map((cell) => cell.toLowerCase());
   const column = (...names) => header.findIndex((cell) => names.some((name) => cell.includes(name)));
   const screen = column("screen", "หน้า", "ชื่อหน้า");
@@ -100,7 +119,7 @@ export function parseUxui(markdown) {
     feature: feature >= 0 ? row[feature] || "" : "",
     states: states >= 0 ? (row[states] || "").split(/[,/·;]|\s+และ\s+/).map((value) => value.trim()).filter(Boolean) : []
   })).filter((row) => row.screen);
-  return { screens };
+  return { screens, ...extra };
 }
 
 // The items a change owes: every defined item for "all", otherwise the scoped
@@ -116,7 +135,7 @@ export function scopedItems(prd, scope) {
   for (const [criterion, stories] of prd.criteria)
     if ([...stories].some((story) => owed.has(story))) owed.add(criterion);
   for (const [id, item] of prd.items)
-    if (item.kind === "Q" && [...namedIds(item.text)].some((named) => owed.has(named))) owed.add(id);
+    if (MENTION_SCOPED.has(item.kind) && [...namedIds(item.text)].some((named) => owed.has(named))) owed.add(id);
   return new Set([...owed].filter((id) => prd.items.has(id)));
 }
 
@@ -139,6 +158,9 @@ function draftPlaces(draft) {
   for (const row of draft.failureMatrix || []) add("failureMatrix", "failure matrix", row);
   for (const decision of draft.decisions || []) add("decisions", `decision ${text(decision.key)}`, decision);
   for (const question of draft.openQuestions || []) add("openQuestions", "open question", question);
+  for (const row of [].concat(draft.dependencies || [])) add("dependencies", "dependency", row);
+  for (const row of [].concat(draft.dataModel || [])) add("dataModel", `data ${text(row?.entity)}`, row);
+  for (const row of draft.uiStates || []) add("uiStates", `UI states ${text(row?.screen)}`, row);
   return places;
 }
 
@@ -160,7 +182,8 @@ export function productHandoffCoverage(draft, handoff, { prdText = null, uxuiTex
   const places = draftPlaces(draft);
   if (prdText !== null) {
     const prd = parsePrd(prdText);
-    if (!prd.items.size) issues.push("semantic draft productHandoff.prd defines no ID (US-, AC-, BR-, F-, NFR-, ADR-, ERR-, Q-); write it with the prd skill");
+    if (!prd.items.size) issues.push("semantic draft productHandoff.prd defines no ID (US-, AC-, BR-, F-, NFR-, ADR-, ERR-, DEP-, DATA-, PERM-, Q-): " +
+      "convert it with the prd skill's import step, which keeps every statement and checks nothing was dropped");
     const scope = handoff.scope === undefined || handoff.scope === "all" ? "all"
       : Array.isArray(handoff.scope) ? handoff.scope.map(text).filter(Boolean) : null;
     if (scope === null) issues.push('semantic draft productHandoff.scope must be "all" or a list of feature IDs (F-nn)');
@@ -181,10 +204,12 @@ export function productHandoffCoverage(draft, handoff, { prdText = null, uxuiTex
         issues.push(`semantic draft does not cover ${id} from the PRD: cite "${id}" in ${
           allowed.map((place) => PLACE_TEXT[place]).join(" or ")}, or add it to productHandoff.excluded with the reason`);
     }
+    glossaryCoverage(prd, rows, draft, excluded, used, issues);
   }
   if (uxuiText !== null) {
     const { screens } = parseUxui(uxuiText);
-    if (!screens.length) issues.push("semantic draft productHandoff.uxui has no Screen Inventory rows; write it with the ux-design skill");
+    if (!screens.length) issues.push("semantic draft productHandoff.uxui has no Screen Inventory rows: convert it with the " +
+      "ux-design skill's import step");
     const featureNames = handoff.scope && handoff.scope !== "all" && prdText !== null ? scopedFeatureNames(prdText, handoff.scope) : null;
     for (const row of screens) {
       if (featureNames && !featureNames.some((name) => normalized(row.feature).includes(name))) continue;
@@ -204,9 +229,56 @@ export function productHandoffCoverage(draft, handoff, { prdText = null, uxuiTex
       }
     }
   }
+  if (uxuiText !== null) uxuiRowCoverage(uxuiText, handoff, prdText, draft, places, excluded, used, rows, issues);
   for (const id of excluded.keys())
     if (!used.has(id)) issues.push(`semantic draft productHandoff.excluded names ${id}, which is not owed by this change`);
   return { rows, issues };
+}
+
+// A glossary term the owed items use must be defined in the change's
+// domainLanguage, so the spec and the code use the PM's words.
+function glossaryCoverage(prd, rows, draft, excluded, used, issues) {
+  const owedText = normalized(rows.filter((row) => row.excluded === null && row.kind !== "SCREEN").map((row) => row.text).join(" "));
+  const defined = normalized(JSON.stringify(draft.domainLanguage || []));
+  for (const { term, aliases } of prd.glossary) {
+    if (!aliases.some((alias) => owedText.includes(normalized(alias)))) continue;
+    const id = `GL:${term}`;
+    const covered = aliases.some((alias) => defined.includes(normalized(alias)));
+    const reason = excluded.get(id);
+    if (reason !== undefined) used.add(id);
+    rows.push({ id, kind: "GL", text: term, coveredBy: covered ? ["domain language"] : [], excluded: reason ?? null });
+    if (!covered && reason === undefined)
+      issues.push(`semantic draft uses the PRD glossary term "${term}" but its domainLanguage does not define it: ` +
+        `add { "term": "${aliases[0]}", "meaning": "<from the PRD glossary>" }, or exclude "${id}" with the reason`);
+  }
+}
+
+// uxui.md permission rows (UP-nn) become scenarios; microcopy rows (MC-nn)
+// appear in a scenario or UI state by ID or by their exact quoted text. A row
+// is owed when the scope is "all" or it names a scoped screen or feature.
+function uxuiRowCoverage(uxuiText, handoff, prdText, draft, places, excluded, used, rows, issues) {
+  const { screens, permissions, microcopy } = parseUxui(uxuiText);
+  const scoped = handoff.scope && handoff.scope !== "all" && prdText !== null;
+  const names = scoped ? [...scopedFeatureNames(prdText, handoff.scope),
+    ...screens.filter((row) => scopedFeatureNames(prdText, handoff.scope).some((name) => normalized(row.feature).includes(name)))
+      .map((row) => normalized(row.screen))] : [];
+  const drafted = normalized(JSON.stringify([draft.requirements || [], draft.uiStates || []]));
+  for (const [kind, list, allowed] of [["UP", permissions, ["scenarios"]], ["MC", microcopy, ["scenarios", "uiStates"]]]) {
+    for (const row of list) {
+      if (scoped && !names.some((name) => normalized(row.text).includes(name))) continue;
+      const byId = allowed.flatMap((place) => places[place].filter((entry) => entry.ids.has(row.id)).map((entry) => entry.where));
+      const byCopy = kind === "MC" && row.copy.length && row.copy.every((copy) => drafted.includes(normalized(copy)))
+        ? ["the exact copy"] : [];
+      const coveredBy = [...new Set([...byId, ...byCopy])];
+      const reason = excluded.get(row.id);
+      if (reason !== undefined) used.add(row.id);
+      rows.push({ id: row.id, kind, text: row.text, coveredBy, excluded: reason ?? null });
+      if (!coveredBy.length && reason === undefined)
+        issues.push(`semantic draft does not cover ${row.id} from uxui.md: cite "${row.id}" in ${
+          allowed.map((place) => PLACE_TEXT[place]).join(" or ")}${kind === "MC" ? " or use its exact text" : ""
+        }, or add it to productHandoff.excluded with the reason`);
+    }
+  }
 }
 
 function scopedFeatureNames(prdText, scope) {
@@ -229,6 +301,11 @@ export function productHandoffShapeIssues(handoff) {
   if (!handoff || typeof handoff !== "object" || Array.isArray(handoff))
     return ["semantic draft productHandoff must be an object { prd?, uxui?, scope?, excluded? }"];
   const issues = [];
+  if (handoff.none !== undefined) {
+    if (!text(handoff.none)) issues.push("semantic draft productHandoff.none must say why this change is not from the product documents");
+    if (text(handoff.prd) || text(handoff.uxui)) issues.push("semantic draft productHandoff.none cannot be combined with prd or uxui");
+    return issues;
+  }
   if (!text(handoff.prd) && !text(handoff.uxui))
     issues.push("semantic draft productHandoff names neither prd nor uxui");
   if (handoff.excluded !== undefined && !Array.isArray(handoff.excluded))
@@ -240,7 +317,8 @@ export function productHandoffShapeIssues(handoff) {
 export function renderProductHandoff(coverage, { language = "en" } = {}) {
   if (!coverage?.rows?.length) return "";
   const th = language === "th";
-  const groups = [...Object.entries(PRD_KINDS).map(([kind, { label }]) => [kind, label]), ["SCREEN", SCREEN_LABEL]];
+  const groups = [...Object.entries(PRD_KINDS).map(([kind, { label }]) => [kind, label]), ["GL", "Glossary terms"],
+    ["SCREEN", SCREEN_LABEL], ["UP", "UX/UI permissions"], ["MC", "Microcopy"]];
   const head = th ? "| ID | รายการ | อยู่ใน change ที่ |\n|---|---|---|" : "| ID | Item | Covered in this change by |\n|---|---|---|";
   const cell = (value) => String(value).replace(/\|/g, "\\|");
   const parts = [coverage.documents ? `${th ? "เอกสาร" : "Documents"}: ${coverage.documents}` : ""];

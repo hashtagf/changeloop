@@ -11,7 +11,9 @@ CONFIRM.
 
 ## Steps
 
-1. Phase 0: ask the brief in `references/phases.md`; build nothing before the answers.
+1. Phase 0: ask the brief in `references/phases.md`; build nothing before the
+   answers. An existing UX document is imported into `uxui.md` and checked with
+   the prd skill's `import-check.mjs`.
 2. Phase 1: write `uxui.md` from `references/uxui-template.md`; label persona
    and journey items `[Data]` or `[Assumption]`. CONFIRM.
 3. Phase 2: build `design-system.html` per `references/design-system.md`

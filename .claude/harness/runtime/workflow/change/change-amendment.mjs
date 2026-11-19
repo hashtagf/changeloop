@@ -1,4 +1,5 @@
 import { packetIdentity, snapshotAmendedPacket } from "../../core/user-decisions.mjs";
+import { handoffRecordFor, writeHandoffRecord } from "../validation/handoff-binding.mjs";
 import { createHash } from "node:crypto";
 import {
   cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync,
@@ -332,6 +333,10 @@ export function createChangeAmendment(ctx) {
     try {
       writeSemanticAmendment(stagedPath, compiled, slugify,
         { schema: state.schema, revision: priorContractRevision + 1 });
+      // An amendment that carries productHandoff re-reads the documents; the
+      // validation below then requires the amended agreement to cite them.
+      if (amendment.productHandoff !== undefined)
+        writeHandoffRecord(stagedPath, handoffRecordFor(root, {}, amendment.productHandoff));
     }
     catch (error) {
       rmSync(transactionRoot, { recursive: true, force: true });

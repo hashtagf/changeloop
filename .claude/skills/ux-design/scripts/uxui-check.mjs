@@ -49,6 +49,10 @@ export function uxuiFindings(text) {
     const unlabelled = items.filter((line) => !LABEL.test(line));
     if (unlabelled.length) findings.push(`uxui.md: ${unlabelled.length} ${row.title} item(s) without [Data] or [Assumption]`);
   }
+  const permission = section(list, "Permission Matrix");
+  if (permission && !/\|\s*UP-\d+/.test(permission.body)) findings.push("uxui.md: Permission Matrix has no UP-nn row");
+  const microcopy = section(list, "Content & Microcopy");
+  if (microcopy && !/\|\s*MC-\d+/.test(microcopy.body)) findings.push("uxui.md: Content & Microcopy has no MC-nn row");
   const inventory = section(list, "Screen Inventory");
   if (inventory) {
     const rows = inventory.body.split("\n").filter((line) => /^\|/.test(line) && !/^\|[\s:-]+\|/.test(line)).slice(1);

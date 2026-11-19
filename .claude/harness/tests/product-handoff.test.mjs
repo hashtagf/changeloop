@@ -144,3 +144,100 @@ test("change start reads the documents from the project and refuses an uncovered
   assert.ok(references.semanticReferenceIssues({ productHandoff: { prd: "docs/missing.md" } })
     .some((issue) => issue.includes("productHandoff.prd must reference an existing regular file")));
 });
+
+const PRD2 = `${PRD}
+## 7. Glossary
+| Term | Meaning |
+|---|---|
+| ตะกร้า (Cart) | chosen items |
+| Invoice | tax document |
+## 14. Dependencies
+| ID | Type | Item |
+|---|---|---|
+| DEP-01 | Dependency | Stock service for F-01 |
+## 15. Data and Permission
+| ID | Entity |
+|---|---|
+| DATA-01 | Cart rows for F-01 |
+| ID | Permission | Shopper |
+|---|---|---|
+| PERM-01 | Edit own cart (F-01) | ✓ |
+`;
+const UXUI2 = `${UXUI}
+## 4. Permission Matrix
+| ID | Feature | Role | Edit |
+|---|---|---|---|
+| UP-01 | Cart | Guest | – |
+| UP-02 | Codes | Admin | ✓ |
+## 8. Content & Microcopy Guideline
+| ID | Screen | Kind | Text |
+|---|---|---|---|
+| MC-01 | Cart | empty | "Your cart is empty" |
+`;
+
+test("dependencies, data, permissions, glossary terms, and uxui permission and copy rows are owed", () => {
+  const prd = parsePrd(PRD2);
+  assert.deepEqual([...scopedItems(prd, ["F-01"])].filter((id) => /^(DEP|DATA|PERM)/.test(id)).sort(), ["DATA-01", "DEP-01", "PERM-01"]);
+  assert.deepEqual(prd.glossary.map((row) => row.aliases), [["ตะกร้า", "Cart"], ["Invoice"]]);
+  const ux = parseUxui(UXUI2);
+  assert.deepEqual(ux.microcopy[0].copy, ["Your cart is empty"]);
+  const { issues } = productHandoffCoverage(covered, { prd: "PRD.md", uxui: "uxui.md", scope: ["F-01"] },
+    { prdText: PRD2, uxuiText: UXUI2 });
+  const has = (text) => assert.ok(issues.some((issue) => issue.includes(text)), `${text}\n${issues.join("\n")}`);
+  has('does not cover DEP-01 from the PRD: cite "DEP-01" in a dependencies row');
+  has('does not cover DATA-01 from the PRD: cite "DATA-01" in a dataModel row');
+  has('does not cover PERM-01 from the PRD: cite "PERM-01" in a scenario');
+  has('uses the PRD glossary term "ตะกร้า (Cart)" but its domainLanguage does not define it');
+  has('does not cover UP-01 from uxui.md');
+  has('does not cover MC-01 from uxui.md');
+  assert.ok(!issues.some((issue) => issue.includes("Invoice") || issue.includes("UP-02")), "unused terms and other features are not owed");
+  const complete = { ...covered,
+    requirements: [{ ...covered.requirements[0], scenarios: [...covered.requirements[0].scenarios,
+      { name: "PERM-01 shopper edits own cart", when: "x", then: "y" }, { name: "UP-01 guest cannot edit", when: "x", then: "y" }] }],
+    dependencies: [{ name: "DEP-01 stock service" }], dataModel: [{ entity: "Cart", note: "DATA-01" }],
+    domainLanguage: [{ term: "Cart", meaning: "chosen items", avoid: "basket" }],
+    uiStates: [{ screen: "Cart", states: [{ state: "empty", shows: "Your cart is empty" }, { state: "error" }] }] };
+  assert.deepEqual(productHandoffCoverage(complete, { prd: "PRD.md", uxui: "uxui.md", scope: ["F-01"] },
+    { prdText: PRD2, uxuiText: UXUI2 }).issues, [], "microcopy counts when its exact text is used");
+});
+
+test("a project with product documents makes every draft declare productHandoff or why not", async (t) => {
+  const { productDocuments, undeclaredHandoffIssues } = await import("../runtime/workflow/validation/handoff-binding.mjs");
+  const root = mkdtempSync(join(tmpdir(), "handoff-discover-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  assert.deepEqual(undeclaredHandoffIssues(root, undefined), []);
+  for (const path of ["docs/PRD.md", "design/shop.uxui.md", "node_modules/x/PRD.md", "openspec/changes/a/PRD.md"]) {
+    mkdirSync(join(root, path, ".."), { recursive: true });
+    writeFileSync(join(root, path), "# x\n");
+  }
+  assert.deepEqual(productDocuments(root), ["design/shop.uxui.md", "docs/PRD.md"]);
+  assert.match(undeclaredHandoffIssues(root, undefined)[0], /product documents \(design\/shop\.uxui\.md, docs\/PRD\.md\)/);
+  assert.deepEqual(undeclaredHandoffIssues(root, { none: "typo fix" }), []);
+  assert.deepEqual(productHandoffShapeIssues({ none: "typo fix" }), []);
+  assert.ok(productHandoffShapeIssues({ none: "x", prd: "PRD.md" })[0].includes("cannot be combined"));
+});
+
+test("the packet record catches an edited document and an owed ID an amendment dropped", async (t) => {
+  const { handoffPacketIssues, handoffRecordFor, writeHandoffRecord } =
+    await import("../runtime/workflow/validation/handoff-binding.mjs");
+  const root = mkdtempSync(join(tmpdir(), "handoff-binding-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const packet = join(root, "openspec", "changes", "c");
+  mkdirSync(join(packet, "specs", "cart"), { recursive: true });
+  writeFileSync(join(root, "PRD.md"), PRD);
+  writeFileSync(join(packet, "specs", "cart", "spec.md"), "US-01 cart\n#### Scenario: AC-01 over stock\nERR-01 BR-01\n");
+  writeFileSync(join(packet, "tasks.md"), "- [ ] T001 F-01 cart\n");
+  writeFileSync(join(packet, "design.md"), "NFR-01 Q1\n");
+  writeFileSync(join(packet, "proposal.md"), "## Handoff coverage (PRD and UX/UI)\n\nAC-01 US-01\n");
+  const record = handoffRecordFor(root, covered, { prd: "PRD.md", scope: ["F-01"] });
+  assert.deepEqual(record.owed.sort(), ["AC-01", "BR-01", "ERR-01", "F-01", "NFR-01", "Q1", "US-01"]);
+  writeHandoffRecord(packet, record);
+  assert.deepEqual(handoffPacketIssues(root, packet), []);
+  writeFileSync(join(packet, "specs", "cart", "spec.md"), "US-01 cart\nERR-01 BR-01\n");
+  writeFileSync(join(packet, "design.md"), "NFR-01 Q1 AC-01\n");
+  assert.match(handoffPacketIssues(root, packet).join("\n"), /no longer covers AC-01/,
+    "a criterion must stay in the contract, not only in design.md or the coverage table");
+  writeFileSync(join(root, "PRD.md"), `${PRD}\n| BR-02 | new |\n`);
+  assert.match(handoffPacketIssues(root, packet).join("\n"), /PRD\.md changed after this agreement was compiled/);
+  assert.equal(handoffRecordFor(root, {}, { none: "x" }), null);
+});
