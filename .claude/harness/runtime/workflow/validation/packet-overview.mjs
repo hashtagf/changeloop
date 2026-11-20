@@ -96,7 +96,7 @@ function capabilityLabel(draft) {
   return names.length === 1 ? ` (\`${names[0]}\`)` : "";
 }
 
-export function renderScope(draft, { unselectedRepositories = [] } = {}) {
+export function renderScope(draft, { selectedRepositories = [], hasUnselectedRepositories = false } = {}) {
   // The behavior each requirement adds: the draft's own change list (authored,
   // else derived from the requirements), so Scope states it once.
   const changes = unique(strings(draft?.changes));
@@ -107,12 +107,12 @@ export function renderScope(draft, { unselectedRepositories = [] } = {}) {
   const out = [];
   const paths = taskPathsOf(draft);
   if (paths.length) out.push(`edits outside ${preview(paths, "`")}`);
-  if (unselectedRepositories.length)
-    out.push(`repositories not selected: ${unselectedRepositories.join(", ")}`);
+  if (hasUnselectedRepositories) out.push("all other declared repositories");
   if (strings(draft?.nonGoals).length) out.push("the authored Non-goals below");
-  if (!inScope.length && !out.length) return "";
+  if (!inScope.length && !selectedRepositories.length && !out.length) return "";
   return "## Scope\n\n" + [
     inScope.length ? `- **In scope${capabilityLabel(draft)}:** ${inScope.join("; ")}` : "",
+    selectedRepositories.length ? `- **Repositories in scope:** ${selectedRepositories.map((id) => `\`${id}\``).join(", ")}` : "",
     out.length ? `- **Out of scope:** ${out.join("; ")}` : ""].filter(Boolean).join("\n");
 }
 

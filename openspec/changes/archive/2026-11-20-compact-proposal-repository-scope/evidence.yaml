@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "compact-repository-scope-proposal",
+      "requirementKey": "compact-repository-scope",
+      "scenario": "เลือกบาง repo จากหลายร้อย repo",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "compact-repository-scope-proposal-2",
+      "requirementKey": "compact-repository-scope",
+      "scenario": "เลือกหลาย repo ครบทั้งโปรเจกต์",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "compact-repository-scope-proposal-3",
+      "requirementKey": "compact-repository-scope",
+      "scenario": "โปรเจกต์ repo เดียว",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/reader-guide.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

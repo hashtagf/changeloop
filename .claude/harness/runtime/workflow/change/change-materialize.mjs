@@ -76,9 +76,7 @@ export function createChangeMaterializer(ctx) {
       .map((warning) => `  design warning: ${warning}\n`).join("") + verify;
   }
 
-  // Facts the proposal states from policy and topology rather than from the
-  // draft: the review route the change will take (the same label resolve
-  // prints) and declared repositories its tasks do not select.
+  // Summarize the repository selection and use the same review label as resolve.
   function proposalContext(draft, state) {
     const declared = declaredRepositories().map((row) => row.id);
     const used = new Set([
@@ -88,7 +86,8 @@ export function createChangeMaterializer(ctx) {
     ].filter(Boolean));
     const policy = workflowPolicy();
     return {
-      unselectedRepositories: declared.filter((repository) => !used.has(repository)),
+      selectedRepositories: declared.length ? [...used] : [],
+      hasUnselectedRepositories: declared.some((repository) => !used.has(repository)),
       reviewLabel: reviewRouteLabel({
         lowRiskModel: policy.review?.lowRiskModel, modelByTier: policy.review?.modelByTier,
         state: { ...state, impact: draft.impact, coupling: draft.coupling,

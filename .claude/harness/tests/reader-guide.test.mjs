@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
+import { createChangeMaterializer } from "../runtime/workflow/change/change-materialize.mjs";
 import { normalizeSemanticDraft } from "../runtime/workflow/draft/semantic-draft.mjs";
 import { expandMinimalSemanticDraft } from "../runtime/workflow/draft/semantic-draft-minimal.mjs";
 import {
@@ -360,8 +364,8 @@ test("a Thai draft keeps the acceptance table structure", () => {
 
 test("out of scope is derived from enforced boundaries and is never empty or invented", () => {
   const compiled = rapidCompiled();
-  const proposal = renderDraftProposal(compiled, RAPID, { unselectedRepositories: ["billing"] });
-  assert.match(proposal, /^- \*\*Out of scope:\*\* edits outside `src\/money\.js`, `test\/money\.test\.js`, `src\/pad\.js`; repositories not selected: billing$/m);
+  const proposal = renderDraftProposal(compiled, RAPID);
+  assert.match(proposal, /^- \*\*Out of scope:\*\* edits outside `src\/money\.js`, `test\/money\.test\.js`, `src\/pad\.js`$/m);
   // Authored non-goals keep their own section and Scope points at it once.
   const goals = renderDraftProposal({ ...compiled, nonGoals: ["No rounding modes"] }, RAPID);
   assert.match(goals, /the authored Non-goals below/);
@@ -372,6 +376,42 @@ test("out of scope is derived from enforced boundaries and is never empty or inv
   assert.match(none, /^## Scope\n\n- \*\*In scope/m);
   const empty = renderDraftProposal({ ...compiled, changes: [], specs: [], tasks: [] }, RAPID);
   assert.doesNotMatch(empty, /## Scope/);
+});
+
+function materializedProposal(t, declared, selected = [], taskRepository) {
+  const root = mkdtempSync(join(tmpdir(), "proposal-scope-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const { materializeDraft } = createChangeMaterializer({
+    root, changePath: () => root, loadRuntime: () => RAPID,
+    declaredRepositories: () => declared.map((id) => ({ id, relativePath: id })),
+    workflowPolicy: () => ({}), readJson: () => ({}), writeJson: () => {}
+  });
+  materializeDraft("scope", {
+    ...rapidCompiled(), _semanticVersion: undefined, repositories: selected,
+    tasks: [{ id: "T001", outcome: "Round totals", paths: ["src/money.js"], repository: taskRepository }],
+    nonGoals: ["No rounding modes"]
+  });
+  return readFileSync(join(root, "proposal.md"), "utf8");
+}
+
+test("a proposal lists the selected repository, not 820 unselected names", (t) => {
+  const proposal = materializedProposal(t, ["billing", ...Array.from({ length: 820 }, (_, i) => `unselected-${i}`)],
+    ["billing"], "billing");
+  assert.doesNotMatch(proposal, /unselected-\d+/);
+  assert.match(proposal, /^- \*\*Repositories in scope:\*\* `billing`$/m);
+  assert.match(proposal, /^- \*\*Out of scope:\*\* edits outside `src\/money\.js`; all other declared repositories; the authored Non-goals below$/m);
+  assert.match(proposal, /^- No rounding modes$/m);
+});
+
+test("a proposal lists every selected repository without claiming exclusions when all are selected", (t) => {
+  const proposal = materializedProposal(t, ["billing", "ledger"], [{ id: "billing" }], "ledger");
+  assert.match(proposal, /^- \*\*Repositories in scope:\*\* `billing`, `ledger`$/m);
+  assert.doesNotMatch(proposal, /other declared repositories/);
+});
+
+test("a proposal omits the repository summary for a root-only project", (t) => {
+  const proposal = materializedProposal(t, []);
+  assert.doesNotMatch(proposal, /Repositories in scope|other declared repositories/);
 });
 
 test("the definition of done states only what the policy enforces, per lane", () => {
