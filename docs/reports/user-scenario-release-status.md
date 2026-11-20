@@ -18,6 +18,12 @@ comparison: 2026-10-08, no-harness/v3.6.0/v3.6.1/v3.6.2.
 
 ## Current scenario checkpoint
 
+### v3.7.6 — owner-approved paid checkpoint exception
+
+No fresh paid scenario checkpoint was run for v3.7.6. The retained comparison
+covers a different revision and is not release evidence. This exception does
+not waive the required no-cost checks or establish repeated assurance.
+
 ### v3.7.5 candidate — 2026-11-17 (no paid smoke, owner exception)
 
 Source makes the live guards advise instead of refuse (Pi runs them in `auto`

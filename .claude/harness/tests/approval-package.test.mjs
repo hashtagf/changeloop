@@ -237,7 +237,7 @@ test("the approval question links approval.html independently of the prototype",
   page("approval");
   const data = runtime.packageData(id);
   assert.equal(data.protocol, 2);
-  assert.equal(Object.hasOwn(data.prototype, "sync"), false);
+  assert.equal(data.prototype.sync.path, "prototype.html");
   assert.deepEqual(data.approvalPage.page, { path: "approval.html", status: "ok" });
   assert.deepEqual(data.prototype.page, { path: "prototype.html", status: "ok" });
   const link = runtime.approvalPageLink(id);
@@ -251,6 +251,8 @@ test("approval.html is discovered even without a prototype example", (t) => {
   const data = runtime.packageData(id);
   assert.equal(data.approvalPage.page.status, "ok");
   assert.equal(data.prototype.page, null);
+  assert.equal(data.prototype.sync.file, "none");
+  assert.equal(data.prototype.sync.path, null);
   assert.equal(runtime.approvalPageLink(id).path, join(".foundation", "previews", id, "approval.html"));
 });
 
@@ -287,12 +289,15 @@ test("recording stores the page digest, an edit then shows as drift, and recordi
   const { id, runtime, page, runtimeDir } = fixture(t, { state: withDraft({ ...DRAFT, examples: [PROTOTYPE] }) });
   const facts = () => runtime.packageData(id).factsDigest;
   page(`v1 ${facts()}`);
+  page(`prototype ${facts()}`, "prototype.html");
   const snapshot = runtime.recordPrototypeSync(id);
   assert.equal(snapshot.revision, 1);
   assert.equal(JSON.parse(readFileSync(join(runtimeDir, `${id}.json`), "utf8")).approvalPageSync.pageDigest, snapshot.pageDigest);
   assert.equal(runtime.packageData(id).approvalPage.sync.drift, false);
   page("prototype edited", "prototype.html");
-  assert.equal(runtime.packageData(id).approvalPage.sync.drift, false);
+  const prototypeEdited = runtime.packageData(id);
+  assert.equal(prototypeEdited.prototype.sync.drift, true);
+  assert.equal(prototypeEdited.approvalPage.sync.drift, false);
   page(`v2 edited ${facts()}`);
   const drifted = runtime.packageData(id);
   assert.equal(drifted.approvalPage.sync.drift, true);
@@ -312,6 +317,11 @@ test("upgrading does not treat a legacy prototype snapshot as an approval page s
   page(`new approval page ${runtime.packageData(id).factsDigest}`);
   assert.equal(runtime.packageData(id).approvalPage.sync.drift, false);
   assert.equal(runtime.packageData(id).approvalPage.sync.recordedRevision, null);
+  const legacy = runtime.packageData(id).prototype.sync;
+  assert.equal(legacy.file, "ok");
+  assert.equal(legacy.path, "prototype.html");
+  assert.equal(legacy.recordedRevision, 1);
+  assert.equal(legacy.drift, true);
 });
 
 test("a page without the current facts digest is stale and a page carrying it is not", (t) => {

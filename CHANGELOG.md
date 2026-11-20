@@ -9,6 +9,11 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+Release qualification for v3.7.6: the owner approved skipping a fresh paid
+scenario checkpoint for this version only. The historical comparison did not
+test this release candidate and does not establish a pass. All required
+no-cost release checks still apply.
+
 ### Changed
 
 - The Homebrew formula is now canonically `cloop`. Install it with
@@ -23,6 +28,8 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- `cloop package` keeps `prototype.sync` for existing scripts. The separate
+  approval page reports its own freshness under `approvalPage.sync`.
 - The built-in app check now uses a bounded one-shot HTTP probe to avoid a
   macOS socket error. The release coverage check remains mandatory and has a
   longer, bounded time limit.

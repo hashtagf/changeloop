@@ -6,7 +6,7 @@ import { routeChange } from "../../contracts/scratch-router.mjs";
 import { missingApprovalLanes } from "../../core/user-decisions.mjs";
 import { isObject } from "../../core/values.mjs";
 import { TYPE_SURFACES, coverageReport } from "../prototype/prototype-checklist.mjs";
-import { factsDigest, pageFile, snapshotFor, syncStatus, syncWarnings } from "../prototype/prototype-sync.mjs";
+import { factsDigest, pageFile, prototypeSnapshot, prototypeSyncStatus, snapshotFor, syncStatus, syncWarnings } from "../prototype/prototype-sync.mjs";
 import { undoPlan } from "../transaction/undo-plan.mjs";
 import { devDocumentChecklist, inferWorkTypes } from "../validation/dev-document.mjs";
 import { bestEffort } from "../../core/best-effort.mjs";
@@ -349,7 +349,8 @@ export function createApprovalPackageRuntime({
       approvalPage: { page: { path: sync.path, status: sync.file }, sync },
       prototype: {
         page: prototype.path ? { path: prototype.path, status: prototype.status } : null,
-        checklist: coverage
+        checklist: coverage,
+        sync: prototypeSyncStatus(state.prototypeSync, prototype, facts)
       },
       facts,
       factsDigest: factsDigest(facts),
@@ -390,11 +391,12 @@ export function createApprovalPackageRuntime({
   // a later edit or a change of facts shows up as an advisory warning.
   function recordPrototypeSync(id) {
     const model = buildModel(id);
-    const snapshot = snapshotFor({
-      previewsDir, id, facts: factsOf(model), revision: model.state.contractRevision
-    });
+    const facts = factsOf(model);
+    const revision = model.state.contractRevision;
+    const snapshot = snapshotFor({ previewsDir, id, facts, revision });
     const state = loadRuntime(id);
     state.approvalPageSync = snapshot;
+    state.prototypeSync = prototypeSnapshot(pageFile({ previewsDir, id, draft: model.draft }), facts, revision);
     saveRuntime(state);
     return snapshot;
   }
