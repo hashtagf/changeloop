@@ -9,6 +9,8 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+## [3.7.6] - 2026-11-20
+
 Release qualification for v3.7.6: the owner approved skipping a fresh paid
 scenario checkpoint for this version only. The historical comparison did not
 test this release candidate and does not establish a pass. All required
@@ -1718,7 +1720,8 @@ project upgrades in place.
   older abandon or a Land undo left such bookkeeping behind, creating a change
   with that id moves it into the newest retirement record.
 
-[Unreleased]: https://github.com/hashtagf/changeloop/compare/v3.7.5...HEAD
+[Unreleased]: https://github.com/hashtagf/changeloop/compare/v3.7.6...HEAD
+[3.7.6]: https://github.com/hashtagf/changeloop/compare/v3.7.5...v3.7.6
 [3.7.5]: https://github.com/hashtagf/changeloop/compare/v3.7.4...v3.7.5
 [3.7.4]: https://github.com/hashtagf/changeloop/compare/v3.7.3...v3.7.4
 [3.7.3]: https://github.com/hashtagf/changeloop/compare/v3.7.2...v3.7.3

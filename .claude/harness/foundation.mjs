@@ -48,7 +48,7 @@ import { composeEnvironment } from "./runtime/composition/environment-wiring.mjs
 import { composeLifecycleRuntimes } from "./runtime/composition/lifecycle-wiring.mjs";
 import { composeEvidenceState } from "./runtime/composition/evidence-state-wiring.mjs";
 
-const VERSION = "3.7.5";
+const VERSION = "3.7.6";
 const RUNTIME_API_VERSION = "42";
 // Checked here, at load, rather than only inside `doctor`: a torn install —
 // this file from one revision, runtime/** from another — otherwise passed
