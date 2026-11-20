@@ -129,7 +129,9 @@ jobs:
           # The authoritative suite already contains all six semantic mutation
           # lanes, so do not execute the same mutations a second time here.
           # --release adds the zero-cost benchmark sentinel the default gate skips.
-          sh .claude/tests/run-all.sh --release
+          # The full gate includes instrumented tests with their own worker pool.
+          # Bound outer fan-out on the macOS release runner to reduce contention.
+          FOUNDATION_TEST_JOBS=2 sh .claude/tests/run-all.sh --release
           npm run test:mutation:dashboard
           npm run quality:mutation:coverage:dashboard
           npm run quality:mutation:normalize:dashboard
