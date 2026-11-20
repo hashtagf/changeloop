@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "release-macos-verification-process-runtime-coverage",
+      "requirementKey": "release-macos-verification",
+      "scenario": "รอจนตรวจ readiness สำเร็จ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "release-macos-verification-deterministic-gate",
+      "requirementKey": "release-macos-verification",
+      "scenario": "จำกัดงานพร้อมกันบน runner รีลีส",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/process-runtime.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

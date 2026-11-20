@@ -345,6 +345,11 @@ test("spawned service reports spawn, early-exit, and timeout failures", async (t
   assert.deepEqual(timedOut.child.kills, ["SIGTERM"]);
 });
 
+test("macOS release bounds the full gate's worker pool", () => {
+  const workflow = readFileSync(new URL("../../../.github/workflows/release.yml", import.meta.url), "utf8");
+  assert.match(workflow, /FOUNDATION_TEST_JOBS=2 sh \.claude\/tests\/run-all\.sh --release\b/);
+});
+
 test("process runtime executes commands, handles spawn errors, and times out", async (t) => {
   const root = workspace(t);
   let tick = 0;
@@ -378,9 +383,19 @@ test("process runtime executes commands, handles spawn errors, and times out", a
     response.end("service ready");
   });
   await new Promise((resolve) => ready.listen(port, "127.0.0.1", resolve));
+  const marker = join(root, "readiness-consumed");
+  const request = globalThis.fetch;
+  const probe = t.mock.method(globalThis, "fetch", async (...args) => {
+    const response = await request(...args);
+    if (response.status !== 200) return response;
+    const body = await response.text();
+    // Release the child after the current readiness check's microtasks finish.
+    setImmediate(() => writeFileSync(marker, ""));
+    return new Response(body, { status: response.status, headers: response.headers });
+  });
   try {
     const observed = await runtime.runCommand(process.execPath,
-      ["-e", "setTimeout(() => {}, 250)"], {
+      ["-e", "const timer = setInterval(() => { if (require('node:fs').existsSync(process.argv[1])) clearInterval(timer); }, 10)", marker], {
         cwd: root, env: process.env, timeoutMs: 1000,
         readiness: {
           url: `http://127.0.0.1:${port}/`, expectHeader: { "x-ready": "yes" },
@@ -391,6 +406,7 @@ test("process runtime executes commands, handles spawn errors, and times out", a
     assert.equal(observed.readinessObserved, true);
     assert.equal(probes >= 2, true);
   } finally {
+    probe.mock.restore();
     await new Promise((resolve) => ready.close(resolve));
   }
 });
