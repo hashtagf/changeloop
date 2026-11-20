@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { connect } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import test from "node:test";
 import { APP_SMOKE_BUILT_IN, appSmoke, chromePath, printedUrl, serveMethod } from "../runtime/evidence/app-smoke-check.mjs";
 import { appSmokeProvider } from "../runtime/evidence/built-in-providers.mjs";
@@ -70,7 +72,24 @@ createServer((q, r) => { r.writeHead(200, { "content-type": "text/html" }); r.en
   const report = await appSmoke(root, { chrome });
   assert.equal(report.status, "pass", JSON.stringify(report.findings));
   assert.equal(report.served, "npm run dev");
-  await assert.rejects(fetch(report.url), "the dev server is stopped after the check");
+  const { hostname, port } = new URL(report.url);
+  // SIGTERM is sent to the process group; allow the child time to exit.
+  const connection = () => new Promise((done, failed) => {
+    const socket = connect({ host: hostname, port: Number(port) });
+    socket.once("error", failed);
+    socket.once("connect", () => { socket.destroy(); done(); });
+    socket.setTimeout(2000, () => socket.destroy(new Error("stop check timed out")));
+  });
+  const stoppedBy = Date.now() + 3000;
+  while (Date.now() < stoppedBy) {
+    try { await connection(); }
+    catch (error) {
+      assert.equal(error.code, "ECONNREFUSED");
+      return;
+    }
+    await delay(50);
+  }
+  assert.fail("the dev server is still listening after the check");
 });
 
 test("an app that cannot start fails with its output, not a pass", { skip: !chrome && "no Chrome" }, async (t) => {

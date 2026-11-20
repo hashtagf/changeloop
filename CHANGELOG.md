@@ -23,6 +23,9 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- The built-in app check now uses a bounded one-shot HTTP probe to avoid a
+  macOS socket error. The release coverage check remains mandatory and has a
+  longer, bounded time limit.
 - Test discrimination waited the whole ten-minute provider timeout when the
   change's tests failed on the base code but left a server open (paid lane
   `project-tracker-api` on main took 15 minutes instead of 8). A base run is now
