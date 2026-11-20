@@ -30,6 +30,11 @@ no-cost release checks still apply.
 
 ### Fixed
 
+- Unrecognized workflow guard modes use advisory behavior instead of blocking
+  ordinary edits. Pi warns when an advisory hook is unavailable and still
+  enforces secret checks and Build workspace routing.
+- Multi-repository proposals list selected repositories and summarize exclusions
+  instead of listing every unselected repository.
 - `cloop package` keeps `prototype.sync` for existing scripts. The separate
   approval page reports its own freshness under `approvalPage.sync`.
 - The built-in app check now uses a bounded one-shot HTTP probe to avoid a

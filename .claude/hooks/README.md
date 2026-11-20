@@ -62,7 +62,8 @@ not record a new phase, and agents do not have to prepare a packet solely to
 make a hook recognize the phase. Session identity selects the exact active
 change even when another session has a newer change.
 The default `auto` mode guides during every active lifecycle phase and stays
-out of adoption-only sessions with no phase context: a call that leaves the
+out of sessions with no phase context. An unrecognized guardrail mode behaves
+like `auto`. During an active phase, a call that leaves the
 phase's rules still runs, redirected into the workspace when it can be, and the
 agent is told the route. A recorded Build phase recovers every selected
 repository workspace root from runtime state when the host does not export

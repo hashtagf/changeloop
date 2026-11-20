@@ -106,6 +106,9 @@ Pi guards advise by default: Land, Deliver, edits outside a change, shell
 shapes, and background `authority run` proceed with a warning on the tool
 result instead of a refusal. Secret redaction stays enforced, and exporting
 `FOUNDATION_GUARDRAIL_MODE=block` before starting Pi restores the refusals.
+An unrecognized mode uses `auto`. In `auto`, ordinary edits do not require an
+active change. If an advisory hook is unavailable, Pi warns instead of stopping
+ordinary tools; secret checks and Build workspace routing still apply.
 Pi guard coverage is partial: built-in tools and `background_bash` are guarded;
 other custom/MCP tools are outside the live boundary and get a one-time warning
 during a change. The session digest is injected at start and after compaction,

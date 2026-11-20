@@ -101,6 +101,9 @@ cloop init /path/to/your-project --host cursor    # หรือ opencode, codex
 guard ของ Pi แนะนำเป็นค่าเริ่มต้น: Land, Deliver, การแก้ไฟล์นอกงาน, รูปแบบ shell และ `authority run`
 ผ่าน background รันต่อพร้อมคำเตือนในผลของ tool แทนการปฏิเสธ การปิดค่าลับยังบังคับเหมือนเดิม
 และตั้ง `FOUNDATION_GUARDRAIL_MODE=block` ก่อนเปิด Pi เพื่อให้ปฏิเสธแบบเดิม
+ถ้าระบุโหมดที่ไม่รู้จัก ระบบจะใช้ `auto` ซึ่งไม่ต้องเปิด Change เพื่อแก้ไฟล์ทั่วไป
+ถ้า hook สำหรับแนะนำขั้นตอนใช้ไม่ได้ Pi จะเตือนแทนการหยุดเครื่องมือทั่วไป
+โดยยังตรวจค่าลับและเปลี่ยนเส้นทางไปยัง Build workspace ตามเดิม
 guard ของ Pi ครอบคลุมบางส่วน: tool ในตัวและ `background_bash` ผ่าน guard ส่วน custom/MCP
 tools อื่นอยู่นอกขอบเขต live guard และได้คำเตือนครั้งเดียวระหว่างทำงาน มี session digest
 ตอนเริ่มและหลัง compact และ `/dev` เตือนเมื่อหยุดก่อน proof ผ่าน การวิเคราะห์ shell ใช้นโยบายร่วมของ runtime

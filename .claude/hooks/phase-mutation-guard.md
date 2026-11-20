@@ -23,15 +23,13 @@ What the default does with a call that leaves the active phase's rules:
 - Anything else runs, with `additionalContext` naming the rule and the route.
 
 `FOUNDATION_GUARDRAIL_MODE=block` restores the refusals described below for a
-host that wants them; `audit` records without speaking.
+host that wants them; `audit` records without speaking. Unrecognized values use
+`auto`, not `block`. Without an active phase, `auto` does not require starting a
+Change before an ordinary edit.
 
-What `.claude/settings.json` wires is `phase-mutation-guard.sh`, a prefilter that
-answers the "no phase to guard" case with shell builtins alone and `exec`s the
-`.mjs` whenever a decision is actually needed. On a stock install with no active
-change that is the difference between ~50ms and ~4ms on every mutating tool call.
-The prefilter never reports a violation and never reads the event body: `block`
-mode and any recorded phase context always reach the guard, so enforcement and
-freshness policy stay in one place.
+`.claude/settings.json` calls `phase-mutation-guard.sh`. The wrapper skips
+explicit `off` and otherwise delegates to `phase-mutation-guard.mjs`, which
+resolves the mode and phase from the tool event and runtime context.
 
 The phase comes from one of two places, in this order:
 
@@ -42,7 +40,7 @@ The phase comes from one of two places, in this order:
    share the same authority without a preparatory `packet` command. A row older
    than 12 hours is treated as no phase: the loop is not running.
 
-Before any phase exists, block mode (a `/dev` session) still lets Write/Edit
+Before any phase exists, explicit `block` mode still lets Write/Edit
 create the change draft — a `.foundation/drafts/<id>.json` file or the files
 directly inside a `.foundation/drafts/<id>/` folder (`.json`/`.md`) — and
 `openspec/repositories.yaml`, because a draft may select only declared
@@ -73,8 +71,9 @@ The host may also supply:
 By default those shell refusals are recorded as `shell-audit` rows and the
 command runs, with a notice to the agent: shell containment is inferred from
 command text and misread sed scripts, `$(…)` captures, and scratch copies.
-Structured Write/Edit targets stay enforced, including before the Build sandbox
-exists, and Land/Deliver shell authority stays blocked. Prove readiness and
+In explicit `block` mode, structured Write/Edit restrictions still apply,
+including before the Build sandbox exists. The runtime checks Land and Deliver
+authority separately from hook advice. Prove readiness and
 `land check` compare the target checkout with its snapshot at isolation; target
 edits after a `shell-audit` row stop as agent-owned
 `TARGET_EDITED_OUTSIDE_SANDBOX` repair, and edits the user confirms as their own
