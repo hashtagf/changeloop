@@ -17,7 +17,8 @@ import { spawn, spawnSync } from "node:child_process";
 import {
   existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, rmSync, symlinkSync, unlinkSync, writeFileSync
 } from "node:fs";
-import { createServer } from "node:http";
+import { createServer, get as httpGet } from "node:http";
+import { get as httpsGet } from "node:https";
 import { tmpdir } from "node:os";
 import { extname, join, normalize, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -115,11 +116,30 @@ async function scriptServer(dir, script, timeoutMs) {
   });
 }
 
+// Use a one-shot native request: the probe needs only headers, not a pooled
+// fetch connection or undici's socket QoS handling on macOS.
+function probeHttp(url, timeoutMs) {
+  const get = new URL(url).protocol === "https:" ? httpsGet : httpGet;
+  return new Promise((done, failed) => {
+    const request = get(url, { agent: false }, (response) => {
+      response.destroy();
+      done(response.statusCode);
+    });
+    const cancel = deadline(timeoutMs, () => request.destroy(new Error("HTTP probe timed out")));
+    request.once("close", cancel);
+    request.once("error", failed);
+  });
+}
+
 async function waitForHttp(url, timeoutMs) {
   const end = Date.now() + timeoutMs;
   let last = null;
   while (Date.now() < end) {
-    try { const response = await fetch(url, { redirect: "manual" }); if (response.status < 500) return; last = `HTTP ${response.status}`; }
+    try {
+      const status = await probeHttp(url, Math.max(1, end - Date.now()));
+      if (status < 500) return;
+      last = `HTTP ${status}`;
+    }
     catch (error) { last = error.message; }
     await delay(300);
   }

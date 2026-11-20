@@ -548,16 +548,15 @@ suite_timeout_seconds() {
   case "$1" in
     # About 100s alone, but over 600s on the macOS CI runner: it made 110 of its
     # 163 assertions in 600s before being killed in two release gates.
-    'harness contracts (topology planning)')
+    # Full coverage instrumentation also exceeded 600s on the release runner.
+    'harness contracts (topology planning)'|'harness coverage ratchet')
       echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-1200}" ;;
     # The sibling topology fixture walks a real change to archived on its own.
     # Each upgrade-from-3.7.0 row drives a published release and the current
     # one through every lifecycle stage on real Git. Evidence binding mutation
     # reruns the evidence suites per fault: about 115s alone, over 300s when
-    # it shares the pool with the rest of the full tier. The coverage ratchet
-    # runs every harness test under instrumentation, so it grows with the
-    # suite: 220-241s on the CI runner before it passed 300s.
-    'harness coverage ratchet'|'evidence binding mutation'|'pull request delivery'|'proof loop end to end'|'apply conflict'|'concurrent repositories seam'|'installer smoke'|'harness contracts (topology siblings)'|'upgrade from 3.7.0'|'upgrade from 3.7.0 (legacy review)')
+    # it shares the pool with the rest of the full tier.
+    'evidence binding mutation'|'pull request delivery'|'proof loop end to end'|'apply conflict'|'concurrent repositories seam'|'installer smoke'|'harness contracts (topology siblings)'|'upgrade from 3.7.0'|'upgrade from 3.7.0 (legacy review)')
       echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-600}" ;;
     *) echo "${FOUNDATION_SUITE_TIMEOUT_SECONDS:-300}" ;;
   esac
