@@ -24,8 +24,7 @@ const TOOLS = { read: "Read", grep: "Grep", write: "Write", edit: "Edit", bash: 
 // through FOUNDATION_PARENT_SESSION_ID, so spawning one is not a bypass.
 const UNGUARDED_OK = new Set(["ls", "find", "ask_user", "agent_list", "agent_inbox", "agent_send",
   "agent_stop", "agent_spawn", "background_job", "task_board", "tool_guide", "session_title"]);
-const GUARD_FILES = ["protect-secrets.sh", "phase-mutation-guard.sh", "lint.sh", "shell-route-guard.sh",
-  "no-detached-authority.mjs", "session-context.mjs", "dev-terminal-guard.mjs"];
+const SECRET_GUARD = "protect-secrets.sh";
 const AUTHORITY_RUN = /\b(?:cloop|foundation\.mjs)\s+authority(?:-|\s+)run\b/;
 const quote = (value) => `'${String(value).replaceAll("'", "'\\''")}'`;
 const ID = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
@@ -155,8 +154,7 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     const tool = TOOLS[name];
     if (!tool) return;
     const notes = [];
-    // Unset means auto; an unknown value fails closed, like the phase guard.
-    const strict = !["", "auto", "audit", "off"].includes(String(process.env.FOUNDATION_GUARDRAIL_MODE || "").toLowerCase());
+    const strict = (process.env.FOUNDATION_GUARDRAIL_MODE || "").trim().toLowerCase() === "block";
     // Advice by default: the call runs and the note explains the preferred route.
     const advise = (message) => { if (strict) throw new Error(`BLOCKED: ${message}`); notes.push(`WARNING: ${message}`); };
     if (name === "background_bash" && AUTHORITY_RUN.test(normalizeHarnessCliInvocations(String(input.command))))
@@ -205,12 +203,22 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
         if (updated.glob !== undefined) input.glob = updated.glob;
       }
     };
-    if (["Read", "Grep", "Bash"].includes(tool)) apply(await hook("protect-secrets.sh", event(), ctx));
-    if (["Write", "Edit", "Bash"].includes(tool)) apply(await hook("phase-mutation-guard.sh", event(), ctx));
-    if (tool === "Bash") apply(await hook("shell-route-guard.sh", event(), ctx));
+    const workflowHook = async (script) => {
+      try { apply(await hook(script, event(), ctx)); }
+      catch (error) {
+        // Build still needs the phase hook to route writes into its workspace.
+        if (strict || ctx.signal?.aborted ||
+            (script === "phase-mutation-guard.sh" && buildWorkspace(ctx))) throw error;
+        notes.push(`WARNING: Change Loop ${script} unavailable; workflow advice was skipped.`);
+      }
+    };
+    if (["Read", "Grep", "Bash"].includes(tool)) apply(await hook(SECRET_GUARD, event(), ctx));
+    if (["Write", "Edit", "Bash"].includes(tool))
+      await workflowHook("phase-mutation-guard.sh");
+    if (tool === "Bash") await workflowHook("shell-route-guard.sh");
     // Skip an interpreter start for the common command that cannot match.
     if (tool === "Bash" && /authority/.test(String(input.command)))
-      apply(await hook("no-detached-authority.mjs", event(), ctx));
+      await workflowHook("no-detached-authority.mjs");
     return notes;
   };
 
@@ -229,8 +237,8 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     warnedTools.clear(); digest = "";
     try {
       assertSharedInstallation(root, runtimeRoot);
-      for (const file of GUARD_FILES)
-        if (!existsSync(join(runtimeRoot, ".claude/hooks", file))) throw new Error(`Missing Change Loop guard: ${file}`);
+      if (!existsSync(join(runtimeRoot, ".claude/hooks", SECRET_GUARD)))
+        throw new Error(`Missing Change Loop guard: ${SECRET_GUARD}`);
       const jq = await execute("jq", ["--version"], { cwd: root, env: environment(ctx) });
       if (jq.code !== 0) throw new Error("Change Loop guards require jq.");
       contract = await hostJson("agent-contract", ["--protocol", "1", "--format", "json"], ctx);
@@ -373,7 +381,10 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
     try {
       const result = await hook("lint.sh", { tool_name: "Write", tool_input: { file_path: path } }, ctx, 30000);
       if (result.diagnostics) return { content: [...content, { type: "text", text: result.diagnostics }], isError: true };
-    } catch (error) { return { content: [...content, { type: "text", text: error.message }], isError: true }; }
+    } catch {
+      // The edit already ran. A missing lint result is not a failed write.
+      return { content: [...content, { type: "text", text: "WARNING: Change Loop lint unavailable; the edit ran but was not linted." }] };
+    }
     return noted;
   });
 
@@ -389,7 +400,8 @@ export default function install(pi, { createBashTool, createLocalBashOperations,
   pi.on("user_bash", async (event, ctx) => {
     try {
       const input = { command: event.command };
-      await guard("bash", input, ctx, event.cwd);
+      const notes = await guard("bash", input, ctx, event.cwd);
+      if (notes?.length) ctx.ui.notify(notes.join("\n"), "warning");
       const local = createLocalBashOperations();
       return { operations: { exec(_command, cwd, options) {
         const exports = Object.entries(environment(ctx))

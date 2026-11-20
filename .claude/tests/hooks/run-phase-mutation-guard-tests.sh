@@ -440,6 +440,14 @@ out="$(printf '%s' "$(write_event "$TMP/outside/adoption.js")" |
   CLAUDE_PROJECT_DIR="$TMP/outside" node "$HOOK")"
 assert_eq "default auto mode stays out of adoption-only sessions" "" "$out"
 
+for configured in legacy-block ' auto '; do
+  out="$(invoke '' "$configured" '' '{"tool_name":"Edit","tool_input":{"file_path":"repos/realtime-gateway/Dockerfile"}}')"
+  assert_not_contains "invalid or padded mode does not block a nested-repo Edit ($configured)" "$out" '"decision":"block"'
+  out="$(invoke prove "$configured" '' "$(write_event "$TMP/project/src/app.js")")"
+  assert_not_contains "invalid or padded mode does not block an active Prove write ($configured)" "$out" '"decision":"block"'
+  assert_contains "invalid or padded mode preserves phase advice ($configured)" "$out" 'Prove keeps product and instruction files read-only'
+done
+
 # Harness CLI spellings (npx, npx flags, bin paths) classify exactly like the
 # bare CLI: a pre-phase read-only command stays allowed and an authority
 # command outside its invocation stays blocked.

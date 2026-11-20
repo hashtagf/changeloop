@@ -127,8 +127,9 @@ test("the wired hook advises with the route, denies only in strict modes, and pa
     const strict = JSON.parse(run(`cd ${sandbox} && git status`, { FOUNDATION_SHELL_GUARD: "block" }));
     assert.equal(strict.decision, "block");
     assert.equal(JSON.parse(run("npm test", { FOUNDATION_GUARDRAIL_MODE: "block" })).decision, "block");
-    assert.equal(JSON.parse(run("npm test", { FOUNDATION_GUARDRAIL_MODE: "strict" })).decision, "block",
-      "an unknown mode fails closed");
+    const unknown = JSON.parse(run("npm test", { FOUNDATION_GUARDRAIL_MODE: "strict" }));
+    assert.equal(unknown.decision, undefined);
+    assert.match(unknown.hookSpecificOutput.additionalContext, /cloop exec/);
     assert.equal(run("npm test", { FOUNDATION_GUARDRAIL_MODE: "off" }), "");
     assert.equal(run("npm test", {}, { permission_mode: "bypassPermissions" }), "");
     assert.equal(run("ls src"), "");

@@ -180,7 +180,7 @@ export function projectContext(event, projectRoot) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
-  const mode = (process.env.FOUNDATION_GUARDRAIL_MODE || "auto").toLowerCase();
+  const mode = (process.env.FOUNDATION_GUARDRAIL_MODE || "auto").trim().toLowerCase();
   let raw = "";
   for await (const chunk of process.stdin) raw += chunk;
   bestEffort(() => {
@@ -190,10 +190,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
     const projectRoot = resolve(process.env.CLAUDE_PROJECT_DIR || process.cwd());
     const route = shellRoute(String(event.tool_input?.command || ""), projectContext(event, projectRoot));
     if (!route) process.exit(0);
-    // The route is advice; only a strict mode refuses the call. An unknown
-    // mode fails closed, like the phase guard.
-    const strict = !["auto", "audit"].includes(mode) ||
-      (process.env.FOUNDATION_SHELL_GUARD || "").toLowerCase() === "block";
+    const strict = mode === "block" ||
+      (process.env.FOUNDATION_SHELL_GUARD || "").trim().toLowerCase() === "block";
     process.stdout.write(JSON.stringify(strict
       ? { decision: "block", reason: route.reason }
       : { hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: route.reason } }));

@@ -63,8 +63,9 @@ test("block mode still refuses a detached authority run", () => {
   const refused = runHook("cloop authority run demo &", { FOUNDATION_GUARDRAIL_MODE: "block" });
   assert.equal(refused.decision, "block");
   assert.match(refused.reason, /foreground/);
-  assert.equal(runHook("cloop authority run demo &", { FOUNDATION_GUARDRAIL_MODE: "strict" }).decision, "block",
-    "an unknown mode fails closed");
+  const unknown = runHook("cloop authority run demo &", { FOUNDATION_GUARDRAIL_MODE: "strict" });
+  assert.equal(unknown.decision, undefined);
+  assert.equal(unknown.hookSpecificOutput.updatedInput.command, "cloop authority run demo");
   const rewritten = runHook("cloop authority run demo &");
   assert.equal(rewritten.hookSpecificOutput.updatedInput.command, "cloop authority run demo");
 });

@@ -509,6 +509,35 @@ test("failed startup and missing guards fail closed for built-in tools", async (
   } finally { writeFileSync(script, original); }
 });
 
+test("an unavailable workflow hook does not block idle edits or guarded shells", async () => {
+  const b = await bridge("broken-workflow-hook");
+  const script = join(root, ".claude/hooks/phase-mutation-guard.sh");
+  const original = readFileSync(script, "utf8");
+  try {
+    writeFileSync(script, "#!/bin/sh\nexit 1\n");
+    const input = { path: "repos/realtime-gateway/Dockerfile", oldText: "FROM old", newText: "FROM new" };
+    assert.match(await noted(b, "edit", input, "broken-phase-edit"), /phase-mutation-guard\.sh.*unavailable/);
+    assert.match(await noted(b, "bash", { command: "git status" }, "broken-phase-shell"), /phase-mutation-guard\.sh.*unavailable/);
+    assert.ok((await b.fire("user_bash", { command: "git status", cwd: root })).operations);
+    building("broken-workflow-hook", "broken-phase-build");
+    assert.equal((await b.call("edit", input))?.block, true, "do not write to the checkout if Build redirect failed");
+  } finally { writeFileSync(script, original); }
+});
+
+test("a missing advisory hook at startup does not disable Pi or secret redaction", async () => {
+  const script = join(root, ".claude/hooks/shell-route-guard.sh");
+  const original = readFileSync(script, "utf8");
+  try {
+    rmSync(script);
+    const b = await bridge("missing-shell-advice");
+    assert.equal((await b.call("edit", { path: "src/example.js" }))?.block, undefined);
+    writeFileSync(join(root, ".env"), "API_KEY=not-a-real-secret\n");
+    const input = { command: "cat .env" };
+    assert.match(await noted(b, "bash", input, "missing-shell-advice-call"), /shell-route-guard\.sh.*unavailable/);
+    assert.match(input.command, /redacted/);
+  } finally { writeFileSync(script, original); }
+});
+
 test("post-edit lint errors reach Pi as failed tool results", async () => {
   const b = await bridge();
   const workspace = building();
@@ -521,6 +550,11 @@ test("post-edit lint errors reach Pi as failed tool results", async () => {
     assert.equal(result.isError, true);
     assert.equal(result.content.at(-1).text, "lint diagnostics");
     assert.equal(await b.fire("tool_result", { toolName: "write", toolCallId: "lint-call", content: [] }), undefined);
+    writeFileSync(script, "#!/bin/sh\nexit 1\n");
+    await b.call("write", { path: join(workspace, "x.js"), content: "x" }, "broken-lint-call");
+    const unlinted = await b.fire("tool_result", { toolName: "write", toolCallId: "broken-lint-call", content: [{ type: "text", text: "written" }] });
+    assert.equal(unlinted.isError, undefined);
+    assert.match(unlinted.content.at(-1).text, /edit ran but was not linted/);
   } finally { writeFileSync(script, original); }
 });
 
@@ -691,6 +725,20 @@ test("by default a worker's main-checkout write moves into the parent's workspac
   const foreign = { path: join(workspace, "src/other.js"), content: "x" };
   assert.doesNotMatch(await noted(stranger, "write", foreign, "w3"), /redirected/);
   assert.equal(foreign.path, join(workspace, "src/other.js"), "another session's phase is not used");
+});
+
+test("an unknown legacy mode does not block an idle nested-repo Edit or reviewer guidance", async (t) => {
+  const previous = process.env.FOUNDATION_GUARDRAIL_MODE;
+  process.env.FOUNDATION_GUARDRAIL_MODE = "legacy-block";
+  t.after(() => {
+    if (previous === undefined) delete process.env.FOUNDATION_GUARDRAIL_MODE;
+    else process.env.FOUNDATION_GUARDRAIL_MODE = previous;
+  });
+  const b = await bridge("advice-unknown-mode");
+  const input = { path: "repos/realtime-gateway/Dockerfile", oldText: "FROM old", newText: "FROM new" };
+  assert.equal((await b.call("edit", input))?.block, undefined);
+  assert.equal(input.path, "repos/realtime-gateway/Dockerfile");
+  assert.match(await noted(b, "background_bash", { command: "cloop authority run demo" }, "r3"), /foreground/);
 });
 
 test("a user's FOUNDATION_GUARDRAIL_MODE=block is passed to the guards", async (t) => {

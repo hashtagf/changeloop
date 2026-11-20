@@ -35,9 +35,9 @@ const AUDIT_MAX_BYTES = 1024 * 1024;
 // and the guard has nothing to enforce.
 const PHASE_FRESHNESS_MS = 12 * 60 * 60 * 1000;
 
-const requestedMode = (process.env.FOUNDATION_GUARDRAIL_MODE || "auto").toLowerCase();
+const requestedMode = (process.env.FOUNDATION_GUARDRAIL_MODE || "auto").trim().toLowerCase();
 const configuredMode = new Set(["auto", "audit", "block", "off"]).has(requestedMode)
-  ? requestedMode : "block";
+  ? requestedMode : "auto";
 if (configuredMode === "off") process.exit(0);
 
 let event;

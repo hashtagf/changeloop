@@ -39,8 +39,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
   const attached = attachedAuthorityCommand(event.tool_input.command);
   const reason = "authority run owns a synchronous reviewer and must stay in the foreground. " +
     "Run it without &, nohup, setsid, or disown; wait for its durable completion before replying.";
-  // Unset means auto; an unknown value fails closed, like the phase guard.
-  if (!["", "auto", "audit", "off"].includes((process.env.FOUNDATION_GUARDRAIL_MODE || "").toLowerCase())) {
+  if ((process.env.FOUNDATION_GUARDRAIL_MODE || "").trim().toLowerCase() === "block") {
     process.stdout.write(JSON.stringify({ decision: "block", reason: `BLOCKED: ${reason}` }));
   } else if (detachedAuthorityCommand(attached)) {
     // Not safely rewritable: it runs as written with the warning.
