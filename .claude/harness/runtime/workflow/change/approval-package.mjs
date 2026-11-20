@@ -1,11 +1,12 @@
 import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import protocols from "../../../protocol.json" with { type: "json" };
 
 import { routeChange } from "../../contracts/scratch-router.mjs";
 import { missingApprovalLanes } from "../../core/user-decisions.mjs";
 import { isObject } from "../../core/values.mjs";
 import { TYPE_SURFACES, coverageReport } from "../prototype/prototype-checklist.mjs";
-import { factsDigest, snapshotFor, syncStatus, syncWarnings } from "../prototype/prototype-sync.mjs";
+import { factsDigest, pageFile, snapshotFor, syncStatus, syncWarnings } from "../prototype/prototype-sync.mjs";
 import { undoPlan } from "../transaction/undo-plan.mjs";
 import { devDocumentChecklist, inferWorkTypes } from "../validation/dev-document.mjs";
 import { bestEffort } from "../../core/best-effort.mjs";
@@ -13,9 +14,8 @@ import { projectFeaturesForDraft } from "../validation/project-feature-map.mjs";
 
 // Approval data: what the harness computes about a change for the people who
 // approve it, printed as JSON by `package <change>`. The harness writes no
-// page. The approval page is a file the prototype skill authors (the draft
-// names it as the `prototype` example); the harness only reads it to record and
-// compare digests. A label of `proof` requires a valid passing receipt, so
+// page. The harness reads the separate approval page to record and compare
+// digests. A label of `proof` requires a valid passing receipt, so
 // nothing the page says can raise a proof count.
 
 // The typed draft is trusted only when it describes the current revision.
@@ -305,11 +305,13 @@ export function createApprovalPackageRuntime({
     const facts = factsOf(model);
     const types = draft ? inferWorkTypes(draft).filter((type) => TYPE_SURFACES[type]) : [];
     const coverage = draft ? coverageReport(draft, { workTypes: types }) : null;
-    const sync = syncStatus(state.prototypeSync, { previewsDir, id, draft: draft || {}, facts });
+    const sync = syncStatus(state.approvalPageSync, { previewsDir, id, facts });
+    const prototype = pageFile({ previewsDir, id, draft });
     const scratch = isObject(draft?.scratch) ? draft.scratch : {};
     const { undo, who } = undoWho(draft);
     const checklist = draft ? devDocumentChecklist(draft) : [];
     return {
+      protocol: Number(protocols.approvalPackageProtocol),
       change: id,
       revision: facts.revision,
       language,
@@ -344,11 +346,10 @@ export function createApprovalPackageRuntime({
         stale: Boolean(row.stale),
         artifact: row.artifact ? confinedPreviewPath(root, join(previewsDir, id), row.artifact) : null
       })),
+      approvalPage: { page: { path: sync.path, status: sync.file }, sync },
       prototype: {
-        // The page the draft names, if any; the skill writes it, the harness never does.
-        page: sync.path ? { path: sync.path, status: sync.file } : null,
-        checklist: coverage,
-        sync
+        page: prototype.path ? { path: prototype.path, status: prototype.status } : null,
+        checklist: coverage
       },
       facts,
       factsDigest: factsDigest(facts),
@@ -366,17 +367,17 @@ export function createApprovalPackageRuntime({
     return data;
   }
 
-  // The approval question's view of the page: the file the skill wrote, with
+  // The approval question's view of the hand-authored approval page, with
   // its advisory warnings, or the four summary lines when there is no page yet.
   // Never fails the question.
   function approvalPageLink(id) {
     try {
       const model = buildModel(id);
       const data = dataFor(model);
-      const page = data.prototype.page;
+      const page = data.approvalPage.page;
       if (page?.status === "ok") {
         return { path: relative(root, join(previewsDir, id, page.path)), language: data.language,
-          warnings: syncWarnings(data.prototype.sync) };
+          warnings: syncWarnings(data.approvalPage.sync) };
       }
       const summary = SCRATCH_LINES.map((key) => data.scratch[key]).filter(Boolean);
       return { missing: true, language: data.language, summary };
@@ -390,10 +391,10 @@ export function createApprovalPackageRuntime({
   function recordPrototypeSync(id) {
     const model = buildModel(id);
     const snapshot = snapshotFor({
-      previewsDir, id, draft: model.draft || {}, facts: factsOf(model), revision: model.state.contractRevision
+      previewsDir, id, facts: factsOf(model), revision: model.state.contractRevision
     });
     const state = loadRuntime(id);
-    state.prototypeSync = snapshot;
+    state.approvalPageSync = snapshot;
     saveRuntime(state);
     return snapshot;
   }

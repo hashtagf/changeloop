@@ -52,7 +52,7 @@ function fixture(t, { state = {}, providers = {}, previewProviders = {}, receipt
     receiptValidity: receiptValidity || ((changeId, provider) => receipts[provider] || { provider, validity: "missing" }),
     fail: (message) => { throw new Error(message); }
   });
-  const page = (text, name = "prototype.html") => write(join(previewsDir, id, name), text);
+  const page = (text, name = "approval.html") => write(join(previewsDir, id, name), text);
   return { root, id, runtime, runtimeDir, previewsDir, statePath, page, packagesDir: join(root, ".foundation", "packages") };
 }
 const withDraft = (draft) => ({ draftSource: { contractRevision: 1, draft } });
@@ -231,24 +231,43 @@ test("the prototype checklist is none without a page, unknown without covers, an
   assert.equal(report.advisory, true, "a declaration is a claim, not proof");
 });
 
-test("the approval page link names the file the skill wrote, in the draft's language", (t) => {
+test("the approval question links approval.html independently of the prototype", (t) => {
   const { id, runtime, page } = fixture(t, { state: withDraft({ ...DRAFT, language: "th", examples: [PROTOTYPE] }) });
-  page("page");
+  page("interactive", "prototype.html");
+  page("approval");
+  const data = runtime.packageData(id);
+  assert.equal(data.protocol, 2);
+  assert.equal(Object.hasOwn(data.prototype, "sync"), false);
+  assert.deepEqual(data.approvalPage.page, { path: "approval.html", status: "ok" });
+  assert.deepEqual(data.prototype.page, { path: "prototype.html", status: "ok" });
   const link = runtime.approvalPageLink(id);
-  assert.equal(link.path, join(".foundation", "previews", id, "prototype.html"));
-  assert.equal(link.language, "th");
-  assert.match(approvalPackageLine(link), /^  หน้าอนุมัติ: \.foundation\/previews\/demo\/prototype\.html\n/);
-  assert.doesNotMatch(approvalPackageLine(link), /package/);
+  assert.equal(link.path, join(".foundation", "previews", id, "approval.html"));
+  assert.match(approvalPackageLine(link), /^  หน้าอนุมัติ: \.foundation\/previews\/demo\/approval\.html\n/);
 });
 
-test("with no page yet, the link gives the summary as text and says to use the skill, without failing", (t) => {
-  const { id, runtime } = fixture(t, { state: withDraft({
-    ...DRAFT, scratch: { get: "Get line", asIs: "As line", toBe: "To line", ifFail: "Fail line" } }) });
+test("approval.html is discovered even without a prototype example", (t) => {
+  const { id, runtime, page } = fixture(t);
+  page("approval");
+  const data = runtime.packageData(id);
+  assert.equal(data.approvalPage.page.status, "ok");
+  assert.equal(data.prototype.page, null);
+  assert.equal(runtime.approvalPageLink(id).path, join(".foundation", "previews", id, "approval.html"));
+});
+
+test("only a prototype gives the approval summary as text, without using that prototype as a page", (t) => {
+  const { id, runtime, page } = fixture(t, { state: withDraft({
+    ...DRAFT, examples: [PROTOTYPE], scratch: { get: "Get line", asIs: "As line", toBe: "To line", ifFail: "Fail line" } }) });
+  page("prototype only", "prototype.html");
   const link = runtime.approvalPageLink(id);
+  const data = runtime.packageData(id);
+  assert.equal(data.prototype.page.status, "ok");
+  assert.equal(data.approvalPage.page.status, "missing");
+  assert.equal(data.approvalPage.sync.factsStale, false);
   assert.equal(link.missing, true);
   assert.deepEqual(link.summary, ["Get line", "As line", "To line", "Fail line"]);
   const text = approvalPackageLine(link);
-  assert.match(text, /approval page: none yet; the prototype skill writes it/);
+  assert.match(text, /approval page: none yet/);
+  assert.doesNotMatch(text, /prototype/);
   assert.match(text, /Get line/);
 });
 
@@ -270,24 +289,38 @@ test("recording stores the page digest, an edit then shows as drift, and recordi
   page(`v1 ${facts()}`);
   const snapshot = runtime.recordPrototypeSync(id);
   assert.equal(snapshot.revision, 1);
-  assert.equal(JSON.parse(readFileSync(join(runtimeDir, `${id}.json`), "utf8")).prototypeSync.pageDigest, snapshot.pageDigest);
-  assert.equal(runtime.packageData(id).prototype.sync.drift, false);
+  assert.equal(JSON.parse(readFileSync(join(runtimeDir, `${id}.json`), "utf8")).approvalPageSync.pageDigest, snapshot.pageDigest);
+  assert.equal(runtime.packageData(id).approvalPage.sync.drift, false);
+  page("prototype edited", "prototype.html");
+  assert.equal(runtime.packageData(id).approvalPage.sync.drift, false);
   page(`v2 edited ${facts()}`);
   const drifted = runtime.packageData(id);
-  assert.equal(drifted.prototype.sync.drift, true);
+  assert.equal(drifted.approvalPage.sync.drift, true);
   assert.ok(drifted.warnings.some((line) => /edited after revision 1/.test(line)));
   assert.ok(runtime.approvalPageLink(id).warnings.some((line) => /edited after revision 1/.test(line)));
   runtime.recordPrototypeSync(id);
-  assert.equal(runtime.packageData(id).prototype.sync.drift, false);
+  assert.equal(runtime.packageData(id).approvalPage.sync.drift, false);
+});
+
+test("upgrading does not treat a legacy prototype snapshot as an approval page snapshot", (t) => {
+  const { id, runtime, page } = fixture(t, {
+    state: { ...withDraft({ ...DRAFT, examples: [PROTOTYPE] }),
+      prototypeSync: { revision: 1, path: "prototype.html", pageDigest: "legacy" } }
+  });
+  page("legacy prototype", "prototype.html");
+  assert.equal(runtime.approvalPageLink(id).missing, true);
+  page(`new approval page ${runtime.packageData(id).factsDigest}`);
+  assert.equal(runtime.packageData(id).approvalPage.sync.drift, false);
+  assert.equal(runtime.packageData(id).approvalPage.sync.recordedRevision, null);
 });
 
 test("a page without the current facts digest is stale and a page carrying it is not", (t) => {
   const { id, runtime, page } = fixture(t, { state: withDraft({ ...DRAFT, examples: [PROTOTYPE] }) });
   page("an old page");
   runtime.recordPrototypeSync(id);
-  assert.equal(runtime.packageData(id).prototype.sync.factsStale, true);
+  assert.equal(runtime.packageData(id).approvalPage.sync.factsStale, true);
   page(`a page with ${runtime.packageData(id).factsDigest}`);
-  assert.equal(runtime.packageData(id).prototype.sync.factsStale, false);
+  assert.equal(runtime.packageData(id).approvalPage.sync.factsStale, false);
 });
 
 // The shipped runtime fails through die(), which exits the process unless the

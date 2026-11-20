@@ -6,7 +6,7 @@
 
 import {
   appendFileSync, closeSync, existsSync, mkdirSync, openSync, readSync,
-  readdirSync, readFileSync, realpathSync, renameSync, statSync
+  lstatSync, readdirSync, readFileSync, realpathSync, renameSync, statSync
 } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
@@ -178,11 +178,8 @@ if (deliverAuthorityCommand && !deliverSession)
 if (!phase && mode !== "block") process.exit(0);
 
 if (!phase && prePhaseDraftMutationAllowed()) {
-  // Atomic Change starts need one narrowly-scoped bootstrap write before a
-  // lifecycle phase exists. Both the legacy change-start name and the v3
-  // drafts directory are temporary data consumed by `change start`; neither
-  // is product code or authority. Shell writes remain blocked so redirects
-  // cannot smuggle additional mutations into the bootstrap boundary.
+  // Draft inputs and the two hand-authored preview files are not product code
+  // or authority. This exception applies only to structured writes.
   process.exit(0);
 } else if (!phase && tool === "Bash" && !shellGuardBlocks && violations.length === 0) {
   // Before a change exists the shell only reproduces, inspects, and writes the
@@ -710,15 +707,24 @@ function prePhaseDraftMutationAllowed() {
   return paths.every((rawPath) => {
     const target = canonicalTarget(rawPath, projectRoot);
     if (!target) return false;
-    // Scratch outside the project is not product code; before a phase exists
-    // it is the only other place an agent can think on disk.
-    if (!pathInside(projectRoot, target)) return true;
+    const lexical = resolve(projectRoot, rawPath);
+    const preview = /^\.foundation\/previews\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\/(?:approval|prototype)\.html$/;
     const rel = relative(projectRoot, target).split(sep).join("/");
-    // The v5 draft folder holds one level of files (change.json, proposal.md,
-    // design.md); openspec/repositories.yaml declares the repositories a draft
-    // may select. Nested or dot-prefixed names stay denied.
+    if (preview.test(rel) || preview.test(relative(projectRoot, lexical).split(sep).join("/")))
+      return target === lexical && !rawPath.split(sep).includes("..") && bestEffort(() => isDirectPreviewTarget(target), false);
+    if (!pathInside(projectRoot, target)) return true;
+    // Draft folder files are one level deep; repository declarations are also allowed.
     return /^(?:\.foundation\/change-start-[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.json|\.foundation\/drafts\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.json|\.foundation\/drafts\/[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\/[a-z0-9][a-z0-9_-]*\.(?:json|md)|openspec\/repositories\.yaml)$/.test(rel);
   });
+}
+
+// lstat sees dangling links; a missing component is fine, a symlink is not.
+function isDirectPreviewTarget(target) {
+  for (let cursor = target; cursor !== projectRoot; cursor = dirname(cursor)) {
+    const info = lstatSync(cursor, { throwIfNoEntry: false });
+    if (info && !(cursor === target ? info.isFile() : info.isDirectory())) return false;
+  }
+  return true;
 }
 
 function allowedPaths() {

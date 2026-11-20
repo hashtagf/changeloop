@@ -625,14 +625,15 @@ export function materializeDraftSpecs({
   }
 }
 
-// The approval page is a file the prototype skill writes, never the harness.
+// The agent or user writes the approval page, never the harness.
 // The line names it in the draft's language, or, with no page yet, gives the
 // summary as text so the user can still approve from the packet.
 export function approvalPackageLine(link) {
   const name = link?.language === "th" ? "หน้าอนุมัติ" : "approval page";
   if (link?.path) return `  ${name}: ${link.path}\n` + (link.warnings || []).map((line) => `  warning: ${line}\n`).join("");
   if (link?.missing)
-    return `  ${name}: none yet; the prototype skill writes it (summary below)\n` +
+    return (link.language === "th" ? `  ${name}: ยังไม่มี (ดูสรุปด้านล่าง)\n` :
+      `  ${name}: none yet (summary below)\n`) +
       (link.summary || []).map((line) => `    ${line}\n`).join("");
   if (link?.error) return `  warning: ${name} not checked (${link.error}); review the packet\n`;
   return "";

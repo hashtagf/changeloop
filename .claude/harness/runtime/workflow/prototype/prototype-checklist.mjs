@@ -189,8 +189,8 @@ export function checklistNoteLine(draft, /** @type {{ workTypes?: any }} */ { wo
   const report = coverageReport(draft, { workTypes });
   if (report.total <= 1 && report.state === "none") return "";
   const names = (items) => items.map((item) => item.key).join(", ");
-  if (report.state === "none") return `prototype (advisory, approval page): no prototype yet; it should show ${names(report.items)}; the prototype skill builds it`;
-  if (report.state === "unknown") return `prototype (advisory, approval page): the prototype declares no 'covers'; it should show ${names(report.items)}`;
+  if (report.state === "none") return `prototype (advisory): no prototype yet; it should show ${names(report.items)}; the prototype skill builds it`;
+  if (report.state === "unknown") return `prototype (advisory): the prototype declares no 'covers'; it should show ${names(report.items)}`;
   const missing = report.items.filter((item) => item.status === "missing");
-  return missing.length ? `prototype (advisory, approval page): the prototype does not yet cover ${names(missing)}` : "";
+  return missing.length ? `prototype (advisory): the prototype does not yet cover ${names(missing)}` : "";
 }

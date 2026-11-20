@@ -28,10 +28,10 @@ test("the facts digest is stable across key order and changes when a fact change
 
 test("a page edited after the recorded revision is reported as drift, and does not block", (t) => {
   const { put, args } = fixture(t);
-  put("prototype.html", `v1 ${factsDigest(FACTS)}`);
+  put("approval.html", `v1 ${factsDigest(FACTS)}`);
   const recorded = snapshotFor({ ...args(), revision: 2 });
   assert.equal(syncStatus(recorded, args()).drift, false, "unchanged file");
-  put("prototype.html", `v2 edited ${factsDigest(FACTS)}`);
+  put("approval.html", `v2 edited ${factsDigest(FACTS)}`);
   const status = syncStatus(recorded, args());
   assert.equal(status.drift, true);
   assert.equal(status.recordedRevision, 2);
@@ -41,9 +41,9 @@ test("a page edited after the recorded revision is reported as drift, and does n
 
 test("recording again after a revise clears the drift", (t) => {
   const { put, args } = fixture(t);
-  put("prototype.html", `v1 ${factsDigest(FACTS)}`);
+  put("approval.html", `v1 ${factsDigest(FACTS)}`);
   const first = snapshotFor({ ...args(), revision: 2 });
-  put("prototype.html", `v2 ${factsDigest(FACTS)}`);
+  put("approval.html", `v2 ${factsDigest(FACTS)}`);
   assert.equal(syncStatus(first, args()).drift, true);
   const second = snapshotFor({ ...args(), revision: 3 });
   const status = syncStatus(second, args());
@@ -53,18 +53,18 @@ test("recording again after a revise clears the drift", (t) => {
 
 test("a page without the current facts digest is stale, and an updated one is not", (t) => {
   const { put, args } = fixture(t);
-  put("prototype.html", "page with an old facts digest 0123456789abcdef");
+  put("approval.html", "page with an old facts digest 0123456789abcdef");
   const recorded = snapshotFor({ ...args(), revision: 1 });
   const stale = syncStatus(recorded, args());
   assert.equal(stale.factsStale, true);
   assert.match(syncWarnings(stale).join("\n"), new RegExp(factsDigest(FACTS)));
-  put("prototype.html", `page with ${factsDigest(FACTS)}`);
+  put("approval.html", `page with ${factsDigest(FACTS)}`);
   assert.equal(syncStatus(recorded, args()).factsStale, false);
 });
 
 test("facts that changed since the snapshot are reported even when the page was not edited", (t) => {
   const { put, args } = fixture(t);
-  put("prototype.html", `page ${factsDigest(FACTS)}`);
+  put("approval.html", `page ${factsDigest(FACTS)}`);
   const recorded = snapshotFor({ ...args(), revision: 1 });
   const status = syncStatus(recorded, args({ facts: { ...FACTS, proof: 2 } }));
   assert.equal(status.factsChanged, true);
@@ -83,11 +83,13 @@ test("a missing page raises no drift or facts warning", (t) => {
   assert.deepEqual(syncWarnings(status), []);
 });
 
-test("a change with no prototype example, or with nothing recorded yet, raises nothing", (t) => {
+test("approval sync ignores the prototype and does not require a prototype example", (t) => {
   const { put, args } = fixture(t);
-  assert.equal(syncStatus(null, args({ draft: { workType: ["ui"] } })).file, "none");
-  put("prototype.html", "page");
-  const status = syncStatus(null, args());
+  put("prototype.html", "prototype only");
+  assert.equal(syncStatus(null, args()).file, "missing");
+  put("approval.html", `page ${factsDigest(FACTS)}`);
+  const status = syncStatus(null, args({ draft: { workType: ["ui"] } }));
+  assert.equal(status.file, "ok");
   assert.equal(status.drift, false, "nothing recorded to compare with");
   assert.equal(status.recordedRevision, null);
 });
@@ -106,7 +108,7 @@ test("the page path must stay inside the change's previews folder", (t) => {
 
 test("the status only reports; it exposes no gate for Prove or Land to read", (t) => {
   const { put, args } = fixture(t);
-  put("prototype.html", "x");
+  put("approval.html", "x");
   const status = syncStatus(snapshotFor({ ...args(), revision: 1 }), args());
   assert.equal(status.advisory, true);
   assert.equal(typeof status.blocked, "undefined");

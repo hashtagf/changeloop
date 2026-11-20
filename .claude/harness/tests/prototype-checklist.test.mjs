@@ -127,7 +127,7 @@ test("covers must be an array", () => {
 
 test("a ui change without a prototype gets an advisory line naming what to show, and nothing blocks", () => {
   const line = checklistNoteLine({ workType: ["ui"] });
-  assert.match(line, /^prototype \(advisory, approval page\): no prototype yet/);
+  assert.match(line, /^prototype \(advisory\): no prototype yet/);
   assert.match(line, /flow, states, ba, fail/);
 });
 

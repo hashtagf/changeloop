@@ -343,6 +343,24 @@ out="$(printf '%s' "$(write_event "$TMP/project/.foundation/drafts/change-start-
   CLAUDE_PROJECT_DIR="$TMP/project" FOUNDATION_GUARDRAIL_MODE=block node "$HOOK")"
 assert_eq "pre-phase semantic draft is writable" "" "$out"
 
+for name in approval.html prototype.html; do
+  preview=".foundation/previews/b2b-office-uat/$name"
+  out="$(invoke "" block "" "$(write_event "$preview")")"
+  assert_eq "pre-phase Write permits $preview" "" "$out"
+  out="$(invoke "" block "" "{\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\"$preview\"}}")"
+  assert_eq "pre-phase Edit permits $preview" "" "$out"
+done
+out="$(invoke "" block "" '{"tool_name":"MultiEdit","tool_input":{"edits":[{"file_path":".foundation/previews/b2b-office-uat/approval.html"},{"file_path":".foundation/previews/b2b-office-uat/prototype.html"}]}}')"
+assert_eq "pre-phase MultiEdit permits the two preview files" "" "$out"
+out="$(invoke "" block "" '{"tool_name":"MultiEdit","tool_input":{"edits":[{"file_path":".foundation/previews/b2b-office-uat/approval.html"},{"file_path":"src/app.js"}]}}')"
+assert_contains "pre-phase MultiEdit still checks every target" "$out" 'active phase is unavailable'
+mkdir -p "$TMP/project/.foundation/previews/linked" "$TMP/project/src"
+ln -s "$TMP/project/src/new.html" "$TMP/project/.foundation/previews/linked/prototype.html"
+out="$(invoke "" block "" "$(write_event '.foundation/previews/linked/prototype.html')")"
+assert_contains "pre-phase preview exception refuses unresolved links" "$out" 'active phase is unavailable'
+out="$(invoke "" block "" "$(bash_event 'touch .foundation/previews/b2b-office-uat/prototype.html')")"
+assert_contains "pre-phase preview exception does not grant shell writes" "$out" 'active phase is unavailable'
+
 for target in \
   "$TMP/project/.foundation/change-start-.json" \
   "$TMP/project/.foundation/change-start-Fix.json" \
@@ -373,6 +391,9 @@ for target in \
 done
 for target in \
   "$TMP/project/openspec/config.yaml" \
+  "$TMP/project/.foundation/previews/demo/index.html" \
+  "$TMP/project/.foundation/previews/Demo/approval.html" \
+  "$TMP/project/.foundation/previews/demo/nested/prototype.html" \
   "$TMP/project/.foundation/drafts/fix/sub/x.md" \
   "$TMP/project/.foundation/drafts/fix/../../src/app.js" \
   "$TMP/project/.foundation/drafts/fix/.hidden.md" \

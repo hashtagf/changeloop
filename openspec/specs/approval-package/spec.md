@@ -283,25 +283,28 @@ change start SHALL คืน EDIT ที่ระบุ path scratch เมื�
 
 ### Requirement: approval-page-authored-by-skill
 
-harness SHALL NOT สร้างหรือเขียนทับหน้าอนุมัติ HTML ในทุกคำสั่ง และคำถามอนุมัติ SHALL ระบุ path ของหน้าที่ skill prototype เขียนไว้เมื่อไฟล์นั้นมีอยู่ มิฉะนั้น SHALL แสดงสรุปเป็นข้อความและบอกให้ใช้ skill prototype โดยไม่กั้น
+คำถามอนุมัติ SHALL ใช้หน้าอนุมัติ `.foundation/previews/<change>/approval.html` ที่เอเจนต์หรือผู้ใช้เขียน หรือใช้สรุปข้อความเมื่อไม่มีหน้า โดยไม่ใช้ต้นแบบแทน
+
+- ไฟล์เดิมยังเปิดอ่านได้ที่ตำแหน่งเดิม ระบบไม่ย้าย ไม่คัดลอก และไม่ตีความ prototype เป็นหน้าอนุมัติโดยอัตโนมัติ
+- หน้าอนุมัติอ่านประกอบการตัดสินใจเท่านั้น ตัดสินใจในช่องทางเดิมและไม่ใช่หลักฐาน
 
 #### Scenario: มีหน้าแล้ว
 
-- **GIVEN** มีไฟล์ .foundation/previews/<change>/prototype.html และ draft ชี้ไฟล์นั้นเป็น example ชนิด prototype
+- **GIVEN** มีไฟล์ `.foundation/previews/<change>/approval.html` ไม่ว่าจะมีต้นแบบหรือไม่
 - **WHEN** advance ถามเรื่องอนุมัติ
-- **THEN** ข้อความเรียก หน้าอนุมัติ พร้อม path ของไฟล์นั้น
+- **THEN** คำถามลิงก์ `approval.html` ในชื่อหน้าอนุมัติ
 
 #### Scenario: ยังไม่มีหน้า
 
-- **GIVEN** ไม่มีไฟล์หน้าอนุมัติของ change นี้
+- **GIVEN** ไม่มี `approval.html` แม้ว่ามี `prototype.html` หรือตัวอย่างชนิด prototype
 - **WHEN** advance ถามเรื่องอนุมัติ
-- **THEN** ข้อความแสดงสรุป 4 บรรทัดเป็นข้อความและบอกว่ายังไม่มีหน้าอนุมัติให้ใช้ skill prototype และไม่หยุดการถาม
+- **THEN** ข้อความแสดงสรุป 4 บรรทัด ไม่เรียกต้นแบบว่าหน้าอนุมัติ และไม่หยุดการถาม
 
 #### Scenario: ไม่เขียนไฟล์หน้า
 
 - **GIVEN** รัน change start advance หรือ package
 - **WHEN** คำสั่งทำงานจนเสร็จ
-- **THEN** ไม่มีไฟล์ HTML ถูกสร้างหรือเขียนทับใน .foundation/packages และไฟล์เก่าที่มีอยู่ไม่ถูกแก้
+- **THEN** ไม่มีการสร้างหรือเขียนทับ HTML ใน `.foundation/previews/` หรือ `.foundation/packages/`
 
 #### Scenario: ตัวอย่างใน draft ยังถูกตรวจ
 
@@ -309,9 +312,15 @@ harness SHALL NOT สร้างหรือเขียนทับหน้�
 - **WHEN** รัน change start
 - **THEN** ได้ EDIT ที่ระบุ path ของ example นั้นตามเดิม และ harness ไม่เรนเดอร์ example ใด
 
+#### Scenario: ข้อมูลหน้าอนุมัติแยกจากต้นแบบ
+
+- **GIVEN** มีทั้งหน้าอนุมัติและตัวอย่างต้นแบบใน draft
+- **WHEN** รัน package
+- **THEN** JSON รายงานหน้าอนุมัติแยกจากต้นแบบ และการประกาศ covers ของต้นแบบยังคงใช้กับรายการต้นแบบ
+
 ### Requirement: prototype-checklist
 
-ข้อมูลของ package และผลของ change start SHALL บอกรายการสิ่งที่หน้าอนุมัติของ change นี้ต้องแสดง โดยอนุมานจาก work type และฟิลด์ใน draft เท่านั้น ครอบคลุมทุก work type ที่ catalog ประกาศ และ SHALL NOT กั้น change start Build Prove หรือ Land
+ข้อมูลของ package และผลของ change start SHALL บอกรายการสิ่งที่ต้นแบบของ change ควรแสดงจาก work type และฟิลด์ใน draft เท่านั้น ครอบคลุมทุก work type และไม่กั้น Change, Build, Prove หรือ Land
 
 #### Scenario: งาน API
 
@@ -363,9 +372,9 @@ harness SHALL NOT สร้างหรือเขียนทับหน้�
 
 #### Scenario: ไม่กั้นการเริ่ม
 
-- **GIVEN** draft ประเภท ui ยังไม่มีหน้าอนุมัติ
+- **GIVEN** draft ประเภท ui ยังไม่มีต้นแบบ แม้มีหน้าอนุมัติ
 - **WHEN** รัน change start
-- **THEN** พิมพ์ NOTE ที่ระบุรายการที่หน้าต้องแสดง โดยไม่ EDIT ไม่ถามผู้ใช้ และไม่หยุด
+- **THEN** พิมพ์ NOTE เกี่ยวกับต้นแบบโดยไม่เรียกว่าหน้าอนุมัติ ไม่ EDIT ไม่ถามผู้ใช้ และไม่หยุด
 
 ### Requirement: prototype-coverage-declared
 
@@ -425,11 +434,13 @@ harness SHALL NOT สร้างหรือเขียนทับหน้�
 
 ### Requirement: prototype-sync
 
-harness SHALL บันทึก digest ของไฟล์หน้าอนุมัติและ factsDigest ของข้อมูลที่คำนวณทุกครั้งที่ change start revise หรือ amend และข้อมูลของ package กับคำถามอนุมัติ SHALL เตือนเมื่อไฟล์ถูกแก้หลังฉบับล่าสุด หรือเมื่อหน้าไม่มี factsDigest ล่าสุด โดย SHALL NOT กั้น change start Build Prove หรือ Land
+ระบบ SHALL บันทึก digest และรายงานความสดของหน้าอนุมัติจาก `approval.html` เท่านั้น โดยคำเตือนไม่กั้น Change, Build, Prove หรือ Land
+
+- บันทึก digest ของหน้าและ factsDigest ตอน change start, revise หรือ amend; ไม่ใช้ digest ของต้นแบบเดิมตัดสินว่าหน้าอนุมัติถูกแก้
 
 #### Scenario: แก้ไฟล์แล้วเตือน
 
-- **GIVEN** บันทึก digest ของ prototype.html ที่ฉบับ 2 แล้วไฟล์ถูกแก้
+- **GIVEN** บันทึก digest ของ approval.html ที่ฉบับ 2 แล้วไฟล์ถูกแก้
 - **WHEN** รัน package
 - **THEN** ข้อมูลมี drift true ระบุว่าถูกแก้หลังฉบับ 2 ให้ตรวจให้ตรงกับ change แล้ว change revise
 
@@ -443,7 +454,7 @@ harness SHALL บันทึก digest ของไฟล์หน้าอน�
 
 - **GIVEN** หน้าอ้าง factsDigest เก่าเพราะมี receipt ใหม่หลังจากนั้น
 - **WHEN** รัน package
-- **THEN** ข้อมูลมี factsStale true และคำถามอนุมัติเตือนให้ skill อัปเดตแถบข้อเท็จจริงในหน้า
+- **THEN** ข้อมูลมี factsStale true และคำถามอนุมัติเตือนให้อัปเดตข้อเท็จจริงในหน้าอนุมัติ
 
 #### Scenario: แก้ไฟล์แต่ไม่แก้ change
 
@@ -453,15 +464,21 @@ harness SHALL บันทึก digest ของไฟล์หน้าอน�
 
 #### Scenario: ไม่มีไฟล์
 
-- **GIVEN** example ชนิด prototype ชี้ไฟล์ที่ไม่มี
+- **GIVEN** ไม่มี approval.html แม้ draft ชี้ไฟล์ต้นแบบที่มีอยู่
 - **WHEN** รัน package
-- **THEN** ข้อมูลระบุว่ายังไม่มีไฟล์ และไม่มีคำเตือนเรื่อง drift หรือ facts
+- **THEN** ข้อมูลหน้าอนุมัติระบุว่ายังไม่มีไฟล์ และไม่มีคำเตือนเรื่อง drift หรือ facts
 
 #### Scenario: คำเตือนไม่ใช่หลักฐาน
 
 - **GIVEN** มีหรือไม่มีคำเตือนเรื่อง drift หรือ facts
 - **WHEN** รัน prove หรือ land
 - **THEN** ผลของ Prove และ Land ไม่เปลี่ยนเพราะสถานะนั้น
+
+#### Scenario: แก้เฉพาะต้นแบบ
+
+- **GIVEN** มี snapshot ของหน้าอนุมัติและข้อเท็จจริงไม่ได้เปลี่ยน
+- **WHEN** แก้เฉพาะ prototype แล้วรัน package
+- **THEN** หน้าอนุมัติไม่ถูกแจ้งว่าแก้หลังบันทึก
 
 ### Requirement: plain-approval-wording
 
@@ -478,3 +495,21 @@ harness SHALL บันทึก digest ของไฟล์หน้าอน�
 - **GIVEN** ผู้ใช้หรือ script เรียก package ของ change หนึ่ง
 - **WHEN** รัน claude-foundation package <change>
 - **THEN** คำสั่งไม่ error และพิมพ์ข้อมูลตาม approval-data
+
+### Requirement: prephase-approval-preview
+
+ในโหมด block ที่ยังไม่มี phase ระบบ SHALL อนุญาต Write, Edit หรือ MultiEdit เฉพาะพาธมาตรฐานของหน้าอนุมัติ `approval.html` และต้นแบบ `prototype.html` ใน `.foundation/previews/<change-id>/` สำหรับข้อยกเว้นใหม่นี้
+
+- ตรวจพาธจริง; ไม่เพิ่มสิทธิ์ให้ shell หรือไฟล์อื่น และไม่เปลี่ยนกติกาเมื่อมี phase
+
+#### Scenario: เขียนหน้าอนุมัติและต้นแบบ
+
+- **GIVEN** โหมด block และยังไม่มี phase
+- **WHEN** ใช้ Write กับ prototype.html ของ b2b-office-uat หรือ approval.html ในโฟลเดอร์เดียวกัน
+- **THEN** guard อนุญาตแต่ละไฟล์โดยไม่ต้องเริ่ม Change
+
+#### Scenario: ปฏิเสธพาธนอกขอบเขต
+
+- **GIVEN** โหมด block และยังไม่มี phase
+- **WHEN** ขอเขียนไฟล์พรีวิวอื่นหรือไฟล์ที่ resolve แล้วเป็นซอร์สผลิตภัณฑ์
+- **THEN** guard ไม่ให้ข้อยกเว้นและยังปฏิเสธ

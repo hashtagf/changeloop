@@ -1,0 +1,229 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "prephase-approval-preview-write-prototype-html-b2b-office-uat-ap",
+      "requirementKey": "prephase-approval-preview",
+      "scenario": "เขียนหน้าอนุมัติและต้นแบบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prephase-approval-preview-resolve",
+      "requirementKey": "prephase-approval-preview",
+      "scenario": "ปฏิเสธพาธนอกขอบเขต",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-page-authored-by-skill-advance",
+      "requirementKey": "approval-page-authored-by-skill",
+      "scenario": "มีหน้าแล้ว",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-page-authored-by-skill-advance-2",
+      "requirementKey": "approval-page-authored-by-skill",
+      "scenario": "ยังไม่มีหน้า",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-page-authored-by-skill-3",
+      "requirementKey": "approval-page-authored-by-skill",
+      "scenario": "ไม่เขียนไฟล์หน้า",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-page-authored-by-skill-change-start",
+      "requirementKey": "approval-page-authored-by-skill",
+      "scenario": "ตัวอย่างใน draft ยังถูกตรวจ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-page-authored-by-skill-package",
+      "requirementKey": "approval-page-authored-by-skill",
+      "scenario": "ข้อมูลหน้าอนุมัติแยกจากต้นแบบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-sync-package",
+      "requirementKey": "prototype-sync",
+      "scenario": "แก้ไฟล์แล้วเตือน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-sync-agent-draft-change-revise",
+      "requirementKey": "prototype-sync",
+      "scenario": "revise แล้วหายเตือน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-sync-package-2",
+      "requirementKey": "prototype-sync",
+      "scenario": "ข้อมูลของ harness ในหน้าล้าสมัย",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-sync-advance-prove",
+      "requirementKey": "prototype-sync",
+      "scenario": "แก้ไฟล์แต่ไม่แก้ change",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-sync-package-3",
+      "requirementKey": "prototype-sync",
+      "scenario": "ไม่มีไฟล์",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-sync-prove-land",
+      "requirementKey": "prototype-sync",
+      "scenario": "คำเตือนไม่ใช่หลักฐาน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-sync-prototype-package",
+      "requirementKey": "prototype-sync",
+      "scenario": "แก้เฉพาะต้นแบบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-checklist-package",
+      "requirementKey": "prototype-checklist",
+      "scenario": "งาน API",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-checklist-package-2",
+      "requirementKey": "prototype-checklist",
+      "scenario": "งานข้อมูล",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-checklist-package-3",
+      "requirementKey": "prototype-checklist",
+      "scenario": "งานหน้าจอ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-checklist-4",
+      "requirementKey": "prototype-checklist",
+      "scenario": "ครบทุก work type",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-checklist-package-4",
+      "requirementKey": "prototype-checklist",
+      "scenario": "หลายชนิดรวมกัน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-checklist-package-5",
+      "requirementKey": "prototype-checklist",
+      "scenario": "ฟิลด์ไม่ระบุ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-checklist-package-6",
+      "requirementKey": "prototype-checklist",
+      "scenario": "งานที่ไม่ต้องมีภาพมาก",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-checklist-harness",
+      "requirementKey": "prototype-checklist",
+      "scenario": "ชนิดใหม่ที่ยังไม่มีรายการ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prototype-checklist-change-start",
+      "requirementKey": "prototype-checklist",
+      "scenario": "ไม่กั้นการเริ่ม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(bash .claude/tests/hooks/run-phase-mutation-guard-tests.sh) && (node --test .claude/harness/tests/approval-package.test.mjs .claude/harness/tests/prototype-checklist.test.mjs)"
+      ],
+      "segments": [
+        "bash .claude/tests/hooks/run-phase-mutation-guard-tests.sh",
+        "node --test .claude/harness/tests/approval-package.test.mjs .claude/harness/tests/prototype-checklist.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

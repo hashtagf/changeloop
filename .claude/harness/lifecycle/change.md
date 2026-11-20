@@ -410,15 +410,23 @@ primitive-created/in-flight changes retain their compatibility route.
 ## Approval page, approval data, and role lanes
 
 The approval question names the **approval page**,
-`.foundation/previews/<change>/prototype.html`, which the agent (when asked) or
-the user writes by hand and the draft names as its `prototype` example. No
+`.foundation/previews/<change>/approval.html`, which the agent (when asked) or
+the user writes by hand. A prototype, typically `prototype.html` in the same
+folder, demonstrates product behavior and can be named separately as a
+`prototype` example in the draft. It is never substituted for the approval
+page. Before a phase starts in block mode, structured tools may write the two
+standard preview files, without granting access to other preview files. No
 skill ships for it, and `change start`, `advance`, and `package` write no HTML
 and no `.foundation/packages/` file (an older package stays readable, not
 updated). With no page yet the question gives the four `scratch` lines as text
 and never blocks; a Thai draft calls the page `หน้าอนุมัติ`.
 
 `package <change> [--pretty]` prints the change's data as JSON and writes no
-file. The scratch router derives from `workType`, `riskSignals`, `impact`,
+file. Protocol `2` moves approval-page freshness from `prototype.sync` to
+`approvalPage.sync` with no alias. `prototype.page` still describes the draft's
+prototype; use `approvalPage.page` for the approval page.
+
+The scratch router derives from `workType`, `riskSignals`, `impact`,
 `coupling`, `integrations`, and `securityTriggers`: a risk level (Critical when
 `impact` is high with `financial` or `access-control`; High when `impact` is
 high or a weight-3 signal is declared; Medium for any other signal or medium
@@ -432,8 +440,8 @@ scenarios with recovery only when stated, required-section status, approval
 and missing `approval.roles` lanes, and suggested previews; unreadable evidence
 becomes a `warnings` entry.
 
-**What the page must show.** `prototype.checklist` lists the surfaces the change
-owes, inferred only from its work types and typed draft fields, each with its
+**What the prototype should show.** `prototype.checklist` lists the surfaces the prototype
+should show, inferred only from its work types and typed draft fields, each with its
 source field and whether the draft specifies it. Each of the 26 catalog work
 types owes at least one surface plus before and after, and types that can fail
 owe failure cases with recovery; a test fails when a work type is added without
@@ -446,13 +454,12 @@ never read it, and `change start` only prints an advisory `NOTE: prototype`.
 **Keeping the page honest.** Risk level, proof count, and role lanes come only
 from the harness's computation, never from the page. At `change start`,
 `revise`, and `amend` the harness records the page digest and a `factsDigest`;
-`package` and the approval question warn, never block, on `drift` (edited after
+`package` and the approval question report approval page freshness under `approvalPage.sync` and warn, never block, on `drift` (edited after
 the recorded revision), `factsStale` (current `factsDigest` absent), or
 `factsChanged`. The page is one file with no network request and no decision
 controls (the chat reply is the decision), in the draft's language, keyboard
 usable without relying on colour alone, labelled as not proof: a header, the
-harness facts copied verbatim with the `factsDigest`, the prototype as the main
-view, the checklist, before and after, the path, failures with recovery, undo
+harness facts copied verbatim with the `factsDigest`, links to the separate prototype if available, before and after, the path, failures with recovery, undo
 and who, and reviewer details closed by default. A host design canvas may hold
 one numbered frame per screen or state, but the file is always exported. When
 the page is edited the agent revises or amends the change in the same turn.
