@@ -25,7 +25,7 @@ export function factsDigest(facts) {
 
 export function pageFile({ previewsDir, id, draft }) {
   const example = prototypeExample(draft);
-  if (!example) return { status: "none", path: null };
+  if (!example) return { status: "none", path: null, digest: null, text: "" };
   return previewFile(previewsDir, id, String(example.path || "").trim(), false);
 }
 
@@ -44,7 +44,6 @@ function previewFile(previewsDir, id, path, approval) {
     if (real !== realBase && !real.startsWith(realBase + sep)) return missing;
     if (approval && (realBase !== join(realpathSync(previewsDir), id) || real !== join(realBase, path))) return missing;
     if (!statSync(real).isFile()) return missing;
-    if (!approval) return { status: "ok", path };
     const buffer = readFileSync(real);
     return { status: "ok", path, digest: sha256(buffer), text: buffer.toString("utf8") };
   } catch { return missing; }
@@ -52,7 +51,14 @@ function previewFile(previewsDir, id, path, approval) {
 
 // What `change start`, `revise`, and `amend` store in the change's runtime state.
 export function snapshotFor({ previewsDir, id, facts, revision, now = () => new Date().toISOString() }) {
-  const page = approvalPageFile({ previewsDir, id });
+  return pageSnapshot(approvalPageFile({ previewsDir, id }), facts, revision, now);
+}
+
+export function prototypeSnapshot(page, facts, revision, now = () => new Date().toISOString()) {
+  return pageSnapshot(page, facts, revision, now);
+}
+
+function pageSnapshot(page, facts, revision, now) {
   return {
     revision: Number(revision || 0),
     path: page.path,
@@ -68,7 +74,10 @@ export function snapshotFor({ previewsDir, id, facts, revision, now = () => new 
 //   factsChanged   the facts themselves changed since the snapshot (new receipt, lane, ...)
 // A page that is absent, or never recorded, raises none of them.
 export function syncStatus(recorded, { previewsDir, id, facts }) {
-  const page = approvalPageFile({ previewsDir, id });
+  return prototypeSyncStatus(recorded, approvalPageFile({ previewsDir, id }), facts);
+}
+
+export function prototypeSyncStatus(recorded, page, facts) {
   const current = facts === undefined ? null : factsDigest(facts);
   const base = {
     advisory: true,

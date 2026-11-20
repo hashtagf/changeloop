@@ -422,9 +422,9 @@ updated). With no page yet the question gives the four `scratch` lines as text
 and never blocks; a Thai draft calls the page `หน้าอนุมัติ`.
 
 `package <change> [--pretty]` prints the change's data as JSON and writes no
-file. Protocol `2` moves approval-page freshness from `prototype.sync` to
-`approvalPage.sync` with no alias. `prototype.page` still describes the draft's
-prototype; use `approvalPage.page` for the approval page.
+file. `approvalPage.page` and `approvalPage.sync` describe `approval.html`.
+`prototype.page` and the legacy `prototype.sync` still describe the draft's
+prototype. Prototype freshness is advisory and does not drive approval warnings.
 
 The scratch router derives from `workType`, `riskSignals`, `impact`,
 `coupling`, `integrations`, and `securityTriggers`: a risk level (Critical when

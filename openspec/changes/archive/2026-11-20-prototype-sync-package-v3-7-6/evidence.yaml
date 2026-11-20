@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "legacy-prototype-sync-package",
+      "requirementKey": "legacy-prototype-sync",
+      "scenario": "เครื่องมือเดิมอ่านสถานะต้นแบบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "legacy-prototype-sync-package-2",
+      "requirementKey": "legacy-prototype-sync",
+      "scenario": "ไม่มีต้นแบบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "legacy-prototype-sync-package-3",
+      "requirementKey": "legacy-prototype-sync",
+      "scenario": "ต้นแบบเปลี่ยนหลังบันทึก",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/approval-package.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}
