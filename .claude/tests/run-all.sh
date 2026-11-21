@@ -271,6 +271,7 @@ runtime environment policy|node --test "$HERE/harness/run-runtime-environment-po
 release preflight|node --test "$HERE/harness/release-preflight.test.mjs"
 release rehearsal evidence|node --test "$HERE/harness/rehearsal-evidence.test.mjs"
 release main integration|node --test "$HERE/harness/release-integration.test.mjs"
+release bottle block|node --test "$HERE/harness/replace-bottle-block.test.mjs"
 release upgrade matrix contract|node --test "$HERE/harness/upgrade-matrix.test.mjs"
 local release rehearsal contract|node --test "$HERE/harness/local-release-rehearsal.test.mjs"
 rollout report contract|node --test "$HERE/bench/tests/rollout-report.test.mjs"

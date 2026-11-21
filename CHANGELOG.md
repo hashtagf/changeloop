@@ -15,6 +15,11 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
   The release job reruns the pull-request CI suites and the upgrade matrix on that
   pinned commit, tags it, and merges the release back without dropping later work.
 
+### Fixed
+
+- Releasing after a bottled release no longer fails `brew style`: replacing the
+  formula's bottle block left an extra blank line.
+
 ## [3.7.6] - 2026-11-20
 
 Release qualification for v3.7.6: the owner approved skipping a fresh paid
