@@ -34,6 +34,7 @@ export function rehearsalEvidence({ root = ROOT, candidateVersion, sourceHead })
       deterministicAndSemantic: "pass",
       automatedMutation: "pass",
       rewrittenCandidate: "pass",
+      upgradeMatrix: "pass",
       bottleRehearsal: "pass"
     }
   };

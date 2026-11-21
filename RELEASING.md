@@ -76,12 +76,10 @@ After the required scenario checkpoint, `.github/workflows/release.yml` does the
 1. **Write the changelog.** Add the release's entries under `## [Unreleased]` in `CHANGELOG.md` and push to `main`. (This is the only hand-written part; everything below is automated.)
 2. **Trigger the release.** Actions tab → **Release** → *Run workflow* → enter the new version (e.g. `2.5.11`). Or: `gh workflow run release.yml -f version=2.5.11`.
 
-The workflow then: renames `## [Unreleased]` → `## [X.Y.Z]` (dated) + adds a fresh `## [Unreleased]` + fixes the link refs · bumps `VERSION` + the `WORKFLOW.md` mirror · validates and builds the rewritten English/Thai documentation · commits `chore(release): vX.Y.Z` + tags + pushes · computes the tarball `sha256` and bumps the formula `url`/`sha256` · publishes the GitHub release from the new changelog section · builds + uploads the bottle and arms the formula's `bottle do` block · commits `chore(brew): formula for vX.Y.Z`. **Result: 2 bot commits + a tag + a published, bottled release.**
+The workflow pins the dispatched `main` commit, runs the pull-request CI suites and release gates on it, rewrites the version and changelog, verifies upgrades to that version, and checks that the release can merge into the latest `main` before it tags anything. It then tags the release commit, publishes GitHub and Homebrew artifacts from that tag, and merges the release and formula commits into `main`. Later `main` commits are preserved but are not part of the release. A conflict found before tagging stops the release; if `main` changes after publication, the workflow retries the merge and, if needed, reports the exact commit to merge.
 
-It refuses to run if the selected ref is not the current `main` revision, the
-version is malformed, the tag already exists, or `## [Unreleased]` is empty
-(nothing to release). If `main` moves before validation, dispatch a new run;
-if it moves later, the release push still fails closed.
+It refuses to run if the dispatched commit is no longer on `main`, the
+version is malformed, the tag already exists, or `## [Unreleased]` is empty.
 
 > **Rehearse when the release machinery changed.** Run with **`dry_run: true`**
 > (`gh workflow run release.yml -f version=2.5.11 -f dry_run=true`) to do the
@@ -108,7 +106,7 @@ run first, before dependency installation.
 
 > **Coverage.** The bottle is built on one pinned arm64 macOS runner (`macos-15` → `arm64_sequoia`, which also pours on `arm64_tahoe`/macOS 26 via forward-compat). Intel macOS, Linux, and macOS older than Sequoia fall back to build-from-source. To widen coverage, build on a CI matrix and add one `sha256 … <tag>:` line per platform. `bottle.yml` remains the manual tool for retro-fixing/rebuilding the bottle for an already-tagged release.
 
-Before the workflow rehearsal, run `npm run release:upgrade-matrix`. The
+The release workflow runs the upgrade matrix on the version-rewritten candidate. You can still run `npm run release:upgrade-matrix` locally before rehearsal. The
 versioned policy in `scripts/release/supported-upgrades.json` selects every tag
 from v3.2.19 through the current `VERSION` and tests all four host adapters with
 a bounded concurrent worker pool. The default is up to eight workers; use

@@ -87,10 +87,17 @@ on:
       - '.workflow/_templates/**'
       - '.github/workflows/workflow-tests.yml'
   workflow_dispatch: {}
+  workflow_call:
+    inputs:
+      release_candidate:
+        description: "Run the CI suites for a pinned release candidate"
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
-  group: workflow-tests-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: workflow-tests-${{ github.event_name }}-${{ github.ref }}-${{ inputs.release_candidate && github.sha || 'branch' }}
+  cancel-in-progress: ${{ !inputs.release_candidate }}
 
 jobs:
   minimum-runtime:

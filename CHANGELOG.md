@@ -9,6 +9,12 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Changed
+
+- Releases publish the dispatched `main` commit even after later commits land.
+  The release job reruns the pull-request CI suites and the upgrade matrix on that
+  pinned commit, tags it, and merges the release back without dropping later work.
+
 ## [3.7.6] - 2026-11-20
 
 Release qualification for v3.7.6: the owner approved skipping a fresh paid
