@@ -83,11 +83,14 @@ export function structuralReleaseChecks({ version, protocol, foundationSource,
     "release workflow exposes a non-publishing rehearsal");
   add("workflow-main-bound", workflow.includes('"$GITHUB_REF" = "refs/heads/main"') &&
     workflow.includes("git ls-remote --heads origin refs/heads/main") &&
-    workflow.includes('"$REMOTE_MAIN" = "$GITHUB_SHA"'),
-  "release workflow rejects non-main and stale dispatch revisions");
+    workflow.includes('git merge-base --is-ancestor "$GITHUB_SHA" "$REMOTE_MAIN"') &&
+    workflow.includes("integrate-release.mjs") && !workflow.includes("git push origin HEAD:main\n          git push origin"),
+  "release workflow publishes a pinned main candidate and preserves later main commits");
+  add("workflow-release-ci", workflow.includes("uses: ./.github/workflows/workflow-tests.yml") &&
+    workflow.includes("needs: ci"), "release runs the pull-request CI suites on the pinned candidate");
   add("workflow-rehearsal-reuse", workflow.includes("rehearsal_run_id") &&
     workflow.includes("rehearsal-evidence.mjs verify") && workflow.includes("actions: read") &&
-    workflow.includes('.head_branch == "main"'),
+    workflow.includes('.head_branch == "main"') && workflow.includes("upgrade-matrix.mjs"),
   "release workflow verifies source-bound rehearsal evidence before reuse");
   add("workflow-release-gate", workflow.includes("sh .claude/tests/run-all.sh --release"),
     "release workflow runs the deterministic gate with the release-only sentinel");

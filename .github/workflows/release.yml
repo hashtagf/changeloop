@@ -7,12 +7,12 @@ name: Release
 #   1. rename [Unreleased] -> [X.Y.Z] (dated), add a fresh [Unreleased], fix link refs
 #   2. bump VERSION + every executable, protocol, installed guidance, and
 #      documentation surface that states the release
-#   3. commit `chore(release): vX.Y.Z`, tag vX.Y.Z, push
+#   3. commit `chore(release): vX.Y.Z` on the pinned candidate, tag it, push the tag
 #   4. compute the source-tarball sha256, bump the formula url + sha256
 #   5. publish the GitHub release from the new changelog section
 #   6. build the Homebrew bottle, upload it, arm the formula's bottle block
-#   7. commit `chore(brew): formula for vX.Y.Z`, push
-# Result: 2 bot commits + a tag + a published, bottled release from one click.
+#   7. commit the formula, then merge the release into the latest main
+# Later main commits are preserved and are not released.
 #
 # `dry_run: true` does steps 1-2, 6 (build the bottle to prove it works) WITHOUT
 # any push/tag/publish/upload — use it to rehearse a release safely. A successful
@@ -46,7 +46,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  ci:
+    # The same CI suites a pull request runs, on the exact pinned candidate.
+    uses: ./.github/workflows/workflow-tests.yml
+    with:
+      release_candidate: true
+
   release:
+    needs: ci
     # Pinned (not macos-latest, which flip-flops during OS migrations) so the
     # bottle tag is deterministic. An older-macOS bottle pours on newer macOS
     # (forward-compatible), so arm64_sequoia also covers arm64_tahoe/macOS 26.
@@ -62,8 +69,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # Bind every check and reusable rehearsal to the dispatch SHA. A later
-          # main update then makes the eventual release push fail closed.
+          # Bind every check and reusable rehearsal to the dispatch SHA. Later
+          # main commits are integrated after publication, never released.
           ref: ${{ github.sha }}
           fetch-depth: 0
 
@@ -85,8 +92,9 @@ jobs:
           [ "$(git rev-parse HEAD)" = "$GITHUB_SHA" ] || {
             echo "::error::checkout is not bound to the dispatch SHA"; exit 1; }
           REMOTE_MAIN=$(git ls-remote --heads origin refs/heads/main | awk 'NR == 1 { print $1 }')
-          [ -n "$REMOTE_MAIN" ] && [ "$REMOTE_MAIN" = "$GITHUB_SHA" ] || {
-            echo "::error::dispatch SHA is not the current origin/main; start a new release run"; exit 1; }
+          git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+          [ -n "$REMOTE_MAIN" ] && git merge-base --is-ancestor "$GITHUB_SHA" "$REMOTE_MAIN" || {
+            echo "::error::release candidate $GITHUB_SHA is not on current origin/main"; exit 1; }
           PREV=$(tr -d '[:space:]' < VERSION)
           echo "PREV=$PREV" >> "$GITHUB_ENV"
           [ "$PREV" != "$NEW" ] || { echo "::error::VERSION is already $NEW"; exit 1; }
@@ -223,6 +231,12 @@ jobs:
           awk -v new="$NEW" '$0 ~ ("^## \\[" new "\\]") {f=1; next} /^## \[/{f=0} f' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
           echo "----- release notes -----"; cat "$RUNNER_TEMP/notes.md"
 
+      - name: Verify upgrades to the release candidate
+        if: env.REHEARSAL_RUN_ID == ''
+        run: |
+          set -euo pipefail
+          node scripts/release/upgrade-matrix.mjs --jobs 4 --output "$RUNNER_TEMP/upgrade-matrix.json"
+
       - name: Validate rewritten release
         run: |
           set -euo pipefail
@@ -249,8 +263,13 @@ jobs:
             website/docs/src/content/docs/th/cli.md
           git commit -m "chore(release): v$NEW"
           git tag -a "v$NEW" -m "Release v$NEW"
-          git push origin HEAD:main
-          git push origin "v$NEW"
+          RELEASE_HEAD=$(git rev-parse HEAD)
+          echo "RELEASE_HEAD=$RELEASE_HEAD" >> "$GITHUB_ENV"
+          git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+          node scripts/release/integrate-release.mjs --release "$RELEASE_HEAD" \
+            --main origin/main --message "Merge release v$NEW into main"
+          git switch --detach "$RELEASE_HEAD"
+          git push origin "refs/tags/v$NEW"
 
       - name: Compute tarball sha256 + bump formula url/sha
         if: env.DRY != 'true'
@@ -328,7 +347,16 @@ jobs:
           gh release upload "v$NEW" cloop-*.bottle.tar.gz --clobber
           git add Formula/cloop.rb
           git commit -m "chore(brew): formula for v$NEW (url/sha + bottle)"
-          git push origin HEAD:main
+          RELEASE_TIP=$(git rev-parse HEAD)
+          for attempt in 1 2 3; do
+            git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+            node scripts/release/integrate-release.mjs --release "$RELEASE_TIP" \
+              --main origin/main --message "Merge release v$NEW into main"
+            if git push origin HEAD:main; then exit 0; fi
+            git switch --detach "$RELEASE_TIP"
+          done
+          echo "::error::published v$NEW but main kept moving; merge $RELEASE_TIP into main"
+          exit 1
 
       - name: Record reusable rehearsal evidence
         if: env.DRY == 'true'
@@ -351,8 +379,7 @@ jobs:
   # change and the site keeps serving the previous release's numbers. Calling
   # the deploy directly is what closes that gap; a PAT would work too but adds
   # a secret to own, and duplicating the build here would drift from pages.yml.
-  # `ref: main` matters: the call would otherwise deploy this run's triggering
-  # SHA, which predates the version bump.
+  # Deploy the release tag, not main, so later unreleased docs stay unpublished.
   deploy-site:
     needs: release
     if: github.event.inputs.dry_run != 'true'
@@ -362,4 +389,4 @@ jobs:
       id-token: write
     uses: ./.github/workflows/pages.yml
     with:
-      ref: main
+      ref: v${{ github.event.inputs.version }}

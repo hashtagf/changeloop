@@ -54,7 +54,11 @@ test("structural release checks require canonical changelog and matching artifac
     workflow: `dry_run DRY rehearsal_run_id actions: read
 "$GITHUB_REF" = "refs/heads/main"
 git ls-remote --heads origin refs/heads/main
-"$REMOTE_MAIN" = "$GITHUB_SHA"
+git merge-base --is-ancestor "$GITHUB_SHA" "$REMOTE_MAIN"
+integrate-release.mjs
+uses: ./.github/workflows/workflow-tests.yml
+needs: ci
+upgrade-matrix.mjs
 .head_branch == "main"
 rehearsal-evidence.mjs verify
 sh .claude/tests/run-all.sh --release
@@ -111,13 +115,19 @@ test("release workflow builds the rewritten public documentation before publicat
   assert.match(workflow, /npm ci --prefix website\/docs/);
 });
 
-test("release workflow binds publishing and reusable rehearsal evidence to current main", () => {
+test("release workflow binds publishing and reusable rehearsal evidence to a pinned main candidate", () => {
   const workflow = readFileSync(new URL("../../../.github/workflows/release.yml", import.meta.url),
     "utf8");
   assert.match(workflow, /ref: \$\{\{ github\.sha \}\}/);
   assert.match(workflow, /\[ "\$GITHUB_REF" = "refs\/heads\/main" \]/);
   assert.match(workflow, /git ls-remote --heads origin refs\/heads\/main/);
-  assert.match(workflow, /\[ "\$REMOTE_MAIN" = "\$GITHUB_SHA" \]/);
+  assert.match(workflow, /git merge-base --is-ancestor "\$GITHUB_SHA" "\$REMOTE_MAIN"/);
+  assert.match(workflow, /uses: \.\/\.github\/workflows\/workflow-tests\.yml/);
+  assert.match(workflow, /needs: ci/);
+  assert.match(workflow, /upgrade-matrix\.mjs --jobs 4/);
+  assert.match(workflow, /integrate-release\.mjs --release/);
+  assert.match(workflow, /git push origin "refs\/tags\/v\$NEW"/);
+  assert.match(workflow, /ref: v\$\{\{ github\.event\.inputs\.version \}\}/);
   assert.match(workflow, /actions: read/);
   assert.match(workflow, /rehearsal_run_id:/);
   assert.match(workflow, /\.conclusion == "success"/);
