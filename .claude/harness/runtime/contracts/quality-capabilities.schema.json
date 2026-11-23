@@ -37,6 +37,17 @@
     "providers": { "type": "object" },
     "requiredControls": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
     "recommendedSemanticFaults": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "proposals": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "enum": ["proposed", "not-applicable", "unavailable"] },
+          "reason": { "type": "string" }
+        }
+      }
+    },
     "inventory": {
       "type": "object",
       "required": ["files", "truncated", "markers", "extensions"],

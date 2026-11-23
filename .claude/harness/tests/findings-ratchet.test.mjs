@@ -3,14 +3,14 @@
 // adoption starts with a baseline.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import test from "node:test";
 
 import {
   evaluateFindingsRatchet, fileSizeFindings, moduleBoundaryFindings, normalizeFindingsReport,
-  parseEslintJson, parseTscText
+  parseEslintJson, parseGoVetText, parseGolangciJson, parseMypyText, parseRuffJson, parseTscText
 } from "../runtime/quality/findings-ratchet.mjs";
 import { createQualityRuntime } from "../runtime/quality/quality-runtime.mjs";
 import { detectedProviders } from "../runtime/quality/quality-discovery.mjs";
@@ -114,6 +114,75 @@ test("discovery offers type-check, lint, and file-size without project scripts",
     assert.equal(providers[adapter].adapter, adapter);
     assert.equal(detectedProviders(root, ["web-style"])[adapter], undefined);
   }
+});
+
+test("Ruff, mypy, golangci-lint, and go vet output become findings keyed by path and rule", () => {
+  const ruff = JSON.stringify([{ filename: "/repo/app/a.py", code: "F401", location: { row: 2 }, message: "unused" },
+    { filename: "app/b.py", code: null, location: { row: 1 }, message: "syntax" }]);
+  assert.deepEqual(parseRuffJson(ruff, "/repo").map(({ path, rule, line }) => [path, rule, line]),
+    [["app/a.py", "ruff/F401", 2], ["app/b.py", "ruff/syntax-error", 1]]);
+  assert.deepEqual(parseMypyText("app/a.py:4: error: Incompatible types  [assignment]\napp/b.py:9:3: error: Bad\nSuccess\n")
+    .map(({ path, rule, line }) => [path, rule, line]),
+  [["app/a.py", "types/mypy-assignment", 4], ["app/b.py", "types/mypy-error", 9]]);
+  const golangci = `level=warn msg="x"\n${JSON.stringify({ Issues: [
+    { FromLinter: "errcheck", Text: "unchecked", Pos: { Filename: "pkg/a.go", Line: 7 } }] })}\n`;
+  assert.deepEqual(parseGolangciJson(golangci).map(({ path, rule, line }) => [path, rule, line]),
+    [["pkg/a.go", "golangci/errcheck", 7]]);
+  assert.deepEqual(parseGolangciJson(""), []);
+  assert.deepEqual(parseGoVetText("# example/pkg\npkg/a.go:3:2: undefined: foo\nvet: pkg/b.go:5:1: bad\n")
+    .map(({ path, rule, line }) => [path, rule, line]),
+  [["pkg/a.go", "types/go-vet", 3], ["pkg/b.go", "types/go-vet", 5]]);
+});
+
+test("Go and Python lanes are proposed only from what the project declares", (t) => {
+  const go = detectedProviders(project(t, { "go.mod": "module x\n", ".golangci.yml": "version: \"2\"\n" }), ["application-go"]);
+  assert.equal(go.lint.adapter, "golangci-json");
+  assert.ok(go.lint.command.includes("--output.json.path"), "a v2 config gets the v2 flag");
+  assert.equal(go["type-check"].adapter, "go-vet-text");
+  const goV1 = detectedProviders(project(t, { "go.mod": "module x\n", ".golangci.yml": "linters: {}\n" }), ["application-go"]);
+  assert.ok(goV1.lint.command.includes("--out-format"));
+  assert.equal(detectedProviders(project(t, { "go.mod": "module x\n" }), ["application-go"]).lint, undefined);
+
+  const bare = detectedProviders(project(t, { "tools/script.py": "print(1)\n" }), ["application-python"]);
+  assert.equal(bare.test, undefined, "a stray script is not a pytest suite");
+  assert.equal(bare.lint, undefined);
+  assert.equal(bare["type-check"], undefined);
+  const python = detectedProviders(project(t, {
+    "pyproject.toml": "[tool.ruff]\nline-length = 100\n[tool.mypy]\nstrict = true\n",
+    "requirements-dev.txt": "pytest==8.0\n" }), ["application-python"]);
+  assert.deepEqual(python.test.command.slice(-2), ["-m", "pytest"]);
+  assert.ok(python.test.command.includes("pycache_prefix=.foundation/quality/pycache"),
+    "bytecode goes under the ignored .foundation, so a test run leaves git status unchanged");
+  assert.equal(python.lint.adapter, "ruff-json");
+  assert.equal(python["type-check"].adapter, "mypy-text");
+  const declared = detectedProviders(project(t, { "requirements.txt": "ruff>=0.4\nmypy\n", "conftest.py": "" }), ["application-python"]);
+  assert.deepEqual([declared.test?.kind, declared.lint?.adapter, declared["type-check"]?.adapter],
+    ["command", "ruff-json", "mypy-text"]);
+  assert.equal(detectedProviders(project(t, { "requirements.txt": "ruffian\n" }), ["application-python"]).lint, undefined);
+});
+
+test("Python lanes use python3 where only python3 is installed", (t) => {
+  const bin = project(t, { python3: "" });
+  const both = project(t, { python: "", python3: "" });
+  const root = project(t, { "pytest.ini": "[pytest]\n" });
+  const saved = process.env.PATH;
+  t.after(() => { process.env.PATH = saved; });
+  process.env.PATH = bin;
+  assert.equal(detectedProviders(root, ["application-python"]).test.command[0], "python3");
+  process.env.PATH = both;
+  assert.equal(detectedProviders(root, ["application-python"]).test.command[0], "python");
+});
+
+test("a tool reporting the resolved path still maps to a repository path", (t) => {
+  const created = project(t, { "app/a.py": "" });
+  const link = `${created}-link`;
+  symlinkSync(created, link);
+  const real = realpathSync(created);
+  t.after(() => rmSync(link, { force: true }));
+  const ruff = JSON.stringify([{ filename: join(real, "app/a.py"), code: "F401", location: { row: 1 }, message: "x" }]);
+  assert.equal(parseRuffJson(ruff, link)[0].path, "app/a.py");
+  const eslint = JSON.stringify([{ filePath: join(real, "app/a.js"), messages: [{ ruleId: "r", line: 1, message: "m" }] }]);
+  assert.equal(parseEslintJson(eslint, link)[0].path, "app/a.js");
 });
 
 const BLOCK = ["function total(order) {", "  const items = order.items.filter(Boolean);",

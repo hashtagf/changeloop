@@ -83,7 +83,9 @@ tracked file, or a new file over `policy.findings.fileSizeCeiling` (default
 `reduced` assurance and names `cloop quality baseline --write`; a changed
 tool or configuration digest is never compared against the old baseline.
 
-Built-in adapters: `eslint-json`, `tsc-text`, `generic-findings-json` (read a
+Built-in adapters: `eslint-json`, `tsc-text`, `ruff-json` (`ruff check
+--output-format json`), `mypy-text`, `golangci-json` (golangci-lint v1 or v2
+JSON), `go-vet-text` (`go vet ./... 2>&1`), `generic-findings-json` (read a
 report file, or the command's stdout when the input path is `-`),
 `file-size` (no tool), and `module-boundaries` (`modules`: name and path
 globs; `allow`: which modules each may import; relative JavaScript and
@@ -100,14 +102,30 @@ source extensions without a project tool and skip files over 512 KiB;
 set. Exit code 1 from a findings tool is accepted as
 "findings reported". Discovery adds `file-size`, `workaround-comments`,
 `duplication`, and `nesting-depth` to every application profile, `type-check` with TypeScript and
-`tsconfig.json`, and `lint` with ESLint.
+`tsconfig.json`, and `lint` with ESLint. For Go it adds `type-check` through
+`go vet` and `lint` when a `.golangci.*` config exists; for Python, `pytest`,
+`ruff`, and `mypy` only when the project declares them (a config file or
+section, or a requirements or `pyproject.toml` dependency), never from a stray
+script. Python commands use `python`, or `python3` where only that is installed,
+with `-X pycache_prefix=.foundation/quality/pycache` so bytecode does not change
+the repository status. Tool paths are mapped to repository paths through the
+repository's real path too (macOS reports `/tmp` as `/private/tmp`).
+
+For JavaScript and TypeScript, discovery also returns
+`proposals.module-boundaries`: a draft lane read from real relative imports.
+Modules are the directories under the source root (the deepest directory that
+alone holds nested source; tests and hidden directories are left out), `allow`
+lists every direction the code already has so the lane starts clean and fails
+only a new direction, and `cycles` lists each import cycle for the user to
+decide. `quality init` never writes a proposal; the `onboard` skill adds it
+after the user agrees.
 
 ## Pyramid readiness
 
 `quality readiness [--pretty]` reports the project against the poteto pyramid,
 strongest layer first: codebase (size, nesting, duplication, module
 boundaries, feature map), static (lint, types, stopgap comments), verification
-(a test lane, CRAP or coverage, mutation), prose (recurring lessons and
+(a test lane whose latest run passed, CRAP or coverage, mutation), prose (recurring lessons and
 `quality/rule-enforcement.json` rules have checks, and every imperative
 sentence in `CLAUDE.md`/`AGENTS.md` has a registry row), and review (every
 closed incident in `openspec/incidents/` names a regression file that exists;
@@ -117,7 +135,19 @@ clear. A criterion without a fact is unmeasured and is never scored; a layer's
 percent counts measured criteria only. `doctor` carries the same summary as
 the `pyramid` setup row with the next step for the weakest layer, and Change
 Loop's own repository is scored with the same criteria
-(`runtime/quality/pyramid-readiness.mjs`).
+(`runtime/quality/pyramid-readiness.mjs`). Every row carries `why`, a plain
+reason it helps the work, for the agent to explain a gap. Without
+`quality/foundation-quality.json`, `setup` names one step, running the
+`onboard` skill, for every lane row instead of one setup command per lane.
+
+Readiness measures whether the checks exist, not whether the work got
+better. `outcomes` answers that: it splits archived changes at the first
+commit of `quality/foundation-quality.json` and compares first-proof pass,
+review repairs, user decisions, lead time, known cost, and declared escaped
+defects, each with its denominator. A side with fewer than three changes is
+`insufficient`, the matched view keeps only work-type cohorts present on both
+sides, and a difference is reported as after minus before, never as an
+improvement.
 
 A project with a user interface (a UI framework dependency, or `.tsx`, `.jsx`,
 `.vue`, `.svelte`, `.astro`, or `.html` files outside tests) also gets five UI

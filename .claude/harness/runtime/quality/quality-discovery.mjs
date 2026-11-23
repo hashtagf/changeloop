@@ -1,11 +1,12 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { extname, join, relative } from "node:path";
+import { delimiter, extname, join, relative } from "node:path";
 import {
   capabilityNamesForProfiles, languagesForProfiles, profilesForInventory
 } from "./language-profiles.mjs";
 import {
   requiredControlsForProfiles, semanticFaultsForProfiles
 } from "./semantic-fault-catalog.mjs";
+import { proposeModuleBoundaries } from "./module-boundary-proposal.mjs";
 
 const EXCLUDED = new Set([
   ".git", ".claude", ".foundation", "node_modules", "vendor", "target", "dist", "build",
@@ -54,6 +55,45 @@ function commandProvider(command, extra = {}) {
   return { kind: "command", command, isolation: "read-only", ...extra };
 }
 
+function findingsProvider(adapter, command) {
+  return { kind: "builtin", adapter, isolation: "read-only", command, inputs: { report: "-" } };
+}
+
+function textAt(root, name) {
+  try { return readFileSync(join(root, name), "utf8"); } catch { return ""; }
+}
+
+// Python tools are proposed only when the project declares them: a config
+// section or file, or a dependency line. A stray script is not a test suite.
+function pythonDeclares(root, tool, { files = [], sections = [] } = {}) {
+  if (files.some((name) => existsSync(join(root, name)))) return true;
+  const configs = ["pyproject.toml", "setup.cfg", "tox.ini"].map((name) => textAt(root, name)).join("\n");
+  if (sections.some((section) => configs.includes(section))) return true;
+  const requirements = readdirSync(root).filter((name) => /^requirements.*\.(txt|in)$/.test(name))
+    .map((name) => textAt(root, name)).join("\n");
+  const pattern = new RegExp(`(^|[\\s"'\\[,])${tool}([\\s<>=~!;\\["',]|$)`, "m");
+  return pattern.test(requirements) || pattern.test(textAt(root, "pyproject.toml"));
+}
+
+// `python` where it is installed, else `python3` (macOS and many Linux images
+// ship only python3). Bytecode goes under .foundation, which the installer
+// ignores, so a test or compile run leaves the repository status unchanged.
+function pythonCommand(args, path = process.env.PATH || "") {
+  const onPath = (name) => path.split(delimiter).some((directory) => directory && existsSync(join(directory, name)));
+  const python = onPath("python") || !onPath("python3") ? "python" : "python3";
+  return [python, "-X", "pycache_prefix=.foundation/quality/pycache", ...args];
+}
+
+const GOLANGCI_CONFIGS = [".golangci.yml", ".golangci.yaml", ".golangci.toml", ".golangci.json"];
+
+// golangci-lint v2 configs declare version "2" and take a different JSON flag.
+function golangciCommand(root) {
+  const config = GOLANGCI_CONFIGS.map((name) => textAt(root, name)).find(Boolean) || "";
+  return /version\s*[:=]\s*["']?2/.test(config)
+    ? ["golangci-lint", "run", "--output.json.path", "stdout", "./..."]
+    : ["golangci-lint", "run", "--out-format", "json", "./..."];
+}
+
 export function detectedProviders(root, profiles) {
   const providers = {};
   const packageJson = jsonAt(join(root, "package.json"));
@@ -81,11 +121,21 @@ export function detectedProviders(root, profiles) {
   if (profiles.includes("application-go")) {
     providers.test ||= commandProvider(["go", "test", "./..."]);
     providers["static-analysis"] ||= commandProvider(["go", "vet", "./..."]);
+    // The compiler is Go's type checker; vet prints compile and vet errors on stderr.
+    providers["type-check"] ||= findingsProvider("go-vet-text", ["sh", "-c", "go vet ./... 2>&1"]);
+    if (GOLANGCI_CONFIGS.some((name) => existsSync(join(root, name))))
+      providers.lint ||= findingsProvider("golangci-json", golangciCommand(root));
   }
   if (profiles.includes("application-python")) {
-    providers.test ||= commandProvider(["python", "-m", "pytest"]);
+    if (pythonDeclares(root, "pytest", { files: ["pytest.ini", "conftest.py"], sections: ["[tool.pytest", "[pytest]", "[tool:pytest]"] }))
+      providers.test ||= commandProvider(pythonCommand(["-m", "pytest"]));
     const pyproject = existsSync(join(root, "pyproject.toml"));
-    if (pyproject) providers["static-analysis"] ||= commandProvider(["python", "-m", "compileall", "-q", "."]);
+    if (pyproject) providers["static-analysis"] ||= commandProvider(pythonCommand(["-m", "compileall", "-q", "."]));
+    if (pythonDeclares(root, "ruff", { files: ["ruff.toml", ".ruff.toml"], sections: ["[tool.ruff"] }))
+      providers.lint ||= findingsProvider("ruff-json", pythonCommand(["-m", "ruff", "check", ".", "--output-format", "json"]));
+    if (pythonDeclares(root, "mypy", { files: ["mypy.ini", ".mypy.ini"], sections: ["[tool.mypy", "[mypy]"] }))
+      providers["type-check"] ||= findingsProvider("mypy-text",
+        pythonCommand(["-m", "mypy", ".", "--no-error-summary", "--no-pretty"]));
   }
   if (profiles.includes("application-php")) {
     const composer = jsonAt(join(root, "composer.json"));
@@ -131,9 +181,17 @@ export function discoverRepositoryQuality(repository) {
     languages: languagesForProfiles(profiles), profiles, capabilities, providers,
     requiredControls: requiredControlsForProfiles(profiles),
     recommendedSemanticFaults: semanticFaultsForProfiles(profiles),
+    // Drafts that need the user's confirmation, never written by `quality init`.
+    ...(profiles.includes("application-js-ts")
+      ? { proposals: { "module-boundaries": proposeBoundaries(repository.path) } } : {}),
     inventory: { files: inventory.files.length, truncated: inventory.truncated,
       markers: inventory.markers, extensions: inventory.extensions }
   };
+}
+
+function proposeBoundaries(root) {
+  try { return proposeModuleBoundaries(root); }
+  catch (error) { return { status: "unavailable", reason: error.message }; }
 }
 
 export function discoverConsumerQuality(repositories) {

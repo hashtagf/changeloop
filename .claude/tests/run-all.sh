@@ -264,6 +264,7 @@ consumer quality runtime|node --test "$ROOT/.claude/harness/tests/quality-runtim
 consumer quality adapters|node --test "$ROOT/.claude/harness/tests/quality-adapters.test.mjs"
 consumer findings ratchet|node --test "$ROOT/.claude/harness/tests/findings-ratchet.test.mjs"
 pyramid readiness|node --test "$ROOT/.claude/harness/tests/pyramid-readiness.test.mjs"
+consumer onboarding path|node --test "$ROOT/.claude/harness/tests/consumer-onboarding-path.test.mjs"
 project feature map|node --test "$ROOT/.claude/harness/tests/project-feature-map.test.mjs"
 setup readiness|node --test "$ROOT/.claude/harness/tests/setup-readiness.test.mjs"
 runtime syntax|node --check "$ROOT/.claude/harness/foundation.mjs"

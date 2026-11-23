@@ -9,7 +9,37 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Added
+
+- Onboarding drafts module boundaries from the project's real imports.
+  `quality discover` returns `proposals.module-boundaries` with the modules,
+  today's import directions, and each import cycle, for the user to confirm.
+- Go and Python projects get real lint and type checks when they declare the
+  tools: golangci-lint and `go vet` for Go, Ruff and mypy for Python, each
+  through a new built-in findings adapter.
+- `outcomes` compares archived changes before and after onboarding (the first
+  commit of `quality/foundation-quality.json`): first-proof pass, review
+  repairs, user decisions, lead time, known cost, and declared escaped
+  defects, with denominators. A side with fewer than three changes reports
+  `insufficient`, and a matched view keeps only cohorts on both sides.
+
 ### Changed
+
+- Pyramid readiness explains each gap: every row says in plain words why it
+  helps, and a project without a quality configuration gets one step, running
+  the `onboard` skill, instead of a setup command for every lane.
+- Pyramid readiness counts a test lane only while its latest run passes; a
+  configured lane that never ran is unmeasured, a failing one unmet.
+- Discovery proposes `pytest` only when the project declares it, so a stray
+  Python script in a JavaScript repository no longer becomes the test lane.
+
+### Fixed
+
+- Python quality lanes no longer fail with "provider changed repository
+  state": bytecode goes under `.foundation/`, and `python3` is used where
+  `python` is not installed.
+- ESLint and Ruff findings keep repository paths when the tool reports the
+  resolved path (macOS `/tmp` is `/private/tmp`).
 
 - Releases publish the dispatched `main` commit even after later commits land.
   The release job reruns the pull-request CI suites and the upgrade matrix on that

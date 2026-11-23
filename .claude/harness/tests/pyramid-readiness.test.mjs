@@ -18,6 +18,7 @@ const ALL_LANES = ["file-size", "nesting-depth", "duplication", "module-boundari
 const ready = () => ({
   lanes: Object.fromEntries(ALL_LANES.map((lane) => [lane, "ratcheting"])),
   findings: Object.fromEntries(ALL_LANES.slice(0, 7).map((lane) => [lane, 0])),
+  statuses: { test: "pass" },
   featureMap: { features: 6, issues: 0 },
   lessons: { recurring: 2, pending: 0 },
   rules: { registered: 10, prose: 0, issues: 0, unregistered: 0 },
@@ -51,7 +52,31 @@ test("a ratchet stops growth; clearing the debt is a separate criterion", () => 
   assert.equal(row("file-size-clear").status, "unmet");
   assert.match(row("file-size-clear").detail, /4 file-size finding\(s\) remain/);
   assert.equal(value.layers[0].percent, 89);
-  assert.deepEqual(value.focus, { layer: "codebase", next: row("file-size-clear").next });
+  assert.deepEqual(value.focus, { layer: "codebase", next: row("file-size-clear").next, why: row("file-size-clear").why });
+});
+
+test("a test lane counts only while its latest run passes", () => {
+  const verdict = (statuses) => pyramidReadiness({ ...ready(), statuses }).criteria.find((row) => row.id === "tests");
+  assert.equal(verdict({ test: "pass" }).status, "met");
+  assert.equal(verdict({}).status, "unmeasured", "a configured lane that never ran is not a pass");
+  const failing = verdict({ test: "fail" });
+  assert.equal(failing.status, "unmet");
+  assert.match(failing.next, /fix the failing tests/);
+});
+
+test("every criterion says in plain words why it helps the work", () => {
+  for (const row of pyramidReadiness({}).criteria) assert.match(row.why || "", /\w+ \w+ \w+/, row.id);
+});
+
+test("a project without a quality config gets one setup step instead of a lane per gap", () => {
+  const value = pyramidReadiness({ configured: false });
+  assert.match(value.setup.next, /onboard skill/);
+  assert.ok(["file-size", "lint", "type-check", "tests", "coverage", "mutation"].every((id) => value.setup.criteria.includes(id)));
+  const text = readinessText(value);
+  assert.match(text, /not set up yet; one onboarding pass covers \d+ criteria/);
+  assert.equal(text.split(value.setup.next).length - 1, 2, "the setup step prints once, plus the focus line");
+  assert.doesNotMatch(text, /file-size has no result/, "debt rows of an unconfigured lane are not repeated");
+  assert.equal(pyramidReadiness({ configured: true }).setup, null);
 });
 
 test("missing facts are unmeasured, never a pass or a zero, and each unmet row names its next step", () => {
@@ -107,7 +132,7 @@ test("the installed command reads lanes, feature map, lessons, registry, and out
   const command = createPyramidReadinessCommand({
     root, log: (line) => logged.push(line),
     laneStates: () => ({ lanes: { "file-size": "ratcheting", test: "not-run", lint: "no-baseline" },
-      findings: { "file-size": 0, lint: 3 } }),
+      findings: { "file-size": 0, lint: 3 }, statuses: { test: "pass" } }),
     lessonsValue: () => ({ lessons: [{ status: "enforced" }, { status: "prose-only" }] }),
     outcomesValue: () => ({ changes: [{ firstProofPass: true, escapedDefects: 0 },
       { firstProofPass: false, escapedDefects: 1 }, { firstProofPass: null, escapedDefects: 0 }] })

@@ -14,16 +14,23 @@
 //
 // A criterion is met, unmet (with the next step that meets it), or unmeasured
 // (no fact yet). A layer's percent counts only measured criteria; nothing
-// unmeasured is ever scored as zero or as a pass.
+// unmeasured is ever scored as zero or as a pass. Every row also says, in
+// plain words, why it helps the work (`why`), so the agent can explain a gap
+// to the user without reading the criteria code. Setup gaps route to the
+// `onboard` skill: the agent sets the project up, the user only confirms.
 
 export const READINESS_PROTOCOL = "foundation-pyramid-readiness-v1";
 export const LAYERS = Object.freeze(["codebase", "static", "verification", "prose", "review"]);
 // Outcome targets for the review layer; three archived changes before judging.
 export const REVIEW_TARGETS = Object.freeze({ minimumChanges: 3, firstProofPassRate: 0.7, escapedDefectRate: 0.1 });
 
+const ONBOARD = "run the onboard skill (the agent sets up the checks and asks the user only to confirm baselines and drafts)";
+
 const LANE_NEXT = {
+  // Nothing is configured yet: one setup pass covers every lane.
+  unconfigured: () => `${ONBOARD}; it runs cloop quality discover and cloop quality init --write`,
   "no-lane": (capability) => `add a '${capability}' lane to quality/foundation-quality.json ` +
-    "(cloop quality discover shows the providers it found; cloop quality init --write creates a missing file)",
+    "(cloop quality discover shows the providers it found and drafts module boundaries; the onboard skill adds it with the user)",
   "not-run": (capability) => `cloop quality run --capability ${capability}`,
   "no-baseline": (capability) =>
     `cloop quality baseline --write --capability ${capability} --decision-ref <ref> --reason <why>`,
@@ -36,9 +43,9 @@ const LANE_NEXT = {
 function lane(id, layer, label, capability, alternatives = []) {
   return {
     id, layer, label,
-    evaluate: ({ lanes = {} }) => {
+    evaluate: ({ lanes = {}, configured }) => {
       const state = [capability, ...alternatives].map((name) => lanes[name]).find((value) => value === "ratcheting")
-        || lanes[capability] || "no-lane";
+        || lanes[capability] || (configured === false ? "unconfigured" : "no-lane");
       if (state === "ratcheting") return { status: "met", detail: `${capability} ratchets against its baseline` };
       return { status: "unmet", detail: `${capability}: ${state}`, next: (LANE_NEXT[state] || LANE_NEXT["no-lane"])(capability) };
     }
@@ -94,6 +101,38 @@ function rate(numerator, denominator) {
   return denominator ? numerator / denominator : null;
 }
 
+// Why each criterion helps the work, in words a user understands.
+const WHY = Object.freeze({
+  "file-size": "small files keep each change easy for the agent and the reviewer to read; this stops a file from growing without limit",
+  "file-size-clear": "oversized files are where agents most often edit the wrong part",
+  "nesting-depth": "deeply nested code hides bugs; this stops it from getting deeper",
+  "nesting-depth-clear": "flat code is easier to change safely",
+  duplication: "copied code means a fix lands in one copy and the bug stays in another; this stops new copies",
+  "duplication-clear": "every remaining copy is a fix that can be missed",
+  "module-boundaries": "an agent cannot quietly wire parts of the system together that should stay apart",
+  "module-boundaries-clear": "the architecture the team intended is the one in the code",
+  "feature-map": "the agent finds the right code for a feature instead of guessing",
+  "ui-tokens": "colors and spacing stay consistent across screens",
+  lint: "common mistakes are caught automatically before review, and new ones cannot be added",
+  "lint-clear": "no known lint problem is left in the code",
+  "type-check": "type mistakes are caught before the code runs, and new ones cannot be added",
+  "type-check-clear": "no known type error is left in the code",
+  "workaround-comments": "TODO and workaround notes cannot pile up unnoticed",
+  "workaround-comments-clear": "no unfinished workaround is left behind",
+  "ui-a11y-lint": "accessibility mistakes in the UI code are caught automatically",
+  tests: "every change is checked by the project's own tests",
+  coverage: "tested code stays tested; risky untested code cannot grow",
+  mutation: "proves the tests actually catch bugs instead of only running the code",
+  "ui-rendered": "the screen is checked as users see it, not only as code",
+  "ui-accessibility": "people using keyboards and screen readers can still use the product",
+  lessons: "a mistake that already happened twice is caught by a check, not by memory",
+  "guide-rules": "rules written for agents are enforced by checks instead of hoping they are read",
+  "ui-design-doc": "every agent follows the same design rules",
+  "incident-regressions": "a bug that reached users cannot come back unnoticed",
+  "first-proof-pass": "most changes are right the first time, so work finishes sooner",
+  "escaped-defects": "few bugs slip past the checks into later fixes"
+});
+
 /** @typedef {{ status: string, detail: string, next?: string }} Verdict */
 /** @type {ReadonlyArray<{ id: string, layer: string, label: string, evaluate: (facts: any) => Verdict }>} */
 export const CRITERIA = Object.freeze([
@@ -126,9 +165,16 @@ export const CRITERIA = Object.freeze([
     "svelte-check, @angular-eslint template rules, @html-eslint for plain HTML, or Biome) to the lint lane"),
   {
     id: "tests", layer: "verification", label: "A test lane proves behavior",
-    evaluate: (/** @type {{ lanes?: Record<string, string> }} */ { lanes = {} }) => lanes.test && lanes.test !== "no-lane"
-      ? { status: "met", detail: `test lane ${lanes.test}` }
-      : { status: "unmet", detail: "no test lane", next: LANE_NEXT["no-lane"]("test") }
+    // A configured test lane counts only while its latest run passes.
+    evaluate: (/** @type {{ lanes?: Record<string, string>, statuses?: Record<string, string>, configured?: boolean }} */
+      { lanes = {}, statuses = {}, configured }) => {
+      if (!lanes.test || lanes.test === "no-lane")
+        return { status: "unmet", detail: "no test lane", next: LANE_NEXT[configured === false ? "unconfigured" : "no-lane"]("test") };
+      if (!statuses.test) return { status: "unmeasured", detail: "the test lane has not run" };
+      return statuses.test === "pass" ? { status: "met", detail: "the test lane passed on its latest run" }
+        : { status: "unmet", detail: `the test lane's latest run is ${statuses.test}`,
+          next: "fix the failing tests (cloop quality run --capability test shows them)" };
+    }
   },
   lane("coverage", "verification", "Coverage or CRAP ratchets", "crap", ["coverage"]),
   lane("mutation", "verification", "Mutation testing ratchets", "automated-mutation"),
@@ -149,7 +195,7 @@ export const CRITERIA = Object.freeze([
     id: "guide-rules", layer: "prose", label: "Every agent-guide rule names its check or why none can exist",
     evaluate: ({ rules }) => !rules
       ? { status: "unmet", detail: "no quality/rule-enforcement.json",
-        next: "list each rule from CLAUDE.md/AGENTS.md in quality/rule-enforcement.json with the check that enforces it" }
+        next: `${ONBOARD}; it lists each rule from CLAUDE.md/AGENTS.md in quality/rule-enforcement.json with the check that enforces it` }
       : rules.issues > 0 ? { status: "unmet", detail: `${rules.issues} registry issue(s)`,
         next: "fix the rows quality/rule-enforcement.json reports (stale quote, missing check file)" }
         : rules.unregistered > 0 ? { status: "unmet",
@@ -199,7 +245,7 @@ export const CRITERIA = Object.freeze([
 ]);
 
 /**
- * @param {{ lanes?: Record<string, string>, findings?: Record<string, number>, featureMap?: { features: number, issues?: number } | null,
+ * @param {{ lanes?: Record<string, string>, statuses?: Record<string, string>, configured?: boolean, findings?: Record<string, number>, featureMap?: { features: number, issues?: number } | null,
  *   lessons?: { recurring: number, pending: number } | null,
  *   rules?: { registered: number, prose: number, issues?: number, unregistered?: number } | null,
  *   incidents?: { total: number, closed: number, missing: string[] } | null,
@@ -207,7 +253,7 @@ export const CRITERIA = Object.freeze([
  *   ui?: { present: boolean, framework?: string | null, uiFiles?: number } & Record<string, any> | null }} facts
  */
 export function pyramidReadiness(facts = {}) {
-  const criteria = CRITERIA.map(({ id, layer, label, evaluate }) => ({ id, layer, label, ...evaluate(facts) }));
+  const criteria = CRITERIA.map(({ id, layer, label, evaluate }) => ({ id, layer, label, why: WHY[id], ...evaluate(facts) }));
   const layers = LAYERS.map((layer) => {
     const rows = criteria.filter((row) => row.layer === layer && row.status !== "not-applicable");
     const met = rows.filter((row) => row.status === "met").length;
@@ -218,15 +264,28 @@ export function pyramidReadiness(facts = {}) {
   });
   // The weakest measured layer, top of the pyramid first: the cheapest place to invest next.
   const focus = layers.find((layer) => layer.percent !== null && layer.percent < 100) || null;
-  return { protocol: READINESS_PROTOCOL, layers, criteria, focus: focus && { layer: focus.layer, next: focus.next } };
+  const focusRow = focus && criteria.find((row) => row.layer === focus.layer && row.status === "unmet");
+  // Before any quality lane exists, one onboarding pass covers every lane row.
+  const setupNext = LANE_NEXT.unconfigured();
+  const waiting = criteria.filter((row) => row.next === setupNext).map((row) => row.id);
+  return { protocol: READINESS_PROTOCOL, layers, criteria,
+    setup: waiting.length ? { next: setupNext, criteria: waiting } : null,
+    focus: focus && { layer: focus.layer, next: focus.next, why: focusRow?.why || null } };
 }
 
 export function readinessText(value) {
   const lines = ["Pyramid readiness (measured criteria met per layer):"];
   value.layers.forEach((layer, index) => lines.push(`  ${index + 1} ${layer.layer.padEnd(12)} ${
     layer.percent === null ? "unmeasured" : `${String(layer.percent).padStart(3)}%`}  (${layer.met}/${layer.measured} measured, ${layer.total} total)`));
-  for (const row of value.criteria.filter((row) => !["met", "not-applicable"].includes(row.status)))
-    lines.push(`  - [${row.layer}] ${row.label}: ${row.status}, ${row.detail}${row.next ? `\n      next: ${row.next}` : ""}`);
+  const setup = new Set(value.setup?.criteria || []);
+  if (setup.size) lines.push(`  Quality checks are not set up yet; one onboarding pass covers ${setup.size} criteria:`,
+    ...value.criteria.filter((row) => setup.has(row.id)).map((row) => `    - [${row.layer}] ${row.label}: ${row.why}`),
+    `      next: ${value.setup.next}`);
+  // Debt rows of an unconfigured lane only repeat the setup gap.
+  const shown = (row) => !setup.has(row.id) && !(setup.size && row.status === "unmeasured" && row.id.endsWith("-clear"));
+  for (const row of value.criteria.filter((row) => !["met", "not-applicable"].includes(row.status) && shown(row)))
+    lines.push(`  - [${row.layer}] ${row.label}: ${row.status}, ${row.detail}${
+      row.status === "unmet" && row.why ? `\n      why: ${row.why}` : ""}${row.next ? `\n      next: ${row.next}` : ""}`);
   if (value.focus) lines.push(`Focus: ${value.focus.layer}; ${value.focus.next}`);
   return lines.join("\n");
 }

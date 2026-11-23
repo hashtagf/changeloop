@@ -151,6 +151,10 @@ function providerResultPath(root, repository, capability) {
   return join(root, QUALITY_RESULT_RELATIVE, repository, `${capability}.json`);
 }
 
+function laneStatusPath(root, repository, capability) {
+  return join(root, QUALITY_RESULT_RELATIVE, repository, `${capability}.status.json`);
+}
+
 function baselinePath(root, repository, capability) {
   return join(root, "quality", "baselines", repository, `${capability}-v1.json`);
 }
@@ -392,6 +396,8 @@ export function createQualityRuntime({
           evaluateLane(lane, { repository, capability, full: options.full, configuredChanged, config });
         lane.durationMs = performance.now() - laneStarted;
         lanes.push(lane);
+        // The latest verdict per lane: readiness counts a test lane only while it passes.
+        writeJson(laneStatusPath(root, repository.id, capability), { status: lane.status, at: new Date().toISOString() });
       }
       for (const capability of profileCapabilities(repositoryConfig.profiles)) {
         if (repositoryConfig.providers[capability] ||
@@ -546,7 +552,7 @@ export function createQualityRuntime({
   function readiness() {
     if (!existsSync(configPath)) return [{ id: "quality-config", level: "warn",
       detail: `${QUALITY_CONFIG_RELATIVE} is missing; lint, type-check, file-size, duplication, nesting, and CRAP are not measured`,
-      next: "cloop quality discover, then cloop quality init --write" }];
+      next: "run the onboard skill: it runs cloop quality discover, then cloop quality init --write, and asks the user only to confirm baselines" }];
     let config;
     try {
       config = readJsonFile(configPath);
@@ -614,13 +620,23 @@ export function createQualityRuntime({
     const order = ["unreadable", "not-run", "no-baseline", "incompatible", "ratcheting"];
     const lanes = {};
     const findings = {};
+    // Latest run verdict per capability; one failing repository makes it fail.
+    const statuses = {};
+    for (const repository of config.repositories || [])
+      for (const capability of Object.keys(repository.providers || {})) {
+        const path = laneStatusPath(root, repository.id, capability);
+        if (!existsSync(path)) continue;
+        const status = readJsonFile(path)?.status;
+        if (typeof status === "string") statuses[capability] = statuses[capability] && statuses[capability] !== "pass"
+          ? statuses[capability] : status;
+      }
     for (const repository of config.repositories || [])
       for (const { capability, state, findings: count } of repositoryLaneStates(repository)) {
         const current = lanes[capability];
         lanes[capability] = current === undefined || order.indexOf(state) < order.indexOf(current) ? state : current;
         if (Number.isInteger(count)) findings[capability] = (findings[capability] || 0) + count;
       }
-    return { lanes, findings };
+    return { lanes, findings, statuses };
   }
 
   return { discovery, showDiscovery, draft, initialize, configured, doctor, run, report, baseline, debt, readiness,

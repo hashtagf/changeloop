@@ -56,7 +56,7 @@ recovery, administration และ host integration ด้านล่าง
 | `providers` | ดูการต่อสายหลักฐานระหว่างนิยาม change contract |
 | `version` | พิมพ์เวอร์ชันแพ็กเกจที่ติดตั้งอยู่ |
 | `describe [command] [--json]` | อธิบาย slash command และคำสั่ง CLI ทุกคำสั่งตอบ `--help` ได้ด้วย |
-| `outcomes [--pretty]` | สรุป change ที่ archive แล้ว: จำนวนรอบ proof, ผ่านตั้งแต่ proof แรกไหม, การตัดสินใจของผู้ใช้, ค่าใช้จ่ายที่รู้ และ defect ที่หลุดตามที่แจ้งไว้ |
+| `outcomes [--pretty]` | สรุป change ที่ archive แล้ว: จำนวนรอบ proof, ผ่านตั้งแต่ proof แรกไหม, การตัดสินใจของผู้ใช้, เวลาตั้งแต่เริ่มจน archive, ค่าใช้จ่ายที่รู้ และ defect ที่หลุดตามที่แจ้งไว้ พร้อมเปรียบเทียบก่อน/หลัง onboard |
 | `lessons [--min-changes <n>] [--pretty]` | รวม code ของ blocker และ review ที่เกิดซ้ำในอย่างน้อย `n` change (ค่าเริ่มต้น 3) เป็นข้อเสนอ check ถาวรแบบแนะนำสำหรับ `/change`: ตัวบังคับที่แข็งที่สุดที่ทำได้ (architecture, type, lint, test), change ในอดีตที่ check ใหม่ต้อง fail ได้ draft ตั้งต้นของ change นั้น และสถานะของแต่ละบทเรียน: `enforced` เมื่อ `openspec/lessons.md` ระบุไฟล์ในโปรเจกต์หรือ `quality:<capability>`, `judgment` เมื่อเขียน `judgment: <เหตุผล>` นอกนั้นเป็น `prose-only` หรือ `open` (`doctor` เตือน) |
 | `features [--change <id>] [--strict] [--pretty]` | ตรวจ feature map ของโปรเจกต์ (`openspec/feature-map.json`) และเมื่อใส่ `--change` จะบอกว่า change นั้นแตะฟีเจอร์ไหน |
 | `product measure <KPI-nn> --value <n> --source <ref> [--at <date>]` | บันทึกค่าที่วัดได้จริงของตัวชี้วัดความสำเร็จหลังปล่อย พร้อมแหล่งที่มา |

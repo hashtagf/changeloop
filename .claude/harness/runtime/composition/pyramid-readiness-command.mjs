@@ -27,8 +27,11 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
     const registry = attempt(() => ruleRegistrySummary(root));
     const changes = attempt(() => outcomesValue())?.changes;
     return {
+      // Without a quality config every lane routes to one onboarding pass.
+      configured: existsSync(join(root, "quality", "foundation-quality.json")),
       lanes: quality?.lanes || {},
       findings: quality?.findings || {},
+      statuses: quality?.statuses || {},
       featureMap: map === undefined ? undefined : map && {
         features: Array.isArray(map.features) ? map.features.length : 0,
         issues: validateProjectFeatureMap(map, { exists: (path) => existsSync(join(root, path)) }).length

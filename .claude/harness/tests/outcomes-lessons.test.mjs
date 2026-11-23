@@ -7,7 +7,7 @@ import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { createOutcomesRuntime } from "../runtime/observability/outcomes-runtime.mjs";
+import { createOutcomesRuntime, onboardingComparison, outcomesText } from "../runtime/observability/outcomes-runtime.mjs";
 import {
   adoptionDraft, createLessonsRuntime, enforcementFor, enforcementKind, lessonsReadiness, lessonsText,
   minChangesValue, suggestedCheck
@@ -228,6 +228,53 @@ test("outcomes with no history exits 0 with empty lists and writes nothing", (t)
   assert.deepEqual(value.changes, []);
   assert.deepEqual(value.cohorts, []);
   assert.equal(storeDigest(fixture.store), before);
+});
+
+test("before/after onboarding reports measured sides only once each has enough changes", () => {
+  const row = (id, archivedAt, firstProofPass, cohort = "feature|medium|none") => ({ id, archivedAt, firstProofPass,
+    cohort, reviewRepairRounds: firstProofPass ? 0 : 1, userDecisions: 1, leadTimeHours: firstProofPass ? 2 : 6,
+    cost: null, escapedDefects: 0 });
+  const at = "2026-10-10T00:00:00Z";
+  assert.equal(onboardingComparison([], null).status, "unavailable");
+  const few = onboardingComparison([row("a", "2026-10-01T00:00:00Z", false), row("b", "2026-10-11T00:00:00Z", true)], { at });
+  assert.equal(few.status, "insufficient");
+  assert.match(few.reason, /1 change\(s\) before and 1 after/);
+  assert.equal(few.difference, undefined, "no difference is reported below the minimum");
+
+  const changes = [
+    row("b1", "2026-10-01T00:00:00Z", false), row("b2", "2026-10-02T00:00:00Z", true),
+    row("b3", "2026-10-03T00:00:00Z", false), row("b4", "2026-10-04T00:00:00Z", true, "docs|low|none"),
+    row("a1", "2026-10-11T00:00:00Z", true), row("a2", "2026-10-12T00:00:00Z", true),
+    row("a3", "2026-10-13T00:00:00Z", false), { ...row("u", null, true) }];
+  const value = onboardingComparison(changes, { at, source: "git" });
+  assert.equal(value.status, "measured");
+  assert.deepEqual([value.before.changes, value.after.changes, value.undated], [4, 3, 1]);
+  assert.equal(value.before.firstProofPass.rate, 0.5);
+  assert.equal(value.difference.firstProofPassRate, 0.1667);
+  assert.equal(value.cost?.mean, undefined);
+  assert.equal(value.after.cost.mean, null, "an unmeasured cost stays unknown, never zero");
+  assert.equal(value.difference.meanCost, null);
+  assert.deepEqual(value.matched.cohorts, ["feature|medium|none"], "only cohorts on both sides are matched");
+  assert.equal(value.matched.before.firstProofPass.rate, 0.3333);
+  assert.equal(value.difference.matchedFirstProofPassRate, 0.3334, "0.6667 - 0.3333");
+  assert.match(outcomesText({ changes: [], cohorts: [], skipped: [], onboarding: value }), /Before\/after onboarding .*measured/);
+});
+
+test("outcomes dates onboarding from the first commit of the quality configuration, with lead time per change", (t) => {
+  const fixture = project(t);
+  fixture.change("a", { createdAt: "2026-10-01T00:00:00Z", archivedAt: "2026-10-01T03:00:00Z" }, { proofRuns: 1 });
+  let value = JSON.parse(run(fixture, "outcomes").stdout);
+  assert.equal(value.changes[0].leadTimeHours, 3);
+  assert.equal(value.onboarding.status, "unavailable");
+  const git = (...args) => spawnSync("git", args, { cwd: fixture.root, encoding: "utf8" });
+  git("init", "-q");
+  write(join(fixture.root, "quality", "foundation-quality.json"), { version: 1 });
+  git("add", "quality/foundation-quality.json");
+  git("-c", "user.email=a@b", "-c", "user.name=t", "commit", "-qm", "onboard");
+  value = JSON.parse(run(fixture, "outcomes").stdout);
+  assert.equal(value.onboarding.status, "insufficient");
+  assert.match(value.onboarding.source, /first committed/);
+  assert.equal(value.onboarding.before.changes, 1);
 });
 
 test("outcomes and lessons leave the store digest unchanged", (t) => {

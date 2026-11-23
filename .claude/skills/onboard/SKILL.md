@@ -19,8 +19,8 @@ user decides what becomes binding.
    `cloop quality baseline --write --decision-ref <answer> --reason <why>`.
 4. Feature map: draft 5–20 user-facing features per
    `references/feature-map-guide.md`; the user renames, merges, or drops them.
-5. Module boundaries (optional): propose modules from real imports with their
-   current violations; add the lane only if the user agrees.
+5. Module boundaries (optional): show discovery's
+   `proposals.module-boundaries`; add its `provider` if the user agrees.
 6. Lessons: offer each warned lesson's `adoption.draft` through `/change`.
 7. Rules: draft `quality/rule-enforcement.json` per
    `references/rule-registry-guide.md`; the user confirms each layer.

@@ -150,6 +150,8 @@ export function repositoryReadiness(root, card) {
       ...(existsSync(join(root, COVERAGE_BASELINE)) ? { coverage: ratcheting } : {}),
       ...(mutationBaselines ? { "automated-mutation": ratcheting } : {})
     },
+    // run-all.sh is the test lane; on a green build it passed.
+    statuses: { test: "pass" },
     // On a green build the committed baseline equals the code.
     findings: {
       "file-size": card.code.filesOverSizeCeiling, "nesting-depth": card.code.filesNestedOverLimit,

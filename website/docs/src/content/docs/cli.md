@@ -57,7 +57,7 @@ its own read-only HTML file.
 | `providers` | Inspect evidence wiring while defining a change contract |
 | `version` | Print the installed package version |
 | `describe [command] [--json]` | Describe the slash commands and CLI commands; every command also answers `--help` |
-| `outcomes [--pretty]` | Summarize archived changes: proof runs, first-proof pass, user decisions, known cost, and declared escaped defects |
+| `outcomes [--pretty]` | Summarize archived changes: proof runs, first-proof pass, user decisions, lead time, known cost, and declared escaped defects, plus a before/after onboarding comparison |
 | `lessons [--min-changes <n>] [--pretty]` | Group blocker and review codes that recur across at least `n` changes (default 3) into advisory check proposals for `/change`: the strongest workable enforcement (architecture, type, lint, test), the past changes a new check must fail on, a starting draft for that change, and each lesson's status: `enforced` when `openspec/lessons.md` names a project file or `quality:<capability>`, `judgment` for `judgment: <why>`, `prose-only` or `open` otherwise (`doctor` warns about those) |
 | `features [--change <id>] [--strict] [--pretty]` | Check the project's feature map (`openspec/feature-map.json`) and, with `--change`, name the features the change touches |
 | `product measure <KPI-nn> --value <n> --source <ref> [--at <date>]` | Record a success metric's observed value after a release, with where it came from |

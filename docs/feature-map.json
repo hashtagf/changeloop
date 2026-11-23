@@ -636,7 +636,8 @@
       ],
       "code": [
         ".claude/harness/runtime/quality/quality-runtime.mjs",
-        ".claude/harness/runtime/quality/findings-ratchet.mjs"
+        ".claude/harness/runtime/quality/findings-ratchet.mjs",
+        ".claude/harness/runtime/quality/module-boundary-proposal.mjs"
       ],
       "tests": [
         ".claude/harness/tests/quality-runtime.test.mjs",
@@ -674,7 +675,8 @@
         ".claude/harness/runtime/composition/pyramid-readiness-command.mjs"
       ],
       "tests": [
-        ".claude/harness/tests/pyramid-readiness.test.mjs"
+        ".claude/harness/tests/pyramid-readiness.test.mjs",
+        ".claude/harness/tests/consumer-onboarding-path.test.mjs"
       ],
       "docs": [
         ".claude/harness/CONSUMER-QUALITY.md",

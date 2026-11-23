@@ -71,7 +71,7 @@
       "audience": "agent",
       "kind": "read",
       "idempotent": true,
-      "description": "Summarize every archived change (proof runs, first-proof pass, user decisions, known cost, declared escaped defects) and work type × impact × risk cohorts over known values, without writing state."
+      "description": "Summarize every archived change (proof runs, first-proof pass, user decisions, lead time, known cost, declared escaped defects), work type × impact × risk cohorts over known values, and before/after onboarding, without writing state."
     },
     {
       "name": "features",

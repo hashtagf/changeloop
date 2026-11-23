@@ -238,7 +238,13 @@ export function composeDeliveryRuntimes({
     nextAction: (id) => advanceValue(id, { inspect: true })
   });
   const { outcomesValue, showOutcomes } = createOutcomesRuntime({ runtimeDir: RUNTIME, evidenceDir: EVIDENCE_VAULT,
-    logsDir: LOGS, changeWorkTypes: (id, state) => changeWorkTypes(activeChangePath(id, state)), reviewAttemptRecords });
+    logsDir: LOGS, changeWorkTypes: (id, state) => changeWorkTypes(activeChangePath(id, state)), reviewAttemptRecords,
+    // Onboarding is when the quality configuration was first committed.
+    onboardedAt: () => {
+      const result = git(["log", "--diff-filter=A", "--format=%cI", "--", "quality/foundation-quality.json"]);
+      const at = result.status === 0 ? String(result.stdout || "").trim().split("\n").filter(Boolean).at(-1) : null;
+      return at ? { at, source: "git: quality/foundation-quality.json first committed" } : null;
+    } });
   const { lessonsValue, showLessons } = createLessonsRuntime({ runtimeDir: RUNTIME, evidenceDir: EVIDENCE_VAULT,
     logsDir: LOGS, reviewAttemptRecords, lessonsDocument: join(ROOT, "openspec", "lessons.md"),
     projectFileExists: (path) => existsSync(join(ROOT, path)), fail: die });

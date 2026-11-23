@@ -4,8 +4,8 @@
 // become a baseline that may only shrink; a new finding, a grown file, or a
 // new boundary violation fails. The same rule Change Loop applies to its own
 // harness, offered to the projects that install it.
-import { readFileSync, statSync } from "node:fs";
-import { join, posix, relative } from "node:path";
+import { readFileSync, realpathSync, statSync } from "node:fs";
+import { isAbsolute, join, posix, relative } from "node:path";
 import { configDigest } from "./quality-protocol.mjs";
 import { pathMatches } from "./quality-evaluator.mjs";
 import { SOURCE_EXTENSIONS, lineCount, slash, sourceFiles } from "./source-scan.mjs";
@@ -60,12 +60,23 @@ export function normalizeFindingsReport(report) {
   };
 }
 
+// A tool's absolute path as a repository path. Tools report the resolved
+// path (macOS /tmp is /private/tmp), so the repository's real path counts too.
+function repositoryRelative(repositoryPath, file) {
+  const path = String(file || "");
+  if (!isAbsolute(path)) return slash(path);
+  let real = repositoryPath;
+  try { real = realpathSync(repositoryPath); } catch (error) { if (error?.code !== "ENOENT") throw error; }
+  const inside = [repositoryPath, real].map((base) => relative(base, path)).find((value) => !value.startsWith(".."));
+  return slash(inside ?? relative(repositoryPath, path));
+}
+
 // ESLint `-f json`: [{ filePath, messages: [{ ruleId, line, message, severity }] }].
 export function parseEslintJson(source, repositoryPath) {
   const files = JSON.parse(source);
   if (!Array.isArray(files)) throw new Error("ESLint JSON report must be an array");
   return files.flatMap((file) => (file.messages || []).map((message) => ({
-    path: slash(relative(repositoryPath, file.filePath)),
+    path: repositoryRelative(repositoryPath, file.filePath),
     rule: message.ruleId ? `eslint/${message.ruleId}` : (message.fatal ? "eslint/parse-error" : "eslint/unknown"),
     line: message.line,
     message: message.message
@@ -78,6 +89,50 @@ export function parseTscText(source) {
   for (const line of String(source).split(/\r?\n/)) {
     const match = line.match(/^(.+?)\((\d+),\d+\): error (TS\d+): (.*)$/);
     if (match) findings.push({ path: slash(match[1]), rule: `types/${match[3]}`, line: Number(match[2]), message: match[4] });
+  }
+  return findings;
+}
+
+// Ruff `check --output-format json`: [{ filename, code, location: { row }, message }].
+export function parseRuffJson(source, repositoryPath) {
+  const rows = JSON.parse(source || "[]");
+  if (!Array.isArray(rows)) throw new Error("Ruff JSON report must be an array");
+  return rows.map((row) => ({
+    path: repositoryRelative(repositoryPath, row.filename),
+    rule: row.code ? `ruff/${row.code}` : "ruff/syntax-error",
+    line: row.location?.row,
+    message: row.message
+  }));
+}
+
+// mypy text: path:line[:col]: error: message  [code]
+export function parseMypyText(source) {
+  const findings = [];
+  for (const line of String(source).split(/\r?\n/)) {
+    const match = line.match(/^(.+?):(\d+)(?::\d+)?: error: (.*?)(?:\s+\[([a-z0-9-]+)\])?$/);
+    if (match) findings.push({ path: slash(match[1]), rule: `types/mypy-${match[4] || "error"}`,
+      line: Number(match[2]), message: match[3] });
+  }
+  return findings;
+}
+
+// golangci-lint JSON (v1 `--out-format json`, v2 `--output.json.path stdout`):
+// { Issues: [{ FromLinter, Text, Pos: { Filename, Line } }] }.
+export function parseGolangciJson(source) {
+  const text = String(source || "").trim();
+  const report = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1) || "{}");
+  return (report.Issues || []).map((issue) => ({
+    path: slash(issue.Pos?.Filename), rule: `golangci/${issue.FromLinter || "unknown"}`,
+    line: issue.Pos?.Line, message: issue.Text
+  }));
+}
+
+// `go vet ./... 2>&1`: path.go:line:col: message, after `# package` headers.
+export function parseGoVetText(source) {
+  const findings = [];
+  for (const line of String(source).split(/\r?\n/)) {
+    const match = line.match(/^(?:vet: )?(.+?\.go):(\d+)(?::\d+)?: (.*)$/);
+    if (match) findings.push({ path: slash(match[1]), rule: "types/go-vet", line: Number(match[2]), message: match[3] });
   }
   return findings;
 }
@@ -174,6 +229,18 @@ export const FINDINGS_ADAPTERS = Object.freeze({
   "tsc-text": { capability: "type-check", inputs: ["report"],
     run: ({ repository, provider, inputs, ...identity }) =>
       report("tsc-text", provider, parseTscText(inputs.report), { repository, ...identity }) },
+  "ruff-json": { capability: "lint", inputs: ["report"],
+    run: ({ repository, provider, inputs, ...identity }) =>
+      report("ruff-json", provider, parseRuffJson(inputs.report, repository.path), { repository, ...identity }) },
+  "golangci-json": { capability: "lint", inputs: ["report"],
+    run: ({ repository, provider, inputs, ...identity }) =>
+      report("golangci-json", provider, parseGolangciJson(inputs.report), { repository, ...identity }) },
+  "mypy-text": { capability: "type-check", inputs: ["report"],
+    run: ({ repository, provider, inputs, ...identity }) =>
+      report("mypy-text", provider, parseMypyText(inputs.report), { repository, ...identity }) },
+  "go-vet-text": { capability: "type-check", inputs: ["report"],
+    run: ({ repository, provider, inputs, ...identity }) =>
+      report("go-vet-text", provider, parseGoVetText(inputs.report), { repository, ...identity }) },
   "generic-findings-json": { capability: null, inputs: ["report"],
     run: ({ repository, provider, inputs, ...identity }) =>
       report("generic-findings-json", provider, JSON.parse(inputs.report).findings || [], { repository, ...identity }) },

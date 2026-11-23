@@ -162,6 +162,82 @@ export function outcomeCohorts(changes) {
     }));
 }
 
+// Hours from a change's creation to its archive; null when either is missing.
+function leadTimeHours(state) {
+  const start = Date.parse(state.createdAt);
+  const end = Date.parse(state.archivedAt);
+  return Number.isFinite(start) && Number.isFinite(end) && end >= start ? round((end - start) / 3600000, 2) : null;
+}
+
+// Each side of the onboarding comparison needs this many archived changes
+// before a difference is reported; below it the comparison says so.
+export const ONBOARDING_MINIMUM_CHANGES = 3;
+
+function side(rows) {
+  return {
+    changes: rows.length,
+    firstProofPass: knownRate(rows.map((row) => row.firstProofPass)),
+    reviewRepairRounds: knownSummary(rows.map((row) => row.reviewRepairRounds)),
+    userDecisions: knownSummary(rows.map((row) => row.userDecisions)),
+    leadTimeHours: knownSummary(rows.map((row) => row.leadTimeHours)),
+    cost: knownSummary(rows.map((row) => row.cost)),
+    escapedDefects: knownSummary(rows.map((row) => row.escapedDefects))
+  };
+}
+
+const difference = (before, after) => (before === null || after === null ? null : round(after - before));
+
+// Archived changes before and after the project was onboarded (its quality
+// configuration first committed). Whether onboarding helped is answered only
+// by measured values on both sides: each metric keeps its denominator, a side
+// with fewer than ONBOARDING_MINIMUM_CHANGES changes is insufficient, and the
+// matched view keeps only cohorts present on both sides, so a shift in the
+// kind of work is not read as an effect. Differences are after minus before;
+// this reports them, it never calls them an improvement.
+export function onboardingComparison(changes, onboarded) {
+  if (!onboarded?.at || !Number.isFinite(Date.parse(onboarded.at)))
+    return { status: "unavailable", reason: "no onboarding date: quality/foundation-quality.json is not committed" };
+  const split = Date.parse(onboarded.at);
+  const dated = changes.filter((row) => Number.isFinite(Date.parse(row.archivedAt)));
+  const before = dated.filter((row) => Date.parse(row.archivedAt) < split);
+  const after = dated.filter((row) => Date.parse(row.archivedAt) >= split);
+  const shared = new Set(before.map((row) => row.cohort).filter((key) => after.some((row) => row.cohort === key)));
+  const value = {
+    onboardedAt: onboarded.at, source: onboarded.source || null,
+    minimumChanges: ONBOARDING_MINIMUM_CHANGES, undated: changes.length - dated.length,
+    before: side(before), after: side(after),
+    matched: { cohorts: [...shared].sort(),
+      before: side(before.filter((row) => shared.has(row.cohort))),
+      after: side(after.filter((row) => shared.has(row.cohort))) }
+  };
+  const enough = before.length >= ONBOARDING_MINIMUM_CHANGES && after.length >= ONBOARDING_MINIMUM_CHANGES;
+  if (!enough) return { status: "insufficient", ...value,
+    reason: `${before.length} change(s) before and ${after.length} after onboarding; each side needs ${ONBOARDING_MINIMUM_CHANGES}` };
+  return { status: "measured", ...value, difference: {
+    firstProofPassRate: difference(value.before.firstProofPass.rate, value.after.firstProofPass.rate),
+    meanReviewRepairRounds: difference(value.before.reviewRepairRounds.mean, value.after.reviewRepairRounds.mean),
+    meanUserDecisions: difference(value.before.userDecisions.mean, value.after.userDecisions.mean),
+    meanLeadTimeHours: difference(value.before.leadTimeHours.mean, value.after.leadTimeHours.mean),
+    meanCost: difference(value.before.cost.mean, value.after.cost.mean),
+    meanEscapedDefects: difference(value.before.escapedDefects.mean, value.after.escapedDefects.mean),
+    matchedFirstProofPassRate: difference(value.matched.before.firstProofPass.rate, value.matched.after.firstProofPass.rate)
+  } };
+}
+
+function onboardingText(value) {
+  if (value.status === "unavailable") return `Before/after onboarding: unavailable (${value.reason})`;
+  const known = (metric) => `${cell(metric.rate ?? metric.mean)} (n=${metric.denominator})`;
+  const rows = [["first-proof pass rate", "firstProofPass"], ["mean review repairs", "reviewRepairRounds"],
+    ["mean user decisions", "userDecisions"], ["mean lead time (h)", "leadTimeHours"], ["mean cost", "cost"],
+    ["mean escaped defects", "escapedDefects"]].map(([label, key]) =>
+    [label, known(value.before[key]), known(value.after[key])]);
+  return [`Before/after onboarding (${value.onboardedAt}, ${value.source || "declared"}): ${value.status}${
+    value.reason ? `, ${value.reason}` : ""}`,
+  table(["metric", `before (${value.before.changes})`, `after (${value.after.changes})`], rows),
+  `Matched cohorts (${value.matched.cohorts.length}): first-proof pass ${known(value.matched.before.firstProofPass)} -> ${
+    known(value.matched.after.firstProofPass)}`].join("\n");
+}
+
 const cell = (value) => (value === null || value === undefined ? "unknown" : String(value));
 
 function table(headers, rows) {
@@ -187,6 +263,7 @@ export function outcomesText(value) {
       row.key, String(row.changes), cell(row.firstProofPass.rate),
       String(row.firstProofPass.denominator), String(row.firstProofPass.unknownCount),
       cell(row.cost.mean), cell(row.userDecisions.mean)])));
+  if (value.onboarding) sections.push(onboardingText(value.onboarding));
   if (value.skipped.length)
     sections.push(`Skipped: ${value.skipped.map((row) => `${row.id} (${row.reason})`).join(", ")}`);
   sections.push("escapedDefects counts later changes that declared 'fixes' (declared-only).");
@@ -198,7 +275,9 @@ export function createOutcomesRuntime({
   // (id, state) => string[]: the change's declared work types.
   changeWorkTypes,
   // (id) => review attempt records, read only.
-  reviewAttemptRecords
+  reviewAttemptRecords,
+  // () => { at, source } | null: when the project was onboarded.
+  onboardedAt = () => null
 }) {
   function outcomesValue() {
     const rows = runtimeStates(runtimeDir);
@@ -230,6 +309,7 @@ export function createOutcomesRuntime({
           amendments: count(state.amendments),
           userDecisions: count(state.advanceRecovery?.answers) + count(state.waivers) +
             count(state.groundingReopens),
+          leadTimeHours: leadTimeHours(state),
           cost: knownCost(logsDir, id),
           escapedDefects: (fixedBy.get(id) || []).length,
           fixedBy: [...(fixedBy.get(id) || [])].sort()
@@ -240,10 +320,12 @@ export function createOutcomesRuntime({
       availability: {
         escapedDefects: "declared-only",
         cost: "known-events-only",
-        firstProofPass: "first-execution-artifacts"
+        firstProofPass: "first-execution-artifacts",
+        leadTimeHours: "created-to-archived"
       },
       changes,
       cohorts: outcomeCohorts(changes),
+      onboarding: onboardingComparison(changes, onboardedAt()),
       skipped
     };
   }
