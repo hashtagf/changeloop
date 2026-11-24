@@ -46,9 +46,11 @@ concurrency:
   cancel-in-progress: false
 
 # The expensive evidence runs in parallel jobs after a fast validation: the
-# release-only deterministic gate in four macOS shards (the platform the bottle
-# ships for), dashboard mutation, and the upgrade matrix in four shards against
-# the same rewritten candidate. The release job tags only after every one of
+# release-only deterministic gate in four Ubuntu shards, dashboard mutation,
+# and the upgrade matrix in four shards against the same rewritten candidate.
+# Only the release job needs macOS (the bottle, which brew installs and tests
+# there): a rehearsal holding five macOS runners at once was cancelled when one
+# shard waited out GitHub's macOS arm64 capacity. The release job tags only after every one of
 # them passes, or after verifying a reusable rehearsal that skipped them.
 jobs:
   validate:
@@ -110,7 +112,7 @@ jobs:
   gate:
     needs: validate
     if: github.event.inputs.rehearsal_run_id == ''
-    runs-on: macos-15
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
@@ -138,8 +140,8 @@ jobs:
           # lanes, so do not execute the same mutations a second time here.
           # --release adds the zero-cost benchmark sentinel the default gate skips;
           # the four shards together are the whole --release set.
-          # Bound outer fan-out on the macOS release runner to reduce contention.
-          FOUNDATION_TEST_JOBS=2 sh .claude/tests/run-all.sh --release --shard ${{ matrix.shard }}/4
+          command -v jq >/dev/null || { sudo apt-get update && sudo apt-get install -y jq; }
+          sh .claude/tests/run-all.sh --release --shard ${{ matrix.shard }}/4
 
   mutation:
     needs: validate

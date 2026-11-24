@@ -12,7 +12,7 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 ### Changed
 
 - The release workflow validates its inputs first, then runs the pull-request
-  CI suites, the `--release` gate in four macOS shards, dashboard mutation,
+  CI suites, the `--release` gate in four Ubuntu shards, dashboard mutation,
   and the upgrade matrix in four shards in parallel; it tags only after all of
   them pass. The candidate version rewrite is one script
   (`scripts/release/rewrite-version.sh`) shared by the upgrade shards and the
