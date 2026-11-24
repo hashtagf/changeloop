@@ -151,6 +151,8 @@ function providerResultPath(root, repository, capability) {
   return join(root, QUALITY_RESULT_RELATIVE, repository, `${capability}.json`);
 }
 
+const LANE_HISTORY = 10;
+
 function laneStatusPath(root, repository, capability) {
   return join(root, QUALITY_RESULT_RELATIVE, repository, `${capability}.status.json`);
 }
@@ -445,7 +447,14 @@ export function createQualityRuntime({
         lane.durationMs = performance.now() - laneStarted;
         lanes.push(lane);
         // The latest verdict per lane: readiness counts a test lane only while it passes.
-        writeJson(laneStatusPath(root, repository.id, capability), { status: lane.status, at: new Date().toISOString() });
+        // The latest verdict plus a short history: readiness judges whether the
+        // test lane is fast enough to run every turn and stable on unchanged code.
+        const statusPath = laneStatusPath(root, repository.id, capability);
+        let previous = [];
+        try { previous = existsSync(statusPath) ? readJsonFile(statusPath).history || [] : []; } catch { previous = []; }
+        const entry = { status: lane.status, durationMs: Math.round(lane.durationMs),
+          workspaceDigest: repository.workspaceDigest || null, at: new Date().toISOString() };
+        writeJson(statusPath, { ...entry, history: [...previous, entry].slice(-LANE_HISTORY) });
       }
       for (const capability of profileCapabilities(repositoryConfig.profiles)) {
         if (repositoryConfig.providers[capability] ||
@@ -670,16 +679,20 @@ export function createQualityRuntime({
     const findings = {};
     // Latest run verdict per capability; one failing repository makes it fail.
     const statuses = {};
+    const histories = {};
     // The same facts per repository, so a large topology reports each
     // onboarded repository instead of only the least ready one.
     const repositories = {};
     for (const repository of config.repositories || []) {
-      const own = { lanes: {}, findings: {}, statuses: {}, onboardedAt: repository.onboardedAt || null };
+      const own = { lanes: {}, findings: {}, statuses: {}, histories: {}, onboardedAt: repository.onboardedAt || null };
       for (const capability of Object.keys(repository.providers || {})) {
         const path = laneStatusPath(root, repository.id, capability);
-        const status = existsSync(path) ? readJsonFile(path)?.status : undefined;
+        const record = existsSync(path) ? readJsonFile(path) : null;
+        const status = record?.status;
         if (typeof status !== "string") continue;
         own.statuses[capability] = status;
+        own.histories[capability] = Array.isArray(record.history) ? record.history : [record];
+        (histories[capability] ||= []).push(...own.histories[capability]);
         statuses[capability] = statuses[capability] && statuses[capability] !== "pass" ? statuses[capability] : status;
       }
       for (const { capability, state, findings: count } of repositoryLaneStates(repository)) {
@@ -692,7 +705,7 @@ export function createQualityRuntime({
       }
       repositories[repository.id] = own;
     }
-    return { lanes, findings, statuses, repositories, unlisted: config.unlisted || "fail" };
+    return { lanes, findings, statuses, histories, repositories, unlisted: config.unlisted || "fail" };
   }
 
   return { discovery, showDiscovery, draft, initialize, configured, doctor, run, report, baseline, debt, readiness,

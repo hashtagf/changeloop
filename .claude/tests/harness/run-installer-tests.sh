@@ -621,6 +621,24 @@ assert_file_absent "retired review command removed on upgrade" \
   "$TARGET/.claude/commands/review.md"
 assert_file_contains "user AGENTS content survives managed block update" \
   "$TARGET/AGENTS.md" "User agent instruction."
+# A project's formatter and linter must not judge Change Loop's own files: a
+# Prettier project gains a .prettierignore block, an existing .eslintignore
+# keeps its entries and gains the block once, and no ignore file appears for a
+# tool the project does not use.
+IGNORE_TARGET="$TMP/tool-ignore-target"
+mkdir -p "$IGNORE_TARGET"
+printf '{}\n' > "$IGNORE_TARGET/.prettierrc"
+printf 'dist/\n' > "$IGNORE_TARGET/.eslintignore"
+assert_cmd_zero "installer writes tool ignore blocks" \
+  bash "$ROOT/install.sh" "$IGNORE_TARGET" --source "$ROOT" --yes
+assert_file_contains "Prettier project ignores installed files" "$IGNORE_TARGET/.prettierignore" ".claude/"
+assert_file_contains "existing eslint ignore entries survive" "$IGNORE_TARGET/.eslintignore" "dist/"
+assert_file_contains "eslint ignore gains the managed block" "$IGNORE_TARGET/.eslintignore" "claude-foundation:tool-ignore:start"
+assert_file_absent "no ignore file for a tool the project does not use" "$IGNORE_TARGET/.stylelintignore"
+assert_cmd_zero "installer reruns over tool ignore blocks" \
+  bash "$ROOT/install.sh" "$IGNORE_TARGET" --source "$ROOT" --yes
+assert_eq "rerunning keeps one tool ignore block" "1" \
+  "$(grep -c 'claude-foundation:tool-ignore:start' "$IGNORE_TARGET/.eslintignore")"
 assert_cmd_zero "installed harness starts" \
   node "$TARGET/.claude/harness/foundation.mjs" version
 cp "$TARGET/.claude/harness/commands.json" "$TMP/commands-valid.json"

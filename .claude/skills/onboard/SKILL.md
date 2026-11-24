@@ -26,9 +26,10 @@ user decides what becomes binding.
    `REVIEW.md`, offer `SECURITY.md` once.
 8. Rules: draft `quality/rule-enforcement.json` per
    `references/rule-registry-guide.md`; the user confirms each layer.
-9. UI rows: propose fixes (`references/ui-readiness-guide.md`) via `/change`.
-10. Verify: `cloop features --strict`, `cloop quality run`,
-    `cloop quality readiness --pretty`; report each layer and next step.
+9. UI and `verify` rows: `references/ui-readiness-guide.md`,
+   `references/verify.md`.
+10. Check: `cloop features --strict`, `cloop quality run`,
+    `cloop quality readiness --pretty`; report layers.
 
 ## Harness
 
@@ -43,3 +44,4 @@ Without Change Loop installed: stop; `cloop init` comes first.
 - `references/ui-readiness-guide.md` — UI rows.
 - `references/multi-repository.md` — many repositories.
 - `references/guides.md` — project guides.
+- `references/verify.md` — verify skill.

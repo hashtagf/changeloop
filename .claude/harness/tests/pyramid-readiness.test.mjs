@@ -12,6 +12,7 @@ import {
 import { createPyramidReadinessCommand } from "../runtime/composition/pyramid-readiness-command.mjs";
 import { registryIssues, ruleRegistrySummary } from "../runtime/quality/rule-registry.mjs";
 import { rawColorLiterals, uiReadinessFacts } from "../runtime/quality/ui-readiness.mjs";
+import { verifyFacts } from "../runtime/quality/verify-readiness.mjs";
 
 const ALL_LANES = ["file-size", "nesting-depth", "duplication", "module-boundaries", "lint", "type-check",
   "workaround-comments", "test", "crap", "automated-mutation"];
@@ -19,6 +20,9 @@ const ready = () => ({
   lanes: Object.fromEntries(ALL_LANES.map((lane) => [lane, "ratcheting"])),
   findings: Object.fromEntries(ALL_LANES.slice(0, 7).map((lane) => [lane, 0])),
   statuses: { test: "pass" },
+  histories: { test: [{ status: "pass", durationMs: 40000, workspaceDigest: "a" },
+    { status: "pass", durationMs: 41000, workspaceDigest: "a" }] },
+  verify: { source: ".claude/skills/verify", kind: "skill" },
   featureMap: { features: 6, issues: 0 },
   lessons: { recurring: 2, pending: 0 },
   rules: { registered: 10, prose: 0, issues: 0, unregistered: 0 },
@@ -62,6 +66,57 @@ test("a test lane counts only while its latest run passes", () => {
   const failing = verdict({ test: "fail" });
   assert.equal(failing.status, "unmet");
   assert.match(failing.next, /fix the failing tests/);
+});
+
+test("SCSS line comments are not code: tokens defined under one are not raw colors", () => {
+  const sheet = "// Slate tokens\n:root {\n  // ---- light ----\n  --sc-ground: #eef1f6;\n}\n.a { background: url(http://x.test/a.png); color: #fff; }\n";
+  assert.equal(rawColorLiterals(sheet, { lineComments: true }), 1, "only the color written outside a token counts");
+  assert.equal(rawColorLiterals(sheet), 2, "plain CSS keeps // as text, as browsers do");
+});
+
+test("type-check is not applicable to JavaScript without TypeScript", (t) => {
+  const js = project(t, { "package.json": { name: "x" }, "jsconfig.json": { compilerOptions: { paths: {} } } });
+  const command = (root) => createPyramidReadinessCommand({ root, log: () => {}, laneStates: () => null,
+    lessonsValue: () => ({ lessons: [] }), outcomesValue: () => ({ changes: [] }) }).readinessValue();
+  const row = (value, id) => value.criteria.find((criterion) => criterion.id === id);
+  assert.equal(row(command(js), "type-check").status, "not-applicable");
+  assert.equal(row(command(js), "type-check-clear").status, "not-applicable");
+  const checked = project(t, { "package.json": { name: "x" }, "jsconfig.json": { compilerOptions: { checkJs: true } } });
+  assert.equal(row(command(checked), "type-check").status, "unmet", "checkJs makes a type checker apply");
+  const ts = project(t, { "package.json": { name: "x", devDependencies: { typescript: "5" } } });
+  assert.equal(row(command(ts), "type-check").status, "unmet");
+});
+
+test("a test lane must be fast and stable, and an unmet test row is the first next step", () => {
+  const status = (facts, id) => pyramidReadiness({ ...ready(), ...facts }).criteria.find((row) => row.id === id);
+  const run = (status, durationMs, workspaceDigest) => ({ status, durationMs, workspaceDigest });
+  assert.equal(status({ histories: {} }, "tests-fast").status, "unmeasured");
+  assert.equal(status({ histories: { test: [run("pass", 300000, "a")] } }, "tests-fast").status, "unmet");
+  assert.equal(status({ histories: { test: [run("pass", 300000, "a"), run("pass", 9000, "b")] } }, "tests-fast").status, "met",
+    "the latest run decides");
+  assert.equal(status({ histories: { test: [run("pass", 1, "a"), run("fail", 1, "b")] } }, "tests-stable").status, "unmeasured",
+    "a failure after a code change is not flakiness");
+  const flaky = status({ histories: { test: [run("pass", 1, "a"), run("fail", 1, "a")] } }, "tests-stable");
+  assert.equal(flaky.status, "unmet");
+  assert.match(flaky.next, /rerun instead of fix/);
+
+  // Lint debt is the weakest layer, but a flaky test lane is still the first thing to fix.
+  const facts = { ...ready(), histories: { test: [run("pass", 1, "a"), run("fail", 1, "a")] } };
+  facts.findings.lint = 9;
+  const value = pyramidReadiness(facts);
+  assert.equal(value.focus.next, flaky.next);
+  assert.equal(pyramidReadiness({ ...ready(), verify: null }).focus.next,
+    status({ verify: null }, "verify").next, "no verify route comes right after no tests");
+});
+
+test("a verify route is a skill, an end-to-end script, tool, config, or directory", (t) => {
+  assert.equal(verifyFacts(project(t, { "src/a.js": "" })), null);
+  assert.deepEqual(verifyFacts(project(t, { ".claude/skills/verify/SKILL.md": "# Verify\n" })),
+    { source: ".claude/skills/verify", kind: "skill" });
+  assert.equal(verifyFacts(project(t, { "package.json": { scripts: { "test:e2e": "x" } } })).source, "npm run test:e2e");
+  assert.equal(verifyFacts(project(t, { "package.json": { devDependencies: { supertest: "7" } } })).kind, "dependency");
+  assert.equal(verifyFacts(project(t, { "playwright.config.ts": "" })).kind, "config");
+  assert.equal(verifyFacts(project(t, { "tests/e2e/flow.test.js": "" })).kind, "directory");
 });
 
 test("every criterion says in plain words why it helps the work", () => {

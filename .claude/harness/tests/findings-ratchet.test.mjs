@@ -15,8 +15,9 @@ import {
 import { createQualityRuntime } from "../runtime/quality/quality-runtime.mjs";
 import { detectedProviders } from "../runtime/quality/quality-discovery.mjs";
 import {
-  duplicationFindings, duplicationWindow, maxNestingDepth, nestingDepthFindings, workaroundCommentFindings
+  duplicatesIn, duplicationFindings, duplicationWindow, maxNestingDepth, nestingDepthFindings, workaroundCommentFindings
 } from "../runtime/quality/code-health-findings.mjs";
+import { sourceFiles } from "../runtime/quality/source-scan.mjs";
 import { FINDINGS_ADAPTERS } from "../runtime/quality/findings-ratchet.mjs";
 import { configDigest } from "../runtime/quality/quality-protocol.mjs";
 
@@ -165,6 +166,32 @@ test("file-size measures every code language and skips nested repositories", (t)
   const root = project(t, { "big.py": "x = 1\n".repeat(1200), "big.go": "// x\n".repeat(1200),
     "small.js": "x\n", "repos/other/huge.js": "x\n".repeat(1200), "repos/other/.git": "gitdir: x\n" });
   assert.deepEqual(fileSizeFindings(root, {}).map((row) => row.path).sort(), ["big.go", "big.py"]);
+});
+
+test("lint and test lanes follow the project's own scripts", (t) => {
+  const vue = detectedProviders(project(t, { "package.json": JSON.stringify({
+    scripts: { "lint:js": "eslint --ext \".js,.vue\" --ignore-path .gitignore .", "test:unit": "jest" },
+    devDependencies: { eslint: "7", jest: "29" } }) }), ["application-js-ts"]);
+  assert.deepEqual(vue.lint.command, ["npx", "--no-install", "eslint", ".", "--ext", ".js,.vue",
+    "--ignore-path", ".gitignore", "-f", "json"], "a Vue project's lane lints .vue as its script does");
+  assert.deepEqual(vue.test.command, ["npm", "run", "test:unit"]);
+  const bare = detectedProviders(project(t, { "package.json": JSON.stringify({ devDependencies: { vitest: "1" } }) }),
+    ["application-js-ts"]);
+  assert.deepEqual(bare.test.command, ["npx", "--no-install", "vitest", "run"]);
+});
+
+test("scans skip what the repository's .gitignore excludes", (t) => {
+  const root = project(t, { ".gitignore": ".nuxt\ncoverage/\n", ".nuxt/router.js": "// TODO generated\n",
+    "coverage/lcov.js": "x\n", "src/app.js": "x\n" });
+  spawnSync("git", ["init", "-q"], { cwd: root });
+  assert.deepEqual(sourceFiles(root, {}), ["src/app.js"]);
+  assert.deepEqual(workaroundCommentFindings(root, {}), [], "a marker in build output is not the project's");
+});
+
+test("markup that only closes elements is not duplicated code", () => {
+  const closing = ["</button>", "</el-popconfirm>", "</el-tooltip>", "</div>", "</template>",
+    "</el-table-column>", "</table-card>", "</div></div>", "/>", "</section>"].join("\n");
+  assert.deepEqual(duplicatesIn([{ path: "a.vue", text: `<a>\n${closing}\n` }, { path: "b.vue", text: `<b>\n${closing}\n` }], 8), []);
 });
 
 test("workspace package names resolve as imports into the package", (t) => {

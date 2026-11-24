@@ -11,6 +11,14 @@ import { incidentSummary } from "../quality/incident-records.mjs";
 import { uiReadinessFacts } from "../quality/ui-readiness.mjs";
 import { changesPerRepository, onboardingCandidates } from "../quality/onboarding-candidates.mjs";
 import { guideReadiness } from "../quality/guide-readiness.mjs";
+import { typeCheckExemption } from "../quality/quality-discovery.mjs";
+import { verifyFacts } from "../quality/verify-readiness.mjs";
+
+// Criteria that do not apply to a repository, by capability.
+function exemptions(path) {
+  const typeCheck = attempt(() => typeCheckExemption(path));
+  return typeCheck ? { "type-check": typeCheck } : {};
+}
 import {
   readProjectFeatureMap, validateProjectFeatureMap
 } from "../workflow/validation/project-feature-map.mjs";
@@ -32,11 +40,14 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
     const registry = attempt(() => ruleRegistrySummary(root));
     const changes = attempt(() => outcomesValue())?.changes;
     return {
+      notApplicable: exemptions(root),
       // Without a quality config every lane routes to one onboarding pass.
       configured: existsSync(join(root, "quality", "foundation-quality.json")),
       lanes: quality?.lanes || {},
       findings: quality?.findings || {},
       statuses: quality?.statuses || {},
+      histories: quality?.histories || {},
+      verify: attempt(() => verifyFacts(root)),
       featureMap: map === undefined ? undefined : map && {
         features: Array.isArray(map.features) ? map.features.length : 0,
         issues: validateProjectFeatureMap(map, { exists: (path) => existsSync(join(root, path)) }).length
@@ -73,7 +84,9 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
         : attempt(() => uiReadinessFacts(repository.path));
       // The feature map is project-wide; a repository row judges its lanes and UI.
       const value = pyramidReadiness({ ...facts, featureMap: undefined, ui, configured: true,
-        lanes: own.lanes, findings: own.findings, statuses: own.statuses });
+        notApplicable: repository && repository.type !== "root" ? exemptions(repository.path) : facts.notApplicable,
+        lanes: own.lanes, findings: own.findings, statuses: own.statuses, histories: own.histories || {},
+        verify: repository && repository.type !== "root" ? attempt(() => verifyFacts(repository.path)) : facts.verify });
       return { id, onboardedAt: own.onboardedAt || null,
         layers: value.layers.filter((layer) => REPOSITORY_LAYERS.includes(layer.layer))
           .map(({ layer, percent, met, measured }) => ({ layer, percent, met, measured })),

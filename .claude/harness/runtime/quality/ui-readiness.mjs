@@ -43,8 +43,15 @@ function packages(root, files) {
 // design token should carry. `--accent: #2946e8` defines a token; `color:
 // #2946e8` bypasses it. Comments are ignored; declarations are split on `;`,
 // `{`, and `}` outside parentheses, so minified stylesheets count the same.
-export function rawColorLiterals(text) {
-  const source = String(text).replace(/\/\*[\s\S]*?\*\//g, " ");
+// SCSS, Sass, and Less also comment with `//` to the end of the line; a URL's
+// `://` is not a comment.
+function withoutComments(text, lineComments = false) {
+  const blocks = String(text).replace(/\/\*[\s\S]*?\*\//g, " ");
+  return lineComments ? blocks.replace(/(^|[^:\\])\/\/[^\n]*/g, "$1") : blocks;
+}
+
+export function rawColorLiterals(text, { lineComments = false } = {}) {
+  const source = withoutComments(text, lineComments);
   let count = 0;
   let start = 0;
   let depth = 0;
@@ -62,9 +69,11 @@ export function rawColorLiterals(text) {
   return count;
 }
 
-function definesTokens(text) {
-  return /(^|[;{\s])--[\w-]+\s*:/.test(String(text).replace(/\/\*[\s\S]*?\*\//g, " "));
+function definesTokens(text, lineComments = false) {
+  return /(^|[;{\s])--[\w-]+\s*:/.test(withoutComments(text, lineComments));
 }
+
+const LINE_COMMENT_STYLES = /\.(scss|sass|less)$/i;
 
 // Where the design tokens live and how many colors bypass them, per stylesheet.
 function tokenFacts(root, files) {
@@ -72,8 +81,9 @@ function tokenFacts(root, files) {
     try { return [{ path, text: readFileSync(join(root, path), "utf8") }]; } catch { return []; }
   });
   const source = files.find((path) => TOKENS.test(path) && !TEST_PATH.test(path)) ||
-    sheets.find((sheet) => definesTokens(sheet.text))?.path || null;
-  const raw = sheets.map((sheet) => ({ path: sheet.path, count: rawColorLiterals(sheet.text) }))
+    sheets.find((sheet) => definesTokens(sheet.text, LINE_COMMENT_STYLES.test(sheet.path)))?.path || null;
+  const raw = sheets.map((sheet) => ({ path: sheet.path,
+    count: rawColorLiterals(sheet.text, { lineComments: LINE_COMMENT_STYLES.test(sheet.path) }) }))
     .filter((row) => row.count > 0).sort((left, right) => right.count - left.count || left.path.localeCompare(right.path));
   return { source, rawColors: raw.reduce((total, row) => total + row.count, 0), rawColorFiles: raw };
 }

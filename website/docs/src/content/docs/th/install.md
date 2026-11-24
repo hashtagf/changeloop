@@ -127,6 +127,8 @@ cloop doctor --stage change
 
 `doctor` คือคำสั่งที่ควรหยิบใช้ทุกครั้งที่รู้สึกว่ามีอะไรผิดปกติ มันวินิจฉัยสถานะของโปรเจกต์ provider และ lifecycle และรายงาน apply transaction ที่ค้างอยู่ก่อนที่ Land จะไปเจอเข้า
 
+installer จะเพิ่มส่วนที่ Change Loop ดูแลลงใน `.prettierignore`, `.eslintignore` หรือ `.stylelintignore` ที่โปรเจกต์มีอยู่แล้ว (และสร้าง `.prettierignore` ถ้าโปรเจกต์ใช้ Prettier) เพื่อให้ตัว format และ lint ของคุณไม่ไปตรวจไฟล์ของ Change Loop รายการเดิมของคุณยังอยู่ครบ
+
 ## ตั้งค่าโปรเจกต์ให้พร้อมสำหรับ agent
 
 หลังติดตั้งครั้งแรก `doctor` จะแสดงรายการ **setup** เพิ่ม บอกว่าตั้งค่า consumer quality

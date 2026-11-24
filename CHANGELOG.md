@@ -11,6 +11,19 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- Readiness puts the checks that help an agent most first. New rows: the test
+  lane runs within two minutes, gives one result for unchanged code (each
+  `quality run` keeps a lane's last ten runs), and the project has a verify
+  route (a verify skill, an end-to-end or smoke suite) so the agent can run
+  the real thing. An unmet test, verify, stable, or fast row is the next step
+  before any other layer. The onboard skill drafts a verify skill and proposes
+  property or differential tests where the code calls for them.
+- The `agent-guide` row warns when a guide is over 200 lines or names package
+  scripts that no longer exist.
+- A regression test proves a change cannot loosen the checks that judge it:
+  the quality configuration, baselines, and `REVIEW.md` are read from the
+  project root, never from the change's sandbox.
+
 - Onboarding covers the project guides. `doctor` reports an `agent-guide` row
   that is not ready while `AGENTS.md`/`CLAUDE.md` hold only the Change Loop
   pointer, and a `review-rules` row while `REVIEW.md` is the generic template.
@@ -30,6 +43,29 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+Found by onboarding a real Nuxt project:
+
+- Installing no longer breaks a project's own format and lint checks. The
+  installer keeps a managed block naming Change Loop's files in an existing
+  `.prettierignore`, `.eslintignore`, or `.stylelintignore`, and creates
+  `.prettierignore` for a project that configures Prettier. Before, a project
+  whose `prettier --check .` passed failed on 681 installed files, and Prove
+  runs that check. The managed CLAUDE.md and AGENTS.md blocks are now
+  Prettier-formatted.
+- The lint lane passes the project's own `--ext` and `--ignore-path` from its
+  eslint script: ESLint 7 and 8 lint only `.js` otherwise, so a Vue project's
+  lane checked none of its `.vue` files.
+- Code-health lanes and discovery skip what `.gitignore` excludes, such as
+  `.nuxt/` and `coverage/`; generated code produced findings the project
+  cannot fix.
+- Discovery finds a test lane from a `test:unit` script or a declared Jest or
+  Vitest, not only from a `test` script.
+- The design-token row reads SCSS, Sass, and Less `//` comments as comments:
+  a token defined under one was counted as a raw color.
+- Duplication ignores lines that only close markup (`</div>`, `</template>`):
+  every Vue screen ends the same way without sharing code.
+- Type-check criteria are not applicable to JavaScript without TypeScript or
+  `checkJs` instead of unmet.
 - The `file-size` lane measures every code language the other code-health
   lanes do (Python, Go, Ruby, and more), not only JavaScript and TypeScript.
   A file-size baseline from the narrower scan no longer compares, so the lane

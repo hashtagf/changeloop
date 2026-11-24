@@ -22,6 +22,11 @@
 export const READINESS_PROTOCOL = "foundation-pyramid-readiness-v1";
 export const LAYERS = Object.freeze(["codebase", "static", "verification", "prose", "review"]);
 // Outcome targets for the review layer; three archived changes before judging.
+// A test lane slower than this is skipped between edits, so it stops guiding the agent.
+export const FAST_TEST_MS = 120000;
+// Criteria the evidence says help an agent most: running tests, fast and stable.
+// When one is unmet it is the next step, whatever layer it sits in.
+const FIRST_NEXT = Object.freeze(["tests", "verify", "tests-stable", "tests-fast"]);
 export const REVIEW_TARGETS = Object.freeze({ minimumChanges: 3, firstProofPassRate: 0.7, escapedDefectRate: 0.1 });
 
 const ONBOARD = "run the onboard skill (the agent sets up the checks and asks the user only to confirm baselines and drafts)";
@@ -43,7 +48,8 @@ const LANE_NEXT = {
 function lane(id, layer, label, capability, alternatives = []) {
   return {
     id, layer, label,
-    evaluate: ({ lanes = {}, configured }) => {
+    evaluate: ({ lanes = {}, configured, notApplicable = {} }) => {
+      if (notApplicable[capability]) return { status: "not-applicable", detail: notApplicable[capability] };
       const state = [capability, ...alternatives].map((name) => lanes[name]).find((value) => value === "ratcheting")
         || lanes[capability] || (configured === false ? "unconfigured" : "no-lane");
       if (state === "ratcheting") return { status: "met", detail: `${capability} ratchets against its baseline` };
@@ -57,7 +63,8 @@ function lane(id, layer, label, capability, alternatives = []) {
 function clear(id, layer, label, capability) {
   return {
     id, layer, label,
-    evaluate: ({ findings = {} }) => {
+    evaluate: ({ findings = {}, notApplicable = {} }) => {
+      if (notApplicable[capability]) return { status: "not-applicable", detail: notApplicable[capability] };
       const count = findings[capability];
       if (count === undefined || count === null) return { status: "unmeasured", detail: `${capability} has no result` };
       return count === 0 ? { status: "met", detail: `no ${capability} findings` }
@@ -123,7 +130,10 @@ const WHY = Object.freeze({
   "workaround-comments": "TODO and workaround notes cannot pile up unnoticed",
   "workaround-comments-clear": "no unfinished workaround is left behind",
   "ui-a11y-lint": "accessibility mistakes in the UI code are caught automatically",
-  tests: "every change is checked by the project's own tests",
+  tests: "every change is checked by the project's own tests; running tests helps an agent more than any other check",
+  "tests-fast": "an agent runs a fast suite after every edit; a slow one it skips, and then it guides nothing",
+  "tests-stable": "a flaky failure teaches the agent to rerun instead of fixing the code",
+  verify: "running the change end to end catches what unit tests and types miss, and is hard to fool",
   coverage: "tested code stays tested; risky untested code cannot grow",
   mutation: "proves the tests actually catch bugs instead of only running the code",
   "ui-rendered": "the screen is checked as users see it, not only as code",
@@ -178,6 +188,39 @@ export const CRITERIA = Object.freeze([
         : { status: "unmet", detail: `the test lane's latest run is ${statuses.test}`,
           next: "fix the failing tests (cloop quality run --capability test shows them)" };
     }
+  },
+  {
+    id: "tests-fast", layer: "verification", label: "The test lane is fast enough to run every turn",
+    evaluate: (/** @type {{ histories?: Record<string, Array<any>> }} */ { histories = {} }) => {
+      const runs = (histories.test || []).filter((run) => Number.isFinite(run?.durationMs));
+      if (!runs.length) return { status: "unmeasured", detail: "the test lane has no timed run" };
+      const latest = runs.at(-1).durationMs;
+      return latest <= FAST_TEST_MS ? { status: "met", detail: `latest run took ${Math.round(latest / 1000)}s` }
+        : { status: "unmet", detail: `latest run took ${Math.round(latest / 1000)}s (target ${FAST_TEST_MS / 1000}s)`,
+          next: "give agents a fast test script (unit tests only, slow suites split out) and point the test lane at it" };
+    }
+  },
+  {
+    id: "tests-stable", layer: "verification", label: "The test lane gives one result for unchanged code",
+    evaluate: (/** @type {{ histories?: Record<string, Array<any>> }} */ { histories = {} }) => {
+      const runs = (histories.test || []).filter((run) => run?.workspaceDigest && ["pass", "fail"].includes(run.status));
+      // Runs grouped by the tree they measured; a tree run more than once is a stability sample.
+      const byDigest = new Map();
+      for (const run of runs) byDigest.set(run.workspaceDigest, [...(byDigest.get(run.workspaceDigest) || []), run.status]);
+      const repeated = [...byDigest.values()].filter((statuses) => statuses.length > 1);
+      if (!repeated.length) return { status: "unmeasured", detail: "no repeated run of unchanged code yet" };
+      const flaky = repeated.filter((statuses) => new Set(statuses).size > 1).length;
+      return flaky ? { status: "unmet", detail: `${flaky} unchanged tree(s) both passed and failed`,
+        next: "find and fix the flaky tests: an agent that sees a flaky failure learns to rerun instead of fix" }
+        : { status: "met", detail: `${repeated.length} tree(s) re-run with the same result` };
+    }
+  },
+  {
+    id: "verify", layer: "verification", label: "The agent can run the real thing to check a change",
+    evaluate: ({ verify }) => verify === undefined ? { status: "unmeasured", detail: "verify route not read" }
+      : verify ? { status: "met", detail: `${verify.source} (${verify.kind})` }
+        : { status: "unmet", detail: "no verify skill, end-to-end or smoke suite",
+          next: "onboard drafts a verify skill that starts the app and drives one real flow (references/verify.md)" }
   },
   lane("coverage", "verification", "Coverage or CRAP ratchets", "crap", ["coverage"]),
   lane("mutation", "verification", "Mutation testing ratchets", "automated-mutation"),
@@ -266,8 +309,10 @@ export function pyramidReadiness(facts = {}) {
       next: rows.find((row) => row.status === "unmet")?.next || null };
   });
   // The weakest measured layer, top of the pyramid first: the cheapest place to invest next.
-  const focus = layers.find((layer) => layer.percent !== null && layer.percent < 100) || null;
-  const focusRow = focus && criteria.find((row) => row.layer === focus.layer && row.status === "unmet");
+  const first = FIRST_NEXT.map((id) => criteria.find((row) => row.id === id && row.status === "unmet")).find(Boolean);
+  const weakest = layers.find((layer) => layer.percent !== null && layer.percent < 100) || null;
+  const focus = first ? { layer: first.layer, next: first.next } : weakest;
+  const focusRow = first || (focus && criteria.find((row) => row.layer === focus.layer && row.status === "unmet"));
   // Before any quality lane exists, one onboarding pass covers every lane row.
   const setupNext = LANE_NEXT.unconfigured();
   const waiting = criteria.filter((row) => row.next === setupNext).map((row) => row.id);

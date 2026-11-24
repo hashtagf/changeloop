@@ -152,6 +152,8 @@ export function repositoryReadiness(root, card) {
     },
     // run-all.sh is the test lane; on a green build it passed.
     statuses: { test: "pass" },
+    // Change Loop verifies itself end to end in disposable consumer projects.
+    verify: existsSync(join(root, ".claude/tests/e2e")) ? { source: ".claude/tests/e2e", kind: "directory" } : null,
     // On a green build the committed baseline equals the code.
     findings: {
       "file-size": card.code.filesOverSizeCeiling, "nesting-depth": card.code.filesNestedOverLimit,

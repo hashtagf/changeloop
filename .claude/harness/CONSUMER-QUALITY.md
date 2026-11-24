@@ -105,7 +105,11 @@ source extensions without a project tool and skip files over 512 KiB;
 set. Exit code 1 from a findings tool is accepted as
 "findings reported". Discovery adds `file-size`, `workaround-comments`,
 `duplication`, and `nesting-depth` to every application profile, `type-check` with TypeScript and
-`tsconfig.json`, and `lint` with ESLint. For Go it adds `type-check` through
+`tsconfig.json`, and `lint` with ESLint, passing the `--ext` and
+`--ignore-path` of the project's own eslint script. The test lane is the
+`test` script, else `test:unit`, else a declared Jest or Vitest. Scans skip
+what `.gitignore` excludes. Type-check criteria are not applicable to
+JavaScript without TypeScript or `checkJs`. For Go it adds `type-check` through
 `go vet` and `lint` when a `.golangci.*` config exists; for Python, `pytest`,
 `ruff`, and `mypy` only when the project declares them (a config file or
 section, or a requirements or `pyproject.toml` dependency), never from a stray
@@ -155,7 +159,9 @@ takes about 20 seconds.
 `quality readiness [--pretty]` reports the project against the poteto pyramid,
 strongest layer first: codebase (size, nesting, duplication, module
 boundaries, feature map), static (lint, types, stopgap comments), verification
-(a test lane whose latest run passed, CRAP or coverage, mutation), prose (recurring lessons and
+(a test lane whose latest run passed, that run within two minutes and gives
+one result for unchanged code, a verify route the agent can run end to end,
+CRAP or coverage, mutation), prose (recurring lessons and
 `quality/rule-enforcement.json` rules have checks, and every imperative
 sentence in `CLAUDE.md`/`AGENTS.md` has a registry row), and review (every
 closed incident in `openspec/incidents/` names a regression file that exists;
@@ -169,6 +175,15 @@ Loop's own repository is scored with the same criteria
 reason it helps the work, for the agent to explain a gap. Without
 `quality/foundation-quality.json`, `setup` names one step, running the
 `onboard` skill, for every lane row instead of one setup command per lane.
+
+An unmet test, verify, stable-test, or fast-test row is the next step before
+any other layer: running tests and the real thing helps an agent more than
+static checks (in Meta's 2025 ablation, test feedback raised the solve rate
+from 28.5% to 43.9%, static analysis alone to 34.1%). Each `quality run`
+records a lane's last ten runs (status, duration, workspace digest) next to its
+result. The quality configuration, baselines, and `REVIEW.md` are always read
+from the project root, never from a change's sandbox, so a change cannot
+loosen the checks that judge it.
 
 Readiness measures whether the checks exist, not whether the work got
 better. `outcomes` answers that: it splits archived changes at the first

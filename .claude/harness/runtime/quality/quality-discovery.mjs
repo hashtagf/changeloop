@@ -7,7 +7,7 @@ import {
   requiredControlsForProfiles, semanticFaultsForProfiles
 } from "./semantic-fault-catalog.mjs";
 import { proposeModuleBoundaries } from "./module-boundary-proposal.mjs";
-import { nestedRepository } from "./source-scan.mjs";
+import { gitIgnored, nestedRepository } from "./source-scan.mjs";
 
 const EXCLUDED = new Set([
   ".git", ".claude", ".foundation", "node_modules", "vendor", "target", "dist", "build",
@@ -24,6 +24,8 @@ export function inventoryRepository(root, { maximumFiles = 10000 } = {}) {
   const extensions = new Set();
   const markers = new Set();
   let truncated = false;
+  // Build output the repository ignores (.nuxt/, .next/) is not its source.
+  const ignored = gitIgnored(root);
   const walk = (directory) => {
     if (truncated) return;
     let entries = [];
@@ -34,7 +36,7 @@ export function inventoryRepository(root, { maximumFiles = 10000 } = {}) {
       const path = relative(root, absolute).replaceAll("\\", "/");
       if (entry.isDirectory()) {
         // Another repository (sibling or submodule) is discovered on its own.
-        if (!EXCLUDED_PATHS.has(path) && !nestedRepository(absolute)) walk(absolute);
+        if (!EXCLUDED_PATHS.has(path) && !nestedRepository(absolute) && !ignored(path, true)) walk(absolute);
         continue;
       }
       if (!entry.isFile()) continue;
@@ -96,12 +98,57 @@ function golangciCommand(root) {
     : ["golangci-lint", "run", "--out-format", "json", "./..."];
 }
 
+// The scope flags of the project's own eslint script: ESLint 7 and 8 lint only
+// .js unless told `--ext`, so a Vue project's lane would skip every .vue, and
+// `--ignore-path` keeps build output out the way the project does.
+export function eslintScopeArgs(scripts = {}) {
+  for (const script of Object.values(scripts)) {
+    const call = /\beslint\b([^&|;]*)/.exec(String(script))?.[1];
+    if (!call) continue;
+    const flag = (name) => new RegExp(`${name}[ =]("[^"]+"|'[^']+'|\\S+)`).exec(call)?.[1].replace(/^["']|["']$/g, "");
+    const args = [];
+    for (const name of ["--ext", "--ignore-path"]) if (flag(name)) args.push(name, flag(name));
+    if (args.length) return args;
+  }
+  return [];
+}
+
+// A test lane from the project's test script: `test`, else `test:unit`, else
+// a declared Jest or Vitest run directly.
+function testCommand(scripts, dependencies) {
+  if (scripts.test) return ["npm", "test"];
+  if (scripts["test:unit"]) return ["npm", "run", "test:unit"];
+  if (dependencies.vitest) return ["npx", "--no-install", "vitest", "run"];
+  if (dependencies.jest) return ["npx", "--no-install", "jest"];
+  return null;
+}
+
+// Why a type checker does not apply, or null when it does: a JavaScript
+// project without TypeScript, `checkJs`, Go, or Python has no type checker to
+// ratchet, so its type-check criteria are not applicable rather than unmet.
+export function typeCheckExemption(root) {
+  const manifest = jsonAt(join(root, "package.json"));
+  if (!manifest) return null;
+  const declared = { ...manifest.dependencies, ...manifest.devDependencies };
+  const checkJs = ["jsconfig.json", "tsconfig.json"].some((name) =>
+    /"checkJs"\s*:\s*true/.test(readFileSafe(join(root, name))));
+  const typed = declared.typescript || existsSync(join(root, "tsconfig.json")) || checkJs ||
+    ["go.mod", "pyproject.toml", "mypy.ini"].some((name) => existsSync(join(root, name)));
+  return typed ? null : "JavaScript without TypeScript or checkJs";
+}
+
+function readFileSafe(path) {
+  try { return readFileSync(path, "utf8"); } catch { return ""; }
+}
+
 export function detectedProviders(root, profiles) {
   const providers = {};
   const packageJson = jsonAt(join(root, "package.json"));
   const scripts = packageJson?.scripts || {};
   if (profiles.includes("application-js-ts")) {
-    if (scripts.test) providers.test = commandProvider(["npm", "test"]);
+    const declared = { ...packageJson?.dependencies, ...packageJson?.devDependencies };
+    const test = testCommand(scripts, declared);
+    if (test) providers.test = commandProvider(test);
     if (scripts.typecheck) providers["static-analysis"] = commandProvider(["npm", "run", "typecheck"]);
     else if (scripts.lint) providers["static-analysis"] = commandProvider(["npm", "run", "lint"]);
     const crapScript = scripts["foundation:quality:crap"]
@@ -113,9 +160,11 @@ export function detectedProviders(root, profiles) {
     if (dependencies.typescript && existsSync(join(root, "tsconfig.json")))
       providers["type-check"] = { kind: "builtin", adapter: "tsc-text", isolation: "read-only",
         command: ["npx", "--no-install", "tsc", "--noEmit", "--pretty", "false"], inputs: { report: "-" } };
-    if (dependencies.eslint)
+    if (dependencies.eslint) {
       providers.lint = { kind: "builtin", adapter: "eslint-json", isolation: "read-only",
-        command: ["npx", "--no-install", "eslint", ".", "-f", "json"], inputs: { report: "-" } };
+        command: ["npx", "--no-install", "eslint", ".", ...eslintScopeArgs(scripts), "-f", "json"],
+        inputs: { report: "-" } };
+    }
     if (scripts["foundation:quality:mutation"]) providers["automated-mutation"] = commandProvider(["npm", "run", "foundation:quality:mutation"], {
       protocol: "foundation-automated-mutation-v1", output: ".foundation/quality/mutation.json", isolation: "tool"
     });

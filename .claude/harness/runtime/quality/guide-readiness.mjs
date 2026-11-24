@@ -13,6 +13,26 @@ const MANAGED_BLOCK = /<!--\s*claude-foundation:([a-z-]+):start\s*-->[\s\S]*?<!-
 const REVIEW_PLACEHOLDERS = ["<name or team who maintains these rules>", "<add project-specific exclusions>"];
 // Words of project guidance an agent guide needs beyond headings and the managed block.
 const MINIMUM_GUIDE_WORDS = 40;
+// A guide is loaded into every session: past this it crowds out the task and
+// rots. Keep it a map that points to docs, not the manual itself.
+export const MAXIMUM_GUIDE_LINES = 200;
+
+// Package-script references (`npm run x`, `pnpm x`, `yarn x`, `bun run x`) in
+// a guide whose package.json no longer defines that script: an instruction an
+// agent follows and fails on.
+export function staleScriptReferences(markdown, scripts) {
+  if (!scripts) return [];
+  const builtins = new Set(["install", "ci", "i", "add", "remove", "exec", "dlx", "run", "init", "create",
+    "publish", "pack", "link", "update", "upgrade", "outdated", "audit", "why", "x", "start", "test"]);
+  const found = new Set();
+  const pattern = /\b(?:npm|pnpm|bun) run ([\w:.-]+)|\b(?:pnpm|yarn|bun) ([\w:.-]+)|\bnpm (start|test)\b/g;
+  for (const match of String(markdown).matchAll(pattern)) {
+    const name = match[1] || match[2] || match[3];
+    if (!name || (!match[1] && !match[3] && builtins.has(name))) continue;
+    if (!Object.hasOwn(scripts, name)) found.add(name);
+  }
+  return [...found].sort();
+}
 
 function text(root, name) {
   try { return readFileSync(join(root, name), "utf8"); } catch { return null; }
@@ -30,7 +50,21 @@ export function guideReadiness(root) {
   const guides = ["CLAUDE.md", "AGENTS.md"].filter((name) => existsSync(join(root, name)));
   const words = guides.map((name) => ({ name, words: projectGuideWords(text(root, name)) }));
   const written = words.find((row) => row.words >= MINIMUM_GUIDE_WORDS);
-  rows.push(!guides.length
+  let scripts = null;
+  try { scripts = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).scripts || {}; } catch { scripts = null; }
+  const problems = guides.flatMap((name) => {
+    const content = text(root, name) || "";
+    const lines = content.split("\n").length;
+    const stale = staleScriptReferences(content, scripts);
+    return [
+      ...(lines > MAXIMUM_GUIDE_LINES ? [`${name} is ${lines} lines (keep it under ${MAXIMUM_GUIDE_LINES}: a map that points to docs)`] : []),
+      ...(stale.length ? [`${name} names script(s) package.json lacks: ${stale.slice(0, 5).join(", ")}`] : [])
+    ];
+  });
+  rows.push(problems.length && written
+    ? { id: "agent-guide", level: "warn", detail: problems.join("; "),
+      next: "fix the named commands and move long sections into docs/ the guide links to (skill: claude-md)" }
+    : !guides.length
     ? { id: "agent-guide", level: "info", detail: "no CLAUDE.md or AGENTS.md",
       next: "ask the agent to write a short agent guide (skill: claude-md)" }
     : written ? { id: "agent-guide", level: "ok", detail: `${written.name} has project guidance`, next: null }

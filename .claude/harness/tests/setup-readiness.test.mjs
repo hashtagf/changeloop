@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 import { createQualityRuntime } from "../runtime/quality/quality-runtime.mjs";
 import { projectSetupReadiness } from "../runtime/workflow/validation/project-feature-map.mjs";
-import { guideReadiness, projectGuideWords } from "../runtime/quality/guide-readiness.mjs";
+import { guideReadiness, projectGuideWords, staleScriptReferences } from "../runtime/quality/guide-readiness.mjs";
 
 const FOUNDATION = fileURLToPath(new URL("../foundation.mjs", import.meta.url));
 
@@ -127,6 +127,16 @@ test("a seeded agent guide or REVIEW.md template is not project guidance yet", (
   rows = byId(guideReadiness(project(t, { "CLAUDE.md": rules, "REVIEW.md": reviewed })));
   assert.deepEqual([rows["agent-guide"].level, rows["review-rules"].level], ["ok", "ok"]);
   assert.equal(projectGuideWords(POINTER), 0);
+
+  // A written guide that has grown into a manual, or names scripts that are gone.
+  const stale = `${rules}\nRun \`npm run lint:all\` and \`npm test\` before pushing.\n`;
+  rows = byId(guideReadiness(project(t, { "AGENTS.md": stale, "package.json": { scripts: { test: "jest" } } })));
+  assert.equal(rows["agent-guide"].level, "warn");
+  assert.match(rows["agent-guide"].detail, /names script\(s\) package.json lacks: lint:all/);
+  rows = byId(guideReadiness(project(t, { "AGENTS.md": `${rules}${"- rule\n".repeat(220)}` })));
+  assert.match(rows["agent-guide"].detail, /lines \(keep it under 200/);
+  assert.deepEqual(staleScriptReferences("pnpm install, yarn build, npm test", { build: "x", test: "y" }), [],
+    "package-manager builtins and defined scripts are not stale");
 });
 
 test("doctor --json carries a setup section and no setup row is an error", (t) => {

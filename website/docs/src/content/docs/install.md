@@ -134,6 +134,11 @@ cloop doctor --stage change
 
 `doctor` is the readiness check you should reach for whenever something looks wrong. It diagnoses project, provider, and lifecycle state, and it reports unresolved apply transactions before Land ever reaches them.
 
+The installer also adds one managed block naming Change Loop's files to an
+existing `.prettierignore`, `.eslintignore`, or `.stylelintignore` (and
+creates `.prettierignore` when the project configures Prettier), so your own
+format and lint checks never judge the installed files. Your entries stay.
+
 ## Set up the project for agents
 
 After the first install, `doctor` also lists **setup** rows: whether consumer

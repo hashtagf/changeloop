@@ -122,6 +122,14 @@ test("discover, init, run, baseline, and the accepted boundary draft meet the co
     "workaround-comments", "workaround-comments-clear", "tests"])
     assert.equal(row(value, id).status, "met", id);
 
+  // Each run adds to the test lane's history, so readiness can judge speed and stability.
+  quality.run({ capability: "test" });
+  const history = JSON.parse(readFileSync(join(root, ".foundation/quality/results/root/test.status.json"), "utf8")).history;
+  assert.equal(history.length, 2);
+  assert.ok(history.every((run) => run.status === "pass" && Number.isFinite(run.durationMs)));
+  const again = readiness.readinessValue().criteria;
+  assert.equal(again.find((row) => row.id === "tests-fast").status, "met");
+
   // A new dependency direction is a boundary finding the ratchet rejects.
   writeFileSync(join(root, "src/core/money.js"), "import \"../ui/cart.js\";\nexport const add = (a, b) => a + b;\n");
   const summary = quality.run({ capability: "module-boundaries" });

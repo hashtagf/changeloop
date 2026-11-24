@@ -527,6 +527,7 @@ START="<!-- claude-foundation:change-loop:start -->"
 END="<!-- claude-foundation:change-loop:end -->"
 BLOCK="$(cat <<'EOF'
 <!-- claude-foundation:change-loop:start -->
+
 ## Foundation change loop
 
 Use `/investigate` when the problem is unclear, otherwise use `/change`.
@@ -534,6 +535,7 @@ The delivery loop is `/change → /build → /prove → /land`; `/dev` is a
 compatibility composition that stops after proof.
 
 @.claude/harness/AGENT.md
+
 <!-- claude-foundation:change-loop:end -->
 EOF
 )"
@@ -560,11 +562,13 @@ AGENTS_START="<!-- claude-foundation:portable-agent:start -->"
 AGENTS_END="<!-- claude-foundation:portable-agent:end -->"
 AGENTS_BLOCK="$(cat <<'EOF'
 <!-- claude-foundation:portable-agent:start -->
+
 ## Foundation change loop
 
 Read `.claude/harness/AGENT.md` before Foundation workflow work. Use
 `investigate → change → build → prove → land`; start each phase from
 `cloop packet <change>`.
+
 <!-- claude-foundation:portable-agent:end -->
 EOF
 )"
@@ -585,6 +589,55 @@ elif grep -qF "$AGENTS_START" "$AGENTS_DST"; then
 else
   printf '\n%s\n' "$AGENTS_BLOCK" >> "$AGENTS_DST"
 fi
+
+# The project's formatters and linters must not judge Change Loop's own files:
+# a project whose `prettier --check .` passed would otherwise fail on hundreds
+# of installed files the day Change Loop arrives, and Prove runs that check.
+# Keep one managed block in each ignore file the project already uses (and in
+# a new .prettierignore when the project configures Prettier without one).
+IGNORE_START="# claude-foundation:tool-ignore:start"
+IGNORE_END="# claude-foundation:tool-ignore:end"
+IGNORE_BLOCK="$(cat <<'EOF'
+# claude-foundation:tool-ignore:start
+# Change Loop installed files and machine state, managed by its installer.
+.claude/
+.foundation/
+openspec/
+quality/
+WORKFLOW.md
+# claude-foundation:tool-ignore:end
+EOF
+)"
+prettier_configured() {
+  # One unmatched glob makes ls fail as a whole, so test each candidate.
+  for candidate in "$TARGET_PATH"/.prettierrc* "$TARGET_PATH"/prettier.config.*; do
+    [ -e "$candidate" ] && return 0
+  done
+  [ -f "$TARGET_PATH/package.json" ] && grep -qE '"prettier"' "$TARGET_PATH/package.json"
+}
+IGNORE_TOUCHED=()
+for ignore_name in .prettierignore .eslintignore .stylelintignore; do
+  ignore_dst="$TARGET_PATH/$ignore_name"
+  if [ ! -e "$ignore_dst" ]; then
+    [ "$ignore_name" = .prettierignore ] && prettier_configured || continue
+    printf '%s\n' "$IGNORE_BLOCK" > "$ignore_dst"
+  elif grep -qF "$IGNORE_START" "$ignore_dst"; then
+    tmp="$(mktemp)"
+    block_tmp="$(mktemp)"
+    printf '%s\n' "$IGNORE_BLOCK" > "$block_tmp"
+    awk -v start="$IGNORE_START" -v end="$IGNORE_END" '
+      FNR==NR { replacement=replacement $0 ORS; next }
+      index($0,start) { printf "%s", replacement; skip=1; next }
+      index($0,end) { skip=0; next }
+      !skip { print }
+    ' "$block_tmp" "$ignore_dst" > "$tmp"
+    rm -f "$block_tmp"
+    mv "$tmp" "$ignore_dst"
+  else
+    printf '\n%s\n' "$IGNORE_BLOCK" >> "$ignore_dst"
+  fi
+  IGNORE_TOUCHED+=("$ignore_name")
+done
 
 # Prepare the pinned OpenSpec CLI now, through the same harness routine Build,
 # Prove, and Land use, so a machine without npm access learns it at install
@@ -650,6 +703,8 @@ if command -v git >/dev/null 2>&1 &&
     git -C "$TARGET_PATH" add -- REVIEW.md >/dev/null 2>&1 || true
   [ "${#RECORDS_SEEDED[@]}" -eq 0 ] ||
     git -C "$TARGET_PATH" add -- "${RECORDS_SEEDED[@]}" >/dev/null 2>&1 || true
+  [ "${#IGNORE_TOUCHED[@]}" -eq 0 ] ||
+    git -C "$TARGET_PATH" add -- "${IGNORE_TOUCHED[@]}" >/dev/null 2>&1 || true
   if ! git -C "$TARGET_PATH" diff --cached --quiet 2>/dev/null; then
     printf '▸ Setup is complete, but the managed workflow files are only staged.\n'
     printf '  Commit them before the first Change Loop change so they are not mistaken for product work:\n'
