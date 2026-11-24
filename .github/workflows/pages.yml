@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || 'https://changeloop.ai/' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -110,6 +110,22 @@ jobs:
         with:
           path: _site
 
+      # The artifact upload succeeds, but deploy-pages one second later has
+      # repeatedly found no `github-pages` artifact (the artifact index lags).
+      # Wait, and retry once; a re-run of the whole job cannot help because the
+      # retried upload then leaves two artifacts with the same name.
+      - name: Let the Pages artifact become visible
+        run: sleep 15
+
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+
+      - name: Wait before retrying the Pages deploy
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 45
+
+      - name: Deploy to GitHub Pages (retry)
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v5
