@@ -780,6 +780,7 @@
         ".claude/harness/adapters/pi-extension.mjs",
         ".claude/harness/runtime/core/host-instruction.mjs",
         ".claude/harness/runtime/observability/telemetry-runtime.mjs",
+        ".claude/harness/runtime/quality/guide-readiness.mjs",
         ".claude/skills/onboard/SKILL.md"
       ],
       "tests": [

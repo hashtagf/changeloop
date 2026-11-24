@@ -132,7 +132,7 @@ cloop doctor --stage change
 หลังติดตั้งครั้งแรก `doctor` จะแสดงรายการ **setup** เพิ่ม บอกว่าตั้งค่า consumer quality
 แล้วหรือยัง, lane ของ lint, type-check, ขนาดไฟล์ และขอบเขตโมดูลมี baseline หรือยัง,
 `openspec/feature-map.json` ระบุฟีเจอร์ของคุณแล้วหรือยัง และมี `openspec/lessons.md`
-กับ agent guide หรือยัง แต่ละรายการบอกคำสั่งถัดไป และไม่มีรายการไหนทำให้ `doctor` fail
+แล้วหรือยัง, `AGENTS.md` หรือ `CLAUDE.md` มีกฎของโปรเจกต์แล้วหรือยัง (ไม่ใช่มีแค่ส่วนที่ Change Loop ใส่ไว้) และ `REVIEW.md` ยังเป็น template ทั่วไปอยู่ไหม แต่ละรายการบอกคำสั่งถัดไป และไม่มีรายการไหนทำให้ `doctor` fail การ onboard จะร่างกฎรีวิวเฉพาะโปรเจกต์ให้คุณยืนยัน และถามครั้งเดียวว่าจะเพิ่ม `SECURITY.md` ไหม
 
 สั่ง agent ให้ onboard โปรเจกต์ ("onboard this repo") skill `onboard` จะรันคำสั่งที่
 `doctor` บอก ร่าง feature map และขอบเขตโมดูล (ถ้าต้องการ) จากโค้ดของคุณ แล้วถามให้คุณยืนยัน

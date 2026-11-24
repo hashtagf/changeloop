@@ -22,23 +22,24 @@ user decides what becomes binding.
 5. Module boundaries (optional): show discovery's
    `proposals.module-boundaries`; add its `provider` if the user agrees.
 6. Lessons: offer each warned lesson's `adoption.draft` through `/change`.
-7. Rules: draft `quality/rule-enforcement.json` per
+7. Guides (`references/guides.md`): agent guide to `claude-md`, draft
+   `REVIEW.md`, offer `SECURITY.md` once.
+8. Rules: draft `quality/rule-enforcement.json` per
    `references/rule-registry-guide.md`; the user confirms each layer.
-8. UI rows: propose fixes (`references/ui-readiness-guide.md`) via `/change`.
-9. Verify with `cloop features --strict`, `cloop quality run`, and
-   `cloop quality readiness --pretty`; report each layer's percent and next step.
-10. Hand a missing or stale `CLAUDE.md`/`AGENTS.md` to `claude-md`.
+9. UI rows: propose fixes (`references/ui-readiness-guide.md`) via `/change`.
+10. Verify: `cloop features --strict`, `cloop quality run`,
+    `cloop quality readiness --pretty`; report each layer and next step.
 
 ## Harness
 
-Writes only `quality/foundation-quality.json`, `quality/baselines/**` (after the user's decision), `quality/rule-enforcement.json`, and `openspec/feature-map.json`.
+Writes only `quality/foundation-quality.json`, `quality/baselines/**` (after the user's decision), `quality/rule-enforcement.json`, `openspec/feature-map.json`, and confirmed `REVIEW.md`/`SECURITY.md`.
 Never edits product code, reruns `cloop init` unasked, wires evidence (`advance` does), commits, or pushes.
 Without Change Loop installed: stop; `cloop init` comes first.
 
 ## References
 
 - `references/feature-map-guide.md` — choosing features and the JSON shape.
-- `references/rule-registry-guide.md` — pyramid layers, what counts as a check,
-  and the registry shape.
+- `references/rule-registry-guide.md` — pyramid layers, registry.
 - `references/ui-readiness-guide.md` — UI rows.
 - `references/multi-repository.md` — many repositories.
+- `references/guides.md` — project guides.

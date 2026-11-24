@@ -139,8 +139,11 @@ cloop doctor --stage change
 After the first install, `doctor` also lists **setup** rows: whether consumer
 quality is configured, whether each lint, type-check, file-size, or
 module-boundary lane has a baseline, whether `openspec/feature-map.json` names
-your features, and whether `openspec/lessons.md` and an agent guide exist. Each
-row names its next command; none of them fails `doctor`.
+your features, whether `openspec/lessons.md` exists, whether `AGENTS.md` or
+`CLAUDE.md` holds project rules rather than only the Change Loop pointer, and
+whether `REVIEW.md` is still the generic template. Each row names its next
+command; none of them fails `doctor`. Onboarding drafts project review rules for
+you to confirm and asks once whether to add a `SECURITY.md`.
 
 Ask the agent to onboard the project ("onboard this repo"). The `onboard` skill
 runs the commands `doctor` names, drafts the feature map and optional module

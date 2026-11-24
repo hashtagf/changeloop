@@ -450,7 +450,7 @@ Install or upgrade Change Loop, connect agent hosts, then onboard the project: d
 | CLI commands | `init`, `models`, `host agent-contract`, `host instruction`, `telemetry sync`, `telemetry import`, `telemetry host-import`, `event`, `api-version` |
 | User states | — |
 | Runtime groups | — |
-| Code | `.claude/harness/adapters/pi-extension.mjs`, `.claude/harness/runtime/core/host-instruction.mjs`, `.claude/harness/runtime/observability/telemetry-runtime.mjs`, `.claude/skills/onboard/SKILL.md` |
+| Code | `.claude/harness/adapters/pi-extension.mjs`, `.claude/harness/runtime/core/host-instruction.mjs`, `.claude/harness/runtime/observability/telemetry-runtime.mjs`, `.claude/harness/runtime/quality/guide-readiness.mjs`, `.claude/skills/onboard/SKILL.md` |
 | Tests | `.claude/harness/tests/host-capability-matrix.test.mjs`, `.claude/harness/tests/telemetry-import-sync.test.mjs`, `.claude/harness/tests/setup-readiness.test.mjs` |
 | Docs | `website/docs/src/content/docs/install.md`, `.claude/harness/README.md` |
 

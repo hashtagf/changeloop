@@ -9,6 +9,16 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Added
+
+- Onboarding covers the project guides. `doctor` reports an `agent-guide` row
+  that is not ready while `AGENTS.md`/`CLAUDE.md` hold only the Change Loop
+  pointer, and a `review-rules` row while `REVIEW.md` is the generic template.
+  The `onboard` skill hands the agent guide to `claude-md`, drafts review
+  rules from the project's sensitive areas, lessons, and incidents for the user
+  to confirm, and asks once whether to add a `SECURITY.md` from the owner's
+  answers.
+
 ### Changed
 
 - The release workflow validates its inputs first, then runs the pull-request

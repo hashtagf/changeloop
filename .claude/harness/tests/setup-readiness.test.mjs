@@ -11,6 +11,7 @@ import { fileURLToPath } from "node:url";
 
 import { createQualityRuntime } from "../runtime/quality/quality-runtime.mjs";
 import { projectSetupReadiness } from "../runtime/workflow/validation/project-feature-map.mjs";
+import { guideReadiness, projectGuideWords } from "../runtime/quality/guide-readiness.mjs";
 
 const FOUNDATION = fileURLToPath(new URL("../foundation.mjs", import.meta.url));
 
@@ -85,9 +86,9 @@ test("quality readiness reports an invalid config and a repository without findi
   assert.equal(byId(runtime.readiness())["findings:root"].level, "info");
 });
 
-test("project readiness covers the feature map, lessons, and agent guide", (t) => {
+test("project readiness covers the feature map and lessons", (t) => {
   let rows = byId(projectSetupReadiness(project(t)));
-  assert.deepEqual([rows["feature-map"].level, rows.lessons.level, rows["agent-guide"].level], ["info", "info", "info"]);
+  assert.deepEqual([rows["feature-map"].level, rows.lessons.level], ["info", "info"]);
   rows = byId(projectSetupReadiness(project(t, { "openspec/feature-map.json": { version: 1, features: [] } })));
   assert.equal(rows["feature-map"].level, "warn");
   assert.match(rows["feature-map"].next, /onboard/);
@@ -97,9 +98,35 @@ test("project readiness covers the feature map, lessons, and agent guide", (t) =
     "openspec/feature-map.json": { version: 1, features: [{ id: "x", name: "X", summary: "S", paths: ["src/gone/**"] }] } })));
   assert.match(rows["feature-map"].detail, /1 issue/);
   rows = byId(projectSetupReadiness(project(t, {
-    "src/x/a.js": "", "openspec/lessons.md": "#", "AGENTS.md": "#",
+    "src/x/a.js": "", "openspec/lessons.md": "#",
     "openspec/feature-map.json": { version: 1, features: [{ id: "x", name: "X", summary: "S", paths: ["src/x/**"] }] } })));
-  assert.deepEqual([rows["feature-map"].level, rows.lessons.level, rows["agent-guide"].level], ["ok", "ok", "ok"]);
+  assert.deepEqual([rows["feature-map"].level, rows.lessons.level], ["ok", "ok"]);
+});
+
+const POINTER = "# AGENTS.md\n\n<!-- claude-foundation:portable-agent:start -->\n## Foundation change loop\n\n" +
+  "Read `.claude/harness/AGENT.md` before Foundation workflow work. Use the loop and start each phase from the packet, " +
+  "which is plenty of words inside the managed block that must not count as project guidance at all here.\n" +
+  "<!-- claude-foundation:portable-agent:end -->\n";
+const TEMPLATE = readFileSync(new URL("../templates/REVIEW.md", import.meta.url), "utf8");
+
+test("a seeded agent guide or REVIEW.md template is not project guidance yet", (t) => {
+  let rows = byId(guideReadiness(project(t)));
+  assert.deepEqual([rows["agent-guide"].level, rows["review-rules"].level], ["info", "info"]);
+  assert.match(rows["agent-guide"].next, /claude-md/);
+  assert.match(rows["review-rules"].detail, /missing/);
+
+  rows = byId(guideReadiness(project(t, { "AGENTS.md": POINTER, "REVIEW.md": TEMPLATE })));
+  assert.match(rows["agent-guide"].detail, /only the Change Loop pointer/, "the managed block does not count");
+  assert.equal(rows["review-rules"].level, "info");
+  assert.match(rows["review-rules"].detail, /generic template/);
+  assert.match(rows["review-rules"].next, /onboard/);
+
+  const rules = `${POINTER}\n## Commands\n\n${"Run npm test before every commit and keep handlers thin. ".repeat(6)}\n`;
+  const reviewed = TEMPLATE.replace("<name or team who maintains these rules>", "Payments team")
+    .replace("- <add project-specific exclusions>.", "- fixtures under test/data.");
+  rows = byId(guideReadiness(project(t, { "CLAUDE.md": rules, "REVIEW.md": reviewed })));
+  assert.deepEqual([rows["agent-guide"].level, rows["review-rules"].level], ["ok", "ok"]);
+  assert.equal(projectGuideWords(POINTER), 0);
 });
 
 test("doctor --json carries a setup section and no setup row is an error", (t) => {
@@ -108,7 +135,7 @@ test("doctor --json carries a setup section and no setup row is an error", (t) =
   const run = spawnSync(process.execPath, [FOUNDATION, "doctor", "--json"], { cwd: root, encoding: "utf8",
     env: { ...process.env, CLAUDE_FOUNDATION_PROJECT: root, FOUNDATION_TELEMETRY: "0" } });
   const value = JSON.parse(run.stdout);
-  assert.deepEqual(value.setup.map((row) => row.id).sort(), ["agent-guide", "feature-map", "lessons", "lessons-enforcement", "pyramid", "quality-config"]);
+  assert.deepEqual(value.setup.map((row) => row.id).sort(), ["agent-guide", "feature-map", "lessons", "lessons-enforcement", "pyramid", "quality-config", "review-rules"]);
   // A row that is not ready names its next step; a project with no history has no pending lessons.
   for (const row of value.setup) assert.ok(row.level === "ok" || row.next, row.id);
   assert.equal(value.setup.find((row) => row.id === "lessons-enforcement").level, "ok");

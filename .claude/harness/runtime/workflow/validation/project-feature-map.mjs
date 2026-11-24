@@ -159,10 +159,5 @@ export function projectSetupReadiness(root) {
     ? { id: "lessons", level: "ok", detail: "openspec/lessons.md present", next: null }
     : { id: "lessons", level: "info", detail: "openspec/lessons.md is missing",
       next: "rerun 'cloop init' to seed it" });
-  const guide = ["CLAUDE.md", "AGENTS.md"].find((name) => existsSync(join(root, name)));
-  rows.push(guide
-    ? { id: "agent-guide", level: "ok", detail: `${guide} present`, next: null }
-    : { id: "agent-guide", level: "info", detail: "no CLAUDE.md or AGENTS.md",
-      next: "ask the agent to write a short agent guide (skill: claude-md)" });
   return rows;
 }

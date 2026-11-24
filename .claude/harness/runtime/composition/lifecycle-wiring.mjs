@@ -18,6 +18,7 @@ import { createPullRequestRuntime } from "../workflow/delivery/pull-request-runt
 import { join } from "node:path";
 import { lessonsReadiness } from "../observability/lessons-runtime.mjs";
 import { projectSetupReadiness } from "../workflow/validation/project-feature-map.mjs";
+import { guideReadiness } from "../quality/guide-readiness.mjs";
 import { receiptRegressionFinding } from "../evidence/benchmark-runtime.mjs";
 import { taskBlocks, taskMetadata } from "../contracts/change-artifacts.mjs";
 import { transactionJournals as readTransactionJournals } from "../workflow/transaction/land-journal.mjs";
@@ -142,7 +143,7 @@ export function composeLifecycleRuntimes({
     reviewerStatus,
     unverifiedDrift: (id) => modelDriftInspector.changeDrift(id).unverified,
     evidenceDetection: evidenceDetectionValue,
-    setupReadiness: () => [...qualityReadiness(), ...projectSetupReadiness(ROOT), lessonsReadiness(lessonsValue()),
+    setupReadiness: () => [...qualityReadiness(), ...projectSetupReadiness(ROOT), ...guideReadiness(ROOT), lessonsReadiness(lessonsValue()),
       pyramidReadinessCommand.readinessRow()],
     fail: die
   });
