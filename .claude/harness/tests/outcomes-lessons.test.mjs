@@ -277,6 +277,28 @@ test("outcomes dates onboarding from the first commit of the quality configurati
   assert.equal(value.onboarding.before.changes, 1);
 });
 
+test("each onboarded repository is compared on the changes that selected it, at its own date", (t) => {
+  const fixture = project(t);
+  const day = (n) => `2026-10-${String(n).padStart(2, "0")}T00:00:00Z`;
+  for (const [id, n, repositories] of [["a1", 1, ["api"]], ["a2", 2, ["api", "web"]], ["a3", 3, ["api"]],
+    ["a4", 11, ["api"]], ["a5", 12, ["api"]], ["a6", 13, ["api"]], ["w1", 14, ["web"]]])
+    fixture.change(id, { createdAt: day(n), archivedAt: day(n),
+      repositories: Object.fromEntries(repositories.map((repository) => [repository, {}])) }, { proofRuns: 1 });
+  const value = createOutcomesRuntime({
+    runtimeDir: join(fixture.store, "runtime"), evidenceDir: join(fixture.store, "evidence"),
+    logsDir: join(fixture.store, "logs"), changeWorkTypes: () => ["feature"],
+    reviewAttemptRecords: attemptRecords(fixture.store),
+    repositoryOnboardedAt: () => ({ api: day(10), web: day(10), idle: day(10) })
+  }).outcomesValue();
+  assert.deepEqual(value.changes.find((row) => row.id === "a2").repositories, ["api", "web"]);
+  const byId = Object.fromEntries(value.onboardingByRepository.map((row) => [row.repository, row]));
+  assert.deepEqual(Object.keys(byId), ["api", "web"], "a repository with no changes is not listed");
+  assert.equal(byId.api.status, "measured");
+  assert.deepEqual([byId.api.before.changes, byId.api.after.changes], [3, 3]);
+  assert.equal(byId.web.status, "insufficient");
+  assert.match(outcomesText(value), /\[api\] Before\/after onboarding/);
+});
+
 test("outcomes and lessons leave the store digest unchanged", (t) => {
   const fixture = project(t);
   fixture.change("a", {}, { proofRuns: 1, events: [{ cost: 1 }],

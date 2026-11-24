@@ -120,6 +120,24 @@ only a new direction, and `cycles` lists each import cycle for the user to
 decide. `quality init` never writes a proposal; the `onboard` skill adds it
 after the user agrees.
 
+## Per-repository onboarding
+
+A topology of many repositories onboards a few at a time. `quality discover
+--repo <id>,...` and `quality init --write --repo <id>,...` touch only the named
+repositories: init adds them (with `onboardedAt`) to an existing configuration,
+keeps the others, and sets `unlisted: not-onboarded`. Without a change,
+`quality run` and `quality doctor` then measure only the onboarded
+repositories, and doctor reports the rest as one count. `quality readiness`
+adds `onboarding` (`onboarded` of `total` writable repositories and up to five
+`candidates` ranked by recorded changes, sensitive names such as auth or
+payments, and declared lint or type tools) and `repositories`, each onboarded
+repository's codebase, static, and verification layers. `outcomes` adds
+`onboardingByRepository`, comparing each repository before and after its own
+`onboardedAt` on the changes that selected it. Measured on a synthetic
+800-repository topology: readiness, doctor, init, and run of the onboarded
+repositories each take under three seconds; discovery of every repository
+takes about 20 seconds.
+
 ## Pyramid readiness
 
 `quality readiness [--pretty]` reports the project against the poteto pyramid,
@@ -178,7 +196,9 @@ approver, tracking issue, risk, and expiry within 90 days.
 
 ## Fail-closed rules
 
-- A selected repository missing from config fails.
+- A selected repository missing from config fails, unless the config sets
+  `unlisted: not-onboarded` (written by `quality init --repo`): then it is a
+  passing lane with reduced assurance that says it is not onboarded.
 - A required profile capability cannot set `required: false`.
 - Unsupported or unavailable capability never becomes pass or zero; reduced
   assurance remains visible in the aggregate.

@@ -368,7 +368,7 @@ export function composeLifecycleRuntimes({
     projectRootRepositories, proofAdvance, proofAudit, proofReadinessValue, providerConfig,
     pullRequestRuntime, qualityLaneStates, readJson, readJsonLines, readJsonOrNull, receiptPath,
     receiptValidity, recordPhaseContext, recoverLand, recoverReviewBindings, releaseAgentLease,
-    relevantHash, repositoryById, requiredProviders, reviewAttemptRecords,
+    relevantHash, repositoryById, repositoryCatalog, requiredProviders, reviewAttemptRecords,
     rollbackApplyTransaction, safeRootPath, sandboxRuntime, saveRuntime, selectedRepositories,
     stableHash, syncSandbox, transactionJournalPath, trapFailures, trapFailuresAsync, writeJson
   });

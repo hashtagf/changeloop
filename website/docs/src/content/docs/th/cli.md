@@ -69,8 +69,8 @@ recovery, administration และ host integration ด้านล่าง
 
 | คำสั่ง | ใช้ทำอะไร |
 |---|---|
-| `quality discover [--change <id>]` | อ่าน manifest แล้วรายงานภาษา profile provider และ capability ที่ไม่รองรับ โดยไม่รัน command ของโปรเจกต์ |
-| `quality init [--change <id>] [--write] [--force] [--ci github]` | preview consumer quality config แล้วเขียน config/ตัวอย่าง GitHub workflow เมื่อสั่งชัดเจน |
+| `quality discover [--change <id>] [--repo <id>,...]` | อ่าน manifest แล้วรายงานภาษา profile provider และ capability ที่ไม่รองรับ โดยไม่รัน command ของโปรเจกต์ `--repo` จำกัดเฉพาะ repo ที่ระบุ |
+| `quality init [--change <id>] [--write] [--force] [--ci github] [--repo <id>,...]` | preview consumer quality config แล้วเขียน config/ตัวอย่าง GitHub workflow เมื่อสั่งชัดเจน `--repo` onboard เฉพาะ repo ที่ระบุ เพิ่มเข้า config เดิมหรือสร้างใหม่ |
 | `quality doctor [--change <id>] [--enforce]` | ตรวจ repository ที่เลือก, provider config, executable ที่พร้อมใช้ และ mutation isolation |
 | `quality run [--change <id>] [--repo <id>] [--capability <name>] [--full] [--shard-index <n> --shard-count <n>] [--enforce]` | รัน lane แยก repository และใช้ changed-code หรือ full-inventory ratchet |
 | `quality report` | อ่าน summary ล่าสุดแบบไม่เฉลี่ยกลบ repository |

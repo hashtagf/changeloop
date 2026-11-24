@@ -9,6 +9,7 @@ import { pyramidReadiness, readinessText } from "../quality/pyramid-readiness.mj
 import { ruleRegistrySummary } from "../quality/rule-registry.mjs";
 import { incidentSummary } from "../quality/incident-records.mjs";
 import { uiReadinessFacts } from "../quality/ui-readiness.mjs";
+import { changesPerRepository, onboardingCandidates } from "../quality/onboarding-candidates.mjs";
 import {
   readProjectFeatureMap, validateProjectFeatureMap
 } from "../workflow/validation/project-feature-map.mjs";
@@ -19,9 +20,12 @@ function attempt(read) {
   try { return read(); } catch { return undefined; }
 }
 
-export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, outcomesValue, log = console.log }) {
-  function readinessFacts() {
-    const quality = attempt(laneStates) || null;
+// Layers a single repository owns; prose and review stay project-wide.
+const REPOSITORY_LAYERS = ["codebase", "static", "verification"];
+
+export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, outcomesValue,
+  repositoryCatalog = () => null, changeStates = () => [], log = console.log }) {
+  function readinessFacts(quality = attempt(laneStates) || null) {
     const map = attempt(() => readProjectFeatureMap(root));
     const lessons = attempt(() => lessonsValue())?.lessons;
     const registry = attempt(() => ruleRegistrySummary(root));
@@ -55,8 +59,35 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
     };
   }
 
+  // A multi-repository topology onboards one repository at a time: each
+  // onboarded repository gets its own code layers, and the rest are ranked
+  // so the agent can propose the next few for the user to pick.
+  function repositoryRows(facts, quality) {
+    return Object.entries(quality?.repositories || {}).map(([id, own]) => {
+      // Feature map and UI rows are project-wide; a repository row judges its lanes.
+      const value = pyramidReadiness({ ...facts, featureMap: undefined, ui: undefined, configured: true,
+        lanes: own.lanes, findings: own.findings, statuses: own.statuses });
+      return { id, onboardedAt: own.onboardedAt || null,
+        layers: value.layers.filter((layer) => REPOSITORY_LAYERS.includes(layer.layer))
+          .map(({ layer, percent, met, measured }) => ({ layer, percent, met, measured })) };
+    });
+  }
+
+  function onboarding(quality) {
+    const catalog = attempt(repositoryCatalog);
+    const repositories = catalog?.repositories || [];
+    if (repositories.filter((repository) => repository.type !== "root").length < 1) return null;
+    return { unlisted: quality?.unlisted || null, ...onboardingCandidates({ repositories,
+      onboarded: new Set(Object.keys(quality?.repositories || {})),
+      changed: changesPerRepository(attempt(changeStates) || []) }) };
+  }
+
   function readinessValue() {
-    return pyramidReadiness(readinessFacts());
+    const quality = attempt(laneStates) || null;
+    const facts = readinessFacts(quality);
+    const value = pyramidReadiness(facts);
+    const plan = onboarding(quality);
+    return plan ? { ...value, onboarding: plan, repositories: repositoryRows(facts, quality) } : value;
   }
 
   function showReadiness(flags = {}) {
@@ -70,7 +101,8 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
   function readinessRow() {
     const value = readinessValue();
     const detail = value.layers.map((layer, index) =>
-      `${index + 1} ${layer.layer} ${layer.percent === null ? "unmeasured" : `${layer.percent}%`}`).join(", ");
+      `${index + 1} ${layer.layer} ${layer.percent === null ? "unmeasured" : `${layer.percent}%`}`).join(", ") +
+      (value.onboarding ? `; onboarded ${value.onboarding.onboarded}/${value.onboarding.total} repositories` : "");
     return value.focus
       ? { id: "pyramid", level: "info", detail, next: value.focus.next }
       : { id: "pyramid", level: "ok", detail, next: null };

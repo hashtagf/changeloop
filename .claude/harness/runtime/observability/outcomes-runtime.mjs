@@ -264,6 +264,7 @@ export function outcomesText(value) {
       String(row.firstProofPass.denominator), String(row.firstProofPass.unknownCount),
       cell(row.cost.mean), cell(row.userDecisions.mean)])));
   if (value.onboarding) sections.push(onboardingText(value.onboarding));
+  for (const row of value.onboardingByRepository || []) sections.push(`[${row.repository}] ${onboardingText(row)}`);
   if (value.skipped.length)
     sections.push(`Skipped: ${value.skipped.map((row) => `${row.id} (${row.reason})`).join(", ")}`);
   sections.push("escapedDefects counts later changes that declared 'fixes' (declared-only).");
@@ -277,7 +278,9 @@ export function createOutcomesRuntime({
   // (id) => review attempt records, read only.
   reviewAttemptRecords,
   // () => { at, source } | null: when the project was onboarded.
-  onboardedAt = () => null
+  onboardedAt = () => null,
+  // () => { [repositoryId]: ISO date }: when each repository was onboarded.
+  repositoryOnboardedAt = () => ({})
 }) {
   function outcomesValue() {
     const rows = runtimeStates(runtimeDir);
@@ -309,6 +312,7 @@ export function createOutcomesRuntime({
           amendments: count(state.amendments),
           userDecisions: count(state.advanceRecovery?.answers) + count(state.waivers) +
             count(state.groundingReopens),
+          repositories: Object.keys(state.repositories || {}).sort(),
           leadTimeHours: leadTimeHours(state),
           cost: knownCost(logsDir, id),
           escapedDefects: (fixedBy.get(id) || []).length,
@@ -326,6 +330,12 @@ export function createOutcomesRuntime({
       changes,
       cohorts: outcomeCohorts(changes),
       onboarding: onboardingComparison(changes, onboardedAt()),
+      // Repositories onboard on different days: each is compared on the
+      // changes that selected it, split at its own onboarding date.
+      onboardingByRepository: Object.entries(repositoryOnboardedAt() || {}).sort(([left], [right]) => left.localeCompare(right))
+        .map(([id, at]) => [id, at, changes.filter((row) => row.repositories.includes(id))])
+        .filter(([, , rows]) => rows.length)
+        .map(([id, at, rows]) => ({ repository: id, ...onboardingComparison(rows, { at, source: "quality config onboardedAt" }) })),
       skipped
     };
   }

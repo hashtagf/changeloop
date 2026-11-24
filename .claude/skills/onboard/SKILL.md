@@ -13,7 +13,7 @@ user decides what becomes binding.
 1. Run `cloop doctor --json`; work only `setup` rows that are not `ok`, running
    each row's next command.
 2. Quality: `cloop quality discover`, then `cloop quality init --write` when the
-   config is missing.
+   config is missing (see `references/multi-repository.md`).
 3. Baselines: `cloop quality run`, report each lane's finding count, and ask once
    whether today's findings become the baseline; after a yes run
    `cloop quality baseline --write --decision-ref <answer> --reason <why>`.
@@ -41,3 +41,4 @@ Without Change Loop installed: stop; `cloop init` comes first.
 - `references/rule-registry-guide.md` — pyramid layers, what counts as a check,
   and the registry shape.
 - `references/ui-readiness-guide.md` — UI rows.
+- `references/multi-repository.md` — many repositories.

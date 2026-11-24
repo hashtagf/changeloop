@@ -165,9 +165,12 @@ export function createQualityRuntime({
   pathInside, workspaceManifest = null, fail, log = console.log
 }) {
   const configPath = join(root, QUALITY_CONFIG_RELATIVE);
-  const repositoriesFor = (change = null) => {
+  // `only` filters before each repository's head and workspace digest are
+  // computed: in a topology of hundreds that work dominates every command.
+  const repositoriesFor = (change = null, only = null) => {
     const state = change ? loadRuntime(change) : null;
-    const rows = change ? selectedRepositories(change, state) : repositoryCatalog().repositories;
+    const rows = (change ? selectedRepositories(change, state) : repositoryCatalog().repositories)
+      .filter((repository) => !only || only.has(repository.id));
     return rows.map((repository) => {
       // Runtime state is the source of truth once a change has entered a sandbox.
       // Do not let a stale/cached selector row silently measure the target checkout.
@@ -188,9 +191,19 @@ export function createQualityRuntime({
     });
   };
 
+  // `--repo a,b` limits discovery and init to the repositories being onboarded:
+  // a large topology onboards a few at a time instead of all at once.
+  const repoFilter = (options) => {
+    const ids = String(options.repo || "").split(",").map((id) => id.trim()).filter(Boolean);
+    return ids.length ? new Set(ids) : null;
+  };
+
   function discovery(options = {}) {
-    return discoverConsumerQuality(repositoriesFor(
-      options.change || process.env.FOUNDATION_CHANGE_ID || null));
+    const only = repoFilter(options);
+    const repositories = repositoriesFor(options.change || process.env.FOUNDATION_CHANGE_ID || null, only);
+    if (only) for (const id of only)
+      if (!repositories.some((repository) => repository.id === id)) fail(`unknown repository '${id}'`);
+    return discoverConsumerQuality(repositories);
   }
 
   function showDiscovery(options = {}) {
@@ -208,12 +221,27 @@ export function createQualityRuntime({
     })));
   }
 
+  // With --repo the drafted repositories join the existing configuration (or
+  // start one) and every other repository counts as not onboarded yet.
+  function repositoryDraft(options) {
+    const value = draft(options);
+    const at = new Date().toISOString();
+    for (const repository of value.repositories) repository.onboardedAt = at;
+    value.unlisted = "not-onboarded";
+    if (!existsSync(configPath)) return value;
+    const current = readJsonFile(configPath);
+    const added = new Set(value.repositories.map((repository) => repository.id));
+    return { ...current, unlisted: current.unlisted || "not-onboarded",
+      repositories: [...current.repositories.filter((repository) => !added.has(repository.id)), ...value.repositories] };
+  }
+
   function initialize(options = {}) {
     if (options.ci && options.ci !== "github") fail("quality init --ci currently supports only 'github'");
-    const value = draft(options);
+    const perRepository = Boolean(repoFilter(options));
+    const value = perRepository ? repositoryDraft(options) : draft(options);
     if (options.write) {
-      if (existsSync(configPath) && !options.force)
-        fail(`${QUALITY_CONFIG_RELATIVE} already exists; inspect it or pass --force`);
+      if (existsSync(configPath) && !options.force && !perRepository)
+        fail(`${QUALITY_CONFIG_RELATIVE} already exists; inspect it, pass --force, or add repositories with --repo`);
       const workflowTemplates = options.ci === "github" ? [
         ["github-actions.yml", "foundation-quality.yml"],
         ["github-actions-nightly.yml", "foundation-quality-nightly.yml"],
@@ -255,7 +283,6 @@ export function createQualityRuntime({
 
   function doctor(options = {}) {
     const activeChange = options.change || process.env.FOUNDATION_CHANGE_ID || null;
-    const discovered = discovery(options);
     const issues = [];
     let config = null;
     if (!existsSync(configPath)) issues.push({ level: "error", code: "missing-config",
@@ -264,8 +291,13 @@ export function createQualityRuntime({
       try { config = configured(); }
       catch (error) { issues.push({ level: "error", code: "invalid-config", message: error.message }); }
     }
+    // A per-repository configuration without a change checks what is onboarded.
+    const onboardedOnly = !activeChange && !options.repo && config?.unlisted === "not-onboarded"
+      ? new Set(config.repositories.map((row) => row.id)) : null;
+    const discovered = onboardedOnly ? discoverConsumerQuality(repositoriesFor(null, onboardedOnly)) : discovery(options);
+    const actualRepositories = config ? new Map(repositoriesFor(activeChange, onboardedOnly).map((row) => [row.id, row])) : new Map();
     if (config) for (const repository of config.repositories) {
-      const actual = repositoriesFor(activeChange).find((row) => row.id === repository.id);
+      const actual = actualRepositories.get(repository.id);
       if (!actual) { issues.push({ level: "error", code: "repository-not-selected",
         repository: repository.id, message: "configured repository is not selected" }); continue; }
       const capabilities = new Set([
@@ -287,10 +319,15 @@ export function createQualityRuntime({
     }
     if (config) {
       const configuredIds = new Set(config.repositories.map((repository) => repository.id));
-      for (const repository of repositoriesFor(activeChange))
-        if (!configuredIds.has(repository.id)) issues.push({ level: "error",
-          code: "repository-unconfigured", repository: repository.id,
-          message: "selected repository has no consumer quality configuration" });
+      const pending = [...actualRepositories.values()].filter((repository) => !configuredIds.has(repository.id));
+      if (config.unlisted === "not-onboarded") {
+        const total = onboardedOnly ? repositoryCatalog().repositories.filter((row) => !configuredIds.has(row.id)).length : pending.length;
+        if (total) issues.push({ level: "info", code: "repositories-not-onboarded", count: total,
+          repositories: (onboardedOnly ? [] : pending.map((row) => row.id)).slice(0, 20),
+          message: `${total} repositor${total === 1 ? "y is" : "ies are"} not onboarded yet` });
+      } else for (const repository of pending) issues.push({ level: "error",
+        code: "repository-unconfigured", repository: repository.id,
+        message: "selected repository has no consumer quality configuration" });
     }
     const report = {
       protocol: "foundation-quality-doctor-v1", status: issues.some((issue) => issue.level === "error") ? "fail" : "pass",
@@ -368,13 +405,24 @@ export function createQualityRuntime({
       shardCount === 1 || laneShard(repository, capability, shardCount) === shardIndex;
     const activeChange = options.change || process.env.FOUNDATION_CHANGE_ID || null;
     const impact = activeChange ? loadRuntime(activeChange).impact || "medium" : "medium";
-    const repositories = repositoriesFor(activeChange)
-      .filter((repository) => !options.repository || repository.id === options.repository);
+    // Without a change, a per-repository configuration measures what is
+    // onboarded; a change still reports each selected repository.
+    const only = options.repository ? new Set([options.repository])
+      : !activeChange && config.unlisted === "not-onboarded" ? new Set(config.repositories.map((row) => row.id)) : null;
+    const repositories = repositoriesFor(activeChange, only);
     if (options.repository && !repositories.length) fail(`unknown or unselected repository '${options.repository}'`);
     const changed = changedByRepository(activeChange, repositories);
     const lanes = [];
     for (const repository of repositories) {
       const repositoryConfig = config.repositories.find((row) => row.id === repository.id);
+      if (!repositoryConfig && config.unlisted === "not-onboarded") {
+        if (selectedLane(repository.id, "configuration")) lanes.push({
+          repository: repository.id, capability: "configuration", status: "pass",
+          assurance: "reduced", required: false,
+          reason: "repository is not onboarded yet; its quality ratchets are not set up"
+        });
+        continue;
+      }
       if (!repositoryConfig) {
         if (selectedLane(repository.id, "configuration")) lanes.push({
           repository: repository.id, capability: "configuration", status: "fail",
@@ -622,21 +670,29 @@ export function createQualityRuntime({
     const findings = {};
     // Latest run verdict per capability; one failing repository makes it fail.
     const statuses = {};
-    for (const repository of config.repositories || [])
+    // The same facts per repository, so a large topology reports each
+    // onboarded repository instead of only the least ready one.
+    const repositories = {};
+    for (const repository of config.repositories || []) {
+      const own = { lanes: {}, findings: {}, statuses: {}, onboardedAt: repository.onboardedAt || null };
       for (const capability of Object.keys(repository.providers || {})) {
         const path = laneStatusPath(root, repository.id, capability);
-        if (!existsSync(path)) continue;
-        const status = readJsonFile(path)?.status;
-        if (typeof status === "string") statuses[capability] = statuses[capability] && statuses[capability] !== "pass"
-          ? statuses[capability] : status;
+        const status = existsSync(path) ? readJsonFile(path)?.status : undefined;
+        if (typeof status !== "string") continue;
+        own.statuses[capability] = status;
+        statuses[capability] = statuses[capability] && statuses[capability] !== "pass" ? statuses[capability] : status;
       }
-    for (const repository of config.repositories || [])
       for (const { capability, state, findings: count } of repositoryLaneStates(repository)) {
+        own.lanes[capability] = state;
         const current = lanes[capability];
         lanes[capability] = current === undefined || order.indexOf(state) < order.indexOf(current) ? state : current;
-        if (Number.isInteger(count)) findings[capability] = (findings[capability] || 0) + count;
+        if (!Number.isInteger(count)) continue;
+        own.findings[capability] = count;
+        findings[capability] = (findings[capability] || 0) + count;
       }
-    return { lanes, findings, statuses };
+      repositories[repository.id] = own;
+    }
+    return { lanes, findings, statuses, repositories, unlisted: config.unlisted || "fail" };
   }
 
   return { discovery, showDiscovery, draft, initialize, configured, doctor, run, report, baseline, debt, readiness,

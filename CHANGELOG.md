@@ -11,6 +11,13 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- Onboarding per repository for large topologies. `quality discover` and
+  `quality init --write` take `--repo <id>,...`; init adds only those
+  repositories to the configuration and marks the rest not onboarded instead
+  of failing every change that selects them. `quality readiness` reports each
+  onboarded repository and ranks the next candidates (recorded work, sensitive
+  areas, declared tools) for the agent to ask the user; `outcomes` compares
+  each repository before and after its own onboarding date.
 - The scenario lab takes `--onboard true` to run the same task on an onboarded
   project (quality lanes, module-boundary draft, baselines) for a plain versus
   onboarded comparison.
@@ -38,6 +45,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- Quality commands scale to large topologies: `quality init --repo`, `quality
+  run`, and `quality doctor` no longer hash every repository before filtering,
+  and doctor no longer looks each configured repository up across the whole
+  topology (33 s to 0.5 s on 800 repositories).
 - Python quality lanes no longer fail with "provider changed repository
   state": bytecode goes under `.foundation/`, and `python3` is used where
   `python` is not installed.

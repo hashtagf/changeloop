@@ -370,7 +370,7 @@ Optional CRAP, mutation, lint, type-check, file-size, and module-boundary checks
 | CLI commands | `quality discover`, `quality init`, `quality doctor`, `quality run`, `quality report`, `quality baseline`, `quality debt` |
 | User states | — |
 | Runtime groups | `quality` |
-| Code | `.claude/harness/runtime/quality/quality-runtime.mjs`, `.claude/harness/runtime/quality/findings-ratchet.mjs`, `.claude/harness/runtime/quality/module-boundary-proposal.mjs` |
+| Code | `.claude/harness/runtime/quality/quality-runtime.mjs`, `.claude/harness/runtime/quality/findings-ratchet.mjs`, `.claude/harness/runtime/quality/module-boundary-proposal.mjs`, `.claude/harness/runtime/quality/onboarding-candidates.mjs` |
 | Tests | `.claude/harness/tests/quality-runtime.test.mjs`, `.claude/harness/tests/quality-adapters.test.mjs`, `.claude/harness/tests/findings-ratchet.test.mjs` |
 | Docs | `.claude/harness/CONSUMER-QUALITY.md`, `website/docs/src/content/docs/consumer-quality.md` |
 
@@ -391,7 +391,7 @@ Per-layer readiness (codebase, static checks, verification, prose, review) of th
 | User states | — |
 | Runtime groups | — |
 | Code | `.claude/harness/runtime/quality/pyramid-readiness.mjs`, `.claude/harness/runtime/quality/rule-registry.mjs`, `.claude/harness/runtime/quality/guide-rules.mjs`, `.claude/harness/runtime/quality/incident-records.mjs`, `.claude/harness/runtime/quality/ui-readiness.mjs`, `.claude/harness/runtime/composition/pyramid-readiness-command.mjs` |
-| Tests | `.claude/harness/tests/pyramid-readiness.test.mjs`, `.claude/harness/tests/consumer-onboarding-path.test.mjs` |
+| Tests | `.claude/harness/tests/pyramid-readiness.test.mjs`, `.claude/harness/tests/consumer-onboarding-path.test.mjs`, `.claude/harness/tests/repository-onboarding.test.mjs` |
 | Docs | `.claude/harness/CONSUMER-QUALITY.md`, `website/docs/src/content/docs/consumer-quality.md` |
 
 <a id="project-feature-map"></a>

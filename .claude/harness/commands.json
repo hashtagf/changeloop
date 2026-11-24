@@ -523,7 +523,7 @@
     },
     {
       "name": "quality discover",
-      "usage": "quality discover [--change <id>]",
+      "usage": "quality discover [--change <id>] [--repo <id>[,<id>...]]",
       "audience": "admin",
       "kind": "read",
       "idempotent": true,
@@ -531,7 +531,7 @@
     },
     {
       "name": "quality init",
-      "usage": "quality init [--change <id>] [--write] [--force] [--ci github]",
+      "usage": "quality init [--change <id>] [--write] [--force] [--ci github] [--repo <id>[,<id>...]]",
       "audience": "admin",
       "kind": "write",
       "idempotent": true,

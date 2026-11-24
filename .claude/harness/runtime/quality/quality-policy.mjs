@@ -119,10 +119,16 @@ export function validateConsumerQualityConfig(config, repositoryIds = null) {
     if (repository.include !== undefined && (!Array.isArray(repository.include) ||
         repository.include.some((path) => typeof path !== "string" || !path)))
       failAt(`repository '${repository.id}' include must be a string array`);
+    if (repository.onboardedAt !== undefined && !Number.isFinite(Date.parse(repository.onboardedAt)))
+      failAt(`repository '${repository.id}' onboardedAt must be a date`);
     if (repository.exclude !== undefined && (!Array.isArray(repository.exclude) ||
         repository.exclude.some((path) => typeof path !== "string" || !path)))
       failAt(`repository '${repository.id}' exclude must be a string array`);
   }
+  // `not-onboarded`: repositories onboard one at a time, so one outside the
+  // list is reported as not onboarded instead of failing every change it joins.
+  if (config.unlisted !== undefined && !["fail", "not-onboarded"].includes(config.unlisted))
+    failAt("unlisted must be fail|not-onboarded");
   if (!Array.isArray(config.exceptions)) failAt("exceptions must be an array");
   const exceptionIds = new Set();
   for (const exception of config.exceptions) {

@@ -299,13 +299,13 @@ export async function routeRuntimeCommand(command, values, api) {
       console.log(JSON.stringify(foundationPolicy().models, null, 2));
     },
     "quality-discover": async () => {
-      const { flags, rest } = parseStrictCommandFlags(values, "quality discover", { value: ["change"] });
+      const { flags, rest } = parseStrictCommandFlags(values, "quality discover", { value: ["change", "repo"] });
       if (rest.length) die(`unexpected quality discover argument(s): ${rest.join(", ")}`);
       showQualityDiscovery(flags);
     },
     "quality-init": async () => {
       const { flags, rest } = parseStrictCommandFlags(values, "quality init", {
-        boolean: ["write", "force"], value: ["change", "ci"]
+        boolean: ["write", "force"], value: ["change", "ci", "repo"]
       });
       if (rest.length) die(`unexpected quality init argument(s): ${rest.join(", ")}`);
       initializeQuality(flags);

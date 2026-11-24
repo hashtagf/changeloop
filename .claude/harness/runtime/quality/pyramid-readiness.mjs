@@ -287,5 +287,25 @@ export function readinessText(value) {
     lines.push(`  - [${row.layer}] ${row.label}: ${row.status}, ${row.detail}${
       row.status === "unmet" && row.why ? `\n      why: ${row.why}` : ""}${row.next ? `\n      next: ${row.next}` : ""}`);
   if (value.focus) lines.push(`Focus: ${value.focus.layer}; ${value.focus.next}`);
+  if (value.onboarding) lines.push(...onboardingLines(value));
   return lines.join("\n");
+}
+
+// Onboarded repositories, weakest first, and the next ones to propose.
+function onboardingLines({ onboarding, repositories = [] }) {
+  const percent = (row, layer) => {
+    const value = row.layers.find((item) => item.layer === layer)?.percent;
+    return value === null || value === undefined ? "unmeasured" : `${value}%`;
+  };
+  const score = (row) => row.layers.reduce((total, layer) => total + (layer.percent ?? 100), 0);
+  const shown = [...repositories].sort((left, right) => score(left) - score(right) || left.id.localeCompare(right.id)).slice(0, 10);
+  return [
+    `Repositories onboarded: ${onboarding.onboarded}/${onboarding.total}`,
+    ...shown.map((row) => `  ${row.id}: codebase ${percent(row, "codebase")}, static ${
+      percent(row, "static")}, verification ${percent(row, "verification")}`),
+    ...(repositories.length > shown.length ? [`  ... ${repositories.length - shown.length} more`] : []),
+    ...(onboarding.candidates.length ? ["Onboard next (ask the user which):",
+      ...onboarding.candidates.map((row) => `  ${row.id}: ${row.reasons.join("; ")}`),
+      ...(onboarding.remaining ? [`  ... ${onboarding.remaining} more not onboarded`] : [])] : [])
+  ];
 }

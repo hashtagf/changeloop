@@ -637,7 +637,8 @@
       "code": [
         ".claude/harness/runtime/quality/quality-runtime.mjs",
         ".claude/harness/runtime/quality/findings-ratchet.mjs",
-        ".claude/harness/runtime/quality/module-boundary-proposal.mjs"
+        ".claude/harness/runtime/quality/module-boundary-proposal.mjs",
+        ".claude/harness/runtime/quality/onboarding-candidates.mjs"
       ],
       "tests": [
         ".claude/harness/tests/quality-runtime.test.mjs",
@@ -676,7 +677,8 @@
       ],
       "tests": [
         ".claude/harness/tests/pyramid-readiness.test.mjs",
-        ".claude/harness/tests/consumer-onboarding-path.test.mjs"
+        ".claude/harness/tests/consumer-onboarding-path.test.mjs",
+        ".claude/harness/tests/repository-onboarding.test.mjs"
       ],
       "docs": [
         ".claude/harness/CONSUMER-QUALITY.md",

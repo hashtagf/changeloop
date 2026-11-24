@@ -10,7 +10,7 @@ import { createAdvanceRuntime, hasValidLandGrant, prepareAdvanceBuild, runAdvanc
 import { createFeedbackRuntime } from "../observability/feedback-runtime.mjs";
 import { createLandUndo } from "../workflow/land/land-undo.mjs";
 import { createLessonsRuntime } from "../observability/lessons-runtime.mjs";
-import { createOutcomesRuntime } from "../observability/outcomes-runtime.mjs";
+import { createOutcomesRuntime, runtimeStates } from "../observability/outcomes-runtime.mjs";
 import { createProjectFeaturesCommand } from "../workflow/validation/project-feature-map.mjs";
 import { createProductProgressCommand } from "../workflow/validation/product-progress.mjs";
 import { createPyramidReadinessCommand } from "./pyramid-readiness-command.mjs";
@@ -37,7 +37,7 @@ export function composeDeliveryRuntimes({
   projectRootRepositories, proofAdvance, proofAudit, proofReadinessValue, providerConfig,
   pullRequestRuntime, qualityLaneStates, readJson, readJsonLines, readJsonOrNull, receiptPath,
   receiptValidity, recordPhaseContext, recoverLand, recoverReviewBindings, releaseAgentLease,
-  relevantHash, repositoryById, requiredProviders, reviewAttemptRecords,
+  relevantHash, repositoryById, repositoryCatalog, requiredProviders, reviewAttemptRecords,
   rollbackApplyTransaction, safeRootPath, sandboxRuntime, saveRuntime, selectedRepositories,
   stableHash, syncSandbox, transactionJournalPath, trapFailures, trapFailuresAsync, writeJson
 }) {
@@ -244,12 +244,19 @@ export function composeDeliveryRuntimes({
       const result = git(["log", "--diff-filter=A", "--format=%cI", "--", "quality/foundation-quality.json"]);
       const at = result.status === 0 ? String(result.stdout || "").trim().split("\n").filter(Boolean).at(-1) : null;
       return at ? { at, source: "git: quality/foundation-quality.json first committed" } : null;
+    },
+    repositoryOnboardedAt: () => {
+      const path = join(ROOT, "quality", "foundation-quality.json");
+      const config = existsSync(path) ? readJsonOrNull(path) : null;
+      return Object.fromEntries((config?.repositories || []).filter((row) => row.onboardedAt)
+        .map((row) => [row.id, row.onboardedAt]));
     } });
   const { lessonsValue, showLessons } = createLessonsRuntime({ runtimeDir: RUNTIME, evidenceDir: EVIDENCE_VAULT,
     logsDir: LOGS, reviewAttemptRecords, lessonsDocument: join(ROOT, "openspec", "lessons.md"),
     projectFileExists: (path) => existsSync(join(ROOT, path)), fail: die });
   const pyramidReadinessCommand = createPyramidReadinessCommand({ root: ROOT, laneStates: qualityLaneStates,
-    lessonsValue, outcomesValue });
+    lessonsValue, outcomesValue, repositoryCatalog,
+    changeStates: () => runtimeStates(RUNTIME).filter((row) => row.state).map((row) => row.state) });
   const { showFeatures } = createProjectFeaturesCommand({
     root: ROOT, loadRuntime, activeChangePath, canonicalChangedSurface, fail: die
   });

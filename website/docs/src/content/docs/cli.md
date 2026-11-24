@@ -70,8 +70,8 @@ language profiles, baselines, and rollout policy.
 
 | Command | Purpose |
 |---|---|
-| `quality discover [--change <id>]` | Read repository manifests and report detected languages, profiles, providers, and unsupported capabilities without executing project commands |
-| `quality init [--change <id>] [--write] [--force] [--ci github]` | Preview consumer quality config; explicitly write it and optional GitHub workflow templates |
+| `quality discover [--change <id>] [--repo <id>,...]` | Read repository manifests and report detected languages, profiles, providers, and unsupported capabilities without executing project commands; `--repo` limits it to the named repositories |
+| `quality init [--change <id>] [--write] [--force] [--ci github] [--repo <id>,...]` | Preview consumer quality config; explicitly write it and optional GitHub workflow templates; `--repo` onboards only the named repositories into an existing or new config |
 | `quality doctor [--change <id>] [--enforce]` | Validate selected repositories, provider configuration, executable availability, and mutation isolation |
 | `quality run [--change <id>] [--repo <id>] [--capability <name>] [--full] [--shard-index <n> --shard-count <n>] [--enforce]` | Run per-repository lanes and apply changed-code or full-inventory ratchets |
 | `quality report` | Read the latest non-averaged repository-lane summary |
