@@ -43,6 +43,11 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- An onboarded project without Git no longer blocks Prove: the quality gate
+  provider `node .claude/harness/foundation.mjs quality-run --enforce` was
+  refused because every installed harness file counted as an untracked input
+  outside the declared surface. The installed harness is never treated as a
+  product input (found by a paid notes-api lab run).
 - Agent-guide rule detection ignores a word inside a hyphenated compound, so
   "repository-only" or "read-only" no longer counts as an instruction.
 - The `agent-guide` row reads scripts from every `package.json` in the

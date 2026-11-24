@@ -27,6 +27,24 @@ test("command workspace files ignore executables and flags", () => {
   }
 });
 
+test("the installed harness entrypoint is not an untracked product input", () => {
+  // A paid lab without Git blocked Prove: the onboarded quality gate runs
+  // `node .claude/harness/foundation.mjs quality-run --enforce`, and every
+  // installed file counted as untracked outside the declared surface.
+  const workspace = fixture();
+  try {
+    mkdirSync(join(workspace, ".claude", "harness"), { recursive: true });
+    writeFileSync(join(workspace, ".claude", "harness", "foundation.mjs"), "// harness\n");
+    const config = { command: ["node", ".claude/harness/foundation.mjs", "quality-run", "--enforce"] };
+    assert.deepEqual(commandWorkspaceFiles(config, workspace), []);
+    assert.deepEqual(uncoveredCommandWorkspaceFiles({ config, workspace }), []);
+    assert.deepEqual(uncoveredCommandWorkspaceFiles({ config: { command: ["node", "tests/run.mjs"] }, workspace }),
+      ["tests/run.mjs"], "a product file is still checked");
+  } finally {
+    rmSync(workspace, { recursive: true, force: true });
+  }
+});
+
 test("a configured report argument is an output rather than an input", () => {
   const workspace = fixture();
   try {

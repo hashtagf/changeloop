@@ -34,6 +34,11 @@ export function commandWorkspaceFiles(config, workspace) {
     if (!token || token.startsWith("-") || isAbsolute(token) ||
         token.split(/[\\/]+/).includes("..")) continue;
     const rel = token.replaceAll("\\", "/").replace(/^\.\/+/, "");
+    // The installed harness is installer-managed and versioned, not product
+    // input: a harness-owned provider such as `node .claude/harness/foundation.mjs
+    // quality-run --enforce` must not be refused in a project without Git, where
+    // every installed file counts as untracked.
+    if (rel.startsWith(".claude/harness/")) continue;
     // A report is an output contract, even when the command receives its path
     // as an argument. Binding it as an input would reject the first run after
     // the file appears and would make the provider depend on its own output.
