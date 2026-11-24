@@ -43,6 +43,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- The `agent-guide` row reads scripts from every `package.json` in the
+  repository, so a guide that says "run `npm run build` from website/docs" is
+  not reported as naming a missing script.
+
 Found by onboarding a real Nuxt project:
 
 - Installing no longer breaks a project's own format and lint checks. The

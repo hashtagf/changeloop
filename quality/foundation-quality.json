@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "policy": {
+    "version": 1,
+    "mode": "report",
+    "enforcement": "changed-code-ratchet",
+    "authority": "evidence-only",
+    "coverage": {
+      "unitChangedMinimum": 80,
+      "integrationChangedMinimum": 70,
+      "criticalJourneyMinimum": 50
+    },
+    "complexity": {
+      "warning": 11,
+      "refactor": 21,
+      "maximumChanged": 30
+    },
+    "crap": {
+      "warning": 20,
+      "maximumNew": 30,
+      "rejectRegression": true
+    },
+    "mutation": {
+      "rejectScoreRegression": true,
+      "rejectNewNoCoverage": true,
+      "changedCodeTarget": 70,
+      "semanticKillRate": 100
+    },
+    "findings": {
+      "fileSizeCeiling": 1000
+    },
+    "unsupportedCapability": {
+      "default": "report",
+      "neverAssumePass": true,
+      "neverAssumeZero": true
+    },
+    "remediation": {
+      "mode": "changed-code-only",
+      "allowBehaviorPreservingRefactor": true,
+      "allowPublicContractChange": false,
+      "allowCrossRepositoryExpansion": false
+    },
+    "risks": {
+      "low": {
+        "crapRequired": false,
+        "requireCompensatingEvidence": false
+      },
+      "medium": {
+        "crapRequired": false,
+        "requireCompensatingEvidence": true
+      },
+      "high": {
+        "crapRequired": true,
+        "requireCompensatingEvidence": true
+      }
+    }
+  },
+  "unlisted": "not-onboarded",
+  "repositories": [
+    {
+      "id": "root",
+      "onboardedAt": "2026-11-24T14:51:38.103Z",
+      "profiles": [
+        "application-js-ts"
+      ],
+      "include": [
+        "**/*"
+      ],
+      "exclude": [
+        "**/node_modules/**",
+        "**/vendor/**",
+        "**/.git/**",
+        "**/.foundation/**",
+        "**/.claude/**",
+        "**/dist/**",
+        "**/build/**"
+      ],
+      "providers": {
+        "lint": {
+          "kind": "builtin",
+          "adapter": "generic-findings-json",
+          "isolation": "read-only",
+          "command": [
+            "node",
+            "scripts/quality/repository-findings.mjs",
+            "lint"
+          ],
+          "inputs": {
+            "report": "-"
+          }
+        },
+        "type-check": {
+          "kind": "builtin",
+          "adapter": "generic-findings-json",
+          "isolation": "read-only",
+          "command": [
+            "node",
+            "scripts/quality/repository-findings.mjs",
+            "type-check"
+          ],
+          "inputs": {
+            "report": "-"
+          }
+        },
+        "file-size": {
+          "kind": "builtin",
+          "adapter": "generic-findings-json",
+          "isolation": "read-only",
+          "command": [
+            "node",
+            "scripts/quality/repository-findings.mjs",
+            "file-size"
+          ],
+          "inputs": {
+            "report": "-"
+          }
+        },
+        "nesting-depth": {
+          "kind": "builtin",
+          "adapter": "generic-findings-json",
+          "isolation": "read-only",
+          "command": [
+            "node",
+            "scripts/quality/repository-findings.mjs",
+            "nesting-depth"
+          ],
+          "inputs": {
+            "report": "-"
+          }
+        },
+        "duplication": {
+          "kind": "builtin",
+          "adapter": "generic-findings-json",
+          "isolation": "read-only",
+          "command": [
+            "node",
+            "scripts/quality/repository-findings.mjs",
+            "duplication"
+          ],
+          "inputs": {
+            "report": "-"
+          }
+        },
+        "workaround-comments": {
+          "kind": "builtin",
+          "adapter": "generic-findings-json",
+          "isolation": "read-only",
+          "command": [
+            "node",
+            "scripts/quality/repository-findings.mjs",
+            "workaround-comments"
+          ],
+          "inputs": {
+            "report": "-"
+          }
+        },
+        "module-boundaries": {
+          "kind": "builtin",
+          "adapter": "generic-findings-json",
+          "isolation": "read-only",
+          "command": [
+            "node",
+            "scripts/quality/repository-findings.mjs",
+            "module-boundaries"
+          ],
+          "inputs": {
+            "report": "-"
+          }
+        },
+        "test": {
+          "kind": "command",
+          "isolation": "read-only",
+          "command": [
+            "sh",
+            ".claude/tests/run-all.sh"
+          ]
+        }
+      }
+    }
+  ],
+  "exceptions": []
+}

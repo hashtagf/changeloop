@@ -6,6 +6,8 @@
 // fills; never an error.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { sourceFiles } from "./source-scan.mjs";
+import { bestEffort } from "../core/best-effort.mjs";
 
 // Blocks the installer writes into CLAUDE.md and AGENTS.md.
 const MANAGED_BLOCK = /<!--\s*claude-foundation:([a-z-]+):start\s*-->[\s\S]*?<!--\s*claude-foundation:\1:end\s*-->/g;
@@ -45,13 +47,29 @@ export function projectGuideWords(markdown) {
     .split(/\s+/).filter((word) => /\w/.test(word)).length;
 }
 
+// Every script the repository defines: guides say "run `npm run build` from
+// website/docs", so a nested package.json counts too. Null without any.
+function packageScripts(root) {
+  const manifests = ["package.json", ...sourceFiles(root, { extensions: [".json"] })
+    .filter((path) => path.endsWith("/package.json"))];
+  let found = false;
+  const scripts = {};
+  for (const path of manifests) {
+    // A missing or unreadable manifest declares nothing.
+    const manifest = bestEffort(() => JSON.parse(readFileSync(join(root, path), "utf8")), null);
+    if (!manifest) continue;
+    Object.assign(scripts, manifest.scripts || {});
+    found = true;
+  }
+  return found ? scripts : null;
+}
+
 export function guideReadiness(root) {
   const rows = [];
   const guides = ["CLAUDE.md", "AGENTS.md"].filter((name) => existsSync(join(root, name)));
   const words = guides.map((name) => ({ name, words: projectGuideWords(text(root, name)) }));
   const written = words.find((row) => row.words >= MINIMUM_GUIDE_WORDS);
-  let scripts = null;
-  try { scripts = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).scripts || {}; } catch { scripts = null; }
+  const scripts = packageScripts(root);
   const problems = guides.flatMap((name) => {
     const content = text(root, name) || "";
     const lines = content.split("\n").length;

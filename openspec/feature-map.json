@@ -1,0 +1,403 @@
+{
+  "version": 1,
+  "features": [
+    {
+      "id": "investigate",
+      "name": "Investigate",
+      "summary": "Research a problem, a bug's mechanics, or bounded alternatives without editing product code; hands grounded findings to Change.",
+      "paths": [
+        ".claude/harness/runtime/workflow/investigation/investigation-runtime.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/investigation-runtime.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/investigate.md",
+        "website/docs/src/content/docs/loop/investigate.md"
+      ]
+    },
+    {
+      "id": "agreement",
+      "name": "Write the agreement",
+      "summary": "Turn settled intent into an OpenSpec agreement: the agent writes a draft, the harness compiles proposal, design, specs, tasks, and evidence, and the user approves it.",
+      "paths": [
+        ".claude/harness/runtime/workflow/change/change-lifecycle.mjs",
+        ".claude/harness/runtime/workflow/draft/semantic-draft.mjs",
+        ".claude/harness/runtime/workflow/draft/draft-folder.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/change-atomic-start.test.mjs",
+        ".claude/harness/tests/semantic-draft.test.mjs",
+        ".claude/harness/tests/change-lifecycle-surface.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/change.md",
+        "website/docs/src/content/docs/loop/change.md"
+      ]
+    },
+    {
+      "id": "approval-page",
+      "name": "Approval page",
+      "summary": "The decision-first page the user reads before approving: risk, decisions, open questions, scope, and optional prototype previews.",
+      "paths": [
+        ".claude/harness/runtime/workflow/change/approval-package.mjs",
+        ".claude/harness/runtime/workflow/prototype/preview-runtime.mjs",
+        ".claude/harness/runtime/workflow/prototype/prototype-binding.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/approval-package.test.mjs",
+        ".claude/harness/tests/preview-runtime.test.mjs"
+      ],
+      "docs": [
+        "website/docs/src/content/docs/approval.md"
+      ]
+    },
+    {
+      "id": "amendment",
+      "name": "Amend during Build",
+      "summary": "Change requirements or tasks mid-Build under the same change ID; only the affected proof is redone.",
+      "paths": [
+        ".claude/harness/runtime/workflow/change/change-amendment.mjs",
+        ".claude/harness/runtime/workflow/draft/semantic-amendment.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/amendment-invalidation.test.mjs",
+        ".claude/harness/tests/amendment-record.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/change.md"
+      ]
+    },
+    {
+      "id": "validation",
+      "name": "Validate and trace",
+      "summary": "Check that every scenario, claim, task, and provider trace to each other, and record a user-approved waiver of one failing gate.",
+      "paths": [
+        ".claude/harness/runtime/workflow/change/change-validation.mjs",
+        ".claude/harness/runtime/workflow/change/grounding-validation.mjs",
+        ".claude/harness/runtime/workflow/change/gate-waivers.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/change-validation-phases.test.mjs",
+        ".claude/harness/tests/traceability.test.mjs",
+        ".claude/harness/tests/waive-gate.test.mjs"
+      ],
+      "docs": [
+        "website/docs/src/content/docs/evidence/claims.md"
+      ]
+    },
+    {
+      "id": "advance",
+      "name": "Advance and what the user sees",
+      "summary": "The one resumable command that moves a change toward a target, reuses valid work, and stops only at a real decision; every stop becomes one of the user-facing states.",
+      "paths": [
+        ".claude/harness/runtime/workflow/advance/advance-runtime.mjs",
+        ".claude/harness/runtime/workflow/advance/advance-envelope.mjs",
+        ".claude/harness/runtime/core/lifecycle-outcome.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/advance-runtime.test.mjs",
+        ".claude/harness/tests/lifecycle-user-projection-golden.test.mjs",
+        ".claude/harness/tests/budget-continuation.test.mjs"
+      ],
+      "docs": [
+        "WORKFLOW.md",
+        "website/docs/src/content/docs/cli.md"
+      ]
+    },
+    {
+      "id": "build-sandbox",
+      "name": "Build in a sandbox",
+      "summary": "Implement the change in an isolated workspace so the main checkout stays untouched until Land; keep it in sync with agreement revisions and target moves.",
+      "paths": [
+        ".claude/harness/runtime/workflow/sandbox/sandbox-runtime.mjs",
+        ".claude/harness/runtime/workflow/sandbox/sandbox-sync.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/sandbox-create-phases.test.mjs",
+        ".claude/harness/tests/sandbox-runtime-sync.test.mjs",
+        ".claude/harness/tests/sandbox-data-loss.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/build.md",
+        "website/docs/src/content/docs/loop/build.md"
+      ]
+    },
+    {
+      "id": "parallel-agents",
+      "name": "Parallel agents and task packets",
+      "summary": "Plan independently verifiable tasks, hand each worker a bounded packet, and fence shared resources with leases.",
+      "paths": [
+        ".claude/harness/runtime/workflow/authority/agent-planning.mjs",
+        ".claude/harness/runtime/workflow/authority/agent-dispatch.mjs",
+        ".claude/harness/runtime/workflow/authority/lease-runtime.mjs",
+        ".claude/harness/runtime/workflow/packet/packet-runtime.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/agent-dispatch.test.mjs",
+        ".claude/harness/tests/lease-interleaving.test.mjs",
+        ".claude/harness/tests/packet-value.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/build.md"
+      ]
+    },
+    {
+      "id": "prove",
+      "name": "Prove with evidence",
+      "summary": "Run the project's own checks for every claim and bind each result to the exact code; detect and wire providers, and accept signed CI or external evidence.",
+      "paths": [
+        ".claude/harness/runtime/evidence/proof-execution-runtime.mjs",
+        ".claude/harness/runtime/evidence/evidence-contract.mjs",
+        ".claude/harness/runtime/evidence/receipt-runtime.mjs",
+        ".claude/harness/runtime/evidence/app-smoke-check.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/proof-advance.test.mjs",
+        ".claude/harness/tests/proof-audit.test.mjs",
+        ".claude/harness/tests/signed-ci.test.mjs",
+        ".claude/harness/tests/app-smoke.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/prove.md",
+        ".claude/harness/EVIDENCE.md",
+        "website/docs/src/content/docs/loop/prove.md",
+        "website/docs/src/content/docs/evidence/receipts.md"
+      ]
+    },
+    {
+      "id": "review",
+      "name": "Review and external authority",
+      "summary": "Route AI or human review and acceptance, keep the attempt history, and record bound responses; retries and extra waves need a recorded user decision.",
+      "paths": [
+        ".claude/harness/runtime/workflow/authority/authority-runtime.mjs",
+        ".claude/harness/runtime/workflow/authority/authority-reviewer-run.mjs",
+        ".claude/harness/runtime/evidence/configured-reviewer.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/authority-continuity.test.mjs",
+        ".claude/harness/tests/configured-reviewer.test.mjs",
+        ".claude/harness/tests/review-repair-closure.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/EVIDENCE.md"
+      ]
+    },
+    {
+      "id": "land",
+      "name": "Land and archive",
+      "summary": "On the user's explicit instruction, apply the proven change to the target as an uncommitted diff with HEAD and index unchanged, then archive the agreement; interrupted Land resumes the same transaction.",
+      "paths": [
+        ".claude/harness/runtime/workflow/land/land-runtime.mjs",
+        ".claude/harness/runtime/workflow/land/apply-runtime.mjs",
+        ".claude/harness/runtime/workflow/transaction/land-journal.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/apply-runtime-archive.test.mjs",
+        ".claude/harness/tests/land-grant.test.mjs",
+        ".claude/harness/tests/recover-pending-apply.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/land.md",
+        "website/docs/src/content/docs/loop/land.md"
+      ]
+    },
+    {
+      "id": "deliver",
+      "name": "Deliver as a pull request",
+      "summary": "Optionally commit an archived change on its own branch and open a pull request; needs separate delivery authority.",
+      "paths": [
+        ".claude/harness/runtime/workflow/delivery/pull-request-runtime.mjs",
+        ".claude/harness/runtime/workflow/delivery/repository-delivery-saga.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/pull-request-runtime.test.mjs",
+        ".claude/harness/tests/repository-delivery-saga.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/deliver.md"
+      ]
+    },
+    {
+      "id": "multi-repository",
+      "name": "Multiple repositories",
+      "summary": "Work across submodules and sibling repositories: select them, isolate each, and land them in dependency order.",
+      "paths": [
+        ".claude/harness/runtime/workflow/repository/repository-topology.mjs",
+        ".claude/harness/runtime/workflow/repository/repository-snapshot.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/repository-topology.test.mjs",
+        ".claude/harness/tests/concurrent-repositories.test.mjs"
+      ],
+      "docs": [
+        "website/docs/src/content/docs/multi-repository.md"
+      ]
+    },
+    {
+      "id": "status",
+      "name": "Status, history, and diagnosis",
+      "summary": "See active changes and their next step, diagnose readiness, and read measured cost, timing, outcomes, and recurring findings.",
+      "paths": [
+        ".claude/harness/runtime/core/diagnostics-runtime.mjs",
+        ".claude/harness/runtime/observability/metrics-runtime.mjs",
+        ".claude/harness/runtime/observability/outcomes-runtime.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/diagnostics-changes.test.mjs",
+        ".claude/harness/tests/outcomes-lessons.test.mjs"
+      ],
+      "docs": [
+        "website/docs/src/content/docs/cli.md"
+      ]
+    },
+    {
+      "id": "operations-handoff",
+      "name": "Operations handoff",
+      "summary": "Track permission-bound external operations (deploys, migrations, access) as obligations for a named operator, not developer tasks.",
+      "paths": [
+        ".claude/harness/runtime/workflow/authority/handoff-runtime.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/handoff-policy.test.mjs",
+        ".claude/harness/tests/handoff-operation-normalization.test.mjs"
+      ],
+      "docs": [
+        "WORKFLOW.md"
+      ]
+    },
+    {
+      "id": "abandon",
+      "name": "Abandon a change",
+      "summary": "Retire a change that cannot be proven after a recorded user decision, quarantining its record instead of deleting it.",
+      "paths": [
+        ".claude/harness/runtime/workflow/change/abandon-runtime.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/abandon-runtime.test.mjs"
+      ],
+      "docs": [
+        "WORKFLOW.md"
+      ]
+    },
+    {
+      "id": "consumer-quality",
+      "name": "Consumer quality gates",
+      "summary": "Optional CRAP, mutation, lint, type-check, file-size, and module-boundary checks on the user project; every one ratchets against a baseline that may only shrink.",
+      "paths": [
+        ".claude/harness/runtime/quality/quality-runtime.mjs",
+        ".claude/harness/runtime/quality/findings-ratchet.mjs",
+        ".claude/harness/runtime/quality/module-boundary-proposal.mjs",
+        ".claude/harness/runtime/quality/onboarding-candidates.mjs",
+        ".claude/harness/runtime/quality/verify-readiness.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/quality-runtime.test.mjs",
+        ".claude/harness/tests/quality-adapters.test.mjs",
+        ".claude/harness/tests/findings-ratchet.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/CONSUMER-QUALITY.md",
+        "website/docs/src/content/docs/consumer-quality.md"
+      ]
+    },
+    {
+      "id": "pyramid-readiness",
+      "name": "Pyramid readiness",
+      "summary": "Per-layer readiness (codebase, static checks, verification, prose, review) of the user project, the same criteria Change Loop's own scorecard uses, with the next step for the weakest layer; a project with a user interface also gets UI rows (tokens, accessibility lint, rendered and accessibility checks, DESIGN.md).",
+      "paths": [
+        ".claude/harness/runtime/quality/pyramid-readiness.mjs",
+        ".claude/harness/runtime/quality/rule-registry.mjs",
+        ".claude/harness/runtime/quality/guide-rules.mjs",
+        ".claude/harness/runtime/quality/incident-records.mjs",
+        ".claude/harness/runtime/quality/ui-readiness.mjs",
+        ".claude/harness/runtime/composition/pyramid-readiness-command.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/pyramid-readiness.test.mjs",
+        ".claude/harness/tests/consumer-onboarding-path.test.mjs",
+        ".claude/harness/tests/repository-onboarding.test.mjs",
+        ".claude/harness/tests/checks-outside-the-change.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/CONSUMER-QUALITY.md",
+        "website/docs/src/content/docs/consumer-quality.md"
+      ]
+    },
+    {
+      "id": "project-feature-map",
+      "name": "Project feature map",
+      "summary": "The user project names its own features and the paths behind them in openspec/feature-map.json; intake reads it, the features command checks it and names the features a change touches, and the approval page lists them.",
+      "paths": [
+        ".claude/harness/runtime/workflow/validation/project-feature-map.mjs",
+        ".claude/harness/templates/feature-map.json"
+      ],
+      "tests": [
+        ".claude/harness/tests/project-feature-map.test.mjs"
+      ],
+      "docs": [
+        "website/docs/src/content/docs/artifacts.md",
+        "WORKFLOW.md"
+      ]
+    },
+    {
+      "id": "product-handoff",
+      "name": "Product documents (PRD and UX/UI)",
+      "summary": "A PM's PRD and a designer's uxui.md, in any layout with IDs, are found in the project; every change names the documents it comes from and must cover each owed item or exclude it with a reason, validation stops when a document changes after approval or an amendment drops an item, and product status shows every item across all changes. After release, product measure records each success metric's value and source.",
+      "paths": [
+        ".claude/harness/runtime/workflow/validation/product-handoff.mjs",
+        ".claude/harness/runtime/workflow/validation/handoff-binding.mjs",
+        ".claude/harness/runtime/workflow/validation/product-progress.mjs",
+        ".claude/skills/prd/SKILL.md",
+        ".claude/skills/ux-design/SKILL.md",
+        ".claude/harness/runtime/workflow/validation/product-measures.mjs"
+      ],
+      "tests": [
+        ".claude/harness/tests/product-handoff.test.mjs",
+        ".claude/harness/tests/product-progress.test.mjs",
+        ".claude/tests/docs/pm-ux-skills.test.mjs"
+      ],
+      "docs": [
+        ".claude/harness/lifecycle/change.md",
+        "website/docs/src/content/docs/loop/change.md",
+        "website/docs/src/content/docs/cli.md"
+      ]
+    },
+    {
+      "id": "install-and-hosts",
+      "name": "Install, hosts, and onboarding",
+      "summary": "Install or upgrade Change Loop, connect agent hosts, then onboard the project: doctor lists setup rows and the onboard skill drafts the quality baselines and feature map for the user to confirm.",
+      "paths": [
+        ".claude/harness/adapters/pi-extension.mjs",
+        ".claude/harness/runtime/core/host-instruction.mjs",
+        ".claude/harness/runtime/observability/telemetry-runtime.mjs",
+        ".claude/harness/runtime/quality/guide-readiness.mjs",
+        ".claude/skills/onboard/SKILL.md"
+      ],
+      "tests": [
+        ".claude/harness/tests/host-capability-matrix.test.mjs",
+        ".claude/harness/tests/telemetry-import-sync.test.mjs",
+        ".claude/harness/tests/setup-readiness.test.mjs"
+      ],
+      "docs": [
+        "website/docs/src/content/docs/install.md",
+        ".claude/harness/README.md"
+      ]
+    },
+    {
+      "id": "team-dashboard",
+      "name": "Team dashboard",
+      "summary": "Optional team presence and usage view fed by agent heartbeats.",
+      "paths": [
+        "dashboard/server.js",
+        "dashboard/client.sh"
+      ],
+      "tests": [
+        "dashboard/test/server.test.js"
+      ],
+      "docs": [
+        "dashboard/README.md"
+      ]
+    }
+  ]
+}

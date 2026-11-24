@@ -1,0 +1,14 @@
+{
+  "protocol": "foundation-findings-v1",
+  "repository": "root",
+  "repositoryCommit": "0a1f7a3feaa089a743630c22810f1ba4ad00b1f9",
+  "workspaceDigest": "sha256:d33a5751e9f3c4938935c34b74f71c1891550181f4926ecf1257803d1605939b",
+  "language": "any",
+  "tool": {
+    "name": "generic-findings-json",
+    "version": "unknown",
+    "adapterVersion": "1",
+    "configDigest": "sha256:1114dcd6f61fb563ab0172d7dbd528b26ee547109dc077f63d32a54f47286694"
+  },
+  "findings": []
+}

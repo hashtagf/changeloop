@@ -44,6 +44,7 @@
     "release:upgrade-matrix": "node scripts/release/upgrade-matrix.mjs",
     "release:rollout-report": "node scripts/release/rollout-report.mjs",
     "release:local-rehearsal": "node scripts/release/local-rehearsal.mjs",
+    "verify": "node scripts/release/local-rehearsal.mjs",
     "test:harness": "sh .claude/tests/harness/run-harness-tests.sh",
     "test:quality:consumer": "node --test .claude/tests/harness/run-quality-protocol-tests.mjs .claude/tests/harness/run-quality-policy-tests.mjs .claude/tests/harness/run-quality-discovery-tests.mjs .claude/harness/tests/quality-runtime.test.mjs .claude/harness/tests/quality-adapters.test.mjs .claude/harness/tests/findings-ratchet.test.mjs",
     "quality:mutation:changed": "node scripts/quality/evaluate-mutation-delta.mjs",

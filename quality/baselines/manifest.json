@@ -1,0 +1,96 @@
+{
+  "protocol": "foundation-quality-baseline-manifest-v1",
+  "entries": [
+    {
+      "updatedAt": "2026-11-24T14:53:56.510Z",
+      "decisionRef": "dogfood-onboarding-2026-11-24",
+      "reason": "Change Loop onboards itself through the consumer path; today's guard findings (all zero) become the baseline",
+      "reports": [
+        {
+          "repository": "root",
+          "capability": "lint",
+          "target": "quality/baselines/root/lint-v1.json",
+          "tool": {
+            "name": "generic-findings-json",
+            "version": "unknown",
+            "adapterVersion": "1",
+            "configDigest": "sha256:1114dcd6f61fb563ab0172d7dbd528b26ee547109dc077f63d32a54f47286694"
+          },
+          "repositoryCommit": "0a1f7a3feaa089a743630c22810f1ba4ad00b1f9"
+        },
+        {
+          "repository": "root",
+          "capability": "type-check",
+          "target": "quality/baselines/root/type-check-v1.json",
+          "tool": {
+            "name": "generic-findings-json",
+            "version": "unknown",
+            "adapterVersion": "1",
+            "configDigest": "sha256:1114dcd6f61fb563ab0172d7dbd528b26ee547109dc077f63d32a54f47286694"
+          },
+          "repositoryCommit": "0a1f7a3feaa089a743630c22810f1ba4ad00b1f9"
+        },
+        {
+          "repository": "root",
+          "capability": "file-size",
+          "target": "quality/baselines/root/file-size-v1.json",
+          "tool": {
+            "name": "generic-findings-json",
+            "version": "unknown",
+            "adapterVersion": "1",
+            "configDigest": "sha256:1114dcd6f61fb563ab0172d7dbd528b26ee547109dc077f63d32a54f47286694"
+          },
+          "repositoryCommit": "0a1f7a3feaa089a743630c22810f1ba4ad00b1f9"
+        },
+        {
+          "repository": "root",
+          "capability": "module-boundaries",
+          "target": "quality/baselines/root/module-boundaries-v1.json",
+          "tool": {
+            "name": "generic-findings-json",
+            "version": "unknown",
+            "adapterVersion": "1",
+            "configDigest": "sha256:1114dcd6f61fb563ab0172d7dbd528b26ee547109dc077f63d32a54f47286694"
+          },
+          "repositoryCommit": "0a1f7a3feaa089a743630c22810f1ba4ad00b1f9"
+        },
+        {
+          "repository": "root",
+          "capability": "workaround-comments",
+          "target": "quality/baselines/root/workaround-comments-v1.json",
+          "tool": {
+            "name": "generic-findings-json",
+            "version": "unknown",
+            "adapterVersion": "1",
+            "configDigest": "sha256:1114dcd6f61fb563ab0172d7dbd528b26ee547109dc077f63d32a54f47286694"
+          },
+          "repositoryCommit": "0a1f7a3feaa089a743630c22810f1ba4ad00b1f9"
+        },
+        {
+          "repository": "root",
+          "capability": "duplication",
+          "target": "quality/baselines/root/duplication-v1.json",
+          "tool": {
+            "name": "generic-findings-json",
+            "version": "unknown",
+            "adapterVersion": "1",
+            "configDigest": "sha256:1114dcd6f61fb563ab0172d7dbd528b26ee547109dc077f63d32a54f47286694"
+          },
+          "repositoryCommit": "0a1f7a3feaa089a743630c22810f1ba4ad00b1f9"
+        },
+        {
+          "repository": "root",
+          "capability": "nesting-depth",
+          "target": "quality/baselines/root/nesting-depth-v1.json",
+          "tool": {
+            "name": "generic-findings-json",
+            "version": "unknown",
+            "adapterVersion": "1",
+            "configDigest": "sha256:1114dcd6f61fb563ab0172d7dbd528b26ee547109dc077f63d32a54f47286694"
+          },
+          "repositoryCommit": "0a1f7a3feaa089a743630c22810f1ba4ad00b1f9"
+        }
+      ]
+    }
+  ]
+}

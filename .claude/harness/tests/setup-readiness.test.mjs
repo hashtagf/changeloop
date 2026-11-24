@@ -135,6 +135,10 @@ test("a seeded agent guide or REVIEW.md template is not project guidance yet", (
   assert.match(rows["agent-guide"].detail, /names script\(s\) package.json lacks: lint:all/);
   rows = byId(guideReadiness(project(t, { "AGENTS.md": `${rules}${"- rule\n".repeat(220)}` })));
   assert.match(rows["agent-guide"].detail, /lines \(keep it under 200/);
+  // A script defined in a nested package.json ("run from website/docs") is not stale.
+  rows = byId(guideReadiness(project(t, { "AGENTS.md": `${rules}\nRun \`npm run build\` from website/docs.\n`,
+    "package.json": { scripts: { test: "jest" } }, "website/docs/package.json": { scripts: { build: "astro build" } } })));
+  assert.equal(rows["agent-guide"].level, "ok");
   assert.deepEqual(staleScriptReferences("pnpm install, yarn build, npm test", { build: "x", test: "y" }), [],
     "package-manager builtins and defined scripts are not stale");
 });

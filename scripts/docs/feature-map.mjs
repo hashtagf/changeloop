@@ -3,7 +3,7 @@
 // and states users see and the code, tests, and docs that own each feature.
 //
 //   node scripts/docs/feature-map.mjs          check docs/feature-map.json and docs/feature-map.md
-//   node scripts/docs/feature-map.mjs --write  regenerate docs/feature-map.md
+//   node scripts/docs/feature-map.mjs --write  regenerate docs/feature-map.md and openspec/feature-map.json
 //
 // Repository-only: not shipped to consumers.
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -142,13 +142,32 @@ export function renderFeatureMap(map) {
   return lines.join("\n");
 }
 
+// The same features in the project feature-map shape every installed project
+// uses (openspec/feature-map.json), so Change Loop onboards itself through the
+// consumer path: `cloop features`, readiness, and change intake read it.
+export const PROJECT_MAP_PATH = "openspec/feature-map.json";
+
+export function projectFeatureMap(map) {
+  return { version: 1, features: map.features.map((feature) => ({
+    id: feature.id, name: feature.name.en, summary: feature.summary.en,
+    paths: feature.code, tests: feature.tests, docs: feature.docs
+  })) };
+}
+
 export function main(argv = process.argv.slice(2), root = REPO_ROOT, out = console) {
   const map = JSON.parse(readFileSync(join(root, MAP_PATH), "utf8"));
   const issues = validateFeatureMap(map, root);
   const rendered = renderFeatureMap(map);
-  if (argv.includes("--write") && !issues.length) writeFileSync(join(root, DOC_PATH), rendered);
-  else if (!existsSync(join(root, DOC_PATH)) || readFileSync(join(root, DOC_PATH), "utf8") !== rendered)
-    issues.push(`${DOC_PATH} is stale; run node scripts/docs/feature-map.mjs --write`);
+  const project = `${JSON.stringify(projectFeatureMap(map), null, 2)}\n`;
+  if (argv.includes("--write") && !issues.length) {
+    writeFileSync(join(root, DOC_PATH), rendered);
+    writeFileSync(join(root, PROJECT_MAP_PATH), project);
+  } else {
+    if (!existsSync(join(root, DOC_PATH)) || readFileSync(join(root, DOC_PATH), "utf8") !== rendered)
+      issues.push(`${DOC_PATH} is stale; run node scripts/docs/feature-map.mjs --write`);
+    if (!existsSync(join(root, PROJECT_MAP_PATH)) || readFileSync(join(root, PROJECT_MAP_PATH), "utf8") !== project)
+      issues.push(`${PROJECT_MAP_PATH} is stale; run node scripts/docs/feature-map.mjs --write`);
+  }
   for (const issue of issues) out.error(`feature map: ${issue}`);
   if (issues.length) return 1;
   out.log(`feature map: ${map.features.length} features cover every command, state, and runtime group`);
