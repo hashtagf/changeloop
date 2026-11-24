@@ -9,12 +9,13 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const read = file => readFileSync(resolve(root, file), "utf8");
 const guides = [
   "README.md", "README.th.md", "AGENTS.md", "CLAUDE.md", "CONTRIBUTING.md",
-  ".claude/tests/README.md", "docs/reports/README.md"
+  ".claude/tests/README.md", "docs/reports/README.md", "docs/documentation-ownership.md",
+  "docs/shipping-boundary.md", "docs/repository-map.md"
 ];
 const withoutFences = body => body.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, "");
 
 test("first-run guides stay within their documented reading budgets", () => {
-  const policy = read("CLAUDE.md");
+  const policy = read("docs/documentation-ownership.md");
   // Read the budgets from their canonical policy, rather than maintaining a
   // second configuration that can silently disagree with the instructions.
   const readmeLimit = Number(policy.match(/root README at \*\*(\d+) lines or fewer\*\*/)?.[1]);
@@ -72,7 +73,7 @@ test("entry-guide local links resolve after documentation moves", () => {
 
 test("agent and contributor entrypoints reach the canonical documentation policy", () => {
   for (const file of ["AGENTS.md", "CONTRIBUTING.md"]) {
-    assert.ok(read(file).includes("CLAUDE.md#documentation-ownership"), file);
+    assert.ok(read(file).includes("docs/documentation-ownership.md"), file);
   }
 });
 

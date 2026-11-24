@@ -179,7 +179,8 @@ for (const [name, value] of Object.entries(releaseSurfaces))
 
 // --- shipping boundary -------------------------------------------------------
 
-// `install.sh` MANAGED is authoritative and CLAUDE.md documents it. A path in
+// `install.sh` MANAGED is authoritative and docs/shipping-boundary.md (linked
+// from CLAUDE.md) documents it. A path in
 // one and not the other means either an install that silently stops shipping a
 // file, or a document that lies about what a consumer receives.
 const managedBlock = read("install.sh");
@@ -192,9 +193,11 @@ const managed = managedBlock
 check(() => assert.ok(managed.length >= 8,
   "the install.sh MANAGED array failed to parse — this test is reading the wrong block"));
 
-const claudeMd = read("CLAUDE.md");
+const boundary = read("docs/shipping-boundary.md");
+check(() => assert.ok(read("CLAUDE.md").includes("docs/shipping-boundary.md"),
+  "CLAUDE.md links the shipping boundary"));
 for (const path of managed)
-  check(() => assert.ok(claudeMd.includes(path),
-    `install.sh ships '${path}' but CLAUDE.md does not list it as managed`));
+  check(() => assert.ok(boundary.includes(path),
+    `install.sh ships '${path}' but docs/shipping-boundary.md does not list it as managed`));
 
 console.log(`single-source tables: ALL PASS (${assertions}/${assertions} assertions)`);

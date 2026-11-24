@@ -71,7 +71,7 @@ Use the smallest relevant canonical source:
 Do not duplicate a canonical contract into another guide. Link to it and keep
 summaries short. Keep English and Thai public documentation aligned.
 
-For documentation changes, follow [Documentation ownership](CLAUDE.md#documentation-ownership):
+For documentation changes, follow [Documentation ownership](docs/documentation-ownership.md):
 use the file's purpose and update trigger, keep first-run guides within their
 reading budgets, and run the documentation checks. These repository maintenance
 rules must not become dependencies of installed consumer files.

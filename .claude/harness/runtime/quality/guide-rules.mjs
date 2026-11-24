@@ -7,7 +7,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const GUIDE_FILES = Object.freeze(["CLAUDE.md", "AGENTS.md"]);
-const IMPERATIVE = /\b(?:must|never|always|do not|don't|only|requires?)\b/i;
+// A word inside a hyphenated compound ("repository-only", "read-only") names
+// a kind of thing, not an instruction.
+const IMPERATIVE = /(?<![\w-])(?:must|never|always|do not|don't|only|requires?)(?![\w-])/i;
 const normalize = (text) => String(text).replace(/\s+/g, " ").trim();
 
 export function ruleSentences(markdown) {

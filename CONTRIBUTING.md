@@ -90,7 +90,7 @@ repository-only tooling. Read [`CLAUDE.md`](CLAUDE.md) — particularly the
 
 ## Making a change
 
-For documentation, use the [file responsibilities and editing rules](CLAUDE.md#documentation-ownership).
+For documentation, use the [file responsibilities and editing rules](docs/documentation-ownership.md).
 Update the canonical source and affected English/Thai summaries together.
 
 1. **Open an issue first** for anything beyond a small fix, so we can agree on

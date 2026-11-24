@@ -86,6 +86,9 @@ dashboard/data/*.db-wal
 !/docs/changelog-history.md
 !/docs/feature-map.json
 !/docs/feature-map.md
+!/docs/documentation-ownership.md
+!/docs/shipping-boundary.md
+!/docs/repository-map.md
 !/docs/reports/
 !/docs/reports/*.md
 !/docs/adr/

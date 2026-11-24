@@ -229,6 +229,9 @@ test("guide rule sentences are imperative prose outside code, tables, and list l
     "```sh", "# you must not count code", "```"
   ].join("\n"));
   assert.deepEqual(sentences, ["Agents must run the gate.", "Never edit receipts by hand."]);
+  // A hyphenated compound names a kind of thing, not an instruction.
+  assert.deepEqual(ruleSentences("Repository-only and read-only files are listed in docs.\n\nOnly the owner may delete.\n"),
+    ["Only the owner may delete."]);
 });
 
 test("an unregistered guide rule and a closed incident without a regression are unmet", (t) => {

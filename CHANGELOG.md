@@ -43,6 +43,8 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- Agent-guide rule detection ignores a word inside a hyphenated compound, so
+  "repository-only" or "read-only" no longer counts as an instruction.
 - The `agent-guide` row reads scripts from every `package.json` in the
   repository, so a guide that says "run `npm run build` from website/docs" is
   not reported as naming a missing script.

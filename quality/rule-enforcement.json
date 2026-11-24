@@ -340,63 +340,63 @@
     },
     {
       "id": "policy-linked-not-copied",
-      "source": "CLAUDE.md",
-      "quote": "`AGENTS.md` and contributor guides link here; do not copy this policy into each file.",
+      "source": "docs/documentation-ownership.md",
+      "quote": "`AGENTS.md`, `CLAUDE.md`, and contributor guides link here; do not copy this policy into each file.",
       "layer": "judgment",
       "judgment": "documentation placement and wording need a reader; the doc-consistency suite checks links, locales, and budgets, not duplication"
     },
     {
       "id": "doc-family",
-      "source": "CLAUDE.md",
+      "source": "docs/documentation-ownership.md",
       "quote": "Extend the nearest family above or add a row only when its responsibility differs.",
       "layer": "judgment",
       "judgment": "documentation placement and wording need a reader; the doc-consistency suite checks links, locales, and budgets, not duplication"
     },
     {
       "id": "no-repeat-guide",
-      "source": "CLAUDE.md",
+      "source": "docs/documentation-ownership.md",
       "quote": "Do not create a new guide merely to repeat an existing one.",
       "layer": "judgment",
       "judgment": "documentation placement and wording need a reader; the doc-consistency suite checks links, locales, and budgets, not duplication"
     },
     {
       "id": "canonical-first",
-      "source": "CLAUDE.md",
+      "source": "docs/documentation-ownership.md",
       "quote": "Change the canonical contract first, then only the summaries and examples affected by it.",
       "layer": "judgment",
       "judgment": "documentation placement and wording need a reader; the doc-consistency suite checks links, locales, and budgets, not duplication"
     },
     {
       "id": "examples-supported",
-      "source": "CLAUDE.md",
+      "source": "docs/documentation-ownership.md",
       "quote": "Examples must use supported commands and state what the reader should see.",
       "layer": "judgment",
       "judgment": "whether an example states what the reader should see needs a reader; the docs build checks only that pages render"
     },
     {
       "id": "no-date-refresh",
-      "source": "CLAUDE.md",
+      "source": "docs/documentation-ownership.md",
       "quote": "Never refresh a date to imply revalidation.",
       "layer": "judgment",
       "judgment": "intent behind a date edit is invisible to a check"
     },
     {
       "id": "readability",
-      "source": "CLAUDE.md",
+      "source": "docs/documentation-ownership.md",
       "quote": "Inspect changed pages for readability; passing checks do not establish semantic accuracy or",
       "layer": "judgment",
       "judgment": "readability and usability need a person"
     },
     {
       "id": "generated-records-wording",
-      "source": "CLAUDE.md",
+      "source": "docs/documentation-ownership.md",
       "quote": "Never describe generated records as disposable or project-owned packets as freely hand-editable.",
       "layer": "judgment",
       "judgment": "documentation placement and wording need a reader; the doc-consistency suite checks links, locales, and budgets, not duplication"
     },
     {
       "id": "installer-ownership",
-      "source": "CLAUDE.md",
+      "source": "docs/shipping-boundary.md",
       "quote": "Installers may seed or merge them only through their documented ownership rules.",
       "layer": "test",
       "enforcedBy": [
@@ -405,7 +405,7 @@
     },
     {
       "id": "unshipped-tests",
-      "source": "CLAUDE.md",
+      "source": "docs/shipping-boundary.md",
       "quote": "`install.sh` copies `.claude/harness` except its `tests/` and `fixtures/` (`UNSHIPPED`); those stay",
       "layer": "test",
       "enforcedBy": [
@@ -415,7 +415,7 @@
     },
     {
       "id": "vendored-unchanged",
-      "source": "CLAUDE.md",
+      "source": "docs/shipping-boundary.md",
       "quote": "Do not edit it in place: update it by copying a newer upstream release, record the release, commit,",
       "layer": "test",
       "enforcedBy": [
@@ -424,14 +424,14 @@
     },
     {
       "id": "adapted-skill-fixes",
-      "source": "CLAUDE.md",
+      "source": "docs/shipping-boundary.md",
       "quote": "`skill-creator` and `ui-ux-pro-max` are adapted upstream copies without `VENDORED.md`; their local",
       "layer": "judgment",
       "judgment": "an upstream sync is a manual copy; which local fixes to reapply is read from CHANGELOG.md"
     },
     {
       "id": "shipped-independence-claude",
-      "source": "CLAUDE.md",
+      "source": "docs/shipping-boundary.md",
       "quote": "Never make a shipped file depend on repository-only tests, reports, or release paths.",
       "layer": "test",
       "enforcedBy": [
@@ -440,7 +440,7 @@
     },
     {
       "id": "no-history-in-runtime",
-      "source": "CLAUDE.md",
+      "source": "docs/shipping-boundary.md",
       "quote": "Never store benchmark history, incidents, or cost observations in the installed runtime.",
       "layer": "judgment",
       "judgment": "what counts as history or cost data in a runtime file needs a reviewer; repository hygiene covers repository-only paths"
