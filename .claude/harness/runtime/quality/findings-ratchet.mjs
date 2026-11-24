@@ -9,7 +9,7 @@ import { isAbsolute, join, posix, relative } from "node:path";
 import { configDigest } from "./quality-protocol.mjs";
 import { pathMatches } from "./quality-evaluator.mjs";
 import { SOURCE_EXTENSIONS, lineCount, slash, sourceFiles } from "./source-scan.mjs";
-import { duplicationFindings, nestingDepthFindings, workaroundCommentFindings } from "./code-health-findings.mjs";
+import { CODE_EXTENSIONS, duplicationFindings, nestingDepthFindings, workaroundCommentFindings } from "./code-health-findings.mjs";
 
 export const FINDINGS_PROTOCOL = "foundation-findings-v1";
 export const FINDINGS_CAPABILITIES = new Set(["lint", "type-check", "file-size", "module-boundaries",
@@ -20,7 +20,7 @@ export const DEFAULT_FILE_SIZE_CEILING = 1000;
 function tool(provider, adapter) {
   // Settings added after a lane's first release join the digest only when
   // set, so an existing baseline keeps comparing.
-  const later = Object.fromEntries(["extensions", "window", "maxDepth"]
+  const later = Object.fromEntries(["extensions", "window", "maxDepth", "aliases"]
     .filter((key) => provider[key] !== undefined).map((key) => [key, provider[key]]));
   return {
     name: provider.tool?.name || adapter,
@@ -28,7 +28,11 @@ function tool(provider, adapter) {
     adapterVersion: FINDINGS_ADAPTER_VERSION,
     configDigest: configDigest({ adapter, inputs: provider.inputs || null, include: provider.include || null,
       exclude: provider.exclude || null, ceiling: provider.ceiling || null, modules: provider.modules || null,
-      allow: provider.allow || null, tool: provider.tool || null, ...later })
+      allow: provider.allow || null, tool: provider.tool || null, ...later,
+      // file-size once scanned only JavaScript and TypeScript; a baseline from
+      // then no longer compares, so the lane asks for a new one instead of
+      // failing on files it never measured.
+      ...(adapter === "file-size" && provider.extensions === undefined ? { scope: "code-v2" } : {}) })
   };
 }
 
@@ -142,7 +146,7 @@ export function parseGoVetText(source) {
 export function fileSizeFindings(root, provider, policyCeiling = DEFAULT_FILE_SIZE_CEILING) {
   const ceiling = Number(provider.ceiling || policyCeiling);
   if (!Number.isInteger(ceiling) || ceiling < 1) throw new Error("file-size ceiling must be a positive integer");
-  return sourceFiles(root, provider).flatMap((path) => {
+  return sourceFiles(root, provider, CODE_EXTENSIONS).flatMap((path) => {
     const lines = lineCount(readFileSync(join(root, path), "utf8"));
     return lines > ceiling ? [{ path, rule: "file-size", value: lines,
       message: `${lines} lines exceeds the ${ceiling}-line ceiling; split it into focused modules` }] : [];
@@ -154,9 +158,25 @@ const IMPORT_PATTERNS = [
   /\b(?:import|require)\s*\(\s*["']([^"']+)["']\s*\)/g
 ];
 
-function resolveImport(root, from, specifier) {
-  if (!specifier.startsWith(".")) return null;
-  const base = posix.normalize(posix.join(posix.dirname(from), specifier));
+// `aliases` maps an import prefix to a repository path, as tsconfig `paths`
+// or a bundler alias does: { "~/": "src/" } reads `~/api/x` as `src/api/x`.
+// A key without a trailing slash is a workspace package name: `@acme/core`
+// reads as that package's entry and `@acme/core/x` as a path inside it.
+function aliasTarget(aliases, specifier) {
+  for (const key of Object.keys(aliases).sort((left, right) => right.length - left.length)) {
+    if (key.endsWith("/") ? specifier.startsWith(key) : specifier === key || specifier.startsWith(`${key}/`)) {
+      const rest = specifier.slice(key.length).replace(/^\//, "");
+      return posix.join(aliases[key], rest || (key.endsWith("/") ? "" : "index"));
+    }
+  }
+  return null;
+}
+
+function resolveImport(root, from, specifier, aliases = {}) {
+  const aliased = aliasTarget(aliases, specifier);
+  if (!specifier.startsWith(".") && aliased === null) return null;
+  const base = aliased !== null ? posix.normalize(aliased)
+    : posix.normalize(posix.join(posix.dirname(from), specifier));
   if (base.startsWith("..")) return null;
   const candidates = [base, ...SOURCE_EXTENSIONS.map((ext) => `${base}${ext}`),
     ...SOURCE_EXTENSIONS.map((ext) => `${base}/index${ext}`)];
@@ -185,7 +205,11 @@ export function validateModuleBoundaries(provider) {
     if (!Array.isArray(targets) || targets.some((target) => !names.has(target)))
       throw new Error(`allow.${from} must list declared modules`);
   }
-  return { modules, allow };
+  const aliases = provider.aliases || {};
+  if (typeof aliases !== "object" || Array.isArray(aliases) || Object.entries(aliases)
+    .some(([prefix, target]) => !prefix || typeof target !== "string" || target.startsWith("..") || target.startsWith("/")))
+    throw new Error("module-boundaries aliases map an import prefix to a repository path");
+  return { modules, allow, aliases };
 }
 
 // A relative import from one declared module into another that its `allow`
@@ -193,7 +217,7 @@ export function validateModuleBoundaries(provider) {
 // line. Files outside every module and imports that leave the repository are
 // not judged.
 export function moduleBoundaryFindings(root, provider) {
-  const { modules, allow } = validateModuleBoundaries(provider);
+  const { modules, allow, aliases } = validateModuleBoundaries(provider);
   const moduleOf = (path) => modules.find((module) => pathMatches(path, module.paths))?.name || null;
   const findings = [];
   for (const path of sourceFiles(root, provider)) {
@@ -202,10 +226,11 @@ export function moduleBoundaryFindings(root, provider) {
     const source = readFileSync(join(root, path), "utf8");
     const seen = new Set();
     for (const pattern of IMPORT_PATTERNS) for (const match of source.matchAll(pattern)) {
-      const target = resolveImport(root, path, match[1]);
+      const target = resolveImport(root, path, match[1], aliases);
       const to = target ? moduleOf(target) : null;
       if (!to || to === from || (allow[from] || []).includes(to)) continue;
-      const line = source.slice(0, match.index).split("\n").length;
+      // The pattern starts with the character before `import`; count from the keyword.
+      const line = source.slice(0, match.index + match[0].search(/import|export|require/)).split("\n").length;
       const key = `${line}\0${match[1]}`;
       if (seen.has(key)) continue;
       seen.add(key);

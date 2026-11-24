@@ -10,6 +10,7 @@ import { ruleRegistrySummary } from "../quality/rule-registry.mjs";
 import { incidentSummary } from "../quality/incident-records.mjs";
 import { uiReadinessFacts } from "../quality/ui-readiness.mjs";
 import { changesPerRepository, onboardingCandidates } from "../quality/onboarding-candidates.mjs";
+import { guideReadiness } from "../quality/guide-readiness.mjs";
 import {
   readProjectFeatureMap, validateProjectFeatureMap
 } from "../workflow/validation/project-feature-map.mjs";
@@ -25,7 +26,7 @@ const REPOSITORY_LAYERS = ["codebase", "static", "verification"];
 
 export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, outcomesValue,
   repositoryCatalog = () => null, changeStates = () => [], log = console.log }) {
-  function readinessFacts(quality = attempt(laneStates) || null) {
+  function readinessFacts(quality = attempt(laneStates) || null, uiFacts = undefined) {
     const map = attempt(() => readProjectFeatureMap(root));
     const lessons = attempt(() => lessonsValue())?.lessons;
     const registry = attempt(() => ruleRegistrySummary(root));
@@ -49,7 +50,7 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
         unregistered: registry.unregistered.length
       },
       incidents: attempt(() => incidentSummary(root)),
-      ui: attempt(() => uiReadinessFacts(root)),
+      ui: uiFacts || attempt(() => uiReadinessFacts(root)),
       outcomes: Array.isArray(changes) ? {
         archived: changes.length,
         measured: changes.filter((change) => change.firstProofPass !== null).length,
@@ -62,19 +63,30 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
   // A multi-repository topology onboards one repository at a time: each
   // onboarded repository gets its own code layers, and the rest are ranked
   // so the agent can propose the next few for the user to pick.
-  function repositoryRows(facts, quality) {
+  // UI rows read the repository's own files: design tokens, accessibility
+  // lint, rendered checks, and DESIGN.md live in the repository, not the root.
+  function repositoryRows(facts, quality, catalog) {
+    const paths = new Map((catalog?.repositories || []).map((row) => [row.id, row]));
     return Object.entries(quality?.repositories || {}).map(([id, own]) => {
-      // Feature map and UI rows are project-wide; a repository row judges its lanes.
-      const value = pyramidReadiness({ ...facts, featureMap: undefined, ui: undefined, configured: true,
+      const repository = paths.get(id);
+      const ui = !repository ? undefined : repository.type === "root" ? { perRepository: true }
+        : attempt(() => uiReadinessFacts(repository.path));
+      // The feature map is project-wide; a repository row judges its lanes and UI.
+      const value = pyramidReadiness({ ...facts, featureMap: undefined, ui, configured: true,
         lanes: own.lanes, findings: own.findings, statuses: own.statuses });
       return { id, onboardedAt: own.onboardedAt || null,
         layers: value.layers.filter((layer) => REPOSITORY_LAYERS.includes(layer.layer))
-          .map(({ layer, percent, met, measured }) => ({ layer, percent, met, measured })) };
+          .map(({ layer, percent, met, measured }) => ({ layer, percent, met, measured })),
+        ui: value.criteria.filter((row) => row.id.startsWith("ui-") && row.status !== "not-applicable")
+          .map(({ id: criterion, label, status, next }) => ({ id: criterion, label, status, next: next || null })),
+        // The repository's own AGENTS.md/CLAUDE.md and REVIEW.md, not the root's.
+        guides: !repository || repository.type === "root" ? []
+          : (attempt(() => guideReadiness(repository.path)) || []).filter((row) => row.level !== "ok")
+            .map(({ id: guide, detail, next }) => ({ id: guide, detail, next })) };
     });
   }
 
-  function onboarding(quality) {
-    const catalog = attempt(repositoryCatalog);
+  function onboarding(quality, catalog) {
     const repositories = catalog?.repositories || [];
     if (repositories.filter((repository) => repository.type !== "root").length < 1) return null;
     return { unlisted: quality?.unlisted || null, ...onboardingCandidates({ repositories,
@@ -84,10 +96,12 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
 
   function readinessValue() {
     const quality = attempt(laneStates) || null;
-    const facts = readinessFacts(quality);
+    const catalog = attempt(repositoryCatalog);
+    const plan = onboarding(quality, catalog);
+    // A control root of several repositories is not one UI: skip its scan.
+    const facts = readinessFacts(quality, plan ? { perRepository: true } : undefined);
     const value = pyramidReadiness(facts);
-    const plan = onboarding(quality);
-    return plan ? { ...value, onboarding: plan, repositories: repositoryRows(facts, quality) } : value;
+    return plan ? { ...value, onboarding: plan, repositories: repositoryRows(facts, quality, catalog) } : value;
   }
 
   function showReadiness(flags = {}) {

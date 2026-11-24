@@ -78,6 +78,28 @@ test("discovery drafts module boundaries from real imports, and tests stay outsi
   assert.equal(proposeModuleBoundaries(project(t, { "src/only/a.js": "x;\n" })).status, "not-applicable");
 });
 
+test("path aliases count as imports: configured in tsconfig, or guessed and marked for the user", (t) => {
+  const aliased = {
+    "package.json": { name: "app" },
+    "tsconfig.json": '{\n  // Nuxt-style alias\n  "compilerOptions": { "paths": { "~/*": ["./src/*"], "@/*": ["./src/*"], },\n  },\n}\n',
+    "src/core/money.ts": "export const add = (a: number, b: number) => a + b;\n",
+    "src/api/orders.ts": "import { add } from \"~/core/money\";\nexport const total = add;\n",
+    "src/ui/Cart.vue": "<script setup lang=\"ts\">\nimport { total } from '@/api/orders';\n</script>\n"
+  };
+  const draft = proposeModuleBoundaries(project(t, aliased));
+  assert.deepEqual(draft.provider.aliases, { "~/": "src/", "@/": "src/" });
+  assert.equal(draft.aliasSource, "tsconfig.json");
+  assert.ok(draft.provider.extensions.includes(".vue"), "components are scanned when the project has them");
+  assert.deepEqual(draft.provider.allow, { api: ["core"], ui: ["api"] });
+
+  const { "tsconfig.json": _, ...bare } = aliased;
+  const guessed = proposeModuleBoundaries(project(t, bare));
+  assert.deepEqual(guessed.provider.aliases, { "~/": "src/", "@/": "src/" });
+  assert.match(guessed.aliasSource, /guessed.*confirm/);
+  assert.deepEqual(guessed.provider.allow, { api: ["core"], ui: ["api"] });
+  assert.equal(proposeModuleBoundaries(project(t, APP)).aliasSource, null, "relative-only code gets no aliases");
+});
+
 test("discover, init, run, baseline, and the accepted boundary draft meet the codebase layer", (t) => {
   const root = project(t, APP);
   const { quality, readiness } = runtimes(root);

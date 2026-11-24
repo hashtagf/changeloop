@@ -30,6 +30,26 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- The `file-size` lane measures every code language the other code-health
+  lanes do (Python, Go, Ruby, and more), not only JavaScript and TypeScript.
+  A file-size baseline from the narrower scan no longer compares, so the lane
+  asks for a new baseline instead of failing on files it never measured.
+- Code-health lanes and discovery stop at a nested repository (a directory
+  with its own `.git`): a multi-repository root no longer counts its
+  repositories' files a second time or hits the 20,000-file scan limit.
+- Module boundaries resolve monorepo workspace package names (`@acme/core`,
+  `@acme/core/x`) as imports into that package, and a boundary finding names
+  the import's own line rather than the line before it.
+- In a multi-repository topology, readiness reports each onboarded
+  repository's own agent guide and `REVIEW.md` instead of only the root's.
+- Module-boundary drafts and the boundary lane read path aliases (`~/`, `@/`)
+  from tsconfig/jsconfig `paths`, or guess them from the layout for the user
+  to confirm, and scan Vue, Svelte, and Astro components. Before, a project
+  importing through `~/` showed almost no module relationships.
+- In a multi-repository topology, the UI readiness rows (design tokens,
+  accessibility lint, rendered checks, DESIGN.md) are read from each onboarded
+  repository instead of the control root, which missed what the repository
+  already had.
 - The website deploy waits for the Pages artifact and retries once: the deploy
   repeatedly found no artifact one second after a successful upload.
 

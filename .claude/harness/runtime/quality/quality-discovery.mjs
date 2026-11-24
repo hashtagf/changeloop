@@ -7,6 +7,7 @@ import {
   requiredControlsForProfiles, semanticFaultsForProfiles
 } from "./semantic-fault-catalog.mjs";
 import { proposeModuleBoundaries } from "./module-boundary-proposal.mjs";
+import { nestedRepository } from "./source-scan.mjs";
 
 const EXCLUDED = new Set([
   ".git", ".claude", ".foundation", "node_modules", "vendor", "target", "dist", "build",
@@ -32,7 +33,8 @@ export function inventoryRepository(root, { maximumFiles = 10000 } = {}) {
       const absolute = join(directory, entry.name);
       const path = relative(root, absolute).replaceAll("\\", "/");
       if (entry.isDirectory()) {
-        if (!EXCLUDED_PATHS.has(path)) walk(absolute);
+        // Another repository (sibling or submodule) is discovered on its own.
+        if (!EXCLUDED_PATHS.has(path) && !nestedRepository(absolute)) walk(absolute);
         continue;
       }
       if (!entry.isFile()) continue;

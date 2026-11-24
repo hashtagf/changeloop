@@ -161,6 +161,24 @@ test("Go and Python lanes are proposed only from what the project declares", (t)
   assert.equal(detectedProviders(project(t, { "requirements.txt": "ruffian\n" }), ["application-python"]).lint, undefined);
 });
 
+test("file-size measures every code language and skips nested repositories", (t) => {
+  const root = project(t, { "big.py": "x = 1\n".repeat(1200), "big.go": "// x\n".repeat(1200),
+    "small.js": "x\n", "repos/other/huge.js": "x\n".repeat(1200), "repos/other/.git": "gitdir: x\n" });
+  assert.deepEqual(fileSizeFindings(root, {}).map((row) => row.path).sort(), ["big.go", "big.py"]);
+});
+
+test("workspace package names resolve as imports into the package", (t) => {
+  const root = project(t, {
+    "packages/core/package.json": JSON.stringify({ name: "@acme/core" }),
+    "packages/core/index.js": "export const x = 1;\n",
+    "packages/web/src/app.js": "import { x } from \"@acme/core\";\nimport \"@acme/core/util\";\nimport \"@acme/core-extra\";\n"
+  });
+  const findings = moduleBoundaryFindings(root, { aliases: { "@acme/core": "packages/core/" },
+    modules: [{ name: "core", paths: ["packages/core/**"] }, { name: "web", paths: ["packages/web/**"] }] });
+  assert.deepEqual(findings.map((row) => [row.rule, row.line]), [["boundary/web->core", 1], ["boundary/web->core", 2]],
+    "a package name and its subpath resolve; a longer name is a different package");
+});
+
 test("Python lanes use python3 where only python3 is installed", (t) => {
   const bin = project(t, { python3: "" });
   const both = project(t, { python: "", python3: "" });
@@ -260,9 +278,15 @@ test("a later lane setting joins the digest only when set, so existing baselines
   const root = project(t, { "a.js": "x\n" });
   const repository = { id: "root", path: root };
   const digest = (provider) => FINDINGS_ADAPTERS["file-size"].run({ repository, provider }).tool.configDigest;
-  assert.equal(digest({}), configDigest({ adapter: "file-size", inputs: null, include: null, exclude: null,
-    ceiling: null, modules: null, allow: null, tool: null }), "the digest a 3.7 baseline recorded");
+  const legacy = configDigest({ adapter: "file-size", inputs: null, include: null, exclude: null,
+    ceiling: null, modules: null, allow: null, tool: null });
+  // file-size now scans every code language: a baseline from the JS/TS-only
+  // scan deliberately stops comparing and asks for a new one.
+  assert.notEqual(digest({}), legacy, "a JS/TS-only file-size baseline is not compared with the wider scan");
   assert.notEqual(digest({}), digest({ extensions: [".py"] }));
+  const nesting = FINDINGS_ADAPTERS["nesting-depth"].run({ repository, provider: {} }).tool.configDigest;
+  assert.equal(nesting, configDigest({ adapter: "nesting-depth", inputs: null, include: null, exclude: null,
+    ceiling: null, modules: null, allow: null, tool: null }), "other lanes keep the digest their baselines recorded");
   const window = (value) => FINDINGS_ADAPTERS.duplication.run({ repository, provider: { window: value } }).tool.configDigest;
   assert.notEqual(window(8), window(12));
 });

@@ -87,9 +87,12 @@ Built-in adapters: `eslint-json`, `tsc-text`, `ruff-json` (`ruff check
 --output-format json`), `mypy-text`, `golangci-json` (golangci-lint v1 or v2
 JSON), `go-vet-text` (`go vet ./... 2>&1`), `generic-findings-json` (read a
 report file, or the command's stdout when the input path is `-`),
-`file-size` (no tool), and `module-boundaries` (`modules`: name and path
+`file-size` (no tool; every code language the code-health lanes scan), and `module-boundaries` (`modules`: name and path
 globs; `allow`: which modules each may import; relative JavaScript and
-TypeScript imports only), `workaround-comments` (one `comment/<marker>`
+TypeScript imports, plus the keys in `aliases`: a prefix such as
+`{ "~/": "src/" }`, or a workspace package name such as
+`{ "@acme/core": "packages/core/" }` for the package and its subpaths;
+`aliases` joins the configuration digest only when set), `workaround-comments` (one `comment/<marker>`
 finding per comment line with an upper-case `TODO`, `FIXME`, `HACK`, or `XXX`,
 or the word workaround), and `duplication` (one `duplication/block` finding per
 run of at least `window` significant lines, default 8, repeated from earlier
@@ -112,7 +115,11 @@ the repository status. Tool paths are mapped to repository paths through the
 repository's real path too (macOS reports `/tmp` as `/private/tmp`).
 
 For JavaScript and TypeScript, discovery also returns
-`proposals.module-boundaries`: a draft lane read from real relative imports.
+`proposals.module-boundaries`: a draft lane read from real imports, relative
+ones and path aliases (`~/`, `@/`) from tsconfig/jsconfig `paths`, or, when
+the code uses `~/` or `@/` without one, guessed from the layout with
+`aliasSource` asking the user to confirm. Vue, Svelte, and Astro components
+are scanned when the project has them.
 Modules are the directories under the source root (the deepest directory that
 alone holds nested source; tests and hidden directories are left out), `allow`
 lists every direction the code already has so the lane starts clean and fails
@@ -131,7 +138,12 @@ repositories, and doctor reports the rest as one count. `quality readiness`
 adds `onboarding` (`onboarded` of `total` writable repositories and up to five
 `candidates` ranked by recorded changes, sensitive names such as auth or
 payments, and declared lint or type tools) and `repositories`, each onboarded
-repository's codebase, static, and verification layers. `outcomes` adds
+repository's codebase, static, and verification layers, and its UI rows read
+from that repository's own files (design tokens, accessibility lint, rendered
+checks, DESIGN.md); the control root of several repositories carries no UI
+rows of its own. Each repository row also lists its own agent guide and
+`REVIEW.md` when they are not ready. Scans stop at a nested repository (a
+directory with its own `.git`), so a root never counts its repositories' files. `outcomes` adds
 `onboardingByRepository`, comparing each repository before and after its own
 `onboardedAt` on the changes that selected it. Measured on a synthetic
 800-repository topology: readiness, doctor, init, and run of the onboarded

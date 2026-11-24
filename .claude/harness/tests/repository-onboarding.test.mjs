@@ -31,6 +31,9 @@ const TOPOLOGY = {
   "repos/search/src/index.js": "export const find = 1;\n",
   "repos/docs/package.json": { name: "docs", scripts: { test: "node -e 0" } },
   "repos/docs/src/index.js": "export const page = 1;\n",
+  "repos/docs/src/App.jsx": "export const App = () => null;\n",
+  "repos/docs/DESIGN.md": "# Design\n",
+  "repos/docs/src/tokens.css": ":root { --accent: #2946e8; }\n",
   "repos/vendor/src/index.js": "export const v = 1;\n"
 };
 
@@ -118,11 +121,31 @@ test("readiness reports each onboarded repository and proposes the next ones", (
   assert.deepEqual(value.onboarding.candidates.map((row) => row.id), ["search", "billing"]);
   assert.deepEqual(value.repositories.map((row) => row.id), ["docs"]);
   const codebase = value.repositories[0].layers.find((layer) => layer.layer === "codebase");
-  // file-size, nesting, and duplication ratchet and are clear; one source
-  // directory gets no module-boundaries lane.
-  assert.deepEqual([codebase.met, codebase.measured], [6, 7]);
+  // file-size, nesting, and duplication ratchet and are clear, and the
+  // repository's own tokens.css counts; one source directory gets no
+  // module-boundaries lane.
+  assert.deepEqual([codebase.met, codebase.measured], [7, 8]);
   const text = readinessText(value);
   assert.match(text, /Repositories onboarded: 1\/3/);
   assert.match(text, /Onboard next \(ask the user which\):\n  search: 1 change/);
   assert.match(readiness.readinessRow().detail, /onboarded 1\/3 repositories/);
+  // UI rows read the repository's own files, not the control root.
+  const ui = Object.fromEntries(value.repositories[0].ui.map((row) => [row.id, row.status]));
+  assert.deepEqual([ui["ui-design-doc"], ui["ui-tokens"]], ["met", "met"]);
+  assert.equal(ui["ui-a11y-lint"], "unmet");
+  assert.ok(value.criteria.filter((row) => row.id.startsWith("ui-")).every((row) => row.status === "not-applicable"),
+    "the control root carries no UI rows of its own");
+  assert.match(text, /docs: .*UI 2\/5 \(missing: /);
+  // The repository has no agent guide or REVIEW.md of its own.
+  assert.deepEqual(value.repositories[0].guides.map((row) => row.id), ["agent-guide", "review-rules"]);
+  assert.match(text, /docs: .*guides: agent-guide, review-rules not ready/);
+});
+
+test("the control root's scan stops at each nested repository", (t) => {
+  const root = project(t, { ...TOPOLOGY, "repos/search/.git": "gitdir: x\n", "tool.js": "x\n" });
+  const { quality } = runtimes(root);
+  const discovered = quality.discovery({ repo: "root" }).repositories[0];
+  assert.equal(discovered.inventory.markers.includes("repos/search/package.json"), false,
+    "a nested repository's manifest is not the root's");
+  assert.ok(discovered.inventory.markers.includes("repos/docs/package.json"), "a plain directory is still scanned");
 });

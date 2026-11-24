@@ -71,6 +71,9 @@ function clear(id, layer, label, capability) {
 // it is not applicable, which is neither measured nor listed.
 function uiOutsideScope(facts) {
   if (facts === undefined || facts === null) return { status: "unmeasured", detail: "UI surface not read" };
+  // A multi-repository control root only gathers repositories: each onboarded
+  // repository carries its own UI rows.
+  if (facts.perRepository) return { status: "not-applicable", detail: "UI is judged per repository" };
   return facts.present ? null : { status: "not-applicable", detail: "no user interface" };
 }
 
@@ -301,8 +304,14 @@ function onboardingLines({ onboarding, repositories = [] }) {
   const shown = [...repositories].sort((left, right) => score(left) - score(right) || left.id.localeCompare(right.id)).slice(0, 10);
   return [
     `Repositories onboarded: ${onboarding.onboarded}/${onboarding.total}`,
-    ...shown.map((row) => `  ${row.id}: codebase ${percent(row, "codebase")}, static ${
-      percent(row, "static")}, verification ${percent(row, "verification")}`),
+    ...shown.map((row) => {
+      const ui = row.ui || [];
+      const missing = ui.filter((item) => item.status === "unmet").map((item) => item.label);
+      return `  ${row.id}: codebase ${percent(row, "codebase")}, static ${percent(row, "static")}, verification ${
+        percent(row, "verification")}${ui.length ? `; UI ${ui.filter((item) => item.status === "met").length}/${ui.length}${
+        missing.length ? ` (missing: ${missing.join("; ")})` : ""}` : ""}${
+        (row.guides || []).length ? `; guides: ${row.guides.map((item) => item.id).join(", ")} not ready` : ""}`;
+    }),
     ...(repositories.length > shown.length ? [`  ... ${repositories.length - shown.length} more`] : []),
     ...(onboarding.candidates.length ? ["Onboard next (ask the user which):",
       ...onboarding.candidates.map((row) => `  ${row.id}: ${row.reasons.join("; ")}`),
