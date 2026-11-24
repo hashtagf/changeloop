@@ -345,9 +345,13 @@ test("spawned service reports spawn, early-exit, and timeout failures", async (t
   assert.deepEqual(timedOut.child.kills, ["SIGTERM"]);
 });
 
-test("macOS release bounds the full gate's worker pool", () => {
+test("the release gate runs its shards on Ubuntu, like CI, not on a contended macOS runner", () => {
   const workflow = readFileSync(new URL("../../../.github/workflows/release.yml", import.meta.url), "utf8");
-  assert.match(workflow, /FOUNDATION_TEST_JOBS=2 sh \.claude\/tests\/run-all\.sh --release\b/);
+  const gate = workflow.slice(workflow.indexOf("\n  gate:"), workflow.indexOf("\n  mutation:"));
+  assert.match(gate, /runs-on: ubuntu-latest/);
+  assert.match(gate, /sh \.claude\/tests\/run-all\.sh --release --shard/);
+  // macOS is kept for the one job that needs it: building and testing the bottle.
+  assert.equal(workflow.split("runs-on: macos-15").length - 1, 1);
 });
 
 test("process runtime executes commands, handles spawn errors, and times out", async (t) => {
