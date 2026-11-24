@@ -5,7 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 
 import {
-  boundedMap, compareSemver, semverTuple, supportedTags
+  boundedMap, compareSemver, semverTuple, shardExercises, supportedTags
 } from "../../../scripts/release/upgrade-matrix.mjs";
 import {
   projectUpgradeDiagnostics, upgradeCompatibilityDiagnostics
@@ -15,6 +15,15 @@ test("upgrade policy selects every release from the supported minimum through cu
   const tags = ["v3.4.10", "v3.2.18", "v3.3.0", "junk", "v3.2.19", "v3.4.11"];
   assert.deepEqual(supportedTags(tags, "3.2.19", "3.4.10"),
     ["v3.2.19", "v3.3.0", "v3.4.10"]);
+});
+
+test("upgrade shards partition the exercises: every one runs exactly once", () => {
+  const exercises = Array.from({ length: 11 }, (_, index) => index);
+  const shards = [1, 2, 3, 4].map((index) => shardExercises(exercises, `${index}/4`));
+  assert.deepEqual(shards.flat().sort((left, right) => left - right), exercises);
+  assert.deepEqual(shards[0], [0, 4, 8]);
+  assert.deepEqual(shardExercises(exercises, null), exercises);
+  for (const bad of ["0/4", "5/4", "x", "2"]) assert.throws(() => shardExercises(exercises, bad), /--shard/);
 });
 
 test("upgrade exercises use bounded concurrency and preserve report order", async () => {

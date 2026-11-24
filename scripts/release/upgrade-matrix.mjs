@@ -55,6 +55,16 @@ export async function boundedMap(items, concurrency, worker) {
   return results;
 }
 
+// One shard of the (tag, host) exercises, round-robin so old and new tags
+// spread across shards. The union of shards 1..N is the whole matrix.
+export function shardExercises(exercises, shard = null) {
+  if (!shard) return exercises;
+  const match = /^(\d+)\/(\d+)$/.exec(shard);
+  const [index, count] = match ? [Number(match[1]), Number(match[2])] : [0, 0];
+  if (!match || index < 1 || count < 1 || index > count) throw new Error("--shard requires K/N with 1 <= K <= N");
+  return exercises.filter((_, position) => position % count === index - 1);
+}
+
 function sourceIdentity() {
   const head = run("git", ["rev-parse", "HEAD"]).trim();
   const status = run("git", ["status", "--porcelain=v1"]);
@@ -142,22 +152,22 @@ async function exercise({ tag, source, host, root, currentVersion }) {
 }
 
 export async function runUpgradeMatrix({ tags: requestedTags = null,
-  jobs = Math.min(8, availableParallelism()) } = {}) {
+  jobs = Math.min(8, availableParallelism()), shard = null } = {}) {
   const currentVersion = readFileSync(join(ROOT, "VERSION"), "utf8").trim();
   const allTags = run("git", ["tag", "--list", "v*.*.*"]).trim().split(/\r?\n/).filter(Boolean);
   const tags = requestedTags || supportedTags(allTags, POLICY.minimum, currentVersion);
   if (!tags.length) throw new Error("supported upgrade matrix selected no tags");
   const root = mkdtempSync(join(tmpdir(), "foundation-upgrade-matrix-"));
   let rows = [];
+  const exercises = shardExercises(tags.flatMap((tag) => POLICY.hosts.map((host) => ({
+    tag, host, source: join(root, `source-${tag.slice(1)}`), root, currentVersion
+  }))), shard);
   try {
-    for (const tag of tags) {
+    for (const tag of new Set(exercises.map((row) => row.tag))) {
       const source = join(root, `source-${tag.slice(1)}`);
       mkdirSync(source, { recursive: true });
       unpackTag(tag, source);
     }
-    const exercises = tags.flatMap((tag) => POLICY.hosts.map((host) => ({
-      tag, host, source: join(root, `source-${tag.slice(1)}`), root, currentVersion
-    })));
     rows = await boundedMap(exercises, jobs, exercise);
   } finally {
     rmSync(root, { recursive: true, force: true });
@@ -166,7 +176,7 @@ export async function runUpgradeMatrix({ tags: requestedTags = null,
   const report = {
     version: 1, protocol: "foundation-upgrade-matrix-report-v1", policyDigest,
     source: sourceIdentity(),
-    currentVersion, minimum: POLICY.minimum, tags, hosts: POLICY.hosts,
+    currentVersion, minimum: POLICY.minimum, tags, hosts: POLICY.hosts, ...(shard ? { shard } : {}),
     rows, status: rows.every((row) => row.status === "pass") ? "pass" : "fail"
   };
   return { ...report,
@@ -181,7 +191,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     const jobs = jobsIndex >= 0 ? Number(process.argv[jobsIndex + 1]) : undefined;
     if (jobs !== undefined && (!Number.isSafeInteger(jobs) || jobs < 1))
       throw new Error("--jobs must be a positive integer");
-    const report = await runUpgradeMatrix({ tags, jobs });
+    const shardIndex = process.argv.indexOf("--shard");
+    const shard = shardIndex >= 0 ? process.argv[shardIndex + 1] : null;
+    const report = await runUpgradeMatrix({ tags, jobs, shard });
     const rendered = `${JSON.stringify(report, null, 2)}\n`;
     const outputIndex = process.argv.indexOf("--output");
     if (outputIndex >= 0) {

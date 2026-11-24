@@ -57,7 +57,7 @@ git ls-remote --heads origin refs/heads/main
 git merge-base --is-ancestor "$GITHUB_SHA" "$REMOTE_MAIN"
 integrate-release.mjs
 uses: ./.github/workflows/workflow-tests.yml
-needs: ci
+needs: [validate, ci, gate, mutation, upgrade]
 upgrade-matrix.mjs
 .head_branch == "main"
 rehearsal-evidence.mjs verify
@@ -123,8 +123,11 @@ test("release workflow binds publishing and reusable rehearsal evidence to a pin
   assert.match(workflow, /git ls-remote --heads origin refs\/heads\/main/);
   assert.match(workflow, /git merge-base --is-ancestor "\$GITHUB_SHA" "\$REMOTE_MAIN"/);
   assert.match(workflow, /uses: \.\/\.github\/workflows\/workflow-tests\.yml/);
-  assert.match(workflow, /needs: ci/);
-  assert.match(workflow, /upgrade-matrix\.mjs --jobs 4/);
+  assert.match(workflow, /needs: \[validate, ci, gate, mutation, upgrade\]/);
+  assert.match(workflow, /upgrade-matrix\.mjs --jobs 4 --shard \$\{\{ matrix\.shard \}\}\/4/);
+  assert.match(workflow, /run-all\.sh --release --shard \$\{\{ matrix\.shard \}\}\/4/);
+  // The upgrade shards and the release job rewrite the candidate with one script.
+  assert.equal(workflow.split("scripts/release/rewrite-version.sh").length - 1, 2);
   assert.match(workflow, /integrate-release\.mjs --release/);
   assert.match(workflow, /git push origin "refs\/tags\/v\$NEW"/);
   assert.match(workflow, /ref: v\$\{\{ github\.event\.inputs\.version \}\}/);

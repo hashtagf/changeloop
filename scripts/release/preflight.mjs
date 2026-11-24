@@ -87,7 +87,8 @@ export function structuralReleaseChecks({ version, protocol, foundationSource,
     workflow.includes("integrate-release.mjs") && !workflow.includes("git push origin HEAD:main\n          git push origin"),
   "release workflow publishes a pinned main candidate and preserves later main commits");
   add("workflow-release-ci", workflow.includes("uses: ./.github/workflows/workflow-tests.yml") &&
-    workflow.includes("needs: ci"), "release runs the pull-request CI suites on the pinned candidate");
+    /needs: \[validate, ci, gate, mutation, upgrade\]/.test(workflow),
+  "release tags only after the pull-request CI suites, release gate, mutation, and upgrade matrix on the pinned candidate");
   add("workflow-rehearsal-reuse", workflow.includes("rehearsal_run_id") &&
     workflow.includes("rehearsal-evidence.mjs verify") && workflow.includes("actions: read") &&
     workflow.includes('.head_branch == "main"') && workflow.includes("upgrade-matrix.mjs"),

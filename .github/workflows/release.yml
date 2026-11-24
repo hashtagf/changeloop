@@ -45,27 +45,18 @@ concurrency:
   group: release
   cancel-in-progress: false
 
+# The expensive evidence runs in parallel jobs after a fast validation: the
+# release-only deterministic gate in four macOS shards (the platform the bottle
+# ships for), dashboard mutation, and the upgrade matrix in four shards against
+# the same rewritten candidate. The release job tags only after every one of
+# them passes, or after verifying a reusable rehearsal that skipped them.
 jobs:
-  ci:
-    # The same CI suites a pull request runs, on the exact pinned candidate.
-    uses: ./.github/workflows/workflow-tests.yml
-    with:
-      release_candidate: true
-
-  release:
-    needs: ci
-    # Pinned (not macos-latest, which flip-flops during OS migrations) so the
-    # bottle tag is deterministic. An older-macOS bottle pours on newer macOS
-    # (forward-compatible), so arm64_sequoia also covers arm64_tahoe/macOS 26.
-    # Only arm64 macOS is bottled here; Intel/Linux/older macOS fall back to
-    # build-from-source. Add a CI matrix + per-tag sha lines to widen coverage.
-    runs-on: macos-15
+  validate:
+    runs-on: ubuntu-latest
     env:
       NEW: ${{ github.event.inputs.version }}
       DRY: ${{ github.event.inputs.dry_run }}
       REHEARSAL_RUN_ID: ${{ github.event.inputs.rehearsal_run_id }}
-      TAP: hashtagf/changeloop
-      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -105,8 +96,149 @@ jobs:
           body=$(awk '/^## \[Unreleased\]/{f=1;next} /^## \[/{f=0} f' CHANGELOG.md | tr -d '[:space:]')
           [ -n "$body" ] || { echo "::error::## [Unreleased] is empty — add changelog entries first"; exit 1; }
           node scripts/release/preflight.mjs
-          command -v jq >/dev/null || brew install jq
+          command -v jq >/dev/null || { sudo apt-get update && sudo apt-get install -y jq; }
           echo "PREV=$PREV NEW=$NEW DRY=$DRY REHEARSAL_RUN_ID=${REHEARSAL_RUN_ID:-none}"
+
+
+  ci:
+    needs: validate
+    # The same CI suites a pull request runs, on the exact pinned candidate.
+    uses: ./.github/workflows/workflow-tests.yml
+    with:
+      release_candidate: true
+
+  gate:
+    needs: validate
+    if: github.event.inputs.rehearsal_run_id == ''
+    runs-on: macos-15
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: [1, 2, 3, 4]
+    name: release gate (${{ matrix.shard }}/4)
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Bind every check and reusable rehearsal to the dispatch SHA. Later
+          # main commits are integrated after publication, never released.
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Require fresh deterministic and mutation evidence
+        run: |
+          set -euo pipefail
+          npm ci
+          export PATH="$PWD/node_modules/.bin:$PATH"
+          # The authoritative suite already contains all six semantic mutation
+          # lanes, so do not execute the same mutations a second time here.
+          # --release adds the zero-cost benchmark sentinel the default gate skips;
+          # the four shards together are the whole --release set.
+          # Bound outer fan-out on the macOS release runner to reduce contention.
+          FOUNDATION_TEST_JOBS=2 sh .claude/tests/run-all.sh --release --shard ${{ matrix.shard }}/4
+
+  mutation:
+    needs: validate
+    if: github.event.inputs.rehearsal_run_id == ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Bind every check and reusable rehearsal to the dispatch SHA. Later
+          # main commits are integrated after publication, never released.
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Automated mutation evidence
+        run: |
+          set -euo pipefail
+          npm ci
+          export PATH="$PWD/node_modules/.bin:$PATH"
+          npm run test:mutation:dashboard
+          npm run quality:mutation:coverage:dashboard
+          npm run quality:mutation:normalize:dashboard
+          npm run quality:mutation:changed
+
+  upgrade:
+    needs: validate
+    if: github.event.inputs.rehearsal_run_id == ''
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: [1, 2, 3, 4]
+    name: upgrade matrix (${{ matrix.shard }}/4)
+    env:
+      NEW: ${{ github.event.inputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Bind every check and reusable rehearsal to the dispatch SHA. Later
+          # main commits are integrated after publication, never released.
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Verify upgrades to the release candidate
+        run: |
+          set -euo pipefail
+          command -v jq >/dev/null || { sudo apt-get update && sudo apt-get install -y jq; }
+          bash scripts/release/rewrite-version.sh "$(tr -d '[:space:]' < VERSION)" "$NEW"
+          node scripts/release/upgrade-matrix.mjs --jobs 4 --shard ${{ matrix.shard }}/4 \
+            --output "$RUNNER_TEMP/upgrade-matrix.json"
+
+  release:
+    needs: [validate, ci, gate, mutation, upgrade]
+    # Fresh evidence must pass; with a reusable rehearsal the evidence jobs are
+    # skipped and the rehearsal step below verifies the rehearsal instead.
+    if: >-
+      !cancelled() && needs.validate.result == 'success' && needs.ci.result == 'success' &&
+      ((needs.gate.result == 'success' && needs.mutation.result == 'success' && needs.upgrade.result == 'success') ||
+      (github.event.inputs.rehearsal_run_id != '' && needs.gate.result == 'skipped' &&
+      needs.mutation.result == 'skipped' && needs.upgrade.result == 'skipped'))
+    # Pinned (not macos-latest, which flip-flops during OS migrations) so the
+    # bottle tag is deterministic. An older-macOS bottle pours on newer macOS
+    # (forward-compatible), so arm64_sequoia also covers arm64_tahoe/macOS 26.
+    # Only arm64 macOS is bottled here; Intel/Linux/older macOS fall back to
+    # build-from-source. Add a CI matrix + per-tag sha lines to widen coverage.
+    runs-on: macos-15
+    env:
+      NEW: ${{ github.event.inputs.version }}
+      DRY: ${{ github.event.inputs.dry_run }}
+      REHEARSAL_RUN_ID: ${{ github.event.inputs.rehearsal_run_id }}
+      TAP: hashtagf/changeloop
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Bind every check and reusable rehearsal to the dispatch SHA. Later
+          # main commits are integrated after publication, never released.
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Read the previous version
+        run: |
+          set -euo pipefail
+          echo "PREV=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_ENV"
+          command -v jq >/dev/null || brew install jq
 
       - name: Verify reusable rehearsal evidence
         if: env.REHEARSAL_RUN_ID != ''
@@ -128,114 +260,14 @@ jobs:
             --version "$NEW" --source-head "$GITHUB_SHA" \
             --file "$evidence_dir/manifest.json"
 
-      - name: Require fresh deterministic and mutation evidence
-        if: env.REHEARSAL_RUN_ID == ''
-        run: |
-          set -euo pipefail
-          npm ci
-          export PATH="$PWD/node_modules/.bin:$PATH"
-          # The authoritative suite already contains all six semantic mutation
-          # lanes, so do not execute the same mutations a second time here.
-          # --release adds the zero-cost benchmark sentinel the default gate skips.
-          # The full gate includes instrumented tests with their own worker pool.
-          # Bound outer fan-out on the macOS release runner to reduce contention.
-          FOUNDATION_TEST_JOBS=2 sh .claude/tests/run-all.sh --release
-          npm run test:mutation:dashboard
-          npm run quality:mutation:coverage:dashboard
-          npm run quality:mutation:normalize:dashboard
-          npm run quality:mutation:changed
-
       - name: Rewrite changelog + bump version mirrors
         run: |
           set -euo pipefail
-          DATE=$(date +%F)
-          REPO="https://github.com/${GITHUB_REPOSITORY}"
-
-          # Add a dated [NEW] section directly under [Unreleased].
-          awk -v new="$NEW" -v date="$DATE" '
-            !done && /^## \[Unreleased\]$/ { print; print ""; print "## [" new "] - " date; done=1; next }
-            { print }' CHANGELOG.md > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
-
-          # Bump the [Unreleased] link ref + add the [NEW] compare line.
-          awk -v new="$NEW" -v prev="$PREV" -v repo="$REPO" '
-            /^\[Unreleased\]:/ {
-              print "[Unreleased]: " repo "/compare/v" new "...HEAD"
-              print "[" new "]: " repo "/compare/v" prev "...v" new
-              next }
-            { print }' CHANGELOG.md > CHANGELOG.tmp && mv CHANGELOG.tmp CHANGELOG.md
-
-          printf '%s\n' "$NEW" > VERSION
-
-          perl -pi -e "s/const VERSION = \"\Q${PREV}\E\"/const VERSION = \"${NEW}\"/" \
-            .claude/harness/foundation.mjs
-          perl -pi -e "s/\"runtime\": \"\Q${PREV}\E\"/\"runtime\": \"${NEW}\"/" \
-            .claude/harness/protocol.json
-          perl -pi -e "s/Change Loop \Q${PREV}\E/Change Loop ${NEW}/" \
-            .claude/harness/AGENT.md
-          perl -pi -e "s/\Q${PREV}\E/${NEW}/g" \
-            .claude/harness/DEVELOPER-SETUP.md
-
-          # Every surface that states the release has to move with it. The
-          # documentation suite derives its expectations from VERSION, so a
-          # surface left behind here fails `run-doc-consistency.sh` rather than
-          # drifting quietly the way the website did for four releases.
-          perl -pi -e "s/\*\*Version \Q${PREV}\E\*\*/**Version ${NEW}**/" \
-            WORKFLOW.md README.md README.th.md
-          perl -pi -e "s/<b>v\Q${PREV}\E<\/b>/<b>v${NEW}<\/b>/" website/index.html
-          perl -pi -e "s/\*\*v\Q${PREV}\E\*\*/**v${NEW}**/" \
-            website/docs/src/content/docs/index.md \
-            website/docs/src/content/docs/th/index.md
-          perl -pi -e "s/\| Pin \| v\Q${PREV}\E \|/| Pin | v${NEW} |/" \
-            website/docs/src/content/docs/cli.md \
-            website/docs/src/content/docs/th/cli.md
-          perl -pi -e "s/\| runtime \| \Q${PREV}\E \|/| runtime | ${NEW} |/" \
-            website/docs/src/content/docs/cli.md \
-            website/docs/src/content/docs/th/cli.md
-
-          grep -q "const VERSION = \"$NEW\"" .claude/harness/foundation.mjs ||
-            { echo "::error::.claude/harness/foundation.mjs version not updated"; exit 1; }
-          jq -e --arg version "$NEW" '.runtime == $version' \
-            .claude/harness/protocol.json >/dev/null ||
-            { echo "::error::.claude/harness/protocol.json runtime not updated"; exit 1; }
-          grep -q "Change Loop $NEW" .claude/harness/AGENT.md ||
-            { echo "::error::.claude/harness/AGENT.md version not updated"; exit 1; }
-          grep -q "Change Loop v$NEW" .claude/harness/DEVELOPER-SETUP.md ||
-            { echo "::error::.claude/harness/DEVELOPER-SETUP.md version not updated"; exit 1; }
-          grep -q 'version` is `'$NEW'`' .claude/harness/DEVELOPER-SETUP.md ||
-            { echo "::error::.claude/harness/DEVELOPER-SETUP.md CLI pin not updated"; exit 1; }
-          grep -q 'clone tag `v'$NEW'`' .claude/harness/DEVELOPER-SETUP.md ||
-            { echo "::error::.claude/harness/DEVELOPER-SETUP.md clone tag not updated"; exit 1; }
-          grep -q "claude-foundation/$NEW" .claude/harness/DEVELOPER-SETUP.md ||
-            { echo "::error::.claude/harness/DEVELOPER-SETUP.md install path not updated"; exit 1; }
-
-          for f in WORKFLOW.md README.md README.th.md; do
-            grep -q "\*\*Version $NEW\*\*" "$f" ||
-              { echo "::error::$f version line not updated"; exit 1; }
-          done
-          grep -q "<b>v$NEW</b>" website/index.html ||
-            { echo "::error::website/index.html version line not updated"; exit 1; }
-          for f in website/docs/src/content/docs/index.md \
-                   website/docs/src/content/docs/th/index.md; do
-            grep -q "\*\*v$NEW\*\*" "$f" ||
-              { echo "::error::$f version line not updated"; exit 1; }
-          done
-          for f in website/docs/src/content/docs/cli.md \
-                   website/docs/src/content/docs/th/cli.md; do
-            grep -q "| Pin | v$NEW |" "$f" ||
-              { echo "::error::$f pin row not updated"; exit 1; }
-            grep -q "| runtime | $NEW |" "$f" ||
-              { echo "::error::$f runtime row not updated"; exit 1; }
-          done
+          bash scripts/release/rewrite-version.sh "$PREV" "$NEW"
 
           # Release notes = the new section body (header line dropped).
           awk -v new="$NEW" '$0 ~ ("^## \\[" new "\\]") {f=1; next} /^## \[/{f=0} f' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
           echo "----- release notes -----"; cat "$RUNNER_TEMP/notes.md"
-
-      - name: Verify upgrades to the release candidate
-        if: env.REHEARSAL_RUN_ID == ''
-        run: |
-          set -euo pipefail
-          node scripts/release/upgrade-matrix.mjs --jobs 4 --output "$RUNNER_TEMP/upgrade-matrix.json"
 
       - name: Validate rewritten release
         run: |
@@ -374,7 +406,8 @@ jobs:
   # Deploy the release tag, not main, so later unreleased docs stay unpublished.
   deploy-site:
     needs: release
-    if: github.event.inputs.dry_run != 'true'
+    # Explicit: a reusable rehearsal skips the evidence jobs upstream of release.
+    if: "!cancelled() && needs.release.result == 'success' && github.event.inputs.dry_run != 'true'"
     permissions:
       contents: read
       pages: write
