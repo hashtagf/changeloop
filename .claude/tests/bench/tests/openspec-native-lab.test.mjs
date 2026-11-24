@@ -403,6 +403,37 @@ test("Pi host dry-run installs the Pi adapter, routes through the shim and pins 
   }
 });
 
+test("an onboarded lab adds quality lanes, the boundary draft, and baselines before the host starts", () => {
+  const root = mkdtempSync(join(tmpdir(), "foundation-lab-onboard-dry-"));
+  const fixture = join(root, "fixture");
+  const tempParent = join(root, "tmp");
+  mkdirSync(tempParent, { recursive: true });
+  write(join(fixture, "package.json"), JSON.stringify({ name: "fixture", scripts: { test: "node -e 0" } }));
+  write(join(fixture, "src/core/a.js"), "export const a = 1;\n");
+  write(join(fixture, "src/api/b.js"), "import { a } from \"../core/a.js\";\nexport const b = a;\n");
+  const oracle = join(root, "oracle.sh");
+  executable(oracle, "#!/bin/sh\nexit 0\n");
+  const matrix = join(root, "matrix.json");
+  writeFixtureMatrix(matrix, fixture, oracle);
+  const saved = Object.fromEntries(["CLAUDE_FOUNDATION_PROJECT", "CLAUDE_PROJECT_DIR"]
+    .map((key) => [key, process.env[key]]));
+  for (const key of Object.keys(saved)) delete process.env[key];
+  try {
+    const plan = runScenarioLab({ matrixPath: matrix, scenarioId: "fixture", outputRoot: join(root, "results"),
+      tempParent, runId: "dry-onboard", dryRun: true, onboard: true });
+    assert.ok(plan.onboarding.lanes.includes("root:file-size"));
+    assert.ok(plan.onboarding.lanes.includes("root:module-boundaries"));
+    assert.deepEqual(plan.onboarding.moduleBoundaries, ["root"]);
+    assert.equal(plan.onboarding.initialRunExitCode, 0);
+    assert.deepEqual(readdirSync(tempParent), [], "the onboarded project is still disposed of");
+    assert.throws(() => runScenarioLab({ matrixPath: matrix, scenarioId: "fixture", tempParent,
+      arm: "baseline", dryRun: true, onboard: true }), /--onboard applies to a fresh Change Loop arm only/);
+  } finally {
+    for (const [key, value] of Object.entries(saved)) if (value !== undefined) process.env[key] = value;
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("baseline tools are what a plain user approves for the task", () => {
   const project = mkdtempSync(join(tmpdir(), "bench-lab-baseline-allow-"));
   try {

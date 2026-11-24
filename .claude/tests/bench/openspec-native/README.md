@@ -111,6 +111,15 @@ node .claude/tests/bench/openspec-native/lab.mjs \
   --scenario bare-node-boundary
 ```
 
+`--onboard true` runs the deterministic part of the `onboard` skill before
+the host starts: the discovered quality configuration, the accepted
+module-boundary draft, one quality run, and baselines of the seed's findings
+(the manifest records them under `onboarding`). The feature map and rule
+registry need judgment and are not added. To measure whether onboarding
+helps, run the same scenarios with and without it into two result roots and
+compare them with `aggregate.mjs --label plain <root> --label onboarded <root>
+--compare`.
+
 Pass `--keep-project` only for an explicit debugging run. Direct `run.mjs`
 invocation remains available for an already prepared disposable project.
 

@@ -11,6 +11,9 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- The scenario lab takes `--onboard true` to run the same task on an onboarded
+  project (quality lanes, module-boundary draft, baselines) for a plain versus
+  onboarded comparison.
 - Onboarding drafts module boundaries from the project's real imports.
   `quality discover` returns `proposals.module-boundaries` with the modules,
   today's import directions, and each import cycle, for the user to confirm.
@@ -38,6 +41,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 - Python quality lanes no longer fail with "provider changed repository
   state": bytecode goes under `.foundation/`, and `python3` is used where
   `python` is not installed.
+- An onboarded project's quality ratchets now check every change the policy
+  flags for static analysis. Before, the inferred capability stayed an
+  advisory, so Prove never ran `quality run --enforce` on the agent's change
+  (found by a paid onboarding A/B lab).
 - ESLint and Ruff findings keep repository paths when the tool reports the
   resolved path (macOS `/tmp` is `/private/tmp`).
 

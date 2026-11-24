@@ -200,6 +200,43 @@ export function prepareLabProject({ fixture, installer = join(ROOT, "install.sh"
   return { project, seedDigest: directoryDigest(source) };
 }
 
+// The deterministic part of the onboard skill, applied before the host starts:
+// write the discovered quality configuration, accept the module-boundary
+// draft, run every lane, and record today's findings as the baseline. The
+// judgment parts (feature map, rule registry) need an agent and the user, so
+// an onboarded lab measures the quality ratchets alone. Same seed and prompt
+// as the plain arm; only this setup differs.
+export function onboardLabProject(project) {
+  if (JSON.parse(readFileSync(join(project, ".foundation-benchmark.json"), "utf8")).disposable !== true)
+    throw new Error("lab onboarding requires a disposable lab");
+  const foundation = (...args) => commandResult(process.execPath,
+    [join(project, ".claude/harness/foundation.mjs"), ...args], project,
+    { ...process.env, CLAUDE_FOUNDATION_PROJECT: project, FOUNDATION_TELEMETRY: "0" });
+  requireSuccess(foundation("quality-init", "--write"), "lab onboarding quality init");
+  const discovered = foundation("quality-discover");
+  requireSuccess(discovered, "lab onboarding discovery");
+  const discovery = JSON.parse(discovered.stdout);
+  const configPath = join(project, "quality/foundation-quality.json");
+  const config = JSON.parse(readFileSync(configPath, "utf8"));
+  const boundaries = [];
+  for (const repository of discovery.repositories) {
+    const proposal = repository.proposals?.["module-boundaries"];
+    const row = config.repositories.find((item) => item.id === repository.repository);
+    if (proposal?.status !== "proposed" || !row) continue;
+    row.providers["module-boundaries"] = proposal.provider;
+    boundaries.push(repository.repository);
+  }
+  writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+  // A lane may fail here (a seed with failing tests); the baseline records it.
+  const run = foundation("quality-run");
+  requireSuccess(foundation("quality-baseline", "--write", "--decision-ref", "lab-onboarding",
+    "--reason", "disposable lab: adopt the seed's findings"), "lab onboarding baseline");
+  return {
+    lanes: config.repositories.flatMap((row) => Object.keys(row.providers).map((lane) => `${row.id}:${lane}`)).sort(),
+    moduleBoundaries: boundaries, initialRunExitCode: run.status
+  };
+}
+
 // Selected repositories need real seed commits even when their topology type
 // is `external`. This is deterministic setup inside a lab-owned disposable
 // tree, before Build; it never commits product implementation or touches the
@@ -355,7 +392,7 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
   installer = null, runner = join(HERE, "run.mjs"),
   tempParent = tmpdir(), keepProject = false, runId = null, resumeProject = null,
   arm = "change-loop", dryRun = false, lifecycleInterruptions = null,
-  host = "claude-code", model = null }) {
+  host = "claude-code", model = null, onboard = false }) {
   const selectedArm = benchArm(arm);
   const baseline = isBaselineArm(selectedArm);
   if (!LAB_HOSTS.includes(host)) throw new Error(`--host must be one of ${LAB_HOSTS.join(", ")}`);
@@ -374,6 +411,8 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
     throw new Error(`${scenarioId} has no baseline arm: ${scenario.baseline_arm_reason || "Change Loop only"}`);
   if (baseline && resumeProject)
     throw new Error("baseline arm has no lifecycle to resume; start a fresh project");
+  if (onboard && (baseline || resumeProject))
+    throw new Error("--onboard applies to a fresh Change Loop arm only");
   const prepared = resumeProject
     ? { project: resolve(resumeProject), seedDigest: directoryDigest(resolve(ROOT, plan.fixture)) }
     : baseline
@@ -387,13 +426,18 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
           repositoryCatalog: scenario.repository_catalog,
           openspecHistory: plan.openspecHistory ? resolve(ROOT, plan.openspecHistory) : null
         });
+  let onboarding = null;
+  if (onboard) {
+    try { onboarding = onboardLabProject(prepared.project); }
+    catch (error) { rmSync(prepared.project, { recursive: true, force: true }); throw error; }
+  }
   if (resumeProject) {
     const marker = JSON.parse(readFileSync(join(prepared.project,
       ".foundation-benchmark.json"), "utf8"));
     if (marker.disposable !== true)
       throw new Error("resume project must be an explicitly disposable benchmark project");
   }
-  const id = runId || `${scenarioId}${baseline ? `-${selectedArm}` : ""}${pi ? "-pi" : ""}-${Date.now()}`;
+  const id = runId || `${scenarioId}${baseline ? `-${selectedArm}` : ""}${onboard ? "-onboarded" : ""}${pi ? "-pi" : ""}-${Date.now()}`;
   const runDir = resolve(outputRoot, id);
   const scorecards = join(runDir, "scorecards.jsonl");
   const args = [runner, "--scenario", scenarioId, "--project", prepared.project,
@@ -433,8 +477,8 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
       "--claude-arg", "--permission-mode", "--claude-arg", "acceptEdits",
       "--claude-arg", "--allowedTools",
       ...installedAllowedTools(prepared.project).flatMap((rule) => ["--claude-arg", rule]));
-  if (dryRun) return dryRunPlan({ args, prepared, keepProject, resumeProject,
-    arm: selectedArm, scenarioId, host });
+  if (dryRun) return { ...dryRunPlan({ args, prepared, keepProject, resumeProject,
+    arm: selectedArm, scenarioId, host }), onboarding };
   const startedAt = new Date().toISOString();
   const source = sourceRevision();
   let result;
@@ -469,7 +513,7 @@ export function runScenarioLab({ matrixPath, scenarioId, outputRoot = DEFAULT_RE
       project: prepared.project, runDir,
       manifest: {
         version: 1, protocol: "foundation-consumer-lab-run-v1", runId: id,
-        scenario: scenarioId, arm: selectedArm, prompt: scenario.prompt, host: pi ? "pi" : scenario.host,
+        scenario: scenarioId, arm: selectedArm, onboarding, prompt: scenario.prompt, host: pi ? "pi" : scenario.host,
         requestedModel: model,
         risk: scenario.risk, seed: plan.fixture, seedDigest: prepared.seedDigest,
         expectedSeedDigest: scenario.fixture_digest, projectCommand: scenario.project_command,
@@ -548,7 +592,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       dryRun: flags.dryRun,
       lifecycleInterruptions: flags["lifecycle-interruptions"] ?? null,
       host: flags.host ?? "claude-code",
-      model: flags.model ?? null
+      model: flags.model ?? null,
+      onboard: flags.onboard === "true"
     });
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     process.exitCode = result.status || 0;

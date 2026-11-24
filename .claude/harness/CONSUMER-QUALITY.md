@@ -187,7 +187,9 @@ approver, tracking issue, risk, and expiry within 90 days.
 - A provider that does not restore Git status fails.
 - Mutation over SQL/MongoDB must use an isolated per-run data store.
 
-When the committed quality config exists, evidence bootstrap may wire
-`quality run --enforce` as static-analysis evidence. The generic command adapter
+When the committed quality config exists, it is the project's static-analysis
+wiring: a change whose diff makes the policy infer static-analysis requires it
+(it is no longer only an advisory), and evidence bootstrap binds it to
+`quality run --enforce`. The generic command adapter
 records full/reduced assurance in the receipt observation and preserves the
 per-repository summary in the command log.

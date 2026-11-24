@@ -1,6 +1,8 @@
 // Capabilities a harness-owned provider can produce without project tooling.
 // Accessibility (a static read of the markup a change touched) and browser
 // (the running app, where the project serves one and Chrome is installed).
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { ACCESSIBILITY_BUILT_IN } from "../../evidence/accessibility-check.mjs";
 import { APP_SMOKE_BUILT_IN } from "../../evidence/app-smoke-check.mjs";
 
@@ -11,6 +13,13 @@ export function builtInCovers(config) {
 // A capability the declared work type owes is enforced as soon as a
 // harness-owned provider can produce it (accessibility for `ui`), so a missing
 // project tool never downgrades it to an advisory.
+// A committed quality/foundation-quality.json is the project wiring
+// static-analysis: evidence bootstrap binds it to `quality run --enforce`, so
+// an onboarded project's ratchets check every change the policy flags.
+export function projectWiredCapabilities(root) {
+  return existsSync(join(root, "quality", "foundation-quality.json")) ? ["static-analysis"] : [];
+}
+
 export function builtInOwedCapabilities(workTypeActions, providerConfig) {
   return new Set((workTypeActions || []).map((action) => action.capability)
     .filter((capability) => builtInCovers(providerConfig(capability))));

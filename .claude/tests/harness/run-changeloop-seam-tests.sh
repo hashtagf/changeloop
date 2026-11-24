@@ -368,6 +368,24 @@ assert_eq "an unwired inferred capability stays out of the provider set" \
 assert_contains "editing a pre-existing file returns it to the surface" \
   "$($F proof-plan "$C" 2>&1 || true)" "advisory accessibility: not blocking"
 
+# An onboarded project wired static-analysis by committing its quality
+# configuration. A paid A/B lab found the inferred capability left advisory, so
+# the onboarded ratchets never checked the agent's change; now it is required
+# and evidence bootstrap binds it to `quality run --enforce`.
+setup_project onboarded-quality
+mkdir -p src && printf 'module.exports = 1;\n' > src/app.js
+$F new "tiny js tweak" --rapid > /dev/null
+C=tiny-js-tweak
+printf 'module.exports = 2;\n' > src/app.js
+without_quality="$(providers_for "$C")"
+mkdir -p quality && printf '{"version":1}\n' > quality/foundation-quality.json
+with_quality="$(providers_for "$C")"
+if printf '%s' "$($F proof-plan "$C" 2>&1 || true)" | grep -q "advisory static-analysis"; then
+  assert_not_contains "without quality config, inferred static-analysis stays out" "$without_quality" "static-analysis"
+fi
+assert_contains "a committed quality config makes static-analysis a required provider" \
+  "$with_quality" "static-analysis"
+
 # --- Pre-existing dirt does not cost a change its worktree. -----------------
 #
 # The surface already ignores what the tree carried in, but `sandbox create`

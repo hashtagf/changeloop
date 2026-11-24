@@ -1,6 +1,6 @@
 import { carryApprovalAcrossBookkeeping, currentWaivers } from "../../core/user-decisions.mjs";
 import { assertHandoffCovered } from "../validation/handoff-binding.mjs";
-import { builtInCovers, builtInOwedCapabilities, inferredAdvisoryNext } from "./built-in-capabilities.mjs";
+import { builtInCovers, builtInOwedCapabilities, inferredAdvisoryNext, projectWiredCapabilities } from "./built-in-capabilities.mjs";
 import { existsSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { auditTraceability } from "../../evidence/traceability.mjs";
@@ -491,8 +491,8 @@ export function createChangeValidationRuntime({
   // (`review.independence`, `review.diversity` in foundation.json). Downgrading
   // it here would drop a gate that has a way out rather than one that does not.
   function policyCapabilitySplit(id, contract = evidence(id)) {
-    const configured = new Set(Object.entries(contract.providers || {})
-      .map(([provider, config]) => providerCapability(provider, config)));
+    const configured = new Set([...Object.entries(contract.providers || {})
+      .map(([provider, config]) => providerCapability(provider, config)), ...projectWiredCapabilities(root)]);
     const declared = new Set(contract.claims.flatMap((claim) => claim.capabilities || []));
     const enforced = [];
     const advisory = [];
