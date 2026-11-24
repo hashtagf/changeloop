@@ -13,7 +13,7 @@ Investigate? → Change → Build → Prove → Land
 Your coding agent implements it; the harness manages state, isolation,
 evidence, and recovery. Keep using your existing test framework, Git, and CI.
 
-**Version 3.7.6** · Command: `cloop`.
+**Version 3.7.7** · Command: `cloop`.
 
 ## Principles
 
