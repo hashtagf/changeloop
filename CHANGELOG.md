@@ -9,6 +9,13 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+Release qualification for v3.7.7: the owner approved skipping a fresh paid
+scenario checkpoint for this version only. No paid scenario evidence tests
+this release candidate, and none is claimed. All required no-cost release
+checks still apply. A one-repeat plain versus onboarded lab on five small
+lanes (both arms 5/5 archived) ran before the Prove wiring fix below and does
+not measure this candidate.
+
 ### Added
 
 - Onboarding per repository for large topologies. `quality discover` and
