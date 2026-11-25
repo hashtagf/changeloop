@@ -9,6 +9,15 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+Release qualification: a paid checkpoint of the ten standard scenarios ran
+one at a time on `claude-sonnet-5-5` at `5d7967b5`. All ten reached
+`archived` with full oracle scores, including `project-tracker-api`, which
+failed on v3.6.8 and v3.6.9. Against v3.6.9 (same model, 2026-11-02) total
+wall time fell from 1,377 s to 1,022 s and measured cost from US$5.69 to
+US$3.80; no lane was slower. One repeat per lane: a smoke check, not a
+stable speedup claim. The later Land and benchmark-oracle fixes do not touch
+those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
+
 ### Added
 
 - Two ten-repository benchmark lanes: `platform-tenant-contract` (a contract
