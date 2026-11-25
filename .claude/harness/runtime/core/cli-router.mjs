@@ -598,7 +598,7 @@ export async function routeRuntimeCommand(command, values, api) {
       // `--phase buidl` wrote a `buidl` bucket straight into `metrics.phases`
       // and the typo looked like a phase.
       if (flags.phase !== undefined && !LIFECYCLE_PHASES.includes(flags.phase)) die(`exec --phase must be ${LIFECYCLE_PHASES.join("|")}`);
-      process.exitCode = execObserved(rest[0], commandArgs, {
+      process.exitCode = await execObserved(rest[0], commandArgs, {
         phase: flags.phase,
         repository: repository ?? null,
         task: flags.task ?? null

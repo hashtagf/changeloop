@@ -1,13 +1,15 @@
-import { spawnSync } from "node:child_process";
 import { resumeThrough } from "../core/next-step.mjs";
 import {
-  appendFileSync, existsSync, mkdirSync, realpathSync, statSync
+  appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync
 } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import {
   shellDisplayArgument as displayArgument, shellMutationViolation
 } from "../core/shell-mutation-policy.mjs";
 import { pathInside } from "../core/paths.mjs";
+import { bestEffort } from "../core/best-effort.mjs";
+import { commandOfArgv, createCheckReuse } from "../core/check-reuse.mjs";
+import { watchedExec } from "./watched-exec.mjs";
 
 function phasesForStatus(status) {
   if (["change", "resolved"].includes(status)) return ["change"];
@@ -220,9 +222,17 @@ export function createExecRuntime({
   callerCwd = () => process.env.FOUNDATION_CALLER_CWD || process.cwd(),
   // Brings the change's sandboxes current (the root sandbox's nested
   // repository paths) before a check runs in one of them.
-  prepareWorkspace = (..._args) => {}
+  prepareWorkspace = (..._args) => {},
+  // The change's workspace hash: a task-scoped pass is kept for advance to reuse.
+  workspaceHash = null,
+  runWatched = watchedExec
 }) {
-  function execObserved(id, commandArgs, /** @type {{ phase?: any, repository?: any, task?: any }} */ { phase, repository = null, task = null } = {}) {
+  const checks = workspaceHash ? createCheckReuse({ logs, workspaceHash, now }) : null;
+  const operations = (id) => join(logs, id, "operations.jsonl");
+  const inflight = (id) => join(logs, id, "exec-running.json");
+
+  // Validation and the workspace an exec child starts in.
+  function prepareExec(id, commandArgs, /** @type {{ phase?: any, repository?: any, task?: any }} */ { phase, repository = null, task = null } = {}) {
     const state = loadRuntime(id);
     assertApproval?.(id, state);
     if (state.status === "archived")
@@ -260,30 +270,66 @@ export function createExecRuntime({
         /requires an (?:existing )?isolated workspace/.test(violation)))
       fail(violation);
     if (violation) console.error(`NOTICE: exec recorded an unverified shell mutation: ${violation}`);
-    const startedAtMs = Date.now();
-    const startedAt = now();
-    const result = spawnSync(commandArgs[0], commandArgs.slice(1), {
-      stdio: "inherit", cwd,
-      env: cwd ? { ...process.env, FOUNDATION_WORKSPACE_ROOT: workspace } : process.env
-    });
-    if (result.error)
-      fail(`exec could not start '${commandArgs[0]}': ${result.error.message}`);
-    // Signal death has no exit status; a non-zero stand-in keeps the failure
-    // visible to whatever invoked exec.
-    const exitCode = result.status === null ? 1 : result.status;
-    const path = join(logs, id, "operations.jsonl");
-    mkdirSync(dirname(path), { recursive: true });
-    appendFileSync(path, `${JSON.stringify({
+    return { cwd, workspace, phase, runtimePhase,
+      env: cwd ? { ...process.env, FOUNDATION_WORKSPACE_ROOT: workspace } : process.env };
+  }
+
+  function recordOperation(id, commandArgs, prepared, exitCode, startedAt, startedAtMs, extra = {}) {
+    mkdirSync(dirname(operations(id)), { recursive: true });
+    appendFileSync(operations(id), `${JSON.stringify({
       version: 2, changeId: id, operation: "exec",
-      phase: phase || runtimePhase || process.env.FOUNDATION_PUBLIC_OPERATION || null,
+      phase: prepared.phase || prepared.runtimePhase || process.env.FOUNDATION_PUBLIC_OPERATION || null,
       command: commandArgs.join(" ").slice(0, 512),
       status: exitCode === 0 ? "completed" : "failed", exitCode,
       startedAt, finishedAt: now(),
       durationMs: Date.now() - startedAtMs,
       requests: null, inputTokens: null, outputTokens: null,
       cacheCreationTokens: null, cacheReadTokens: null, cacheTokens: null, cost: null,
-      measurement: "external-command-observed"
+      measurement: "external-command-observed", ...extra
     })}\n`);
+  }
+
+  // An exec that never recorded its end (the host stopped it, or it hung until
+  // a timeout) is recorded the next time, so its wait is visible.
+  function recordInterrupted(id) {
+    const path = inflight(id);
+    const running = bestEffort(() => existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : null, null);
+    if (!running) return;
+    const alive = bestEffort(() => { process.kill(running.pid, 0); return true; }, false);
+    if (alive) return;
+    appendFileSync(operations(id), `${JSON.stringify({
+      version: 2, changeId: id, operation: "exec", phase: running.phase || null,
+      command: running.command, status: "interrupted", exitCode: null,
+      startedAt: running.startedAt, finishedAt: null,
+      durationMs: running.lastOutputAt ? running.lastOutputAt - running.startedAtMs : null,
+      measurement: "exec-interrupted: the process ended without recording; durationMs is until its last output"
+    })}\n`);
+    bestEffort(() => rmSync(path, { force: true }));
+  }
+
+  // Output is watched (a lingering test run is stopped once it
+  // has reported), an interrupted earlier exec is recorded, and a task-scoped
+  // pass is kept so advance does not run the same check again.
+  async function execObserved(id, commandArgs, options = {}) {
+    recordInterrupted(id);
+    const prepared = prepareExec(id, commandArgs, options);
+    const startedAtMs = Date.now();
+    const startedAt = now();
+    const marker = { pid: process.pid, command: commandArgs.join(" ").slice(0, 512),
+      phase: prepared.phase || prepared.runtimePhase || null, startedAt, startedAtMs, lastOutputAt: null };
+    mkdirSync(dirname(inflight(id)), { recursive: true });
+    writeFileSync(inflight(id), JSON.stringify(marker));
+    const result = await runWatched(commandArgs[0], commandArgs.slice(1), { cwd: prepared.cwd, env: prepared.env });
+    bestEffort(() => rmSync(inflight(id), { force: true }));
+    if (result.error)
+      fail(`exec could not start '${commandArgs[0]}': ${result.error.message}`);
+    const exitCode = result.status === null ? 1 : result.status;
+    recordOperation(id, commandArgs, prepared, exitCode, startedAt, startedAtMs,
+      result.lingeredMs !== null ? { lingeredMs: result.lingeredMs } : {});
+    // Only a run inside the change's isolated workspace counts for advance.
+    if (checks && prepared.cwd)
+      checks.record(id, options.repository || "root", commandOfArgv(commandArgs),
+        { status: exitCode === 0 ? "pass" : "fail", durationMs: Date.now() - startedAtMs, source: "exec" });
     return exitCode;
   }
   return { execObserved };

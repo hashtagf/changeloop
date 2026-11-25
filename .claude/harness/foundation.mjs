@@ -213,9 +213,7 @@ const { execObserved } = createExecRuntime({
       ? taskBlocks(readFileSync(path, "utf8")).filter((task) => task.id).map(taskMetadata)
       : [];
   },
-  logs: LOGS,
-  loadRuntime,
-  now,
+  logs: LOGS, loadRuntime, now, workspaceHash: (id) => relevantHash(id),
   prepareWorkspace: (id) => projectRootRepositories(id),
   fail: die
 });

@@ -266,6 +266,7 @@ consumer findings ratchet|node --test "$ROOT/.claude/harness/tests/findings-ratc
 pyramid readiness|node --test "$ROOT/.claude/harness/tests/pyramid-readiness.test.mjs"
 consumer onboarding path|node --test "$ROOT/.claude/harness/tests/consumer-onboarding-path.test.mjs"
 repository onboarding|node --test "$ROOT/.claude/harness/tests/repository-onboarding.test.mjs"
+no wasted waits|node --test "$ROOT/.claude/harness/tests/no-wasted-waits.test.mjs"
 checks outside the change|node --test "$ROOT/.claude/harness/tests/checks-outside-the-change.test.mjs"
 project feature map|node --test "$ROOT/.claude/harness/tests/project-feature-map.test.mjs"
 setup readiness|node --test "$ROOT/.claude/harness/tests/setup-readiness.test.mjs"

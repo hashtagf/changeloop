@@ -43,6 +43,23 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+Found by timing a Build that lost 4m24s to one exec and ran a 40s check twice:
+
+- `cloop exec` watches the command's output. A test run that printed its
+  final summary (Node or TAP `duration_ms`, Jest `Ran all test suites`) and
+  keeps running on an open handle is stopped after 10 seconds with the
+  summary's verdict; a minute of silence raises one notice naming the cause
+  and `--test-force-exit` / `--forceExit`. An exec the host stopped before it
+  finished is recorded as `interrupted` on the next exec, so the wait is
+  visible.
+- A task's verify check that already passed on the exact same workspace (in
+  an earlier `advance`, or the agent's own `cloop exec` in the sandbox) is
+  reused instead of run again. A check slower than 30 seconds raises a
+  `slow-check` signal: verify only the task's own tests (the suite runs once
+  in Prove), close lingering handles, and start independent ready tasks
+  meanwhile.
+- Inside a change, `quality run --enforce` no longer reruns the project's
+  test lane: Prove's test provider already runs those tests.
 - Prove no longer waits out the two-minute test-discrimination cap when the
   change's tests already failed on the base source: the base run stops at the
   first failing test (spec `✖`, TAP `not ok`, or a `fail N` summary) instead

@@ -11,6 +11,8 @@ import { createFeedbackRuntime } from "../observability/feedback-runtime.mjs";
 import { createLandUndo } from "../workflow/land/land-undo.mjs";
 import { createLessonsRuntime } from "../observability/lessons-runtime.mjs";
 import { createOutcomesRuntime, runtimeStates } from "../observability/outcomes-runtime.mjs";
+import { SLOW_CHECK_MS, createCheckReuse, slowCheckMessage } from "../core/check-reuse.mjs";
+import { emitSignal } from "../core/signals.mjs";
 import { createProjectFeaturesCommand } from "../workflow/validation/project-feature-map.mjs";
 import { createProductProgressCommand } from "../workflow/validation/product-progress.mjs";
 import { createPyramidReadinessCommand } from "./pyramid-readiness-command.mjs";
@@ -104,13 +106,24 @@ export function composeDeliveryRuntimes({
       console.log = priorLog;
     }
   }
+  const checkReuse = createCheckReuse({ logs: LOGS, workspaceHash: (id) => relevantHash(id) });
   const sessionLeases = createSessionLeaseRuntime({
     loadRuntime, activeChangeLeases, stableHash, saveRuntime, agentPlanValue,
     // D5: advance runs the handed-off task's own verify check and ticks it.
+    // A pass on this exact workspace (from an earlier advance or the agent's
+    // own `exec --task`) is reused, never waited on again.
     runCheck: (id, check) => commandPhaseRecorder.measure("build.task-check", () => {
       projectRootRepositories(id);
-      return adapterRuntime.runTaskCheckAsEvidence(id, check) ||
+      const reused = checkReuse.reusable(id, check.repository, check.command);
+      if (reused) return { status: "pass", exitCode: 0, reused: true,
+        output: `passed on this exact workspace (${reused.source}, ${reused.at}); not run again` };
+      const started = Date.now();
+      const result = adapterRuntime.runTaskCheckAsEvidence(id, check) ||
         runTaskCheck({ loadRuntime }, id, check);
+      const durationMs = Date.now() - started;
+      checkReuse.record(id, check.repository, check.command, { status: result?.status, durationMs, source: "advance" });
+      if (durationMs > SLOW_CHECK_MS) emitSignal("slow-check", `NOTICE: ${slowCheckMessage(check.command, durationMs)}`);
+      return result;
     }),
     taskChangeIssue: (id, taskId) => {
       try {

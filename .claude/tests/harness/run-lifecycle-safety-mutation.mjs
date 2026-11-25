@@ -52,8 +52,8 @@ const CASES = [
     sourcePath: ".claude/harness/runtime/observability/exec-runtime.mjs",
     expectedKiller: "CASE-EXEC-WORKSPACE-CWD",
     detector: EXEC_DETECTOR,
-    before: "stdio: \"inherit\", cwd,",
-    after: "stdio: \"inherit\","
+    before: "{ cwd: prepared.cwd, env: prepared.env }",
+    after: "{ env: prepared.env }"
   },
   {
     id: "MUT-AMENDMENT-TASK-CONTRACT-REPLACED",
