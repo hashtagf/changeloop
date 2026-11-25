@@ -7,6 +7,9 @@ changelog format (`## [x.y.z]`) so Pi can show them after an update.
 
 ### Added
 
+- btw: `/btw <question>` answers a side question about the current
+  conversation with the current model and no tools, in an overlay, even while
+  the agent is working. Nothing is written to the session.
 - team-webui: viewer (read-only) and member invites that expire after 1 hour,
   24 hours or 7 days and can be revoked, ending the sessions that used them.
   The **Access** dialog lists invites, signed-in people and recent

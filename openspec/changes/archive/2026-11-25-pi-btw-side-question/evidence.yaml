@@ -1,0 +1,85 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "btw-command-btw",
+      "requirementKey": "btw-command",
+      "scenario": "ถามตอนเอเจนต์ว่าง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "btw-command-btw-2",
+      "requirementKey": "btw-command",
+      "scenario": "บริบทยาวเกิน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "btw-command-btw-3",
+      "requirementKey": "btw-command",
+      "scenario": "ไม่ใส่คำถาม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "btw-command-btw-4",
+      "requirementKey": "btw-command",
+      "scenario": "ไม่มีโมเดล",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "btw-isolation-btw",
+      "requirementKey": "btw-isolation",
+      "scenario": "ไม่เขียนลง session",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "btw-isolation-esc",
+      "requirementKey": "btw-isolation",
+      "scenario": "ยกเลิกระหว่างรอ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "btw-isolation-btw-2",
+      "requirementKey": "btw-isolation",
+      "scenario": "โมเดลล้มเหลว",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(cd pi-extensions && node --test btw/btw.test.cjs) && (cd pi-extensions && npm test)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "cd pi-extensions && node --test btw/btw.test.cjs",
+        "cd pi-extensions && npm test"
+      ]
+    }
+  }
+}

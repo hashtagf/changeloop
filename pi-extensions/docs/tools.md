@@ -989,3 +989,11 @@ Read a short, task-specific guide: when/why/how to use installed tools, examples
 | Command | Description |
 |---|---|
 | `/accounts` | Claude accounts: select, add/use/login <name>, rename <old> <new>, list, cancel. Selection is per session. |
+
+## btw
+
+**Commands**
+
+| Command | Description |
+|---|---|
+| `/btw` | Ask a quick side question about this conversation; the answer is not added to the session |

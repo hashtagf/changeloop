@@ -20,7 +20,7 @@ test('a host package in dependencies is rejected with the package name', async (
 
 test('a missing pi.extensions entry is reported by path', async () => {
   const { checkManifest } = await load();
-  const broken = { ...pkg(), pi: { extensions: ['./agent-team/index.ts', './ask-user/index.ts', './background-bash/index.ts', './nine-router/index.ts', './session-title/index.ts', './team-webui/index.ts', './claude-accounts/index.ts', './missing/index.ts'] } };
+  const broken = { ...pkg(), pi: { extensions: ['./agent-team/index.ts', './ask-user/index.ts', './background-bash/index.ts', './nine-router/index.ts', './session-title/index.ts', './team-webui/index.ts', './claude-accounts/index.ts', './btw/index.ts', './missing/index.ts'] } };
   assert.deepEqual(checkManifest(broken, root), ['package.json: pi.extensions entry not found: ./missing/index.ts']);
   assert.ok(checkManifest({ ...pkg(), keywords: ['pi'] }, root).some(p => p.includes('pi-package')));
 });
@@ -35,7 +35,7 @@ test('changelog needs a heading for the current version', async () => {
 
 test('pack contents: tests are forbidden and required files must exist', async () => {
   const { checkPackFiles } = await load();
-  const good = ['package.json', 'LICENSE', 'CHANGELOG.md', 'README.md', 'docs/tools.md', 'agent-team/index.ts', 'ask-user/index.ts', 'background-bash/index.ts', 'nine-router/index.ts', 'session-title/index.ts', 'team-webui/index.ts', 'claude-accounts/index.ts'];
+  const good = ['package.json', 'LICENSE', 'CHANGELOG.md', 'README.md', 'docs/tools.md', 'agent-team/index.ts', 'ask-user/index.ts', 'background-bash/index.ts', 'nine-router/index.ts', 'session-title/index.ts', 'team-webui/index.ts', 'claude-accounts/index.ts', 'btw/index.ts'];
   assert.deepEqual(checkPackFiles(good), []);
   assert.deepEqual(checkPackFiles([...good, 'ask-user/store.test.cjs']), ['npm pack: must not publish ask-user/store.test.cjs']);
   assert.ok(checkPackFiles([...good, 'ask-user/test/tui-smoke.py', 'agent-team/test.cjs']).length === 2);

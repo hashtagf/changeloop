@@ -1,7 +1,7 @@
 {
   "name": "@hashtagf/pi-extensions",
   "version": "0.4.0",
-  "description": "Pi extensions: worker agent team with task board, persistent structured user questions, background shell jobs, a 9router provider, session titles that name the current work, a workspace web UI with task board, and Claude account switching.",
+  "description": "Pi extensions: worker agent team with task board, persistent structured user questions, background shell jobs, a 9router provider, session titles that name the current work, a workspace web UI with task board, Claude account switching, and /btw side questions.",
   "keywords": [
     "pi-package",
     "pi-extension",
@@ -39,7 +39,8 @@
       "./nine-router/index.ts",
       "./session-title/index.ts",
       "./team-webui/index.ts",
-      "./claude-accounts/index.ts"
+      "./claude-accounts/index.ts",
+      "./btw/index.ts"
     ]
   },
   "files": [
@@ -50,6 +51,7 @@
     "session-title/",
     "team-webui/",
     "claude-accounts/",
+    "btw/",
     "!**/*.test.cjs",
     "!**/*.test.mjs",
     "!**/__pycache__/",

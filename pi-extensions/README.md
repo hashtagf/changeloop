@@ -14,6 +14,7 @@ folder. The product's Pi adapter lives in `.claude/harness/adapters/`.
 | `session-title/` | Names each session after its work so terminal tabs differ (`session_title`) |
 | `team-webui/` | Workspace web hub (`/serve`), task board (`task_board`), `tool_guide` ([README](team-webui/README.md)) |
 | `claude-accounts/` | Per-session Claude account switching (`/accounts`); needs the `pi-claude-subscription` package ([README](claude-accounts/README.md)) |
+| `btw/` | Side questions about the conversation (`/btw`) that never enter the session ([README](btw/README.md)) |
 
 The extensions import each other by sibling path, so they ship as one package
 and stay side by side when installed. Every tool, command and shortcut is
@@ -31,7 +32,7 @@ pi-extensions/
 ├── scripts/            # pack-check, tool-docs, typecheck tests (not published)
 ├── tsconfig.json
 ├── agent-team/  ask-user/  background-bash/  nine-router/  session-title/
-├── team-webui/  claude-accounts/
+├── team-webui/  claude-accounts/  btw/
 ├── install.sh          # copy-install into ~/.pi/agent/extensions
 └── test.sh             # Node tests; --tui adds real-terminal smokes
 ```

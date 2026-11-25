@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "btw-provider-neutral-btw",
+      "requirementKey": "btw-provider-neutral",
+      "scenario": "ใช้ streamSimple ไม่ใช่ complete",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "btw-provider-neutral-esc",
+      "requirementKey": "btw-provider-neutral",
+      "scenario": "ยกเลิกยังใช้ signal ของตัวเอง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "cd pi-extensions && node --test btw/btw.test.cjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}
