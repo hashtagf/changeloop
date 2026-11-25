@@ -616,9 +616,10 @@ a medium-tier review runs the faster `standard` class by default (the reviewer's
 delta/closure round after a repair keeps the class its tier chose for the first
 round (an unsure scenario still escalates). The configured model keeps high, a medium change
 with any trigger other than `medium-impact-or-coupling`, `review-risk`,
-`declared-medium-risk`, `input-domain`, or `independence-waived-self-review`
-(for example `access-control`, `authorization-or-secrets`, `risk-semantics`,
-`risk-capability`, `covered-by-review:*`, `multi-repository-claim`), and a declared
+`declared-medium-risk`, `input-domain`, `independence-waived-self-review`, or
+`multi-repository-claim` (for example `access-control`,
+`authorization-or-secrets`, `risk-semantics`, `risk-capability`,
+`covered-by-review:*`), and a declared
 (not keyword-only) review. `review.modelByTier` maps `low` and `medium` to
 `fast|standard|configured` (`high` is rejected, never weakened); an unrecognized
 class, a missing alias, or a standard model that would share the implementation's

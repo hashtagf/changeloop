@@ -90,6 +90,10 @@ Found by timing a Build that lost 4m24s to one exec and ran a 40s check twice:
 - A settled draft decision recorded as `answer`, `chosen`, or `decision`
   loads as its `choice` instead of failing `change start` and costing a
   repair round; an explicit `choice` still wins.
+- A medium-risk change whose claims span several repositories, with no other
+  risk trigger, now reviews on the faster standard model class instead of the
+  strongest model (owner decision). Financial, access-control, secrets, and
+  other high-risk or pinned triggers keep the strongest model.
 - A re-review after a review repair keeps the model class its risk tier chose
   for the first round instead of switching to the strongest model (owner
   decision). High-risk and pinned medium changes keep the strongest model in

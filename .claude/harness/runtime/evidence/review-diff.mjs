@@ -143,13 +143,15 @@ export const REVIEW_MODEL_CLASSES = Object.freeze(["fast", "standard", "configur
 export const DEFAULT_REVIEW_MODEL_BY_TIER = Object.freeze({
   low: "fast", medium: "standard", high: "configured"
 });
-// Medium-tier triggers that only describe how much changed or how it couples;
-// any other trigger (access-control, authorization-or-secrets, risk-capability,
-// risk-semantics, covered-by-review:*, multi-repository-claim, critical-*, a
+// Medium-tier triggers that only describe how much changed or how it couples
+// (a claim spanning several repositories included: owner decision 2026-11-25,
+// a multi-repository change with no risk trigger reviews on the standard
+// class); any other trigger (access-control, authorization-or-secrets,
+// risk-capability, risk-semantics, covered-by-review:*, critical-*, a
 // diversity waiver, or one added later) pins the configured model.
 export const MEDIUM_TIER_SPEED_SAFE_TRIGGERS = Object.freeze([
   "medium-impact-or-coupling", "review-risk", "declared-medium-risk", "input-domain",
-  "independence-waived-self-review"
+  "independence-waived-self-review", "multi-repository-claim"
 ]);
 
 export function reviewModelClass(/** @type {{ tier?: any, deliveredAiCount?: number, triggers?: any[], declaredReview?: boolean, settings?: any }} */ {

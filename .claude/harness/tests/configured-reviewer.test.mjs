@@ -819,10 +819,15 @@ try {
     "configured", "high is never configurable");
   assert.equal(reviewModelClass({ tier: undefined }), "configured", "legacy routing");
   for (const trigger of ["access-control", "authorization-or-secrets", "risk-capability",
-    "risk-semantics", "multi-repository-claim", "covered-by-review:resilience",
+    "risk-semantics", "covered-by-review:resilience",
     "critical-capability", "diversity-waived-single-model", "added-later"])
     assert.equal(reviewModelClass({ tier: "medium", triggers: [...safeMedium, trigger] }),
       "configured", `${trigger} pins the configured model at medium`);
+  assert.equal(reviewModelClass({ tier: "medium", triggers: [...safeMedium, "multi-repository-claim"] }),
+    "standard", "a multi-repository change without a risk trigger reviews on the standard class");
+  assert.equal(reviewModelClass({ tier: "medium",
+    triggers: [...safeMedium, "multi-repository-claim", "access-control"] }),
+    "configured", "a risk trigger beside it still pins the strong model");
   assert.equal(reviewModelClass({ tier: "medium", triggers: safeMedium, declaredReview: true }),
     "configured", "a declared review pins the configured model");
   assert.equal(reviewModelClass({ tier: "medium", triggers: undefined }), "configured",
