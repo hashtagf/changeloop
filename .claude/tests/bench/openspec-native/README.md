@@ -130,9 +130,10 @@ model) and MCP servers never reach the lab, while the Change Loop arm keeps its
 installed project hooks. Authentication is unaffected. Scorecards record this
 in `provenance.hostSettings` (null for collect-only rows) and fill
 `requestedModel` (explicit `--model`, else the stream's session model) and
-`actualModel` (the model that answered) from the host stream. A user-level
-default model no longer applies; direct `run.mjs` runs pin one with
-`--claude-arg --model --claude-arg <model>`. User memory (`~/.claude/CLAUDE.md`) is not a
+`actualModel` (the model that answered) from the host stream. Every host
+launch pins `claude-sonnet-5-5` so paid runs compare across versions; a
+run names another with `--model <model>` (lab) or
+`--claude-arg --model --claude-arg <model>` (`run.mjs`). User memory (`~/.claude/CLAUDE.md`) is not a
 settings source and is not covered by this isolation.
 Each retained run has `manifest.json`, `source.patch`, and `integrity.json`; the
 last file content-binds every preserved artifact. Aggregate repeated runs with:

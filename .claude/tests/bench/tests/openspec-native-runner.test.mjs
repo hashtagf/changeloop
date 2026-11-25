@@ -887,7 +887,9 @@ process.stdout.write(rows.map((row) => JSON.stringify(row)).join("\\n") + "\\n")
     const scorecard = JSON.parse(readFileSync(output, "utf8").trim());
     assert.deepEqual(scorecard.provenance.hostSettings,
       { isolated: true, settingSources: "project,local", strictMcpConfig: true });
-    assert.equal(scorecard.provenance.requestedModel, "claude-opus-5-5");
+    assert.equal(scorecard.provenance.requestedModel, "claude-sonnet-5-5",
+      "every host launch pins Sonnet 5.5");
+    assert.equal(argv[argv.lastIndexOf("--model") + 1], "claude-sonnet-5-5");
     assert.equal(scorecard.provenance.actualModel, "claude-opus-5-5");
     assert.equal(validate(scorecard), true, JSON.stringify(validate.errors));
   } finally {
@@ -903,7 +905,8 @@ test("host models come from the stream, an explicit --model, or stay unknown", (
   assert.deepEqual(hostModels([], { modelUsage: { small: { costUSD: 0.1 }, big: { costUSD: 2 } } }),
     { sessionModel: null, actualModel: "big" });
   assert.equal(requestedHostModel(["--permission-mode", "acceptEdits", "--model", "sonnet"]), "sonnet");
-  assert.equal(requestedHostModel(["--permission-mode", "acceptEdits"]), null);
+  assert.equal(requestedHostModel(["--permission-mode", "acceptEdits"]), "claude-sonnet-5-5",
+    "paid runs always pin Sonnet 5.5 unless a model is named");
 });
 
 test("live request ceilings stop the host at a resumable user-decision boundary", () => {
@@ -1447,7 +1450,7 @@ test("dry-run plans give both arms the same model, budget, and ceilings without 
       assert.equal(plan.argv[0], "-p");
       assert.equal(plan.argv[1], plan.prompt);
       assert.equal(plan.argv[plan.argv.indexOf("--max-budget-usd") + 1], "7");
-      assert.equal(plan.argv[plan.argv.indexOf("--model") + 1], "parity-model");
+      assert.equal(plan.argv[plan.argv.lastIndexOf("--model") + 1], "parity-model");
       assert.equal(plan.timeoutMs, 900000);
       assert.equal(plan.maxModelRequests, 60);
       assert.equal(plan.maxToolCalls, 80);

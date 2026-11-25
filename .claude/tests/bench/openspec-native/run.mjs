@@ -655,10 +655,15 @@ const HOST_ISOLATION_ARGS = Object.freeze([
   "--setting-sources", HOST_SETTINGS_ISOLATION.settingSources, "--strict-mcp-config"
 ]);
 
+// Paid runs always use one model so runs compare across versions (owner
+// decision, 2026-11-25): the host's own default changes with the account and
+// once turned a run into Opus. An explicit `--model` still wins (last wins).
+export const DEFAULT_HOST_MODEL = "claude-sonnet-5-5";
+
 // The exact host argv; the dry-run plan prints this same value.
 export function hostArgv(prompt, claudeArgs = []) {
   return ["-p", prompt, "--output-format", "stream-json", "--verbose",
-    ...HOST_ISOLATION_ARGS, ...claudeArgs];
+    ...HOST_ISOLATION_ARGS, "--model", DEFAULT_HOST_MODEL, ...claudeArgs];
 }
 
 // Both arms pass the same budget flag the same way.
@@ -1067,10 +1072,11 @@ export function hostModels(rows, envelope = {}) {
   };
 }
 
-// An explicit `--model` handed to the host (last one wins, as in the CLI).
+// The model handed to the host: an explicit `--model` (last one wins, as in
+// the CLI), else the pinned default every host launch carries.
 export function requestedHostModel(claudeArgs = []) {
   const index = claudeArgs.lastIndexOf("--model");
-  return index >= 0 && claudeArgs[index + 1] ? claudeArgs[index + 1] : null;
+  return index >= 0 && claudeArgs[index + 1] ? claudeArgs[index + 1] : DEFAULT_HOST_MODEL;
 }
 
 function writeResult(output, scorecard) {
