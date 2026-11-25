@@ -160,8 +160,8 @@ export function configuredReviewPrompt(packet) {
     "Read the full referenced requirements and scenarios for the scoped claims. " +
     "For UI claims check the required output is rendered and reachable; for persisted " +
     "or wire data challenge supported older representations. Passing counts, test " +
-    "tags, and calculated-but-unused values do not establish those outcomes. " +
-    SCOPE_DISCIPLINE_INSTRUCTIONS +
+    "tags, and calculated-but-unused values do not establish those outcomes; nor does a " +
+    "test that replaces the collaborator a scenario names with a fake. " + SCOPE_DISCIPLINE_INSTRUCTIONS +
     "For a delta packet, review only reviewScope.paths. Whenever the packet carries " +
     "closureFindings (a delta, or a review after a human review reported blockers), list in " +
     "verifiedFindingIds only the closureFindings.ids the repair closed: all of them when it " +

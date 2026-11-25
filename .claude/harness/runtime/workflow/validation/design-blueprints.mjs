@@ -222,6 +222,7 @@ export function designBlueprintWarnings(draft) {
         warnings.push(`fileMap[${index}] '${path}' is outside every task's paths`);
     });
   warnings.push(...taskTestOwnershipWarnings(draft));
+  warnings.push(...(Array.isArray(draft._placementWarnings) ? draft._placementWarnings : []));
   (draft?.decisions || []).forEach((decision, index) => {
     if (!present(decision?.consequences))
       warnings.push(`decisions[${index}] states no consequences`);

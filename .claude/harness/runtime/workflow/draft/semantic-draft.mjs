@@ -6,18 +6,16 @@ import { scratchFieldIssues, scratchRequiredIssues } from "./scratch-fields.mjs"
 import { undoIssues } from "../transaction/undo-plan.mjs";
 import { enforcesIssues } from "../../contracts/lesson-enforcement.mjs";
 import { readerGuideIssues } from "../validation/reader-guide.mjs";
-import {
-  devDocumentIssues, devDocumentShapeIssues, inferWorkTypes
-} from "../validation/dev-document.mjs";
+import { devDocumentIssues, devDocumentShapeIssues, inferWorkTypes } from "../validation/dev-document.mjs";
 import { riskDerivationSummary } from "../validation/draft-risk.mjs";
+import { scenarioPlacement } from "../validation/scenario-placement.mjs";
 import { isSemanticVersion } from "../validation/draft-version.mjs";
 import { unique } from "../../core/values.mjs";
 import {
   comparableLabel, placeholderIssue, rawScenarioEntries, stringList, text, textList
 } from "./semantic-draft-text.mjs";
 import {
-  deriveRepositoryTaskDependencies, derivedExecution, normalizeTasks,
-  unknownTaskFieldWarnings
+  deriveRepositoryTaskDependencies, derivedExecution, normalizeTasks, unknownTaskFieldWarnings
 } from "./semantic-draft-tasks.mjs";
 import { rejectedAlternatives, decisionMetadataIssues, applyDecisionRationale, SETTLED_REASON } from "./semantic-draft-decisions.mjs";
 
@@ -617,6 +615,7 @@ export function normalizeSemanticDraft(input, slugify, options = {}) {
     tasks = ordered.tasks;
     issues.push(...ordered.issues.map((issue) => `semantic draft ${issue}`));
   }
+  const placement = scenarioPlacement(source, { repositories: options.repositories }, issues);
   issues.push(...readerGuideIssues(source, requirementKeys));
   const claims = requirements.flatMap((row) => row.claims);
   const acceptance = source.acceptance || { required: false, reason: null, claimIds: [] };
@@ -673,7 +672,8 @@ export function normalizeSemanticDraft(input, slugify, options = {}) {
     execution: derivedExecution(source, claims, tasks),
     externalOperations: Array.isArray(source.externalOperations)
       ? source.externalOperations : undefined,
-    repositories: Array.isArray(source.repositories) ? source.repositories : undefined
+    repositories: Array.isArray(source.repositories) ? source.repositories : undefined,
+    ...(placement.warnings.length ? { _placementWarnings: placement.warnings } : {})
   };
   if (isSemanticVersion(source.version)) draft.discovery = normalizeDiscovery(source);
   return { draft, issues, warnings: unknownTaskFieldWarnings(source) };

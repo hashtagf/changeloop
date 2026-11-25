@@ -13,6 +13,7 @@ import { createLessonsRuntime } from "../observability/lessons-runtime.mjs";
 import { createOutcomesRuntime, runtimeStates } from "../observability/outcomes-runtime.mjs";
 import { SLOW_CHECK_MS, createCheckReuse, slowCheckMessage } from "../core/check-reuse.mjs";
 import { emitSignal } from "../core/signals.mjs";
+import { escapingImportIssue, escapingImports } from "../workflow/change/repository-escape.mjs";
 import { createProjectFeaturesCommand } from "../workflow/validation/project-feature-map.mjs";
 import { createProductProgressCommand } from "../workflow/validation/product-progress.mjs";
 import { createPyramidReadinessCommand } from "./pyramid-readiness-command.mjs";
@@ -130,12 +131,18 @@ export function composeDeliveryRuntimes({
         const state = loadRuntime(id);
         const task = (agentPlanValue(id)?.tasks || []).find((row) => row.id === taskId);
         if (!task || !changedSurfaceResolvable(id, state)) return null;
-        const repositoryId = trapFailures(() =>
-          repositoryById(id, task.repository || "root", state).id);
+        const repository = trapFailures(() =>
+          repositoryById(id, task.repository || "root", state));
+        const changedPaths = trapFailures(() => canonicalChangedSurface(id, state))
+          .filter((row) => row.repositoryId === repository.id).map((row) => row.path);
+        // A child repository must stand alone: no relative path into another.
+        if (repository.id !== "root" && repository.workspacePath) {
+          const escaped = escapingImportIssue(taskId, repository.id,
+            escapingImports(repository.workspacePath, changedPaths));
+          if (escaped) return escaped;
+        }
         return taskChangeIssue({
-          workTypes: changeWorkTypes(activeChangePath(id)), task, changeId: id,
-          changedPaths: trapFailures(() => canonicalChangedSurface(id, state))
-            .filter((row) => row.repositoryId === repositoryId).map((row) => row.path)
+          workTypes: changeWorkTypes(activeChangePath(id)), task, changeId: id, changedPaths
         });
       } catch { return null; }
     },
