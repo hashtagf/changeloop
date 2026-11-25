@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 
 import {
-  BASE_RUN_TIMEOUT_MS, baseRunOutcome, baseRunTimeoutMs, createTestDiscriminationRuntime, inconclusiveLine
+  BASE_RUN_TIMEOUT_MS, baseRunOutcome, baseRunTimeoutMs, createTestDiscriminationRuntime, earlyBaseFailure, inconclusiveLine
 } from "../runtime/evidence/test-discrimination.mjs";
 import { configuredCommand } from "../runtime/evidence/evidence-results.mjs";
 import { lightKind } from "../runtime/workflow/validation/dev-document.mjs";
@@ -170,4 +170,24 @@ test("discrimination-hung-base-run: a base run is capped and partial output is n
   ] }).evaluate("change-a", "hash-b");
   assert.deepEqual(result.repositories[0].files.find((row) => row.file === "test/hangs.test.mjs"),
     { file: "test/hangs.test.mjs", outcome: "timed-out" });
+});
+
+test("discrimination-early-failure: Prove stops a base run as soon as a test fails, without waiting on its handles", async (t) => {
+  // A paid notes-api run waited the full two-minute cap twice: every test had
+  // failed in milliseconds, but a server kept the base run alive.
+  assert.equal(earlyBaseFailure("✖ needs the change (1.2ms)\n"), 1);
+  assert.equal(earlyBaseFailure("not ok 1 - needs the change\n"), 1);
+  assert.equal(earlyBaseFailure("ℹ fail 3\n"), 1);
+  assert.equal(earlyBaseFailure("✔ a (1ms)\nok 1 - b\n# fail 0\n"), null, "passing output is no verdict yet");
+  const { root, repo } = fixture(t);
+  writeFileSync(join(repo.workspacePath, "test/hangs.test.mjs"),
+    "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { createServer } from 'node:http';\n" +
+    "createServer().listen(0);\ntest('needs the change', () => assert.equal(1, 2));\n");
+  const started = Date.now();
+  const result = await runtime(repo, join(root, "logs"), { timeoutMs: 20000, binding: [
+    { claimId: "hangs", requirementKey: "greet", scenario: "hangs", regression: false, files: ["test/hangs.test.mjs"] }
+  ] }).evaluateAsync("change-a", "hash-b");
+  assert.deepEqual(result.repositories[0].files.find((row) => row.file === "test/hangs.test.mjs"),
+    { file: "test/hangs.test.mjs", outcome: "fails-on-base" });
+  assert.ok(Date.now() - started < 15000, "the run stopped on its first failure, not at the cap");
 });

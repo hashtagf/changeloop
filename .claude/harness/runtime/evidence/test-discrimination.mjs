@@ -8,7 +8,7 @@ import { basename, dirname, join } from "node:path";
 import { providerExecutionEnvironment } from "./adapter-runtime.mjs";
 import { providerTimeoutMs } from "./provider-catalog.mjs";
 import { environmentIdentity, taskCheckArgv } from "./task-check-evidence.mjs";
-import { spawnCapturedAsync } from "./configured-reviewer.mjs";
+import { spawnUntilSettled } from "./early-stop-spawn.mjs";
 import { scopeAllowsPath } from "../core/graph-execution.mjs";
 import { buildCopyScratch, copyBaseIdentity, copyChangedPaths } from "./copy-base-tree.mjs";
 // Work whose tests should pass before and after the change.
@@ -129,6 +129,21 @@ export const BASE_RUN_TIMEOUT_MS = 120000;
 
 export function baseRunTimeoutMs(config) {
   return Math.min(providerTimeoutMs(config), BASE_RUN_TIMEOUT_MS);
+}
+
+// A run is one verdict (one file, or one repository): any failing test makes
+// it fail on base. Once the reporter prints a failed test, waiting for the
+// process to exit only adds the time a lingering handle keeps it alive (a
+// paid notes-api run waited the full two minutes, twice). Recognized: Node's
+// spec reporter (`✖ name (12ms)`), TAP (`not ok 3 - name`), and a summary
+// `fail N` count. A line naming the file as a whole is not a test failure.
+export function earlyBaseFailure(stdout, stderr = "") {
+  const text = `${stdout}\n${stderr}`;
+  const summary = /^(?:ℹ|#) fail (\d+)\s*$/m.exec(text);
+  if (summary && Number(summary[1]) > 0) return 1;
+  const spec = /^\s*✖ (?!failing tests:).+\(\d+(?:\.\d+)?ms\)\s*$/m.test(text);
+  const tap = /^\s*not ok \d+ /m.test(text);
+  return spec || tap ? 1 : null;
 }
 
 export function baseRunOutcome(result) {
@@ -346,7 +361,8 @@ export function createTestDiscriminationRuntime({
   root = null, copyBaseBytes = null, LOGS, requiredProviders, providerConfig, providerCapability, providerRepository,
   selectedRepositories, repositoryBaseHead, changedSurface, pathKind, changeWorkTypes,
   receiptValidity, configuredCommand, fileDigest, stableHash, loadRuntime,
-  spawnCommandSync = spawnSync, spawnCommandAsync = spawnCapturedAsync, environment = process.env
+  spawnCommandSync = spawnSync, spawnCommandAsync = (command, args, options) => spawnUntilSettled(command, args,
+    { ...options, settled: earlyBaseFailure }), environment = process.env
 }) {
   // { provider, config }, { pending }, { ineligible } for a test provider this
   // check cannot run on base (a service, readiness probe, several

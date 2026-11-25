@@ -43,6 +43,11 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- Prove no longer waits out the two-minute test-discrimination cap when the
+  change's tests already failed on the base source: the base run stops at the
+  first failing test (spec `✖`, TAP `not ok`, or a `fail N` summary) instead
+  of waiting for a server the change would close. A paid notes-api run spent
+  four of its seven minutes in two such waits.
 - An onboarded project without Git no longer blocks Prove: the quality gate
   provider `node .claude/harness/foundation.mjs quality-run --enforce` was
   refused because every installed harness file counted as an untracked input
