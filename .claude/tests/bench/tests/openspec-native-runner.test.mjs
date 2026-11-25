@@ -287,6 +287,29 @@ fi
   } finally {rmSync(project,{recursive:true,force:true});}
 });
 
+// A ten-repository paid run graded correct work 8/12: the root sandbox skips
+// nested repositories, so ones the change never selected were missing.
+test('composite oracle takes unselected catalog repositories from the target', () => {
+  const project=projectFixture();
+  const rootBox=join(project,'.foundation/sandboxes/todo');
+  const repoBox=join(project,'.foundation/repository-sandboxes/todo/backend');
+  write(join(rootBox,'package.json'),'{}');
+  write(join(repoBox,'value.txt'),'changed');
+  write(join(project,'backend/value.txt'),'seed');
+  write(join(project,'auth/index.mjs'),'unselected');
+  write(join(project,'auth/.git'),'gitdir: outside\n');
+  write(join(project,'openspec/repositories.yaml'),{version:1,repositories:[
+    {id:'backend',path:'backend'},{id:'auth',path:'auth'},{id:'escape',path:'../outside'}]});
+  write(join(project,'.foundation/runtime/todo.json'),{id:'todo',status:'proven',
+    repositories:{backend:{path:repoBox,targetPath:join(project,'backend'),mode:'worktree'}}});
+  const evaluation=benchmarkEvaluationWorkspace(project,'todo');
+  try {
+    assert.equal(readFileSync(join(evaluation.workspace,'backend/value.txt'),'utf8'),'changed');
+    assert.equal(readFileSync(join(evaluation.workspace,'auth/index.mjs'),'utf8'),'unselected');
+    assert.equal(existsSync(join(evaluation.workspace,'auth/.git')),false);
+  } finally {evaluation.cleanup(); rmSync(project,{recursive:true,force:true});}
+});
+
 test('archived delivery with an unchecked canonical task ledger is not benchmark completion', () => {
   const project=projectFixture();
   const archived='openspec/changes/archive/2026-10-12-todo';

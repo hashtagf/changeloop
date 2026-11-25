@@ -101,6 +101,19 @@ export function benchmarkEvaluationWorkspace(project, changeId) {
   const filter=path=>!excluded.has(path.split(/[\\/]/).at(-1));
   try {
     cpSync(base,workspace,{recursive:true,filter});
+    // The root sandbox skips nested repositories. A catalog repository the
+    // change never selected is unchanged by it: evaluate the target's copy, or
+    // the product is graded with whole repositories missing.
+    const selected=new Set(repositories.map(([id])=>id));
+    const catalog=readJson(join(root,'openspec/repositories.yaml'))||{};
+    for (const row of Array.isArray(catalog.repositories)?catalog.repositories:[]) {
+      if (!row?.id || selected.has(row.id) || typeof row.path!=='string') continue;
+      const source=resolve(root,row.path);
+      const location=relative(root,source);
+      if (!location || isAbsolute(location) || location.startsWith('..') || !existsSync(source)) continue;
+      rmSync(join(workspace,location),{recursive:true,force:true});
+      cpSync(source,join(workspace,location),{recursive:true,filter});
+    }
     for (const [id,repository] of repositories) {
       if (!repository.path || !repository.targetPath || !existsSync(repository.path))
         throw new Error(`benchmark repository workspace unavailable: ${id}`);

@@ -11,6 +11,11 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- Two ten-repository benchmark lanes: `platform-tenant-contract` (a contract
+  change across seven repositories, three untouched) and
+  `platform-refund-slice` (four writable, six read-only). The composite
+  benchmark oracle now takes repositories a change never selected from the
+  target instead of grading the product with them missing.
 - Onboard without installing: in a repository that never ran `cloop init`,
   `cloop quality …` and `cloop features` run on the CLI's bundled runtime
   and write only the onboarding files plus a self-ignored `.foundation/`.
@@ -47,6 +52,11 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
   release job, and `upgrade-matrix.mjs` takes `--shard K/N`.
 
 ### Fixed
+
+- Land beside another change's landed, uncommitted bytes no longer sends the
+  later change back to sync and prove again: bytes another change landed and
+  the specs an archive writes are not unknown target work. A user's own
+  uncommitted file is still carried into the sandbox and proved first.
 
 Found by timing a Build that lost 4m24s to one exec and ran a 40s check twice:
 

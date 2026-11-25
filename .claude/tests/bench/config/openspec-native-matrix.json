@@ -1189,6 +1189,279 @@
       },
       "expected_terminal": "completed",
       "baseline": null
+    },
+    {
+      "id": "platform-tenant-contract",
+      "status": "ready",
+      "execution": "paid",
+      "workload": "cross-repository-contract-change",
+      "stack": "node-ten-repository-platform",
+      "size": "large",
+      "fixture": ".claude/tests/bench/tasks/46-platform-tenant-contract/seed",
+      "fixture_digest": "sha256:cad19bbb45252ab2c365b8ee28e6c4b2494f953adca0d840ba7467683e160191",
+      "prompt": "/dev implement TENANT-CONTRACT.md across the platform repositories, changing only the repositories the contract requires and adding meaningful tests",
+      "host": "claude-code",
+      "risk": "high",
+      "project_command": "npm test",
+      "clean_install_command": "npm install --ignore-scripts --offline",
+      "repository_catalog": {
+        "version": 1,
+        "repositories": [
+          {
+            "id": "contracts",
+            "path": "contracts",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": []
+          },
+          {
+            "id": "auth",
+            "path": "auth",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": []
+          },
+          {
+            "id": "users",
+            "path": "users",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": []
+          },
+          {
+            "id": "inventory",
+            "path": "inventory",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": [
+              "contracts"
+            ]
+          },
+          {
+            "id": "payments",
+            "path": "payments",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": [
+              "contracts"
+            ]
+          },
+          {
+            "id": "orders",
+            "path": "orders",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": [
+              "contracts",
+              "inventory",
+              "payments"
+            ]
+          },
+          {
+            "id": "notifications",
+            "path": "notifications",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": [
+              "contracts"
+            ]
+          },
+          {
+            "id": "gateway",
+            "path": "gateway",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": [
+              "auth",
+              "orders",
+              "inventory"
+            ]
+          },
+          {
+            "id": "sdk",
+            "path": "sdk",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": [
+              "gateway"
+            ]
+          },
+          {
+            "id": "web",
+            "path": "web",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": [
+              "contracts"
+            ]
+          }
+        ]
+      },
+      "critical_case_ids": [
+        "CASE_CONTRACT_V2",
+        "CASE_VENDORED_COPIES",
+        "CASE_AUTH_TENANT",
+        "CASE_STOCK_ISOLATION",
+        "CASE_ORDER_ISOLATION",
+        "CASE_TENANT_FROM_TOKEN_ONLY",
+        "CASE_EVENTS_CARRY_TENANT",
+        "CASE_NOTIFICATIONS_TENANT",
+        "CASE_SDK_ROUNDTRIP",
+        "CASE_UNTOUCHED",
+        "CASE_DELIVERED_TESTS",
+        "CASE_TESTS_CONTRACTS",
+        "CASE_TESTS_AUTH",
+        "CASE_TESTS_INVENTORY",
+        "CASE_TESTS_NOTIFICATIONS"
+      ],
+      "oracle": {
+        "required": true,
+        "path": ".claude/tests/bench/tasks/46-platform-tenant-contract/oracle/run.sh"
+      },
+      "quality_required": true,
+      "budget": {
+        "wall_ms": 3600000,
+        "cost_usd": 15,
+        "model_requests": 300,
+        "tool_calls": 500
+      },
+      "expected_terminal": "completed",
+      "baseline": null
+    },
+    {
+      "id": "platform-refund-slice",
+      "status": "ready",
+      "execution": "paid",
+      "workload": "feature-slice-in-large-codebase",
+      "stack": "node-ten-repository-platform",
+      "size": "large",
+      "fixture": ".claude/tests/bench/tasks/47-platform-refund-slice/seed",
+      "fixture_digest": "sha256:a0b91ab1ea9ad51eeddf20ce6968f9f220861710807ab69bc2b631efbff68c1b",
+      "prompt": "/dev implement REFUND.md in payments, orders, notifications and web without changing the read-only repositories, adding meaningful tests",
+      "host": "claude-code",
+      "risk": "high",
+      "project_command": "npm test",
+      "clean_install_command": "npm install --ignore-scripts --offline",
+      "repository_catalog": {
+        "version": 1,
+        "repositories": [
+          {
+            "id": "contracts",
+            "path": "contracts",
+            "type": "external",
+            "mode": "read",
+            "dependsOn": []
+          },
+          {
+            "id": "auth",
+            "path": "auth",
+            "type": "external",
+            "mode": "read",
+            "dependsOn": []
+          },
+          {
+            "id": "users",
+            "path": "users",
+            "type": "external",
+            "mode": "read",
+            "dependsOn": []
+          },
+          {
+            "id": "inventory",
+            "path": "inventory",
+            "type": "external",
+            "mode": "read",
+            "dependsOn": [
+              "contracts"
+            ]
+          },
+          {
+            "id": "payments",
+            "path": "payments",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": [
+              "contracts"
+            ]
+          },
+          {
+            "id": "orders",
+            "path": "orders",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": [
+              "contracts",
+              "inventory",
+              "payments"
+            ]
+          },
+          {
+            "id": "notifications",
+            "path": "notifications",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": [
+              "contracts"
+            ]
+          },
+          {
+            "id": "gateway",
+            "path": "gateway",
+            "type": "external",
+            "mode": "read",
+            "dependsOn": [
+              "auth",
+              "orders",
+              "inventory"
+            ]
+          },
+          {
+            "id": "sdk",
+            "path": "sdk",
+            "type": "external",
+            "mode": "read",
+            "dependsOn": [
+              "gateway"
+            ]
+          },
+          {
+            "id": "web",
+            "path": "web",
+            "type": "external",
+            "mode": "write",
+            "dependsOn": [
+              "contracts"
+            ]
+          }
+        ]
+      },
+      "critical_case_ids": [
+        "CASE_REFUND_PARTIAL",
+        "CASE_REFUND_LIMITS",
+        "CASE_CANCEL_FLOW",
+        "CASE_CANCEL_ONCE",
+        "CASE_CANCEL_UNKNOWN",
+        "CASE_WEB_CANCEL",
+        "CASE_READ_ONLY_UNCHANGED",
+        "CASE_DELIVERED_TESTS",
+        "CASE_TESTS_PAYMENTS",
+        "CASE_TESTS_ORDERS",
+        "CASE_TESTS_NOTIFICATIONS",
+        "CASE_TESTS_WEB"
+      ],
+      "oracle": {
+        "required": true,
+        "path": ".claude/tests/bench/tasks/47-platform-refund-slice/oracle/run.sh"
+      },
+      "quality_required": true,
+      "budget": {
+        "wall_ms": 3600000,
+        "cost_usd": 15,
+        "model_requests": 300,
+        "tool_calls": 500
+      },
+      "expected_terminal": "completed",
+      "baseline": null
     }
   ]
 }

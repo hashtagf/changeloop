@@ -60,8 +60,8 @@ test("the versioned cross-domain matrix is valid and every workload is executabl
   const matrix = loadMatrix();
   assert.equal(matrix.protocol, "foundation-openspec-native-matrix-v2");
   assert.deepEqual(matrixIssues(matrix), []);
-  assert.equal(matrix.scenarios.length, 34);
-  assert.equal(matrix.scenarios.filter((scenario) => scenario.status === "ready").length, 34);
+  assert.equal(matrix.scenarios.length, 36);
+  assert.equal(matrix.scenarios.filter((scenario) => scenario.status === "ready").length, 36);
   assert.equal(matrix.scenarios.filter((scenario) => scenario.baseline !== null).length, 1);
 });
 

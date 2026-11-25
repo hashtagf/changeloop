@@ -55,6 +55,24 @@ digests are frozen by the deterministic sentinel.
 Thirteen lanes use paid model execution. The budget/resume lane is
 deterministic and must not spend model budget.
 
+### Largest workloads: a ten-repository platform
+
+Two lanes share one seed of ten independent repositories (`contracts`,
+`auth`, `users`, `inventory`, `payments`, `orders`, `notifications`,
+`gateway`, `sdk`, `web`) wired by a root `platform.mjs`. Services never import
+each other; each vendors the event contract as `event.mjs`, as polyrepos do.
+The lab initializes each repository's own Git seed for the Change Loop arm.
+
+| Scenario | Shape | Risk | Terminal evidence |
+|---|---|---:|---|
+| `platform-tenant-contract` | A tenant-scoped event contract that must reach seven repositories (source contract, every vendored copy, auth, gateway, three services) while `users`, `web` and `sdk` stay byte-for-byte unchanged | high | Oracle 15/15: contract v2, identical vendored copies, tenant only from the token, stock/order/event/notification isolation, SDK round trip, untouched repositories, discriminating tests in four repositories, archived |
+| `platform-refund-slice` | Refunds and cancellation owned by four repositories; the other six are declared read-only for the change | high | Oracle 12/12: partial/full refunds and limits, cancel flow and ordering, cancel once, unknown order, web state, read-only repositories unchanged, discriminating tests in all four owners, archived |
+
+Calibration proves each seed fails, a calibration answer passes every
+critical case, and a stale vendored copy, a tenant taken from the request, an
+edited untouched or read-only repository, an over-refund, and a second
+cancellation are each caught. Neither lane has paid evidence yet.
+
 ### Larger workload: order and inventory (levels 1–2)
 
 The frozen product contract lives in the seed's `ORDER-INVENTORY.md`; the
