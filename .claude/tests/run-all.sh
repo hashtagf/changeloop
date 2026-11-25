@@ -302,6 +302,7 @@ host execution contract|node --test "$ROOT/.claude/harness/tests/host-execution-
 openspec benchmark matrix|node --test "$ROOT/.claude/tests/bench/tests/openspec-native-matrix.test.mjs"
 scenario placement|node --test "$ROOT/.claude/harness/tests/scenario-placement.test.mjs"
 plain-language proposals|node --test "$ROOT/.claude/harness/tests/plain-language.test.mjs"
+completeness checklist|node --test "$ROOT/.claude/harness/tests/completeness-checklist.test.mjs"
 ten-repository platform lanes|node --test "$ROOT/.claude/tests/bench/tests/openspec-native-platform-workloads.test.mjs"
 benchmark workload oracles|node --test "$ROOT/.claude/tests/bench/tests/openspec-native-workloads.test.mjs"
 agent eval tooling|node --test "$HERE/evals/evals.test.mjs"

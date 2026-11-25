@@ -9,11 +9,18 @@ context: |
 rules:
   proposal:
     - State the user-visible outcome and why the change is needed.
+    - Write the summary and why for whoever decides, without code names; mark
+      evidence [Data] (with its source) or [Assumption].
     - Identify affected behavior and explicit non-goals.
   specs:
     - Use stable requirement and scenario names.
     - Express observable behavior with WHEN and THEN.
     - Preserve existing public behavior unless a delta explicitly changes it.
+    - Place each scenario where it can be proved for real; another repository
+      or a real service belongs to the task that composes them.
+    - Before Build, answer the completeness questions change start raises
+      (missing or wrong input, partial failure, stored data, limits, ties,
+      unsupported requests) with a scenario, a non-goal, or an assumption.
   design:
     - Record only decisions that constrain implementation or rollback.
     - Identify compatibility, migration, security, and cross-repository effects.

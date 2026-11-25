@@ -20,6 +20,17 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
 
 ### Added
 
+- `change start` asks the completeness questions reviewers kept raising after
+  proof, when nobody builds them any more: a missing or wrong-typed input, an
+  empty value, a later step failing after an earlier one succeeded, corrupt
+  stored data, a size limit, the order of ties, an unsupported request. Only
+  the questions the requirements make relevant appear, as design warnings on
+  every lane; a scenario, a non-goal, or an assumption answers one. In the
+  3.7.8 checkpoint drafts they matched the gaps reviewers reported.
+- `verification.md` opens with one outcome line, each check by its plain name
+  and result (Thai labels for a Thai packet), and the gaps the reviewer noted
+  but nobody built; a Technical record keeps hashes, claims, and commands,
+  without machine paths.
 - Proposals read in two halves. The top is for whoever decides, in business
   language: summary, why, stories, success criteria, scope, impact with one
   plain risk sentence, decisions, and how to verify. A "Technical details"

@@ -129,6 +129,30 @@ test("Land writes verification.md with the accepted proof run and one row per re
   assert.match(record, /- user-waived: accessibility: no UI/);
 });
 
+// verification.md opens for whoever reads the outcome: one line, each check
+// by its plain name, the reviewer's open gaps; hashes and commands follow.
+test("verification.md leads with a plain outcome, named checks, and the reviewer's open gaps", () => {
+  const proof = { proofRunId: "p", status: "pass", workspaceHash: "w", contractFingerprint: "c",
+    receipts: [{ provider: "test", path: "a", sha256: "s1" }, { provider: "custom-lint", path: "b", sha256: "s2" },
+      { provider: "review", path: "missing", sha256: "s3" }] };
+  const receipts = { a: { provider: "test", status: "pass", observed: "exit 0",
+    command: "node /Users/someone/work/app/scripts/check.mjs", durationMs: 1500 },
+  b: { provider: "custom-lint", status: "fail", observed: "2 findings" } };
+  const attempts = [{ status: "completed", specGaps: [{ scenario: "Release fails after refund", reason: "no scenario says what happens" }] }];
+  const record = renderVerificationRecord({ proof, receipts, reviewAttempts: attempts });
+  const top = record.slice(0, record.indexOf("## Technical record"));
+  assert.match(top, /^# Verification\n\n1 of 3 checks did not pass\. · 1 result\(s\) could not be read and are not counted as passes\. · An AI review was completed\./);
+  assert.match(top, /\| Project tests \(`test`\) \| passed \| exit 0 \| 1\.5 s \|/);
+  assert.match(top, /\| `custom-lint` \| failed \| 2 findings \|/);
+  assert.match(top, /- \*\*Release fails after refund\*\* — no scenario says what happens/);
+  assert.doesNotMatch(top, /s1|Workspace hash|\/Users\//);
+  assert.match(record, /\| test \| — \| pass \| exit 0 \| node check\.mjs \| 1\.5 s \| s1 \|/,
+    "the technical record keeps the command without the machine path");
+  const th = renderVerificationRecord({ language: "th", proof: { ...proof, receipts: [proof.receipts[0]] }, receipts });
+  assert.match(th, /^# ผลการพิสูจน์\n\nผ่านครบทั้ง 1 ด่าน/);
+  assert.match(th, /\| เทสต์ของโปรเจกต์ \(`test`\) \| ผ่าน \|/);
+});
+
 test("an unreadable receipt is listed as unavailable, never as a pass", () => {
   const land = fixture({ receipt: null });
   land.run();

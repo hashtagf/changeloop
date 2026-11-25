@@ -305,7 +305,17 @@ const VERIFICATION_LABELS = Object.freeze({
     receipt: "Receipt SHA-256", unavailable: "unavailable", advisories: "Advisories",
     review: "Review", reviewRecorded: "See Appendix: Review record in proposal.md.",
     reviewNone: "No completed review is recorded for this change.",
-    none: "None.", unknown: "unknown"
+    none: "None.", unknown: "unknown",
+    checks: "Checks", check: "Check", result: "Result", seen: "What it saw",
+    allPassed: (n) => `All ${n} checks passed.`, someFailed: (n, m) => `${n} of ${m} checks did not pass.`,
+    unreadable: (n) => `${n} result(s) could not be read and are not counted as passes.`,
+    reviewed: "An AI review was completed.", notes: "Gaps the reviewer noted (not built; a new change decides them)",
+    technical: "Technical record", statuses: { pass: "passed", fail: "failed", error: "error", inconclusive: "inconclusive" },
+    names: { test: "Project tests", discovery: "Tests discovered", review: "AI review",
+      "static-analysis": "Code quality checks", accessibility: "Accessibility",
+      "dependency-supply-chain": "Dependency safety", browser: "Browser check",
+      "security-static": "Security scan", mutation: "Test strength (mutation)", coverage: "Test coverage",
+      visual: "Visual check", acceptance: "User acceptance" }
   },
   th: {
     title: "ผลการพิสูจน์",
@@ -316,7 +326,17 @@ const VERIFICATION_LABELS = Object.freeze({
     receipt: "SHA-256 ของ receipt", unavailable: "unavailable", advisories: "Advisory",
     review: "Review", reviewRecorded: "ดู ภาคผนวก: ผล review ใน proposal.md",
     reviewNone: "change นี้ไม่มีผล review ที่เสร็จแล้ว",
-    none: "ไม่มี", unknown: "ไม่ทราบ"
+    none: "ไม่มี", unknown: "ไม่ทราบ",
+    checks: "ผลแต่ละด่าน", check: "ด่านตรวจ", result: "ผล", seen: "สิ่งที่ตรวจเห็น",
+    allPassed: (n) => `ผ่านครบทั้ง ${n} ด่าน`, someFailed: (n, m) => `ไม่ผ่าน ${n} จาก ${m} ด่าน`,
+    unreadable: (n) => `อ่านผลไม่ได้ ${n} ด่าน (ไม่นับว่าผ่าน)`,
+    reviewed: "มี AI review ตรวจแล้ว", notes: "สิ่งที่ reviewer ฝากไว้ (ยังไม่ได้ทำ ต้องตัดสินใจใน change ใหม่)",
+    technical: "บันทึกทางเทคนิค", statuses: { pass: "ผ่าน", fail: "ไม่ผ่าน", error: "ผิดพลาด", inconclusive: "ยังสรุปไม่ได้" },
+    names: { test: "เทสต์ของโปรเจกต์", discovery: "จำนวนเทสต์ที่พบ", review: "AI review",
+      "static-analysis": "ตรวจคุณภาพโค้ด", accessibility: "การเข้าถึง",
+      "dependency-supply-chain": "ความปลอดภัยของ dependency", browser: "ตรวจบนเบราว์เซอร์",
+      "security-static": "สแกนความปลอดภัย", mutation: "ความแข็งแรงของเทสต์ (mutation)",
+      coverage: "ความครอบคลุมของเทสต์", visual: "ตรวจหน้าตา", acceptance: "ผู้ใช้ยอมรับ" }
   }
 });
 
@@ -324,7 +344,14 @@ const VERIFICATION_LABELS = Object.freeze({
 // paths, receipt locations, and anything naming the local proof store.
 function publicValue(value) {
   const value_ = text(value);
-  return /\.foundation\//.test(value_) ? "" : value_;
+  // An absolute path names the machine, not the check: keep its file name.
+  return /\.foundation\//.test(value_) ? ""
+    : value_.replace(/(?:\/(?:Users|home|private|var|tmp|opt)\/)[^\s'"]*\/([^\s/'"]+)/g, "$1");
+}
+
+function clip(value, max = 160) {
+  const value_ = text(value).replace(/\s+/g, " ");
+  return value_.length > max ? `${value_.slice(0, max - 1)}…` : value_;
 }
 
 function durationText(ms) {
@@ -364,13 +391,30 @@ export function renderVerificationRecord(/** @type {{ language?: string, proof?:
         .map(text).filter(Boolean).join(": ")
       : item))
     .filter(Boolean);
-  const reviewed = (Array.isArray(reviewAttempts) ? reviewAttempts : [])
-    .some((attempt) => isObject(attempt) && attempt.status === "completed");
+  const completed = (Array.isArray(reviewAttempts) ? reviewAttempts : [])
+    .filter((attempt) => isObject(attempt) && attempt.status === "completed");
+  const reviewed = completed.length > 0;
+  // The top is for whoever reads the outcome: one line, then each check by
+  // its plain name. Hashes, claim ids and commands follow as the record.
+  const named = rows.map(([provider, , status, observed, , duration]) => [
+    l.names[provider] ? `${l.names[provider]} (\`${provider}\`)` : `\`${provider}\``,
+    l.statuses[status] || status, clip(observed), duration]);
+  const failed = rows.filter((row) => !row[2].startsWith("pass") && row[2] !== l.unavailable).length;
+  const unreadable = rows.filter((row) => row[2] === l.unavailable).length;
+  const headline = [
+    rows.length ? (failed ? l.someFailed(failed, rows.length) : l.allPassed(rows.length)) : "",
+    unreadable ? l.unreadable(unreadable) : "",
+    reviewed ? l.reviewed : ""].filter(Boolean).join(" · ");
+  const gaps = (completed.at(-1)?.specGaps || []).filter(isObject)
+    .map((gap) => `- **${text(gap.scenario)}** — ${text(gap.reason)}`).filter((line) => line !== "- **** — ");
   return [
-    `# ${l.title}`, l.intro, summary,
-    `## ${l.providers}`, providers,
+    `# ${l.title}`, headline,
+    ...(named.length ? [`## ${l.checks}`, table([l.check, l.result, l.seen, l.duration], named)] : []),
+    ...(gaps.length ? [`## ${l.notes}`, gaps.join("\n")] : []),
     `## ${l.advisories}`, advisories.length ? advisories.map((item) => `- ${item}`).join("\n") : l.none,
-    `## ${l.review}`, reviewed ? l.reviewRecorded : l.reviewNone
+    `## ${l.review}`, reviewed ? l.reviewRecorded : l.reviewNone,
+    `## ${l.technical}`, l.intro, summary,
+    `### ${l.providers}`, providers
   ].join("\n\n");
 }
 

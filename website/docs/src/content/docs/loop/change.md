@@ -167,7 +167,11 @@ decisions to ratify, and how to verify. A Technical details divider then holds
 what developers and reviewers need: files and repositories, the technical
 analysis, capabilities, acceptance, and the definition of done, then
 appendices. A missing summary, or code names in the summary or why, is a
-design warning; the design reads from current state
+design warning; so is each completeness question the requirements make
+relevant but no scenario, non-goal, or assumption answers (a missing or
+wrong-typed input, a later step failing after an earlier one succeeded,
+corrupt stored data, a size limit, the order of ties, an unsupported
+request); the design reads from current state
 and architecture through contracts, work-type sections, decisions, quality,
 rollout, and tests. One `EDIT` names any unknown, derived, out-of-order, empty,
 or `TODO`/`TBD` section. `change start --template` prints the accepted headings
@@ -301,9 +305,11 @@ for what approvers see; `.claude/harness/lifecycle/change.md` lists all 29 examp
 At archive, Land appends the volatile records to the archived `proposal.md`
 only: Appendix: Review record, Appendix: Compliance change record (only when
 `openspec/config.yaml` sets `compliance: change-record`), and Appendix: Rollout
-gates. It also writes `verification.md` beside the archived proposal: the proof
-run Land accepted and one row per receipt with its claims, result, command, and
-SHA-256, so the evidence summary travels with Git.
+gates. It also writes `verification.md` beside the archived proposal. It opens
+with one outcome line, each check by its plain name with its result, and the
+gaps the reviewer noted but nobody built; a Technical record then keeps the
+proof run Land accepted and one row per receipt with its claims, command (no
+machine paths), and SHA-256, so the evidence summary travels with Git.
 
 After compilation, `openspec/changes/<id>/` is the source of truth. The draft is
 temporary and `.foundation/` is derived runtime state.

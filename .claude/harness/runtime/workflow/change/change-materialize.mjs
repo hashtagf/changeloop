@@ -13,6 +13,7 @@ import { designBlueprintWarnings, verifyCountAdvisories } from "../validation/de
 import { docsOnlyDraft, withNewPaths } from "../validation/dev-document.mjs";
 import { readerGuideWarnings } from "../validation/reader-guide.mjs";
 import { plainLanguageWarnings } from "../validation/plain-language.mjs";
+import { completenessWarnings } from "../validation/completeness-checklist.mjs";
 import {
   draftNeedsDesign, materializeDraftSpecs, renderDraftDesign, renderDraftProposal,
   renderDraftTasks, repositoryDraftGuidance, reviewRouteLabel
@@ -72,11 +73,13 @@ export function createChangeMaterializer(ctx) {
     const verify = verifyCountAdvisories(draft.tasks)
       .map((warning) => `  verify advisory: ${warning}\n`).join("") +
       unknownTaskFieldWarnings(source).map((warning) => `  task warning: ${warning}\n`).join("");
-    // A business reader opens every proposal, rapid ones included.
+    // Every lane: a business reader opens every proposal, and the open
+    // completeness questions are cheapest to answer before Build.
+    const always = completenessWarnings(draft);
     if (schema !== "foundation-standard")
-      return plainLanguageWarnings(draft, (key) => draft?.prose?.proposal?.[key] || "")
+      return [...plainLanguageWarnings(draft, (key) => draft?.prose?.proposal?.[key] || ""), ...always]
         .map((warning) => `  design warning: ${warning}\n`).join("") + verify;
-    return [...designBlueprintWarnings(draft), ...readerGuideWarnings(draft)]
+    return [...designBlueprintWarnings(draft), ...readerGuideWarnings(draft), ...always]
       .map((warning) => `  design warning: ${warning}\n`).join("") + verify;
   }
 
