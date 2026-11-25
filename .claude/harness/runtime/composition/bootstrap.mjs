@@ -55,7 +55,7 @@ function walkRoot({ start, pinned, fail, warn }) {
 
 function canonicalPath(path) {
   const absolute = resolve(path);
-  return existsSync(absolute) ? realpathSync(absolute) : absolute;
+  return existsSync(absolute) ? realpathSync.native(absolute) : absolute;
 }
 
 // Standalone onboarding (`cloop quality …` before `cloop init`): the CLI pins

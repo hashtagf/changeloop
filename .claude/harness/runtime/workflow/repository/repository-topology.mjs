@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import {
   isolatedRepositoryState, worktreeOwnedByTarget
@@ -269,17 +269,43 @@ export function createRepositoryTopology({
     return value.repositories.map((entry) => typeof entry === "string" ? entry : entry.id).sort();
   }
 
-  function selected(id, state = loadRuntime(id), reportFailure = fail, options = {}) {
+  // One command selects the same repositories many times (every provider
+  // read does), each pass re-reading the catalog and re-checking every
+  // sandbox binding. The rows are kept per runtime-state object (a changed
+  // state file is a new object) while the catalog, submodule, and selection
+  // files keep their identity. Only the throwing default reporter is cached,
+  // so a collecting reporter still sees every issue; callers get copies.
+  const selections = new WeakMap();
+  const fileIdentity = (path) => {
+    try {
+      const stats = statSync(path, { bigint: true });
+      return `${stats.ino}:${stats.size}:${stats.mtimeNs}:${stats.ctimeNs}`;
+    } catch { return "missing"; }
+  };
+
+  function selected(id, state = loadRuntime(id, { shared: true }), reportFailure = fail, options = {}) {
+    const changeDir = options.changeDir || activeChangePath(id);
+    const cacheable = reportFailure === fail && state && typeof state === "object";
+    const key = cacheable ? [id, JSON.stringify(options),
+      fileIdentity(join(root, "openspec", "repositories.yaml")),
+      fileIdentity(join(root, ".gitmodules")),
+      fileIdentity(join(changeDir, "repositories.yaml"))].join("\0") : null;
+    const cached = cacheable ? selections.get(state)?.get(key) : null;
+    if (cached) return structuredClone(cached);
     const catalogValue = catalog();
-    const selection = changeSelectionAt(id,
-      options.changeDir || activeChangePath(id), reportFailure);
-    return selectRepositories({
+    const selection = changeSelectionAt(id, changeDir, reportFailure);
+    const rows = selectRepositories({
       id, catalogValue, selection, state, options, root, canonicalPath, gitHead,
       reportFailure
     });
+    if (cacheable) {
+      if (!selections.has(state)) selections.set(state, new Map());
+      selections.get(state).set(key, structuredClone(rows));
+    }
+    return rows;
   }
 
-  function byId(id, repositoryId, state = loadRuntime(id)) {
+  function byId(id, repositoryId, state = loadRuntime(id, { shared: true })) {
     const repository = selected(id, state).find((item) => item.id === repositoryId);
     if (!repository) fail(`change '${id}' does not select repository '${repositoryId}'`);
     return repository;

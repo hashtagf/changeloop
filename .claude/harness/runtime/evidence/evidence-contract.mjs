@@ -398,7 +398,7 @@ export function createEvidenceContract({
     const repositoryId = config.repository || "root";
     const repository = selectedRepositories(id).find((row) => row.id === repositoryId);
     const workspace = canonicalPath(repository?.workspacePath || repository?.path || ROOT);
-    const declared = declaredSurfaceMatcher(id, loadRuntime(id), repositoryId);
+    const declared = declaredSurfaceMatcher(id, loadRuntime(id, { shared: true }), repositoryId);
     const uncovered = uncoveredCommandWorkspaceFiles({
       config, workspace, repositoryId, declared,
       // Index membership only: reused while the repository index is

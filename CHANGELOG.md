@@ -62,6 +62,11 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
 
 ### Fixed
 
+- A multi-repository `advance` no longer re-reads the repository catalog and
+  re-checks every sandbox binding for each provider it inspects. Selections
+  are reused while the state, catalog, and selection files are unchanged, and
+  a confirmed sandbox ownership while its Git pointer is unchanged. A Build
+  `advance` on the ten-repository lane fell from 17 s to 3 s locally.
 - Land beside another change's landed, uncommitted bytes no longer sends the
   later change back to sync and prove again: bytes another change landed and
   the specs an archive writes are not unknown target work. A user's own

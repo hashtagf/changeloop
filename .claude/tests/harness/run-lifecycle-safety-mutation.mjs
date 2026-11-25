@@ -108,8 +108,8 @@ const CASES = [
     sourcePath: ".claude/harness/runtime/core/repository-binding.mjs",
     expectedKiller: "CASE-REPOSITORY-WORKTREE-OWNERSHIP",
     detector: TOPOLOGY_DETECTOR,
-    before: "return Boolean(worktreeOwner && targetOwner && worktreeOwner === targetOwner);",
-    after: "return Boolean(worktreeOwner && targetOwner && worktreeOwner !== targetOwner);"
+    before: "const owned = Boolean(worktreeOwner && targetOwner && worktreeOwner === targetOwner);",
+    after: "const owned = Boolean(worktreeOwner && targetOwner && worktreeOwner !== targetOwner);"
   },
   {
     id: "MUT-PROOF-INCOMPLETE-REPOSITORY-BINDING-ALLOWED",

@@ -110,8 +110,51 @@ test("worktree ownership is bound to the selected Git repository", () => {
     assert.equal(worktreeOwnedByTarget(linked, first), true);
     assert.equal(worktreeOwnedByTarget(linked, second), false);
     assert.equal(worktreeOwnedByTarget(join(root, "missing"), first), false);
+    // A confirmed ownership is reused only while the worktree pointer stands:
+    // repointing the worktree at another repository is seen at once.
+    assert.equal(worktreeOwnedByTarget(linked, first), true);
+    execFileSync("git", ["worktree", "remove", "--force", linked], { cwd: first });
+    execFileSync("git", ["worktree", "add", "--detach", linked, "HEAD"], { cwd: second });
+    assert.equal(worktreeOwnedByTarget(linked, first), false);
+    assert.equal(worktreeOwnedByTarget(linked, second), true);
   } finally {
     rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// Selection runs many times per command; a ten-repository advance spent most
+// of its time redoing it. Reuse must never hide a change in its inputs.
+test("repeated selection is reused until the state, catalog, or selection changes", () => {
+  const f = fixture();
+  try {
+    const first = f.topology.selected("change", f.state);
+    first[0].id = "mutated by a caller";
+    assert.equal(f.topology.selected("change", f.state)[0].id, "root",
+      "callers get their own copy");
+    writeFileSync(join(f.activeChange, "repositories.yaml"), JSON.stringify({
+      version: 1, repositories: [{ id: "root", mode: "read" }]
+    }));
+    assert.equal(f.topology.selected("change", f.state)[0].mode, "read",
+      "a rewritten selection is read again");
+    const target = { changeDir: f.targetChange, useTargetPaths: true };
+    assert.equal(f.topology.selected("change", f.state, f.fail, target)[1].mode, "write");
+    writeFileSync(join(f.root, "openspec", "repositories.yaml"), JSON.stringify({
+      version: 1, repositories: [{ id: "child", type: "git", path: "child", mode: "read" }]
+    }));
+    writeFileSync(join(f.targetChange, "repositories.yaml"), JSON.stringify({
+      version: 1, repositories: [{ id: "root", mode: "write" }, { id: "child", dependsOn: ["root"] }]
+    }));
+    assert.equal(f.topology.selected("change", f.state, f.fail, target)[1].mode, "read",
+      "a rewritten catalog is read again");
+    const other = { ...f.state, workspace: { mode: "worktree", path: join(f.root, "elsewhere") } };
+    assert.equal(f.topology.selected("change", other)[0].workspacePath, join(f.root, "elsewhere"),
+      "another state object is selected afresh");
+    const issues = [];
+    f.topology.selected("change", f.state, (message) => issues.push(message));
+    f.topology.selected("change", f.state, (message) => issues.push(message));
+    assert.deepEqual(issues, [], "a collecting reporter is never served from the cache");
+  } finally {
+    rmSync(f.root, { recursive: true, force: true });
   }
 });
 
