@@ -132,7 +132,10 @@ test("lifecycle oracle rejects amendment and paging mutants", () => {
     ["CASE_VALIDATION_ATOMIC", "backend/server.mjs", "integer(value.ttlMs, 1, 3600000)", "integer(value.ttlMs, 1, 86400000)"],
     ["CASE_RELEASE_IDEMPOTENT", "backend/server.mjs", "previous.origQuantity !== value.quantity", "previous.quantity !== value.quantity"],
     ["CASE_RELEASE_PARTIAL", "backend/server.mjs", "[value.quantity, tenant, order.sku]", "[0, tenant, order.sku]"],
-    ["CASE_RELEASE_CONCURRENT", "backend/server.mjs", "AND quantity>?\"", "AND ?>0\""],
+    // CASE_RELEASE_CONCURRENT's mutant (dropping the SQL guard) is caught only
+    // when two releases interleave; the reference also checks in JavaScript, so
+    // on a host that serializes the burst it escapes. A race cannot be a
+    // deterministic calibration: the oracle case still runs on every delivery.
     ["CASE_RELEASE_REJECTS", "backend/server.mjs", "if (order.status !== 'reserved') fail(409, 'NOT_RESERVED');", ""],
     ["CASE_B_PAGING_BACKEND", "backend/server.mjs", "(? IS NULL OR sku > ?)", "(? IS NULL OR sku >= ?)"],
     ["CASE_B_PAGING_BACKEND", "backend/server.mjs", "substr(sku, 1, ?) = ?", "sku LIKE ? || '%' AND ? IS NOT NULL"],
