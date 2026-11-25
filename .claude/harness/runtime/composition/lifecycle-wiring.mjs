@@ -362,7 +362,7 @@ export function composeLifecycleRuntimes({
     approvalPackageLink, archive, authorityNext, authorityPreflight, authorityStatusValue,
     blockWithDecision, canonicalChangedSurface, changePath, changedSurfaceResolvable,
     cleanupAppliedSandbox, cleanupChangeLeases, cleanupRepositorySandboxes, commandPhaseRecorder,
-    copyPath, deliveredAiAttempts, die, discardAgentLease, externalEvidenceRecovery, fileDigest,
+    copyPath, deliveredAiAttempts, die, directoryHash, discardAgentLease, externalEvidenceRecovery, fileDigest,
     git, gitBuffer, gitHead, guardedRunAuthorityReviewer, initializeEvidence, inspectSnapshots,
     landCheck, landGrantRuntime, landPlanValue, loadRuntime, markBlocked, metricsValue, now,
     packetRuntime, parkAgentLease, pathIdentity, pathMode, prepareBuildSandbox,

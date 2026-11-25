@@ -8,7 +8,8 @@ import {
 import { dirname, join } from "node:path";
 import { transitionLifecycleState } from "../../core/lifecycle-reducer.mjs";
 import {
-  landedTargetPaths, otherLandedOutput, replayLandedEdit, resolutionKeepsLanded
+  landedTargetPaths, otherLandedOutput, replayLandedEdit, resolutionKeepsLanded,
+  targetUncommittedPaths, uncommittedCarryPlan
 } from "../transaction/target-edits.mjs";
 import { captureCopyBase, copyBaseBytes, copyEditCarried, fileSource } from "../transaction/copy-base.mjs";
 import { repositoryDeliveryTransactions } from "../delivery/repository-delivery-saga.mjs";
@@ -245,6 +246,58 @@ export function createSandboxSync(ctx) {
       else delete workspace.sandboxPreexisting;
     }
     return added;
+  }
+
+  // Several sessions work in one target; whoever lands keeps the others'
+  // uncommitted work, so its proof must run on the target Land will leave.
+  // Every uncommitted target file the change has not edited is copied into the
+  // sandbox and recorded (`targetUncommitted`): like landed bytes, it is not
+  // this change's contribution while its bytes are unchanged. A path the
+  // change edited keeps the merge route; a file no longer uncommitted in the
+  // target is put back to the target's bytes. Deletions are not carried.
+  function carryTargetUncommitted(id, state) {
+    const workspace = state.workspace;
+    if (workspace?.mode !== "worktree" || workspace.applied || !workspace.path) return [];
+    const dirty = targetUncommittedPaths(gitBuffer, root);
+    if (!dirty) return [];
+    const kind = (path) => {
+      const stats = lstatSync(path, { throwIfNoEntry: false });
+      return !stats ? "missing" : stats.isFile() ? "file" : "other";
+    };
+    const base = workspace.baseHead || "HEAD";
+    const prior = workspace.targetUncommitted || {};
+    const plan = uncommittedCarryPlan({
+      root, sandboxPath: workspace.path, dirty, prior,
+      landed: { ...(workspace.landedCarried || {}), ...(workspace.landedCarriedFrom || {}) },
+      kind, identity: fileDigest, bytes: (path) => readFileSync(path),
+      baseBytes: (path) => {
+        const shown = gitBuffer(["show", `${base}:${path}`], root);
+        return shown.status === 0 ? shown.stdout : null;
+      }
+    });
+    const carried = { ...plan.kept };
+    for (const path of plan.carry) {
+      const sandboxFile = join(workspace.path, path);
+      mkdirSync(dirname(sandboxFile), { recursive: true });
+      cpSync(join(root, path), sandboxFile, VERBATIM_COPY);
+      carried[path] = { digest: fileDigest(sandboxFile) };
+    }
+    // No longer uncommitted: the sandbox takes the target's bytes again.
+    for (const path of plan.restore) {
+      const sandboxFile = join(workspace.path, path);
+      if (kind(join(root, path)) === "missing") rmSync(sandboxFile, { force: true });
+      else cpSync(join(root, path), sandboxFile, VERBATIM_COPY);
+    }
+    const added = [...plan.carry, ...plan.restore];
+    const preexisting = { ...(workspace.sandboxPreexisting || {}) };
+    for (const path of Object.keys(prior)) if (!carried[path]) delete preexisting[path];
+    for (const [path, row] of Object.entries(carried)) preexisting[path] = row.digest;
+    if (Object.keys(carried).length) workspace.targetUncommitted = carried;
+    else delete workspace.targetUncommitted;
+    if (Object.keys(preexisting).length) workspace.sandboxPreexisting = preexisting;
+    else delete workspace.sandboxPreexisting;
+    const dropped = Object.keys(prior).filter((path) => !carried[path]);
+    return [...new Set([...added, ...dropped])].sort();
   }
 
   function landedCarryLine(added) {
@@ -540,6 +593,7 @@ export function createSandboxSync(ctx) {
       })();
     const targetCarried = movement?.conflicts?.length ? [] : carryTargetEdits(state);
     const landedCarried = movement?.conflicts?.length ? [] : carryLandedOutput(id, state);
+    const uncommittedCarried = movement?.conflicts?.length ? [] : carryTargetUncommitted(id, state);
     clearSnapshotCache(id);
     const invalidated = !priorHash || priorHash !== relevantHash(id) ||
       fingerprints.priorContract !== fingerprints.nextContract ||
@@ -547,7 +601,7 @@ export function createSandboxSync(ctx) {
       conflicts.length > 0 || (movement && !movement.rebased) ||
       Boolean(movement?.conflicts?.length) ||
       landedReplay.merged.length > 0 || landedReplay.conflicts.length > 0 ||
-      targetCarried.length > 0 || landedCarried.length > 0;
+      targetCarried.length > 0 || landedCarried.length > 0 || uncommittedCarried.length > 0;
     if (preserveAmendment && directoryHash(source) !== acceptedSourceHash)
       fail(`target agreement changed during sandbox sync for '${id}'; both packets are preserved, retry sync to resolve the current target`);
     updateSandboxSyncState(id, state, source, fingerprints, invalidated,
@@ -570,7 +624,8 @@ export function createSandboxSync(ctx) {
     const harnessRewrites = [
       ...(landedReplay.merged.length ? ["landed-replay"] : []),
       ...(targetCarried.length ? ["target-carry"] : []),
-      ...(landedCarried.length ? ["landed-carry"] : [])
+      ...(landedCarried.length ? ["landed-carry"] : []),
+      ...(uncommittedCarried.length ? ["uncommitted-carry"] : [])
     ];
     const cleanRewrite = harnessRewrites.length && !movement?.rebased && !conflicts.length &&
       !movement?.conflicts?.length && !landedReplay.conflicts.length;
@@ -595,6 +650,9 @@ export function createSandboxSync(ctx) {
     for (const row of landedCarried)
       console.log(`CARRIED LANDED ${row.path}: copied ${row.landedBy}'s landed, uncommitted ` +
         "bytes into the sandbox; they are not this change's contribution.");
+    for (const path of uncommittedCarried)
+      console.log(`CARRIED UNCOMMITTED ${path}: the sandbox now matches the target checkout's ` +
+        "uncommitted bytes, so proof sees what Land leaves; they are not this change's contribution.");
     return {
       status: conflicts.length || movement?.conflicts?.length || landedReplay.conflicts.length
         ? "CONFLICT" : "SYNCED",
@@ -602,7 +660,8 @@ export function createSandboxSync(ctx) {
       movement,
       ...(landedReplay.merged.length ? { landedReplayed: landedReplay.merged } : {}),
       ...(targetCarried.length ? { targetCarried } : {}),
-      ...(landedCarried.length ? { landedCarried } : {})
+      ...(landedCarried.length ? { landedCarried } : {}),
+      ...(uncommittedCarried.length ? { uncommittedCarried } : {})
     };
   }
 

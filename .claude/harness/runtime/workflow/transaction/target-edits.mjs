@@ -418,10 +418,69 @@ export function landedTargetPaths({ root, paths, landed, identity }) {
 // not this change's contribution: apply, replay, and the diff identity exclude
 // them. A carried path this change has since edited counts again.
 export function carriedLandedExcludes(workspace, identity) {
-  const carried = workspace?.landedCarried || {};
+  // Uncommitted target files the sync carried in are another session's work
+  // on the same terms as landed bytes.
+  const carried = { ...(workspace?.targetUncommitted || {}), ...(workspace?.landedCarried || {}) };
   return Object.keys(carried).sort().filter((path) => {
     try { return identity(join(workspace.path, path)) === carried[path]?.digest; } catch { return false; }
   }).map((path) => `:(exclude,literal)${path}`);
+}
+
+// Harness state and change packets are never another session's product work.
+const UNCOMMITTED_SKIPPED = [".foundation/", "openspec/changes/"];
+
+// Files the target checkout holds uncommitted (modified or untracked, never
+// ignored) that still exist: what Land leaves in the target beside this
+// change, so its proof must see them. Null when Git cannot report status.
+export function targetUncommittedPaths(gitBuffer, root) {
+  const listed = gitBuffer(["status", "--porcelain=v1", "-z", "--untracked-files=all",
+    "--no-renames"], root);
+  if (listed.status !== 0) return null;
+  return String(listed.stdout).split("\0").filter((entry) => /^[ MTADRCU?]{2} ./.test(entry))
+    .map((entry) => ({ code: entry.slice(0, 2), path: entry.slice(3) }))
+    .filter(({ code, path }) => path && !path.endsWith("/") && !code.includes("D") &&
+      !UNCOMMITTED_SKIPPED.some((prefix) => path.startsWith(prefix)))
+    .map(({ path }) => path).sort();
+}
+
+// The one rule the sync's carry and Land's check share, so Land never asks
+// for a sync that would copy nothing. Only regular files are carried; a path
+// the change edited (its sandbox copy is neither the base nor the recorded
+// carry) keeps the merge route; another change's landed bytes keep theirs.
+// `carry`: uncommitted target files the sandbox does not yet hold. `restore`:
+// carried files the target no longer holds uncommitted, still at the carried
+// bytes, whose target bytes differ. `kept`: carried files already current.
+// `kind(path)` is "missing", "file" or "other"; `identity` digests a regular
+// file; `baseBytes(rel)` is the sandbox base's bytes or null.
+export function uncommittedCarryPlan({ root, sandboxPath, dirty, prior = {}, landed = {},
+  kind, identity, bytes, baseBytes }) {
+  const plan = { carry: [], restore: [], kept: {} };
+  const dirtySet = new Set(dirty);
+  for (const path of [...new Set([...dirty, ...Object.keys(prior)])].sort()) {
+    if (Object.hasOwn(landed, path)) continue;
+    const sandboxFile = join(sandboxPath, path);
+    const targetFile = join(root, path);
+    const sandboxKind = kind(sandboxFile);
+    const targetKind = kind(targetFile);
+    const sandbox = sandboxKind === "file" ? identity(sandboxFile) : null;
+    const ours = Boolean(prior[path]) && sandbox !== null && prior[path].digest === sandbox;
+    if (!dirtySet.has(path)) {
+      if (ours && (targetKind !== "file" || identity(targetFile) !== sandbox))
+        plan.restore.push(path);
+      continue;
+    }
+    if (targetKind !== "file") continue;
+    if (!ours) {
+      const base = baseBytes(path);
+      const untouched = base === null ? sandboxKind === "missing"
+        : sandboxKind === "file" && base.equals(bytes(sandboxFile));
+      if (!untouched) continue;
+    }
+    const target = identity(targetFile);
+    if (sandbox === target) plan.kept[path] = { digest: target };
+    else plan.carry.push(path);
+  }
+  return plan;
 }
 
 // Replays an earlier change's landed edit into the sandbox copy of a path the

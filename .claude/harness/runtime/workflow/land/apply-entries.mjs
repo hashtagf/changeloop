@@ -3,7 +3,10 @@ import { join, resolve } from "node:path";
 import { deliveryTreeEntries } from "../transaction/delivery-integrity.mjs";
 import { gatheringRoot, nestedRepositoryAncestor } from "../sandbox/sandbox-copy.mjs";
 import { rejectedPaths } from "../sandbox/sandbox-replay.mjs";
-import { replayCarriesLanded, targetEditCarried } from "../transaction/target-edits.mjs";
+import {
+  replayCarriesLanded, targetEditCarried, targetEditSyncStop, targetUncommittedPaths,
+  uncommittedCarryPlan
+} from "../transaction/target-edits.mjs";
 import {
   baseBlob, restoreAuthorizedTargetPaths, restoreRegenerableConflicts,
   stopForTargetConflict
@@ -17,6 +20,7 @@ export function gitApplyInputsOperation(context, id, sandboxPath,
   { regenerated = false, inspect = false } = {}) {
   const state = context.loadRuntime(id);
   const names = context.sandboxDiffNames(id, sandboxPath, state);
+  stopForUncarriedTarget(context, id, state, sandboxPath);
   const restored = new Set(restoreAuthorizedTargetPaths(context, state, names, { inspect }));
   const pending = names.filter((path) => !(inspect && restored.has(path))).filter((path) =>
     context.pathIdentity(join(context.root, path)) !==
@@ -98,6 +102,33 @@ export function gitApplyInputsOperation(context, id, sandboxPath,
     stopForTargetConflict(context, id, state, clobbered,
       "apply would overwrite uncommitted target edits", { inspect });
   return names;
+}
+
+// Proof must have run on the target Land leaves. Whatever the sync would
+// still carry or put back (one shared rule, so this stop always leads to a
+// sync that changes the sandbox) sends Land back through the sync and proof
+// before anything is applied: an uncommitted file that appeared or changed
+// after the last sync, or a carried file the target has since reverted.
+function stopForUncarriedTarget(context, id, state, sandboxPath) {
+  const workspace = state.workspace;
+  if (workspace?.mode !== "worktree" || workspace.applied || !context.blockWithDecision ||
+      !context.gitBuffer || !context.lstat) return;
+  const dirty = targetUncommittedPaths(context.gitBuffer, context.root);
+  if (!dirty) return;
+  const kind = (path) => {
+    const stats = context.lstat(path, { throwIfNoEntry: false });
+    return !stats ? "missing" : stats.isFile?.() ? "file" : "other";
+  };
+  const plan = uncommittedCarryPlan({
+    root: context.root, sandboxPath, dirty, prior: workspace.targetUncommitted || {},
+    landed: { ...(workspace.landedCarried || {}), ...(workspace.landedCarriedFrom || {}) },
+    kind, identity: context.pathIdentity, bytes: context.readFile,
+    baseBytes: (path) => baseBlob(context, state, path)
+  });
+  const stale = [...plan.carry, ...plan.restore].sort();
+  if (!stale.length) return;
+  const stop = targetEditSyncStop({ changeId: id, paths: stale });
+  context.blockWithDecision(id, stop.code, stop.decision);
 }
 
 export function copyApplyCodePaths(context, id, state, sandboxPath) {

@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "amended-wiring-carried-evidence-wiring-execution-yaml-target-san",
+      "requirementKey": "amended-wiring-carried",
+      "scenario": "wiring หลัง amend",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "amended-wiring-carried-evidence-wiring",
+      "requirementKey": "amended-wiring-carried",
+      "scenario": "การแก้ข้อตกลงจริงยังถูกกู้คืน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "amended-wiring-carried-evidence-wiring-2",
+      "requirementKey": "amended-wiring-carried",
+      "scenario": "target ถูกแก้จากที่อื่นก่อน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "amended-wiring-carried-evidence-wiring-3",
+      "requirementKey": "amended-wiring-carried",
+      "scenario": "change ที่ไม่ได้ amend",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/user-decisions.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

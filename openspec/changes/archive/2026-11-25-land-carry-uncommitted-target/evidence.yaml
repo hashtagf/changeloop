@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "carry-uncommitted-change-land",
+      "requirementKey": "carry-uncommitted",
+      "scenario": "ไฟล์ใหม่ที่ถูก import ถูกนำมาด้วย",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "carry-uncommitted-land",
+      "requirementKey": "carry-uncommitted",
+      "scenario": "ไฟล์ค้างที่เกิดหลังพิสูจน์",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "carry-uncommitted-land-apply",
+      "requirementKey": "carry-uncommitted",
+      "scenario": "ไฟล์ที่นำเข้าไม่ใช่งานของ change",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "carry-uncommitted-sandbox-sync",
+      "requirementKey": "carry-uncommitted",
+      "scenario": "งานของ change ไม่ถูกเขียนทับ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/landed-carry-sync.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

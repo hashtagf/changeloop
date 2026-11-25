@@ -1,10 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, mkdirSync, readdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { agreementDriftError, agreementIdentity, agreementRestoredNotice, assertSpecApproval,
-  currentWaivers, repairWhitespaceDrift, restoreDriftedAgreement, REVIEW_DISPATCH_TIMEOUT_MS }
+  carryWiringIntoAmendment, currentWaivers, preserveSpecApprovalAcross, repairWhitespaceDrift, restoreDriftedAgreement, REVIEW_DISPATCH_TIMEOUT_MS }
   from "../runtime/core/user-decisions.mjs";
 import { createAdvanceRuntime } from "../runtime/workflow/advance/advance-runtime.mjs";
 import { advanceFailureAction } from "../runtime/workflow/advance/advance-envelope.mjs";
@@ -226,4 +227,105 @@ test("a restore names the restored files and the saved copy", (t) => {
   // Whitespace-only differences are repaired in place and never restored.
   write(workspace, { "proposal.md": "# Greeting  \n", "design.md": "## Overview\n", "tasks.md": "- [ ] 1.1 Do\n" });
   assert.equal(repairWhitespaceDrift(root, workspace, "demo"), true);
+});
+
+// An amended change in Build: the target packet is the pre-amendment text, the
+// isolated packet and its harness snapshot carry the amendment, and consent
+// binds the amended packet. Evidence wiring then writes execution.yaml.
+function amendedBuild(t, { amended = true } = {}) {
+  const root = mkdtempSync(join(tmpdir(), "spec-amended-wiring-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const workspace = join(root, "workspace");
+  const target = join(root, "openspec/changes/demo");
+  const isolated = join(workspace, "openspec/changes/demo");
+  for (const [packet, proposal] of [[target, "Greet"], [isolated, amended ? "Greet and wave" : "Greet"]]) {
+    mkdirSync(packet, { recursive: true });
+    writeFileSync(join(packet, "proposal.md"), proposal);
+    writeFileSync(join(packet, "tasks.md"), "- [ ] T001 Build it [paths:src/a.ts]\n");
+  }
+  const snapshotPath = ".foundation/agreement-amended/demo/1";
+  if (amended) cpSync(isolated, join(root, snapshotPath), { recursive: true });
+  const directoryHash = (dir) => {
+    const hash = createHash("sha256");
+    for (const name of readdirSync(dir).sort()) hash.update(name).update(readFileSync(join(dir, name)));
+    return hash.digest("hex");
+  };
+  const changePath = (id) => join(root, "openspec/changes", id);
+  let stored = { status: "building", contractRevision: amended ? 1 : 0,
+    workspace: { path: workspace, changeSourceHash: directoryHash(target) },
+    amendments: amended ? [{ revision: 1, snapshot: snapshotPath, identity: agreementIdentity(workspace, "demo") }] : [],
+    specApproval: { required: true, identity: agreementIdentity(workspace, "demo"),
+      revision: amended ? 1 : 0, decisionRef: "user" } };
+  let saves = 0;
+  const deps = { loadRuntime: () => structuredClone(stored),
+    saveRuntime: (state) => { saves += 1; stored = structuredClone(state); },
+    directoryHash, changePath, now: () => "2026-01-01T00:00:00.000Z" };
+  const execution = JSON.stringify({ version: 1, providers: { lint: { command: ["npm", "run", "lint"] } }, services: {} });
+  const wire = () => {
+    writeFileSync(join(target, "execution.yaml"), execution);
+    writeFileSync(join(isolated, "execution.yaml"), execution);
+  };
+  return { root, workspace, target, isolated, snapshot: join(root, snapshotPath), deps, wire,
+    directoryHash, state: () => stored, saves: () => saves };
+}
+
+const quietly = (fn) => {
+  const original = console.error;
+  console.error = () => {};
+  try { return fn(); } finally { console.error = original; drainSignals(); }
+};
+
+test("wiring after an amendment keeps consent and the written execution.yaml", (t) => {
+  // Before the fix the restore deleted the harness's own wiring and consent
+  // no longer matched: advance asked for approval on every run.
+  const bug = amendedBuild(t);
+  preserveSpecApprovalAcross(bug.root, "demo", bug.deps, bug.wire, "evidence-wiring");
+  assert.throws(() => quietly(() => assertSpecApproval(bug.root, "demo", bug.state())),
+    { code: "SPEC_APPROVAL_REQUIRED" });
+  assert.equal(existsSync(join(bug.isolated, "execution.yaml")), false);
+
+  const run = amendedBuild(t);
+  preserveSpecApprovalAcross(run.root, "demo", run.deps,
+    () => carryWiringIntoAmendment(run.root, "demo", run.deps, run.wire), "evidence-wiring");
+  drainSignals();
+  assert.doesNotThrow(() => assertSpecApproval(run.root, "demo", run.state()));
+  assert.deepEqual(drainSignals(), [], "no drift restore");
+  assert.equal(existsSync(join(run.isolated, "execution.yaml")), true);
+  assert.equal(readFileSync(join(run.snapshot, "execution.yaml"), "utf8"),
+    readFileSync(join(run.isolated, "execution.yaml"), "utf8"));
+  assert.equal(run.state().amendments[0].identity, agreementIdentity(run.workspace, "demo"));
+  assert.equal(run.state().workspace.changeSourceHash, run.directoryHash(run.target),
+    "the harness's own target write is not a competing edit");
+});
+
+test("an agreement edit outside an amendment is still restored after wiring", (t) => {
+  const run = amendedBuild(t);
+  const identity = run.state().amendments[0].identity;
+  writeFileSync(join(run.isolated, "proposal.md"), "Delete the greeting");
+  carryWiringIntoAmendment(run.root, "demo", run.deps, run.wire);
+  assert.equal(readFileSync(join(run.snapshot, "proposal.md"), "utf8"), "Greet and wave");
+  assert.equal(existsSync(join(run.snapshot, "execution.yaml")), false, "snapshot left as it was");
+  assert.equal(run.state().amendments[0].identity, identity);
+  quietly(() => assertSpecApproval(run.root, "demo", run.state()));
+  assert.equal(readFileSync(join(run.isolated, "proposal.md"), "utf8"), "Greet and wave");
+});
+
+test("a target edited elsewhere before wiring stays a user decision", (t) => {
+  const run = amendedBuild(t);
+  const recorded = run.state().workspace.changeSourceHash;
+  writeFileSync(join(run.target, "proposal.md"), "Greet loudly");
+  carryWiringIntoAmendment(run.root, "demo", run.deps, run.wire);
+  assert.equal(run.state().workspace.changeSourceHash, recorded);
+  assert.notEqual(recorded, run.directoryHash(run.target));
+});
+
+test("wiring a change without an amendment leaves state untouched", (t) => {
+  const run = amendedBuild(t, { amended: false });
+  const before = structuredClone(run.state());
+  let wired = 0;
+  assert.equal(carryWiringIntoAmendment(run.root, "demo", run.deps, () => { wired += 1; return "ok"; }), "ok");
+  assert.equal(wired, 1);
+  assert.equal(run.saves(), 0);
+  assert.deepEqual(run.state(), before);
+  assert.equal(existsSync(join(run.root, ".foundation/agreement-amended")), false);
 });

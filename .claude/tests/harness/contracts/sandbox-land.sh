@@ -260,6 +260,23 @@ assert_eq "conflicting target content is preserved" "user-conflict" \
   "$(tr -d '\n' < app.txt)"
 printf 'before\n' > app.txt
 printf 'unrelated during build\n' > NOTES.md
+# Land proves on the target it leaves: an uncommitted target file the change
+# never touched is refused until the sync carries it into the sandbox and
+# proof runs again. The carried copy is not this change's contribution.
+if node .claude/harness/foundation.mjs sandbox apply sandbox-copy >/dev/null 2>&1; then
+  fail "an uncarried target edit sends Land back to sync"
+else
+  pass "an uncarried target edit sends Land back to sync"
+fi
+node .claude/harness/foundation.mjs sandbox sync sandbox-copy >/dev/null
+assert_file_contains "the sync carries the unrelated target edit into the sandbox" \
+  .foundation/sandboxes/sandbox-copy/NOTES.md "unrelated during build"
+node .claude/harness/foundation.mjs receipt sandbox-copy test pass \
+  --observed "fixture test evidence" --source harness-test --artifact app.txt >/dev/null
+node .claude/harness/foundation.mjs receipt sandbox-copy discovery pass \
+  --discovered 2 --minimum 1 --observed "2 tests discovered" \
+  --source harness-test --artifact app.txt >/dev/null
+node .claude/harness/foundation.mjs prove sandbox-copy >/dev/null
 if FOUNDATION_TEST_MODE=1 FOUNDATION_TEST_FAIL_APPLY_AFTER=1 \
   node .claude/harness/foundation.mjs sandbox apply sandbox-copy >/dev/null 2>&1; then
   fail "injected partial apply fails"

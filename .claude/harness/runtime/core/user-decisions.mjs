@@ -371,6 +371,48 @@ export function amendedPacketSource(root, state) {
   return existsSync(path) ? path : null;
 }
 
+// Evidence wiring writes `execution.yaml` to the target packet and mirrors it
+// into the isolated one. For an amended change the latest amendment snapshot
+// is the agreed text, and it predates that write: the drift restore then
+// deleted the harness's own wiring, consent no longer matched, and every
+// `advance` asked for approval again; the target write also read as a
+// competing edit to the amended packet. Wiring is harness-owned, so it joins
+// the snapshot, and the source hash moves only when that write was the sole
+// target change. Any other edit to either packet keeps its existing route.
+export function carryWiringIntoAmendment(root, id, {
+  loadRuntime, saveRuntime, directoryHash, changePath
+}, rewrite) {
+  const before = loadRuntime(id);
+  const workspace = before.workspace?.path;
+  const isolated = workspace && join(workspace, "openspec", "changes", id);
+  const snapshot = amendedPacketSource(root, before);
+  if (!snapshot || !isolated || !existsSync(isolated)) return rewrite();
+  const sourceCurrent = Boolean(before.workspace.changeSourceHash) &&
+    before.workspace.changeSourceHash === directoryHash(changePath(id));
+  const result = rewrite();
+  const state = loadRuntime(id);
+  const latest = latestAmendment(state);
+  const mirror = join(isolated, "execution.yaml");
+  const target = join(snapshot, "execution.yaml");
+  const prior = existsSync(target) ? readFileSync(target) : null;
+  if (existsSync(mirror)) cpSync(mirror, target);
+  else rmSync(target, { force: true });
+  const identity = packetIdentity(snapshot);
+  let changed = false;
+  if (latest && identity === agreementIdentity(workspace, id)) {
+    changed = latest.identity !== identity;
+    latest.identity = identity;
+  } else if (prior === null) rmSync(target, { force: true });
+  else writeFileSync(target, prior);
+  if (sourceCurrent && state.workspace) {
+    const sourceHash = directoryHash(changePath(id));
+    changed ||= state.workspace.changeSourceHash !== sourceHash;
+    state.workspace.changeSourceHash = sourceHash;
+  }
+  if (changed) saveRuntime(state);
+  return result;
+}
+
 // Bookkeeping moved `contractRevision` (a grounding reopen, a sandbox sync, a
 // validate that re-locked grounding) while the packet bytes the user approved
 // are unchanged. Consent, lanes, revision-bound waivers, and the compiled draft

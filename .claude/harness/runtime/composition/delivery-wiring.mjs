@@ -3,7 +3,7 @@
 // lessons, the project feature map, and pyramid readiness. Wiring only.
 import { advanceLandOperation, openSpecCliStatus } from "../workflow/land/land-runtime.mjs";
 import { assertExecutionPreparationReady, ensureProjectOpenSpec, executionPreparationValue } from "../core/tool-preparation.mjs";
-import { assertSpecApproval, preserveSpecApprovalAcross } from "../core/user-decisions.mjs";
+import { assertSpecApproval, carryWiringIntoAmendment, preserveSpecApprovalAcross } from "../core/user-decisions.mjs";
 import { changeWorkTypes, taskChangeIssue } from "../workflow/change/task-change.mjs";
 import { createAbandonRuntime } from "../workflow/change/abandon-runtime.mjs";
 import { createAdvanceRuntime, hasValidLandGrant, prepareAdvanceBuild, runAdvanceProof } from "../workflow/advance/advance-runtime.mjs";
@@ -32,7 +32,7 @@ export function composeDeliveryRuntimes({
   approvalPackageLink, archive, authorityNext, authorityPreflight, authorityStatusValue,
   blockWithDecision, canonicalChangedSurface, changePath, changedSurfaceResolvable,
   cleanupAppliedSandbox, cleanupChangeLeases, cleanupRepositorySandboxes, commandPhaseRecorder,
-  copyPath, deliveredAiAttempts, die, discardAgentLease, externalEvidenceRecovery, fileDigest,
+  copyPath, deliveredAiAttempts, die, directoryHash, discardAgentLease, externalEvidenceRecovery, fileDigest,
   git, gitBuffer, gitHead, guardedRunAuthorityReviewer, initializeEvidence, inspectSnapshots,
   landCheck, landGrantRuntime, landPlanValue, loadRuntime, markBlocked, metricsValue, now,
   packetRuntime, parkAgentLease, pathIdentity, pathMode, prepareBuildSandbox,
@@ -199,9 +199,12 @@ export function composeDeliveryRuntimes({
     wireEvidence: (id) => commandPhaseRecorder.measureAsync("advance.evidence-wiring",
       () => runAdvanceQuietly(async () => {
         // Wiring-only: an approval valid before the write stays valid; the
-        // agreement's behavior did not change.
+        // agreement's behavior did not change. An amended packet takes the
+        // wiring into its snapshot so the drift check keeps it.
         preserveSpecApprovalAcross(ROOT, id, { loadRuntime, saveRuntime, now },
-          () => initializeEvidence(id, { write: true }), "evidence-wiring");
+          () => carryWiringIntoAmendment(ROOT, id,
+            { loadRuntime, saveRuntime, directoryHash, changePath },
+            () => initializeEvidence(id, { write: true })), "evidence-wiring");
         if (loadRuntime(id).status === "building") prepareBuildSandbox(id);
         else await sandboxRuntime.synchronizeAgreement(id);
       })),
