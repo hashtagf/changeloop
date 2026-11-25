@@ -99,6 +99,7 @@ base-move rebind
 archive telemetry
 target drift
 feedback isolation
+benchmark workload oracles
 harness coverage ratchet'
 
 # The longest suites of the default tier (about a minute each on a loaded
@@ -300,6 +301,7 @@ telemetry record event|node --test "$ROOT/.claude/harness/tests/telemetry-record
 host execution contract|node --test "$ROOT/.claude/harness/tests/host-execution-contract.test.mjs"
 openspec benchmark matrix|node --test "$ROOT/.claude/tests/bench/tests/openspec-native-matrix.test.mjs"
 ten-repository platform lanes|node --test "$ROOT/.claude/tests/bench/tests/openspec-native-platform-workloads.test.mjs"
+benchmark workload oracles|node --test "$ROOT/.claude/tests/bench/tests/openspec-native-workloads.test.mjs"
 agent eval tooling|node --test "$HERE/evals/evals.test.mjs"
 agent evals|node "$HERE/evals/run-evals.mjs"
 !openspec native benchmark|node --test --test-concurrency=1 "$ROOT/.claude/tests/bench/tests/openspec-native-scorecard.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-runner.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-lab.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-lifecycle.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-aggregate.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-release-report.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-cost.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-time-gate.test.mjs" "$ROOT/.claude/tests/bench/tests/openspec-native-pi-host.test.mjs"

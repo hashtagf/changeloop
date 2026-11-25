@@ -37,7 +37,8 @@ test("a test run that reported its results and kept running is stopped with its 
     notice: (code, message) => notices.push({ code, message })
   });
   assert.equal(result.status, 0, "every test passed, so the verdict is a pass");
-  assert.ok(result.lingeredMs >= 500);
+  // A timer may fire a millisecond or two early against Date.now on CI.
+  assert.ok(result.lingeredMs !== null && result.lingeredMs >= 450, `lingeredMs ${result.lingeredMs}`);
   assert.ok(Date.now() - started < 15000, "not left to run until a host timeout");
   assert.deepEqual(notices.map((row) => row.code), ["exec-lingering"]);
   assert.match(notices[0].message, /server, timer, or connection.*--test-force-exit/);
