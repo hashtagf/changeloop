@@ -3,6 +3,7 @@ import { renderInvestigationContext } from "./investigation-coverage.mjs";
 import { lightweightDraft } from "./design-blueprints.mjs";
 import { isSemanticVersion } from "./draft-version.mjs";
 import { hasAuthoredProposalProse } from "./outline-contract.mjs";
+import { plainLanguageWarnings } from "./plain-language.mjs";
 
 // Reader guide: the parts of a compiled packet written for a human reviewer
 // rather than for the harness. Every field is optional and renders only when
@@ -94,8 +95,8 @@ export function readerGuideWarnings(draft) {
   // 'why' already gives the reader the lead; a summary would repeat it.
   // A v5 draft authors these sections as proposal.md prose instead of fields.
   const prose = (key) => hasAuthoredProposalProse(draft, key);
-  if (!light && !text(draft.summary) && !text(draft.why) && !prose("summary") && !prose("why"))
-    warnings.push("add a plain-language 'why' or 'summary' (1-3 sentences) so a reviewer understands the change quickly");
+  warnings.push(...plainLanguageWarnings(draft, (key) => draft?.prose?.proposal?.[key] || "",
+    { lead: !light }));
   if (!light && (!Array.isArray(draft.userStories) || !draft.userStories.length) && !prose("userStories"))
     warnings.push("add prioritized 'userStories' (P1-P3) that name who benefits and link requirement keys");
   if (!light && (!Array.isArray(draft.successCriteria) || !draft.successCriteria.length) &&

@@ -160,9 +160,14 @@ folder that `change start <folder>` accepts like a JSON draft:
 outline, in outline order, in English or Thai. The harness writes the derived
 sections itself (Change header, Capabilities, Acceptance traceability,
 Definition of done, Work type, File map, Test map) and merges them with your
-prose, kept byte for byte, in outline order. The proposal reads from why,
-user stories, success criteria, and scope through impact and risk, decisions to
-ratify, and how to verify, then appendices; the design reads from current state
+prose, kept byte for byte, in outline order. The proposal has two halves. The
+top is for whoever decides, in business language: summary, why, user stories,
+success criteria, scope, impact and risk (with one plain risk sentence),
+decisions to ratify, and how to verify. A Technical details divider then holds
+what developers and reviewers need: files and repositories, the technical
+analysis, capabilities, acceptance, and the definition of done, then
+appendices. A missing summary, or code names in the summary or why, is a
+design warning; the design reads from current state
 and architecture through contracts, work-type sections, decisions, quality,
 rollout, and tests. One `EDIT` names any unknown, derived, out-of-order, empty,
 or `TODO`/`TBD` section. `change start --template` prints the accepted headings

@@ -117,8 +117,12 @@ cloop change start .foundation/drafts/<id>   # folder ของ draft v5
 เรียงตามลำดับ outline เป็นภาษาอังกฤษหรือไทยก็ได้ Harness เขียน section ที่ derive
 เอง (Change header, Capabilities, Acceptance traceability, Definition of done,
 Work type, File map, Test map) แล้วรวมกับเนื้อความของคุณซึ่งคงไว้ทุก byte ตามลำดับ
-outline Proposal เรียงจาก why, user story, success criteria และ scope ไปจนถึง
-impact และ risk, decision ที่รอ ratify และวิธี verify แล้วตามด้วย appendix ส่วน design
+outline Proposal แบ่งเป็นสองส่วน ส่วนบนสำหรับคนตัดสินใจ เขียนเป็นภาษาธุรกิจ ได้แก่ สรุป
+เหตุผล user story, success criteria, ขอบเขต, ผลกระทบและความเสี่ยง (มีประโยคความเสี่ยงแบบภาษาคน
+หนึ่งประโยค), decision ที่รอ ratify และวิธีตรวจด้วยตัวเอง จากนั้นหัวข้อรายละเอียดทางเทคนิคเก็บสิ่งที่
+นักพัฒนาและผู้รีวิวต้องใช้ ได้แก่ ไฟล์และ repository, การวิเคราะห์ทางเทคนิค, capability, เกณฑ์ผ่าน
+และนิยามของงานเสร็จ แล้วตามด้วย appendix ถ้าไม่มีสรุป หรือสรุปและเหตุผลมีชื่อโค้ด จะได้
+design warning ส่วน design
 เรียงจาก current state และ architecture ผ่าน contract, section ตามชนิดงาน, decision,
 quality, rollout ไปจนถึง test `EDIT` เดียวระบุ section ที่ outline ไม่รู้จัก, ที่ harness
 derive เอง, ที่ผิดลำดับ, ที่ว่าง หรือที่มี `TODO`/`TBD` คำสั่ง `change start --template`

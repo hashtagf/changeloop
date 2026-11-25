@@ -48,8 +48,9 @@ test("outline documents are exposed", () => {
 
 test("proposal sections follow the reader order with appendices after Definition of done", () => {
   assert.deepEqual(keys("proposal", fullDraft, { workTypes: ["api"], archived: true }), [
-    "header", "summary", "why", "userStories", "successCriteria", "scope", "capabilities", "impact",
-    "decisionsToRatify", "decisionLog", "communication", "demo", "acceptance", "definitionOfDone",
+    "header", "summary", "why", "userStories", "successCriteria", "scope", "impact",
+    "decisionsToRatify", "decisionLog", "communication", "demo", "technical", "capabilities", "acceptance",
+    "definitionOfDone",
     "investigation", "discovery", "derived", "provenance", "amendments", "reviewRecord", "complianceRecord"
   ]);
   const rows = outlineSections("proposal", fullDraft, { archived: true });

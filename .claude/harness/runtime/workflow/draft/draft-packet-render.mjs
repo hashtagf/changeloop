@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { renderSpecHeading } from "./semantic-draft.mjs";
 import { agentDecision, authoredDecisionReason } from "./semantic-draft-decisions.mjs";
 import { isSemanticVersion } from "../validation/draft-version.mjs";
+import { plainRisk } from "../validation/plain-language.mjs";
 import { assembleReviewPolicy, collectReviewSignals } from "../../evidence/review-policy.mjs";
 import { classifyReviewRisk } from "../../evidence/review-routing.mjs";
 import { reviewModelClass } from "../../evidence/review-diff.mjs";
@@ -163,6 +164,9 @@ function proposalImpact(draft, state, rapid) {
   const triggers = (draft.securityTriggers || []).filter(Boolean);
   const fixes = (draft.fixes || []).length ? [`- **Fixes:** ${draft.fixes.join(", ")}`] : [];
   return [
+    // One plain sentence for a business reader before the labels resolve keeps in sync.
+    ...[plainRisk(riskLabel(draft, "impact") || state.impact || "medium",
+      riskLabel(draft, "coupling") || state.coupling || "coupled", draft.language)].filter(Boolean).map((line) => `${line}\n`),
     `- **Impact:** ${riskLabel(draft, "impact") || state.impact || "medium"}`,
     `- **Coupling:** ${riskLabel(draft, "coupling") || state.coupling || "coupled"}`,
     // A rapid change states only what departs from its defaults (code
@@ -236,7 +240,13 @@ export function renderDraftProposal(draft, state, context = {}) {
     why: () => String(draft.why || "").trim(),
     userStories: () => renderUserStories(draft, language),
     successCriteria: () => renderSuccessCriteria(draft),
-    scope: () => sectionBody(renderScope(draft, context)),
+    scope: () => sectionBody(renderScope(draft, { ...context, part: "business", language })),
+    technical: () => [language === "th"
+      ? "ส่วนนี้สำหรับนักพัฒนาและผู้รีวิว: ไฟล์ที่แตะ, การวิเคราะห์ทางเทคนิค, เกณฑ์ผ่าน และนิยามของงานเสร็จ"
+      : "For developers and reviewers: files touched, technical analysis, acceptance, and done criteria.",
+    (() => { const files = sectionBody(renderScope(draft, { ...context, part: "technical", language }));
+      return files ? `### ${language === "th" ? "ไฟล์และ repository" : "Files and repositories"}\n\n${files}` : ""; })()]
+      .filter(Boolean).join("\n\n"),
     capabilities: () => capabilityTable(draft),
     impact: () => proposalImpact(draft, state, rapid),
     decisionsToRatify: () => [sectionBody(renderProposedDecisions(draft.decisions, language)),
@@ -264,8 +274,9 @@ export function renderDraftProposal(draft, state, context = {}) {
   const after = {
     scope: () => [
       (draft.constraints || []).length ? `## Constraints\n\n${draftBullets(draft.constraints)}` : "",
-      (draft.nonGoals || []).length ? `## Non-goals\n\n${draftBullets(draft.nonGoals)}` : "",
-      ...(compact ? compactPlan() : [])],
+      (draft.nonGoals || []).length ? `## Non-goals\n\n${draftBullets(draft.nonGoals)}` : ""],
+    // The rapid compact dev document is technical: it follows the divider.
+    technical: () => compact ? compactPlan() : [],
     impact: () => [rapid ? renderRapidDecisions(draft.decisions) : ""]
   };
   const sections = [];

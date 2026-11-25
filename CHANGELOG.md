@@ -20,6 +20,14 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
 
 ### Added
 
+- Proposals read in two halves. The top is for whoever decides, in business
+  language: summary, why, stories, success criteria, scope, impact with one
+  plain risk sentence, decisions, and how to verify. A "Technical details"
+  divider then holds files and repositories, the technical analysis,
+  capabilities, acceptance, and the definition of done. Scope labels follow
+  the draft's language (Thai included). A missing summary, or code names in
+  the summary or why, is a design warning on every lane; the draft template
+  and the change skill ask for PRD-style `[Data]`/`[Assumption]` evidence.
 - Two ten-repository benchmark lanes: `platform-tenant-contract` (a contract
   change across seven repositories, three untouched) and
   `platform-refund-slice` (four writable, six read-only). The composite
@@ -62,6 +70,15 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
 
 ### Fixed
 
+- A scenario must be provable where it is placed. `change start` refuses a
+  draft whose scenario needs another repository for real ("wired to the real
+  payments") while only a task in one repository covers it, and warns when a
+  scenario only names another repository or describes a real database, HTTP
+  service, queue, browser, restart, or concurrency. Build keeps a task open
+  when its repository's changed files import another repository by a relative
+  path, and the reviewer treats a fake standing in for the collaborator a
+  scenario names as unproven. Found in a paid ten-repository run where such a
+  scenario cost a review round and the repair imported `../payments`.
 - Land of a multi-repository change whose control root is not a Git
   repository (a root that gathers checkouts) no longer stops with "cannot
   inspect Git state" when the change also writes a root file: such a root has

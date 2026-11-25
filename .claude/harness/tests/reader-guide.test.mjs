@@ -121,7 +121,8 @@ test("proposal leads with summary, stories, criteria, and a capability index", (
   });
   const proposal = renderDraftProposal(compiled, { intent: compiled.intent });
   const order = ["## Summary", "## Why", "## User stories", "## Success criteria",
-    "## Scope", "## Capabilities", "## Impact and risk", "## Acceptance traceability", "## Definition of done",
+    "## Scope", "## Impact and risk", "## Technical details", "## Capabilities", "## Acceptance traceability",
+    "## Definition of done",
     "## Appendix: Discovery coverage"].map((heading) =>
     proposal.indexOf(heading));
   assert.ok(order.every((index, position) => index > (order[position - 1] ?? -1)), proposal);
@@ -399,7 +400,11 @@ test("a proposal lists the selected repository, not 820 unselected names", (t) =
     ["billing"], "billing");
   assert.doesNotMatch(proposal, /unselected-\d+/);
   assert.match(proposal, /^- \*\*Repositories in scope:\*\* `billing`$/m);
-  assert.match(proposal, /^- \*\*Out of scope:\*\* edits outside `src\/money\.js`; all other declared repositories; the authored Non-goals below$/m);
+  // The business Scope keeps the Non-goals pointer; file and repository
+  // boundaries move under Technical details.
+  assert.match(proposal, /^- \*\*Out of scope:\*\* the authored Non-goals below$/m);
+  assert.match(proposal, /^- \*\*Out of scope:\*\* edits outside `src\/money\.js`; all other declared repositories$/m);
+  assert.ok(proposal.indexOf("## Technical details") < proposal.indexOf("edits outside"));
   assert.match(proposal, /^- No rounding modes$/m);
 });
 
@@ -497,7 +502,8 @@ test("resolve keeps the lane and review line current and leaves an older layout 
 
 test("a typical rapid proposal stays compact and design.md has no plan, impact, or duplicate tree", () => {
   const proposal = renderDraftProposal(rapidCompiled(), RAPID, { reviewLabel: "not required (x)" });
-  assert.ok(proposal.split("\n").length <= 40, `${proposal.split("\n").length} lines`);
+  // The Technical details divider and the plain risk sentence add a few lines.
+  assert.ok(proposal.split("\n").length <= 50, `${proposal.split("\n").length} lines`);
   for (const heading of ["## Plan", "## What changes", "## Folder tree", "## Non-goals"])
     assert.ok(!proposal.includes(heading), heading);
   const design = renderDraftDesign(compile());
@@ -563,9 +569,9 @@ const STANDARD = { schema: "foundation-standard", id: "kanban-board", createdAt:
 test("a full proposal renders every section in outline order with appendices after Definition of done", () => {
   const proposal = renderDraftProposal(fullDraft(), STANDARD, { reviewLabel: "risk-tiered AI review (medium tier, fast model)" });
   const order = ["## Summary", "## Why", "## User stories", "## Success criteria", "## Scope",
-    "## Constraints", "## Non-goals", "## Capabilities", "## Impact and risk",
+    "## Constraints", "## Non-goals", "## Impact and risk",
     "## Decisions to ratify and open questions", "## Decision log", "## Communication, support, and release note",
-    "## How to verify", "## Acceptance traceability", "## Definition of done",
+    "## How to verify", "## Technical details", "## Capabilities", "## Acceptance traceability", "## Definition of done",
     "## Appendix: Investigation", "## Appendix: Discovery coverage"].map((heading) => proposal.indexOf(heading));
   assert.ok(order.every((index, position) => index > (order[position - 1] ?? -1)), proposal);
   const done = proposal.indexOf("## Definition of done");

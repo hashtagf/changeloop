@@ -115,8 +115,6 @@ const PROPOSAL = [
   row(P, "userStories", "User stories", "User story", ["userStories"], (draft) => has(draft, "userStories")),
   row(P, "successCriteria", "Success criteria", "เกณฑ์ความสำเร็จ", ["successCriteria", "successMeasure"], always),
   row(P, "scope", "Scope", "ขอบเขต", ["surfaces", "nonGoals", "constraints"], always),
-  row(P, "capabilities", "Capabilities", "Capability ที่เปลี่ยน", ["capabilityOverviews"],
-    (draft) => capabilityCount(draft) > 1, { owner: "derived" }),
   row(P, "impact", "Impact and risk", "ผลกระทบและความเสี่ยง",
     ["impact", "coupling", "riskSignals", "securityTriggers", "consumers"], always),
   row(P, "decisionsToRatify", "Decisions to ratify and open questions", "สิ่งที่ต้องตัดสินใจและคำถามที่ยังเปิด",
@@ -126,6 +124,11 @@ const PROPOSAL = [
   row(P, "communication", "Communication, support, and release note", "การสื่อสาร การดูแลหลังปล่อย และ release note",
     ["communication", "releaseNote"], (draft) => has(draft, "communication", "releaseNote")),
   row(P, "demo", "How to verify", "วิธีตรวจด้วยตัวเอง", ["demo"], (draft) => has(draft, "demo")),
+  // Everything above is for a business reader; below this divider is for the
+  // developer and reviewer (capabilities, files, acceptance, done criteria).
+  row(P, "technical", "Technical details", "รายละเอียดทางเทคนิค", [], always, { owner: "derived" }),
+  row(P, "capabilities", "Capabilities", "Capability ที่เปลี่ยน", ["capabilityOverviews"],
+    (draft) => capabilityCount(draft) > 1, { owner: "derived" }),
   row(P, "acceptance", "Acceptance traceability", "เกณฑ์ผ่าน", ["requirements", "tasks", "claims"], always,
     { owner: "derived" }),
   row(P, "productHandoff", "Handoff coverage (PRD and UX/UI)", "ความครอบคลุมเอกสาร PRD และ UX/UI", ["productHandoff"],

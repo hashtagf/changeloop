@@ -43,13 +43,14 @@ Make the agreement readable without chat history:
   or an implementation step; mark `kind` `success`, `failure`, or `boundary`.
 - Tasks name outcomes and affected paths, link requirement coverage, and name
   verification that can detect a violation; a command run alone is not acceptance.
+- Summary and `why` address whoever decides, without code names. Place each
+  scenario where it is provable.
 - `openQuestions` block approval until answered. Record each settled answer as
   a resolved `discovery.decisions` row with `decidedBy`. Resolve discoverable
   facts yourself; never invent facts.
 
-Cross-component changes need a boundary/dependency diagram; changed state,
-async, or workflow behavior needs transitions or sequence, including
-failure/recovery paths.
+Cross-component changes need a boundary diagram; changed state, async, or
+workflow behavior needs a sequence with failure paths.
 Declare `workType` (omitted, it is inferred from `paths`). The harness derives
 the folder tree, plan, file and test maps, failure matrix, `why` from `intent`,
 and `test` evidence unless security triggers apply, noting each under "Derived
@@ -75,7 +76,7 @@ heading, empty section, `TODO`, or `TBD`. v4 JSON stays valid. Its discovery con
 - `integrations` with documentation source/version, linked requirements, and
   security/resilience/compatibility concerns;
 - `repositories` only for multi-repository work, plus each task's
-  `repository`, whose root its paths and verify are relative to;
+  `repository` (its paths and verify are relative to it);
   external operations only for permission-bound work; Grounding v3 only for
   non-derived material decisions.
 
@@ -96,10 +97,9 @@ not only the reported reproduction; declare `input-domain` when behavior uses ca
 `cloop change start .foundation/drafts/<id>` (folder or `.json`)
 inspects and starts in one call when clean; otherwise follow the returned intake action.
 Never inspect managed `.claude/harness/**` merely to reconstruct this schema.
-The compiler owns classification, the intake responsibilities in
-[semantic-intake.md](semantic-intake.md), stable requirement/claim/task IDs,
-cross-links, conditional artifacts, versioned defaults, structural validation,
-and rollback; the first Build `advance` owns sandbox creation and setup.
+The compiler owns classification, [semantic-intake.md](semantic-intake.md)
+duties, stable requirement/claim/task IDs, cross-links, conditional artifacts,
+defaults, validation, and rollback; the first Build `advance` owns the sandbox.
 Repair only the draft fields it reports, as one batch, then retry; fix
 warned task fields (`depends` → `dependsOn`). Never create
 parallel IDs by hand.
@@ -110,8 +110,8 @@ at `DONE`. It preserves completed tasks and prose, invalidates only the
 affected contract, and rolls back on failure. An amendment to a v4+ agreement must include discovery coverage
 for added and revised requirements. `updateTasks` may extend claim coverage,
 never replace an outcome; a completed task's verify changes only with
-`reopen: true`. Task-only amendments (`updateTasks` verify, `removeTasks` for
-unfinished tasks) need no intake (`change amend --template`). `reviseRequirements` replaces a requirement row in
+`reopen: true`. Task-only amendments (`updateTasks`, `removeTasks`) need no
+intake. `reviseRequirements` replaces a requirement row in
 its same capability and operation and needs an open task; `removeRequirements`
 needs a `migration` and must not orphan a task. Before Build starts, revise the
 whole agreement with `change revise <change> <draft.json>`, which likewise

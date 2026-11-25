@@ -237,8 +237,9 @@ test("a rapid proposal carries the compact dev document and keeps the rapid lane
     claims: [], tasks: [{ id: "T001", outcome: "Sum helper", paths: ["src/sum.js"], verify: "npm test" }]
   };
   const proposal = renderDraftProposal(value, { schema: "foundation-rapid" });
-  const order = ["## Summary", "## Scope", "## User flow", "## Failure matrix",
-    "## Impact and risk", "## Definition of done"].map((heading) => proposal.indexOf(heading));
+  // Business first; the compact dev document follows the Technical details divider.
+  const order = ["## Summary", "## Scope", "## Impact and risk", "## Technical details",
+    "## User flow", "## Failure matrix", "## Definition of done"].map((heading) => proposal.indexOf(heading));
   assert.ok(order.every((index, position) => index > (order[position - 1] ?? -1)), proposal);
   // Plan, What changes, and Folder tree have one home each elsewhere.
   for (const heading of ["## Plan", "## What changes", "## Folder tree"])

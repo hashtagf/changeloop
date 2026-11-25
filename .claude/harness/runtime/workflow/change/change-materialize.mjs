@@ -12,6 +12,7 @@ import { handoffRecordFor, writeHandoffRecord } from "../validation/handoff-bind
 import { designBlueprintWarnings, verifyCountAdvisories } from "../validation/design-blueprints.mjs";
 import { docsOnlyDraft, withNewPaths } from "../validation/dev-document.mjs";
 import { readerGuideWarnings } from "../validation/reader-guide.mjs";
+import { plainLanguageWarnings } from "../validation/plain-language.mjs";
 import {
   draftNeedsDesign, materializeDraftSpecs, renderDraftDesign, renderDraftProposal,
   renderDraftTasks, repositoryDraftGuidance, reviewRouteLabel
@@ -71,7 +72,10 @@ export function createChangeMaterializer(ctx) {
     const verify = verifyCountAdvisories(draft.tasks)
       .map((warning) => `  verify advisory: ${warning}\n`).join("") +
       unknownTaskFieldWarnings(source).map((warning) => `  task warning: ${warning}\n`).join("");
-    if (schema !== "foundation-standard") return verify;
+    // A business reader opens every proposal, rapid ones included.
+    if (schema !== "foundation-standard")
+      return plainLanguageWarnings(draft, (key) => draft?.prose?.proposal?.[key] || "")
+        .map((warning) => `  design warning: ${warning}\n`).join("") + verify;
     return [...designBlueprintWarnings(draft), ...readerGuideWarnings(draft)]
       .map((warning) => `  design warning: ${warning}\n`).join("") + verify;
   }

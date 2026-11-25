@@ -1083,7 +1083,7 @@ test("the start template leads with the pre-allowed file-tool save route to a v5
   const change = template.minimalDraft["change.json"];
   assert.equal(change.version, 5);
   assert.deepEqual(change.workType, ["feature"]);
-  assert.match(template.minimalDraft["proposal.md"], /^## Why\n/);
+  assert.match(template.minimalDraft["proposal.md"], /^## Summary\n[\s\S]*\n## Why\n/);
   assert.match(template.minimalDraftWorkType, /workTypeExamples/);
   // The typed-field reference describes change.json.
   assert.equal(template.version, 5);

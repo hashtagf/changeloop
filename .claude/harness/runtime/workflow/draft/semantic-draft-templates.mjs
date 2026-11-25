@@ -30,7 +30,9 @@ export function minimalDraftFolderTemplate() {
   const { intent, requirements, tasks } = minimalSemanticDraftTemplate();
   return {
     "change.json": { version: 5, language: "en", intent, workType: ["feature"], requirements, tasks },
-    "proposal.md": "## Why\n\nSay in 1-3 plain sentences what changes, who benefits, and why.\n"
+    "proposal.md": "## Summary\n\nIn 1-2 business sentences: what users can do after this change, or which problem stops. " +
+      "No file or function names.\n\n## Why\n\nWho has the problem, how often, and the evidence " +
+      "([Data] observed, [Assumption] guessed).\n"
   };
 }
 
