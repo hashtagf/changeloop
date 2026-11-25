@@ -119,9 +119,14 @@ function stopForUncarriedTarget(context, id, state, sandboxPath) {
     const stats = context.lstat(path, { throwIfNoEntry: false });
     return !stats ? "missing" : stats.isFile?.() ? "file" : "other";
   };
+  // Another change's landed bytes, still exact in the target, are Land output
+  // with their own proof: a change that does not touch them lands beside them
+  // with its proof untouched. Only files of unknown origin need the carry.
+  const landedElsewhere = context.landedBy?.(id, dirty) || {};
   const plan = uncommittedCarryPlan({
     root: context.root, sandboxPath, dirty, prior: workspace.targetUncommitted || {},
-    landed: { ...(workspace.landedCarried || {}), ...(workspace.landedCarriedFrom || {}) },
+    landed: { ...landedElsewhere, ...(workspace.landedCarried || {}),
+      ...(workspace.landedCarriedFrom || {}) },
     kind, identity: context.pathIdentity, bytes: context.readFile,
     baseBytes: (path) => baseBlob(context, state, path)
   });

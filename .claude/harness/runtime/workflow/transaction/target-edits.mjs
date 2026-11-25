@@ -426,8 +426,9 @@ export function carriedLandedExcludes(workspace, identity) {
   }).map((path) => `:(exclude,literal)${path}`);
 }
 
-// Harness state and change packets are never another session's product work.
-const UNCOMMITTED_SKIPPED = [".foundation/", "openspec/changes/"];
+// Harness state, change packets, and the specs an archive writes are never
+// another session's product work, so they never send Land back to re-prove.
+const UNCOMMITTED_SKIPPED = [".foundation/", "openspec/changes/", "openspec/specs/"];
 
 // Files the target checkout holds uncommitted (modified or untracked, never
 // ignored) that still exist: what Land leaves in the target beside this

@@ -368,8 +368,14 @@ test("Land undo refuses without writing when the target moved past Land", (t) =>
   assert.equal(JSON.parse(readFileSync(join(fixture.root, ".foundation", "runtime",
     "edited-probe.json"), "utf8")).status, "archived");
 
-  // A committed Land is Git history, not an uncommitted projection.
+  // A committed Land is Git history, not an uncommitted projection. The
+  // user's later app.txt edit is unknown-origin target work, so the next Land
+  // carries it into its sandbox and proves again before applying.
+  assert.notEqual(landed(fixture, "committed-probe").action, "DONE");
+  reprove(fixture, "committed-probe", "lib.txt");
   assert.equal(landed(fixture, "committed-probe").action, "DONE");
+  assert.equal(readFileSync(join(fixture.root, "app.txt"), "utf8"), later,
+    "the carried user edit is kept, never applied back or overwritten");
   execFileSync("git", ["add", "lib.txt"], { cwd: fixture.root });
   const staged = undo(fixture, "committed-probe", "--decision-ref", "fixture://user-undoes");
   assert.notEqual(staged.status, 0);
