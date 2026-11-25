@@ -60,6 +60,14 @@ Found by timing a Build that lost 4m24s to one exec and ran a 40s check twice:
   meanwhile.
 - Inside a change, `quality run --enforce` no longer reruns the project's
   test lane: Prove's test provider already runs those tests.
+- A settled draft decision recorded as `answer`, `chosen`, or `decision`
+  loads as its `choice` instead of failing `change start` and costing a
+  repair round; an explicit `choice` still wins.
+- A re-review after a review repair keeps the model class its risk tier chose
+  for the first round instead of switching to the strongest model (owner
+  decision). High-risk and pinned medium changes keep the strongest model in
+  every round, and an unsure scenario still escalates. In the notes-api run
+  the re-review took 30s and $0.23 on the strongest model.
 - Prove no longer waits out the two-minute test-discrimination cap when the
   change's tests already failed on the base source: the base run stops at the
   first failing test (spec `✖`, TAP `not ok`, or a `fail N` summary) instead

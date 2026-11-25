@@ -613,7 +613,8 @@ alias), so diversity and separation checks judge that model. The first round of
 a medium-tier review runs the faster `standard` class by default (the reviewer's
 `standardModelId`/`standardModelFamily`, else `models.standard.family` for
 `claude-cli`, at the configured effort), a deliberate speed/depth trade-off. The
-configured model keeps high, every later (delta/closure) round, a medium change
+delta/closure round after a repair keeps the class its tier chose for the first
+round (an unsure scenario still escalates). The configured model keeps high, a medium change
 with any trigger other than `medium-impact-or-coupling`, `review-risk`,
 `declared-medium-risk`, `input-domain`, or `independence-waived-self-review`
 (for example `access-control`, `authorization-or-secrets`, `risk-semantics`,

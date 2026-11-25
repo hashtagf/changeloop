@@ -310,8 +310,9 @@ review on the fast model tier at medium effort (`review.lowRiskModel:
 deliberately runs on a faster standard model (a speed/depth trade-off:
 the reviewer's `standardModelId`, else the `models.standard.family` alias) at the
 configured effort, unless the change carries a security or required-review
-trigger or a declared review, which keep the configured model. High and every
-later round keep the configured model at high effort. A team pins the strong model
+trigger or a declared review, which keep the configured model. High keeps the
+configured model at high effort; a re-review after a repair keeps the first
+round's model class. A team pins the strong model
 for medium or picks another class with `review.modelByTier` (`low` and `medium`
 to `fast|standard|configured`; `high` is not configurable; unknown values fall
 back to the configured model). Every full round receives the agreement's scenario checklist and must

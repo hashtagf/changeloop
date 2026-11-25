@@ -11,6 +11,7 @@ import {
   OUTLINE, derivedSectionKeys, sectionHeading
 } from "../validation/outline-contract.mjs";
 import { groundingFromQuality } from "../validation/quality-fields.mjs";
+import { canonicalDecisionAliases } from "../validation/semantic-intake.mjs";
 import { FOLDER_DRAFT_VERSION } from "../validation/draft-version.mjs";
 
 export const DRAFT_FOLDER_VERSION = FOLDER_DRAFT_VERSION;
@@ -172,5 +173,5 @@ export function loadDraftFolder(dir, { name = dir } = {}) {
     prose[document] = split.prose;
     issues.push(...split.issues);
   }
-  return { draft: draft ? withQualityGrounding({ ...draft, prose }) : null, issues };
+  return { draft: draft ? withQualityGrounding(canonicalDecisionAliases({ ...draft, prose })) : null, issues };
 }

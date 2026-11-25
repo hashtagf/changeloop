@@ -599,3 +599,24 @@ test("change start --consume-draft removes a v5 draft folder after the change is
   assert.ok(existsSync(join(changes, "refund-api")));
   assert.equal(existsSync(join(root, path)), false);
 });
+
+// A paid notes-api run lost a repair round (~20s) because the agent recorded
+// settled decisions as `answer`, not `choice`. The value is the same choice.
+test("a settled decision recorded as answer/chosen/decision loads as its choice", (t) => {
+  const dir = folder({ "change.json": changeJson({ discovery: { decisions: [
+    { key: "spec-approval", question: "Approve the spec?", answer: "Approved in the request",
+      decidedBy: "user", status: "resolved" },
+    { key: "id-format", chosen: "uuid", status: "resolved" },
+    { key: "store", choice: "json file", answer: "ignored" },
+    { key: "open-one", question: "Which cache?", alternatives: ["a", "b"], recommended: "a" }
+  ] } }) });
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const { draft, issues } = loadDraftFolder(dir);
+  assert.deepEqual(issues, []);
+  const rows = draft.discovery.decisions;
+  assert.equal(rows[0].choice, "Approved in the request");
+  assert.equal("answer" in rows[0], false);
+  assert.equal(rows[1].choice, "uuid");
+  assert.equal(rows[2].choice, "json file", "an explicit choice wins");
+  assert.equal(rows[3].choice, undefined, "an open decision stays open");
+});

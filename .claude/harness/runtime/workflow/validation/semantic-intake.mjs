@@ -112,6 +112,27 @@ export function requiredDiscoveryDimensions(source = {}) {
   return unique(required);
 }
 
+// A settled decision's recorded choice is `choice`. Agents also write it as
+// `answer`, `chosen`, or `decision`; the same value is accepted as the choice
+// instead of failing the draft and costing a repair round. An explicit
+// `choice` always wins and non-text values are left for validation.
+const DECISION_CHOICE_ALIASES = Object.freeze(["answer", "chosen", "decision"]);
+
+export function canonicalDecisionAliases(draft) {
+  const decisions = draft?.discovery?.decisions;
+  if (!Array.isArray(decisions)) return draft;
+  let changed = false;
+  const rows = decisions.map((row) => {
+    if (!row || typeof row !== "object" || text(row.choice)) return row;
+    const alias = DECISION_CHOICE_ALIASES.find((field) => typeof row[field] === "string" && text(row[field]));
+    if (!alias) return row;
+    changed = true;
+    const { [alias]: value, ...rest } = row;
+    return { ...rest, choice: value };
+  });
+  return changed ? { ...draft, discovery: { ...draft.discovery, decisions: rows } } : draft;
+}
+
 // Without an explicit status, only a recorded choice settles a decision. A
 // row without a choice (even a bare question) is open, so it reaches the user
 // frontier or names what an open decision still lacks; it never passes as

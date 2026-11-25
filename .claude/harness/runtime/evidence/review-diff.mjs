@@ -129,8 +129,11 @@ export function reviewDepthForTier(tier, deliveredAiCount = 0) {
 // `fastModelId`, else the `models.fast.family` alias, at medium effort),
 // `standard` (`standardModelId`, else `models.standard.family`, at the
 // configured effort), and `configured` (the strongest configured model).
-// Defaults by risk tier: low first round `fast`, medium first round
-// `standard`, high and every later round `configured`. `review.modelByTier`
+// Defaults by risk tier: low `fast`, medium `standard`, high `configured`.
+// A delta/closure round after a repair keeps the class its tier chose for the
+// first round: it reviews only the repair, so the strong model there costs
+// wait and money without a matching gain (owner decision, 2026-11-25). An
+// unsure scenario still escalates to `configured`. `review.modelByTier`
 // maps `low` and `medium` to a class (`high` is never weakened);
 // `review.lowRiskModel: "configured"` is the older low-tier opt-out. A medium
 // change that carries a security or required-review trigger, or a declared
@@ -152,8 +155,8 @@ export const MEDIUM_TIER_SPEED_SAFE_TRIGGERS = Object.freeze([
 export function reviewModelClass(/** @type {{ tier?: any, deliveredAiCount?: number, triggers?: any[], declaredReview?: boolean, settings?: any }} */ {
   tier, deliveredAiCount = 0, triggers = [], declaredReview = false, settings = /** @type {Record<string, any>} */ ({})
 } = {}) {
-  if (!["low", "medium"].includes(tier) || Number(deliveredAiCount) > 0)
-    return "configured";
+  void deliveredAiCount;
+  if (!["low", "medium"].includes(tier)) return "configured";
   let chosen = DEFAULT_REVIEW_MODEL_BY_TIER[tier];
   if (tier === "low" && settings?.lowRiskModel === "configured") chosen = "configured";
   const mapped = settings?.modelByTier;

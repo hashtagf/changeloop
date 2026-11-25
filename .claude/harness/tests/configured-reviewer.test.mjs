@@ -805,12 +805,14 @@ try {
   // Tier -> model class. Tier assignment is untouched; only the class changes.
   const safeMedium = ["medium-impact-or-coupling", "review-risk"];
   assert.equal(reviewModelClass({ tier: "low" }), "fast", "low first round: fast");
-  assert.equal(reviewModelClass({ tier: "low", deliveredAiCount: 1 }), "configured",
-    "a promoted low second round keeps the configured model");
+  assert.equal(reviewModelClass({ tier: "low", deliveredAiCount: 1 }), "fast",
+    "a re-review after repair keeps the first round's class");
   assert.equal(reviewModelClass({ tier: "medium", triggers: safeMedium }), "standard",
     "medium first round: the faster standard class by default");
   assert.equal(reviewModelClass({ tier: "medium", triggers: safeMedium, deliveredAiCount: 1 }),
-    "configured", "a delta/closure round keeps the configured model");
+    "standard", "a delta/closure round keeps the first round's class");
+  assert.equal(reviewModelClass({ tier: "medium", triggers: ["access-control"], deliveredAiCount: 1 }),
+    "configured", "a pinned medium change keeps the strong model in every round");
   assert.equal(reviewModelClass({ tier: "high", triggers: ["authorization-or-secrets"] }),
     "configured", "high: the strong model");
   assert.equal(reviewModelClass({ tier: "high", settings: { modelByTier: { high: "fast" } } }),
