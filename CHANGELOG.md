@@ -62,6 +62,10 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
 
 ### Fixed
 
+- Land of a multi-repository change whose control root is not a Git
+  repository (a root that gathers checkouts) no longer stops with "cannot
+  inspect Git state" when the change also writes a root file: such a root has
+  no HEAD or index to keep unchanged.
 - A multi-repository `advance` no longer re-reads the repository catalog and
   re-checks every sandbox binding for each provider it inspects. Selections
   are reused while the state, catalog, and selection files are unchanged, and

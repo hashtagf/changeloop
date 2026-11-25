@@ -64,6 +64,8 @@ function fixture(repositoryCount = 1, options = {}) {
     path: repository.target,
     dependsOn: index === 0 ? [] : [repositories[index - 1].id]
   }));
+  if (options.root) selected.push({ id: "root", type: "root", mode: "write", path: base,
+    dependsOn: repositories.map((repository) => repository.id) });
   let runtimeState = structuredClone(state);
   const proofPath = join(base, "proof.json");
   writeFileSync(proofPath, JSON.stringify({ proofRunId: "proof-a" }));
@@ -95,8 +97,9 @@ function fixture(repositoryCount = 1, options = {}) {
     stableHash,
     proofPath: () => proofPath,
     now: () => "2026-09-05T00:00:00.000Z",
-    prepareRoot: () => assert.fail("root is not selected"),
-    executeRoot: () => assert.fail("root is not selected"),
+    prepareRoot: options.root?.prepare || (() => assert.fail("root is not selected")),
+    executeRoot: options.root?.execute || (() => assert.fail("root is not selected")),
+    planRoot: options.root?.plan,
     verifyRoot: () => ({ valid: true }),
     cleanupRoot: () => {},
     fail: (message) => { throw new Error(message); },
@@ -142,6 +145,31 @@ test("copy-baseline overwrite guard keeps target edits and lets baseline paths l
   assert.deepEqual(targetOverwrites({ git, files, baseState: copyBaselineState(files, undefined) },
     "/target", null, entries.slice(0, 1)), [{ path: "at-base.txt", untracked: true }],
   "no recorded baseline fails closed");
+});
+
+// A paid ten-repository run proved a change that also wrote a control-root
+// file, then Land refused: the lab's control root gathers checkouts and is no
+// Git repository, so there was no HEAD or index to read.
+test("a control root that is no Git repository lands beside its child repositories", () => {
+  let rootApplied = 0;
+  const f = fixture(1, { root: {
+    plan: () => {},
+    prepare: () => ({ transactionId: "root-tx" }),
+    execute: () => {
+      rootApplied += 1;
+      f.update((state) => { state.workspace = { applied: true,
+        apply: { transactionId: "root-tx", projectionHash: "h", touchedPaths: ["platform.test.mjs"] } }; });
+    }
+  } });
+  try {
+    assert.equal(git(["rev-parse", "HEAD"], f.base).status === 0, false, "the fixture root has no Git");
+    const [repository] = f.repositories;
+    writeFileSync(join(repository.sandbox, "feature.txt"), "delivered\n");
+    f.saga.preflight("change-a");
+    assert.equal(f.saga.apply("change-a").status, "PASS");
+    assert.equal(rootApplied, 1);
+    assert.equal(readFileSync(join(repository.target, "feature.txt"), "utf8"), "delivered\n");
+  } finally { f.cleanup(); }
 });
 
 test("repository delivery order honors dependencies", () => {

@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 import { createLandJournal, landEntryNoOp } from "../transaction/land-journal.mjs";
+import { gitRepositoryAbsent } from "../../core/git-head.mjs";
 import { deliveryTreeEntries } from "../transaction/delivery-integrity.mjs";
 import {
   landedTargetPaths, otherLandedOutput, pendingLandedConflict, replayCarriesLanded, targetEditCarried
@@ -58,7 +59,14 @@ function repositoryRuntime(state, repository) {
   return state.repositories?.[repository.id] || null;
 }
 
+// A control root that is not a Git repository (a root gathering checkouts,
+// isolated by copy) has no HEAD or index for Land to keep unchanged; it stays
+// without one. A path inside some repository whose Git state cannot be read
+// is still a refusal.
+const NO_GIT = Object.freeze({ head: "(no git repository)", index: "(no git repository)" });
+
 function gitInvariant(git, stableHash, targetPath) {
+  if (gitRepositoryAbsent(targetPath)) return NO_GIT;
   const head = git(["rev-parse", "HEAD"], targetPath);
   const index = git(["diff", "--cached", "--binary", "--"], targetPath);
   if (head.status !== 0 || index.status !== 0)
