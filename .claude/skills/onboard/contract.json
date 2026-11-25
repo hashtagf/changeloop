@@ -1,7 +1,7 @@
 {
   "version": 1,
   "skill": "onboard",
-  "trigger": "A project that installed Change Loop must be made ready for agents: quality lanes and baselines, the feature map, or module boundaries ('onboard this repo', 'ตั้งค่าโปรเจกต์ให้พร้อมใช้ Change Loop', doctor setup rows not ok)",
+  "trigger": "A project, with or without Change Loop installed, must be made ready for agents: quality lanes and baselines, the feature map, or module boundaries ('onboard this repo', 'ตั้งค่าโปรเจกต์ให้พร้อมใช้ Change Loop', doctor setup rows not ok)",
   "inputs": [
     "cloop doctor --json setup rows",
     "cloop quality discover output and quality run results",

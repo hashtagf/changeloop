@@ -11,6 +11,11 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- Onboard without installing: in a repository that never ran `cloop init`,
+  `cloop quality …` and `cloop features` run on the CLI's bundled runtime
+  and write only the onboarding files plus a self-ignored `.foundation/`.
+  The `onboard` skill works there too (link it from the Homebrew package);
+  Prove enforces nothing until `cloop init`.
 - Readiness puts the checks that help an agent most first. New rows: the test
   lane runs within two minutes, gives one result for unchanged code (each
   `quality run` keeps a lane's last ten runs), and the project has a verify
@@ -58,8 +63,6 @@ Found by timing a Build that lost 4m24s to one exec and ran a 40s check twice:
   `slow-check` signal: verify only the task's own tests (the suite runs once
   in Prove), close lingering handles, and start independent ready tasks
   meanwhile.
-- Inside a change, `quality run --enforce` no longer reruns the project's
-  test lane: Prove's test provider already runs those tests.
 - A settled draft decision recorded as `answer`, `chosen`, or `decision`
   loads as its `choice` instead of failing `change start` and costing a
   repair round; an explicit `choice` still wins.

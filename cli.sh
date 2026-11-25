@@ -68,6 +68,7 @@ find_project_root() {
     [ "$cursor" != "/" ] || break
     cursor="$(dirname "$cursor")"
   done
+  [ -z "${PROJECT_PROBE:-}" ] || return 1
   fail "not inside a Foundation project; run 'cloop init <path>' first"
 }
 
@@ -85,11 +86,32 @@ refuse_foreign_pin() {
   fail "CLAUDE_FOUNDATION_PROJECT pins $root, but this command runs in Foundation project $local_root; refusing to change a different project. Unset CLAUDE_FOUNDATION_PROJECT or run the command from the pinned project"
 }
 
+# Onboarding commands work in a repository that never ran `cloop init`: they
+# run on this CLI's own runtime against the Git top level (else the current
+# directory) and write only onboarding files plus a self-ignored .foundation/.
+STANDALONE_COMMANDS=" quality-discover quality-init quality-doctor quality-run quality-report quality-readiness quality-baseline features "
+
+run_standalone() {
+  local root
+  root="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null || pwd -P)"
+  [ -f "$SCRIPT_DIR/.claude/harness/foundation.mjs" ] ||
+    fail "this cloop has no bundled runtime for standalone onboarding; run 'cloop init <path>' first"
+  command -v node >/dev/null 2>&1 || fail "Node.js is required to run the harness"
+  cd "$root"
+  FOUNDATION_STANDALONE=1 CLAUDE_FOUNDATION_PROJECT="$root" FOUNDATION_TELEMETRY=0 \
+    FOUNDATION_PUBLIC_OPERATION="" FOUNDATION_CALLER_CWD="$root" \
+    FOUNDATION_INSTALLED_CLI_VERSION="$(installed_version)" \
+    exec node "$SCRIPT_DIR/.claude/harness/foundation.mjs" "$@"
+}
+
 run_runtime() {
   local access="$1"; shift
   local root runtime actual_api telemetry caller_cwd
   caller_cwd="$PWD"
-  root="$(find_project_root)"
+  if ! root="$(PROJECT_PROBE=1 find_project_root)"; then
+    case "$STANDALONE_COMMANDS" in *" ${1:-} "*) run_standalone "$@" ;; esac
+    find_project_root >/dev/null
+  fi
   refuse_foreign_pin "$root"
   # The runtime re-resolves its root; hand it the one resolved here.
   [ -z "${CLAUDE_FOUNDATION_PROJECT:-}" ] || export CLAUDE_FOUNDATION_PROJECT="$root"

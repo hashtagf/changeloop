@@ -1,11 +1,11 @@
 ---
 name: onboard
-description: "Use when a project that installed Change Loop needs setting up for agents: quality lanes and baselines, the feature map, module boundaries (ตั้งค่าโปรเจกต์ให้พร้อมใช้ Change Loop). Skip installing files (cloop init) and agent guides (claude-md)."
+description: "Use when a project, with or without Change Loop installed, needs setting up for agents: quality lanes and baselines, the feature map, module boundaries (ตั้งค่าโปรเจกต์ให้พร้อมใช้ Change Loop). Skip installing files (cloop init) and agent guides (claude-md)."
 ---
 
 # Onboard a project
 
-The harness reports what setup is missing; you draft what needs judgment; the
+The harness reports missing setup; you draft what needs judgment; the
 user decides what becomes binding.
 
 ## Steps
@@ -35,7 +35,7 @@ user decides what becomes binding.
 
 Writes only `quality/foundation-quality.json`, `quality/baselines/**` (after the user's decision), `quality/rule-enforcement.json`, `openspec/feature-map.json`, and confirmed `REVIEW.md`/`SECURITY.md`.
 Never edits product code, reruns `cloop init` unasked, wires evidence (`advance` does), commits, or pushes.
-Without Change Loop installed: stop; `cloop init` comes first.
+Without `cloop init`: skip doctor and lessons; Prove enforces nothing until init.
 
 ## References
 

@@ -58,9 +58,19 @@ function canonicalPath(path) {
   return existsSync(absolute) ? realpathSync(absolute) : absolute;
 }
 
-export function createBootstrap({ start, pinned, harness = null, fail, failRoot = fail, warn = console.error }) {
-  const root = canonicalPath(findRoot({ start, pinned, harness, fail: failRoot, warn }));
-  assertSharedInstallation(root);
+// Standalone onboarding (`cloop quality …` before `cloop init`): the CLI pins
+// the repository and runs its own runtime. Nothing is installed: no openspec/
+// change directories are created and the run state under .foundation/ ignores
+// itself, so the repository's own files and .gitignore stay untouched.
+export function standaloneMode(env = process.env) {
+  return env.FOUNDATION_STANDALONE === "1" && Boolean(env.CLAUDE_FOUNDATION_PROJECT);
+}
+
+export function createBootstrap({ start, pinned, harness = null, fail, failRoot = fail, warn = console.error,
+  standalone = standaloneMode() }) {
+  const root = standalone ? canonicalPath(pinned)
+    : canonicalPath(findRoot({ start, pinned, harness, fail: failRoot, warn }));
+  if (!standalone) assertSharedInstallation(root);
   const paths = {
     runtime: join(root, ".foundation", "runtime"),
     receipts: join(root, ".foundation", "receipts"),
@@ -85,8 +95,10 @@ export function createBootstrap({ start, pinned, harness = null, fail, failRoot 
   for (const name of [
     "runtime", "receipts", "logs", "evidenceVault", "snapshots", "transactions",
     "plans", "leases", "attestations", "authority", "handoffs",
-    "instructionManifests", "changes"
+    "instructionManifests", ...(standalone ? [] : ["changes"])
   ]) mkdirSync(paths[name], { recursive: true });
+  const selfIgnore = join(root, ".foundation", ".gitignore");
+  if (standalone && !existsSync(selfIgnore)) writeFileSync(selfIgnore, "*\n");
 
   function readJson(path, fallback = null) {
     try { return JSON.parse(readFileSync(path, "utf8")); }

@@ -130,8 +130,9 @@ test("discover, init, run, baseline, and the accepted boundary draft meet the co
   const again = readiness.readinessValue().criteria;
   assert.equal(again.find((row) => row.id === "tests-fast").status, "met");
 
-  // Inside a change, Prove's own test provider runs the tests; the quality gate does not run them twice.
-  assert.equal(quality.run({ change: "c1" }).lanes.some((lane) => lane.capability === "test"), false);
+  // Inside a change the test lane still runs: it compensates for unsupported
+  // capabilities, and skipping it left a paid notes-api run unable to prove.
+  assert.equal(quality.run({ change: "c1" }).lanes.some((lane) => lane.capability === "test"), true);
 
   // A new dependency direction is a boundary finding the ratchet rejects.
   writeFileSync(join(root, "src/core/money.js"), "import \"../ui/cart.js\";\nexport const add = (a, b) => a + b;\n");

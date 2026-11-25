@@ -438,10 +438,8 @@ export function createQualityRuntime({
         !pathMatches(path, repositoryConfig.exclude || [])));
       for (const [capability, provider] of Object.entries(repositoryConfig.providers)) {
         if (options.capability && capability !== options.capability) continue;
-        // Inside a change, Prove's own test provider runs the project's tests;
-        // running them again here only doubles the wait. Readiness keeps
-        // measuring the test lane from runs outside a change.
-        if (activeChange && capability === "test" && !options.capability) continue;
+        // The test lane runs inside a change too: a passing full test lane is the
+        // compensating evidence for unsupported reduced capabilities below.
         if (!selectedLane(repository.id, capability)) continue;
         const laneStarted = performance.now();
         const lane = runQualityProvider({ repository, capability, provider, git, pathInside,

@@ -89,3 +89,35 @@ test("a host pin never redirects a command run inside another project", () => {
   project(copy);
   assert.equal(run(copy, host).stdout.trim(), `root=${host}`);
 });
+
+// Standalone onboarding: a repository that never ran `cloop init` can still be
+// onboarded. Quality and feature commands run on the CLI's bundled runtime
+// against the Git top level and leave only quality/ plus a self-ignored
+// .foundation/; every other command still asks for init.
+test("onboarding commands run without cloop init and install nothing", () => {
+  const repo = join(tmp, "standalone");
+  mkdirSync(join(repo, "src", "deep"), { recursive: true });
+  writeFileSync(join(repo, "package.json"), JSON.stringify({ name: "x", scripts: { test: "node --test" } }));
+  writeFileSync(join(repo, "src", "a.js"), "export const a = 1;\n");
+  const git = (...args) => spawnSync("git", ["-C", repo, ...args], { encoding: "utf8" });
+  git("init", "-q");
+  git("add", "-A");
+  git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "init");
+
+  const discover = run(join(repo, "src", "deep"), null, ["quality", "discover"]);
+  assert.equal(discover.status, 0, discover.stderr);
+  assert.equal(JSON.parse(discover.stdout).repositories[0].repository, "root");
+  const written = run(repo, null, ["quality", "init", "--write"]);
+  assert.equal(written.status, 0, written.stderr);
+  const readiness = run(repo, null, ["quality", "readiness", "--pretty"]);
+  assert.equal(readiness.status, 0, readiness.stderr);
+  assert.match(readiness.stdout, /Pyramid readiness/);
+
+  assert.deepEqual(git("status", "--short").stdout.trim().split("\n"), ["?? quality/"],
+    "only the onboarding files appear; no .claude/, openspec/ or tracked state");
+  assert.equal(readFileSync(join(repo, ".foundation", ".gitignore"), "utf8"), "*\n");
+
+  const doctor = run(repo, null, ["doctor"]);
+  assert.notEqual(doctor.status, 0);
+  assert.match(doctor.stderr, /run 'cloop init <path>' first/);
+});
