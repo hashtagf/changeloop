@@ -9,17 +9,6 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
-## [3.7.8] - 2026-11-25
-
-Release qualification: a paid checkpoint of the ten standard scenarios ran
-one at a time on `claude-sonnet-5-5` at `5d7967b5`. All ten reached
-`archived` with full oracle scores, including `project-tracker-api`, which
-failed on v3.6.8 and v3.6.9. Against v3.6.9 (same model, 2026-11-02) total
-wall time fell from 1,377 s to 1,022 s and measured cost from US$5.69 to
-US$3.80; no lane was slower. One repeat per lane: a smoke check, not a
-stable speedup claim. The later Land and benchmark-oracle fixes do not touch
-those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
-
 ### Added
 
 - `spec-drift`: a read-only drift report of living specs, after the
@@ -50,6 +39,30 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
   session, or returns malformed output is `not-run`, never zero findings, and
   `main-session` is never used. `package` shows the result as advisory
   `specReview`, stale after the packet changes; it never blocks approval.
+
+### Fixed
+
+- An investigation or `change start` in a repository larger than the
+  discovery scan budget (3,000 source files) no longer stops at a repair the
+  agent cannot make. When only scan-budget limits stop discovery, the
+  declared sources become the hash-bound inventory (investigation state
+  records `repository.scope: "declared-sources"`; intake reports repository
+  status `declared-sources`), and the Change handoff or compile proceeds;
+  unreadable, out-of-project, or oversized declared sources still block.
+
+## [3.7.8] - 2026-11-25
+
+Release qualification: a paid checkpoint of the ten standard scenarios ran
+one at a time on `claude-sonnet-5-5` at `5d7967b5`. All ten reached
+`archived` with full oracle scores, including `project-tracker-api`, which
+failed on v3.6.8 and v3.6.9. Against v3.6.9 (same model, 2026-11-02) total
+wall time fell from 1,377 s to 1,022 s and measured cost from US$5.69 to
+US$3.80; no lane was slower. One repeat per lane: a smoke check, not a
+stable speedup claim. The later Land and benchmark-oracle fixes do not touch
+those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
+
+### Added
+
 - `change start` asks the completeness questions reviewers kept raising after
   proof, when nobody builds them any more: a missing or wrong-typed input, an
   empty value, a later step failing after an earlier one succeeded, corrupt
@@ -111,13 +124,6 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
 
 ### Fixed
 
-- An investigation or `change start` in a repository larger than the
-  discovery scan budget (3,000 source files) no longer stops at a repair the
-  agent cannot make. When only scan-budget limits stop discovery, the
-  declared sources become the hash-bound inventory (investigation state
-  records `repository.scope: "declared-sources"`; intake reports repository
-  status `declared-sources`), and the Change handoff or compile proceeds;
-  unreadable, out-of-project, or oversized declared sources still block.
 - A scenario must be provable where it is placed. `change start` refuses a
   draft whose scenario needs another repository for real ("wired to the real
   payments") while only a task in one repository covers it, and warns when a
