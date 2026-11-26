@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "providers": {
+    "static-analysis": {
+      "adapter": "command",
+      "command": [
+        "node",
+        ".claude/harness/foundation.mjs",
+        "quality-run",
+        "--enforce"
+      ],
+      "repositories": [
+        "root"
+      ]
+    }
+  },
+  "services": {}
+}

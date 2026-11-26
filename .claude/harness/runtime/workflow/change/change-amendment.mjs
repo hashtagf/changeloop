@@ -247,10 +247,18 @@ export function createChangeAmendment(ctx) {
       } else completedAmendmentIntakeEffectiveness = intakeState?.effectiveness || null;
     }
     const basePath = activeChangePath(id, state);
-    // A task-contract amendment skips intake, so its repository binding is
-    // checked here; an intake amendment was checked by its inspection.
+    // A task-contract amendment skips intake, so its repository binding and
+    // its added or changed verify commands are checked here; an intake
+    // amendment was checked by its inspection.
     if (taskContractOnlyAmendment(amendment)) {
-      const repositoryIssues = amendmentRepositoryIssues(id, state, amendment);
+      const currentTasks = readFileSync(join(basePath, "tasks.md"), "utf8");
+      const workspaceRoot = state.workspace?.path && existsSync(state.workspace.path)
+        ? state.workspace.path : root;
+      const repositoryIssues = [
+        ...amendmentVerifyPathIssues(amendment, currentTasks, { exists: (candidate) =>
+          existsSync(join(workspaceRoot, candidate)) || existsSync(join(root, candidate)) }),
+        ...amendmentVerifyShapeIssues(amendment, currentTasks, { workTypes: changeWorkTypes(basePath) }),
+        ...amendmentRepositoryIssues(id, state, amendment)];
       if (repositoryIssues.length)
         fail(`semantic amendment validation failed:\n  - ${repositoryIssues.join("\n  - ")}`);
     }

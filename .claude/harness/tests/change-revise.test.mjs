@@ -922,3 +922,80 @@ test("a v5 folder with an unknown heading returns EDIT and leaves the packet unc
   }
   assert.deepEqual(snapshot(value.root), before);
 });
+
+// A task-only amendment skips semantic intake, but its added or changed
+// verify commands are still checked before anything is written.
+function productDraft() {
+  const draft = semanticDraft();
+  draft.tasks[0].paths = ["src/**", "test/**"];
+  // Product paths infer feature work, which owes these sections.
+  draft.userFlow = { purpose: "Intake path", source: "flowchart LR\n  A --> B" };
+  draft.releaseNote = "Intake accepts a bounded rate.";
+  draft.failureMatrix = [{ failure: "Rate exceeded", userSees: "429", recovery: "Retry later" }];
+  return draft;
+}
+
+function amendTasks(value, amendment) {
+  const path = join(value.root, "task-amendment.json");
+  writeJson(path, { version: 1, reason: "Correct the task contract", ...amendment });
+  const log = console.log;
+  console.log = () => {};
+  try { return value.lifecycle.amendChange("revisable-change", path); }
+  finally { console.log = log; }
+}
+
+test("a task-only amendment refuses a product verify that runs no test", (t) => {
+  const value = fixture(t);
+  value.start(productDraft());
+  const before = snapshot(value.root);
+  assert.throws(() => amendTasks(value, { updateTasks: [{ key: "implement", verify: "true" }] }),
+    /task 'implement' edits product code but its verify .* runs no test/);
+  assert.deepEqual(snapshot(value.root), before, "tasks.md and state are unchanged");
+});
+
+test("a task-only amendment refuses a lint-only verify on an added product task", (t) => {
+  const value = fixture(t);
+  value.start(productDraft());
+  const revision = value.state().contractRevision;
+  assert.throws(() => amendTasks(value, { addTasks: [{ key: "polish", outcome: "Polish the intake",
+    covers: ["throughput"], paths: ["src/**"], verify: "npm run lint" }] }), /runs no test/);
+  assert.equal(value.state().contractRevision, revision);
+});
+
+test("a task-only amendment refuses a verify naming a test file nothing creates", (t) => {
+  const value = fixture(t);
+  value.start(productDraft());
+  assert.throws(() => amendTasks(value, { updateTasks: [{ key: "implement",
+    verify: "node --test docs/missing.test.mjs" }] }), /docs\/missing\.test\.mjs/);
+});
+
+test("a task-only amendment with a test-running verify still amends", (t) => {
+  const value = fixture(t);
+  value.start(productDraft());
+  const revision = value.state().contractRevision;
+  amendTasks(value, { updateTasks: [{ key: "implement", verify: "npm test -- --runInBand" }] });
+  assert.ok(value.state().contractRevision > revision);
+  assert.match(readFileSync(join(value.changes, "revisable-change", "tasks.md"), "utf8"),
+    /npm test -- --runInBand/);
+});
+
+test("a covers-only task amendment is not checked for verify shape", (t) => {
+  const value = fixture(t);
+  // The start-time check refuses a no-op verify, so seed one after start.
+  value.start(productDraft());
+  const tasksPath = join(value.changes, "revisable-change", "tasks.md");
+  writeFileSync(tasksPath, readFileSync(tasksPath, "utf8").replace("verify: `npm test`", "verify: `true`"));
+  const output = [];
+  const log = console.log;
+  console.log = (line) => output.push(String(line));
+  try {
+    const path = join(value.root, "covers-amendment.json");
+    writeJson(path, { version: 1, reason: "Cover a new requirement",
+      addRequirements: [requirement("retry", "The webhook retries a failed delivery")],
+      updateTasks: [{ key: "implement", covers: ["retry"] }],
+      evidence: { retry: { capabilities: ["test"] } } });
+    value.lifecycle.amendChange("revisable-change", path);
+  } catch (error) { output.push(String(error.message)); }
+  finally { console.log = log; }
+  assert.doesNotMatch(output.join("\n"), /runs no test/, "a covers-only row is not checked for verify shape");
+});

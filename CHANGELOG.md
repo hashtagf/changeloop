@@ -124,6 +124,10 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
 
 ### Fixed
 
+- A task-only `change amend` checks the verify commands it adds or changes,
+  as an amendment with requirements already did: a product task's verify
+  that runs no test, or names a test file nothing creates, is refused and
+  nothing is written.
 - A scenario must be provable where it is placed. `change start` refuses a
   draft whose scenario needs another repository for real ("wired to the real
   payments") while only a task in one repository covers it, and warns when a

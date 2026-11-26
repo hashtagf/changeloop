@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "task-only-amend-verify-amend-updatetasks-verify-implement-true",
+      "requirementKey": "task-only-amend-verify",
+      "scenario": "updateTasks ตั้ง verify เป็น no-op",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "task-only-amend-verify-amend-addtasks-src-verify-npm-run-lint",
+      "requirementKey": "task-only-amend-verify",
+      "scenario": "addTasks verify lint อย่างเดียว",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "task-only-amend-verify-amend-updatetasks-verify-node-test-test-m",
+      "requirementKey": "task-only-amend-verify",
+      "scenario": "verify อ้างไฟล์ test ที่ไม่มี",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "task-only-amend-verify-amend-updatetasks-verify-npm-test",
+      "requirementKey": "task-only-amend-verify",
+      "scenario": "verify ที่รัน test ผ่าน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "task-only-amend-verify-amend-updatetasks-covers",
+      "requirementKey": "task-only-amend-verify",
+      "scenario": "แก้ covers อย่างเดียวไม่ถูกตรวจ verify",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/change-revise.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}
