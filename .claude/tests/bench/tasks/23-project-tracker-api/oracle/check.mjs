@@ -830,7 +830,9 @@ await runCase("CASE_NO_LOST_UPDATE", async () => {
   }, dataFile, clock);
 });
 
-// Delivered suite: passes, has >= 15 tests, and fails once src/ is the seed's.
+// Delivered suite: passes, has at least one test, and fails once src/ is the
+// seed's. TRACKER-API.md asks for node --test tests without a count, so no
+// minimum is graded: failing on the seed is what shows the tests check behavior.
 function suite() {
   const env = { ...process.env };
   delete env.NODE_TEST_CONTEXT;
@@ -846,7 +848,7 @@ function suite() {
 let testsExist = "fail";
 try {
   const delivered = suite();
-  if (delivered.ok && delivered.pass >= 15) {
+  if (delivered.ok && delivered.pass >= 1) {
     rmSync(join(work, "src"), { recursive: true, force: true });
     cpSync(join(seed, "src"), join(work, "src"), { recursive: true });
     if (!suite().ok) testsExist = "pass";

@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "tracker-tests-exist-no-count-1",
+      "requirementKey": "tracker-tests-exist-no-count",
+      "scenario": "test น้อยตัวที่ตรวจจริง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "tracker-tests-exist-no-count-2",
+      "requirementKey": "tracker-tests-exist-no-count",
+      "scenario": "test ที่ไม่ตรวจอะไร",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "tracker-tests-exist-no-count-3",
+      "requirementKey": "tracker-tests-exist-no-count",
+      "scenario": "ไม่มี test",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test --test-name-pattern=project-tracker .claude/tests/bench/tests/openspec-native-workloads.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

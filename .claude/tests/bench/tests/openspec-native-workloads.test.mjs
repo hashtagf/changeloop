@@ -38,7 +38,7 @@ function write(path, value) {
   writeFileSync(path, value);
 }
 
-function verifyWorkload(name, repair) {
+function verifyWorkload(name, repair, afterPass = null) {
   const task = join(TASKS, name);
   const project = mkdtempSync(join(tmpdir(), `foundation-${name}-`));
   try {
@@ -56,6 +56,7 @@ function verifyWorkload(name, repair) {
       assert.ok(keys.length && keys.every((key) => after.results[key] === "pass"),
         `${name}: critical case ${id} missing or failing`);
     }
+    afterPass?.(project, (dir) => runBenchmarkOracle({ project: dir, oraclePath: join(task, "oracle/run.sh") }));
   } finally {
     rmSync(project, { recursive: true, force: true });
   }
@@ -1253,6 +1254,28 @@ test("concurrent patches do not lose updates", async () => {
   await a.close();
 });
 `);
+  }, (project, oracle) => {
+    // CASE_TESTS_EXIST grades whether the tests check behavior, not how many
+    // there are: TRACKER-API.md names no count (a paid run's 10 tests, 9 of
+    // them failing on the seed, scored 32/33 under a hidden minimum of 15).
+    const testsExist = (files) => {
+      rmSync(join(project, "test"), { recursive: true, force: true });
+      for (const [file, body] of Object.entries(files)) write(join(project, "test", file), body);
+      return oracle(project).results.CASE_TESTS_EXIST;
+    };
+    const head = "const assert = require('node:assert/strict');\nconst test = require('node:test');\n" +
+      "const { createServer } = require('../src/server');\n" +
+      "async function get(path, init) {\n  const s = createServer({ dataFile: require('node:path').join(require('node:os').tmpdir(), 'one-' + process.pid + '.json') });\n" +
+      "  await new Promise((r) => s.listen(0, '127.0.0.1', r));\n  try { return await fetch('http://127.0.0.1:' + s.address().port + path, init); }\n" +
+      "  finally { s.close(); s.closeAllConnections(); }\n}\n";
+    assert.equal(testsExist({ "one.test.js": head + "test('registers', async () => {\n" +
+      "  const res = await get('/users', { method: 'POST', headers: { 'content-type': 'application/json' },\n" +
+      "    body: JSON.stringify({ email: 'a' + Date.now() + '@b.io', password: '12345678', name: 'A' }) });\n" +
+      "  assert.equal(res.status, 201);\n});\n" }), "pass", "one test that fails on the seed is enough");
+    assert.equal(testsExist({ "health.test.js": head +
+      "test('health', async () => assert.equal((await get('/health')).status, 200));\n" }), "fail",
+      "tests that also pass on the seed check nothing");
+    assert.equal(testsExist({}), "fail", "no tests");
   });
 });
 
