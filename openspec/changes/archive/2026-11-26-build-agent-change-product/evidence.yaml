@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "change-phase-edits-signal-advance-through-build",
+      "requirementKey": "change-phase-edits-signal",
+      "scenario": "โปรเจกต์ไม่มี git",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "change-phase-edits-signal-2",
+      "requirementKey": "change-phase-edits-signal",
+      "scenario": "โปรเจกต์มี git",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "change-phase-edits-signal-product-change-start",
+      "requirementKey": "change-phase-edits-signal",
+      "scenario": "ไม่มีการเขียนก่อน Build",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "change-phase-edits-signal-4",
+      "requirementKey": "change-phase-edits-signal",
+      "scenario": "ไฟล์ที่แก้อยู่แล้วก่อน change start",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "change-phase-edits-signal-foundation-openspec-changes",
+      "requirementKey": "change-phase-edits-signal",
+      "scenario": "ไฟล์ของ harness",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "change-phase-edits-signal-prove-land",
+      "requirementKey": "change-phase-edits-signal",
+      "scenario": "agent ทำตาม signal แล้ว Land ผ่าน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "bench-spec-approval-lane-self-review-land",
+      "requirementKey": "bench-spec-approval",
+      "scenario": "lane ที่อนุญาต self-review",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "bench-spec-approval-2",
+      "requirementKey": "bench-spec-approval",
+      "scenario": "ไม่มีสิทธิ์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/change-phase-target-edits.test.mjs) && (node --test .claude/tests/bench/tests/openspec-native-runner.test.mjs)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "node --test .claude/harness/tests/change-phase-target-edits.test.mjs",
+        "node --test .claude/tests/bench/tests/openspec-native-runner.test.mjs"
+      ]
+    }
+  }
+}

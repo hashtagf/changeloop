@@ -110,6 +110,11 @@ export function changeLoopAuthority({ selfReviewAuthorized = false, landAuthoriz
     `Before Prove, ${PARTITION_HINT}`,
     selfReviewAuthorized
       ? "This disposable benchmark explicitly authorizes main-session self-review; record the waiver and continue without asking." : "",
+    // The no-harness arms have no approval gate. Without an explicit approval
+    // the host either stops at the spec question or approves on its own
+    // reading of /dev, so the same lane measured different work per run.
+    selfReviewAuthorized
+      ? "This disposable benchmark approves the compiled spec (decision ref benchmark:spec-approval); record that approval and continue without asking." : "",
     benchmarkLandAuthority({ landAuthorized, oracleConfigured })
   ].filter(Boolean).join(" ");
 }

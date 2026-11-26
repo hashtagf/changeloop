@@ -7,6 +7,9 @@ import { riskSignalDimensions } from "../validation/semantic-intake.mjs";
 import { inferPathSignals } from "../../contracts/scratch-router.mjs";
 import { groundingFromQuality } from "../validation/quality-fields.mjs";
 import { declaredDraftRisk } from "../validation/draft-risk.mjs";
+import { startManifest as fileStartManifest } from "../../core/start-manifest.mjs";
+
+const withStartManifest = (manifest) => manifest ? { startManifest: manifest } : {};
 
 // Open questions travel with the approval packet, so the user answers them
 // in the same exchange instead of after an approval is refused.
@@ -379,6 +382,7 @@ export function initialChangeState({
   riskBasedCi,
   gitHead,
   preexistingDirty,
+  startManifest = fileStartManifest,
   initialBudget,
   now,
   semanticDraftVersion = null,
@@ -416,7 +420,10 @@ export function initialChangeState({
     reviewHistory: { version: 1, aiAttempts: 0, totalAttempts: 0, chainHead: null },
     workspace: {
       mode: "current", path: root, baseHead: gitHead(root),
-      preexisting: preexistingDirty(root)
+      preexisting: preexistingDirty(root),
+      // A target without Git has no dirty snapshot; Build compares this.
+      // Only a target without Git needs it; HEAD is read from files, not git.
+      ...(gitHead(root) ? {} : withStartManifest(startManifest(root)))
     },
     budget: initialBudget(schema, id),
     createdAt: now(), updatedAt: now()

@@ -1,0 +1,6 @@
+# Tasks
+
+> This is the sole implementation ledger.
+
+- [x] **T001** เก็บ digest ตอน change start สำหรับโปรเจกต์ไม่มี git, เทียบตอนสร้าง sandbox และส่ง signal พร้อม test และ CHANGELOG [key:change-edits-signal] [kind:implementation] [paths:.claude/harness/runtime/workflow/sandbox/**,.claude/harness/runtime/workflow/change/change-start-values.mjs,.claude/harness/runtime/core/state-runtime.mjs,.claude/harness/runtime/core/start-manifest.mjs,.claude/harness/runtime/composition/**,.claude/harness/tests/change-phase-target-edits.test.mjs,.claude/tests/run-all.sh,.claude/tests/README.md,CHANGELOG.md] [claims:change-phase-edits-signal-advance-through-build,change-phase-edits-signal-2,change-phase-edits-signal-product-change-start,change-phase-edits-signal-4,change-phase-edits-signal-foundation-openspec-changes,change-phase-edits-signal-prove-land] — verify: `node --test .claude/harness/tests/change-phase-target-edits.test.mjs`
+- [x] **T002** ข้อความสิทธิ์ของ benchmark อนุมัติสเปกชัดเจน [key:bench-approval] [kind:implementation] [paths:.claude/tests/bench/openspec-native/run.mjs,.claude/tests/bench/tests/openspec-native-runner.test.mjs] [claims:bench-spec-approval-lane-self-review-land,bench-spec-approval-2] — verify: `node --test .claude/tests/bench/tests/openspec-native-runner.test.mjs`

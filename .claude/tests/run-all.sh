@@ -232,6 +232,7 @@ approval package|node --test "$ROOT/.claude/harness/tests/approval-package.test.
 spec review|node --test "$ROOT/.claude/harness/tests/spec-review.test.mjs"
 spec review command|node --test "$ROOT/.claude/harness/tests/spec-review-command.test.mjs"
 spec drift|node --test "$ROOT/.claude/harness/tests/spec-drift.test.mjs" "$ROOT/.claude/harness/tests/spec-drift-command.test.mjs"
+change phase target edits|node --test "$ROOT/.claude/harness/tests/change-phase-target-edits.test.mjs"
 scratch draft fields|node --test "$ROOT/.claude/harness/tests/scratch-draft-fields.test.mjs"
 prototype checklist|node --test "$ROOT/.claude/harness/tests/prototype-checklist.test.mjs"
 prototype sync|node --test "$ROOT/.claude/harness/tests/prototype-sync.test.mjs"

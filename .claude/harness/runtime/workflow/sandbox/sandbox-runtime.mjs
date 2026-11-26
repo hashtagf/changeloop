@@ -1,7 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
-  cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync,
-  rmSync, statSync
+  cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { sandboxCodePathspec } from "../../core/workspace-surface.mjs";
@@ -18,6 +17,7 @@ import {
   runSandboxSetupCommand, runMeasuredSandboxSetupBatch, workspaceSetupPlan, sandboxSetupLine, dependencyDigest, runWorkspaceSetupPlan, refreshChangedSandboxDependencies
 } from "./sandbox-setup.mjs";
 import { bestEffort } from "../../core/best-effort.mjs";
+import { withChangePhaseEdits } from "./change-phase-edits.mjs";
 import {
   changeDiffCandidatePlan, changeDiffCandidateRow, changeDiffCandidates,
   changeDiffIdentityOperation, combinedDiffIdentity, normalizedDiffDigest
@@ -571,7 +571,7 @@ export function createSandboxRuntime({
     cleanupAppliedSandbox,
     repositoryCatalog,
     clearSnapshotCache,
-    createSingle,
+    createSingle: withChangePhaseEdits(createSingle, { root, loadRuntime, dirtyNow: targetDirtySnapshot }),
     projectRepositories,
     runSetupCommand, runSetupBatch,
     output: console,

@@ -13,7 +13,7 @@ import addFormats from "ajv-formats";
 
 import {
   assertBaselineProject, assertDisposableProject, BENCHMARK_VERIFY_AUTHORITY, backendLandArgs,
-  baselineOutcome, baselinePrompt, benchmarkLandAuthority, collectNativeScorecard,
+  baselineOutcome, baselinePrompt, benchmarkLandAuthority, changeLoopAuthority, collectNativeScorecard,
   discoverChangeId, hostModels, projectProcessIds, requestedHostModel, watchedStatusReached,
   externalAuthorityBoundary, guardrailOutcomes, hostFriction, observedOutcome, operationRowsInWindow,
   mergeHostExecutions, oracleRepairPrompt, parseHostOutput, pendingTaskCount,
@@ -199,6 +199,13 @@ test("a proven watcher accepts the Land states one advance moves through", () =>
   assert.equal(watchedStatusReached("proven", "archived"), true);
   assert.equal(watchedStatusReached("proven", "building"), false);
   assert.equal(watchedStatusReached("archived", "applied"), false);
+});
+
+test("a paid benchmark lane approves the spec explicitly so hosts never stop or self-approve", () => {
+  const paid = changeLoopAuthority({ selfReviewAuthorized: true, landAuthorized: true, oracleConfigured: true });
+  assert.match(paid, /approves the compiled spec \(decision ref benchmark:spec-approval\)/);
+  assert.doesNotMatch(changeLoopAuthority({}), /approves the compiled spec/);
+  assert.doesNotMatch(changeLoopAuthority({ landAuthorized: true }), /approves the compiled spec/);
 });
 
 test("an oracle-backed benchmark keeps Land with the backend", () => {

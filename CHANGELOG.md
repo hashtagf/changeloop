@@ -42,6 +42,15 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- Product files an agent writes into the target during Change, before the
+  sandbox exists, are named in Build's first action (`signals[]`,
+  `change-phase-target-edits`): edit them only in the sandbox and never
+  delete or revert them in the target. Cleaning them up there made Land stop
+  on an isolated-copy conflict (a paid Pi run of `cart-coupons`). A target
+  without Git records file digests at change start for the comparison.
+- Paid benchmark lanes approve the compiled spec explicitly
+  (`benchmark:spec-approval`), so a host neither stops at the approval
+  question nor approves on its own reading of `/dev`.
 - The read-only permission allowlist no longer admits commands that delete,
   write, or run others. `Bash(find *)` and `Bash(git diff|log|show *)` match
   by prefix, so `find . -delete`, `find -exec rm`, and `git diff --output=<file>`
