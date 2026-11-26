@@ -4,16 +4,16 @@
 class Cloop < Formula
   desc "OpenSpec-native change harness for AI coding agents"
   homepage "https://changeloop.ai/"
-  url "https://github.com/hashtagf/changeloop/archive/refs/tags/v3.7.8.tar.gz"
-  sha256 "ff96e088232ddce33ebbae5b78363beb8b803bddb4e5291a96656d73a5964c4a"
+  url "https://github.com/hashtagf/changeloop/archive/refs/tags/v3.7.9.tar.gz"
+  sha256 "fb75781a045b2ef22d1217c5f6c250b0ed54466886ea27080e55d968ba2d6baa"
   license "MIT"
   # Give the renamed formula a new keg even when the source version is unchanged.
   revision 1
   head "https://github.com/hashtagf/changeloop.git", branch: "main"
 
   bottle do
-    root_url "https://github.com/hashtagf/changeloop/releases/download/v3.7.8"
-    sha256 cellar: :any_skip_relocation, arm64_sequoia: "404521c5ed3a7c5fc4a9e96f204e0531fe85e26800d341cffa90ecfd5623e11c"
+    root_url "https://github.com/hashtagf/changeloop/releases/download/v3.7.9"
+    sha256 cellar: :any_skip_relocation, arm64_sequoia: "eef1e229484cf6d2ab4c2a32c97c2b67f18b1a76e01804f99d5a03244d489344"
   end
 
   # Add bottle metadata only after a bottle under the cloop name is published.
