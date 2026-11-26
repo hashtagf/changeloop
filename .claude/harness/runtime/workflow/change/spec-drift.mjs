@@ -1,5 +1,6 @@
+import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, relative } from "node:path";
+import { basename, join, relative } from "node:path";
 import { forbiddenSpecReviewSessions, runSpecReviewLens, specReviewers } from "./spec-review.mjs";
 
 // Spec drift (Elephant-Goldfish "drift report"): a read-only report of living
@@ -42,12 +43,48 @@ function pathExists(root, path) {
   return existsSync(join(root, ...prefix));
 }
 
+// Repository files by base name: Git's tracked and unignored files, else a
+// bounded walk that skips dot-directories and node_modules.
+function filesByName(root) {
+  let paths = [];
+  const git = spawnSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+    { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  if (git.status === 0) paths = git.stdout.split("\0").filter(Boolean);
+  else {
+    const walk = (dir, rel) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (paths.length > 50_000 || entry.name.startsWith(".") || entry.name === "node_modules") continue;
+        const path = rel ? `${rel}/${entry.name}` : entry.name;
+        if (entry.isDirectory()) walk(join(dir, entry.name), path);
+        else if (entry.isFile()) paths.push(path);
+      }
+    };
+    walk(root, "");
+  }
+  const index = new Map();
+  for (const path of paths) {
+    const name = basename(path);
+    index.set(name, [...(index.get(name) || []), path]);
+  }
+  return index;
+}
+
+// A vanished file moved when exactly one file of the same name exists; a glob
+// or an ambiguous name never moves.
+export function movedTo(index, path) {
+  if (/[*?[\]{}]/.test(path)) return null;
+  const matches = (index.get(basename(path)) || []).filter((candidate) => candidate !== path);
+  return matches.length === 1 ? matches[0] : null;
+}
+
 export function createSpecDriftRuntime({
   root, reportDir = join(root, ".foundation", "spec-drift"), foundationPolicy = () => ({}),
   reviewerInstalled = (_name) => true, runPromptReview = null, environment = process.env,
   now = () => new Date().toISOString(), fail, log = (line) => console.log(line)
 }) {
   const specsDir = join(root, "openspec", "specs");
+  let index = null;
+  const nameIndex = () => (index ??= filesByName(root));
   const archiveDir = join(root, "openspec", "changes", "archive");
 
   function capabilities() {
@@ -125,8 +162,14 @@ export function createSpecDriftRuntime({
         }
       }
       const files = [...new Set([...quoted, ...linked])].sort();
-      const missing = files.filter((file) => !pathExists(root, file));
-      if (missing.length) return { requirement: name, status: "missing-file", origin: archive, link, files, missing };
+      const gone = files.filter((file) => !pathExists(root, file));
+      const moved = Object.fromEntries(gone.map((file) => [file, movedTo(nameIndex(), file)])
+        .filter(([, target]) => target));
+      const missing = gone.filter((file) => !moved[file]);
+      const movedField = Object.keys(moved).length ? { moved } : {};
+      if (missing.length)
+        return { requirement: name, status: "missing-file", origin: archive, link, files, missing, ...movedField };
+      if (gone.length) return { requirement: name, status: "moved", origin: archive, link, files, ...movedField };
       if (!archive) return { requirement: name, status: "no-origin", origin: null, files };
       return { requirement: name, status: "ok", origin: archive, link, files };
     });
@@ -134,6 +177,7 @@ export function createSpecDriftRuntime({
   }
 
   function runSpecDrift({ capabilities: selected = [], review = false } = {}) {
+    index = null;
     const known = capabilities();
     const unknown = selected.filter((name) => !known.includes(name));
     if (unknown.length) fail(`spec-drift: unknown capability '${unknown.join("', '")}'; choose from openspec/specs`);
@@ -182,7 +226,8 @@ export function createSpecDriftRuntime({
     log(`SPEC DRIFT (advisory; nothing was changed) ${Object.entries(report.counts).map(([k, v]) => `${v} ${k}`).join(", ") || "no requirements"}`);
     for (const row of report.capabilities) {
       for (const req of row.requirements.filter((req) => req.status !== "ok"))
-        log(`  [${req.status}] ${row.capability} · ${req.requirement}${req.missing ? `: ${req.missing.join(", ")}` : ""}`);
+        log(`  [${req.status}] ${row.capability} · ${req.requirement}${req.missing ? `: ${req.missing.join(", ")}` : ""}` +
+          `${req.moved ? ` (moved: ${Object.entries(req.moved).map(([from, to]) => `${from} → ${to}`).join(", ")})` : ""}`);
       if (row.review) log(`  review ${row.capability}: ${row.review.status}${row.review.reason ? ` (${row.review.reason})` : ""}` +
         `${row.review.findings?.length ? `, ${row.review.findings.length} finding(s)` : ""}`);
     }

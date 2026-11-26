@@ -26,8 +26,10 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
   paths, and verify command) plus paths it quotes, and reported `ok`,
   `missing-file`, `no-origin`, or `unreadable`. `--review --capability <name>`
   adds one fresh read-only reviewer per capability comparing meaning; a
-  review that cannot run is `not-run`. Only `.foundation/spec-drift/` is
-  written and drift exits 0.
+  review that cannot run is `not-run`. A vanished linked file found exactly
+  once elsewhere by name is reported `moved` with its new path (a glob or an
+  ambiguous name never moves). Only `.foundation/spec-drift/` is written and
+  drift exits 0.
 - Adversarial rigor, after the Elephant-Goldfish Model: `brainstorming`
   challenges every option (unrequested or existing work, failure and scale,
   what a newcomer would misread) and leads with weaknesses before

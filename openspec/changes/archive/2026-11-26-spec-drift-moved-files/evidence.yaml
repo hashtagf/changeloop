@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "moved-files-spec-drift",
+      "requirementKey": "moved-files",
+      "scenario": "ไฟล์ย้ายเข้าโฟลเดอร์ย่อย",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "moved-files-spec-drift-2",
+      "requirementKey": "moved-files",
+      "scenario": "ชื่อซ้ำหลายที่",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "moved-files-spec-drift-3",
+      "requirementKey": "moved-files",
+      "scenario": "ย้ายบางไฟล์ หายบางไฟล์",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "moved-files-spec-drift-4",
+      "requirementKey": "moved-files",
+      "scenario": "glob ที่โฟลเดอร์หาย",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/spec-drift.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

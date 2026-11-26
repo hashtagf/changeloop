@@ -62,6 +62,44 @@ test("a deleted linked file is missing-file with its path", (t) => {
   assert.equal(paging.origin, "2026-01-01-search");
 });
 
+test("a linked file found once elsewhere by name is moved with its new path", (t) => {
+  const value = fixture(t);
+  write(value.root, "src/paging/page.mjs", "");
+  const paging = value.status(value.runtime.runSpecDrift().report, "paging");
+  assert.equal(paging.status, "moved");
+  assert.deepEqual(paging.moved, { "src/page.mjs": "src/paging/page.mjs" });
+  assert.equal(paging.missing, undefined);
+});
+
+test("an ambiguous name is not guessed and stays missing-file", (t) => {
+  const value = fixture(t);
+  write(value.root, "src/a/page.mjs", "");
+  write(value.root, "src/b/page.mjs", "");
+  const paging = value.status(value.runtime.runSpecDrift().report, "paging");
+  assert.equal(paging.status, "missing-file");
+  assert.deepEqual(paging.missing, ["src/page.mjs"]);
+  assert.equal(paging.moved, undefined);
+});
+
+test("a moved file beside a truly missing one stays missing-file and shows the move", (t) => {
+  const value = fixture(t);
+  write(value.root, "src/paging/page.mjs", "");
+  rmSync(join(value.root, "test", "page.test.mjs"));
+  const paging = value.status(value.runtime.runSpecDrift().report, "paging");
+  assert.equal(paging.status, "missing-file");
+  assert.deepEqual(paging.missing, ["test/page.test.mjs"]);
+  assert.deepEqual(paging.moved, { "src/page.mjs": "src/paging/page.mjs" });
+});
+
+test("a glob whose directory vanished never moves", (t) => {
+  const value = fixture(t);
+  rmSync(join(value.root, "src", "search"), { recursive: true, force: true });
+  write(value.root, "lib/search/index.mjs", "");
+  const tag = value.status(value.runtime.runSpecDrift().report, "tag-filter");
+  assert.equal(tag.status, "missing-file");
+  assert.deepEqual(tag.missing, ["src/search/**"]);
+});
+
 test("a requirement whose linked files all exist is ok, globs checked by their prefix", (t) => {
   const value = fixture(t);
   const tag = value.status(value.runtime.runSpecDrift().report, "tag-filter");
