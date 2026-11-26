@@ -1,16 +1,14 @@
-import {
-  existsSync, mkdirSync, readFileSync, statSync, writeFileSync
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { delimiter, dirname, join, relative, resolve } from "node:path";
-import { evidenceResultValue, parseAssertionSummaryOutput, parseGoTestJsonOutput, parseRunnerSummaryOutput } from "./evidence-results.mjs";
+import { evidenceResultValue, parseAssertionSummaryOutput, parseGoTestJsonOutput, parseLastJsonLine, parseRunnerSummaryOutput } from "./evidence-results.mjs";
 import { repositoryBaseHead } from "../core/repository-binding.mjs";
+import { forceExitCommand } from "../core/node-test-exit.mjs";
 import {
   environmentIdentity, readTaskCheckExecution, sameArgv, sameShellLine, taskCheckArgv,
   taskCheckExecutionPath, taskCheckReuseRefusal, writeTaskCheckExecution
 } from "./task-check-evidence.mjs";
 import { providerTimeoutDetail, providerTimeoutMs } from "./provider-catalog.mjs";
-import { parseLastJsonLine } from "./evidence-results.mjs";
 import { criticalCaseResult, evaluationAdapterResult, enforceCriticalCases, mutationV2Result, mutationReceiptClassification } from "./adapter-results.mjs";
 import { createAdapterReports } from "./adapter-reports.mjs";
 
@@ -429,9 +427,10 @@ export function createAdapterRuntime({
       }
       const commandExecutionId = `command-${Date.now()}-${commandCache.size + 1}`;
       const executionEnv = adapterEnvironment(id, context, config, proofRunId, commandExecutionId);
+      const run = forceExitCommand(built.command, built.args);
       commandCache.set(dedupKey, {
         commandExecutionId,
-        result: runCommand(built.command, built.args, {
+        result: runCommand(run.command, run.args, {
           cwd, timeoutMs: providerTimeoutMs(config), env: executionEnv,
           readiness: config.readiness
         })
@@ -515,7 +514,8 @@ export function createAdapterRuntime({
     const env = adapterEnvironment(id, context, config, executionId, executionId);
     const startedAt = now();
     const startedMs = Date.now();
-    const spawned = spawnCommandSync(built.command, built.args, {
+    const run = forceExitCommand(built.command, built.args);
+    const spawned = spawnCommandSync(run.command, run.args, {
       cwd, env, encoding: "utf8", timeout: providerTimeoutMs(config),
       maxBuffer: 64 * 1024 * 1024
     });

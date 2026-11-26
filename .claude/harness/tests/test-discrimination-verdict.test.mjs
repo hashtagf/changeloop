@@ -161,11 +161,12 @@ test("discrimination-hung-base-run: a base run is capped and partial output is n
   assert.equal(baseRunTimeoutMs({ timeoutMs: 30000 }), 30000);
   assert.equal(baseRunOutcome({ error: { code: "ETIMEDOUT" }, status: null,
     stdout: "not ok 1 - register\n" }), "timed-out");
-  // A test that fails and then keeps a server open, as the base code does.
+  // A test that never settles while a server keeps the process alive.
+  // (--test-force-exit ends a run whose tests finished; this one never does.)
   const { root, repo } = fixture(t);
   writeFileSync(join(repo.workspacePath, "test/hangs.test.mjs"),
     "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { createServer } from 'node:http';\n" +
-    "createServer().listen(0);\ntest('needs the change', () => assert.equal(1, 2));\n");
+    "createServer().listen(0);\ntest('needs the change', () => new Promise(() => assert.ok(true)));\n");
   const result = runtime(repo, join(root, "logs"), { timeoutMs: 4000, binding: [
     { claimId: "hangs", requirementKey: "greet", scenario: "hangs", regression: false, files: ["test/hangs.test.mjs"] }
   ] }).evaluate("change-a", "hash-b");

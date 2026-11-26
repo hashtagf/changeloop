@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { resumeThrough } from "../../core/next-step.mjs";
 import { leaseAuthorityIsStale } from "./lease-runtime.mjs";
 import { bestEffort } from "../../core/best-effort.mjs";
+import { forceExitLine } from "../../core/node-test-exit.mjs";
 
 // A session-mode Build task runs in the coordinating session itself, one task
 // at a time. The agent used to acquire the lease, implement, release it, and
@@ -447,7 +448,7 @@ export function runTaskCheck({
     status: "unavailable", exitCode: null,
     output: `no isolated workspace is recorded for repository '${check.repository}'`
   };
-  const result = spawn("sh", ["-c", check.command], {
+  const result = spawn("sh", ["-c", forceExitLine(check.command)], {
     cwd, env, encoding: "utf8", timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024
   });
   return {

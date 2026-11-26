@@ -114,7 +114,7 @@ function lifecycle(t, { repository }) {
     .trim().split("\n").map((line) => JSON.parse(line));
   return {
     project, id, spawns, calls, operations,
-    suiteRuns: calls("sh", (args) => args[0] === "-c" && args[1] === "node --test").length,
+    suiteRuns: calls("sh", (args) => args[0] === "-c" && /^node --test( --test-force-exit)?$/.test(args[1])).length,
     provenance: readFileSync(join(project, ".foundation/receipts", id, "test.json"), "utf8")
   };
 }

@@ -13,7 +13,7 @@ import addFormats from "ajv-formats";
 
 import {
   assertBaselineProject, assertDisposableProject, BENCHMARK_VERIFY_AUTHORITY, backendLandArgs,
-  baselineOutcome, baselinePrompt, benchmarkLandAuthority, changeLoopAuthority, collectNativeScorecard,
+  baselineOutcome, baselinePrompt, benchmarkLandAuthority, changeLoopAuthority, collectNativeScorecard, oracleRepairLoop,
   discoverChangeId, hostModels, projectProcessIds, requestedHostModel, watchedStatusReached,
   externalAuthorityBoundary, guardrailOutcomes, hostFriction, observedOutcome, operationRowsInWindow,
   mergeHostExecutions, oracleRepairPrompt, parseHostOutput, pendingTaskCount,
@@ -1641,4 +1641,21 @@ test("baseline runner refuses a project that has the harness installed", () => {
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /must not contain Change Loop files/);
   } finally { rmSync(project, { recursive: true, force: true }); }
+});
+
+test("the pre-Land oracle is rerun after a repair that ends without reporting proven", async () => {
+  // Paid project-tracker-api runs on Pi and Claude Code reported 32/33 from
+  // before the repair; the repaired work scored 33/33.
+  const verdicts = [{ verdict: "fail", score: 32 }, { verdict: "pass", score: 33 }];
+  let runs = 0, repairs = 0;
+  const oracle = await oracleRepairLoop({
+    evaluate: () => verdicts[Math.min(runs++, verdicts.length - 1)],
+    repair: async () => { repairs += 1; return true; },
+    reachedProven: () => false
+  });
+  assert.deepEqual([oracle.score, runs, repairs], [33, 2, 1]);
+  runs = 0;
+  const refused = await oracleRepairLoop({ evaluate: () => verdicts[runs++],
+    repair: async () => false, reachedProven: () => true });
+  assert.deepEqual([refused.score, runs], [32, 1], "no repair ran, so the verdict is current");
 });

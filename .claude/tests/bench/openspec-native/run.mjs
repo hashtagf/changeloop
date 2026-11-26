@@ -1188,6 +1188,23 @@ function runtimeStatus(project, changeId) {
     : null;
 }
 
+// The pre-Land oracle, repaired until it passes or a repair is refused. A
+// repair session can end without reporting `proven` while the change is
+// still proven; the reported oracle is then rerun on the repaired work, never
+// the verdict from before the repair (two paid runs reported 32/33 for work
+// that scored 33/33).
+export async function oracleRepairLoop({ evaluate, repair, reachedProven }) {
+  let oracle;
+  let stale = false;
+  do {
+    oracle = evaluate();
+    stale = false;
+    if (oracle.verdict === "pass" || !(await repair(oracle))) break;
+    stale = true;
+  } while (reachedProven());
+  return stale ? evaluate() : oracle;
+}
+
 export function oracleRepairPrompt(changeId, failedCases) {
   const cases = failedCases.join(", ");
   return `Resume existing change ${changeId}. The deterministic pre-Land oracle failed: ` +
@@ -1434,13 +1451,13 @@ async function main() {
     const totalTimeoutMs = Number(args["timeout-ms"] || 1800000);
     const totalRequestCap = args["max-model-requests"]
       ? Number(args["max-model-requests"]) : null;
-    do {
-      oracle = runBenchmarkOracle({
-        project, changeId: discoveredChangeId, oraclePath: args.oracle,
-        timeoutMs: Number(args["oracle-timeout-ms"] || 120000)
-      });
-      if (oracle.verdict === "pass") break;
-      if (runtimeStatus(project, discoveredChangeId) !== "proven") break;
+    const evaluate = () => runBenchmarkOracle({
+      project, changeId: discoveredChangeId, oraclePath: args.oracle,
+      timeoutMs: Number(args["oracle-timeout-ms"] || 120000)
+    });
+    oracle = await oracleRepairLoop({ evaluate, reachedProven: () =>
+      ["proven", "applied"].includes(execution.terminalReached?.status), repair: async (failed) => {
+      if (runtimeStatus(project, discoveredChangeId) !== "proven") return false;
       const remainingMs = totalTimeoutMs - execution.stopwatch.wallMs;
       const remainingRequests = Number.isInteger(totalRequestCap)
         ? totalRequestCap - Number(execution.observedModelRequests || 0) : null;
@@ -1450,15 +1467,15 @@ async function main() {
         ? totalToolCallCap - Number(execution.observedToolCalls || 0) : null;
       if (remainingMs <= 5000 || (remainingRequests !== null && remainingRequests <= 0) ||
           (remainingToolCalls !== null && remainingToolCalls <= 0))
-        break;
-      const failedCases = Object.entries(oracle.results || {})
+        return false;
+      const failedCases = Object.entries(failed.results || {})
         .filter(([, status]) => status !== "pass").map(([id]) => id);
       const remainingCost = args['max-cost-usd']
         ? remainingHostCostBudget(execution, args['max-cost-usd']) : undefined;
       if (remainingCost === null || remainingCost === 0) {
         execution.budgetExhausted = { kind: remainingCost === null ? 'cost-measurement' : 'cost-usd',
           used: hostSessionCost(execution).value, target: Number(args['max-cost-usd']) };
-        break;
+        return false;
       }
       const repairArgs = remainingCost !== undefined
         ? [...args["claude-arg"], "--max-budget-usd", String(remainingCost)]
@@ -1480,7 +1497,8 @@ async function main() {
           ? Number(args['final-envelope-grace-ms']) : 15000
       });
       execution = mergeHostExecutions(execution, repair);
-    } while (["proven", "applied"].includes(execution.terminalReached?.status));
+      return true;
+    } });
     if (oracle.verdict === "pass") runBackendLand();
   }
   // A Land interrupted between code apply and archive resumes through the same

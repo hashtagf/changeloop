@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "node-test-force-exit-advance-task-verify",
+      "requirementKey": "node-test-force-exit",
+      "scenario": "connection keep-alive ค้าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "node-test-force-exit-advance-task-verify-2",
+      "requirementKey": "node-test-force-exit",
+      "scenario": "test ล้ม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "node-test-force-exit-verify-npm-test-test-force-exit",
+      "requirementKey": "node-test-force-exit",
+      "scenario": "คำสั่งอื่น",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "bench-oracle-after-repair",
+      "requirementKey": "bench-oracle-after-repair",
+      "scenario": "รอบซ่อมไม่มี envelope proven",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/node-test-force-exit.test.mjs) && (node --test .claude/tests/bench/tests/openspec-native-runner.test.mjs)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "node --test .claude/harness/tests/node-test-force-exit.test.mjs",
+        "node --test .claude/tests/bench/tests/openspec-native-runner.test.mjs"
+      ]
+    }
+  }
+}

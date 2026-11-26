@@ -9,6 +9,7 @@ import { providerExecutionEnvironment } from "./adapter-runtime.mjs";
 import { providerTimeoutMs } from "./provider-catalog.mjs";
 import { environmentIdentity, taskCheckArgv } from "./task-check-evidence.mjs";
 import { spawnUntilSettled } from "./early-stop-spawn.mjs";
+import { forceExitCommand } from "../core/node-test-exit.mjs";
 import { scopeAllowsPath } from "../core/graph-execution.mjs";
 import { buildCopyScratch, copyBaseIdentity, copyChangedPaths } from "./copy-base-tree.mjs";
 // Work whose tests should pass before and after the change.
@@ -522,18 +523,19 @@ export function createTestDiscriminationRuntime({
     };
     const cleanup = () => rmSync(prepared.scratch, { recursive: true, force: true });
     const pending = planned.filter((job) => !job.cached);
+    const exitingCommand = (job) => forceExitCommand(job.command.command, job.command.args);
     if (asynchronous) {
       return (async () => {
         try {
           for (const job of pending)
-            finish(job, await spawnCommandAsync(job.command.command, job.command.args, options));
+            finish(job, await spawnCommandAsync(exitingCommand(job).command, exitingCommand(job).args, options));
           return settle();
         } finally { cleanup(); }
       })();
     }
     try {
       for (const job of pending)
-        finish(job, spawnCommandSync(job.command.command, job.command.args, options));
+        finish(job, spawnCommandSync(exitingCommand(job).command, exitingCommand(job).args, options));
       return settle();
     } finally {
       cleanup();

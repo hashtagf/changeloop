@@ -42,6 +42,13 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- A `node --test` task check, test provider, or test-discrimination base run
+  now runs with `--test-force-exit`. A paid project-tracker-api run passed
+  every test, but `fetch` left a keep-alive connection to the test's own
+  server open, so the run waited out the ten-minute cap twice. Other
+  commands, such as `npm test`, are unchanged.
+- The paid benchmark reruns its pre-Land oracle after every oracle repair.
+  Two runs reported 32/33 from before the repair for work that scored 33/33.
 - Test discrimination no longer asks to repair a helper file without tests
   (for example `test/helpers.js`). `node --test` reports such a file as one
   passing test, so a paid project-tracker-api run spent an extra Prove round

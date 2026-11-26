@@ -156,7 +156,7 @@ test("a new test that also passes on the base source is a repair naming the file
   assert.match(result.findings[0].message,
     /test\/greet-more\.test\.js .*pass on the original code.*do not verify the change/);
   // Only the change's test file runs, in a scratch copy outside the sandbox.
-  assert.deepEqual(spawns[0].args, ["--test", "test/greet-more.test.js"]);
+  assert.deepEqual(spawns[0].args, ["--test", "--test-force-exit", "test/greet-more.test.js"]);
   assert.ok(!spawns[0].cwd.startsWith(repo.workspacePath));
   assert.equal(git(repo.workspacePath, "status", "--porcelain"), before);
   assert.equal(git(repo.workspacePath, "worktree", "list").split("\n").length, 1);
@@ -237,7 +237,7 @@ test("compiled plain shell providers run only changed tests and keep environment
   const runtime = harness({ repositories: [repo], spawns, logs, environment,
     command: ["sh", "-c", "node --test"] });
   assert.equal(runtime.evaluate("change-a", "hash-a").status, "pass");
-  assert.deepEqual(spawns[0].args, ["--test", "test/greet-format.test.js"]);
+  assert.deepEqual(spawns[0].args, ["--test", "--test-force-exit", "test/greet-format.test.js"]);
   assert.equal(spawns[0].command, "node");
   assert.equal(runtime.evaluate("change-a", "hash-a").repositories[0].cached, true);
   assert.equal(spawns.length, 1);
@@ -295,7 +295,7 @@ test("a behavior change with no changed test runs the suite once on base", (t) =
   const result = harness({ repositories: [repo], spawns, logs: join(root, "logs") })
     .evaluate("change-a", "hash-a");
   assert.equal(result.status, "fail");
-  assert.deepEqual(spawns[0].args, ["--test"]);
+  assert.deepEqual(spawns[0].args, ["--test", "--test-force-exit"]);
   assert.match(result.findings[0].message, /no test in repository 'root' fails on the original code/);
   assert.deepEqual(readdirSync(join(root, "logs", "change-a", "test-discrimination"))
     .filter((name) => name.endsWith(".json")).length, 1);
@@ -394,7 +394,7 @@ test("per-file-discrimination-hidden: a passing bound test cannot hide behind a 
   assert.match(result.findings[0].message, /test\/b\.test\.mjs \(scenario: mentions name\)/);
   assert.doesNotMatch(result.findings[0].message, /a\.test\.mjs/);
   // Each file ran alone on base.
-  assert.deepEqual(spawns.map((row) => row.args), [["--test", "test/a.test.mjs"], ["--test", "test/b.test.mjs"]]);
+  assert.deepEqual(spawns.map((row) => row.args), [["--test", "--test-force-exit", "test/a.test.mjs"], ["--test", "--test-force-exit", "test/b.test.mjs"]]);
   // Without a binding the same change keeps the per-repository judgment.
   assert.equal(harness({ repositories: [repo], logs: join(root, "logs-legacy") })
     .evaluate("change-a", "hash-a").status, "pass");
