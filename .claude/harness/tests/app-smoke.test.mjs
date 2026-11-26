@@ -78,15 +78,16 @@ createServer((q, r) => { r.writeHead(200, { "content-type": "text/html" }); r.en
     const socket = connect({ host: hostname, port: Number(port) });
     socket.once("error", failed);
     socket.once("connect", () => { socket.destroy(); done(); });
-    // A port whose server is gone either refuses or, on a loaded runner while
-    // the socket closes, never answers; both mean nothing is listening.
+    // A port whose server is gone refuses, resets a connection caught while
+    // the socket closes, or on a loaded runner never answers; each means
+    // nothing is listening.
     socket.setTimeout(2000, () => socket.destroy(Object.assign(new Error("stop check timed out"), { code: "ETIMEDOUT" })));
   });
   const stoppedBy = Date.now() + 3000;
   while (Date.now() < stoppedBy) {
     try { await connection(); }
     catch (error) {
-      assert.ok(["ECONNREFUSED", "ETIMEDOUT"].includes(error.code), `unexpected ${error.code}: ${error.message}`);
+      assert.ok(["ECONNREFUSED", "ECONNRESET", "ETIMEDOUT"].includes(error.code), `unexpected ${error.code}: ${error.message}`);
       return;
     }
     await delay(50);

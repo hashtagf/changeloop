@@ -1,0 +1,76 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "headless-read-deny-find-delete-find-delete-find-exec-rm-find-exe",
+      "requirementKey": "headless-read-deny",
+      "scenario": "find ลบไฟล์ถูกปฏิเสธ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "headless-read-deny-git-diff-output-x-git-log-p-output-x-git-show",
+      "requirementKey": "headless-read-deny",
+      "scenario": "git เขียนไฟล์ถูกปฏิเสธ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "headless-read-deny-find-name-md-git-diff-head-1-git-log-oneline",
+      "requirementKey": "headless-read-deny",
+      "scenario": "คำสั่งอ่านยังผ่าน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "headless-read-deny-install-sh",
+      "requirementKey": "headless-read-deny",
+      "scenario": "upgrade ใส่ deny ให้โปรเจกต์เดิม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "headless-read-deny-install-sh-2",
+      "requirementKey": "headless-read-deny",
+      "scenario": "opt-out ไม่แตะ deny",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "headless-read-deny-installer-claude-p",
+      "requirementKey": "headless-read-deny",
+      "scenario": "คำสั่ง headless ที่พิมพ์ออกมา",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(sh .claude/tests/harness/run-installer-tests.sh) && (node --test .claude/harness/tests/app-smoke.test.mjs)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "sh .claude/tests/harness/run-installer-tests.sh",
+        "node --test .claude/harness/tests/app-smoke.test.mjs"
+      ]
+    }
+  }
+}

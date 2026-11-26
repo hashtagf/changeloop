@@ -566,6 +566,31 @@ if printf '%s' "$SHIPPED_ALLOW" | jq -e 'map(select(test("Bash\\((rm|mv|cp|git (
 else
   fail "shipped allowlist grants a write, delete, or state-moving Git command: $SHIPPED_ALLOW"
 fi
+# The read-only prefix rules would also admit commands that delete, write,
+# or run others; shipped deny rules (deny wins over allow) close those forms.
+SHIPPED_DENY="$(jq -c '.permissions.deny' "$ROOT/.claude/settings.json")"
+assert_eq "shipped deny rules close find and git write forms" \
+  '["Bash(find -delete*)","Bash(find * -delete*)","Bash(find -exec*)","Bash(find * -exec*)","Bash(find -ok*)","Bash(find * -ok*)","Bash(find -fprint*)","Bash(find * -fprint*)","Bash(find -fls*)","Bash(find * -fls*)","Bash(git diff --output*)","Bash(git diff * --output*)","Bash(git log --output*)","Bash(git log * --output*)","Bash(git show --output*)","Bash(git show * --output*)"]' \
+  "$SHIPPED_DENY"
+# Glob semantics: `*` matches any text. Every dangerous form matches a deny
+# rule; ordinary reads match none.
+deny_matches() {
+  printf '%s' "$SHIPPED_DENY" | jq -e --arg cmd "$1" 'any(.[];
+    (ltrimstr("Bash(") | rtrimstr(")") | gsub("(?<c>[.^$+?()\\[\\]{}|\\\\])"; "\\\\\(.c)") |
+      gsub("\\*"; ".*") | "^" + . + "$") as $re | $cmd | test($re))' >/dev/null
+}
+for cmd in 'find . -delete' 'find -delete' 'find . -exec rm {} +' 'find . -execdir sh -c x' \
+  'find . -ok rm {} ;' 'find . -fprint out' 'find . -fls out' 'git diff --output=x' \
+  'git log -p --output=x' 'git show HEAD --output=x'; do
+  if deny_matches "$cmd"; then pass "deny rules refuse: $cmd"
+  else fail "deny rules admit a write form: $cmd"; fi
+done
+for cmd in "find . -name '*.md'" "find . -name '*-okhttp*'" "find . -name 'x-execute.sh'" \
+  "find docs -name 'pre-delete.md'" 'git diff HEAD~1' 'git log --oneline' 'git show HEAD' 'git diff' \
+  'git log -- docs/old--output.md'; do
+  if deny_matches "$cmd"; then fail "deny rules refuse a read: $cmd"
+  else pass "deny rules leave the read alone: $cmd"; fi
+done
 assert_eq "upgrade appends the shipped allowlist after user rules in order" \
   "$(printf '%s' "$SHIPPED_ALLOW" | jq -c '["Bash(user-tool *)"] + .')" \
   "$(jq -c '.permissions.allow' "$TARGET/.claude/settings.json")"
@@ -1209,6 +1234,16 @@ assert_file_exists "the prepared OpenSpec CLI is project-local" \
 
 assert_eq "a fresh install seeds the shipped allowlist" \
   "$SHIPPED_ALLOW" "$(jq -c '.permissions.allow' "$ONLINE_TARGET/.claude/settings.json")"
+# The printed headless command passes every shipped deny rule after
+# --disallowedTools, read from the installer's real output.
+headless_line="$(printf '%s\n' "$online_install" | grep -- '--disallowedTools' || true)"
+headless_denied="${headless_line#*--disallowedTools}"
+for rule in $(printf '%s' "$SHIPPED_DENY" | jq -r '.[] | @base64'); do
+  rule="$(printf '%s' "$rule" | base64 -d)"
+  assert_contains "headless instructions deny $rule" "$headless_denied" "\"$rule\""
+done
+assert_eq "a fresh install seeds the shipped deny rules" \
+  "$SHIPPED_DENY" "$(jq -c '.permissions.deny' "$ONLINE_TARGET/.claude/settings.json")"
 
 # An install from before the allowlist already carried the CLI rule beside the
 # user's own; the upgrade keeps both where they were and adds only the rest.
@@ -1222,8 +1257,14 @@ assert_eq "pre-allowlist upgrade adds missing rules without duplicates" \
   "$(printf '%s' "$SHIPPED_ALLOW" | jq -c '["Bash(user-tool *)"] + .')" \
   "$(jq -c '.permissions.allow' "$ALLOW_UPGRADE/.claude/settings.json")"
 assert_cmd_zero "allowlist merge keeps unrelated user settings" \
-  jq -e '.permissions.deny == ["Bash(rm *)"] and .model == "user-choice"' \
-    "$ALLOW_UPGRADE/.claude/settings.json"
+  jq -e '.model == "user-choice"' "$ALLOW_UPGRADE/.claude/settings.json"
+assert_eq "upgrade appends the shipped deny rules after the user's own" \
+  "$(printf '%s' "$SHIPPED_DENY" | jq -c '["Bash(rm *)"] + .')" \
+  "$(jq -c '.permissions.deny' "$ALLOW_UPGRADE/.claude/settings.json")"
+bash "$ROOT/install.sh" "$ALLOW_UPGRADE" --source "$ROOT" --yes >/dev/null 2>&1
+assert_eq "rerunning the installer adds no deny rule twice" \
+  "$(printf '%s' "$SHIPPED_DENY" | jq -c '["Bash(rm *)"] + .')" \
+  "$(jq -c '.permissions.deny' "$ALLOW_UPGRADE/.claude/settings.json")"
 
 # A project seeded by an earlier release (five rules, user rule between them)
 # gains only the missing draft and investigation rules, appended last in
@@ -1257,6 +1298,8 @@ assert_cmd_zero "installer accepts the allowlist opt-out" \
   bash "$ROOT/install.sh" "$OPT_OUT" --source "$ROOT" --yes --no-permission-allowlist
 assert_eq "opt-out leaves the user's allowlist untouched" '["Bash(user-tool *)"]' \
   "$(jq -c '.permissions.allow' "$OPT_OUT/.claude/settings.json")"
+assert_cmd_zero "opt-out adds no deny rule" \
+  jq -e '.permissions | has("deny") | not' "$OPT_OUT/.claude/settings.json"
 assert_file_contains "opt-out still wires the shipped hooks" \
   "$OPT_OUT/.claude/settings.json" "phase-mutation-guard.sh"
 OPT_OUT_FRESH="$TMP/allowlist-opt-out-fresh"

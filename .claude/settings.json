@@ -23,6 +23,24 @@
       "Bash(git log *)",
       "Bash(git show)",
       "Bash(git show *)"
+    ],
+    "deny": [
+      "Bash(find -delete*)",
+      "Bash(find * -delete*)",
+      "Bash(find -exec*)",
+      "Bash(find * -exec*)",
+      "Bash(find -ok*)",
+      "Bash(find * -ok*)",
+      "Bash(find -fprint*)",
+      "Bash(find * -fprint*)",
+      "Bash(find -fls*)",
+      "Bash(find * -fls*)",
+      "Bash(git diff --output*)",
+      "Bash(git diff * --output*)",
+      "Bash(git log --output*)",
+      "Bash(git log * --output*)",
+      "Bash(git show --output*)",
+      "Bash(git show * --output*)"
     ]
   },
   "hooks": {

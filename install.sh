@@ -447,7 +447,7 @@ SETTINGS_DST="$TARGET_PATH/.claude/settings.json"
 # the user's own permissions stay exactly as they were.
 if [ "$PERMISSION_ALLOWLIST" = no ]; then
   settings_template="$BACKUP_DIR/.settings-without-allowlist.json"
-  jq 'del(.permissions.allow) |
+  jq 'del(.permissions.allow) | del(.permissions.deny) |
     if (.permissions // {}) == {} then del(.permissions) else . end' \
     "$SETTINGS_SRC" > "$settings_template"
   SETTINGS_SRC="$settings_template"
@@ -506,12 +506,17 @@ elif command -v jq >/dev/null 2>&1; then
     quote_foundation_hooks |
     # Append only the shipped rules the project lacks: user entries keep
     # their order, and a rerun adds nothing.
-    if ($src[0].permissions.allow // []) == [] then . else
-      .permissions //= {} |
-      .permissions.allow = ((.permissions.allow // []) as $have |
-        $have + [($src[0].permissions.allow[]) |
-          select(. as $rule | $have | any(. == $rule) | not)])
-    end |
+    def append_rules($kind):
+      if ($src[0].permissions[$kind] // []) == [] then . else
+        .permissions //= {} |
+        .permissions[$kind] = ((.permissions[$kind] // []) as $have |
+          $have + [($src[0].permissions[$kind][]) |
+            select(. as $rule | $have | any(. == $rule) | not)])
+      end;
+    # The deny rules close the write and delete forms the read-only prefix
+    # rules would otherwise admit (find -delete, git diff --output); deny wins
+    # over allow, so upgraded projects that keep the old allow rules are covered.
+    append_rules("allow") | append_rules("deny") |
     reduce ($src[0].hooks | to_entries[]) as $event (.;
       reduce ($event.value[]) as $entry (.;
         reduce ($entry.hooks[]) as $hook (.;
@@ -715,4 +720,4 @@ if command -v git >/dev/null 2>&1 &&
 fi
 printf 'Next: describe the outcome with /change <intent>; the agent handles the workflow details.\n'
 printf 'Headless (claude -p): trust the workspace by running claude once interactively, or grant exactly the installed allowlist:\n'
-printf '  claude -p "/change <intent>" --allowedTools "Bash(cloop *)" "Bash(.foundation/bin/cloop *)" "Bash(node .claude/harness/foundation.mjs *)" "Edit(/.foundation/drafts/**)" "Edit(/.foundation/sandboxes/**)" "Edit(/.foundation/repository-sandboxes/**)" "Edit(/openspec/investigations/**)" "Bash(find *)" "Bash(grep *)" "Bash(ls *)" "Bash(head *)" "Bash(wc *)" "Bash(rtk ls *)" "Bash(rtk grep *)" "Bash(git status)" "Bash(git status *)" "Bash(git diff)" "Bash(git diff *)" "Bash(git log)" "Bash(git log *)" "Bash(git show)" "Bash(git show *)"\n'
+printf '  claude -p "/change <intent>" --allowedTools "Bash(cloop *)" "Bash(.foundation/bin/cloop *)" "Bash(node .claude/harness/foundation.mjs *)" "Edit(/.foundation/drafts/**)" "Edit(/.foundation/sandboxes/**)" "Edit(/.foundation/repository-sandboxes/**)" "Edit(/openspec/investigations/**)" "Bash(find *)" "Bash(grep *)" "Bash(ls *)" "Bash(head *)" "Bash(wc *)" "Bash(rtk ls *)" "Bash(rtk grep *)" "Bash(git status)" "Bash(git status *)" "Bash(git diff)" "Bash(git diff *)" "Bash(git log)" "Bash(git log *)" "Bash(git show)" "Bash(git show *)" --disallowedTools "Bash(find -delete*)" "Bash(find * -delete*)" "Bash(find -exec*)" "Bash(find * -exec*)" "Bash(find -ok*)" "Bash(find * -ok*)" "Bash(find -fprint*)" "Bash(find * -fprint*)" "Bash(find -fls*)" "Bash(find * -fls*)" "Bash(git diff --output*)" "Bash(git diff * --output*)" "Bash(git log --output*)" "Bash(git log * --output*)" "Bash(git show --output*)" "Bash(git show * --output*)"\n'

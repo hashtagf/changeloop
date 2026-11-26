@@ -42,6 +42,19 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- The read-only permission allowlist no longer admits commands that delete,
+  write, or run others. `Bash(find *)` and `Bash(git diff|log|show *)` match
+  by prefix, so `find . -delete`, `find -exec rm`, and `git diff --output=<file>`
+  ran without a prompt. The installer now also appends `permissions.deny` rules
+  for `find` with `-delete`, `-exec`, `-ok`, `-fprint`, or `-fls` and `git
+  diff`/`log`/`show` with `--output` (a flag counts only after a space, so
+  names like `*-okhttp*` stay readable); deny wins over allow and refuses
+  outright, so upgraded projects are covered. `--no-permission-allowlist`
+  adds none.
+- A task-only `change amend` checks the verify commands it adds or changes,
+  as an amendment with requirements already did: a product task's verify
+  that runs no test, or names a test file nothing creates, is refused and
+  nothing is written.
 - Five living specs match the shipped behavior again (found by `spec-drift
   --review`): `package` prints JSON and writes no file, labels include
   `stale`, `advance` runs the generated reviewer route and speaks seven
@@ -130,10 +143,6 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
 
 ### Fixed
 
-- A task-only `change amend` checks the verify commands it adds or changes,
-  as an amendment with requirements already did: a product task's verify
-  that runs no test, or names a test file nothing creates, is refused and
-  nothing is written.
 - A scenario must be provable where it is placed. `change start` refuses a
   draft whose scenario needs another repository for real ("wired to the real
   payments") while only a task in one repository covers it, and warns when a

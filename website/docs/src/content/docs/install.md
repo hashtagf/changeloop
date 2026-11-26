@@ -198,7 +198,7 @@ section for a normal interactive setup.
 
 ### Permission allowlist
 
-`.claude/settings.json` stays project-owned. The installer merges the shipped hooks and appends a narrow `permissions.allow` list, so Claude Code does not ask for approval on every harness step: `Bash(cloop *)`, `Bash(.foundation/bin/cloop *)`, `Bash(node .claude/harness/foundation.mjs *)`, `Edit(/.foundation/sandboxes/**)`, `Edit(/.foundation/repository-sandboxes/**)`, `Edit(/.foundation/drafts/**)` (the Change draft), `Edit(/openspec/investigations/**)` (the Investigate record), and read-only exploration: `Bash(find *)`, `Bash(grep *)`, `Bash(ls *)`, `Bash(head *)`, `Bash(wc *)`, the `rtk ls` / `rtk grep` proxied forms, and read-only Git (`Bash(git status)`, `Bash(git status *)`, and the same pair for `diff`, `log`, `show`). `cat` gets no rule (a prefix rule would also pre-allow `cat > file`; read files with the Read tool), and no rule grants a write, a delete, or Git that moves state. Project test runners get no rule: each Build task returns its verify as a `checkCommand` (`cloop exec <change> --task <id> -- <verify>`) that the CLI rule already covers. It adds only missing rules after your own, never removes or reorders entries, and a rerun adds nothing. The PreToolUse guards still run before these rules. Pass `--no-permission-allowlist` on every install or upgrade to leave `permissions.allow` untouched.
+`.claude/settings.json` stays project-owned. The installer merges the shipped hooks and appends a narrow `permissions.allow` list, so Claude Code does not ask for approval on every harness step: `Bash(cloop *)`, `Bash(.foundation/bin/cloop *)`, `Bash(node .claude/harness/foundation.mjs *)`, `Edit(/.foundation/sandboxes/**)`, `Edit(/.foundation/repository-sandboxes/**)`, `Edit(/.foundation/drafts/**)` (the Change draft), `Edit(/openspec/investigations/**)` (the Investigate record), and read-only exploration: `Bash(find *)`, `Bash(grep *)`, `Bash(ls *)`, `Bash(head *)`, `Bash(wc *)`, the `rtk ls` / `rtk grep` proxied forms, and read-only Git (`Bash(git status)`, `Bash(git status *)`, and the same pair for `diff`, `log`, `show`). `cat` gets no rule (a prefix rule would also pre-allow `cat > file`; read files with the Read tool), and no rule grants a write, a delete, or Git that moves state. Because those read rules match by prefix, the installer also appends `permissions.deny` rules that refuse the forms that would write or run other commands: `find` with `-delete`, `-exec`/`-execdir`, `-ok`/`-okdir`, `-fprint`/`-fprintf`, or `-fls`, and `git diff`/`log`/`show` with `--output`. A flag counts only after a space, so a name such as `*-okhttp*` stays readable. Deny wins over allow and refuses the call outright (no prompt), so an upgraded project that keeps the older rules is covered too. Project test runners get no rule: each Build task returns its verify as a `checkCommand` (`cloop exec <change> --task <id> -- <verify>`) that the CLI rule already covers. It adds only missing rules after your own, never removes or reorders entries, and a rerun adds nothing. The PreToolUse guards still run before these rules. Pass `--no-permission-allowlist` on every install or upgrade to leave `permissions.allow` and `permissions.deny` untouched.
 
 ### Headless / CI (`claude -p`)
 
@@ -213,7 +213,14 @@ claude -p "/change <intent>" --allowedTools \
   "Bash(find *)" "Bash(grep *)" "Bash(ls *)" "Bash(head *)" "Bash(wc *)" \
   "Bash(rtk ls *)" "Bash(rtk grep *)" \
   "Bash(git status)" "Bash(git status *)" "Bash(git diff)" "Bash(git diff *)" \
-  "Bash(git log)" "Bash(git log *)" "Bash(git show)" "Bash(git show *)"
+  "Bash(git log)" "Bash(git log *)" "Bash(git show)" "Bash(git show *)" \
+  --disallowedTools \
+  "Bash(find -delete*)" "Bash(find * -delete*)" "Bash(find -exec*)" \
+  "Bash(find * -exec*)" "Bash(find -ok*)" "Bash(find * -ok*)" \
+  "Bash(find -fprint*)" "Bash(find * -fprint*)" "Bash(find -fls*)" \
+  "Bash(find * -fls*)" "Bash(git diff --output*)" "Bash(git diff * --output*)" \
+  "Bash(git log --output*)" "Bash(git log * --output*)" "Bash(git show --output*)" \
+  "Bash(git show * --output*)"
 ```
 
 Build checks run through `cloop exec`, so test runners need no grant; add other project tools only when a run needs them. Claude Code treats paths under `~/.claude/` as sensitive, so keep consumer projects outside that directory for unattended runs.

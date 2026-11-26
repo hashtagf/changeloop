@@ -14,6 +14,10 @@ import { coordinatorAction } from "../runtime/workflow/advance/advance-actions.m
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const read = (path) => readFileSync(join(ROOT, path), "utf8");
 const ALLOW = JSON.parse(read(".claude/settings.json")).permissions.allow;
+const DENY = JSON.parse(read(".claude/settings.json")).permissions.deny;
+// The rules a headless example grants and refuses, read from its two flags.
+const rulesAfter = (example, flag) => [...(example.split(flag)[1] || "")
+  .split(/--(?:allowedTools|disallowedTools)/)[0].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
 
 // Claude Code's documented rule shapes the shipped list uses: `Bash(prefix *)`
 // matches the prefix alone or followed by a space; `Edit(/glob)` is a gitignore
@@ -160,16 +164,15 @@ test("the documented headless run grants exactly the seeded allowlist", () => {
     assert.ok(example, `${path} documents a headless run`);
     assert.doesNotMatch(example, /--permission-mode|acceptEdits|bypassPermissions/,
       `${path}: the headless run must not widen edit approval`);
-    const granted = [...example.split("--allowedTools")[1].matchAll(/"([^"]+)"/g)]
-      .map((match) => match[1]);
-    assert.deepEqual([...granted].sort(), [...ALLOW].sort(), `${path} grants the seeded rules`);
+    assert.deepEqual(rulesAfter(example, "--allowedTools").sort(), [...ALLOW].sort(), `${path} grants the seeded rules`);
+    assert.deepEqual(rulesAfter(example, "--disallowedTools").sort(), [...DENY].sort(), `${path} refuses the seeded deny rules`);
   }
   // The installer's closing hint is the first headless route a user sees.
   const hint = read("install.sh").match(/^printf '\s*(claude -p [^\n]+)\\n'$/m)?.[1];
   assert.ok(hint, "install.sh prints a headless run");
   assert.doesNotMatch(hint, /--permission-mode|acceptEdits|bypassPermissions/);
-  assert.deepEqual([...hint.split("--allowedTools")[1].matchAll(/"([^"]+)"/g)]
-    .map((match) => match[1]).sort(), [...ALLOW].sort(), "install.sh grants the seeded rules");
+  assert.deepEqual(rulesAfter(hint, "--allowedTools").sort(), [...ALLOW].sort(), "install.sh grants the seeded rules");
+  assert.deepEqual(rulesAfter(hint, "--disallowedTools").sort(), [...DENY].sort(), "install.sh refuses the seeded deny rules");
 });
 
 test("the seeded allowlist grants no user-authority or destructive operation", () => {

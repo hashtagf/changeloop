@@ -180,7 +180,7 @@ interactive ปกติข้ามส่วนนี้ได้
 
 ### Permission allowlist
 
-`.claude/settings.json` ยังเป็นของ project Installer จะ merge hook ที่ ship มา และต่อท้าย `permissions.allow` แบบแคบ เพื่อไม่ให้ Claude Code ขออนุมัติทุกขั้นของ harness ได้แก่ `Bash(cloop *)`, `Bash(.foundation/bin/cloop *)`, `Bash(node .claude/harness/foundation.mjs *)`, `Edit(/.foundation/sandboxes/**)`, `Edit(/.foundation/repository-sandboxes/**)`, `Edit(/.foundation/drafts/**)` (draft ของ Change), `Edit(/openspec/investigations/**)` (record ของ Investigate) และคำสั่งอ่านอย่างเดียว ได้แก่ `Bash(find *)`, `Bash(grep *)`, `Bash(ls *)`, `Bash(head *)`, `Bash(wc *)` รวมถึงรูปแบบที่ `rtk ls` / `rtk grep` แปลงให้ และ Git แบบอ่านอย่างเดียว (`Bash(git status)`, `Bash(git status *)` และคู่เดียวกันสำหรับ `diff`, `log`, `show`) `cat` ไม่ได้รับ rule (rule แบบ prefix จะปล่อย `cat > file` ด้วย ให้อ่านไฟล์ผ่าน Read tool แทน) และไม่มี rule ใดให้สิทธิ์เขียน ลบ หรือ Git ที่เปลี่ยน state test runner ของโปรเจกต์ไม่ได้รับ rule: Build task แต่ละงานคืน verify เป็น `checkCommand` (`cloop exec <change> --task <id> -- <verify>`) ซึ่ง rule ของ CLI ครอบคลุมอยู่แล้ว โดยเพิ่มเฉพาะ rule ที่ยังไม่มีต่อจาก rule ของผู้ใช้ ไม่ลบหรือสลับลำดับ entry เดิม และการรันซ้ำไม่เพิ่มอะไร guard ของ PreToolUse ยังทำงานก่อน rule เหล่านี้ ให้ใส่ `--no-permission-allowlist` ทุกครั้งที่ install หรือ upgrade หากไม่ต้องการให้แตะ `permissions.allow`
+`.claude/settings.json` ยังเป็นของ project Installer จะ merge hook ที่ ship มา และต่อท้าย `permissions.allow` แบบแคบ เพื่อไม่ให้ Claude Code ขออนุมัติทุกขั้นของ harness ได้แก่ `Bash(cloop *)`, `Bash(.foundation/bin/cloop *)`, `Bash(node .claude/harness/foundation.mjs *)`, `Edit(/.foundation/sandboxes/**)`, `Edit(/.foundation/repository-sandboxes/**)`, `Edit(/.foundation/drafts/**)` (draft ของ Change), `Edit(/openspec/investigations/**)` (record ของ Investigate) และคำสั่งอ่านอย่างเดียว ได้แก่ `Bash(find *)`, `Bash(grep *)`, `Bash(ls *)`, `Bash(head *)`, `Bash(wc *)` รวมถึงรูปแบบที่ `rtk ls` / `rtk grep` แปลงให้ และ Git แบบอ่านอย่างเดียว (`Bash(git status)`, `Bash(git status *)` และคู่เดียวกันสำหรับ `diff`, `log`, `show`) `cat` ไม่ได้รับ rule (rule แบบ prefix จะปล่อย `cat > file` ด้วย ให้อ่านไฟล์ผ่าน Read tool แทน) และไม่มี rule ใดให้สิทธิ์เขียน ลบ หรือ Git ที่เปลี่ยน state เนื่องจาก rule อ่านเหล่านี้จับแบบ prefix installer จึงต่อท้าย `permissions.deny` ที่ปฏิเสธรูปแบบที่เขียนไฟล์หรือรันคำสั่งอื่น ได้แก่ `find` ที่มี `-delete`, `-exec`/`-execdir`, `-ok`/`-okdir`, `-fprint`/`-fprintf` หรือ `-fls` และ `git diff`/`log`/`show` ที่มี `--output` flag นับเฉพาะเมื่อมีช่องว่างนำหน้า ชื่ออย่าง `*-okhttp*` จึงยังอ่านได้ กฎ deny มีผลเหนือ allow และปฏิเสธคำสั่งทันทีโดยไม่ถาม โปรเจกต์ที่ upgrade แล้วยังมี rule เดิมจึงได้รับการป้องกันด้วย test runner ของโปรเจกต์ไม่ได้รับ rule: Build task แต่ละงานคืน verify เป็น `checkCommand` (`cloop exec <change> --task <id> -- <verify>`) ซึ่ง rule ของ CLI ครอบคลุมอยู่แล้ว โดยเพิ่มเฉพาะ rule ที่ยังไม่มีต่อจาก rule ของผู้ใช้ ไม่ลบหรือสลับลำดับ entry เดิม และการรันซ้ำไม่เพิ่มอะไร guard ของ PreToolUse ยังทำงานก่อน rule เหล่านี้ ให้ใส่ `--no-permission-allowlist` ทุกครั้งที่ install หรือ upgrade หากไม่ต้องการให้แตะ `permissions.allow` และ `permissions.deny`
 
 ### Headless / CI (`claude -p`)
 
@@ -195,7 +195,14 @@ claude -p "/change <intent>" --allowedTools \
   "Bash(find *)" "Bash(grep *)" "Bash(ls *)" "Bash(head *)" "Bash(wc *)" \
   "Bash(rtk ls *)" "Bash(rtk grep *)" \
   "Bash(git status)" "Bash(git status *)" "Bash(git diff)" "Bash(git diff *)" \
-  "Bash(git log)" "Bash(git log *)" "Bash(git show)" "Bash(git show *)"
+  "Bash(git log)" "Bash(git log *)" "Bash(git show)" "Bash(git show *)" \
+  --disallowedTools \
+  "Bash(find -delete*)" "Bash(find * -delete*)" "Bash(find -exec*)" \
+  "Bash(find * -exec*)" "Bash(find -ok*)" "Bash(find * -ok*)" \
+  "Bash(find -fprint*)" "Bash(find * -fprint*)" "Bash(find -fls*)" \
+  "Bash(find * -fls*)" "Bash(git diff --output*)" "Bash(git diff * --output*)" \
+  "Bash(git log --output*)" "Bash(git log * --output*)" "Bash(git show --output*)" \
+  "Bash(git show * --output*)"
 ```
 
 check ของ Build รันผ่าน `cloop exec` จึงไม่ต้องให้สิทธิ์ test runner เพิ่ม tool อื่นของโปรเจกต์เฉพาะเมื่อการรันต้องใช้ Claude Code ถือว่า path ใต้ `~/.claude/` เป็น sensitive path จึงควรวาง consumer project ไว้นอก directory นั้นเมื่อรันแบบไม่มีคนเฝ้า
