@@ -42,6 +42,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- The skill reference-governance audit tokenizes each paragraph once and
+  skips pairs whose word-set sizes cannot reach the near-duplicate threshold.
+  It took 41 of the `context budgets` suite's 44 seconds and now takes under
+  a second, with the same findings.
 - The default `run-all.sh` gate no longer runs the upgrade-compat script
   inside `risk-tiered review contract`; that case took 158 of the gate's 166
   seconds although `upgrade compatibility` belongs to the slow tier. The

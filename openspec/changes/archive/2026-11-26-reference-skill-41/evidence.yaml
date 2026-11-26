@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "reference-governance-fast-claude-skills",
+      "requirementKey": "reference-governance-fast",
+      "scenario": "skill จริงของ repo",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "reference-governance-fast-2",
+      "requirementKey": "reference-governance-fast",
+      "scenario": "ย่อหน้าซ้ำและเกือบซ้ำ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "reference-governance-fast-3",
+      "requirementKey": "reference-governance-fast",
+      "scenario": "ขนาดชุดคำต่างกันมาก",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/tests/harness/reference-governance.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

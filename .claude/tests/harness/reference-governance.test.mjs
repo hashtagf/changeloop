@@ -59,6 +59,23 @@ test("reports near-duplicate ownership drift across skill bundles", (t) => {
   assert.ok(auditReferenceGovernance(root).some((issue) => issue.includes("near-duplicate")));
 });
 
+test("a block that contains a much shorter one is not a near-duplicate", (t) => {
+  const root = fixture(t);
+  mkdirSync(join(root, "testing", "references"), { recursive: true });
+  writeFileSync(join(root, "testing", "SKILL.md"), "# Testing\n\nRead `references/design.md`.\n");
+  const short = Array.from({ length: 40 }, (_, i) => `word${i}`).join(" ");
+  const long = `${short} ${Array.from({ length: 60 }, (_, i) => `extra${i}`).join(" ")}`;
+  writeFileSync(join(root, "change", "references", "workflow.md"), `# Source contract\n\n${short}\n`);
+  writeFileSync(join(root, "testing", "references", "design.md"), `# Design\n\n${long}\n`);
+  assert.deepEqual(auditReferenceGovernance(root).filter((issue) => issue.includes("duplicate")), []);
+});
+
+test("the shipped skills audit in seconds, not the 41 the pairwise pass took", () => {
+  const started = Date.now();
+  assert.deepEqual(auditReferenceGovernance(resolve(dirname(fileURLToPath(import.meta.url)), "../../skills")), []);
+  assert.ok(Date.now() - started < 10000, `took ${Date.now() - started}ms`);
+});
+
 test("Investigate harness-ownership prose is backed by runtime enforcement", () => {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
   const workflow = readFileSync(join(root,

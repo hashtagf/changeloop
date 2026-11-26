@@ -4,7 +4,6 @@ import { pathToFileURL } from "node:url";
 
 const words = (value) => String(value || "").toLocaleLowerCase("und")
   .normalize("NFKC").match(/[\p{L}\p{N}]+/gu) || [];
-const normalizedBlock = (value) => words(value).join(" ");
 function markdownFiles(directory) {
   if (!existsSync(directory)) return [];
   const files = [];
@@ -53,13 +52,15 @@ function paragraphs(markdown) {
     .filter((block) => !block.startsWith("```") && words(block).length >= 24);
 }
 
-function similarity(left, right) {
-  const a = new Set(words(left));
-  const b = new Set(words(right));
-  const intersection = [...a].filter((word) => b.has(word)).length;
-  const union = new Set([...a, ...b]).size;
+// Jaccard similarity of two word sets. It cannot exceed the ratio of the set
+// sizes, so a pair whose ratio is below the threshold is never compared.
+function similarity(a, b) {
+  let intersection = 0;
+  for (const word of a) if (b.has(word)) intersection += 1;
+  const union = a.size + b.size - intersection;
   return union ? intersection / union : 0;
 }
+const NEAR_DUPLICATE = 0.92;
 
 export function auditReferenceGovernance(skillsRoot, {
   acyclicBundles = new Set(["change", "investigate"])
@@ -95,8 +96,13 @@ export function auditReferenceGovernance(skillsRoot, {
           issues.push(`${relative(root, file)} has unresolved anchor ${link.path}#${link.fragment}`);
         if (known.has(target) && target !== file) graph.get(file).push(target);
       }
-      for (const block of paragraphs(markdown))
-        allParagraphs.push({ file, bundle, block, normalized: normalizedBlock(block) });
+      // Tokenized once: the pairwise pass below re-tokenized every block for
+      // every pair and took 41 of the context-budget suite's 44 seconds.
+      for (const block of paragraphs(markdown)) {
+        const list = words(block);
+        allParagraphs.push({ file, bundle, block, normalized: list.join(" "),
+          length: list.length, set: new Set(list) });
+      }
     }
     const reached = new Set();
     const active = new Set();
@@ -124,8 +130,9 @@ export function auditReferenceGovernance(skillsRoot, {
       if (a.file === b.file) continue;
       if (a.normalized === b.normalized)
         issues.push(`${relative(root, a.file)} and ${relative(root, b.file)} duplicate a long block`);
-      else if (words(a.block).length >= 40 && words(b.block).length >= 40 &&
-          similarity(a.block, b.block) >= 0.92)
+      else if (a.length >= 40 && b.length >= 40 &&
+          Math.min(a.set.size, b.set.size) >= NEAR_DUPLICATE * Math.max(a.set.size, b.set.size) &&
+          similarity(a.set, b.set) >= NEAR_DUPLICATE)
         issues.push(`${relative(root, a.file)} and ${relative(root, b.file)} near-duplicate a long block`);
     }
   }
