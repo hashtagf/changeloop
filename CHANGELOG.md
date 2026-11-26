@@ -9,6 +9,8 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+## [3.7.8] - 2026-11-25
+
 Release qualification: a paid checkpoint of the ten standard scenarios ran
 one at a time on `claude-sonnet-5-5` at `5d7967b5`. All ten reached
 `archived` with full oracle scores, including `project-tracker-api`, which
@@ -2012,7 +2014,8 @@ project upgrades in place.
   older abandon or a Land undo left such bookkeeping behind, creating a change
   with that id moves it into the newest retirement record.
 
-[Unreleased]: https://github.com/hashtagf/changeloop/compare/v3.7.7...HEAD
+[Unreleased]: https://github.com/hashtagf/changeloop/compare/v3.7.8...HEAD
+[3.7.8]: https://github.com/hashtagf/changeloop/compare/v3.7.7...v3.7.8
 [3.7.7]: https://github.com/hashtagf/changeloop/compare/v3.7.6...v3.7.7
 [3.7.6]: https://github.com/hashtagf/changeloop/compare/v3.7.5...v3.7.6
 [3.7.5]: https://github.com/hashtagf/changeloop/compare/v3.7.4...v3.7.5
