@@ -131,6 +131,8 @@ unshipped harness tests, and repository-only dependencies are covered in
 7. Update canonical documentation and English/Thai public mirrors together.
    Change `.claude/harness/protocol.json` only for a wire-visible contract.
 8. Run affected checks while iterating, then the default gate before commit;
+   a passing Prove `static-analysis` receipt for the landed change counts as the
+   default gate, but if files were edited after Land, run the default gate again.
    CI runs the complete `--full` set on every push. The default gate also runs
    a slow suite that alone checks a changed file (printed CLI output promotes
    the installer smoke; `PROMOTED` in `affected-suite-selector.mjs`). Review `git diff --check` and the final status; do not commit generated
@@ -153,7 +155,7 @@ rtk npm run quality:scorecard            # code health, rule enforcement, pyrami
 rtk node scripts/quality/coverage-ratchet.mjs  # harness coverage (slow tier, about 3 minutes)
 ```
 
-The default `run-all.sh` (fast tier, about three minutes) is the local gate
+The default `run-all.sh` (fast tier, about two minutes) is the local gate
 before commit. `run-all.sh --full` adds the slow tier; CI runs it on every push
 and pull request, and a green full run is required before merge or release. A
 changed shipped file needs both. Paid scenario

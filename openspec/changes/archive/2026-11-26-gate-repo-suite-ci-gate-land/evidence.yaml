@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "default-gate-skips-slow-upgrade-run-all-sh-full",
+      "requirementKey": "default-gate-skips-slow-upgrade",
+      "scenario": "tier ค่าเริ่มต้น",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "default-gate-skips-slow-upgrade-run-all-sh-full-2",
+      "requirementKey": "default-gate-skips-slow-upgrade",
+      "scenario": "tier full",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "default-gate-skips-slow-upgrade-run-risk-tiered-review-tests-mjs",
+      "requirementKey": "default-gate-skips-slow-upgrade",
+      "scenario": "รัน wrapper ตรง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "prove-counts-as-gate",
+      "requirementKey": "prove-counts-as-gate",
+      "scenario": "แก้ไฟล์หลัง Land",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/tests/harness/risk-tiered-review-tier.test.mjs) && (node --test .claude/tests/docs/maintainer-gate.test.mjs)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "node --test .claude/tests/harness/risk-tiered-review-tier.test.mjs",
+        "node --test .claude/tests/docs/maintainer-gate.test.mjs"
+      ]
+    }
+  }
+}

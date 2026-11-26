@@ -42,6 +42,13 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- The default `run-all.sh` gate no longer runs the upgrade-compat script
+  inside `risk-tiered review contract`; that case took 158 of the gate's 166
+  seconds although `upgrade compatibility` belongs to the slow tier. The
+  default and affected gates report it as deferred, and `--full` (CI) and
+  direct runs still run it. Maintainer guides now count a passing Prove
+  `static-analysis` receipt as the pre-commit gate unless files changed after
+  Land.
 - The project-tracker-api benchmark oracle no longer requires 15 delivered
   tests, a count TRACKER-API.md never states. `CASE_TESTS_EXIST` now passes
   when the delivered suite passes, has at least one test, and fails on the

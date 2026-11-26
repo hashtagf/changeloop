@@ -51,7 +51,7 @@ rtk test bash .claude/tests/run-all.sh --affected
 
 The default `run-all.sh` gate is the local gate before commit. It runs every
 suite except the slow tier (real-Git end-to-end, mutation, installer, and
-topology suites) in about three minutes. You do not need to run it before and
+topology suites) in about two minutes. You do not need to run it before and
 after every edit:
 
 ```sh

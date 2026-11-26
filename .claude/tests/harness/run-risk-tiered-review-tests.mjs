@@ -29,7 +29,10 @@ const cases = [
   },
   {
     id: "CASE-UPGRADE-COMPAT",
-    command: ["sh", ".claude/tests/harness/run-upgrade-compat-tests.sh"]
+    command: ["sh", ".claude/tests/harness/run-upgrade-compat-tests.sh"],
+    // About 130s alone and already the SLOW `upgrade compatibility` suite:
+    // the default and affected gates defer it to `--full` (CI on every push).
+    slow: true
   },
   {
     id: "CASE-EXTERNAL-HANDOFF",
@@ -41,10 +44,26 @@ const cases = [
   }
 ];
 
+// Unset when run directly: every case runs.
+function deferredInTier(testCase, tier = process.env.FOUNDATION_RUN_ALL_TIER) {
+  return Boolean(testCase.slow) && ["fast", "affected"].includes(tier);
+}
+
 const executions = new Map();
 const rows = [];
 for (const testCase of cases) {
+  if (deferredInTier(testCase)) {
+    rows.push({ id: testCase.id, status: "deferred" });
+    process.stdout.write(`DEFERRED: ${testCase.id} (runs in --full)\n`);
+    continue;
+  }
   const key = JSON.stringify(testCase.command);
+  // A dry run names what the tier would execute without running it.
+  if (process.env.FOUNDATION_RISK_TIERED_DRY_RUN === "1") {
+    process.stdout.write(`WOULD RUN: ${testCase.id}\n`);
+    rows.push({ id: testCase.id, status: "passed" });
+    continue;
+  }
   if (!executions.has(key)) {
     const [command, ...args] = testCase.command;
     executions.set(key, spawnSync(command, args, {
@@ -70,6 +89,7 @@ writeFileSync(output, `${JSON.stringify({
   numTotalTests: rows.length,
   numPassedTests: rows.filter((row) => row.status === "passed").length,
   numFailedTests: rows.filter((row) => row.status === "failed").length,
+  numDeferredTests: rows.filter((row) => row.status === "deferred").length,
   criticalCases: rows
 }, null, 2)}\n`);
-if (rows.some((row) => row.status !== "passed")) process.exit(1);
+if (rows.some((row) => row.status === "failed")) process.exit(1);

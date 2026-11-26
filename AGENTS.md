@@ -117,9 +117,12 @@ rtk git diff --check
 ```
 
 The deterministic gate has two tiers. The default `.claude/tests/run-all.sh`
-run (about three minutes) is the local gate before commit; `run-all.sh --full`
+run (about two minutes) is the local gate before commit; `run-all.sh --full`
 adds the slow tier, runs in CI on every push and pull request, and must pass
-before release. A changed shipped file requires the default gate locally and a
+before release. A passing Prove `static-analysis` receipt for a landed change
+runs that same gate on the landed content, so it counts as the default gate;
+if files were edited after Land, run the default gate again before commit.
+A changed shipped file requires the default gate locally and a
 green CI full run before merge or release. Website
 documentation changes require the docs build. Wire-visible changes require the
 matching protocol pin and upgrade coverage.

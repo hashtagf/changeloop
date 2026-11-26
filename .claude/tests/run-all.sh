@@ -30,7 +30,8 @@ fi
 # must never see them; only the runner's own controls survive.
 for _host_var in $(env | sed -n 's/^\(FOUNDATION_[A-Z0-9_]*\)=.*/\1/p'); do
   case "$_host_var" in
-    FOUNDATION_TEST_JOBS|FOUNDATION_SUITE_TIMEOUT_SECONDS|FOUNDATION_CHANGED_FILES|FOUNDATION_TEST_BASE) ;;
+    # FOUNDATION_RUN_ALL_TIER is set below and must survive each --suite child.
+    FOUNDATION_TEST_JOBS|FOUNDATION_SUITE_TIMEOUT_SECONDS|FOUNDATION_CHANGED_FILES|FOUNDATION_TEST_BASE|FOUNDATION_RUN_ALL_TIER) ;;
     *) unset "$_host_var" ;;
   esac
 done
@@ -429,6 +430,8 @@ context rollup drain|node --test "$HERE/harness/run-context-rollup-drain-tests.m
 actionable validation and telemetry|sh "$HERE/harness/run-actionable-validation-telemetry-tests.sh"
 v3.3 review policy|node "$HERE/harness/run-v33-policy-tests.mjs"
 risk-tiered review contract|node "$HERE/harness/run-risk-tiered-review-tests.mjs"
+risk-tiered review tier|node --test "$HERE/harness/risk-tiered-review-tier.test.mjs"
+maintainer gate rule|node --test "$HERE/docs/maintainer-gate.test.mjs"
 risk-tiered review protocol|node --test "$HERE/harness/run-review-protocol-tests.mjs"
 risk-tiered review mutation|node "$HERE/harness/run-risk-tiered-review-mutation.mjs"
 configured reviewer adapters|node "$ROOT/.claude/harness/tests/configured-reviewer.test.mjs"
@@ -769,6 +772,10 @@ repository_status "$ROOT" > "$WORK/repository-before.status" || {
 # safely ignore the environment variable.
 NODE_COMPILE_CACHE="$WORK/node-compile-cache"
 export NODE_COMPILE_CACHE
+# Suites that wrap a SLOW suite read the tier so they do not run it inside the
+# default gate (risk-tiered review contract and upgrade compatibility).
+FOUNDATION_RUN_ALL_TIER="$selection_mode"
+export FOUNDATION_RUN_ALL_TIER
 pool_pid=""
 monitor_pid=""
 cleanup() {
