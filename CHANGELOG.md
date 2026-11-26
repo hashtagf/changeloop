@@ -50,7 +50,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
   diff`/`log`/`show` with `--output` (a flag counts only after a space, so
   names like `*-okhttp*` stay readable); deny wins over allow and refuses
   outright, so upgraded projects are covered. `--no-permission-allowlist`
-  adds none.
+  adds none. A command a deny rule refuses now gets the runnable route from
+  the shell-route guard instead of a bare refusal: `find -exec grep` points
+  to `rg` or the Grep tool, `find -delete`/`-exec` to `find … -print` and a
+  separate command, and `git … --output=<file>` to `git … > <file>`.
 - A task-only `change amend` checks the verify commands it adds or changes,
   as an amendment with requirements already did: a product task's verify
   that runs no test, or names a test file nothing creates, is refused and

@@ -1,0 +1,72 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "deny-route-agent-find-name-md-exec-grep-l-x",
+      "requirementKey": "deny-route",
+      "scenario": "find -exec grep",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deny-route-agent-find-build-name-tmp-delete",
+      "requirementKey": "deny-route",
+      "scenario": "find -delete",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deny-route-agent-git-diff-head-1-output-patch-diff",
+      "requirementKey": "deny-route",
+      "scenario": "git --output",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deny-route-agent-find-exec-grep-x",
+      "requirementKey": "deny-route",
+      "scenario": "ไม่มีกฎ deny",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deny-route-agent-find-name-okhttp",
+      "requirementKey": "deny-route",
+      "scenario": "คำสั่งอ่านปกติ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deny-route-agent-find-delete",
+      "requirementKey": "deny-route",
+      "scenario": "ปิด guard",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/tests/hooks/shell-route-guard.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

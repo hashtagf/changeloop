@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import test from "node:test";
@@ -94,6 +94,33 @@ test("Claude Code Bash allow rules match exact, prefix, and glob forms", () => {
   assert.ok(!bashRuleAllows("Read(//work/**)", "npm test"));
 });
 
+const SHIPPED_DENY = JSON.parse(readFileSync(join(ROOT, ".claude/settings.json"), "utf8")).permissions.deny;
+const denyContext = (rules = SHIPPED_DENY) => context({
+  denied: (text) => rules.some((rule) => bashRuleAllows(rule, text)) });
+
+test("a command the deny rules refuse gets a runnable route", () => {
+  const grep = shellRoute("find . -name '*.md' -exec grep -l x {} +", denyContext());
+  assert.equal(grep.refuse, true);
+  assert.match(grep.reason, /rg -l <pattern> <dir>.*Grep tool/);
+  const remove = shellRoute("find build -name '*.tmp' -delete", denyContext());
+  assert.match(remove.reason, /`find build -name '\*\.tmp' -print`.*separate command/);
+  const run = shellRoute("find . -type f -exec rm {} +", denyContext());
+  assert.match(run.reason, /`find \. -type f -print`/);
+  const patch = shellRoute("git diff HEAD~1 --output=patch.diff", denyContext());
+  assert.match(patch.reason, /`git diff HEAD~1 > patch\.diff`/);
+  const spaced = shellRoute("git log -p --output out.txt", denyContext());
+  assert.match(spaced.reason, /`git log -p > out\.txt`/);
+  const chained = shellRoute("ls && find . -delete", denyContext());
+  assert.equal(chained.shape, "denied");
+});
+
+test("without a matching deny rule, reads and ordinary commands pass through", () => {
+  assert.equal(shellRoute("find . -exec grep x {} +", denyContext([])), null);
+  assert.equal(shellRoute("find . -name '*-okhttp*'", denyContext()), null);
+  assert.equal(shellRoute("git diff HEAD~1", denyContext()), null);
+  assert.equal(shellRoute("ls src", denyContext()), null);
+});
+
 test("the wired hook advises with the route, denies only in strict modes, and passes through when off", () => {
   const dir = mkdtempSync(join(tmpdir(), "shell-route-"));
   try {
@@ -140,6 +167,16 @@ test("the wired hook advises with the route, denies only in strict modes, and pa
     rmSync(join(dir, ".claude"), { recursive: true });
     rmSync(join(dir, "openspec", "changes", change), { recursive: true });
     assert.equal(run("npm test"), "", "no active change passes through");
+    // A project deny rule: the hook refuses with the route in every mode but off.
+    mkdirSync(join(dir, ".claude"), { recursive: true });
+    writeFileSync(join(dir, ".claude", "settings.json"),
+      JSON.stringify({ permissions: { deny: SHIPPED_DENY } }));
+    const refused = JSON.parse(run("find . -name '*.log' -delete"));
+    assert.equal(refused.decision, "block");
+    assert.match(refused.reason, /-print`.*separate command/);
+    assert.equal(run("find . -delete", { FOUNDATION_GUARDRAIL_MODE: "off" }), "");
+    assert.equal(run("find . -name '*-okhttp*'"), "");
+    rmSync(join(dir, ".claude"), { recursive: true });
     assert.equal(execFileSync("sh", [HOOK], { input: "not json", encoding: "utf8",
       env: { ...process.env, CLAUDE_PROJECT_DIR: dir } }), "");
   } finally { rmSync(dir, { recursive: true, force: true }); }

@@ -97,12 +97,46 @@ function testCommand(segments) {
   return op === null;
 }
 
+const FIND_ACTION = /^-(?:delete|exec|execdir|ok|okdir|fprint0?|fprintf|fls)$/;
+
+// A command a permissions.deny rule refuses gets the runnable equivalent: the
+// host would refuse it outright and say nothing about what to run instead.
+export function deniedRoute(text) {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words[0] === "find") {
+    const at = words.findIndex((word) => FIND_ACTION.test(word));
+    const listing = `${words.slice(0, at < 0 ? words.length : at).join(" ")} -print`;
+    const action = at < 0 ? "" : words[at];
+    const runs = words[at + 1] || "";
+    if (/^-(?:exec|execdir|ok|okdir)$/.test(action) && /^(?:e|f)?grep$|^rg$/.test(runs))
+      return "Shell route: this project's permissions.deny refuses `find … " + action +
+        "`. Search with `rg` (for example `rg -l <pattern> <dir>`) or the Grep tool instead.";
+    return "Shell route: this project's permissions.deny refuses `find … " + (action || "<action>") +
+      "`. List the files first with `" + listing + "`, then act on them in a separate command " +
+      "(for example `rm <files>`), which the host can ask you to approve.";
+  }
+  if (words[0] === "git") {
+    const output = words.find((word) => word.startsWith("--output"));
+    const file = output?.includes("=") ? output.slice(output.indexOf("=") + 1)
+      : words[words.indexOf(output) + 1] || "<file>";
+    const rest = words.filter((word, index) => word !== output &&
+      !(output === "--output" && index === words.indexOf(output) + 1));
+    return "Shell route: this project's permissions.deny refuses `git … --output`. Run `" +
+      `${rest.join(" ")} > ${file}\` instead, or write the output with the Write tool.`;
+  }
+  return "Shell route: this project's permissions.deny refuses this command; use a read-only " +
+    "form or the Read, Grep, and Write tools instead.";
+}
+
 // Pure decision. `context`: cwd, change ({ id, repositories: [{ id, path,
 // targetPath }] } | null), ambiguousChanges (ids when no single change
-// applies), allowed(segmentText) -> bool.
+// applies), allowed(segmentText) -> bool, denied(segmentText) -> bool.
 export function shellRoute(command, context) {
   const segments = topLevelSegments(command);
   if (!segments?.length) return null;
+  const denied = context.denied || (() => false);
+  const refused = segments.find((segment) => denied(segment.text));
+  if (refused) return { shape: "denied", refuse: true, reason: deniedRoute(refused.text) };
   const allowed = context.allowed || (() => false);
   const first = plainWords(segments[0].text);
   if (first?.[0] === "cd" && first.length === 2 && !first[1].startsWith("~") && first[1] !== "-" &&
@@ -147,9 +181,13 @@ function readJson(path) {
 
 export function projectContext(event, projectRoot) {
   const cwd = resolve(typeof event.cwd === "string" && isAbsolute(event.cwd) ? event.cwd : projectRoot);
-  const allowRules = [join(projectRoot, ".claude", "settings.json"),
+  const settings = [join(projectRoot, ".claude", "settings.json"),
     join(projectRoot, ".claude", "settings.local.json"), join(homedir(), ".claude", "settings.json")]
-    .map(readJson).flatMap((row) => Array.isArray(row?.permissions?.allow) ? row.permissions.allow : []);
+    .map(readJson);
+  const rules = (kind) => settings.flatMap((row) =>
+    Array.isArray(row?.permissions?.[kind]) ? row.permissions[kind] : []);
+  const allowRules = rules("allow");
+  const denyRules = rules("deny");
   const changesDir = join(projectRoot, "openspec", "changes");
   const active = existsSync(changesDir) ? readdirSync(changesDir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && entry.name !== "archive").map((entry) => entry.name).sort() : [];
@@ -175,7 +213,8 @@ export function projectContext(event, projectRoot) {
     (building.length === 1 ? building[0] : null);
   return {
     cwd, change, ambiguousChanges: change ? [] : building.map((row) => row.id),
-    allowed: (text) => allowRules.some((rule) => bashRuleAllows(rule, text))
+    allowed: (text) => allowRules.some((rule) => bashRuleAllows(rule, text)),
+    denied: (text) => denyRules.some((rule) => bashRuleAllows(rule, text))
   };
 }
 
@@ -190,7 +229,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
     const projectRoot = resolve(process.env.CLAUDE_PROJECT_DIR || process.cwd());
     const route = shellRoute(String(event.tool_input?.command || ""), projectContext(event, projectRoot));
     if (!route) process.exit(0);
-    const strict = mode === "block" ||
+    // The host refuses a denied command anyway; blocking with the reason is
+    // what lets the agent see the runnable route.
+    const strict = route.refuse || mode === "block" ||
       (process.env.FOUNDATION_SHELL_GUARD || "").trim().toLowerCase() === "block";
     process.stdout.write(JSON.stringify(strict
       ? { decision: "block", reason: route.reason }
