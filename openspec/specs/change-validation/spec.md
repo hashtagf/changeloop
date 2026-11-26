@@ -5,15 +5,11 @@ TBD - created by archiving change fix-review-authority-guards-and-land-recovery-
 ## Requirements
 ### Requirement: Spec wording lint runs at change validate
 
-`change validate` SHALL run the OpenSpec strict validation for the change when
-the OpenSpec CLI is available and SHALL fail with the reported findings, so
-that normative-wording defects surface before Prove instead of inside
-`openspec archive`; when the CLI is absent, validate SHALL warn and continue.
+`change validate` SHALL run the OpenSpec strict validation for the change when the OpenSpec CLI is available and SHALL fail with the reported findings, so that normative-wording defects surface before Prove instead of inside `openspec archive`; when the CLI is absent, validate SHALL warn and continue.
 
 #### Scenario: Missing SHALL fails validate
 
-- **WHEN** a change's spec delta lacks SHALL/MUST wording and the OpenSpec CLI
-  is installed
+- **WHEN** a change's spec delta lacks SHALL/MUST wording and the OpenSpec CLI is installed
 - **THEN** `change validate` fails and reports the strict-validation findings
 
 #### Scenario: Corrected wording passes
@@ -24,8 +20,14 @@ that normative-wording defects surface before Prove instead of inside
 #### Scenario: Absent CLI degrades to a warning
 
 - **WHEN** the OpenSpec CLI is not installed
-- **THEN** `change validate` warns about the skipped lint and does not fail for
-  that reason
+- **THEN** `change validate` warns about the skipped lint and does not fail for that reason
+
+#### Scenario: Prove requires the OpenSpec CLI
+
+- **WHEN** Prove-stage validation runs and the OpenSpec CLI is not installed
+- **THEN** validation fails until the CLI is prepared
+- **AND** the absent-CLI warning applies only before Prove
+- **AND** a legacy rapid packet with skip_specs: true is not linted
 
 ### Requirement: Dependency-safe semantic validation is aggregated
 
@@ -128,7 +130,7 @@ Change validation SHALL reject a provider that declares critical cases when its 
 ระบบ SHALL ส่ง EDIT เมื่อ verify ของ task ที่แก้โค้ด product ในงานที่เปลี่ยนพฤติกรรมไม่รัน test
 
 - คำสั่งไม่มีผล เช่น true, :, exit 0, echo เป็น EDIT เสมอ
-- verify ต้องอ้างไฟล์ test หรือเรียก test runner ที่รู้จัก
+- คำสั่งที่ตรวจแค่ lint, format หรือ typecheck เป็น EDIT; คำสั่งที่อ้างไฟล์ test, เรียก test runner ที่รู้จัก หรือเป็นคำสั่งของโปรเจกต์อื่น (เช่น make check, sh scripts/check.sh) ผ่าน
 - task ที่ paths เป็น test, docs หรือ manifest อย่างเดียวได้รับการยกเว้น
 - ใช้กับ task ใน change start, revise และ task ที่ amendment เพิ่มหรือแก้ verify
 

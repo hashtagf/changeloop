@@ -38,7 +38,7 @@ Each host adapter SHALL record exact Foundation-owned adapter artifacts and SHAL
 
 ### Requirement: One coordinator projects the next safe host action
 
-Foundation SHALL expose an additive high-level coordinator that evaluates the current lifecycle and returns one versioned machine action for implementation, repair, configured review, external wait, decision, local recovery, Land readiness, or completion. The core SHALL not invoke a model and SHALL preserve existing low-level commands.
+Foundation SHALL expose an additive high-level coordinator that evaluates the current lifecycle and returns one versioned machine action for implementation, repair, configured review, external wait, decision, local recovery, Land readiness, or completion; it SHALL preserve existing low-level commands and SHALL invoke a model only to run a configured reviewer route the harness generated.
 
 #### Scenario: Runnable implementation or repair work exists
 
@@ -48,8 +48,8 @@ Foundation SHALL expose an additive high-level coordinator that evaluates the cu
 #### Scenario: Configured review is ready
 
 - **WHEN** executable evidence passes and a configured reviewer request is current
-- **THEN** the coordinator returns a `RUN_CONFIGURED_REVIEW` action for the host
-- **AND** does not execute the reviewer itself
+- **THEN** under advance --through proven|archived the coordinator runs the generated reviewer route inline when the reviewer is ready
+- **AND** otherwise it returns RUN_EXTERNAL with legacyAction RUN_CONFIGURED_REVIEW for the host
 
 #### Scenario: Coordinator reaches an authority boundary
 
@@ -64,27 +64,22 @@ Foundation SHALL expose an additive high-level coordinator that evaluates the cu
 #### Scenario: A host requests a lifecycle target
 
 - **WHEN** a host calls `advance <change> --through build|proven|archived`
-- **THEN** Foundation performs safe deterministic steps internally and returns
-  exactly one of `EDIT`, `RUN_EXTERNAL`, `REPAIR`, `WAIT`, `ASK_USER`, or `DONE`
-  at the next real boundary
+- **THEN** Foundation performs safe deterministic steps internally and returns exactly one of WORKING, EDIT, RUN_EXTERNAL, REPAIR, WAIT, ASK_USER, or DONE at the next real boundary, where WORKING means harness work such as a running proof is still in progress
 
 #### Scenario: A target is reached
 
 - **WHEN** the requested lifecycle target is reached without missing authority
-- **THEN** the coordinator returns `DONE`, records the phase once, and does not
-  require the host to replay the completed command chain
+- **THEN** the coordinator returns `DONE`, records the phase once, and does not require the host to replay the completed command chain
 
 #### Scenario: The coordinator cannot continue safely
 
-- **WHEN** authority, a resource, a contract repair, a conflict, or repeated
-  no-progress prevents automatic continuation
-- **THEN** the response names the cause and actor, confirms preserved state,
-  offers bounded alternatives, and includes the exact resume route
+- **WHEN** authority, a resource, a contract repair, a conflict, or repeated no-progress prevents automatic continuation
+- **THEN** the response names the cause and actor, confirms preserved state, offers bounded alternatives, and includes the exact resume route
 
 #### Scenario: An internal lifecycle dependency throws
 
 - **WHEN** Build preparation, dispatch, Prove, or Land throws an operational failure while `advance` is evaluating or chaining
-- **THEN** the coordinator returns a `REPAIR` action carrying the original reason, exact recovery command when available, preserved-state claim, and the same resume route instead of exiting outside the six-action protocol
+- **THEN** the coordinator returns a `REPAIR` action carrying the original reason, exact recovery command when available, preserved-state claim, and the same resume route instead of exiting outside the seven-action protocol
 
 #### Scenario: A long deterministic chain keeps progressing
 

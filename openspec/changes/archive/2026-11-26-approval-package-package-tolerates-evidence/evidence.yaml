@@ -1,0 +1,519 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "package-labels-package",
+      "requirementKey": "package-labels",
+      "scenario": "มี receipt ใช้ได้",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "package-labels-package-2",
+      "requirementKey": "package-labels",
+      "scenario": "มีแต่ preview",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "package-labels-package-3",
+      "requirementKey": "package-labels",
+      "scenario": "preview ของ revision ก่อนหน้า",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-data-claude-foundation-package-change",
+      "requirementKey": "approval-data",
+      "scenario": "พิมพ์ข้อมูลครบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-data-package",
+      "requirementKey": "approval-data",
+      "scenario": "ค่าที่ไม่ทราบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-data-package-2",
+      "requirementKey": "approval-data",
+      "scenario": "อ่าน evidence บางส่วนไม่ได้",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-data-package-3",
+      "requirementKey": "approval-data",
+      "scenario": "change ที่ไม่มี draft แบบ typed",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "facts-from-harness-only-package",
+      "requirementKey": "facts-from-harness-only",
+      "scenario": "หน้าอ้าง proof เอง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "facts-from-harness-only-package-2",
+      "requirementKey": "facts-from-harness-only",
+      "scenario": "preview ไม่ใช่ proof",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "facts-from-harness-only-package-3",
+      "requirementKey": "facts-from-harness-only",
+      "scenario": "ค่าความเสี่ยงมาจาก draft",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "router-path-signals-routechange",
+      "requirementKey": "router-path-signals",
+      "scenario": "migration ที่ไม่ประกาศ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "router-path-signals-routechange-2",
+      "requirementKey": "router-path-signals",
+      "scenario": "path ปกติ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "router-path-signals-advance-through-build-tech-lead",
+      "requirementKey": "router-path-signals",
+      "scenario": "lane จาก path",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "chat-approval-card-agent-spec",
+      "requirementKey": "chat-approval-card",
+      "scenario": "ถามด้วยการ์ด",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "chat-approval-card-approve",
+      "requirementKey": "chat-approval-card",
+      "scenario": "ใช้ถ้อยคำเดิม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-agent-change-start",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "verify ไม่มีผล",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-agent-change-start-2",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "verify เป็น lint",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-agent-change-start-3",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "verify อ้างไฟล์ test",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-agent-change-start-4",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "verify เรียก test runner",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-agent-change-start-5",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "task เอกสารอย่างเดียว",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "verify-runs-tests-amendment-updatetasks-verify-task-product-echo",
+      "requirementKey": "verify-runs-tests",
+      "scenario": "amendment แก้ verify เป็น echo",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "spec-wording-lint-a-change-s-spec-delta-lacks-shall-must-wording",
+      "requirementKey": "spec-wording-lint",
+      "scenario": "Missing SHALL fails validate",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "spec-wording-lint-the-spec-delta-is-corrected-to-strict-valid-wo",
+      "requirementKey": "spec-wording-lint",
+      "scenario": "Corrected wording passes",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "spec-wording-lint-the-openspec-cli-is-not-installed",
+      "requirementKey": "spec-wording-lint",
+      "scenario": "Absent CLI degrades to a warning",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "spec-wording-lint-prove-stage-validation-runs-and-the-openspec-c",
+      "requirementKey": "spec-wording-lint",
+      "scenario": "Prove requires the OpenSpec CLI",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "one-coordinator-the-current-graph-has-one-safe-runnable-frontier",
+      "requirementKey": "one-coordinator",
+      "scenario": "Runnable implementation or repair work exists",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "one-coordinator-executable-evidence-passes-and-a-configured-revi",
+      "requirementKey": "one-coordinator",
+      "scenario": "Configured review is ready",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "one-coordinator-continuation-requires-a-contract-choice-waiver-b",
+      "requirementKey": "one-coordinator",
+      "scenario": "Coordinator reaches an authority boundary",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "one-coordinator-a-deterministic-local-step-succeeds-and-progress",
+      "requirementKey": "one-coordinator",
+      "scenario": "Safe progress continues",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "one-coordinator-a-host-calls-advance-change-through-build-proven",
+      "requirementKey": "one-coordinator",
+      "scenario": "A host requests a lifecycle target",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "one-coordinator-the-requested-lifecycle-target-is-reached-withou",
+      "requirementKey": "one-coordinator",
+      "scenario": "A target is reached",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "one-coordinator-authority-a-resource-a-contract-repair-a-conflic",
+      "requirementKey": "one-coordinator",
+      "scenario": "The coordinator cannot continue safely",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "one-coordinator-build-preparation-dispatch-prove-or-land-throws",
+      "requirementKey": "one-coordinator",
+      "scenario": "An internal lifecycle dependency throws",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "one-coordinator-more-than-32-automated-transitions-each-change-t",
+      "requirementKey": "one-coordinator",
+      "scenario": "A long deterministic chain keeps progressing",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "one-coordinator-the-same-automated-transition-leaves-the-semanti",
+      "requirementKey": "one-coordinator",
+      "scenario": "Automated continuation repeats unchanged",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-page-contract-1",
+      "requirementKey": "approval-page-contract",
+      "scenario": "ลำดับของหน้า",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-page-contract-2",
+      "requirementKey": "approval-page-contract",
+      "scenario": "แถบข้อเท็จจริงคัดลอกจากข้อมูล",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-page-contract-3",
+      "requirementKey": "approval-page-contract",
+      "scenario": "ค่าที่ไม่ทราบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-page-contract-4",
+      "requirementKey": "approval-page-contract",
+      "scenario": "ป้ายไม่ใช่ proof",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-page-contract-5",
+      "requirementKey": "approval-page-contract",
+      "scenario": "ไม่พึ่งเครือข่าย",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approval-page-contract-6",
+      "requirementKey": "approval-page-contract",
+      "scenario": "ใช้คีย์บอร์ดและไม่พึ่งสี",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "trigger-descriptions-frontmatter-description",
+      "requirementKey": "trigger-descriptions",
+      "scenario": "description ตรงตามข้อความที่กำหนด",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "trigger-descriptions-claude-harness-tests-skill-routing-test-mjs",
+      "requirementKey": "trigger-descriptions",
+      "scenario": "spec-vocabulary ยังอยู่",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "trigger-descriptions-frontmatter-head-281caac1b",
+      "requirementKey": "trigger-descriptions",
+      "scenario": "body ของ lifecycle skill ไม่ถูกแตะ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "trigger-descriptions-description-skill-vendor-80",
+      "requirementKey": "trigger-descriptions",
+      "scenario": "description ยาวเกิน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "minimal-skill-bodies-frontmatter",
+      "requirementKey": "minimal-skill-bodies",
+      "scenario": "ทุก body อยู่ใน budget และใช้โครงเดียวกัน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "minimal-skill-bodies-skill-catalog-test-mjs",
+      "requirementKey": "minimal-skill-bodies",
+      "scenario": "guardrail ยังถูกจับ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "minimal-skill-bodies-3",
+      "requirementKey": "minimal-skill-bodies",
+      "scenario": "จำนวน assertion ห้ามคำไม่ลดลง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pruned-references-skill-catalog-test-mjs-reference-governance-mj",
+      "requirementKey": "pruned-references",
+      "scenario": "ขนาดรวมลดและ governance ผ่าน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pruned-references-skill-catalog-test-mjs-run-context-budget-test",
+      "requirementKey": "pruned-references",
+      "scenario": "เนื้อหาที่ pin ยังครบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pruned-references-skill-catalog-test-mjs",
+      "requirementKey": "pruned-references",
+      "scenario": "ไฟล์ที่แผนบอกว่าลบหรือรวมหายไปจริง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "pruned-references-reference-skill-md-reference",
+      "requirementKey": "pruned-references",
+      "scenario": "ลบไฟล์ที่ยังถูกอ้าง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "package-tolerates-evidence-package-cli",
+      "requirementKey": "package-tolerates-evidence",
+      "scenario": "provider ไม่มี adapter",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "package-tolerates-evidence-package-cli-2",
+      "requirementKey": "package-tolerates-evidence",
+      "scenario": "evidence.yaml เป็น JSON ที่เสีย",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "package-tolerates-evidence-package-id",
+      "requirementKey": "package-tolerates-evidence",
+      "scenario": "change ที่ไม่มีอยู่",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/approval-package.test.mjs) && (node --test .claude/harness/tests/verify-shape.test.mjs) && (node --test .claude/harness/tests/advance-runtime.test.mjs) && (node --test .claude/tests/docs/skill-catalog.test.mjs)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "node --test .claude/harness/tests/approval-package.test.mjs",
+        "node --test .claude/harness/tests/verify-shape.test.mjs",
+        "node --test .claude/harness/tests/advance-runtime.test.mjs",
+        "node --test .claude/tests/docs/skill-catalog.test.mjs"
+      ]
+    }
+  }
+}

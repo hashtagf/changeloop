@@ -33,7 +33,7 @@
 
 ### Requirement: package-labels
 
-ระบบ SHALL ติดป้ายทุก artifact ใน package ว่าเป็น preview, proof หรือยังไม่มีหลักฐาน
+ระบบ SHALL ติดป้ายทุก artifact ใน package ว่าเป็น preview, stale, proof หรือยังไม่มีหลักฐาน
 
 #### Scenario: มี receipt ใช้ได้
 
@@ -46,6 +46,12 @@
 - **GIVEN** มีเพียง preview receipt
 - **WHEN** รัน package
 - **THEN** artifact ติดป้าย preview ไม่ใช่ proof
+
+#### Scenario: preview ของ revision ก่อนหน้า
+
+- **GIVEN** มีเพียง preview receipt ที่ contractRevision เก่ากว่า revision ปัจจุบัน
+- **WHEN** รัน package
+- **THEN** artifact ติดป้าย stale ไม่ใช่ preview หรือ proof
 
 ### Requirement: preview-suggestions
 
@@ -82,19 +88,21 @@
 
 ### Requirement: package-tolerates-evidence
 
-ระบบ SHALL เขียน package ต่อพร้อมคำเตือนเมื่ออ่าน evidence หรือ receipt ไม่ได้
+ระบบ SHALL พิมพ์ข้อมูล package เป็น JSON ต่อโดยไม่เขียนไฟล์เมื่ออ่าน evidence หรือ receipt ไม่ได้ และเตือนเฉพาะ evidence ของ change ที่ยังไม่ Land
+
+- receipt ของ change ที่ Land แล้วและ preview receipt ที่อ่านไม่ได้ถูกข้ามโดยไม่เตือน ตาม approval-data
 
 #### Scenario: provider ไม่มี adapter
 
 - **GIVEN** evidence.yaml มี provider ที่ไม่มี adapter
 - **WHEN** รัน package ผ่าน CLI
-- **THEN** exit 0 ไฟล์ package ถูกเขียน และมีคำเตือนที่ระบุ evidence
+- **THEN** exit 0 พิมพ์ JSON ทาง stdout มีคำเตือนที่ระบุ evidence ที่อ่านไม่ได้ และไม่เขียนไฟล์
 
 #### Scenario: evidence.yaml เป็น JSON ที่เสีย
 
 - **GIVEN** evidence.yaml อ่านเป็น JSON ไม่ได้
 - **WHEN** รัน package ผ่าน CLI
-- **THEN** exit 0 ไฟล์ package ถูกเขียน และมีคำเตือน
+- **THEN** exit 0 พิมพ์ JSON ทาง stdout มีคำเตือน และไม่เขียนไฟล์
 
 #### Scenario: change ที่ไม่มีอยู่
 
@@ -122,7 +130,8 @@
 ระบบ SHALL ยกระดับความเสี่ยงและ lane อนุมัติจาก path ที่ task แตะ เมื่อ path บอก signal ที่ draft ไม่ได้ประกาศ
 
 - ใช้กับระดับความเสี่ยง domain artifact และ lane อนุมัติเท่านั้น ไม่เปลี่ยน discovery หรือ review
-- migrations/ schema prisma และ .sql ให้ persisted-data-change; auth permission rbac ให้ access-control; payment billing refund checkout wallet ให้ financial; tsx jsx vue css และ components pages ให้ user-interface; .tf terraform k8s helm Dockerfile และ .github/workflows ให้ high-operational-risk; webhook ให้ external-integration
+- ตัวอย่างรูปแบบ (ไม่ใช่รายการครบ รายการจริงอยู่ใน PATH_SIGNALS ของ scratch-router.mjs): migrations/ schema prisma และ .sql ให้ persisted-data-change; auth permission rbac ให้ access-control; payment billing refund checkout wallet ให้ financial; tsx jsx vue css และ components pages ให้ user-interface; .tf terraform k8s helm Dockerfile และ .github/workflows ให้ high-operational-risk; webhook ให้ external-integration
+- path ที่ตรวจได้แก่ paths ของ task และ fileMap[].path
 
 #### Scenario: migration ที่ไม่ประกาศ
 
@@ -241,12 +250,12 @@ change start SHALL คืน EDIT ที่ระบุ path scratch เมื�
 
 ### Requirement: chat-approval-card
 
-คำสั่ง change และ skill change SHALL ให้ agent ถามอนุมัติ spec ผ่านการ์ดสั้นพร้อมตัวเลือก อนุมัติ อนุมัติพร้อมแก้ ขอดูละเอียด ปฏิเสธ โดยคงคำสั่ง advance เดิม
+คำสั่ง change และ skill change SHALL ให้ agent ถามอนุมัติ spec ผ่านเครื่องมือคำถามแบบมีโครงพร้อมตัวเลือก อนุมัติ แก้ไข ขอดูละเอียด ปฏิเสธ โดยคงคำสั่ง advance เดิม
 
 #### Scenario: ถามด้วยการ์ด
 
 - **WHEN** agent ถึงขั้นขออนุมัติ spec
-- **THEN** คำสั่งระบุให้ถามด้วยสรุป 4 บรรทัดและตัวเลือกทั้งสี่ และบันทึกด้วย advance --approve-spec --decision-ref เดิม
+- **THEN** คำสั่งระบุตัวเลือกทั้งสี่ สำหรับ impact medium/high ใส่บรรทัด scratch (get, asIs, toBe, ifFail) ในคำถาม และบันทึกด้วย advance --approve-spec --decision-ref เดิม
 
 #### Scenario: ใช้ถ้อยคำเดิม
 
@@ -256,6 +265,8 @@ change start SHALL คืน EDIT ที่ระบุ path scratch เมื�
 ### Requirement: approval-data
 
 คำสั่ง package SHALL พิมพ์ข้อมูลของ change เป็น JSON ได้แก่ ระดับความเสี่ยงพร้อมเหตุผล domain artifact ตาม role พร้อมป้ายหลักฐาน คำแนะนำ preview บรรทัด scratch รวม undo และ who รายการตรวจ section ที่บังคับ บรรทัดสถานะการอนุมัติ รายการที่หน้าต้องแสดง สถานะ covers สถานะ drift และ factsDigest โดย SHALL NOT เขียนไฟล์ HTML
+
+- receipt ของ change ที่ Land แล้วและ preview receipt ที่อ่านไม่ได้ ถูกข้ามโดยไม่มีคำเตือน
 
 #### Scenario: พิมพ์ข้อมูลครบ
 
@@ -271,9 +282,9 @@ change start SHALL คืน EDIT ที่ระบุ path scratch เมื�
 
 #### Scenario: อ่าน evidence บางส่วนไม่ได้
 
-- **GIVEN** receipt หนึ่งรายการอ่านไม่ได้
+- **GIVEN** change ที่ยังไม่ Land และการตรวจความถูกต้องของ receipt หนึ่งรายการล้มเหลว
 - **WHEN** รัน package
-- **THEN** ได้ JSON ที่มี warnings ระบุรายการนั้นและข้อมูลส่วนอื่นยังอยู่
+- **THEN** ได้ JSON ที่มี warnings ระบุ provider นั้นและข้อมูลส่วนอื่นยังอยู่
 
 #### Scenario: change ที่ไม่มี draft แบบ typed
 
@@ -430,7 +441,7 @@ change start SHALL คืน EDIT ที่ระบุ path scratch เมื�
 
 - **GIVEN** draft ประกาศ impact high และ riskSignals financial
 - **WHEN** รัน package
-- **THEN** ระดับและเหตุผลคำนวณจาก draft และ path ของ task เท่านั้น
+- **THEN** ระดับและเหตุผลคำนวณจากข้อมูลที่ harness ถือเท่านั้น ได้แก่ draft (workType, riskSignals, impact, integrations, store ของ dataModel, ชนิดของ examples) path ของ task และ fileMap, coupling และ securityTriggers ของ change และ work type ของ packet ไม่ใช่จากหน้าอนุมัติหรือ prototype
 
 ### Requirement: prototype-sync
 

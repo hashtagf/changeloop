@@ -74,6 +74,18 @@ test("a landed change labels proof from the receipts Land accepted, without sand
   assert.deepEqual(model.notices, []);
 });
 
+// package-tolerates-evidence: only a change that has not landed warns about
+// an unreadable receipt; a landed change skips it without a warning.
+test("an unreadable receipt warns before Land and is skipped silently after it", (t) => {
+  const landed = fixture(t, { state: LANDED, providers: { test: {} }, receiptValidity: goneSandbox });
+  write(join(landed.root, ".foundation", "receipts", landed.id, "test.json"), "{ not json");
+  const landedModel = landed.runtime.buildModel(landed.id);
+  assert.deepEqual(landedModel.notices, []);
+  assert.equal(landedModel.artifacts.find((row) => row.id === "testmap").evidence, "none");
+  const open = fixture(t, { providers: { test: {} }, receiptValidity: () => { throw new Error("receipt unreadable"); } });
+  assert.match(open.runtime.buildModel(open.id).notices.join("\n"), /receipt for 'test' not checked \(receipt unreadable\)/);
+});
+
 test("a landed change whose receipt failed is not labeled proof", (t) => {
   const { id, runtime } = fixture(t, {
     state: LANDED, providers: { test: {} }, receiptValidity: goneSandbox,

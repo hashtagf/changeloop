@@ -42,6 +42,12 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- Five living specs match the shipped behavior again (found by `spec-drift
+  --review`): `package` prints JSON and writes no file, labels include
+  `stale`, `advance` runs the generated reviewer route and speaks seven
+  actions including `WORKING`, the removed `prototype` skill's requirement is
+  retired, and the catalog counts 42 skills. `skill-catalog.test.mjs` now
+  proves the pruned references stay gone and within 8,500 lines.
 - An investigation or `change start` in a repository larger than the
   discovery scan budget (3,000 source files) no longer stops at a repair the
   agent cannot make. When only scan-budget limits stop discovery, the

@@ -500,3 +500,24 @@ test("reference files link only to siblings and cross-bundle files that exist", 
     }
   }
 });
+
+// skill-guidance pruned-references: the dropped files stay gone and the
+// non-vendored reference set stays under its line budget.
+test("pruned reference files stay deleted and references stay within 8,500 lines", () => {
+  for (const path of ["architecture-fundamentals/references/observability.md",
+    "programming-fundamentals/references/testing.md",
+    "api-design-fundamentals/references/auth-and-limits.md",
+    "debug-fundamentals/references/instrumentation.md",
+    "debug-fundamentals/references/distributed-debugging.md"])
+    assert.equal(existsSync(join(catalog, path)), false, `${path} was dropped and must not return`);
+  let lines = 0;
+  for (const skill of readdirSync(catalog)) {
+    if (VENDORED.has(skill)) continue;
+    const references = join(catalog, skill, "references");
+    if (!existsSync(references)) continue;
+    for (const file of readdirSync(references, { recursive: true }))
+      if (String(file).endsWith(".md"))
+        lines += readFileSync(join(references, file), "utf8").split("\n").length - 1;
+  }
+  assert.ok(lines <= 8500, `non-vendored references total ${lines} lines; limit 8500`);
+});

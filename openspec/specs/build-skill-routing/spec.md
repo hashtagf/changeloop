@@ -1,7 +1,7 @@
 # build-skill-routing Specification
 
 ## Purpose
-Build action ระบุ skill จากข้อมูล typed และ bench วัดการโหลดจริง
+Build EDIT ไม่ระบุ skill ให้ agent เลือก skill เองจาก description และ bench วัดว่า skill ใดถูกโหลดจริง
 ## Requirements
 ### Requirement: Benchmark scorecards record skill loading
 
