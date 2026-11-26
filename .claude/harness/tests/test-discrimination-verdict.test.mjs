@@ -7,7 +7,8 @@ import { dirname, join } from "node:path";
 import test from "node:test";
 
 import {
-  BASE_RUN_TIMEOUT_MS, baseRunOutcome, baseRunTimeoutMs, createTestDiscriminationRuntime, earlyBaseFailure, inconclusiveLine
+  BASE_RUN_TIMEOUT_MS, baseRunOutcome, baseRunTimeoutMs, createTestDiscriminationRuntime, declaresNoTests,
+  earlyBaseFailure, inconclusiveLine
 } from "../runtime/evidence/test-discrimination.mjs";
 import { configuredCommand } from "../runtime/evidence/evidence-results.mjs";
 import { lightKind } from "../runtime/workflow/validation/dev-document.mjs";
@@ -190,4 +191,41 @@ test("discrimination-early-failure: Prove stops a base run as soon as a test fai
   assert.deepEqual(result.repositories[0].files.find((row) => row.file === "test/hangs.test.mjs"),
     { file: "test/hangs.test.mjs", outcome: "fails-on-base" });
   assert.ok(Date.now() - started < 15000, "the run stopped on its first failure, not at the cap");
+});
+
+test("discrimination-helper-file: a helper without tests beside a test that fails on base is no finding", (t) => {
+  // Paid project-tracker-api runs split helpers into test/helpers.js; node
+  // --test reported the file as one passing test and Prove asked for a repair.
+  const { root, repo } = fixture(t);
+  writeFileSync(join(repo.workspacePath, "test/helpers.mjs"), "export const name = 'Ada';\n");
+  const binding = [{ claimId: "formats", requirementKey: "greet", scenario: "formats", regression: false,
+    files: ["test/**"] }];
+  const result = runtime(repo, join(root, "logs"), { binding }).evaluate("change-a", "hash-a");
+  const row = result.repositories[0];
+  assert.equal(row.outcome, "fails-on-base");
+  assert.deepEqual(row.files.find((entry) => entry.file === "test/helpers.mjs"),
+    { file: "test/helpers.mjs", outcome: "no-tests" });
+  assert.equal(row.undecided, undefined, "a helper is not a no-verdict row");
+});
+
+test("discrimination-helper-file: a real test that passes on base is still a repair", (t) => {
+  const { root, repo } = fixture(t);
+  writeFileSync(join(repo.workspacePath, "test/b.test.mjs"),
+    "import test from 'node:test';\nimport assert from 'node:assert/strict';\ntest('base already', () => assert.ok(true));\n");
+  const binding = [{ claimId: "b", requirementKey: "greet", scenario: "b", regression: false,
+    files: ["test/b.test.mjs"] }];
+  const row = runtime(repo, join(root, "logs"), { binding }).evaluate("change-a", "hash-a").repositories[0];
+  assert.equal(row.outcome, "passes-on-base");
+  assert.deepEqual(row.testFiles, ["test/b.test.mjs"]);
+});
+
+test("discrimination-helper-file: only file-level or zero-count output means no tests", () => {
+  assert.equal(declaresNoTests("✔ test/helpers.js (46.2ms)\nℹ tests 1\nℹ pass 1\n", "test/helpers.js"), true);
+  assert.equal(declaresNoTests("ok 1 - /tmp/x/test/helpers.js\n# tests 1\n", "test/helpers.js"), true);
+  assert.equal(declaresNoTests("# tests 0\n", "test/a.test.js"), true);
+  assert.equal(declaresNoTests("✔ formats (1ms)\nℹ tests 1\n", "test/a.test.js"), false);
+  assert.equal(declaresNoTests("PASS everything\n", "test/a.test.js"), false, "unknown output keeps the exit code");
+  assert.equal(baseRunOutcome({ status: 0, stdout: "✔ test/h.js (2ms)\n" }, ["test/h.js"]), "no-tests");
+  assert.equal(baseRunOutcome({ status: 0, stdout: "✔ test/h.js (2ms)\n" }), "passes-on-base",
+    "an aggregated run keeps the exit code");
 });

@@ -42,6 +42,12 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- Test discrimination no longer asks to repair a helper file without tests
+  (for example `test/helpers.js`). `node --test` reports such a file as one
+  passing test, so a paid project-tracker-api run spent an extra Prove round
+  on it. A per-file base run whose only result names the file, or that counts
+  no tests, is now `no-tests` and is not judged; a real test that passes on
+  the original code is still a repair.
 - Product files an agent writes into the target during Change, before the
   sandbox exists, are named in Build's first action (`signals[]`,
   `change-phase-target-edits`): edit them only in the sandbox and never

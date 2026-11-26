@@ -23,7 +23,9 @@ import { BEHAVIOR_NEUTRAL_WORK } from "../contracts/work-types.mjs";
 // base and therefore counts. A clean pass on base means the new tests do not
 // verify the change: the agent repairs them. The base run is cached by the
 // digest of everything it read, so an unchanged rerun repeats nothing.
-export const TEST_DISCRIMINATION_VERSION = 1;
+// 2: a helper file without tests is `no-tests`, so a cached version-1
+// passes-on-base verdict for it is not reused.
+export const TEST_DISCRIMINATION_VERSION = 2;
 
 
 export function behaviorChangingWork(workTypes) {
@@ -146,10 +148,24 @@ export function earlyBaseFailure(stdout, stderr = "") {
   return spec || tap ? 1 : null;
 }
 
-export function baseRunOutcome(result) {
+export function baseRunOutcome(result, files = []) {
   if (result?.error?.code === "ETIMEDOUT") return "timed-out";
   if (result?.error || result?.status === null || result?.status === undefined) return "unavailable";
+  if (result.status === 0 && files.length === 1 && declaresNoTests(result.stdout, files[0])) return "no-tests";
   return result.status === 0 ? "passes-on-base" : "fails-on-base";
+}
+
+// A helper module beside the tests (test/helpers.js) declares no test, yet
+// `node --test` reports the file itself as one passing test. A passing run
+// whose only results name the file, or whose summary counts no test, has
+// nothing to judge. Output the reporter does not match keeps the exit code.
+export function declaresNoTests(stdout, file) {
+  const text = String(stdout || "");
+  const count = /^(?:ℹ|#) tests (\d+)\s*$/m.exec(text);
+  if (count && Number(count[1]) === 0) return true;
+  const names = [...text.matchAll(/^\s*✔ (.+?) \(\d+(?:\.\d+)?ms\)\s*$/gm),
+    ...text.matchAll(/^\s*ok \d+ - (.+?)\s*$/gm)].map((match) => match[1]);
+  return names.length > 0 && names.every((name) => name === file || name.endsWith(`/${file}`));
 }
 
 // ---- Scenario binding ---------------------------------------------------------
@@ -190,7 +206,10 @@ const NO_VERDICT = new Set(["timed-out", "unavailable", "test-provider-not-runna
  */
 export function combineBaseRuns(row, jobs, binding) {
   const files = jobs.flatMap((job) => job.files.map((file) => ({ file, outcome: job.outcome })));
-  if (!row.perFile) return { ...row, outcome: jobs[0]?.outcome || "unavailable" };
+  if (!row.perFile) {
+    const outcome = jobs[0]?.outcome || "unavailable";
+    return { ...row, outcome: outcome === "no-tests" ? "passes-on-base" : outcome };
+  }
   const judged = [], undecided = [];
   let fails = false, guard = false, noVerdict = null;
   for (const { file, outcome } of files) {
@@ -199,6 +218,7 @@ export function combineBaseRuns(row, jobs, binding) {
       noVerdict ||= outcome;
       undecided.push({ file, reason: outcome });
     }
+    else if (outcome === "no-tests") continue;
     else if (outcome === "passes-on-base") {
       const scenarios = boundScenarios(binding, file);
       if (scenarios.length && scenarios.every((scenario) => scenario.regression)) guard = true;
@@ -210,6 +230,9 @@ export function combineBaseRuns(row, jobs, binding) {
     testFiles: judged.map((entry) => entry.file),
     scenarios: [...new Set(judged.flatMap((entry) => entry.scenarios))] };
   const outcome = fails ? "fails-on-base" : noVerdict || (guard ? "regression-guard" : "passes-on-base");
+  // Only helpers without tests: no test fails on base, and none is named.
+  if (files.length && files.every((entry) => entry.outcome === "no-tests"))
+    return { ...row, files, outcome, testFiles: [] };
   // A file without a verdict stays visible even when a sibling fails on base.
   return { ...row, files, outcome, ...(undecided.length ? { undecided } : {}) };
 }
@@ -486,12 +509,12 @@ export function createTestDiscriminationRuntime({
       env: providerExecutionEnvironment(environment, additions, prepared.tree)
     };
     const finish = (job, result) => {
-      const outcome = baseRunOutcome(result);
+      const outcome = baseRunOutcome(result, job.scoped ? job.files : []);
       const log = join(LOGS, id, "test-discrimination", `${job.key}.log`);
       mkdirSync(dirname(log), { recursive: true });
       writeFileSync(log, `exit=${result?.status ?? "error"}\n${result?.stdout || ""}${result?.stderr || ""}`);
       // Only a verdict is cached; an unavailable or timed-out run is retried.
-      if (["passes-on-base", "fails-on-base"].includes(outcome))
+      if (["passes-on-base", "fails-on-base", "no-tests"].includes(outcome))
         record(cachePath(id, job.key), { version: TEST_DISCRIMINATION_VERSION, key: job.key,
           changeId: id, ...base, provider, baseHead, testFiles: job.files,
           command: describe(job), scoped: job.scoped, outcome });

@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "no-test-file-not-judged-harness-discrimination",
+      "requirementKey": "no-test-file-not-judged",
+      "scenario": "helper คู่กับ test ที่ดี",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "no-test-file-not-judged-harness-discrimination-2",
+      "requirementKey": "no-test-file-not-judged",
+      "scenario": "test จริงที่ผ่านบนโค้ดเดิม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "no-test-file-not-judged-spec-tap-tests-0",
+      "requirementKey": "no-test-file-not-judged",
+      "scenario": "ผลของ runner",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/test-discrimination-verdict.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}
