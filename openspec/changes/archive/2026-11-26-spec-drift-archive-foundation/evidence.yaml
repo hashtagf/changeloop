@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "drift-path-accuracy-spec-drift",
+      "requirementKey": "drift-path-accuracy",
+      "scenario": "change ที่ archive แล้ว",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "drift-path-accuracy-spec-drift-2",
+      "requirementKey": "drift-path-accuracy",
+      "scenario": "ข้อความ ... ไม่ใช่ path",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "drift-path-accuracy-spec-drift-3",
+      "requirementKey": "drift-path-accuracy",
+      "scenario": "state ใต้ .foundation",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "drift-path-accuracy-spec-drift-4",
+      "requirementKey": "drift-path-accuracy",
+      "scenario": "path ออกนอกโปรเจกต์",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "drift-path-accuracy-spec-drift-5",
+      "requirementKey": "drift-path-accuracy",
+      "scenario": "archive วันเดียวกัน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/spec-drift.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

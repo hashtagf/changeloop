@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, join, relative } from "node:path";
 import { forbiddenSpecReviewSessions, runSpecReviewLens, specReviewers } from "./spec-review.mjs";
 
@@ -36,8 +36,25 @@ function slug(value) {
   return String(value).toLowerCase().replace(/[^a-z0-9ก-๙]+/g, "-").replace(/^-|-$/g, "");
 }
 
-// Existence of a linked path; a glob checks its fixed prefix directory.
-function pathExists(root, path) {
+// A linked token that names no project file: placeholder text or harness
+// state under .foundation (git-ignored runtime output).
+export function ignoredPath(path) {
+  return !/[\w*]/.test(path) || path === ".foundation" || path.startsWith(".foundation/");
+}
+
+// A path that leaves the project is never checked for existence.
+export function outsidePath(path) {
+  return path.startsWith("/") || /^[A-Za-z]:[\\/]/.test(path) || path.split(/[\\/]/).includes("..");
+}
+
+// Existence of a linked path; a glob checks its fixed prefix directory. A
+// change folder that moved into archive/<date>-<name> still exists.
+function pathExists(root, path, archiveNames = []) {
+  const change = path.match(/^openspec\/changes\/([^/]+)(\/.*)?$/);
+  if (change && change[1] !== "archive" && !existsSync(join(root, "openspec", "changes", change[1]))) {
+    const archived = archiveNames.find((name) => name.replace(/^\d{4}-\d{2}-\d{2}-/, "") === change[1]);
+    if (archived) return pathExists(root, `openspec/changes/archive/${archived}${change[2] || ""}`);
+  }
   const fixed = path.split("/").filter((part) => !/[*?[\]{}]/.test(part));
   const prefix = path.includes("*") ? fixed.slice(0, path.split("/").findIndex((part) => /[*?]/.test(part))) : fixed;
   return existsSync(join(root, ...prefix));
@@ -96,7 +113,11 @@ export function createSpecDriftRuntime({
   // Latest first: archive folders start with their date.
   const archives = () => existsSync(archiveDir)
     ? readdirSync(archiveDir, { withFileTypes: true }).filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name).sort().reverse() : [];
+      .map((entry) => ({ name: entry.name, mtime: statSync(join(archiveDir, entry.name)).mtimeMs }))
+      // Newest date first; within one date, the most recently modified first.
+      .sort((a, b) => b.name.slice(0, 10).localeCompare(a.name.slice(0, 10)) || b.mtime - a.mtime ||
+        b.name.localeCompare(a.name))
+      .map((entry) => entry.name) : [];
 
   function origin(capability, name, archiveNames) {
     for (const archive of archiveNames) {
@@ -161,8 +182,13 @@ export function createSpecDriftRuntime({
             reason: String(error?.message || error).slice(0, 200) };
         }
       }
-      const files = [...new Set([...quoted, ...linked])].sort();
-      const gone = files.filter((file) => !pathExists(root, file));
+      const candidates = [...new Set([...quoted, ...linked])].filter((file) => !ignoredPath(file));
+      const outside = candidates.filter(outsidePath).sort();
+      const files = candidates.filter((file) => !outsidePath(file)).sort();
+      const outsideField = outside.length ? { outside } : {};
+      if (outside.length)
+        return { requirement: name, status: "missing-file", origin: archive, link, files, missing: outside, ...outsideField };
+      const gone = files.filter((file) => !pathExists(root, file, archiveNames));
       const moved = Object.fromEntries(gone.map((file) => [file, movedTo(nameIndex(), file)])
         .filter(([, target]) => target));
       const missing = gone.filter((file) => !moved[file]);

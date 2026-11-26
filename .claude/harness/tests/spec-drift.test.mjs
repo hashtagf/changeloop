@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
@@ -69,6 +69,57 @@ test("a linked file found once elsewhere by name is moved with its new path", (t
   assert.equal(paging.status, "moved");
   assert.deepEqual(paging.moved, { "src/page.mjs": "src/paging/page.mjs" });
   assert.equal(paging.missing, undefined);
+});
+
+test("a path into a change that moved into the archive still exists", (t) => {
+  const value = fixture(t);
+  write(value.root, `${value.older}/tasks.md`, task("T001", ["c-tag"],
+    ["src/tag.mjs", "openspec/changes/search/**", "openspec/changes/search/tasks.md"], "true") +
+    task("T002", ["c-page"], ["test/page.test.mjs"], "true"));
+  const tag = value.status(value.runtime.runSpecDrift().report, "tag-filter");
+  assert.equal(tag.status, "ok", JSON.stringify(tag));
+  write(value.root, `${value.older}/tasks.md`, task("T001", ["c-tag"], ["openspec/changes/gone/**"], "true") +
+    task("T002", ["c-page"], ["test/page.test.mjs"], "true"));
+  assert.deepEqual(value.status(value.runtime.runSpecDrift().report, "tag-filter").missing,
+    ["openspec/changes/gone/**"]);
+});
+
+test("placeholder text and .foundation state are never linked files", (t) => {
+  const value = fixture(t);
+  write(value.root, `${value.older}/tasks.md`, task("T001", ["c-tag"],
+    ["src/tag.mjs", "...", ".foundation/adapter-manifests"], "true") +
+    task("T002", ["c-page"], ["test/page.test.mjs"], "true"));
+  const tag = value.status(value.runtime.runSpecDrift().report, "tag-filter");
+  assert.equal(tag.status, "ok");
+  assert.deepEqual(tag.files, ["src/tag.mjs"]);
+});
+
+test("a path leaving the project is reported outside and never checked", (t) => {
+  const value = fixture(t);
+  for (const path of ["../outside.mjs", "/etc/passwd"]) {
+    write(value.root, `${value.older}/tasks.md`, task("T001", ["c-tag"], ["src/tag.mjs", path], "true") +
+      task("T002", ["c-page"], ["test/page.test.mjs"], "true"));
+    const tag = value.status(value.runtime.runSpecDrift().report, "tag-filter");
+    assert.equal(tag.status, "missing-file", path);
+    assert.deepEqual(tag.outside, [path]);
+    assert.equal(tag.files.includes(path), false);
+  }
+});
+
+test("same-date archives choose the most recently modified as origin", (t) => {
+  const value = fixture(t);
+  const newer = "openspec/changes/archive/2026-01-01-again";
+  write(value.root, `${newer}/specs/search/spec.md`, spec("tag-filter"));
+  write(value.root, `${newer}/evidence.yaml`, JSON.stringify({ version: 2, claims: [{ id: "n", requirementKey: "tag-filter" }] }));
+  write(value.root, `${newer}/tasks.md`, task("T001", ["n"], ["src/tag.mjs"], "true"));
+  const past = new Date("2026-01-01T00:00:00Z");
+  const middle = new Date("2026-03-01T00:00:00Z");
+  utimesSync(join(value.root, value.older), past, past);
+  utimesSync(join(value.root, newer), middle, middle);
+  assert.equal(value.status(value.runtime.runSpecDrift().report, "tag-filter").origin, "2026-01-01-again");
+  const later = new Date("2026-06-01T00:00:00Z");
+  utimesSync(join(value.root, value.older), later, later);
+  assert.equal(value.status(value.runtime.runSpecDrift().report, "tag-filter").origin, "2026-01-01-search");
 });
 
 test("an ambiguous name is not guessed and stays missing-file", (t) => {
