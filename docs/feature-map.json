@@ -84,13 +84,15 @@
       },
       "phase": "change",
       "summary": {
-        "en": "The decision-first page the user reads before approving: risk, decisions, open questions, scope, and optional prototype previews.",
-        "th": "หน้าที่ผู้ใช้อ่านก่อนอนุมัติ เรียงจากการตัดสินใจ: ความเสี่ยง, ทางเลือก, คำถามค้าง, ขอบเขต และ preview ของ prototype"
+        "en": "The decision-first page the user reads before approving: risk, decisions, open questions, scope, optional prototype previews, an optional fresh-eyes spec review, and a read-only drift report of living specs.",
+        "th": "หน้าที่ผู้ใช้อ่านก่อนอนุมัติ เรียงจากการตัดสินใจ: ความเสี่ยง, ทางเลือก, คำถามค้าง, ขอบเขต, preview ของ prototype รีวิวสเปกจาก reviewer ที่ไม่รู้บริบทเมื่อสั่ง และรายงานสเปกที่ไม่ตรงกับโค้ด"
       },
       "slashCommands": [],
       "cliCommands": [
         "package",
-        "preview"
+        "preview",
+        "spec-review",
+        "spec-drift"
       ],
       "states": [],
       "groups": [
@@ -98,11 +100,17 @@
       ],
       "code": [
         ".claude/harness/runtime/workflow/change/approval-package.mjs",
+        ".claude/harness/runtime/workflow/change/spec-review.mjs",
+        ".claude/harness/runtime/workflow/change/spec-drift.mjs",
         ".claude/harness/runtime/workflow/prototype/preview-runtime.mjs",
         ".claude/harness/runtime/workflow/prototype/prototype-binding.mjs"
       ],
       "tests": [
         ".claude/harness/tests/approval-package.test.mjs",
+        ".claude/harness/tests/spec-review.test.mjs",
+        ".claude/harness/tests/spec-review-command.test.mjs",
+        ".claude/harness/tests/spec-drift.test.mjs",
+        ".claude/harness/tests/spec-drift-command.test.mjs",
         ".claude/harness/tests/preview-runtime.test.mjs"
       ],
       "docs": [

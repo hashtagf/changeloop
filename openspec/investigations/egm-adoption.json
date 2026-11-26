@@ -1,0 +1,71 @@
+{
+  "version": 2,
+  "purpose": "change",
+  "language": "th",
+  "id": "egm-adoption",
+  "activeChange": null,
+  "problem": "Change Loop ควรนำแนวคิด Elephant-Goldfish Model (google/elephant-goldfish-model@63e239d) มาพัฒนาอย่างไร โดยเฉพาะการรีวิวสเปกด้วย reviewer ที่ไม่รู้บริบทก่อนอนุมัติ, รายงานสเปกที่ไม่ตรงกับโค้ด, brainstorming แบบหาจุดอ่อน และกติกา reviewer",
+  "mode": "analyze",
+  "intent": {
+    "goal": "นำจุดแข็งของ EGM มาเสริม Change Loop โดยไม่ซ้ำของเดิมและไม่ขัดหลัก Land เป็นด่านบังคับเดียว",
+    "outcome": "หลักฐานต่อช่วง 1-4 พร้อมขอบเขตที่ส่งเข้า Change ได้",
+    "actors": ["maintainer", "consumer agent", "ผู้อนุมัติสเปก"],
+    "scope": ["pre-approval spec review", "spec drift report", "brainstorming skill", "reviewer rules"]
+  },
+  "conversation": [
+    { "key": "u1", "speaker": "user", "statement": "ศึกษา https://github.com/google/elephant-goldfish-model", "source": "session message" },
+    { "key": "u2", "speaker": "user", "statement": "วางแผนนำ แนวคิดมาพัฒนา changeloop", "source": "session message" },
+    { "key": "u3", "speaker": "user", "statement": "เลือกทั้ง 4 ข้อ: Goldfish spec review, Spec drift report, Adversarial brainstorming, ปรับกติกา reviewer", "source": "ask_user answer egm-plan-scope" }
+  ],
+  "requirements": [
+    { "key": "goldfish-spec-review", "revision": 1, "kind": "behavior", "statement": "ก่อนผู้ใช้อนุมัติสเปก ให้ reviewer ที่เปิด session ใหม่และไม่รู้บริบทตรวจ packet ที่คอมไพล์แล้วในมุม อ่านเข้าใจได้เอง, พร้อมลงมือทำ, เรียบง่าย/ใช้ของเดิมซ้ำ แล้วแสดงผลเป็นคำแนะนำในหน้าอนุมัติ", "origin": "user", "status": "stated", "material": true, "conversationKeys": ["u2", "u3"] },
+    { "key": "spec-drift-report", "revision": 1, "kind": "behavior", "statement": "มีรายงานอ่านอย่างเดียวที่เทียบสเปกที่ archive แล้วใน openspec/specs กับโค้ดปัจจุบัน และให้ผู้ใช้ตัดสินว่าจะแก้สเปกหรือโค้ด", "origin": "user", "status": "stated", "material": true, "conversationKeys": ["u3"] },
+    { "key": "adversarial-brainstorming", "revision": 1, "kind": "behavior", "statement": "skill brainstorming มีขั้นหาจุดอ่อนของแต่ละทางเลือก (YAGNI/ใช้ของเดิมซ้ำ, failure/scale, ความชัดเจน) ก่อนแนะนำ", "origin": "user", "status": "stated", "material": true, "conversationKeys": ["u3"] },
+    { "key": "reviewer-rules", "revision": 1, "kind": "behavior", "statement": "reviewer ที่ไม่ได้รันต้องไม่ถูกนับเป็นการตรวจผ่าน และ reviewer ต้องไม่คล้อยตามผู้ใช้โดยอัตโนมัติ เฉพาะส่วนที่ยังขาด", "origin": "user", "status": "stated", "material": true, "conversationKeys": ["u3"] },
+    { "key": "advisory-only", "revision": 1, "kind": "constraint", "statement": "สิ่งที่เพิ่มต้องเป็นคำแนะนำ ไม่สร้างด่านบังคับใหม่ก่อน Land ตาม WORKFLOW.md blocking policy", "origin": "agent", "status": "superseded", "material": true, "conversationKeys": ["u2"], "reason": "เป็นกติกาเดิมของ repo (Land เป็นด่านบังคับเดียว) ไม่ใช่เจตนาใหม่ที่ต้องให้ผู้ใช้ยืนยัน", "supersededBy": { "key": "advisory-only", "revision": 2 } },
+    { "key": "advisory-only", "revision": 2, "kind": "constraint", "statement": "สิ่งที่เพิ่มต้องเป็นคำแนะนำ ไม่สร้างด่านบังคับใหม่ก่อน Land ตาม WORKFLOW.md blocking policy ที่มีอยู่แล้ว", "origin": "agent", "status": "proposed", "material": false, "conversationKeys": ["u2"] }
+  ],
+  "questions": [
+    { "key": "q-scope", "question": "เริ่มนำแนวคิด EGM จากขอบเขตไหน", "material": true, "status": "answered", "answer": "ทั้ง 4 ข้อ", "conversationKeys": ["u3"], "dependsOn": [], "workKeys": ["change-handoff"] }
+  ],
+  "experiments": [],
+  "work": [
+    { "key": "map-existing", "outcome": "ระบุสิ่งที่ Change Loop ทำอยู่แล้วต่อแต่ละข้อ", "questionKeys": [] },
+    { "key": "change-handoff", "outcome": "แตกเป็น change ที่อนุมัติแยกกันได้", "questionKeys": ["q-scope"] }
+  ],
+  "historyGaps": ["เนื้อหา EGM มาจาก clone ภายนอก google/elephant-goldfish-model@63e239d8d4c3ddc6774faf533b4997405f78c549 ไม่อยู่ใน repo; สรุปภายนอกบันทึกใน openspec/investigations/egm-adoption.md"],
+  "sources": [
+    "openspec/investigations/egm-adoption.md",
+    ".claude/harness/EVIDENCE.md",
+    ".claude/harness/lifecycle/change.md",
+    ".claude/harness/runtime/evidence/configured-reviewer.mjs",
+    ".claude/harness/runtime/evidence/review-attempt-values.mjs",
+    ".claude/harness/runtime/workflow/authority/authority-reviewer-run.mjs",
+    ".claude/harness/runtime/workflow/change/approval-package.mjs",
+    ".claude/harness/runtime/workflow/validation/completeness-checklist.mjs",
+    ".claude/skills/brainstorming/SKILL.md",
+    ".claude/tests/harness/run-context-budget-tests.sh",
+    "docs/feature-map.md",
+    "foundation.json"
+  ],
+  "facts": [
+    { "key": "review-is-post-build", "statement": "AI review ของ Change Loop เกิดใน Prove และดู diff เทียบ agreement; ช่องโหว่ของสเปกออกมาเป็น specGaps แบบ report-only ที่การแก้ต้องเป็น semantic amendment และเปิด proof/review ใหม่", "sources": [".claude/harness/EVIDENCE.md"] },
+    { "key": "fresh-session-exists", "statement": "configured reviewer (claude-cli/codex-cli) ถูกบังคับให้เป็น read-only และ ephemeral session (--no-session-persistence / --ephemeral) และปฏิเสธ session ที่ซ้ำกับ implementer จึงมีกลไกเปิด context ใหม่แบบ Goldfish อยู่แล้วให้ใช้ซ้ำ", "sources": [".claude/harness/runtime/evidence/configured-reviewer.mjs"] },
+    { "key": "main-session-fallback", "statement": "เมื่อไม่มี reviewer CLI ระบบ fallback ไป main-session ได้เฉพาะเมื่อ independence: self; main-session ไม่ใช่ context ใหม่ จึงไม่นับเป็น Goldfish review", "sources": [".claude/harness/runtime/workflow/authority/authority-reviewer-run.mjs", ".claude/harness/EVIDENCE.md"] },
+    { "key": "pre-approval-static-only", "statement": "ก่อนอนุมัติมีแค่การตรวจแบบ deterministic: completeness checklist ตอน change start (คำเตือน) และหน้าอนุมัติที่มี warnings; ไม่มี reviewer AI อ่าน packet ก่อนอนุมัติ", "sources": [".claude/harness/runtime/workflow/validation/completeness-checklist.mjs", ".claude/harness/runtime/workflow/change/approval-package.mjs", ".claude/harness/lifecycle/change.md"] },
+    { "key": "scope-discipline-on-diff", "statement": "review prompt ตรวจ scope discipline (abstraction เกิน, โค้ดตาย, ตัวเลือกเผื่ออนาคต) อยู่แล้ว แต่ตรวจกับ diff ไม่ใช่กับสเปก", "sources": [".claude/harness/EVIDENCE.md"] },
+    { "key": "no-drift-report", "statement": "openspec/specs มี 60 capability แต่ไม่พบคำสั่งหรือ feature ที่เทียบสเปกที่ archive แล้วกับโค้ดปัจจุบัน; คำว่า drift ใน runtime หมายถึง drift ของ workspace/Land/model", "sources": ["docs/feature-map.md"] },
+    { "key": "infra-failure-not-pass", "statement": "reviewer infrastructure error ถูกบันทึกเป็น attempt ที่ error ลองใหม่ได้ 1 ครั้ง และไม่สร้าง delivered baseline จึงไม่ถูกนับเป็นผ่าน หลัก not run ของ EGM มีอยู่แล้วในฝั่ง Prove", "sources": [".claude/harness/runtime/evidence/review-attempt-values.mjs", ".claude/harness/EVIDENCE.md"] },
+    { "key": "no-anti-sycophancy", "statement": "ไม่พบกติกาห้ามคล้อยตามผู้ใช้ใน skills หรือ review prompt", "sources": [".claude/skills/brainstorming/SKILL.md"] },
+    { "key": "brainstorm-no-adversarial", "statement": "brainstorming เสนอได้สูงสุด 3 ทางพร้อม tradeoff แต่ไม่มีขั้นหาจุดอ่อนแบบเจาะจงมุม; ข้อความหลายประโยคของ skill ถูกตรึงด้วย context budget test", "sources": [".claude/skills/brainstorming/SKILL.md", ".claude/tests/harness/run-context-budget-tests.sh"] },
+    { "key": "repo-waivers", "statement": "repo นี้ตั้ง review independence: self และ diversity: single-model ซึ่งผ่อนเรื่องตัวตน/โมเดล แต่ไม่ได้ห้ามการเปิด session ใหม่", "sources": [".claude/harness/EVIDENCE.md", "foundation.json"] }
+  ],
+  "hypotheses": [],
+  "options": [],
+  "selection": null,
+  "decisions": [],
+  "conclusion": {
+    "summary": "ข้อ 1 คุ้มที่สุดและใช้ configured reviewer แบบ ephemeral ที่มีอยู่ได้ ต้องรายงาน not-run เมื่อเปิด session ใหม่ไม่ได้; ข้อ 2 ยังไม่มีเลย; ข้อ 3 เป็นงานแก้ skill ภายใต้ budget; ข้อ 4 ส่วน not-run มีแล้วใน Prove เหลือแค่กติกาห้ามคล้อยตามและสถานะ not-run ของรีวิวสเปกใหม่"
+  },
+  "changeIntent": "Pre-approval Goldfish spec review: a fresh-session read-only reviewer checks the compiled packet for comprehension, implementation readiness, and simplicity/reuse, reported as advisory findings on the approval page with an explicit not-run status (phase 1 of 4; drift report, adversarial brainstorming, and anti-sycophancy reviewer rule follow as separate changes)"
+}

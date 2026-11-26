@@ -13,7 +13,7 @@ keeping this map current are in [How the map is kept current](#how-the-map-is-ke
 |---|---|---|---|
 | [Investigate](#investigate) | สืบค้นก่อนตกลง | investigate | `/investigate` |
 | [Write the agreement](#agreement) | เขียนข้อตกลงของ change | change | `/change` |
-| [Approval page](#approval-page) | หน้าอนุมัติ | change | `package`, `preview` |
+| [Approval page](#approval-page) | หน้าอนุมัติ | change | `package`, `preview`, `spec-review` |
 | [Amend during Build](#amendment) | แก้ข้อตกลงระหว่าง Build | build | `change amend` |
 | [Validate and trace](#validation) | ตรวจข้อตกลงและการโยงหลักฐาน | change | `change validate`, `change audit`, `change waive` |
 | [Advance and what the user sees](#advance) | advance และสิ่งที่ผู้ใช้เห็น | cross-phase | `/dev`, `/feature`, `WORKING`, `TARGET_REACHED`, `DELIVERED`, `NEEDS_DECISION`, `WAITING_EXTERNAL`, `PAUSED` |
@@ -80,18 +80,18 @@ Turn settled intent into an OpenSpec agreement: the agent writes a draft, the ha
 
 **Phase:** change
 
-The decision-first page the user reads before approving: risk, decisions, open questions, scope, and optional prototype previews.
+The decision-first page the user reads before approving: risk, decisions, open questions, scope, optional prototype previews, an optional fresh-eyes spec review, and a read-only drift report of living specs.
 
-หน้าที่ผู้ใช้อ่านก่อนอนุมัติ เรียงจากการตัดสินใจ: ความเสี่ยง, ทางเลือก, คำถามค้าง, ขอบเขต และ preview ของ prototype
+หน้าที่ผู้ใช้อ่านก่อนอนุมัติ เรียงจากการตัดสินใจ: ความเสี่ยง, ทางเลือก, คำถามค้าง, ขอบเขต, preview ของ prototype รีวิวสเปกจาก reviewer ที่ไม่รู้บริบทเมื่อสั่ง และรายงานสเปกที่ไม่ตรงกับโค้ด
 
 | | |
 |---|---|
 | Slash commands | — |
-| CLI commands | `package`, `preview` |
+| CLI commands | `package`, `preview`, `spec-review`, `spec-drift` |
 | User states | — |
 | Runtime groups | `workflow/prototype` |
-| Code | `.claude/harness/runtime/workflow/change/approval-package.mjs`, `.claude/harness/runtime/workflow/prototype/preview-runtime.mjs`, `.claude/harness/runtime/workflow/prototype/prototype-binding.mjs` |
-| Tests | `.claude/harness/tests/approval-package.test.mjs`, `.claude/harness/tests/preview-runtime.test.mjs` |
+| Code | `.claude/harness/runtime/workflow/change/approval-package.mjs`, `.claude/harness/runtime/workflow/change/spec-review.mjs`, `.claude/harness/runtime/workflow/change/spec-drift.mjs`, `.claude/harness/runtime/workflow/prototype/preview-runtime.mjs`, `.claude/harness/runtime/workflow/prototype/prototype-binding.mjs` |
+| Tests | `.claude/harness/tests/approval-package.test.mjs`, `.claude/harness/tests/spec-review.test.mjs`, `.claude/harness/tests/spec-review-command.test.mjs`, `.claude/harness/tests/spec-drift.test.mjs`, `.claude/harness/tests/spec-drift-command.test.mjs`, `.claude/harness/tests/preview-runtime.test.mjs` |
 | Docs | `website/docs/src/content/docs/approval.md` |
 
 <a id="amendment"></a>

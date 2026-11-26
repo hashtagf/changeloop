@@ -645,6 +645,12 @@ findings, change the verdict, or block. The agent reports them and stops: an
 edit for one re-opens proof and review and can exhaust the bounded AI waves.
 Closing one is a semantic amendment the user decides.
 
+<a id="review-skepticism"></a>Every configured review prompt, at any depth, also tells
+the reviewer to treat the agreement, task summaries, comments, and passing
+results as claims to verify against the code, never to lower a defect's
+severity because something asserts it is handled, and not to praise the change.
+Verdict rules are unchanged.
+
 <a id="review-scope-discipline"></a>Every configured review prompt, at any depth, also checks scope discipline in
 the changed hunks: unrequested abstraction, dead or unused code, speculative
 options or configuration, a guard, retry, or catch that hides a symptom, and

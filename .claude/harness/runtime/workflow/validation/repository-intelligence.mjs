@@ -280,6 +280,25 @@ export function skippedRepositoryIntelligence(reason = "rapid-lane") {
   };
 }
 
+// Discovery only widens the read set; declared sources are the evidence. A
+// repository larger than the scan budget keeps its declared sources instead of
+// blocking every intake in it. Integrity findings (unreadable, outside the
+// project, an oversized declared source, an undiscovered seed) still block.
+const DISCOVERY_BUDGET_CODES = new Set([
+  "scan-entry-limit", "scan-file-limit", "scan-byte-limit", "scan-depth-limit", "scan-graph-edge-limit"
+]);
+export function discoveryOverBudget(repository) {
+  const blocking = (repository?.findings || []).filter((row) => row.blocking);
+  return repository?.status === "blocked" && blocking.length > 0 &&
+    blocking.every((row) => DISCOVERY_BUDGET_CODES.has(row.code));
+}
+
+// Intake view: over the scan budget the declared sources stay the hash-bound
+// inventory, reported as status "declared-sources"; nothing is discovered.
+export function declaredSourcesFallback(repository) {
+  return discoveryOverBudget(repository) ? { ...repository, status: "declared-sources" } : repository;
+}
+
 function blockedResult({ limits, terms, scan, findings }) {
   return {
     version: 1,

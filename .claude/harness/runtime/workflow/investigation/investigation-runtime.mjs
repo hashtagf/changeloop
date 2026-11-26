@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, join, posix, relative, resolve } from "node:path";
 import { sortedJson } from "../../core/trust.mjs";
-import { inspectRepositoryIntelligence } from "../validation/repository-intelligence.mjs";
+import { discoveryOverBudget, inspectRepositoryIntelligence } from "../validation/repository-intelligence.mjs";
 import {
   investigationDiscoveryExclusions, isInvestigationReport, writeInvestigationReport
 } from "./investigation-report.mjs";
@@ -441,7 +441,7 @@ export function validateInvestigationBinding(/** @type {{ projectRoot?: string, 
           limits: { maxReadSet: 24 }
         });
         const selected = (repository.readSet || []).map((row) => row.path);
-        if (repository.status !== "ready" ||
+        if ((repository.status !== "ready" && !discoveryOverBudget(repository)) ||
             JSON.stringify(selected) !== JSON.stringify(state.repository?.selectedSources || []))
           issues.push("investigation binding repository discovery is stale or incomplete");
       }
@@ -498,11 +498,13 @@ export function createInvestigationRuntime(/** @type {{ root?: string, readJson?
     // declared ones; facts and options must still cite an inventoried source.
     const discovered = (repository.readSet || []).map((row) => row.path);
     const declared = strings(record?.sources).filter((path) => !isInvestigationReport(path));
+    const overBudget = Boolean(sourceRoot) && discoveryOverBudget(repository);
     const inventoried = new Set(sourceRoot && repository.status === "ready"
       ? [...declared, ...discovered] : declared);
     const sourceInspection = inspectSemanticSources({
       projectRoot: sourceRoot || projectRoot,
-      sourcePaths: sourceRoot && repository.status === "ready" ? unique([...inventoried]) : []
+      sourcePaths: sourceRoot && (repository.status === "ready" || overBudget)
+        ? unique([...inventoried]) : []
     });
     const cited = new Set();
     for (const [kind, rows] of [["fact", record?.facts], ["option", record?.options]])
@@ -517,7 +519,7 @@ export function createInvestigationRuntime(/** @type {{ root?: string, readJson?
     const harnessIssues = [...workspace.issues];
     issues.push(...sourceInspection.findings.map((row) =>
       `investigation source ${row.code}: ${row.path || "(unknown)"}`));
-    if (repository.status !== "ready") {
+    if (repository.status !== "ready" && !overBudget) {
       const discoveryIssues = repository.findings.map((row) =>
         `repository discovery ${row.code}: ${row.path || "(root)"}`);
       issues.push(...discoveryIssues);
@@ -670,6 +672,7 @@ export function createInvestigationRuntime(/** @type {{ root?: string, readJson?
       workspace: workspace.binding,
       repository: {
         complete: repository.complete,
+        ...(overBudget ? { scope: "declared-sources" } : {}),
         scan: repository.scan,
         selectedSources: discovered,
         unreadSources,

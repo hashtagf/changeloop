@@ -1,0 +1,76 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "brainstorm-challenge-context-budget-test-brainstorming-skill-md",
+      "requirementKey": "brainstorm-challenge",
+      "scenario": "มีขั้นหาจุดอ่อน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "brainstorm-challenge-context-budget-test-brainstorming-skill-m-2",
+      "requirementKey": "brainstorm-challenge",
+      "scenario": "ไม่ชมไอเดียผู้ใช้",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "brainstorm-challenge-context-budget-test",
+      "requirementKey": "brainstorm-challenge",
+      "scenario": "อยู่ในงบคำ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "reviewer-skepticism-prompt-packet-full",
+      "requirementKey": "reviewer-skepticism",
+      "scenario": "รีวิวเต็มมีคำสั่ง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "reviewer-skepticism-prompt-packet-diff-only-delta",
+      "requirementKey": "reviewer-skepticism",
+      "scenario": "diff-only และ delta มีคำสั่ง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "reviewer-skepticism-reviewer-pass-finding",
+      "requirementKey": "reviewer-skepticism",
+      "scenario": "ไม่เปลี่ยนเกณฑ์ผ่าน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(bash .claude/tests/harness/run-context-budget-tests.sh) && (node --test .claude/harness/tests/configured-reviewer.test.mjs)"
+      ],
+      "segments": [
+        "bash .claude/tests/harness/run-context-budget-tests.sh",
+        "node --test .claude/harness/tests/configured-reviewer.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

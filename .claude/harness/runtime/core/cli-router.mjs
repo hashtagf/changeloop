@@ -46,6 +46,8 @@ export async function routeRuntimeCommand(command, values, api) {
     measureProduct,
     showPackage,
     showPreview,
+    showSpecReview,
+    showSpecDrift,
     execObserved,
     checkpointBudget,
     continueBudget,
@@ -476,6 +478,18 @@ export async function routeRuntimeCommand(command, values, api) {
       });
       if (rest.length !== 1) die("preview requires exactly one change id");
       showPreview(rest[0], flags);
+    },
+    "spec-review": async () => {
+      const { flags, rest } = parseStrictCommandFlags(values, "spec-review", { boolean: ["pretty"] });
+      if (rest.length !== 1) die("spec-review requires exactly one change id");
+      showSpecReview(rest[0], flags);
+    },
+    "spec-drift": async () => {
+      const { flags, rest } = parseStrictCommandFlags(values, "spec-drift", {
+        boolean: ["pretty", "review"], value: ["capability"]
+      });
+      if (rest.length) die("spec-drift takes no positional arguments; use --capability <name>[,<name>]");
+      showSpecDrift(flags);
     },
     "advance": async () => {
       const { flags, rest } = parseStrictCommandFlags(values, "advance", {

@@ -122,6 +122,22 @@
       "description": "Optionally run one declared provider before Build in an isolated copy under .foundation/previews/<change>/ and record a preview receipt bound to the contract revision. Preview receipts never satisfy Prove or Land, never block approval or Build, and a provider marked external runs only with the user's --decision-ref."
     },
     {
+      "name": "spec-review",
+      "usage": "spec-review <change> [--pretty]",
+      "audience": "agent",
+      "kind": "write",
+      "idempotent": false,
+      "description": "On request only, review a compiled change before Land with three fresh read-only configured-reviewer sessions (comprehension, implementation-readiness, zoom-out) on the risk tier's model class. A lens that fails after one retry is not-run, never zero findings; main-session is never used. Records .foundation/spec-reviews/<change>/latest.json bound to the packet digest; package shows it as advisory (stale after the packet changes). Never blocks approval."
+    },
+    {
+      "name": "spec-drift",
+      "usage": "spec-drift [--capability <name>[,<name>]] [--review] [--pretty]",
+      "audience": "agent",
+      "kind": "write",
+      "idempotent": false,
+      "description": "Read-only drift report of living specs: links each openspec/specs requirement to files through the latest archived change that wrote it (claims, task paths, verify) plus backticked paths, and reports ok, missing-file, no-origin, or unreadable. --review (requires --capability) adds one fresh read-only configured-reviewer session per capability comparing spec meaning with those files; a failed review is not-run. Writes only .foundation/spec-drift/latest.json; drift exits 0."
+    },
+    {
       "name": "exec",
       "usage": "exec <change> [--phase change|build|prove|land] [--repo <id>] [--task <id>] -- <command...>",
       "audience": "agent",
@@ -826,6 +842,8 @@
     "product-measure",
     "package",
     "preview",
+    "spec-review",
+    "spec-drift",
     "budget-checkpoint",
     "budget-continue",
     "doctor",

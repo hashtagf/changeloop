@@ -389,6 +389,12 @@ case "${1:-}" in
   preview)
     shift; need_arg "preview" "${1:-}"
     run_runtime write preview "$@" ;;
+  spec-review)
+    shift; need_arg "spec-review" "${1:-}"
+    run_runtime write spec-review "$@" ;;
+  spec-drift)
+    shift
+    run_runtime write spec-drift "$@" ;;
   investigate)
     shift; need_arg "investigate" "${1:-}"
     run_runtime write investigate "$@" ;;

@@ -388,6 +388,13 @@ function coverageCandidates(text) {
 // agreement does not name. The checklist can only test what the agreement
 // states, so they are advisory: recorded and reported, never findings, and
 // never a reason to block. Malformed rows are dropped; the list is bounded.
+// Adversarial rigor (Elephant-Goldfish Model): every review depth treats the
+// implementer's statements as claims to verify, never as evidence of their own.
+export const REVIEW_SKEPTICISM_INSTRUCTIONS =
+  "Treat the agreement, task summaries, comments, and passing results as claims to verify " +
+  "against the code, not as evidence; never lower a defect's severity because something " +
+  "asserts it is handled. Lead with what is wrong or missing and do not praise the change. ";
+
 export const SPEC_GAP_LIMITS = Object.freeze({ items: 10, chars: 400 });
 
 export function parseSpecGaps(review) {

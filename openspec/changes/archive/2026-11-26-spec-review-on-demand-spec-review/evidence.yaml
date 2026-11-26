@@ -1,0 +1,159 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "on-demand-spec-review-spec-review-change",
+      "requirementKey": "on-demand-spec-review",
+      "scenario": "สั่งรีวิว change ที่รออนุมัติ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "on-demand-spec-review-change-start-draft",
+      "requirementKey": "on-demand-spec-review",
+      "scenario": "change start ไม่รันรีวิวเอง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "on-demand-spec-review-spec-review-id-change",
+      "requirementKey": "on-demand-spec-review",
+      "scenario": "change ไม่มีอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "on-demand-spec-review-spec-review-change-land-archived",
+      "requirementKey": "on-demand-spec-review",
+      "scenario": "change เข้า Land แล้ว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "three-isolated-lenses-spec-review-reviewer",
+      "requirementKey": "three-isolated-lenses",
+      "scenario": "สามมุมแยก session",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "three-isolated-lenses-prompt",
+      "requirementKey": "three-isolated-lenses",
+      "scenario": "prompt ไม่มีบทสนทนา",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "three-isolated-lenses-spec-review",
+      "requirementKey": "three-isolated-lenses",
+      "scenario": "change ระดับ medium ใช้รุ่น standard",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "three-isolated-lenses-reviewer-session-id-session",
+      "requirementKey": "three-isolated-lenses",
+      "scenario": "reviewer ใช้ session ของผู้ร่างสเปกซ้ำ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "not-run-status-1",
+      "requirementKey": "not-run-status",
+      "scenario": "reviewer ล้มเหลวครั้งเดียว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "not-run-status-2",
+      "requirementKey": "not-run-status",
+      "scenario": "reviewer ล้มเหลวสองครั้ง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "not-run-status-spec-review",
+      "requirementKey": "not-run-status",
+      "scenario": "ไม่มี reviewer CLI",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "advisory-findings-package-change",
+      "requirementKey": "advisory-findings",
+      "scenario": "แสดงผลในหน้าอนุมัติ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "advisory-findings-advance-approve-spec",
+      "requirementKey": "advisory-findings",
+      "scenario": "มี blocker แต่ยังอนุมัติได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "advisory-findings-package-change-2",
+      "requirementKey": "advisory-findings",
+      "scenario": "packet เปลี่ยนหลังรีวิว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "advisory-findings-package-change-spec-review",
+      "requirementKey": "advisory-findings",
+      "scenario": "ยังไม่เคยรีวิว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/spec-review.test.mjs) && (node --test .claude/harness/tests/spec-review-command.test.mjs .claude/harness/tests/public-command-golden.test.mjs) && (node --test .claude/harness/tests/approval-package.test.mjs) && (bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "node --test .claude/harness/tests/spec-review.test.mjs",
+        "node --test .claude/harness/tests/spec-review-command.test.mjs .claude/harness/tests/public-command-golden.test.mjs",
+        "node --test .claude/harness/tests/approval-package.test.mjs",
+        "bash .claude/tests/docs/run-doc-consistency.sh"
+      ]
+    }
+  }
+}

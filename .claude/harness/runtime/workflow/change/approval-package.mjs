@@ -11,6 +11,7 @@ import { undoPlan } from "../transaction/undo-plan.mjs";
 import { devDocumentChecklist, inferWorkTypes } from "../validation/dev-document.mjs";
 import { bestEffort } from "../../core/best-effort.mjs";
 import { projectFeaturesForDraft } from "../validation/project-feature-map.mjs";
+import { readSpecReview, specPacketDigest, specPacketFiles, specReviewSummary } from "./spec-review.mjs";
 
 // Approval data: what the harness computes about a change for the people who
 // approve it, printed as JSON by `package <change>`. The harness writes no
@@ -202,7 +203,8 @@ const SCRATCH_LINES = ["get", "asIs", "toBe", "ifFail"];
 const RISK_STEP = Object.freeze({ Low: 1, Medium: 2, High: 3, Critical: 4 });
 
 export function createApprovalPackageRuntime({
-  root, runtimeDir, previewsDir, receiptsDir, loadRuntime, saveRuntime = (..._args) => {}, activeChangePath,
+  root, runtimeDir, previewsDir, receiptsDir, specReviewsDir = null, loadRuntime,
+  saveRuntime = (..._args) => {}, activeChangePath,
   changeWorkTypes, evidence, providerCapability, receiptValidity, fail,
   // Runs a harness call so its failure throws instead of exiting the process;
   // the data is a reading aid and survives broken evidence wiring.
@@ -271,7 +273,7 @@ export function createApprovalPackageRuntime({
     let missingLanes = [];
     missingLanes = bestEffort(() => missingApprovalLanes(root, id, state), missingLanes); // lanes stay unlisted
     return {
-      id, state, route, draft, artifacts,
+      id, state, route, draft, artifacts, packet,
       approval: approvalStatus(state, missingLanes),
       diagrams: draftDiagrams(draft),
       suggestions: previewSuggestions(route, suggestable, id),
@@ -354,8 +356,22 @@ export function createApprovalPackageRuntime({
       },
       facts,
       factsDigest: factsDigest(facts),
+      // The on-demand spec review: advisory, outside the facts digest, and
+      // absent until someone runs `spec-review <change>`.
+      ...specReviewField(id, model.packet),
       warnings: [...route.warnings, ...model.notices, ...syncWarnings(sync)]
     };
+  }
+
+  function specReviewField(id, packet) {
+    if (!specReviewsDir) return {};
+    const summary = bestEffort(() => {
+      const record = readSpecReview(specReviewsDir, id);
+      if (!record) return null;
+      const files = specPacketFiles(root, packet);
+      return specReviewSummary(record, files.length ? specPacketDigest(root, files) : null);
+    }, null);
+    return summary ? { specReview: summary } : {};
   }
 
   function packageData(id) {

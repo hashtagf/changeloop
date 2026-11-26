@@ -400,6 +400,9 @@ try {
   });
   const capture = JSON.parse(readFileSync(join(workspace,
     "claude-capture.json"), "utf8"));
+  // The skepticism instruction rides in the prompt sent, yet a findings-free
+  // pass is still recorded as pass: the verdict rules are unchanged.
+  assert.match(JSON.stringify(capture), /claims to verify against the code/);
   assert.equal(result.status, "pass");
   const usage = usageRows.find((row) => row.changeId === "claude-only");
   assert.equal(usage.outputTokens, 35);
@@ -959,6 +962,15 @@ try {
   assert.match(highPrompt, /Read the full referenced requirements/);
   // Scope discipline (over-building) is a reviewed criterion at every depth,
   // minor unless it leaves a claim false, and never against a root-cause fix.
+  // Adversarial rigor: claims are verified, never trusted, at every depth
+  // (full, diff-only, and a delta/closure round).
+  const fullPrompt = configuredReviewPrompt({ ...lowPacket, reviewDepth: undefined });
+  const deltaPrompt = configuredReviewPrompt({ ...highPacket, closureFindings: { ids: ["F1"] } });
+  for (const prompt of [fullPrompt, lowPrompt, highPrompt, deltaPrompt]) {
+    assert.match(prompt, /passing results as claims to verify against the code, not as evidence/);
+    assert.match(prompt, /never lower a defect's severity because something asserts it is handled/);
+    assert.match(prompt, /do not praise the change/);
+  }
   for (const prompt of [lowPrompt, highPrompt]) {
     assert.match(prompt, /Check scope discipline in the changed hunks/);
     assert.match(prompt, /unrequested abstraction.*dead or unused code.*speculative options/);

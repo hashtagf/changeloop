@@ -39,11 +39,15 @@ test("golden fixture freezes every public host and CLI command contract", () => 
 
 test("the frozen public surface includes the read-only cross-change rollups", () => {
   const rows = publicCliRows();
-  assert.equal(rows.length, 72);
+  assert.equal(rows.length, 74);
   for (const name of ["outcomes", "lessons", "features", "product status", "package", "quality readiness"])
     assert.deepEqual(rows.filter((row) => row.name === name).map(({ kind, idempotent }) =>
       ({ kind, idempotent })), [{ kind: "read", idempotent: true }], name);
   assert.deepEqual(rows.filter((row) => row.name === "preview").map(({ kind }) => kind), ["write"]);
+  assert.deepEqual(rows.filter((row) => row.name === "spec-review").map(({ kind, audience }) =>
+    ({ kind, audience })), [{ kind: "write", audience: "agent" }]);
+  assert.deepEqual(rows.filter((row) => row.name === "spec-drift").map(({ kind, audience }) =>
+    ({ kind, audience })), [{ kind: "write", audience: "agent" }]);
 });
 
 test("runtime routes never name an internal primitive that advance performs", () => {

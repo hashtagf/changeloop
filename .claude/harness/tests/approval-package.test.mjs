@@ -10,6 +10,7 @@ import test from "node:test";
 import { createApprovalPackageRuntime, previewSuggestions } from "../runtime/workflow/change/approval-package.mjs";
 import { approvalPackageLine } from "../runtime/workflow/change/change-lifecycle.mjs";
 import { routeChange } from "../runtime/contracts/scratch-router.mjs";
+import { specPacketDigest, specPacketFiles } from "../runtime/workflow/change/spec-review.mjs";
 
 function write(path, value) {
   mkdirSync(dirname(path), { recursive: true });
@@ -41,8 +42,9 @@ function fixture(t, { state = {}, providers = {}, previewProviders = {}, receipt
   for (const row of previews) write(join(previewsDir, id, "receipts", `${row.provider}.json`), row);
   const receiptsDir = join(root, ".foundation", "receipts");
   for (const [provider, receipt] of Object.entries(storedReceipts)) write(join(receiptsDir, id, `${provider}.json`), receipt);
+  const specReviewsDir = join(root, ".foundation", "spec-reviews");
   const runtime = createApprovalPackageRuntime({
-    root, runtimeDir, previewsDir, receiptsDir,
+    root, runtimeDir, previewsDir, receiptsDir, specReviewsDir,
     loadRuntime: (changeId) => JSON.parse(readFileSync(join(runtimeDir, `${changeId}.json`), "utf8")),
     saveRuntime: (value) => write(join(runtimeDir, `${value.id}.json`), value),
     activeChangePath: (changeId) => join(root, "openspec", "changes", changeId),
@@ -53,7 +55,8 @@ function fixture(t, { state = {}, providers = {}, previewProviders = {}, receipt
     fail: (message) => { throw new Error(message); }
   });
   const page = (text, name = "approval.html") => write(join(previewsDir, id, name), text);
-  return { root, id, runtime, runtimeDir, previewsDir, statePath, page, packagesDir: join(root, ".foundation", "packages") };
+  return { root, id, runtime, runtimeDir, previewsDir, statePath, page, specReviewsDir,
+    packagesDir: join(root, ".foundation", "packages") };
 }
 const withDraft = (draft) => ({ draftSource: { contractRevision: 1, draft } });
 const PROTOTYPE = { type: "prototype", title: "page", path: "prototype.html" };
@@ -401,4 +404,70 @@ test("the data lists each preview with its kept artifact only when that file sta
   assert.equal(rows.shots.stale, false);
   assert.equal(rows.escape.artifact, null, "a path leaving the preview folder is never named");
   assert.equal(rows.gone.artifact, null, "a missing file is never named");
+});
+
+function writeSpecReview(value, { digest: forced = null, lenses = null } = {}) {
+  const files = specPacketFiles(value.root, join(value.root, "openspec", "changes", value.id));
+  write(join(value.specReviewsDir, value.id, "latest.json"), {
+    version: 1, changeId: value.id, files, reviewedAt: "2026-11-25T00:00:00.000Z",
+    packetDigest: forced || specPacketDigest(value.root, files),
+    lenses: lenses || [
+      { lens: "comprehension", status: "completed", findings: [
+        { severity: "nit", section: "proposal.md Why", message: "Vague", recommendation: "Say who" }] },
+      { lens: "implementation-readiness", status: "completed", findings: [
+        { severity: "blocker", section: "tasks.md T001", message: "No path", recommendation: "Name it" },
+        { severity: "major", section: "spec.md", message: "No failure case", recommendation: "Add one" }] },
+      { lens: "zoom-out", status: "not-run", reason: "rate limited; rate limited", findings: [] }
+    ]
+  });
+}
+
+test("package shows the current spec review per lens with findings ordered blocker to nit", (t) => {
+  const value = fixture(t);
+  writeSpecReview(value);
+  const review = value.runtime.packageData(value.id).specReview;
+  assert.equal(review.advisory, true);
+  assert.equal(review.status, "current");
+  assert.deepEqual(review.lenses.map((row) => [row.lens, row.status]), [
+    ["comprehension", "completed"], ["implementation-readiness", "completed"], ["zoom-out", "not-run"]]);
+  assert.equal(review.lenses[2].reason, "rate limited; rate limited");
+  assert.deepEqual(review.notRun, ["zoom-out"]);
+  assert.deepEqual(review.findings.map((row) => row.severity), ["blocker", "major", "nit"]);
+  assert.deepEqual(review.counts, { blocker: 1, major: 1, nit: 1 });
+});
+
+test("a blocker finding never changes approval status or the facts digest", (t) => {
+  const value = fixture(t);
+  const before = value.runtime.packageData(value.id);
+  writeSpecReview(value);
+  const after = value.runtime.packageData(value.id);
+  assert.equal(after.specReview.counts.blocker, 1);
+  assert.deepEqual(after.approval, before.approval);
+  assert.equal(after.factsDigest, before.factsDigest);
+  assert.deepEqual(after.warnings, before.warnings);
+  // Approval recording never reads spec reviews.
+  for (const file of ["change-resolution.mjs", "change-policy.mjs"]) {
+    const source = readFileSync(fileURLToPath(new URL(
+      `../runtime/workflow/change/${file}`, import.meta.url)), "utf8");
+    assert.doesNotMatch(source, /spec-review|specReview/, file);
+  }
+});
+
+test("a spec review of an earlier packet is shown as stale", (t) => {
+  const value = fixture(t);
+  writeSpecReview(value);
+  write(join(value.root, "openspec", "changes", value.id, "proposal.md"), "## Summary\n\nRevised.\n");
+  assert.equal(value.runtime.packageData(value.id).specReview.status, "stale");
+  const forced = fixture(t);
+  writeSpecReview(forced, { digest: "sha256:old" });
+  assert.equal(forced.runtime.packageData(forced.id).specReview.status, "stale");
+});
+
+test("without a spec review the package has no spec review field and no warning", (t) => {
+  const value = fixture(t);
+  const data = value.runtime.packageData(value.id);
+  assert.equal(Object.hasOwn(data, "specReview"), false);
+  assert.equal(data.warnings.some((line) => /spec review/i.test(line)), false);
+  write(join(value.specReviewsDir, value.id, "latest.json"), "{ not json");
+  assert.equal(Object.hasOwn(value.runtime.packageData(value.id), "specReview"), false);
 });

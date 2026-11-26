@@ -11,6 +11,8 @@ import { createAuthorityRuntime } from "../workflow/authority/authority-runtime.
 import { createBudgetContinuation } from "../workflow/authority/budget-commands.mjs";
 import { createLeaseRuntime } from "../workflow/authority/lease-runtime.mjs";
 import { createPreviewRuntime } from "../workflow/prototype/preview-runtime.mjs";
+import { createPromptReviewer, createSpecReviewRuntime } from "../workflow/change/spec-review.mjs";
+import { createSpecDriftRuntime } from "../workflow/change/spec-drift.mjs";
 import { createProofReadinessRuntime } from "../evidence/proof-readiness.mjs";
 import { createSandboxCleanup } from "../workflow/sandbox/sandbox-cleanup.mjs";
 import { createSandboxRuntime } from "../workflow/sandbox/sandbox-runtime.mjs";
@@ -359,11 +361,34 @@ export function composeBuildRuntimes({
     selectedRepositories, cleanupRepositorySandboxes, cleanupAppliedSandbox,
     ownedPaths: (id) => [join(RECEIPTS, id), join(EVIDENCE_VAULT, id), join(HANDOFFS, id)]
   });
+  // On-demand pre-approval spec review: advisory records the package reads.
+  const SPEC_REVIEWS = join(ROOT, ".foundation", "spec-reviews");
+  const runPromptReview = createPromptReviewer({ foundationPolicy, reviewerStatus, fail: die });
+  // Read-only drift report of living specs against current files.
+  const specDrift = createSpecDriftRuntime({
+    root: ROOT, foundationPolicy, reviewerInstalled, runPromptReview, now, fail: die
+  });
+  const specReview = createSpecReviewRuntime({
+    root: ROOT,
+    reviewsDir: SPEC_REVIEWS,
+    runtimeDir: RUNTIME,
+    loadRuntime,
+    activeChangePath,
+    foundationPolicy,
+    // Unreadable evidence wiring throws here instead of exiting, and the
+    // review then runs on the configured model.
+    reviewPolicy: (id) => trapFailures(() => reviewPolicy(id)),
+    reviewerInstalled,
+    runPromptReview,
+    now,
+    fail: die
+  });
   const approvalPackage = createApprovalPackageRuntime({
     root: ROOT,
     runtimeDir: RUNTIME,
     previewsDir: PREVIEWS,
     receiptsDir: RECEIPTS,
+    specReviewsDir: SPEC_REVIEWS,
     loadRuntime,
     saveRuntime,
     activeChangePath,
@@ -409,6 +434,6 @@ export function composeBuildRuntimes({
     resetBaseMoveAuthority, resetInfrastructureAuthority, rollbackAtomicStart,
     runAuthorityReviewer, runAuthorityReviewerAsync, sandboxRuntime, showAgentDispatch,
     showAgentPlan, showAgentTask, showAuthorityStatus, showPacket, showSandboxInspection,
-    syncSandbox, targetEditsFor, topologyIssues, workspaceIsolationIssues
+    specDrift, specReview, syncSandbox, targetEditsFor, topologyIssues, workspaceIsolationIssues
   };
 }

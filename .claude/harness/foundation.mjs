@@ -512,7 +512,7 @@ const {
   resetBaseMoveAuthority, resetInfrastructureAuthority, rollbackAtomicStart,
   runAuthorityReviewer, runAuthorityReviewerAsync, sandboxRuntime, showAgentDispatch,
   showAgentPlan, showAgentTask, showAuthorityStatus, showPacket, showSandboxInspection,
-  syncSandbox, targetEditsFor, topologyIssues, workspaceIsolationIssues
+  specDrift, specReview, syncSandbox, targetEditsFor, topologyIssues, workspaceIsolationIssues
 } = composeBuildRuntimes({
   AGENT_PLAN_SCHEMA_VERSION, AUTHORITY_PROTOCOL_VERSION, CI_EVIDENCE_PROTOCOL_VERSION,
   EVIDENCE_VAULT, HANDOFFS, LEASES, LOGS, PLANS, PREVIEWS, RECEIPTS, ROOT, RUNTIME,
@@ -727,7 +727,7 @@ await routeRuntimeCommand(command, values, {
     return acquireAgentLease(id, taskId, flags);
   },
   showPackage: approvalPackage.showPackage,
-  showPreview: preview.showPreview,
+  showPreview: preview.showPreview, showSpecReview: specReview.showSpecReview, showSpecDrift: specDrift.showSpecDrift,
   recordVerifiedCi: guardedRecordVerifiedCi,
   requestAuthority: guardedRequestAuthority,
   dispatchAuthority: guardedDispatchAuthority,

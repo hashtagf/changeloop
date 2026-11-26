@@ -12,8 +12,8 @@ import { isSemanticVersion } from "../validation/draft-version.mjs";
 import { semanticIntakeAction, semanticIntakeIssues } from "../validation/semantic-intake.mjs";
 import { inspectSemanticSources } from "../validation/semantic-source-inventory.mjs";
 import {
-  PROJECT_GROUNDING_PATHS, inspectRepositoryIntelligence, repositoryIntelligenceRequired,
-  skippedRepositoryIntelligence
+  PROJECT_GROUNDING_PATHS, declaredSourcesFallback, inspectRepositoryIntelligence,
+  repositoryIntelligenceRequired, skippedRepositoryIntelligence
 } from "../validation/repository-intelligence.mjs";
 import {
   planSemanticIntakeDepth,
@@ -336,9 +336,9 @@ export function createChangeLifecycle({
     return { trackedPaths, includedPaths };
   }
 
-  // "skipped" (rapid-shaped change) is usable like "ready"; only "blocked" is not.
+  // "skipped" and "declared-sources" (over the scan budget) are usable; "blocked" is not.
   const intelligenceUsable = (intelligence) =>
-    ["ready", "skipped"].includes(intelligence.repository.status);
+    ["ready", "skipped", "declared-sources"].includes(intelligence.repository.status);
 
   function repositoryIntelligence(source, excludedPaths = [], { standardLane = false } = {}) {
     if (!repositoryIntelligenceRequired(source, { standardLane })) {
@@ -353,7 +353,7 @@ export function createChangeLifecycle({
     const repositoryPaths = repositoryGitPaths(source, semanticSourcePaths(source));
     const excluded = new Set(excludedPaths.map((path) =>
       String(path || "").replaceAll("\\", "/")));
-    const repository = inspectRepositoryIntelligence({
+    const repository = declaredSourcesFallback(inspectRepositoryIntelligence({
       projectRoot: root,
       query,
       seedPaths: semanticSourcePaths(source),
@@ -362,7 +362,7 @@ export function createChangeLifecycle({
       includedPaths: repositoryPaths.includedPaths === null ? null
         : repositoryPaths.includedPaths.filter((path) => !excluded.has(path)),
       limits: { maxReadSet: 48 }
-    });
+    }));
     /** @type {Record<string, any>} */ const graph = repository.graph || {};
     const surfaces = graph.surfaces || {};
     const depth = planSemanticIntakeDepth(source, { repository: {

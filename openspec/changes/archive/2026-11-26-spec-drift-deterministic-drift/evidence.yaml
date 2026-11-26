@@ -1,0 +1,149 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "deterministic-drift-spec-drift",
+      "requirementKey": "deterministic-drift",
+      "scenario": "ไฟล์ที่ผูกไว้หายไป",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deterministic-drift-spec-drift-2",
+      "requirementKey": "deterministic-drift",
+      "scenario": "ทุกไฟล์ยังอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deterministic-drift-spec-drift-3",
+      "requirementKey": "deterministic-drift",
+      "scenario": "หาที่มาไม่เจอ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deterministic-drift-spec-drift-4",
+      "requirementKey": "deterministic-drift",
+      "scenario": "path ในข้อความสเปกหาย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deterministic-drift-spec-drift-capability-spec-review",
+      "requirementKey": "deterministic-drift",
+      "scenario": "ระบุความสามารถ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deterministic-drift-spec-drift-capability-no-such",
+      "requirementKey": "deterministic-drift",
+      "scenario": "ความสามารถไม่มีอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deterministic-drift-spec-drift-5",
+      "requirementKey": "deterministic-drift",
+      "scenario": "ไฟล์ archive เสียหรือรูปแบบเก่า",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "deterministic-drift-spec-drift-6",
+      "requirementKey": "deterministic-drift",
+      "scenario": "ความสามารถที่ไม่มี requirement",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ai-drift-review-spec-drift-review-capability-spec-review",
+      "requirementKey": "ai-drift-review",
+      "scenario": "รีวิวความสามารถที่เลือก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ai-drift-review-spec-drift-review-capability",
+      "requirementKey": "ai-drift-review",
+      "scenario": "--review ไม่ระบุความสามารถ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ai-drift-review-reviewer-reviewer-cli",
+      "requirementKey": "ai-drift-review",
+      "scenario": "reviewer ล้มเหลว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ai-drift-review-spec-drift-review",
+      "requirementKey": "ai-drift-review",
+      "scenario": "ไม่มี --review ไม่เรียก AI",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "read-only-report-spec-drift",
+      "requirementKey": "read-only-report",
+      "scenario": "ไม่แตะไฟล์โปรเจกต์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "read-only-report-drift",
+      "requirementKey": "read-only-report",
+      "scenario": "exit code",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/spec-drift.test.mjs) && (node --test .claude/harness/tests/spec-drift-command.test.mjs .claude/harness/tests/public-command-golden.test.mjs) && (bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/spec-drift.test.mjs",
+        "node --test .claude/harness/tests/spec-drift-command.test.mjs .claude/harness/tests/public-command-golden.test.mjs",
+        "bash .claude/tests/docs/run-doc-consistency.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

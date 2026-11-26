@@ -9,28 +9,27 @@ Facts come from sources; choices come from the user.
 
 ## Steps
 
-1. Read the existing specs or docs and only the code needed to understand the seam.
-   Separate verified facts, hypotheses, constraints, and unknowns.
+1. Read specs or docs and only the code the seam needs. Separate facts,
+   hypotheses, constraints, and unknowns.
 2. Never ask what you can find. Challenge fuzzy or conflicting project terms
    against specifications and code; ask only when more than one material
    domain meaning remains.
-3. Model open decisions as a private dependency tree (prerequisites,
-   alternatives, dependent effects); never persist it as an
+3. Model open decisions as a private dependency tree; never persist it as an
    artifact or lifecycle state.
-4. Offer at most three approaches and recommend one with concrete tradeoffs.
+4. Offer at most three approaches. Before recommending, challenge each:
+   unrequested or existing work, failure or scale limits, likely misreadings.
+   Lead with weaknesses; never praise the user's idea. Recommend one.
    Ask only what materially changes behavior, compatibility, security,
    persistence, scope, or an observable non-functional target
    (performance, capacity, availability, privacy, accessibility).
 5. Ask in rounds, not one at a time: every open decision whose
    prerequisites are already settled, through the host's
-   structured question tool (AskUserQuestion; else plain text),
-   recommendation first. Recompute from the answers; stop only when
+   structured question tool (else plain text), recommendation first. Recompute; stop only when
    every material decision has been asked and answered.
-6. End with a compact agreement: outcome, in/out, scenarios, chosen approach,
-   remaining risk, canonical terms, and
-   each asked question with its chosen answer. Hand it to the next step, reuse
-   the settled answers without asking them again, and record them in the
-   change agreement or design doc, not chat.
+6. End with a compact agreement: outcome, in/out, scenarios, approach, risk,
+   canonical terms, and each asked question with its chosen answer. Hand it
+   on, reuse the settled answers without asking them again, and record them
+   in the change agreement or design doc, not chat.
 
 ## Harness
 

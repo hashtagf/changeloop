@@ -334,7 +334,10 @@ assert_cmd_zero "command registry has one unique entry per public name" \
 # active change. `features` is the read-only check of the project's feature map.
 # `product status` is the read-only view of the product documents across changes;
 # `product measure` records a success metric's observed value with its source.
-assert_eq "agent command surface is bounded" "28" \
+# `spec-review` is the optional, on-request fresh-eyes review of the compiled
+# spec before Land; its result is advisory. `spec-drift` is the read-only
+# report of living specs whose linked files moved or vanished.
+assert_eq "agent command surface is bounded" "30" \
   "$(jq '[.commands[] | select(.audience == "agent")] | length' \
     "$TARGET/.claude/harness/commands.json")"
 # 22 includes explicit authority dispatch/abort/configured-reviewer/reset routes, the

@@ -354,6 +354,29 @@ test("blocked repository discovery short-circuits source inventory reads", (t) =
   assert.deepEqual(state.sourceInventory.sources, []);
 });
 
+test("a repository over the discovery scan budget still hands off from its declared sources", (t) => {
+  const value = fixture(t);
+  mkdirSync(join(value.root, "bulk"));
+  for (let index = 0; index < 3_001; index += 1)
+    writeFileSync(join(value.root, "bulk", `file-${index}.md`), "filler\n");
+  const result = quiet(() => value.runtime.inspectInvestigation(
+    "openspec/investigations/retry-race.json"));
+  assert.equal(result.action, "DONE", JSON.stringify(result.investigation));
+  assert.equal(result.handoff.id, "retry-race");
+  const state = value.readJson(join(value.root, result.state.path));
+  assert.equal(state.repository.scope, "declared-sources");
+  assert.equal(state.repository.findings.some((row) => row.code === "scan-file-limit"), true);
+  assert.deepEqual(state.sourceInventory.sources.map((row) => row.path), ["evidence.md"]);
+  assert.deepEqual(validateInvestigationBinding({
+    projectRoot: value.root, binding: result.handoff
+  }), []);
+  // The declared source is still hash-bound under the degraded scope.
+  writeFileSync(join(value.root, "evidence.md"), "The source changed after handoff.\n");
+  assert.match(validateInvestigationBinding({
+    projectRoot: value.root, binding: result.handoff
+  }).join("\n"), /sources changed/);
+});
+
 test("hypotheses, facts, and recommendations fail closed on invalid bindings", (t) => {
   const value = fixture(t);
   value.record.hypotheses[0].factKeys = ["invented"];

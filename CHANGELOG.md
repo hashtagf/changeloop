@@ -20,6 +20,29 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
 
 ### Added
 
+- `spec-drift`: a read-only drift report of living specs, after the
+  Elephant-Goldfish Model. Each `openspec/specs` requirement is linked to
+  files through the latest archived change that wrote it (its claims, task
+  paths, and verify command) plus paths it quotes, and reported `ok`,
+  `missing-file`, `no-origin`, or `unreadable`. `--review --capability <name>`
+  adds one fresh read-only reviewer per capability comparing meaning; a
+  review that cannot run is `not-run`. Only `.foundation/spec-drift/` is
+  written and drift exits 0.
+- Adversarial rigor, after the Elephant-Goldfish Model: `brainstorming`
+  challenges every option (unrequested or existing work, failure and scale,
+  what a newcomer would misread) and leads with weaknesses before
+  recommending, without praising the user's idea; every configured code
+  review prompt treats the agreement, task summaries, and passing results as
+  claims to verify and never lowers a defect because something asserts it is
+  handled. Verdict rules are unchanged.
+- `spec-review <change>`: an on-request, fresh-eyes review of the compiled
+  spec before Land, after the Elephant-Goldfish Model. Three fresh read-only
+  reviewer sessions each read only the packet through one lens
+  (comprehension, implementation readiness, zoom-out) on the change's review
+  tier model class. A lens that fails after one retry, reuses the calling
+  session, or returns malformed output is `not-run`, never zero findings, and
+  `main-session` is never used. `package` shows the result as advisory
+  `specReview`, stale after the packet changes; it never blocks approval.
 - `change start` asks the completeness questions reviewers kept raising after
   proof, when nobody builds them any more: a missing or wrong-typed input, an
   empty value, a later step failing after an earlier one succeeded, corrupt
@@ -81,6 +104,13 @@ those single-change lanes. Results: `docs/reports/benchmarks/3.7.8.json`.
 
 ### Fixed
 
+- An investigation or `change start` in a repository larger than the
+  discovery scan budget (3,000 source files) no longer stops at a repair the
+  agent cannot make. When only scan-budget limits stop discovery, the
+  declared sources become the hash-bound inventory (investigation state
+  records `repository.scope: "declared-sources"`; intake reports repository
+  status `declared-sources`), and the Change handoff or compile proceeds;
+  unreadable, out-of-project, or oversized declared sources still block.
 - A scenario must be provable where it is placed. `change start` refuses a
   draft whose scenario needs another repository for real ("wired to the real
   payments") while only a task in one repository covers it, and warns when a

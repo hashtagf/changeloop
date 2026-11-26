@@ -6,7 +6,8 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import test from "node:test";
 import {
-  inspectRepositoryIntelligence, repositoryIntelligenceRequired, skippedRepositoryIntelligence
+  discoveryOverBudget, inspectRepositoryIntelligence, repositoryIntelligenceRequired,
+  skippedRepositoryIntelligence
 } from "../runtime/workflow/validation/repository-intelligence.mjs";
 import { createChangeLifecycle } from "../runtime/workflow/change/change-lifecycle.mjs";
 import { changeLifecycleDeps } from "./fixtures/runtime-deps.mjs";
@@ -425,8 +426,21 @@ test("a draft's repository selection narrows the non-Git root scan", (t) => {
 test("a non-Git root without declared repositories keeps the whole-tree scan", (t) => {
   const { inspect } = gatheringRoot(t, { declare: false, siblingEntries: 12_050 });
   const value = inspect();
-  assert.equal(value.status, "blocked");
+  // Over the scan budget the intake falls back to the declared sources.
+  assert.equal(value.status, "declared-sources");
   assert.equal(value.findings.some((row) => row.code === "scan-entry-limit"), true);
+});
+
+test("only scan-budget findings degrade discovery; integrity findings still block", () => {
+  const blocked = (codes) => ({ status: "blocked",
+    findings: codes.map((code) => ({ code, path: "x", blocking: true })) });
+  for (const code of ["scan-entry-limit", "scan-file-limit", "scan-byte-limit",
+    "scan-depth-limit", "scan-graph-edge-limit"])
+    assert.equal(discoveryOverBudget(blocked([code])), true, code);
+  for (const code of ["scan-file-unreadable", "scan-path-outside-project",
+    "scan-file-size-limit", "seed-not-discovered", "scan-root-unreadable"])
+    assert.equal(discoveryOverBudget(blocked(["scan-file-limit", code])), false, code);
+  assert.equal(discoveryOverBudget({ status: "ready", findings: [] }), false);
 });
 
 test("a Git root that ignores its checkouts still scans its declared repositories", (t) => {

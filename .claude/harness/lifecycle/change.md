@@ -482,6 +482,21 @@ preview keeps a copy under `.foundation/previews/<change>/artifacts/` and
 runs. `package` also reports each preview's status, and for a change already
 applied or archived it labels proof from the receipts Land accepted.
 
+<a id="spec-review"></a>`spec-review <change>` is an optional, on-request review of the compiled
+packet before Land; `change start` and `advance` never run it. Three fresh,
+read-only configured-reviewer sessions each read only the packet files (and
+repository files they name) through one lens: comprehension (can a newcomer
+understand it alone), implementation readiness (could it be built and tested
+without a question), and zoom-out (root problem, YAGNI, reuse). The model
+class follows the change's review tier exactly as the Prove review does. A
+lens that fails twice, reuses the calling session, or returns malformed output
+is `not-run` with its reason, never zero findings; `main-session` is never
+used, so a host without a configured reviewer CLI gets three `not-run` lenses.
+The record, `.foundation/spec-reviews/<change>/latest.json`, binds the packet
+digest; `package` shows it as advisory `specReview` (per-lens status, findings
+ordered blocker, major, nit) and marks it `stale` after the packet changes. It
+never changes the facts digest, approval status, or `--approve-spec`.
+
 The router also reads the paths the change's tasks touch. A migration, schema,
 or `.sql` path, an auth or permission path, a payment or billing path, a UI
 component path, an infrastructure path, or a webhook path adds the matching

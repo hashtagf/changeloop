@@ -38,14 +38,20 @@
     {
       "id": "approval-page",
       "name": "Approval page",
-      "summary": "The decision-first page the user reads before approving: risk, decisions, open questions, scope, and optional prototype previews.",
+      "summary": "The decision-first page the user reads before approving: risk, decisions, open questions, scope, optional prototype previews, an optional fresh-eyes spec review, and a read-only drift report of living specs.",
       "paths": [
         ".claude/harness/runtime/workflow/change/approval-package.mjs",
+        ".claude/harness/runtime/workflow/change/spec-review.mjs",
+        ".claude/harness/runtime/workflow/change/spec-drift.mjs",
         ".claude/harness/runtime/workflow/prototype/preview-runtime.mjs",
         ".claude/harness/runtime/workflow/prototype/prototype-binding.mjs"
       ],
       "tests": [
         ".claude/harness/tests/approval-package.test.mjs",
+        ".claude/harness/tests/spec-review.test.mjs",
+        ".claude/harness/tests/spec-review-command.test.mjs",
+        ".claude/harness/tests/spec-drift.test.mjs",
+        ".claude/harness/tests/spec-drift-command.test.mjs",
         ".claude/harness/tests/preview-runtime.test.mjs"
       ],
       "docs": [

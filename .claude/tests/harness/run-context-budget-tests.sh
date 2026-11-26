@@ -67,6 +67,10 @@ assert_file_contains "brainstorming models a private dependency tree" \
 assert_file_contains "brainstorming does not persist a parallel tree" \
   "$ROOT/.claude/skills/brainstorming/SKILL.md" \
   'artifact or lifecycle state'
+assert_file_contains "brainstorming challenges every option before recommending" \
+  "$ROOT/.claude/skills/brainstorming/SKILL.md" 'Before recommending, challenge each'
+assert_file_contains "brainstorming never praises the user's idea" \
+  "$ROOT/.claude/skills/brainstorming/SKILL.md" "never praise the"
 assert_file_contains "brainstorming batches settled decisions into rounds" \
   "$ROOT/.claude/skills/brainstorming/SKILL.md" 'Ask in rounds, not one at a time'
 assert_file_contains "brainstorming keeps the material-change question filter" \

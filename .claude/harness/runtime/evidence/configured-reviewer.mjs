@@ -3,7 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import { parseScenarioCoverage, parseSpecGaps, reviewChecklistInstruction } from "./review-diff.mjs";
+import { REVIEW_SKEPTICISM_INSTRUCTIONS, parseScenarioCoverage, parseSpecGaps, reviewChecklistInstruction } from "./review-diff.mjs";
 import { executableIdentity } from "../core/tool-identity.mjs";
 import { deadline, terminateWithGrace } from "../core/timing.mjs";
 import {
@@ -161,7 +161,7 @@ export function configuredReviewPrompt(packet) {
     "For UI claims check the required output is rendered and reachable; for persisted " +
     "or wire data challenge supported older representations. Passing counts, test " +
     "tags, and calculated-but-unused values do not establish those outcomes; nor does a " +
-    "test that replaces the collaborator a scenario names with a fake. " + SCOPE_DISCIPLINE_INSTRUCTIONS +
+    "test that replaces the collaborator a scenario names with a fake. " + SCOPE_DISCIPLINE_INSTRUCTIONS + REVIEW_SKEPTICISM_INSTRUCTIONS +
     "For a delta packet, review only reviewScope.paths. Whenever the packet carries " +
     "closureFindings (a delta, or a review after a human review reported blockers), list in " +
     "verifiedFindingIds only the closureFindings.ids the repair closed: all of them when it " +
@@ -243,17 +243,17 @@ export function claudeReviewerEnvironment(env, changeId) {
   return environment;
 }
 
-export function claudeReviewerArguments(config, packet, requestedSession) {
+export function claudeReviewerArguments(config, packet, requestedSession, { prompt = null, schema = REVIEW_SCHEMA } = {}) {
   return [
     "-p", "--output-format", "json",
-    "--json-schema", JSON.stringify(REVIEW_SCHEMA),
+    "--json-schema", JSON.stringify(schema),
     "--model", config.modelId,
     "--effort", config.reasoningEffort,
     "--permission-mode", "plan",
     "--tools", CLAUDE_READ_ONLY_TOOLS,
     "--safe-mode", "--no-session-persistence",
     "--session-id", requestedSession,
-    configuredReviewPrompt(packet)
+    prompt ?? configuredReviewPrompt(packet)
   ];
 }
 
