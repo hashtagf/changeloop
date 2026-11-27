@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "outside-scope-finding-is-repairable-1",
+      "requirementKey": "outside-scope-finding-is-repairable",
+      "scenario": "ไฟล์จริงนอก scope",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "outside-scope-finding-is-repairable-2",
+      "requirementKey": "outside-scope-finding-is-repairable",
+      "scenario": "ไฟล์ที่ไม่มีอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "outside-scope-finding-is-repairable-3",
+      "requirementKey": "outside-scope-finding-is-repairable",
+      "scenario": "ชื่อกำกวม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/configured-reviewer.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

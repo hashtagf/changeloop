@@ -212,6 +212,13 @@ function findingScopeBinding(finding, scopePaths, inspections, manifest) {
     catch { return []; }
     return [...aliases, `contract/${raw}`].filter((alias) => alias.startsWith(`${candidate}/`));
   }))];
+  if (matches.length === 0) {
+    // A real problem in a root file the packet did not send (a caller the
+    // change must also fix) is a finding the agent repairs after widening
+    // the task's paths, not an unbindable result that stops the user.
+    const outside = outsideScopeBinding(raw, inspections);
+    if (outside) return outside;
+  }
   if (matches.length !== 1)
     return { issue: `${finding.id}: path '${raw}' is outside the dispatched review scope` };
   const scoped = matches[0];
@@ -222,6 +229,28 @@ function findingScopeBinding(finding, scopePaths, inspections, manifest) {
     repositoryPath: separator === -1 ? scoped : scoped.slice(separator + 1)
   };
 }
+
+// An existing file of the root workspace, named plainly or as `root/<path>`.
+function outsideScopeBinding(raw, inspections) {
+  const workspace = inspections.get("root")?.workspacePath;
+  const repositoryPath = raw.replace(/^root\//, "");
+  if (!workspace || [...inspections.keys()].some((id) => id !== "root" && raw.startsWith(`${id}/`)))
+    return null;
+  const candidate = resolve(workspace, repositoryPath);
+  // A file inside another repository's workspace (a submodule, the change's
+  // contract) belongs to that repository, not root: still refused.
+  for (const [id, entry] of inspections) {
+    if (id === "root" || !entry?.workspacePath) continue;
+    const inner = relative(resolve(entry.workspacePath), candidate);
+    if (inner && relativeInside(inner)) return null;
+  }
+  try { if (!lstatSync(candidate).isFile()) return null; }
+  catch { return null; }
+  return { raw, scoped: `root/${repositoryPath}`, repositoryId: "root", repositoryPath, outsideScope: true };
+}
+
+export const OUTSIDE_SCOPE_NOTE = "(outside the dispatched review scope: widen the task's paths with " +
+  "change amend before repairing it) ";
 
 function findingWorkspaceIssue(finding, binding, inspections, manifest) {
   const inspection = inspections.get(binding.repositoryId);
@@ -285,11 +314,14 @@ export function normalizeReviewFindingPaths(review, packet) {
     .map((entry) => [String(entry.repositoryId), entry]));
   const manifest = new Map((packet.changedSurface?.manifest || [])
     .map((entry) => [`${entry.repositoryId}/${entry.path}`, entry]));
-  return { ...review, findings: review.findings.map((finding) => ({
-    ...finding,
-    path: findingScopeBinding(finding, packet.reviewScope.paths,
-      inspections, manifest).scoped
-  })) };
+  return { ...review, findings: review.findings.map((finding) => {
+    const binding = findingScopeBinding(finding, packet.reviewScope.paths, inspections, manifest);
+    return binding.outsideScope
+      ? { ...finding, path: binding.scoped, outsideScope: true,
+        message: String(finding.message).startsWith(OUTSIDE_SCOPE_NOTE)
+          ? finding.message : `${OUTSIDE_SCOPE_NOTE}${finding.message}` }
+      : { ...finding, path: binding.scoped };
+  }) };
 }
 
 export function parseJson(value) {

@@ -11,6 +11,12 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- A reviewer finding in an existing root file outside the dispatched review
+  scope is a repairable finding (its message notes it is outside the scope and
+  to widen the task's paths) instead of an unbindable result that needed a user
+  decision; missing, ambiguous, or other-repository paths (submodules, the
+  change's contract) are still refused.
+
 - A passing AI review wave that expired because the code moved on no longer
   counts toward the review cap (up to three such waves), and the closure wave
   follows the failing waves, so Prove reviews the new delta itself instead of

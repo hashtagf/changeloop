@@ -216,9 +216,30 @@ assert.match(reviewFindingIssues({ findings: [{
   ...validFinding, path: "contract/specs/dashboard/unchanged.md"
 }] }, { ...contractPacket, reviewScope: { ...contractPacket.reviewScope, mode: "delta" } })[0],
   /outside the dispatched review scope/, "file-scoped delta must not reopen an unchanged sibling");
-assert.match(reviewFindingIssues({ findings: [validFinding] }, {
-  ...scopedPacket, reviewScope: { mode: "delta", paths: [] }
-})[0], /outside the dispatched review scope/);
+// A real problem in an existing root file outside the dispatched scope is a
+// repairable finding, not an unbindable result that stops the user.
+const outsidePacket = { ...scopedPacket, reviewScope: { mode: "delta", paths: [] } };
+assert.deepEqual(reviewFindingIssues({ findings: [validFinding] }, outsidePacket), []);
+const outsideReview = normalizeReviewFindingPaths({ status: "fail", summary: "s", verifiedFindingIds: [],
+  findings: [{ ...validFinding, severity: "major" }] }, outsidePacket);
+assert.equal(outsideReview.findings[0].path, "root/src/app.mjs");
+assert.equal(outsideReview.findings[0].outsideScope, true);
+assert.match(outsideReview.findings[0].message, /widen the task's paths with change amend before repairing it/);
+assert.equal(normalizeReviewFindingPaths(outsideReview, outsidePacket).findings[0].message,
+  outsideReview.findings[0].message, "the note is added once");
+assert.match(reviewFindingIssues({ findings: [{ ...validFinding, path: "src/missing.mjs" }] },
+  outsidePacket)[0], /outside the dispatched review scope/, "a file that does not exist is still refused");
+assert.deepEqual(reviewFindingIssues({ findings: [{ ...validFinding, path: "root/src/app.mjs" }] }, outsidePacket), [],
+  "the root/<path> spelling binds the same file");
+assert.match(reviewFindingIssues({ findings: [{ ...validFinding, line: 999 }] }, outsidePacket)[0],
+  /line 999 is outside/, "an outside-scope finding still needs a line inside the file");
+// A file inside another repository's workspace (the contract here) is not root's to repair.
+const contractOutside = { ...contractPacket, reviewScope: { mode: "delta", paths: [] } };
+assert.match(reviewFindingIssues({ findings: [{ ...validFinding,
+  path: "openspec/changes/nested/specs/dashboard/spec.md" }] }, contractOutside)[0],
+  /outside the dispatched review scope/, "a contract file outside the scope is still refused");
+assert.match(reviewFindingIssues({ findings: [{ ...validFinding, path: "contract/specs/dashboard/spec.md" }] },
+  contractOutside)[0], /outside the dispatched review scope/, "an id/-prefixed path of another repository is refused");
 writeFileSync(join(root, "outside.mjs"), "outside\n");
 symlinkSync(join(root, "outside.mjs"), join(workspace, "src", "escape.mjs"));
 assert.match(reviewFindingIssues({ findings: [{
