@@ -64,10 +64,11 @@ export function effectiveReviewAttemptLimit(routing = {}, delivered = [], worksp
   const promotesLow = routing.tier === "low" && delivered.length >= 1 &&
     Boolean(workspaceHash) && workspaceHash !== latest?.workspaceHash;
   const base = promotesLow ? 2 : Number(routing.maxAiAttempts || 2);
-  // Only a pass the code has since moved past is free: reviewing unchanged
-  // content after a passing verdict again is never needed.
-  const freePasses = Math.min(FREE_PASSING_WAVES, delivered.filter((attempt) =>
-    attempt?.resultStatus === "pass" && Boolean(workspaceHash) && attempt.workspaceHash !== workspaceHash).length);
+  // Free only when there is new code since the latest delivered wave: a
+  // request on content the latest wave already reviewed stays capped.
+  const newCode = Boolean(workspaceHash) && latest?.workspaceHash !== workspaceHash;
+  const freePasses = newCode ? Math.min(FREE_PASSING_WAVES, delivered.filter((attempt) =>
+    attempt?.resultStatus === "pass" && attempt.workspaceHash !== workspaceHash).length) : 0;
   // The closure wave follows the waves that did not pass.
   const counted = delivered.filter((attempt) => attempt?.resultStatus !== "pass");
   const closureWave = base === 2 && reviewClosureWaveAvailable(counted, workspaceHash);

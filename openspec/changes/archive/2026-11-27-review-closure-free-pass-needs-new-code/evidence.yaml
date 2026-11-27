@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "free-pass-needs-new-code-1",
+      "requirementKey": "free-pass-needs-new-code",
+      "scenario": "pass สองรอบ แล้วขอรอบสามบนโค้ดเดิม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "free-pass-needs-new-code-2",
+      "requirementKey": "free-pass-needs-new-code",
+      "scenario": "pass แล้วแก้โค้ด",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/authority-request-operation.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

@@ -652,6 +652,8 @@ test("passing waves do not consume the AI review budget, up to three", () => {
   assert.equal(limit([wave("w1", "fail"), wave("w2", "fail")], "w3"), 3, "the closure wave is unchanged");
   assert.equal(limit([wave("w1", "fail"), wave("w2", "fail"), wave("w3", "fail")], "w4"), 2,
     "three failures exhaust the route as before");
+  assert.equal(limit([wave("w0", "pass"), wave("w1", "pass")], "w1"), 2,
+    "two passes, then a third request on the content the latest pass reviewed: capped");
   assert.equal(limit([wave("w1", "fail"), wave("w2", "pass")], "w2"), 2,
     "a pass on unchanged content is not free: there is nothing new to review");
   const passes = ["a", "b", "c", "d", "e"].map((hash) => wave(hash, "pass"));
