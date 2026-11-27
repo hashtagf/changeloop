@@ -29,7 +29,8 @@ import {
   landedProjectionFindings, repositoryPointerStop, rootPointerMoves
 } from "../runtime/workflow/land/land-verification.mjs";
 import { createSandboxCleanup } from "../runtime/workflow/sandbox/sandbox-cleanup.mjs";
-import { assessSandbox, guardSandboxRemoval } from "../runtime/workflow/sandbox/sandbox-preservation.mjs";
+import { addablePathspec, assessSandbox, guardSandboxRemoval } from "../runtime/workflow/sandbox/sandbox-preservation.mjs";
+import { sandboxCodePathspec } from "../runtime/core/workspace-surface.mjs";
 
 const ID = "hook-change";
 const SUBMODULE = "services/hook/sub";
@@ -894,4 +895,36 @@ test("(e) only a moved gitlink is a pointer change, not a removed placeholder", 
   assert.equal(stop.code, REPOSITORY_POINTER_CHANGE);
   assert.deepEqual(stop.decision.options.map((option) => option.id),
     ["deliver-through-repository", "restore-pointer", "pause"]);
+});
+
+// A Land's cleanup kept its sandbox: a test had written screenshots under the
+// ignored test-results/, and `git add -A` refused the shared sandbox's
+// `:(exclude)test-results/**` with "paths are ignored", failing the backup.
+test("(a) a sandbox backup succeeds beside an ignored test-results directory", (t) => {
+  const base = realpathSync(mkdtempSync(join(tmpdir(), "foundation-backup-ignored-")));
+  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const target = join(base, "target");
+  mkdirSync(target);
+  git(["init", "-q"], target);
+  write(join(target, ".gitignore"), "**/test-results/\n.foundation/\n");
+  write(join(target, "README.md"), "x\n");
+  git(["add", "."], target);
+  git(["commit", "-qm", "base"], target);
+  const baseHead = git(["rev-parse", "HEAD"], target);
+  const sandbox = join(base, "sandbox");
+  git(["worktree", "add", "-q", "--detach", sandbox, baseHead], target);
+  write(join(sandbox, "src/x.js"), "export const x = 1;\n");
+  write(join(sandbox, "test-results/ui-rendered/a.png"), "png\n");
+  write(join(sandbox, "coverage/a.json"), "{}\n");
+  const pathspec = sandboxCodePathspec(ID, []);
+  assert.ok(!addablePathspec(pathspec, sandbox).includes(":(exclude)test-results/**"));
+  assert.ok(addablePathspec(pathspec, sandbox).includes(":(exclude)coverage/**"), "a tracked-able exclude stays");
+  const descriptor = { repositoryId: "root", label: "root", changeId: ID, kind: "shared", mode: "worktree",
+    access: "write", sandboxPath: sandbox, targetPath: target, baseHead, pathspec, nestedPaths: [] };
+  const guarded = guardSandboxRemoval({ root: base, id: ID, descriptor, purpose: "abandon",
+    now: () => "2026-11-27T00:00:00.000Z" });
+  assert.equal(guarded.proceed, true, JSON.stringify(guarded.result));
+  const patch = readFileSync(join(base, guarded.backup, "changes.patch"), "utf8");
+  assert.match(patch, /src\/x\.js/);
+  assert.doesNotMatch(patch, /test-results|coverage\/a\.json/);
 });

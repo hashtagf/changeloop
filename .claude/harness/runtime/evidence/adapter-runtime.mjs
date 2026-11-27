@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { delimiter, dirname, join, relative, resolve } from "node:path";
 import { evidenceResultValue, parseAssertionSummaryOutput, parseGoTestJsonOutput, parseLastJsonLine, parseRunnerSummaryOutput } from "./evidence-results.mjs";
 import { repositoryBaseHead } from "../core/repository-binding.mjs";
-import { forceExitCommand } from "../core/node-test-exit.mjs";
+import { forceExitCommand, noticeLingeringProvider } from "../core/node-test-exit.mjs";
 import {
   environmentIdentity, readTaskCheckExecution, sameArgv, sameShellLine, taskCheckArgv,
   taskCheckExecutionPath, taskCheckReuseRefusal, writeTaskCheckExecution
@@ -749,7 +749,7 @@ export function createAdapterRuntime({
     const execution = { ...context, result: await context.cached.result,
       commandExecutionId: context.cached.commandExecutionId,
       reusedTaskCheck: context.cached.reusedTaskCheck || null };
-    assertReadRepositories(provider, execution.repositoryManifest.rows);
+    assertReadRepositories(provider, execution.repositoryManifest.rows); noticeLingeringProvider(execution);
     const evidenceRow = adapterEvidence(id, provider, config, execution);
     const baseFlags = adapterBaseFlags(
       id, provider, config, proofRunId, execution, evidenceRow);

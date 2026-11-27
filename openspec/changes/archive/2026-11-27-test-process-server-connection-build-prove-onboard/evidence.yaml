@@ -1,0 +1,231 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "node-test-force-exit-advance-task-verify",
+      "requirementKey": "node-test-force-exit",
+      "scenario": "connection keep-alive ค้าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "node-test-force-exit-advance-task-verify-2",
+      "requirementKey": "node-test-force-exit",
+      "scenario": "test ล้ม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "node-test-force-exit-verify-npm-test-test-force-exit",
+      "requirementKey": "node-test-force-exit",
+      "scenario": "คำสั่งอื่น",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "node-test-force-exit-harness-argv-shell",
+      "requirementKey": "node-test-force-exit",
+      "scenario": "tsx --test",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "node-test-force-exit-cloop-quality-run-lane",
+      "requirementKey": "node-test-force-exit",
+      "scenario": "quality lane",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lingering-test-run-harness-task-verify-provider",
+      "requirementKey": "lingering-test-run",
+      "scenario": "npm test ค้างหลัง test จบ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lingering-test-run-harness",
+      "requirementKey": "lingering-test-run",
+      "scenario": "test ช้าจริง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lingering-test-run-harness-2",
+      "requirementKey": "lingering-test-run",
+      "scenario": "อ่านเวลา test ไม่ได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lingering-test-run-cloop-quality-readiness-tests-fast",
+      "requirementKey": "lingering-test-run",
+      "scenario": "readiness ของ lane ที่ค้าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-lane-paths-quality-run-change",
+      "requirementKey": "quality-lane-paths",
+      "scenario": "change ไม่แตะ paths",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-lane-paths-quality-run-change-2",
+      "requirementKey": "quality-lane-paths",
+      "scenario": "change แตะ paths",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-lane-paths-quality-run-change-full",
+      "requirementKey": "quality-lane-paths",
+      "scenario": "ไม่มี change หรือ --full",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-lane-paths-quality-run",
+      "requirementKey": "quality-lane-paths",
+      "scenario": "ผลล่าสุดล้ม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-lane-paths-config",
+      "requirementKey": "quality-lane-paths",
+      "scenario": "paths ผิดรูป",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-provider-swallowed-exit-quality-doctor",
+      "requirementKey": "quality-provider-swallowed-exit",
+      "scenario": "test lane กลืน exit",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-provider-swallowed-exit-quality-doctor-2",
+      "requirementKey": "quality-provider-swallowed-exit",
+      "scenario": "lane ที่ parse output",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-provider-swallowed-exit-quality-doctor-3",
+      "requirementKey": "quality-provider-swallowed-exit",
+      "scenario": "lane รันในโฟลเดอร์เดียว",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "provider-timeout-no-rerun-advance-through-proven-providers",
+      "requirementKey": "provider-timeout-no-rerun",
+      "scenario": "หมดเวลาซ้ำโดยไม่มีอะไรเปลี่ยน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "provider-timeout-no-rerun-advance-through-proven-providers-2",
+      "requirementKey": "provider-timeout-no-rerun",
+      "scenario": "เนื้อหาหรือ config เปลี่ยน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "provider-timeout-no-rerun-advance-through-proven-providers-3",
+      "requirementKey": "provider-timeout-no-rerun",
+      "scenario": "สั่งรันซ้ำ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lingering-test-run-runners-harness",
+      "requirementKey": "lingering-test-run-runners",
+      "scenario": "vitest ค้าง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lingering-test-run-runners-harness-400",
+      "requirementKey": "lingering-test-run-runners",
+      "scenario": "Playwright และ jest รวมกัน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lingering-test-run-runners-harness-2",
+      "requirementKey": "lingering-test-run-runners",
+      "scenario": "Playwright ช้าจริง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/node-test-force-exit.test.mjs) && (node --test .claude/harness/tests/node-test-force-exit.test.mjs .claude/harness/tests/pyramid-readiness.test.mjs) && (node --test .claude/harness/tests/quality-runtime.test.mjs) && (node --test .claude/harness/tests/provider-timeout-rerun.test.mjs)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "node --test .claude/harness/tests/node-test-force-exit.test.mjs",
+        "node --test .claude/harness/tests/node-test-force-exit.test.mjs .claude/harness/tests/pyramid-readiness.test.mjs",
+        "node --test .claude/harness/tests/quality-runtime.test.mjs",
+        "node --test .claude/harness/tests/provider-timeout-rerun.test.mjs"
+      ]
+    }
+  }
+}

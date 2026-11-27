@@ -1,0 +1,108 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "vue-is-js-quality-discover",
+      "requirementKey": "vue-is-js",
+      "scenario": "repo Nuxt",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "vue-is-js-quality-discover-2",
+      "requirementKey": "vue-is-js",
+      "scenario": "ไฟล์ .vue อย่างเดียว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "test-files-runner-quality-discover",
+      "requirementKey": "test-files-runner",
+      "scenario": "มีไฟล์เทสต์และ vitest",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "test-files-runner-quality-discover-2",
+      "requirementKey": "test-files-runner",
+      "scenario": "มีไฟล์เทสต์แต่ไม่มีตัวรัน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "test-command-proposals-quality-discover",
+      "requirementKey": "test-command-proposals",
+      "scenario": "Makefile มี target test",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "test-command-proposals-quality-discover-2",
+      "requirementKey": "test-command-proposals",
+      "scenario": "CI มีคำสั่งเทสต์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "test-command-proposals-quality-discover-3",
+      "requirementKey": "test-command-proposals",
+      "scenario": "มี lane test แล้ว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "no-tests-readiness-quality-discover",
+      "requirementKey": "no-tests-readiness",
+      "scenario": "repo Nuxt ไม่มีเทสต์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "no-tests-readiness-quality-readiness-tests",
+      "requirementKey": "no-tests-readiness",
+      "scenario": "readiness ไม่มีเทสต์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "duration-pattern-alone",
+      "requirementKey": "duration-pattern-alone",
+      "scenario": "pattern ลงท้าย backslash",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/test-gap-discovery.test.mjs .claude/harness/tests/pyramid-readiness.test.mjs .claude/harness/tests/toolchain-packs.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

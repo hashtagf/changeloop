@@ -350,3 +350,124 @@ test("a selected repository missing from quality config fails closed", () => {
       issue.code === "repository-unconfigured"));
   } finally { value.cleanup(); }
 });
+
+// spiffmeter: a backend mutation lane ran 4.5 minutes on every frontend-only Prove.
+test("a lane with declared paths runs only when the change touches them, or without a change, or with --full", () => {
+  const value = fixture();
+  const saved = process.env.FOUNDATION_CHANGE_ID;
+  delete process.env.FOUNDATION_CHANGE_ID;
+  try {
+    const failing = join(value.root, "fail.mjs");
+    writeFileSync(failing, "process.exit(1);\n");
+    const config = value.runtime.draft();
+    config.repositories[0].profiles = [];
+    config.repositories[0].providers = {
+      test: { kind: "command", command: [process.execPath, failing], isolation: "read-only", paths: ["backend/**"] },
+      integration: { kind: "command", command: [process.execPath, failing], isolation: "read-only", paths: ["*.js"] }
+    };
+    value.writeJson(join(value.root, "quality", "foundation-quality.json"), config);
+    const lane = (summary, capability) => summary.lanes.find((row) => row.capability === capability);
+    const scoped = value.runtime.run({ change: "change" });
+    assert.equal(lane(scoped, "test").assurance, "not-affected", "src.js is outside backend/**, so the failing command never ran");
+    assert.equal(lane(scoped, "test").status, "pass");
+    assert.equal(lane(scoped, "test").required, false);
+    assert.match(lane(scoped, "test").reason, /touches none of this lane's paths \(backend\/\*\*\)/);
+    assert.equal(lane(scoped, "integration").status, "fail", "src.js matches *.js, so the lane ran");
+    assert.equal(lane(value.runtime.run({ change: "change", full: true }), "test").status, "fail");
+    assert.equal(lane(value.runtime.run({}), "test").status, "fail", "without a change every lane runs");
+  } finally {
+    if (saved !== undefined) process.env.FOUNDATION_CHANGE_ID = saved;
+    value.cleanup();
+  }
+});
+
+test("a not-affected test lane compensates only when its latest recorded run passed", () => {
+  const value = fixture();
+  try {
+    const config = value.runtime.draft();
+    config.repositories[0].providers = {
+      test: { kind: "command", command: [process.execPath, "-e", "0"], isolation: "read-only", paths: ["backend/**"] }
+    };
+    value.writeJson(join(value.root, "quality", "foundation-quality.json"), config);
+    const status = join(value.root, ".foundation", "quality", "results", "root", "test.status.json");
+    const missing = (summary) => summary.lanes.filter((row) => /compensating evidence is missing/.test(row.reason || ""));
+    value.writeJson(status, { status: "fail", history: [] });
+    const failed = value.runtime.run({ change: "change" });
+    assert.ok(missing(failed).length > 0, "a skipped lane whose last run failed is no evidence");
+    value.writeJson(status, { status: "pass", history: [] });
+    assert.equal(missing(value.runtime.run({ change: "change" })).length, 0);
+  } finally { value.cleanup(); }
+});
+
+test("a provider's paths must be a non-empty list of globs", () => {
+  const value = fixture();
+  try {
+    const config = value.runtime.draft();
+    config.repositories[0].providers = { test: { kind: "command", command: ["npm", "test"], paths: "backend/**" } };
+    value.writeJson(join(value.root, "quality", "foundation-quality.json"), config);
+    assert.throws(() => value.runtime.run({ change: "change" }), /providers\.test\.paths must be a non-empty array/);
+  } finally { value.cleanup(); }
+});
+
+test("quality doctor warns on an exit-code lane that swallows failure and suggests paths for a one-directory lane", () => {
+  const value = fixture();
+  try {
+    const config = value.runtime.draft();
+    config.repositories[0].profiles = [];
+    config.repositories[0].providers = {
+      test: { kind: "command", command: ["sh", "-c", "go test ./... || true"], isolation: "read-only" },
+      lint: { kind: "builtin", adapter: "eslint-json", command: ["sh", "-c", "cd frontend && { pnpm exec eslint . -f json || true; }"] },
+      integration: { kind: "command", command: ["sh", "-c", "cd backend && go test ./..."], isolation: "read-only" },
+      "static-analysis": { kind: "command", command: ["sh", "-c", "cd backend && go vet ./..."], paths: ["backend/**"] }
+    };
+    value.writeJson(join(value.root, "quality", "foundation-quality.json"), config);
+    const report = value.runtime.doctor();
+    const issues = (code) => report.issues.filter((issue) => issue.code === code);
+    assert.deepEqual(issues("provider-swallows-failure").map((issue) => issue.capability), ["test"],
+      "a builtin lane parses its output, so its || true is not a hidden failure");
+    assert.equal(issues("provider-swallows-failure")[0].level, "warning");
+    assert.deepEqual(issues("provider-paths-suggested").map((issue) => [issue.capability, issue.paths]).sort(),
+      [["integration", ["backend/**"]], ["lint", ["frontend/**"]]], "a lane that already declares paths gets no hint");
+    assert.notEqual(report.status, "fail", "hints never fail the doctor");
+  } finally { value.cleanup(); }
+});
+
+test("quality doctor suggests paths from the directory a command names", async () => {
+  const { commandDirectory } = await import("../runtime/quality/quality-doctor-hints.mjs");
+  assert.equal(commandDirectory(["go", "test", "./services/wallet/..."]), "services/wallet");
+  assert.equal(commandDirectory(["go", "test", "-race", "./svc/..."]), "svc");
+  assert.equal(commandDirectory(["sh", "-c", "make -C backend test"]), "backend");
+  assert.equal(commandDirectory(["npm", "--prefix", "web", "test"]), "web");
+  assert.equal(commandDirectory(["pnpm", "--dir", "apps/web", "test"]), "apps/web");
+  assert.equal(commandDirectory(["./gradlew", "-p", "app", "test"]), "app");
+  assert.equal(commandDirectory(["cargo", "test", "--manifest-path", "tools/x/Cargo.toml"]), "tools/x");
+  assert.equal(commandDirectory(["go", "test", "./..."]), null, "the whole repository");
+  assert.equal(commandDirectory(["sh", "-c", "cd .. && make"]), null);
+  const value = fixture();
+  try {
+    const config = value.runtime.draft();
+    config.repositories[0].profiles = [];
+    config.repositories[0].providers = { test: { kind: "command", command: ["go", "test", "./services/wallet/..."] } };
+    value.writeJson(join(value.root, "quality", "foundation-quality.json"), config);
+    const hint = value.runtime.doctor().issues.find((issue) => issue.code === "provider-paths-suggested");
+    assert.deepEqual(hint.paths, ["services/wallet/**"]);
+  } finally { value.cleanup(); }
+});
+
+test("quality doctor suggests every directory a command names, and none for a whole-repository run", async () => {
+  const { commandDirectories } = await import("../runtime/quality/quality-doctor-hints.mjs");
+  assert.deepEqual(commandDirectories(["go", "test", "./a/...", "./b/..."]), ["a", "b"]);
+  assert.deepEqual(commandDirectories(["sh", "-c", "make -C a test && make -C b test"]), ["a", "b"]);
+  assert.deepEqual(commandDirectories(["go", "test", "./a/...", "./..."]), []);
+  assert.deepEqual(commandDirectories(["sh", "-c", "cd backend && go test ./..."]), ["backend"]);
+  const value = fixture();
+  try {
+    const config = value.runtime.draft();
+    config.repositories[0].profiles = [];
+    config.repositories[0].providers = { test: { kind: "command", command: ["go", "test", "./a/...", "./b/..."] },
+      "test:c": { kind: "command", command: ["go", "test", "./c/..."], cwd: "c" } };
+    value.writeJson(join(value.root, "quality", "foundation-quality.json"), config);
+    const hints = value.runtime.doctor().issues.filter((issue) => issue.code === "provider-paths-suggested");
+    assert.deepEqual(hints.map((hint) => hint.paths), [["a/**", "b/**"]], "a lane with cwd is a module lane already");
+  } finally { value.cleanup(); }
+});

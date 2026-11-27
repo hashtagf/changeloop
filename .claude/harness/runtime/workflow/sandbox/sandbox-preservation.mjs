@@ -236,6 +236,18 @@ export function assessSandbox(descriptor) {
   };
 }
 
+// `git add -A` refuses (exit 1, "paths are ignored") an exclude pathspec that
+// names an existing ignored directory, such as `:(exclude)test-results/**`
+// after a test wrote screenshots there. It never adds ignored paths anyway, so
+// such an exclude is dropped from the add; the diff keeps the full pathspec.
+export function addablePathspec(pathspec, cwd) {
+  return pathspec.filter((entry) => {
+    const excluded = /^:\(exclude\)(.+?)(?:\/\*\*)?$/.exec(entry)?.[1];
+    if (!excluded || /[*?[]/.test(excluded) || !existsSync(join(cwd, excluded))) return true;
+    return runGit(["check-ignore", "-q", "--", excluded], cwd).status !== 0;
+  });
+}
+
 export function backupNeeded(assessment) {
   return Boolean(assessment?.inspected && !assessment.absent &&
     (assessment.commits > 0 || assessment.unlanded.length || assessment.placeholders.length));
@@ -284,7 +296,7 @@ export function writeSandboxBackup({ root, id, descriptor, assessment, now, stam
     try {
       const read = runGit(["read-tree", "HEAD"], sandboxPath, env);
       const added = read.status === 0
-        ? runGit(["add", "-A", "--", ...pathspec], sandboxPath, env) : read;
+        ? runGit(["add", "-A", "--", ...addablePathspec(pathspec, sandboxPath)], sandboxPath, env) : read;
       const diff = added.status === 0
         ? runGit(["diff", "--cached", "--binary", baseHead, "--", ...pathspec], sandboxPath, env)
         : added;

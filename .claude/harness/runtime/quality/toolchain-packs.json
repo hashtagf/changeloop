@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "packs": [
+    {
+      "id": "application-js-ts",
+      "languages": ["javascript", "typescript"],
+      "extensions": [".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx", ".vue", ".svelte", ".astro"],
+      "markers": ["package.json", "tsconfig.json"],
+      "capabilities": ["test", "static-analysis", "coverage", "complexity", "crap", "automated-mutation", "semantic-mutation"]
+    },
+    {
+      "id": "application-go",
+      "languages": ["go"],
+      "extensions": [".go"],
+      "markers": ["go.mod"],
+      "capabilities": ["test", "static-analysis", "coverage", "complexity", "crap", "automated-mutation", "semantic-mutation", "compatibility", "resilience"],
+      "durations": [{ "pattern": "^(?:ok|FAIL)\\s+\\S+\\s+(\\d+(?:\\.\\d+)?)(s)\\b", "flags": "gm" }]
+    },
+    {
+      "id": "application-python",
+      "languages": ["python"],
+      "extensions": [".py"],
+      "markers": ["pyproject.toml", "requirements.txt"],
+      "capabilities": ["test", "static-analysis", "coverage", "complexity", "crap", "automated-mutation", "semantic-mutation"],
+      "durations": [{ "pattern": "^=+ .*\\bin (\\d+(?:\\.\\d+)?)(s)\\b", "flags": "gm" }]
+    },
+    {
+      "id": "application-php",
+      "languages": ["php"],
+      "extensions": [".php"],
+      "markers": ["composer.json"],
+      "capabilities": ["test", "static-analysis", "coverage", "complexity", "crap", "automated-mutation", "semantic-mutation"]
+    },
+    {
+      "id": "script-bash",
+      "languages": ["bash"],
+      "extensions": [".sh", ".bash"],
+      "capabilities": ["test", "static-analysis", "semantic-mutation", "state-identity"]
+    },
+    {
+      "id": "database-sql",
+      "languages": ["sql"],
+      "extensions": [".sql"],
+      "capabilities": ["static-analysis", "integration", "compatibility", "data-migration", "performance", "semantic-mutation"]
+    },
+    {
+      "id": "database-mongodb",
+      "languages": ["mongodb"],
+      "capabilities": ["integration", "compatibility", "data-migration", "performance", "semantic-mutation"]
+    },
+    {
+      "id": "web-markup",
+      "languages": ["html"],
+      "extensions": [".html", ".htm"],
+      "capabilities": ["static-analysis", "browser", "accessibility"]
+    },
+    {
+      "id": "web-style",
+      "languages": ["css", "sass"],
+      "extensions": [".css", ".scss", ".sass"],
+      "capabilities": ["static-analysis", "browser", "accessibility"]
+    },
+    {
+      "id": "toolchain-dart-flutter",
+      "languages": ["dart"],
+      "extensions": [".dart"],
+      "markers": ["pubspec.yaml"],
+      "capabilities": ["test", "static-analysis"],
+      "commands": {
+        "test": [{ "command": ["flutter", "test"], "requires": ["test"] }],
+        "static-analysis": [{ "command": ["flutter", "analyze"] }]
+      }
+    },
+    {
+      "id": "toolchain-jvm-gradle",
+      "languages": ["java", "kotlin"],
+      "extensions": [".java", ".kt", ".kts"],
+      "markers": ["build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"],
+      "capabilities": ["test", "static-analysis"],
+      "commands": {
+        "test": [{ "command": ["./gradlew", "test"], "requires": ["gradlew"] }, { "command": ["gradle", "test"] }],
+        "static-analysis": [{ "command": ["./gradlew", "check", "-x", "test"], "requires": ["gradlew"] }, { "command": ["gradle", "check", "-x", "test"] }]
+      }
+    },
+    {
+      "id": "toolchain-jvm-maven",
+      "languages": ["java"],
+      "extensions": [".java"],
+      "markers": ["pom.xml"],
+      "capabilities": ["test", "static-analysis"],
+      "commands": {
+        "test": [{ "command": ["./mvnw", "test"], "requires": ["mvnw"] }, { "command": ["mvn", "test"] }],
+        "static-analysis": [{ "command": ["mvn", "-q", "compile"] }]
+      }
+    },
+    {
+      "id": "toolchain-rust",
+      "languages": ["rust"],
+      "extensions": [".rs"],
+      "markers": ["Cargo.toml"],
+      "capabilities": ["test", "static-analysis"],
+      "commands": {
+        "test": [{ "command": ["cargo", "test"] }],
+        "static-analysis": [{ "command": ["cargo", "check", "--all-targets"] }]
+      },
+      "durations": [{ "pattern": "\\bfinished in (\\d+(?:\\.\\d+)?)(s)\\b", "flags": "gm" }]
+    },
+    {
+      "id": "toolchain-ruby",
+      "languages": ["ruby"],
+      "extensions": [".rb"],
+      "markers": ["Gemfile"],
+      "capabilities": ["test", "static-analysis"],
+      "commands": {
+        "test": [{ "command": ["bundle", "exec", "rspec"], "requires": ["spec"] }, { "command": ["bundle", "exec", "rake", "test"], "requires": ["Rakefile"] }],
+        "static-analysis": [{ "command": ["bundle", "exec", "rubocop"], "requires": [".rubocop.yml"] }]
+      },
+      "durations": [{ "pattern": "^Finished in (\\d+(?:\\.\\d+)?) (seconds|s)\\b", "flags": "gm" }]
+    },
+    {
+      "id": "toolchain-terraform",
+      "languages": ["terraform"],
+      "extensions": [".tf"],
+      "capabilities": ["static-analysis"],
+      "commands": {
+        "static-analysis": [{ "command": ["terraform", "fmt", "-check", "-recursive"] }]
+      }
+    },
+    {
+      "id": "toolchain-helm",
+      "languages": ["helm"],
+      "markers": ["Chart.yaml"],
+      "capabilities": ["static-analysis"],
+      "commands": {
+        "static-analysis": [{ "command": ["helm", "lint", "."] }]
+      }
+    },
+    {
+      "id": "toolchain-dockerfile",
+      "languages": ["dockerfile"],
+      "markers": ["Dockerfile"],
+      "capabilities": ["static-analysis"],
+      "commands": {
+        "static-analysis": [{ "command": ["hadolint", "Dockerfile"] }]
+      }
+    },
+    {
+      "id": "toolchain-kubernetes",
+      "languages": ["kubernetes"],
+      "markers": ["kustomization.yaml", "kustomization.yml"],
+      "capabilities": ["static-analysis"],
+      "commands": {
+        "static-analysis": [{ "command": ["kubectl", "kustomize", "."] }]
+      }
+    }
+  ]
+}

@@ -19,6 +19,8 @@
 // to the user without reading the criteria code. Setup gaps route to the
 // `onboard` skill: the agent sets the project up, the user only confirms.
 
+import { lingeringFix } from "../core/node-test-exit.mjs";
+
 export const READINESS_PROTOCOL = "foundation-pyramid-readiness-v1";
 export const LAYERS = Object.freeze(["codebase", "static", "verification", "prose", "review"]);
 // Outcome targets for the review layer; three archived changes before judging.
@@ -179,8 +181,13 @@ export const CRITERIA = Object.freeze([
   {
     id: "tests", layer: "verification", label: "A test lane proves behavior",
     // A configured test lane counts only while its latest run passes.
-    evaluate: (/** @type {{ lanes?: Record<string, string>, statuses?: Record<string, string>, configured?: boolean }} */
-      { lanes = {}, statuses = {}, configured }) => {
+    evaluate: (/** @type {{ lanes?: Record<string, string>, statuses?: Record<string, string>, configured?: boolean, testFiles?: number | null }} */
+      { lanes = {}, statuses = {}, configured, testFiles }) => {
+      // No test file at all is not a lane discovery missed: say so, and offer a runner.
+      if ((!lanes.test || lanes.test === "no-lane") && testFiles === 0)
+        return { status: "unmet", detail: "the repository has no tests",
+          next: "propose adding a test runner (vitest for JS/TS, go test, pytest) through /change; " +
+            "the user approves it per repository, and no test is written automatically" };
       if (!lanes.test || lanes.test === "no-lane")
         return { status: "unmet", detail: "no test lane", next: LANE_NEXT[configured === false ? "unconfigured" : "no-lane"]("test") };
       if (!statuses.test) return { status: "unmeasured", detail: "the test lane has not run" };
@@ -195,6 +202,13 @@ export const CRITERIA = Object.freeze([
       const runs = (histories.test || []).filter((run) => Number.isFinite(run?.durationMs));
       if (!runs.length) return { status: "unmeasured", detail: "the test lane has no timed run" };
       const latest = runs.at(-1).durationMs;
+      // Splitting a suite does not help when it waits after its tests: name that cause.
+      // A history row recorded before this field existed carries none and reads as not lingering.
+      const lingering = runs.at(-1).lingering;
+      if (Number.isFinite(lingering?.testsMs) && Number.isFinite(lingering?.wallMs))
+        return { status: "unmet",
+          detail: `tests finished in ${Math.round(lingering.testsMs / 1000)}s but the run took ${Math.round(lingering.wallMs / 1000)}s`,
+          next: lingeringFix() };
       return latest <= FAST_TEST_MS ? { status: "met", detail: `latest run took ${Math.round(latest / 1000)}s` }
         : { status: "unmet", detail: `latest run took ${Math.round(latest / 1000)}s (target ${FAST_TEST_MS / 1000}s)`,
           next: "give agents a fast test script (unit tests only, slow suites split out) and point the test lane at it" };

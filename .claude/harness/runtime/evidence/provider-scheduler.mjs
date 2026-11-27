@@ -2,6 +2,7 @@ import { findCyclePath } from "../core/graph.mjs";
 import { scheduleReadyBatch } from "../core/graph-execution.mjs";
 import { advisoryVisualProviders } from "./visual-review.mjs";
 import { bestEffort } from "../core/best-effort.mjs";
+import { timedOutRerunSkip } from "./provider-timeout-rerun.mjs";
 
 // An advisory provider runs once per content: any current receipt, passing
 // or not, is its report, and reruns would only repeat the reviewer's cost.
@@ -253,7 +254,8 @@ export function createProviderScheduler({
         const started = timestamp();
         let result;
         try {
-          result = await executeAdapter(id, node.provider, node.config, proofRunId, commandCache);
+          result = timedOutRerunSkip({ receiptValidity }, id, node.provider, node.config) ||
+            await executeAdapter(id, node.provider, node.config, proofRunId, commandCache);
         } catch (error) {
           // A required provider's crash still ends the run; an advisory one
           // is reported as an error and the run continues.

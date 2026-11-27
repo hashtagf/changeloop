@@ -1,4 +1,5 @@
-import { QUALITY_PROFILES, validateProfiles } from "./language-profiles.mjs";
+import { capabilityNamesForProfiles, toolchainPacks, validateProfiles } from "./language-profiles.mjs";
+import { laneCapability, validateLane, validateLaneFiles } from "./quality-lanes.mjs";
 
 export const DEFAULT_CONSUMER_QUALITY_POLICY = Object.freeze({
   version: 1,
@@ -90,6 +91,9 @@ export function validateQualityProvider(provider, label) {
     failAt(`${label}.inputs must contain repository-relative string paths`);
   if (provider.protocol !== undefined && !PROTOCOLS.has(provider.protocol))
     failAt(`${label}.protocol is not a Foundation quality protocol`);
+  if (provider.paths !== undefined && (!Array.isArray(provider.paths) || !provider.paths.length ||
+      provider.paths.some((path) => typeof path !== "string" || !path)))
+    failAt(`${label}.paths must be a non-empty array of repository-relative globs`);
   if (provider.output !== undefined && (typeof provider.output !== "string" || !provider.output))
     failAt(`${label}.output must be a non-empty repository-relative path`);
   return provider;
@@ -100,6 +104,8 @@ export function validateConsumerQualityConfig(config, repositoryIds = null) {
   validateConsumerQualityPolicy(config.policy);
   if (!Array.isArray(config.repositories) || !config.repositories.length)
     failAt("repositories must be a non-empty array");
+  const packs = config.toolchains ?? [];
+  try { toolchainPacks(packs); } catch (error) { failAt(error.message.replace(/^quality toolchains: /, "toolchains: ")); }
   const ids = new Set();
   for (const repository of config.repositories) {
     if (!object(repository) || typeof repository.id !== "string" || !repository.id)
@@ -108,13 +114,15 @@ export function validateConsumerQualityConfig(config, repositoryIds = null) {
     ids.add(repository.id);
     if (repositoryIds && !repositoryIds.has(repository.id))
       failAt(`unknown repository '${repository.id}'`);
-    validateProfiles(repository.profiles);
+    validateProfiles(repository.profiles, packs);
     if (!object(repository.providers)) failAt(`repository '${repository.id}' requires providers`);
-    const applicable = new Set(profileCapabilities(repository.profiles));
+    const applicable = new Set(profileCapabilities(repository.profiles, packs));
+    validateLaneFiles(Object.keys(repository.providers), `repository '${repository.id}'`, failAt);
     for (const [name, provider] of Object.entries(repository.providers)) {
       validateQualityProvider(provider, `repositories.${repository.id}.providers.${name}`);
-      if (applicable.has(name) && provider.required === false)
-        failAt(`repository '${repository.id}' cannot make profile capability '${name}' optional`);
+      validateLane(name, provider, `repositories.${repository.id}.providers.${name}`, failAt);
+      if (applicable.has(laneCapability(name, provider)) && provider.required === false)
+        failAt(`repository '${repository.id}' cannot make profile capability '${laneCapability(name, provider)}' optional`);
     }
     if (repository.include !== undefined && (!Array.isArray(repository.include) ||
         repository.include.some((path) => typeof path !== "string" || !path)))
@@ -157,9 +165,9 @@ export function validateConsumerQualityConfig(config, repositoryIds = null) {
   return config;
 }
 
-export function profileCapabilities(profileNames) {
-  validateProfiles(profileNames);
-  return [...new Set(profileNames.flatMap((name) => QUALITY_PROFILES[name].capabilities))].sort();
+export function profileCapabilities(profileNames, projectPacks = []) {
+  validateProfiles(profileNames, projectPacks);
+  return capabilityNamesForProfiles(profileNames, projectPacks);
 }
 
 export function capabilityRequirement({ status, capability, impact = "medium", policy }) {

@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "backup-ignored-exclude-backup-sandbox",
+      "requirementKey": "backup-ignored-exclude",
+      "scenario": "มี test-results ที่ถูก ignore",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "backup-ignored-exclude-backup-sandbox-2",
+      "requirementKey": "backup-ignored-exclude",
+      "scenario": "exclude ที่ไม่ถูก ignore",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/sandbox-data-loss.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

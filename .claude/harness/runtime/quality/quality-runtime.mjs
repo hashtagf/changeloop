@@ -13,6 +13,10 @@ import {
   configDigest, normalizeCrapReport, normalizeMutationReport, validateCapabilityReport
 } from "./quality-protocol.mjs";
 import { runBuiltinQualityAdapter } from "./adapter-registry.mjs";
+import { forceExitCommand, lingeringTestRun } from "../core/node-test-exit.mjs";
+import { providerCommandHints } from "./quality-doctor-hints.mjs";
+import { durationPatterns } from "./language-profiles.mjs";
+import { laneDirectory, laneFile, laneLabel, lanesOf } from "./quality-lanes.mjs";
 import {
   FINDINGS_CAPABILITIES, FINDINGS_PROTOCOL, evaluateFindingsRatchet, normalizeFindingsReport
 } from "./findings-ratchet.mjs";
@@ -70,10 +74,20 @@ function normalizeProviderResult(protocol, value, repository) {
 }
 
 export function runQualityProvider({
-  repository, capability, provider, git, pathInside, environment = {}, policy = null
+  repository, capability, provider, git, pathInside, environment = {}, policy = null, durations = [],
+  clock = () => performance.now()
 }) {
   const command = provider.command || [];
-  if (command.length && !executableExists(command[0], repository.path)) return {
+  // A module lane runs in its own directory of the repository.
+  const cwd = provider.cwd ? laneDirectory(repository.path, provider.cwd) : repository.path;
+  if (!cwd) return {
+    repository: repository.id, capability, status: "fail", assurance: "missing",
+    reason: existsSync(join(repository.path, provider.cwd))
+      ? `lane directory '${provider.cwd}' resolves outside the repository`
+      : `lane directory '${provider.cwd}' does not exist`,
+    required: provider.required !== false
+  };
+  if (command.length && !executableExists(command[0], cwd)) return {
     repository: repository.id, capability, status: "unavailable", assurance: "missing",
     reason: `executable '${command[0]}' is unavailable`, required: provider.required !== false
   };
@@ -90,10 +104,13 @@ export function runQualityProvider({
     required: provider.required !== false
   };
   const before = cleanStatus(git, repository.path);
-  const started = performance.now();
-  const elapsed = () => performance.now() - started;
-  const result = command.length ? spawnSync(command[0], command.slice(1), {
-      cwd: repository.path,
+  const started = clock();
+  const elapsed = () => clock() - started;
+  // The same runner exit Prove uses: a passing suite that leaves a server
+  // open must not keep onboarding's quality run waiting for it.
+  const run = command.length ? forceExitCommand(command[0], command.slice(1)) : null;
+  const result = run ? spawnSync(run.command, run.args, {
+      cwd,
       encoding: "utf8",
       maxBuffer: 64 * 1024 * 1024,
       env: { ...process.env, ...environment,
@@ -101,6 +118,10 @@ export function runQualityProvider({
         FOUNDATION_QUALITY_CAPABILITY: capability }
     }) : { status: 0, stdout: "", stderr: "" };
   const after = cleanStatus(git, repository.path);
+  // A suite whose own tests ended long before the run did: readiness names the cause.
+  const lingering = capability === "test" && run
+    ? lingeringTestRun(`${result.stdout || ""}${result.stderr || ""}`, elapsed(),
+      { patterns: durationPatterns(durations) }) : null;
   if (before !== null && after !== null && before !== after) return {
     repository: repository.id, capability, status: "fail", assurance: "missing",
     reason: "provider changed repository state and did not restore it", durationMs: elapsed(),
@@ -112,7 +133,7 @@ export function runQualityProvider({
   if (result.status !== 0 && !findingsExit) return {
     repository: repository.id, capability, status: "fail", assurance: "missing",
     reason: `provider exited ${result.status ?? "without status"}`,
-    stderr: String(result.stderr || "").slice(-4000), durationMs: elapsed(),
+    stderr: String(result.stderr || "").slice(-4000), durationMs: elapsed(), lingering,
     required: provider.required !== false
   };
   let value = null;
@@ -142,9 +163,18 @@ export function runQualityProvider({
   }
   return {
     repository: repository.id, capability, status: "pass", assurance: "full",
-    durationMs: elapsed(), required: provider.required !== false, result: value,
+    durationMs: elapsed(), lingering, required: provider.required !== false, result: value,
     stdout: provider.protocol ? undefined : String(result.stdout || "").slice(-4000)
   };
+}
+
+// The lane a change skips because it touches none of the lane's paths, or null.
+function notAffectedLane(repository, capability, provider, changed, statusPath) {
+  if (!provider.paths || [...(changed || [])].some((path) => pathMatches(path, provider.paths))) return null;
+  let lastStatus = null;
+  try { lastStatus = existsSync(statusPath) ? readJsonFile(statusPath).status || null : null; } catch { lastStatus = null; }
+  return { repository, capability, status: "pass", assurance: "not-affected", required: false, lastStatus,
+    reason: `the change touches none of this lane's paths (${provider.paths.join(", ")})` };
 }
 
 function providerResultPath(root, repository, capability) {
@@ -164,7 +194,9 @@ function baselinePath(root, repository, capability) {
 export function createQualityRuntime({
   root, repositoryCatalog, selectedRepositories, canonicalChangedSurface,
   declaredSurfaceMatcher, loadRuntime, git, gitHead, readJson, writeJson,
-  pathInside, workspaceManifest = null, fail, log = console.log
+  pathInside, workspaceManifest = null, fail, log = console.log,
+  // The lane clock, injectable so a test can measure a lingering run without waiting it out.
+  clock = () => performance.now()
 }) {
   const configPath = join(root, QUALITY_CONFIG_RELATIVE);
   // `only` filters before each repository's head and workspace digest are
@@ -200,12 +232,21 @@ export function createQualityRuntime({
     return ids.length ? new Set(ids) : null;
   };
 
+  // The project's own toolchain packs, so discovery and init know its languages.
+  // A config that cannot be read stops discovery: dropping its packs would
+  // report its languages as unknown instead of naming the cause.
+  const declaredToolchains = () => {
+    if (!existsSync(configPath)) return [];
+    try { return readJsonFile(configPath).toolchains || []; }
+    catch (error) { return fail(`${QUALITY_CONFIG_RELATIVE} cannot be read: ${error.message}`); }
+  };
+
   function discovery(options = {}) {
     const only = repoFilter(options);
     const repositories = repositoriesFor(options.change || process.env.FOUNDATION_CHANGE_ID || null, only);
     if (only) for (const id of only)
       if (!repositories.some((repository) => repository.id === id)) fail(`unknown repository '${id}'`);
-    return discoverConsumerQuality(repositories);
+    return discoverConsumerQuality(repositories, declaredToolchains());
   }
 
   function showDiscovery(options = {}) {
@@ -216,11 +257,13 @@ export function createQualityRuntime({
 
   function draft(options = {}) {
     const report = discovery(options);
-    return defaultConsumerQualityConfig(report.repositories.map((repository) => ({
+    const toolchains = declaredToolchains();
+    const value = defaultConsumerQualityConfig(report.repositories.map((repository) => ({
       id: repository.repository,
       profiles: repository.profiles,
       providers: repository.providers
     })));
+    return toolchains.length ? { ...value, toolchains } : value;
   }
 
   // With --repo the drafted repositories join the existing configuration (or
@@ -296,24 +339,24 @@ export function createQualityRuntime({
     // A per-repository configuration without a change checks what is onboarded.
     const onboardedOnly = !activeChange && !options.repo && config?.unlisted === "not-onboarded"
       ? new Set(config.repositories.map((row) => row.id)) : null;
-    const discovered = onboardedOnly ? discoverConsumerQuality(repositoriesFor(null, onboardedOnly)) : discovery(options);
+    const discovered = onboardedOnly ? discoverConsumerQuality(repositoriesFor(null, onboardedOnly), config.toolchains || []) : discovery(options);
     const actualRepositories = config ? new Map(repositoriesFor(activeChange, onboardedOnly).map((row) => [row.id, row])) : new Map();
     if (config) for (const repository of config.repositories) {
       const actual = actualRepositories.get(repository.id);
       if (!actual) { issues.push({ level: "error", code: "repository-not-selected",
         repository: repository.id, message: "configured repository is not selected" }); continue; }
-      const capabilities = new Set([
-        ...profileCapabilities(repository.profiles), ...Object.keys(repository.providers)
-      ]);
-      for (const capability of [...capabilities].sort()) {
-        const provider = repository.providers[capability];
-        if (!provider) issues.push({ level: "warning", code: "provider-unsupported",
-          repository: repository.id, capability,
+      const lanes = lanesOf(repository);
+      for (const capability of profileCapabilities(repository.profiles, config.toolchains || []))
+        if (!lanes.some((lane) => lane.capability === capability)) issues.push({ level: "warning",
+          code: "provider-unsupported", repository: repository.id, capability,
           message: `no ${capability} provider; risk fallback policy applies` });
-        else if (provider.command?.length && !executableExists(provider.command[0], actual.path))
+      for (const { capability, provider } of [...lanes].sort((a, b) => a.key.localeCompare(b.key))) {
+        if (provider.command?.length && !executableExists(provider.command[0],
+            provider.cwd ? join(actual.path, provider.cwd) : actual.path))
           issues.push({ level: "error", code: "tool-unavailable", repository: repository.id,
             capability, message: `executable '${provider.command[0]}' is unavailable` });
-        if (capability === "automated-mutation" && provider &&
+        issues.push(...providerCommandHints(repository.id, capability, provider));
+        if (capability === "automated-mutation" &&
             !["tool", "harness-sandbox"].includes(provider.isolation))
           issues.push({ level: "error", code: "mutation-not-isolated", repository: repository.id,
             capability, message: "mutation provider requires isolation tool|harness-sandbox" });
@@ -365,9 +408,10 @@ export function createQualityRuntime({
 
   // Compare a lane's fresh result with its baseline: CRAP and mutation on the
   // changed surface (every path with --full), findings across the repository.
-  function evaluateLane(lane, { repository, capability, full, configuredChanged, config }) {
-    writeJson(providerResultPath(root, repository.id, capability), lane.result);
-    const basePath = baselinePath(root, repository.id, capability);
+  function evaluateLane(lane, { repository, capability, key = capability, full, configuredChanged, config }) {
+    const file = laneFile(key);
+    writeJson(providerResultPath(root, repository.id, file), lane.result);
+    const basePath = baselinePath(root, repository.id, file);
     const baseline = existsSync(basePath) ? readJsonFile(basePath) : null;
     if (capability === "crap") lane.evaluation = evaluateCrapRatchet({
       current: lane.result, baseline, changedPaths: full
@@ -379,7 +423,7 @@ export function createQualityRuntime({
         ? new Set(lane.result.mutants.map((mutant) => mutant.path))
         : configuredChanged;
       lane.result = classifyMutationSurfaces(lane.result, mutationPaths);
-      writeJson(providerResultPath(root, repository.id, capability), lane.result);
+      writeJson(providerResultPath(root, repository.id, file), lane.result);
       lane.evaluation = evaluateMutationRatchet({ current: lane.result, baseline,
         policy: config.policy, exceptions: config.exceptions });
     }
@@ -436,30 +480,39 @@ export function createQualityRuntime({
       const configuredChanged = new Set([...(changed.get(repository.id) || [])].filter((path) =>
         (!repositoryConfig.include?.length || pathMatches(path, repositoryConfig.include)) &&
         !pathMatches(path, repositoryConfig.exclude || [])));
-      for (const [capability, provider] of Object.entries(repositoryConfig.providers)) {
+      for (const { key, capability, provider } of lanesOf(repositoryConfig)) {
         if (options.capability && capability !== options.capability) continue;
         // The test lane runs inside a change too: a passing full test lane is the
         // compensating evidence for unsupported reduced capabilities below.
-        if (!selectedLane(repository.id, capability)) continue;
+        if (!selectedLane(repository.id, key)) continue;
+        const statusPath = laneStatusPath(root, repository.id, laneFile(key));
+        // A lane that declares its paths measures only those: a change that
+        // touches none of them does not wait for it (a 4.5-minute backend
+        // mutation run on every frontend-only Prove). Without a change or with
+        // --full every lane runs.
+        const skipped = activeChange && !options.full
+          ? notAffectedLane(repository.id, capability, provider, changed.get(repository.id), statusPath) : null;
+        if (skipped) { lanes.push({ ...skipped, ...laneLabel(key, capability) }); continue; }
         const laneStarted = performance.now();
-        const lane = runQualityProvider({ repository, capability, provider, git, pathInside,
-          environment: { FOUNDATION_QUALITY_CHANGE: activeChange || "" }, policy: config.policy });
+        const lane = { ...runQualityProvider({ repository, capability, provider, git, pathInside,
+          environment: { FOUNDATION_QUALITY_CHANGE: activeChange || "" }, policy: config.policy,
+          durations: config.toolchains, clock }), ...laneLabel(key, capability) };
         if (lane.result)
-          evaluateLane(lane, { repository, capability, full: options.full, configuredChanged, config });
+          evaluateLane(lane, { repository, capability, key, full: options.full, configuredChanged, config });
         lane.durationMs = performance.now() - laneStarted;
         lanes.push(lane);
         // The latest verdict per lane: readiness counts a test lane only while it passes.
         // The latest verdict plus a short history: readiness judges whether the
         // test lane is fast enough to run every turn and stable on unchanged code.
-        const statusPath = laneStatusPath(root, repository.id, capability);
         let previous = [];
         try { previous = existsSync(statusPath) ? readJsonFile(statusPath).history || [] : []; } catch { previous = []; }
         const entry = { status: lane.status, durationMs: Math.round(lane.durationMs),
+          ...("lingering" in lane && lane.lingering ? { lingering: lane.lingering } : {}),
           workspaceDigest: repository.workspaceDigest || null, at: new Date().toISOString() };
         writeJson(statusPath, { ...entry, history: [...previous, entry].slice(-LANE_HISTORY) });
       }
-      for (const capability of profileCapabilities(repositoryConfig.profiles)) {
-        if (repositoryConfig.providers[capability] ||
+      for (const capability of profileCapabilities(repositoryConfig.profiles, config.toolchains || [])) {
+        if (lanesOf(repositoryConfig).some((lane) => lane.capability === capability) ||
             (options.capability && capability !== options.capability)) continue;
         if (!selectedLane(repository.id, capability)) continue;
         const requirement = capabilityRequirement({
@@ -473,7 +526,8 @@ export function createQualityRuntime({
     }
     for (const lane of lanes.filter((item) => item.assurance === "reduced-requires-evidence")) {
       const compensating = lanes.some((item) => item.repository === lane.repository &&
-        item.status === "pass" && item.assurance === "full" &&
+        item.status === "pass" &&
+        (item.assurance === "full" || (item.assurance === "not-affected" && item.lastStatus === "pass")) &&
         ["test", "static-analysis", "coverage", "semantic-mutation", "integration"]
           .includes(item.capability));
       if (!compensating) {
@@ -510,11 +564,12 @@ export function createQualityRuntime({
     const changes = [];
     for (const repository of config.repositories) {
       if (options.repository && repository.id !== options.repository) continue;
-      for (const capability of ["crap", "automated-mutation", ...FINDINGS_CAPABILITIES]) {
-        if (options.capability && capability !== options.capability) continue;
-        const source = providerResultPath(root, repository.id, capability);
+      const ratcheted = new Set(["crap", "automated-mutation", ...FINDINGS_CAPABILITIES]);
+      for (const { key, capability } of lanesOf(repository)) {
+        if (!ratcheted.has(capability) || (options.capability && capability !== options.capability)) continue;
+        const source = providerResultPath(root, repository.id, laneFile(key));
         if (!existsSync(source)) continue;
-        const target = baselinePath(root, repository.id, capability);
+        const target = baselinePath(root, repository.id, laneFile(key));
         changes.push({ repository: repository.id, capability,
           source: relative(root, source), target: relative(root, target), value: readJsonFile(source) });
       }
@@ -648,9 +703,9 @@ export function createQualityRuntime({
   // Each configured lane of one repository: whether it has run, has a
   // baseline, and (for findings) still compares against it.
   function repositoryLaneStates(repository) {
-    return Object.keys(repository.providers).map((capability) => {
-      const resultPath = providerResultPath(root, repository.id, capability);
-      const basePath = baselinePath(root, repository.id, capability);
+    return lanesOf(repository).map(({ key, capability }) => {
+      const resultPath = providerResultPath(root, repository.id, laneFile(key));
+      const basePath = baselinePath(root, repository.id, laneFile(key));
       if (!existsSync(resultPath)) return { capability, state: "not-run" };
       let current = null;
       try { current = readJsonFile(resultPath); } catch (error) {
@@ -687,14 +742,16 @@ export function createQualityRuntime({
     const repositories = {};
     for (const repository of config.repositories || []) {
       const own = { lanes: {}, findings: {}, statuses: {}, histories: {}, onboardedAt: repository.onboardedAt || null };
-      for (const capability of Object.keys(repository.providers || {})) {
-        const path = laneStatusPath(root, repository.id, capability);
+      for (const { key, capability } of lanesOf(repository)) {
+        const path = laneStatusPath(root, repository.id, laneFile(key));
         const record = existsSync(path) ? readJsonFile(path) : null;
         const status = record?.status;
         if (typeof status !== "string") continue;
-        own.statuses[capability] = status;
-        own.histories[capability] = Array.isArray(record.history) ? record.history : [record];
-        (histories[capability] ||= []).push(...own.histories[capability]);
+        // Module lanes of one capability share its verdict and history.
+        own.statuses[capability] = own.statuses[capability] && own.statuses[capability] !== "pass" ? own.statuses[capability] : status;
+        const history = Array.isArray(record.history) ? record.history : [record];
+        (own.histories[capability] ||= []).push(...history);
+        (histories[capability] ||= []).push(...history);
         statuses[capability] = statuses[capability] && statuses[capability] !== "pass" ? statuses[capability] : status;
       }
       for (const { capability, state, findings: count } of repositoryLaneStates(repository)) {

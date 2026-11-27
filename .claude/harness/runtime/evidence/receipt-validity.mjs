@@ -44,6 +44,12 @@ export function receiptIsPreview(value) {
   return value?.kind === "preview";
 }
 
+/** `{ timedOut, observed }` for an error receipt whose run hit its time limit, else `{}`. */
+export function timedOutMark(value) {
+  return value?.status === "error" && /^timeout after \d+ms/.test(String(value.observed || ""))
+    ? { timedOut: true, observed: String(value.observed) } : {};
+}
+
 export function validityRecovery(validity, id, provider) {
   const route = VALIDITY_RECOVERY[validity];
   if (route) return route(id, provider);
@@ -423,10 +429,14 @@ export function createReceiptValidity({
     // An inconclusive executed receipt already names its exact repair (for
     // example the reporter that makes a test count parseable); carry it so the
     // repair batch states it instead of a bare validity code.
+    // A timeout on this same content and configuration (timeoutMs is part of
+    // the provider fingerprint checked above) is marked, so Prove does not
+    // wait it out again unchanged.
     if (value.status !== "pass") return {
       provider, validity: value.status,
       ...(value.status === "inconclusive" && String(value.observed || "").trim()
-        ? { reason: String(value.observed).trim() } : {})
+        ? { reason: String(value.observed).trim() } : {}),
+      ...timedOutMark(value)
     };
     const requiredClaims = claimsForProvider(id, provider).map((claim) => claim.id);
     const covered = new Set(value.claims || []);

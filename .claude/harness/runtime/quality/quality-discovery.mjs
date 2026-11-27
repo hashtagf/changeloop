@@ -1,12 +1,16 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { delimiter, extname, join, relative } from "node:path";
 import {
-  capabilityNamesForProfiles, languagesForProfiles, profilesForInventory
+  capabilityNamesForProfiles, languagesForProfiles, markerNames, profileDefinition, profilesForInventory
 } from "./language-profiles.mjs";
 import {
   requiredControlsForProfiles, semanticFaultsForProfiles
 } from "./semantic-fault-catalog.mjs";
 import { proposeModuleBoundaries } from "./module-boundary-proposal.mjs";
+import { moduleLanes } from "./module-lanes-discovery.mjs";
+import {
+  installedRunnerCommand, knownTestFileCount, testCommandProposals, testSetupProposal
+} from "./test-gap-discovery.mjs";
 import { gitIgnored, nestedRepository } from "./source-scan.mjs";
 
 const EXCLUDED = new Set([
@@ -14,12 +18,10 @@ const EXCLUDED = new Set([
   "coverage", "test-results", ".venv", "venv", "__pycache__"
 ]);
 const EXCLUDED_PATHS = new Set(["openspec/changes/archive"]);
-const MARKERS = new Set([
-  "package.json", "tsconfig.json", "go.mod", "pyproject.toml", "requirements.txt",
-  "composer.json", "phpunit.xml", "phpunit.xml.dist"
-]);
+const BASE_MARKERS = ["phpunit.xml", "phpunit.xml.dist"];
 
-export function inventoryRepository(root, { maximumFiles = 10000 } = {}) {
+export function inventoryRepository(root, { maximumFiles = 10000, projectPacks = [] } = {}) {
+  const MARKERS = new Set([...BASE_MARKERS, ...markerNames(projectPacks)]);
   const files = [];
   const extensions = new Set();
   const markers = new Set();
@@ -141,7 +143,36 @@ function readFileSafe(path) {
   try { return readFileSync(path, "utf8"); } catch { return ""; }
 }
 
-export function detectedProviders(root, profiles) {
+function onPath(name, path) {
+  return path.split(delimiter).some((directory) => directory && existsSync(join(directory, name)));
+}
+
+// A pack's first candidate whose required files are at the root and whose
+// executable is installed (a ./wrapper counts when it exists). A pack is
+// proposed only for a repository it roots: its marker, or for an
+// extension-only pack a matching file, at the top level. Nothing is guessed
+// for a tool the machine does not have.
+function packProviders(root, profiles, projectPacks, path) {
+  let top = [];
+  try { top = readdirSync(root); } catch { return {}; }
+  const providers = {};
+  for (const name of profiles) {
+    const pack = profileDefinition(name, projectPacks);
+    if (!pack || !Object.keys(pack.commands).length) continue;
+    const rooted = pack.markers.length ? pack.markers.some((marker) => top.includes(marker))
+      : top.some((file) => pack.extensions.includes(extname(file).toLowerCase()));
+    if (!rooted) continue;
+    for (const [capability, candidates] of Object.entries(pack.commands)) {
+      const chosen = candidates.find((candidate) =>
+        (candidate.requires || []).every((file) => existsSync(join(root, file))) &&
+        (candidate.command[0].includes("/") ? existsSync(join(root, candidate.command[0])) : onPath(candidate.command[0], path)));
+      if (chosen) providers[capability] ||= commandProvider([...chosen.command]);
+    }
+  }
+  return providers;
+}
+
+export function detectedProviders(root, profiles, { projectPacks = [], path = process.env.PATH || "" } = {}) {
   const providers = {};
   const packageJson = jsonAt(join(root, "package.json"));
   const scripts = packageJson?.scripts || {};
@@ -169,7 +200,9 @@ export function detectedProviders(root, profiles) {
       protocol: "foundation-automated-mutation-v1", output: ".foundation/quality/mutation.json", isolation: "tool"
     });
   }
-  if (profiles.includes("application-go")) {
+  // `go test ./...` needs a module or workspace at the root; a repository of
+  // Go modules in subdirectories gets per-module lanes instead.
+  if (profiles.includes("application-go") && ["go.mod", "go.work"].some((name) => existsSync(join(root, name)))) {
     providers.test ||= commandProvider(["go", "test", "./..."]);
     providers["static-analysis"] ||= commandProvider(["go", "vet", "./..."]);
     // The compiler is Go's type checker; vet prints compile and vet errors on stderr.
@@ -193,6 +226,9 @@ export function detectedProviders(root, profiles) {
     if (composer?.scripts?.test) providers.test ||= commandProvider(["composer", "test"]);
     if (composer?.scripts?.analyse) providers["static-analysis"] ||= commandProvider(["composer", "analyse"]);
   }
+  // Packs fill only what the language-specific discovery above left empty.
+  for (const [capability, provider] of Object.entries(packProviders(root, profiles, projectPacks, path)))
+    providers[capability] ||= provider;
   // Every application profile gets the tool-free ratchets: an ever-growing
   // file, a stopgap marker comment, and a copied block are what an agent copies first.
   if (profiles.some((profile) => profile.startsWith("application-")))
@@ -213,28 +249,52 @@ function mongoProfile(root, inventory, profiles) {
     ? [...profiles, "database-mongodb"].sort() : profiles;
 }
 
-export function discoverRepositoryQuality(repository) {
-  const inventory = inventoryRepository(repository.path);
-  let profiles = profilesForInventory({ files: inventory.markers, extensions: inventory.extensions });
+export function discoverRepositoryQuality(repository, projectPacks = []) {
+  const inventory = inventoryRepository(repository.path, { projectPacks });
+  let profiles = profilesForInventory({ files: inventory.markers, extensions: inventory.extensions }, projectPacks);
   profiles = mongoProfile(repository.path, inventory, profiles);
-  const providers = detectedProviders(repository.path, profiles);
-  const applicable = capabilityNamesForProfiles(profiles);
+  const rootProviders = detectedProviders(repository.path, profiles, { projectPacks });
+  const modules = moduleLanes({ root: repository.path, markers: inventory.markers, rootProviders,
+    profilesFor: (files) => profilesForInventory({ files, extensions: [] }, projectPacks),
+    detect: (path, moduleProfiles) => detectedProviders(path, moduleProfiles, { projectPacks }) });
+  const providers = { ...rootProviders, ...modules.providers };
+  // No test lane: tell "no tests" from "tests discovery missed".
+  const hasTestLane = () => Object.keys(providers).some((key) => key === "test" || key.startsWith("test:"));
+  const testFiles = hasTestLane() ? null : knownTestFileCount(repository.path, profiles);
+  const testGap = {};
+  if (testFiles) {
+    const runner = profiles.includes("application-js-ts") ? installedRunnerCommand(repository.path) : null;
+    if (runner) providers.test = commandProvider(runner);
+  }
+  if (!hasTestLane()) {
+    const commands = testCommandProposals(repository.path);
+    if (commands.length) testGap["test-commands"] = commands;
+    const setup = testFiles === 0 ? testSetupProposal(profiles) : null;
+    if (setup) testGap["test-setup"] = setup;
+  }
+  const applicable = capabilityNamesForProfiles(profiles, projectPacks);
+  const laneFor = (capability) => providers[capability] ||
+    Object.entries(providers).find(([key]) => key.startsWith(`${capability}:`))?.[1];
   const capabilities = Object.fromEntries(applicable.map((capability) => [capability,
-    providers[capability]
-      ? { status: "available", adapter: providers[capability].kind,
-        tool: providers[capability].command?.[0] || "builtin" }
+    laneFor(capability)
+      ? { status: "available", adapter: laneFor(capability).kind,
+        tool: laneFor(capability).command?.[0] || "builtin" }
       : { status: "unsupported", reason: `no configured or safely detected ${capability} provider` }
   ]));
   return {
     protocol: "foundation-quality-capabilities-v1",
     repository: repository.id,
     root: repository.relativePath || ".",
-    languages: languagesForProfiles(profiles), profiles, capabilities, providers,
+    languages: languagesForProfiles(profiles, projectPacks), profiles, capabilities, providers,
     requiredControls: requiredControlsForProfiles(profiles),
     recommendedSemanticFaults: semanticFaultsForProfiles(profiles),
+    ...(modules.modules.length ? { modules: modules.modules, modulesTruncated: modules.modulesTruncated } : {}),
+    // Absent with a test lane; null when the count cannot say "no tests".
+    ...(!hasTestLane() || testFiles ? { testFiles } : {}),
     // Drafts that need the user's confirmation, never written by `quality init`.
-    ...(profiles.includes("application-js-ts")
-      ? { proposals: { "module-boundaries": proposeBoundaries(repository.path) } } : {}),
+    ...(profiles.includes("application-js-ts") || Object.keys(testGap).length
+      ? { proposals: { ...(profiles.includes("application-js-ts")
+        ? { "module-boundaries": proposeBoundaries(repository.path) } : {}), ...testGap } } : {}),
     inventory: { files: inventory.files.length, truncated: inventory.truncated,
       markers: inventory.markers, extensions: inventory.extensions }
   };
@@ -245,10 +305,10 @@ function proposeBoundaries(root) {
   catch (error) { return { status: "unavailable", reason: error.message }; }
 }
 
-export function discoverConsumerQuality(repositories) {
+export function discoverConsumerQuality(repositories, projectPacks = []) {
   return {
     protocol: "foundation-quality-discovery-v1",
     generatedAt: new Date().toISOString(),
-    repositories: repositories.map(discoverRepositoryQuality)
+    repositories: repositories.map((repository) => discoverRepositoryQuality(repository, projectPacks))
   };
 }

@@ -1,0 +1,166 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "quality-module-lanes-quality-run",
+      "requirementKey": "quality-module-lanes",
+      "scenario": "lane ของ module",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-module-lanes-quality-run-2",
+      "requirementKey": "quality-module-lanes",
+      "scenario": "สอง lane capability เดียวกัน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-module-lanes-config",
+      "requirementKey": "quality-module-lanes",
+      "scenario": "cwd ออกนอก repository",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-module-lanes-quality-run-3",
+      "requirementKey": "quality-module-lanes",
+      "scenario": "cwd ไม่มีอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-module-lanes-quality-run-4",
+      "requirementKey": "quality-module-lanes",
+      "scenario": "config เดิม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "discovery-module-lanes-quality-discover",
+      "requirementKey": "discovery-module-lanes",
+      "scenario": "Go หลาย module ไม่มี go.mod ที่ราก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "discovery-module-lanes-quality-discover-2",
+      "requirementKey": "discovery-module-lanes",
+      "scenario": "ราก repo ครอบอยู่แล้ว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "discovery-module-lanes-quality-discover-3",
+      "requirementKey": "discovery-module-lanes",
+      "scenario": "module มากเกิน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "discovery-module-lanes-quality-discover-4",
+      "requirementKey": "discovery-module-lanes",
+      "scenario": "module ที่เป็น git repository แยก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "toolchain-pack-tightening-config",
+      "requirementKey": "toolchain-pack-tightening",
+      "scenario": "duration ไม่มีกลุ่ม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "toolchain-pack-tightening-config-2",
+      "requirementKey": "toolchain-pack-tightening",
+      "scenario": "duration ไม่มี pattern",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "toolchain-pack-tightening-quality-run",
+      "requirementKey": "toolchain-pack-tightening",
+      "scenario": "เวลาเทสต์จาก pack โปรเจกต์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "toolchain-pack-tightening-quality-discover",
+      "requirementKey": "toolchain-pack-tightening",
+      "scenario": "config อ่านไม่ได้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "toolchain-pack-tightening-quality-doctor",
+      "requirementKey": "toolchain-pack-tightening",
+      "scenario": "หลายโฟลเดอร์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "toolchain-pack-tightening-quality-discover-2",
+      "requirementKey": "toolchain-pack-tightening",
+      "scenario": "เครื่องไม่มีเครื่องมือ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "toolchain-pack-tightening-quality-discover-3",
+      "requirementKey": "toolchain-pack-tightening",
+      "scenario": "Flutter ไม่มีโฟลเดอร์ test",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/quality-module-lanes.test.mjs) && (node --test .claude/harness/tests/toolchain-packs.test.mjs .claude/harness/tests/quality-runtime.test.mjs)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/quality-module-lanes.test.mjs",
+        "node --test .claude/harness/tests/toolchain-packs.test.mjs .claude/harness/tests/quality-runtime.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

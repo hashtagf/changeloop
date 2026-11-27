@@ -110,7 +110,11 @@ the next step to wire a project-owned command for that capability in
 
 A provider command without `timeoutMs` runs for at most 600000 ms (ten
 minutes). A timeout is an infrastructure `error`, and the failure names the
-provider, the limit, and `providers.<name>.timeoutMs` to raise it. A provider
+provider, the limit, and `providers.<name>.timeoutMs` to raise it. While that
+receipt still binds the same workspace and provider configuration (including
+`timeoutMs`), Prove does not run the provider again: it reports the same error
+with the fix. Changing the content or the configuration runs it; so does
+`FOUNDATION_RERUN_TIMED_OUT=1` for a machine that was only briefly slow. A provider
 command never inherits the harness's own session state
 (`CLAUDE_FOUNDATION_PROJECT`, `FOUNDATION_WORKSPACE_ROOT`,
 `FOUNDATION_CALLER_CWD`, `FOUNDATION_CLAUDE_SESSION_ID`,

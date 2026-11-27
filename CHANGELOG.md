@@ -9,6 +9,66 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Fixed
+
+- Land no longer keeps a sandbox because its backup failed: `git add -A`
+  refused the `:(exclude)test-results/**` pathspec once a test had written
+  ignored output there.
+- "No tests" is claimed only after a complete count in a language whose test
+  files are recognised (now also Java, Kotlin, PHP, Dart, Rust, and
+  `__tests__/`), and a GitLab or Bitbucket `script:` list yields each test
+  command once.
+
+### Added
+
+- Repositories without a test lane: `.vue`, `.svelte` and `.astro` count as
+  JS/TS; test files without a test script use the runner the repository
+  installed; test commands from a Makefile, CI workflow, or README are listed
+  as proposals for the user to confirm; and a repository with no tests is told
+  so, with a runner to add through `/change`.
+
+- Module lanes: a quality provider keyed `test:services/wallet` with `cwd`
+  runs in that module, and discovery proposes one test and static-analysis
+  lane per module directory of a monorepo (at most 40), each with its own
+  `paths`, so a change touching one service skips the others. A Go repository
+  without a root `go.mod` or `go.work` no longer gets a root `go test ./...`.
+- Toolchain packs: duration patterns must have a capture group, project packs'
+  time patterns are read for quality lanes, an unreadable quality config stops
+  discovery with its cause, and `quality doctor` suggests every directory a
+  command names.
+
+- Toolchain packs: quality discovery reads languages from pack data instead of
+  code. Dart/Flutter, Gradle, Maven, Rust, Ruby, Terraform, Helm, Dockerfile,
+  and Kubernetes are recognized and get proposed lanes when their tool is
+  installed; a project declares its own packs, or overrides one, in
+  `toolchains` of `quality/foundation-quality.json` without a harness release.
+- Lingering-test detection reads go test, pytest, cargo, RSpec, and JUnit XML
+  times; `quality doctor` suggests paths from `make -C`, `--prefix`/`--dir`,
+  `go test ./<dir>/...`, `gradle -p`, and `cargo --manifest-path`; and
+  `--test-force-exit` is added after node options such as `--import tsx`.
+
+### Fixed
+
+- A test run that passes and then waits on an open server no longer costs
+  minutes per run unnoticed. A consumer's `npx tsx --test` suite passed in
+  7s and then waited 360s, on each of seven Build and Prove runs. Task
+  checks, test providers, and `quality run` lanes now add
+  `--test-force-exit` to `tsx --test` and `npx tsx --test` as they already
+  did to `node --test`. When a command the harness does not rewrite (such as
+  `npm test`) reports node:test results far shorter than the run, the task
+  check and the Prove provider raise a `slow-check` signal with both times
+  and the fix, and readiness `tests-fast` names it as unmet. The check also
+  reads vitest, jest, and Playwright summary times.
+- A quality lane can declare `paths`; inside a change, a lane whose paths
+  match no changed file is reported `not-affected` instead of run. In one
+  consumer a backend mutation lane ran 4.5 minutes on every frontend-only
+  Prove, about 35 minutes per change. `quality doctor` suggests paths for a
+  `cd <dir> && ...` lane and warns when an exit-code lane swallows failure
+  with `|| true`; onboarding runs it.
+- Prove no longer reruns a provider whose latest run timed out on the same
+  content and configuration; it reports the limit and the fix.
+  `FOUNDATION_RERUN_TIMED_OUT=1` runs it anyway.
+
 ## [3.7.9] - 2026-11-26
 
 ### Added

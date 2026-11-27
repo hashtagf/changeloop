@@ -94,6 +94,17 @@ test("a test lane must be fast and stable, and an unmet test row is the first ne
   assert.equal(status({ histories: { test: [run("pass", 300000, "a")] } }, "tests-fast").status, "unmet");
   assert.equal(status({ histories: { test: [run("pass", 300000, "a"), run("pass", 9000, "b")] } }, "tests-fast").status, "met",
     "the latest run decides");
+  // A consumer suite passed in 7s and then waited 360s for an open server: the next step names that, not a split.
+  const lingering = status({ histories: { test: [{ ...run("pass", 360000, "a"), lingering: { testsMs: 7000, wallMs: 360000 } }] } },
+    "tests-fast");
+  assert.equal(lingering.status, "unmet");
+  assert.match(lingering.detail, /finished in 7s but the run took 360s/);
+  assert.match(lingering.next, /--test-force-exit right after --test/);
+  const quickButLingering = status({ histories: { test: [{ ...run("pass", 60000, "a"),
+    lingering: { testsMs: 2000, wallMs: 60000 } }] } }, "tests-fast");
+  assert.equal(quickButLingering.status, "unmet", "under the time target, a run that waits after its tests still wastes every turn");
+  assert.equal(status({ histories: { test: [{ ...run("pass", 9000, "a"), lingering: null }] } }, "tests-fast").status, "met",
+    "a row without lingering facts, as older history rows are, reads as not lingering");
   assert.equal(status({ histories: { test: [run("pass", 1, "a"), run("fail", 1, "b")] } }, "tests-stable").status, "unmeasured",
     "a failure after a code change is not flakiness");
   const flaky = status({ histories: { test: [run("pass", 1, "a"), run("fail", 1, "a")] } }, "tests-stable");

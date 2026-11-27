@@ -10,15 +10,15 @@ user decides what becomes binding.
 
 ## Steps
 
-1. Run `cloop doctor --json`; work only `setup` rows that are not `ok`, running
-   each row's next command.
+1. Run `cloop doctor --json`; run the next command of each non-`ok` `setup` row.
 2. Quality: `cloop quality discover`, then `cloop quality init --write` when the
-   config is missing (see `references/multi-repository.md`).
-3. Baselines: `cloop quality run`, report each lane's finding count, and ask once
-   whether today's findings become the baseline; after a yes run
+   config is missing (`references/multi-repository.md`); offer
+   `test-commands`, or `test-setup` via `/change`.
+3. Baselines: `cloop quality run`, report each lane's finding count, ask once
+   whether today's findings become the baseline; after yes run
    `cloop quality baseline --write --decision-ref <answer> --reason <why>`.
 4. Feature map: draft 5–20 user-facing features per
-   `references/feature-map-guide.md`; the user renames, merges, or drops them.
+   `references/feature-map-guide.md`; the user edits them.
 5. Module boundaries (optional): show discovery's
    `proposals.module-boundaries`; add its `provider` if the user agrees.
 6. Lessons: offer each warned lesson's `adoption.draft` through `/change`.
@@ -28,8 +28,8 @@ user decides what becomes binding.
    `references/rule-registry-guide.md`; the user confirms each layer.
 9. UI and `verify` rows: `references/ui-readiness-guide.md`,
    `references/verify.md`.
-10. Check: `cloop features --strict`, `cloop quality run`,
-    `cloop quality readiness --pretty`; report layers.
+10. Check: `cloop features --strict`, `cloop quality doctor` (offer
+    hints), `cloop quality run`, `cloop quality readiness --pretty`.
 
 ## Harness
 

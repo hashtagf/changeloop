@@ -1,0 +1,184 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "toolchain-packs-quality-discover",
+      "requirementKey": "toolchain-packs",
+      "scenario": "repo Flutter",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "toolchain-packs-quality-discover-2",
+      "requirementKey": "toolchain-packs",
+      "scenario": "repo Gradle มี wrapper",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "toolchain-packs-quality-discover-3",
+      "requirementKey": "toolchain-packs",
+      "scenario": "repo Terraform",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "toolchain-packs-quality-discover-4",
+      "requirementKey": "toolchain-packs",
+      "scenario": "marker อยู่ในโฟลเดอร์ย่อย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "toolchain-packs-quality-discover-5",
+      "requirementKey": "toolchain-packs",
+      "scenario": "repo Go เดิม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "project-toolchain-packs-quality-discover",
+      "requirementKey": "project-toolchain-packs",
+      "scenario": "ภาษาที่ harness ไม่รู้จัก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "project-toolchain-packs-config",
+      "requirementKey": "project-toolchain-packs",
+      "scenario": "profile อ้าง pack ที่ประกาศ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "project-toolchain-packs-config-2",
+      "requirementKey": "project-toolchain-packs",
+      "scenario": "pack ผิดรูป",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "project-toolchain-packs-config-3",
+      "requirementKey": "project-toolchain-packs",
+      "scenario": "profile ที่ไม่มีอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lingering-test-run-languages-harness",
+      "requirementKey": "lingering-test-run-languages",
+      "scenario": "go test ค้าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lingering-test-run-languages-harness-2",
+      "requirementKey": "lingering-test-run-languages",
+      "scenario": "pytest ช้าจริง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lingering-test-run-languages-harness-3",
+      "requirementKey": "lingering-test-run-languages",
+      "scenario": "JUnit XML",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-paths-hint-commands-quality-doctor",
+      "requirementKey": "quality-paths-hint-commands",
+      "scenario": "go test โฟลเดอร์เดียว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-paths-hint-commands-quality-doctor-2",
+      "requirementKey": "quality-paths-hint-commands",
+      "scenario": "make -C",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-paths-hint-commands-quality-doctor-3",
+      "requirementKey": "quality-paths-hint-commands",
+      "scenario": "ทั้ง repo",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "force-exit-node-options-harness-shell",
+      "requirementKey": "force-exit-node-options",
+      "scenario": "shell line มี --import",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "force-exit-node-options-harness-argv",
+      "requirementKey": "force-exit-node-options",
+      "scenario": "argv มี --test-timeout",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "force-exit-node-options-harness",
+      "requirementKey": "force-exit-node-options",
+      "scenario": "script ที่รับ --test",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/toolchain-packs.test.mjs) && (node --test .claude/harness/tests/node-test-force-exit.test.mjs .claude/harness/tests/quality-runtime.test.mjs)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/toolchain-packs.test.mjs",
+        "node --test .claude/harness/tests/node-test-force-exit.test.mjs .claude/harness/tests/quality-runtime.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

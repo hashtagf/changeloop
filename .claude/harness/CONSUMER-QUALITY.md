@@ -19,6 +19,84 @@ overwrite config or workflows unless `--force`. The committed configuration is
 `quality/foundation-quality.json`. Generated results live under
 `.foundation/quality/results/`.
 
+A provider may declare `"paths": ["backend/**"]` (repository-relative globs).
+Inside a change, without `--full`, a lane whose paths match no changed file is
+not run: it reports `pass` with assurance `not-affected`, is not required, and
+writes no history. It counts as compensating evidence only while the lane's
+latest recorded run passed. Without a change, or with `--full`, every lane
+runs. `doctor` suggests paths for a lane whose command names one directory
+(`cd <dir> &&`, `make -C`, `npm`/`pnpm`/`yarn --prefix|--dir|-C`,
+`go test ./<dir>/...`, `gradle -p`, `cargo --manifest-path`;
+`provider-paths-suggested`) and warns when a lane judged by its exit code
+(kind `command`, no `protocol`) swallows failure with `|| true`, `|| :`, or
+`; exit 0` (`provider-swallows-failure`). Hints never fail the doctor.
+
+A `node --test`, `tsx --test`, or `npx tsx --test` provider command gains
+`--test-force-exit`, also after node options such as `--import tsx`. A test
+lane whose output shows its tests ended long before the run did records
+`lingering` in its history, and readiness `tests-fast` names the open-handle
+fix. Test time is read from node:test, vitest, jest, Playwright, go test,
+pytest, cargo, RSpec, and JUnit XML printed to the output.
+
+## Toolchain packs
+
+Languages are data. `runtime/quality/toolchain-packs.json` ships one pack per
+language or tool: `id` (the profile name), `languages`, `extensions`,
+`markers` (file names), `capabilities`, optional `commands` (per capability,
+candidates `{ command, requires }` tried in order) and `durations` (time
+patterns). Besides JS/TS, Go, Python, PHP, Bash, SQL, MongoDB, HTML and CSS,
+it covers Dart/Flutter, Gradle, Maven, Rust, Ruby, Terraform, Helm, Dockerfile,
+and Kubernetes (kustomize). Discovery proposes a pack command only when the
+pack roots the repository (a marker, or for an extension-only pack a matching
+file, at the top level), every `requires` file exists, and the executable is
+installed or is an existing `./wrapper`; the language-specific discovery of
+JS/TS, Go, Python, and PHP comes first.
+
+A project adds a language, or replaces a shipped pack by `id`, in
+`"toolchains": [ ... ]` of `quality/foundation-quality.json`; its repositories
+then use the pack id as a profile, and `quality discover`/`init` use it. A
+malformed pack fails the config, naming the field; a duration pattern needs a
+capture group for the number (a second one may name the unit). A project pack
+replaces a shipped pack of the same id whole, durations included; its time
+patterns are read for quality lanes (Prove reads the shipped ones). A pack
+without markers or extensions is a profile named by hand, never detected.
+Discovery stops, naming the cause, when the quality config cannot be read.
+
+## Repositories without a test lane
+
+Discovery counts the test files (`*.test.*`, `*.spec.*`, `_test.go`,
+`test_*.py`, `*_test.py`, `*_spec.rb`, `*.cy.*`, `*Test(s).java|kt`,
+`*Test.php`, `*_test.dart`, Rust `tests/*.rs`, files under `__tests__/`) of a
+repository that has no test lane and reports `testFiles`; it is `null`, never
+0, when the walk stops early or no detected language has known test files. With test files and no test script, a
+JS/TS repository gets the runner it installed (`node_modules/.bin`: vitest,
+jest, then playwright). Test commands named in a Makefile target, a CI
+workflow (`.github/workflows`, `.gitlab-ci.yml`, `bitbucket-pipelines.yml`),
+or a README code block become `proposals.test-commands` (`verified: false`,
+at most ten); they never enter `providers`: onboarding offers them, the user
+confirms one, and `quality run --capability test` proves it. With no test
+file, `proposals.test-setup` names a runner to add through `/change`, and
+readiness `tests` reports "the repository has no tests". `.vue`, `.svelte`,
+and `.astro` count as JS/TS.
+
+## Module lanes
+
+A provider key is a capability (`test`) or a capability and a name
+(`test:services/wallet`); `capability` on the provider overrides the prefix.
+`cwd` (relative, inside the repository, without `..`) runs the lane in that
+directory; a missing directory fails the lane. Each lane files its own result,
+history, and baseline (the key with characters outside `A-Za-z0-9.-` as `_`).
+Lanes of one capability together cover it for profiles, compensating
+evidence, readiness, and `--capability`.
+
+Discovery proposes `test:<dir>` and `static-analysis:<dir>` (with `cwd` and
+`paths: ["<dir>/**"]`) for each directory below the root holding a language
+marker, unless the root already has that lane from a marker of the same
+language. A module inside another of the same language joins it; another
+git repository is left out; at most 40 modules are proposed
+(`modulesTruncated` counts the rest). `go test ./...` is proposed at the root
+only with a root `go.mod` or `go.work`.
+
 For JavaScript/TypeScript, discovery recognizes the canonical project-owned
 `foundation:quality:crap` package script and the existing `quality:crap` alias.
 The command must emit `foundation-crap-v1` at

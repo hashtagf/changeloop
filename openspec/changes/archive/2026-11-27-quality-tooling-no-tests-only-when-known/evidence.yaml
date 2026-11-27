@@ -1,0 +1,72 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "no-tests-only-when-known-quality-discover",
+      "requirementKey": "no-tests-only-when-known",
+      "scenario": "Java มีเทสต์",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "no-tests-only-when-known-quality-discover-2",
+      "requirementKey": "no-tests-only-when-known",
+      "scenario": "__tests__",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "no-tests-only-when-known-3",
+      "requirementKey": "no-tests-only-when-known",
+      "scenario": "นับไม่ครบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "no-tests-only-when-known-quality-discover-3",
+      "requirementKey": "no-tests-only-when-known",
+      "scenario": "ภาษาที่ไม่รู้จักรูปแบบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ci-list-commands-quality-discover",
+      "requirementKey": "ci-list-commands",
+      "scenario": "GitLab script แบบรายการ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ci-list-commands-quality-discover-2",
+      "requirementKey": "ci-list-commands",
+      "scenario": "Bitbucket script แบบรายการ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/test-gap-discovery.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

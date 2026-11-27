@@ -13,6 +13,8 @@ import { changesPerRepository, onboardingCandidates } from "../quality/onboardin
 import { guideReadiness } from "../quality/guide-readiness.mjs";
 import { typeCheckExemption } from "../quality/quality-discovery.mjs";
 import { verifyFacts } from "../quality/verify-readiness.mjs";
+import { knownTestFileCount } from "../quality/test-gap-discovery.mjs";
+import { discoverRepositoryQuality } from "../quality/quality-discovery.mjs";
 
 // Criteria that do not apply to a repository, by capability.
 function exemptions(path) {
@@ -24,6 +26,12 @@ import {
 } from "../workflow/validation/project-feature-map.mjs";
 
 const PENDING_LESSONS = new Set(["open", "prose-only"]);
+
+// A test-file count only for a language whose test files are recognised.
+function testFilesOf(path) {
+  const { profiles } = discoverRepositoryQuality({ id: "readiness", path, relativePath: "." });
+  return knownTestFileCount(path, profiles);
+}
 
 function attempt(read) {
   try { return read(); } catch { return undefined; }
@@ -47,6 +55,8 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
       findings: quality?.findings || {},
       statuses: quality?.statuses || {},
       histories: quality?.histories || {},
+      // Counted only where there is no test lane: the readiness row names "no tests".
+      testFiles: quality?.lanes?.test ? null : attempt(() => testFilesOf(root)) ?? null,
       verify: attempt(() => verifyFacts(root)),
       featureMap: map === undefined ? undefined : map && {
         features: Array.isArray(map.features) ? map.features.length : 0,
@@ -86,6 +96,7 @@ export function createPyramidReadinessCommand({ root, laneStates, lessonsValue, 
       const value = pyramidReadiness({ ...facts, featureMap: undefined, ui, configured: true,
         notApplicable: repository && repository.type !== "root" ? exemptions(repository.path) : facts.notApplicable,
         lanes: own.lanes, findings: own.findings, statuses: own.statuses, histories: own.histories || {},
+        testFiles: own.lanes?.test || !repository ? null : attempt(() => testFilesOf(repository.path)) ?? null,
         verify: repository && repository.type !== "root" ? attempt(() => verifyFacts(repository.path)) : facts.verify });
       return { id, onboardedAt: own.onboardedAt || null,
         layers: value.layers.filter((layer) => REPOSITORY_LAYERS.includes(layer.layer))

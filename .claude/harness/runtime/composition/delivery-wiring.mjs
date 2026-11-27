@@ -11,8 +11,8 @@ import { createFeedbackRuntime } from "../observability/feedback-runtime.mjs";
 import { createLandUndo } from "../workflow/land/land-undo.mjs";
 import { createLessonsRuntime } from "../observability/lessons-runtime.mjs";
 import { createOutcomesRuntime, runtimeStates } from "../observability/outcomes-runtime.mjs";
-import { SLOW_CHECK_MS, createCheckReuse, slowCheckMessage } from "../core/check-reuse.mjs";
-import { emitSignal } from "../core/signals.mjs";
+import { createCheckReuse } from "../core/check-reuse.mjs";
+import { noticeSlowTaskCheck } from "../core/node-test-exit.mjs";
 import { escapingImportIssue, escapingImports } from "../workflow/change/repository-escape.mjs";
 import { createProjectFeaturesCommand } from "../workflow/validation/project-feature-map.mjs";
 import { createProductProgressCommand } from "../workflow/validation/product-progress.mjs";
@@ -123,7 +123,7 @@ export function composeDeliveryRuntimes({
         runTaskCheck({ loadRuntime }, id, check);
       const durationMs = Date.now() - started;
       checkReuse.record(id, check.repository, check.command, { status: result?.status, durationMs, source: "advance" });
-      if (durationMs > SLOW_CHECK_MS) emitSignal("slow-check", `NOTICE: ${slowCheckMessage(check.command, durationMs)}`);
+      noticeSlowTaskCheck(check.command, result, durationMs);
       return result;
     }),
     taskChangeIssue: (id, taskId) => {
