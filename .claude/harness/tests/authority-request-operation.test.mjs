@@ -638,3 +638,25 @@ test("session telemetry provenance contains missing ledgers and selects the best
     root: "/workspace", readFile: () => ""
   }, "change-a", "session-a"), {});
 });
+
+// A change stopped the user twice: a passing second wave expired after a
+// type-check repair, and a later failing wave was repaired. Neither was a
+// review that kept failing.
+test("passing waves do not consume the AI review budget, up to three", () => {
+  const wave = (workspaceHash, resultStatus) => ({ workspaceHash, resultStatus });
+  const limit = (delivered, hash) => effectiveReviewAttemptLimit({ maxAiAttempts: 2 }, delivered, hash).maxAiAttempts;
+  assert.equal(limit([wave("w1", "fail"), wave("w2", "pass")], "w3"), 3, "fail then pass: a third wave runs");
+  assert.equal(limit([wave("w1", "fail"), wave("w2", "pass"), wave("w3", "fail")], "w4"), 4,
+    "the closure wave follows the two failing waves, plus the free pass");
+  assert.equal(limit([wave("w1", "fail"), wave("w2", "fail")], "w2"), 2, "two failures on unchanged code still stop");
+  assert.equal(limit([wave("w1", "fail"), wave("w2", "fail")], "w3"), 3, "the closure wave is unchanged");
+  assert.equal(limit([wave("w1", "fail"), wave("w2", "fail"), wave("w3", "fail")], "w4"), 2,
+    "three failures exhaust the route as before");
+  assert.equal(limit([wave("w1", "fail"), wave("w2", "pass")], "w2"), 2,
+    "a pass on unchanged content is not free: there is nothing new to review");
+  const passes = ["a", "b", "c", "d", "e"].map((hash) => wave(hash, "pass"));
+  assert.equal(limit(passes, "f"), 5, "only three passing waves are free");
+  assert.equal(limit([wave("w1", "inconclusive"), wave("w2", "pass")], "w3"), 3, "an inconclusive wave counts");
+  assert.equal(effectiveReviewAttemptLimit({ maxAiAttempts: 2, grantedAiWaveCap: 6 },
+    [wave("w1", "fail"), wave("w2", "pass")], "w3").maxAiAttempts, 6, "a user grant still raises the cap");
+});

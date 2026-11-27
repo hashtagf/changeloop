@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "test-gap-machine-independent-quality-discover",
+      "requirementKey": "test-gap-machine-independent",
+      "scenario": "ไม่มี gradle",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "test-gap-machine-independent-quality-discover-2",
+      "requirementKey": "test-gap-machine-independent",
+      "scenario": "มี gradle",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/test-gap-discovery.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

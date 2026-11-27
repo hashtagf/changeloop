@@ -21,7 +21,20 @@ function repo(t, files) {
   }
   return root;
 }
-const discover = (root) => discoverRepositoryQuality({ id: "root", path: root, relativePath: "." });
+// Discovery proposes a command only for a tool on PATH; a test names the PATH it means
+// so it gives the same result on a machine with gradle (the CI runner) and without.
+function discover(root, path = process.env.PATH) {
+  const saved = process.env.PATH;
+  process.env.PATH = path;
+  try { return discoverRepositoryQuality({ id: "root", path: root, relativePath: "." }); }
+  finally { process.env.PATH = saved; }
+}
+function toolPath(t, names) {
+  const bin = mkdtempSync(join(tmpdir(), "test-gap-bin-"));
+  t.after(() => rmSync(bin, { recursive: true, force: true }));
+  for (const name of names) { writeFileSync(join(bin, name), "#!/bin/sh\n"); chmodSync(join(bin, name), 0o755); }
+  return bin;
+}
 const nuxt = JSON.stringify({ name: "shop", dependencies: { nuxt: "3" } });
 
 test("a Nuxt repository with only .vue sources is JavaScript/TypeScript", (t) => {
@@ -105,9 +118,12 @@ test("Java, Kotlin, PHP, Dart, Rust and __tests__ test files count; a partial wa
     "test/widget_test.dart": "", "tests/integration.rs": "", "src/__tests__/a.js": "", "src/Foo.java": "" });
   assert.equal(countTestFiles(root), 6);
   assert.equal(countTestFiles(root, { maximumEntries: 2 }), null);
-  const java = discover(repo(t, { "build.gradle": "", "src/test/java/FooTest.java": "" }));
+  const gradleRepo = repo(t, { "build.gradle": "", "src/test/java/FooTest.java": "" });
+  const java = discover(gradleRepo, toolPath(t, []));
   assert.equal(java.testFiles, 1);
   assert.equal(java.proposals?.["test-setup"], undefined);
+  assert.deepEqual(discover(gradleRepo, toolPath(t, ["gradle"])).providers.test.command, ["gradle", "test"],
+    "with gradle installed the repository gets its lane instead");
   const jest = discover(repo(t, { "package.json": nuxt, "src/__tests__/a.js": "" }));
   assert.equal(jest.testFiles, 1);
 });

@@ -11,6 +11,10 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- A passing AI review wave that expired because the code moved on no longer
+  counts toward the review cap (up to three such waves), and the closure wave
+  follows the failing waves, so Prove reviews the new delta itself instead of
+  stopping the user.
 - Land no longer keeps a sandbox because its backup failed: `git add -A`
   refused the `:(exclude)test-results/**` pathspec once a test had written
   ignored output there.

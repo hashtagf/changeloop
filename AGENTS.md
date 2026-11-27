@@ -25,6 +25,18 @@ build|proven|archived`; primitive commands remain compatibility/diagnostic
 surfaces. The compiled OpenSpec packet—not the draft or `.foundation`—is the
 agreement source of truth.
 
+## Design principles
+
+Judge every change to Change Loop against these owner principles:
+
+- Change Loop must never block the agent or the user. Stop only for a real
+  user decision, and carry the work forward on its own everywhere else.
+- Change Loop keeps every task on the project's standard workflow. Raise the
+  standard with checks and evidence, never by adding waits.
+- Change Loop must never slow the work down. Measure harness time from real
+  logs and remove waste such as idle test runs, repeated runs, and avoidable
+  user stops.
+
 ## Non-negotiable invariants
 
 - Preserve public command names and arguments unless the task explicitly

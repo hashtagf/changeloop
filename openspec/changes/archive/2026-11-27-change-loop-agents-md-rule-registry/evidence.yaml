@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "design-principles-recorded-agents-md",
+      "requirementKey": "design-principles-recorded",
+      "scenario": "อ่านหลักการ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "design-principles-recorded-scripts-quality-scorecard-mjs-check",
+      "requirementKey": "design-principles-recorded",
+      "scenario": "registry ครบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test scripts/quality/test/scorecard.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

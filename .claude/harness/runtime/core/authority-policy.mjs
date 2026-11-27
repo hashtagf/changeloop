@@ -53,19 +53,31 @@ export function reviewClosureWaveAvailable(delivered = [], workspaceHash = null)
     Boolean(workspaceHash) && workspaceHash !== latest.workspaceHash;
 }
 
+// The cap stops a review that keeps failing. A wave that passed and expired
+// only because the code moved on (a type-check repair, an amendment) is not
+// such a loop: up to this many passing waves do not consume the budget, so
+// Prove reviews the new delta itself instead of stopping the user.
+const FREE_PASSING_WAVES = 3;
+
 export function effectiveReviewAttemptLimit(routing = {}, delivered = [], workspaceHash = null) {
   const latest = delivered.at(-1) || null;
   const promotesLow = routing.tier === "low" && delivered.length >= 1 &&
     Boolean(workspaceHash) && workspaceHash !== latest?.workspaceHash;
   const base = promotesLow ? 2 : Number(routing.maxAiAttempts || 2);
-  const closureWave = base === 2 && reviewClosureWaveAvailable(delivered, workspaceHash);
+  // Only a pass the code has since moved past is free: reviewing unchanged
+  // content after a passing verdict again is never needed.
+  const freePasses = Math.min(FREE_PASSING_WAVES, delivered.filter((attempt) =>
+    attempt?.resultStatus === "pass" && Boolean(workspaceHash) && attempt.workspaceHash !== workspaceHash).length);
+  // The closure wave follows the waves that did not pass.
+  const counted = delivered.filter((attempt) => attempt?.resultStatus !== "pass");
+  const closureWave = base === 2 && reviewClosureWaveAvailable(counted, workspaceHash);
   // An `authority extend-review` grant allows exactly one wave beyond those
   // delivered when the user granted it.
   const granted = Math.max(0, Number(routing.grantedAiWaveCap || 0));
   return {
     promotesLow,
     closureWave,
-    maxAiAttempts: Math.max(closureWave ? 3 : base, granted)
+    maxAiAttempts: Math.max((closureWave ? 3 : base) + freePasses, granted)
   };
 }
 

@@ -467,12 +467,12 @@ export function createProofExecutionRuntime({
         row.route === "CONTRACT_DECISION_REQUIRED")) {
         // The repaired final delta gets one closure review before any person
         // is asked to accept it unreviewed.
-        // A user-granted extra wave reviews it the same way.
-        if (exhausted.every((row) => reviewClosureWaveAvailable(delivered,
-          currentProviderHash(id, closureProviders.get(row), readiness.workspaceHash))) ||
-            delivered.length < effectiveReviewAttemptLimit(
-              reviewPolicy(id), delivered, null).maxAiAttempts)
-          return { readiness, authorityRequests };
+        // A user-granted extra wave reviews it the same way; the cap is judged on the repaired content.
+        if (exhausted.every((row) => {
+          const subject = currentProviderHash(id, closureProviders.get(row), readiness.workspaceHash);
+          return reviewClosureWaveAvailable(delivered, subject) ||
+            delivered.length < effectiveReviewAttemptLimit(reviewPolicy(id), delivered, subject).maxAiAttempts;
+        })) return { readiness, authorityRequests };
         return { outcome: stopProofAdvance(
           writeReviewExhaustedStop(id, readiness, exhausted, executedProviders)) };
       }

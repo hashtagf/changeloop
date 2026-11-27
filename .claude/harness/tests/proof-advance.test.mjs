@@ -776,6 +776,24 @@ assert.equal(repairedProviderResult.status, "WAITING_EXTERNAL",
 assert.equal(repairedProviderClosure.requests.length, 1);
 
 process.exitCode = 0;
+// fail, pass, fail, then a repair: the passing wave the code moved past is
+// free, so the repaired delta gets its closure review instead of a user stop.
+const passBetweenFailures = fixture({
+  executionNeeded: false,
+  providerHashes: { review: "review-provider-repaired" },
+  deliveredAiAttempts: [
+    { resultStatus: "fail", workspaceHash: "review-provider-w1" },
+    { resultStatus: "pass", workspaceHash: "review-provider-w2" },
+    { resultStatus: "fail", workspaceHash: "review-provider-w3" }
+  ],
+  closureResult: { closed: false, route: "REVIEW_ROUTE_EXHAUSTED", findingIds: ["F-FINAL"] }
+});
+const passBetweenResult = await quiet(() => passBetweenFailures.runtime.proofAdvance("change-a"));
+assert.equal(passBetweenResult.status, "WAITING_EXTERNAL",
+  "fail/pass/fail then repair reviews the repaired delta instead of stopping the user");
+assert.equal(passBetweenFailures.requests.length, 1);
+
+process.exitCode = 0;
 const unchangedProviderClosure = fixture({
   executionNeeded: false,
   providerHashes: { review: "review-provider-unchanged" },
@@ -888,10 +906,11 @@ try {
 // every allotted AI wave delivered, `authority run` is guaranteed to block, so
 // the wait must route to the external recording template instead.
 {
+  // Two waves that did not pass on this same content exhaust the route.
   const capped = fixture({
     deliveredAiAttempts: [
-      { digest: "wave-1", resultStatus: "fail" },
-      { digest: "wave-2", resultStatus: "pass" }
+      { digest: "wave-1", resultStatus: "fail", workspaceHash: "workspace-a" },
+      { digest: "wave-2", resultStatus: "fail", workspaceHash: "workspace-a" }
     ]
   });
   const wait = await quiet(() => capped.runtime.proofAdvance("change-a"));
@@ -902,6 +921,20 @@ try {
     "an exhausted AI review route prescribes the external recording template");
   assert.doesNotMatch(command, /authority run/,
     "an exhausted AI review route must not prescribe a blocked authority run");
+}
+
+// A passing wave whose verdict expired because the code moved on does not
+// consume the budget: the route runs one more AI wave instead of stopping.
+{
+  const moved = fixture({
+    deliveredAiAttempts: [
+      { digest: "wave-1", resultStatus: "fail", workspaceHash: "workspace-0" },
+      { digest: "wave-2", resultStatus: "pass", workspaceHash: "workspace-0" }
+    ]
+  });
+  const wait = await quiet(() => moved.runtime.proofAdvance("change-a"));
+  assert.doesNotMatch(wait.next?.[0]?.command || "", /authority status .* --template/,
+    "a moved-past passing wave leaves the AI route open");
 }
 const hostKeys = ["FOUNDATION_CLAUDE_SESSION_ID", "FOUNDATION_SESSION_ID", "CODEX_THREAD_ID",
   "FOUNDATION_MAIN_SESSION_ID", "FOUNDATION_MAIN_IDENTITY", "FOUNDATION_MAIN_PROVIDER_FAMILY",
@@ -1192,9 +1225,9 @@ function concurrentFixture(options = {}) {
 }
 
 {
-  // The wave cap never starts a concurrent AI review.
+  // The wave cap never starts a concurrent AI review (two waves that did not pass).
   const run = concurrentFixture({ deliveredAiAttempts: [
-    { digest: "wave-1", resultStatus: "fail" }, { digest: "wave-2", resultStatus: "pass" }
+    { digest: "wave-1", resultStatus: "fail" }, { digest: "wave-2", resultStatus: "fail" }
   ] });
   const wait = await run.advance();
   assert.equal(run.reviewCommands.length, 0);

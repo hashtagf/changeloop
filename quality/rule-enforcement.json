@@ -682,6 +682,34 @@
       "enforcedBy": [
         ".claude/tests/harness/run-installer-tests.sh"
       ]
+    },
+    {
+      "id": "principle-never-block",
+      "source": "AGENTS.md",
+      "quote": "Change Loop must never block the agent or the user.",
+      "layer": "judgment",
+      "judgment": "a design principle every change is judged against; the concrete stops it governs are tested where they live (blocking policy, review wave budget, Land gate)"
+    },
+    {
+      "id": "principle-stop-only-for-decisions",
+      "source": "AGENTS.md",
+      "quote": "Stop only for a real user decision, and carry the work forward on its own everywhere else.",
+      "layer": "judgment",
+      "judgment": "whether a stop is a real user decision needs its context; each envelope route that asks the user is covered by its own advance and authority tests"
+    },
+    {
+      "id": "principle-standard-without-waits",
+      "source": "AGENTS.md",
+      "quote": "Raise the standard with checks and evidence, never by adding waits.",
+      "layer": "judgment",
+      "judgment": "a review criterion for new gates: a proposed gate is weighed by the waste it adds, which only a reviewer of that change can judge"
+    },
+    {
+      "id": "principle-never-slow",
+      "source": "AGENTS.md",
+      "quote": "Change Loop must never slow the work down.",
+      "layer": "judgment",
+      "judgment": "measured from operation logs (stage spans, command durations) per change rather than by a static check; regressions are found by comparing real runs"
     }
   ],
   "unregisteredRuleCeiling": 0
