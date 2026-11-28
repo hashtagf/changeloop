@@ -11,7 +11,7 @@ import {
   activeTelemetryRunId, appendTelemetryJsonLines, createTelemetryRuntime, normalizeTelemetryBatch, rebindTelemetryWindow, replaceTelemetryJsonLines
 } from "../runtime/observability/telemetry-runtime.mjs";
 import {
-  blockerTelemetryValue, sanitizedBlockerReason, commandTelemetryEligible, commandTelemetryRow, commandTelemetryStatus, createCommandPhaseRecorder, recordCommandTelemetry
+  blockerTelemetryValue, reclassifiedBlockerCode, sanitizedBlockerReason, commandTelemetryEligible, commandTelemetryRow, commandTelemetryStatus, createCommandPhaseRecorder, recordCommandTelemetry
 } from "../runtime/observability/command-telemetry.mjs";
 import {
   lifecycleSchedulerMetrics, lifecycleStageMetrics
@@ -186,6 +186,33 @@ test("blocker text naming several kinds takes the first by precedence", () => {
   assert.equal(blocker.reason, "authority token conflicts with workspace evidence");
   assert.equal(blockerTelemetryValue("sandbox lease conflict", {}).code, "resource-conflict");
   assert.equal(blockerTelemetryValue("token count drifted", {}).code, "policy-guard");
+});
+
+test("a failing quality gate is recorded as quality-gate with the prove route", () => {
+  const blocker = blockerTelemetryValue("consumer quality gate fail",
+    { changeId: "a", operationName: "advance", phase: "prove" });
+  assert.equal(blocker.code, "quality-gate");
+  assert.equal(blocker.classification, "quality");
+  assert.equal(blocker.recovery, "cloop advance a --through proven");
+  assert.equal(blockerTelemetryValue("consumer quality gate unavailable", {}).code, "quality-gate");
+});
+
+test("a change that was never started is recorded as unknown-change with the start route", () => {
+  const blocker = blockerTelemetryValue("unknown change 'a'",
+    { changeId: "a", operationName: "advance", phase: "meta" });
+  assert.equal(blocker.code, "unknown-change");
+  assert.equal(blocker.classification, "input");
+  assert.equal(blocker.recovery, "cloop change start .foundation/drafts/a");
+  // An earlier class still wins by precedence.
+  assert.equal(blockerTelemetryValue("unknown change lease conflict", {}).code, "resource-conflict");
+});
+
+test("a recorded policy guard is regrouped by its reason; other codes are kept", () => {
+  assert.equal(reclassifiedBlockerCode("policy-guard", "consumer quality gate fail"), "quality-gate");
+  assert.equal(reclassifiedBlockerCode("policy-guard", "unknown change 'x'"), "unknown-change");
+  assert.equal(reclassifiedBlockerCode("policy-guard", "unclassified stop"), "policy-guard");
+  assert.equal(reclassifiedBlockerCode("policy-guard", null), "policy-guard");
+  assert.equal(reclassifiedBlockerCode("contract-invalid", "consumer quality gate fail"), "contract-invalid");
 });
 
 test("unmatched blocker text keeps the policy guard but records its reason", () => {

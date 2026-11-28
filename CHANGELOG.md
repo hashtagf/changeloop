@@ -9,6 +9,15 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Fixed
+
+- A stop caused by a failing consumer quality gate is recorded as
+  `quality-gate` (recovery: prove again), and a command naming a change that
+  was never started as `unknown-change` (recovery: `change start`), instead
+  of the generic `policy-guard`. `lessons` regroups older `policy-guard` rows
+  by their recorded reason, and a recurring `quality-gate` lesson counts as
+  enforced by the gate that raised it.
+
 ## [3.7.10] - 2026-11-28
 
 ### Added

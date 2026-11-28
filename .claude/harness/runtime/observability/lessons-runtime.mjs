@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { jsonLines, recordedChangeIds } from "./outcomes-runtime.mjs";
 import { LESSON_CODE, PROSE_FILE } from "../contracts/lesson-enforcement.mjs";
+import { reclassifiedBlockerCode } from "./command-telemetry.mjs";
 
 // Lessons: blocker codes and review finding codes that recur across distinct
 // changes become advisory proposals for a permanent check, made through the
@@ -66,6 +67,13 @@ export function enforcementKind(cell, exists) {
 }
 
 const STATUS_BY_KIND = { check: "enforced", judgment: "judgment", prose: "prose-only", open: "open" };
+
+// Blocker codes raised by a check: the stop is that check catching the defect,
+// so the lesson is already enforced. How often agents reach Prove with a
+// defect is measured apart, as the first-proof pass rate.
+const SELF_ENFORCED_BLOCKERS = Object.freeze({
+  "quality-gate": "the consumer quality gate that raised it"
+});
 
 // The change a lesson's check is adopted through: a starting draft the agent
 // completes with the files and command, then starts with `change start`.
@@ -182,7 +190,8 @@ export function createLessonsRuntime({
     for (const id of recordedChangeIds({ runtimeDir, evidenceDir, logsDir })) {
       for (const row of jsonLines(join(logsDir, id, "operations.jsonl")) || []) {
         if (row?.status !== "blocked") continue;
-        const code = row.blocker?.code;
+        // Rows recorded as the generic policy guard regroup by their reason.
+        const code = reclassifiedBlockerCode(row.blocker?.code, row.blocker?.reason);
         if (validCode(code) && code !== "untyped") observe("blocker", code, id);
         else uncoded.blocker += 1;
       }
@@ -201,8 +210,10 @@ export function createLessonsRuntime({
       .map((group) => {
         const check = suggestedCheck(group.code);
         const enforcement = enforcementFor(check);
-        const cell = enforcedBy(group.code, enforcedRows);
-        const status = STATUS_BY_KIND[enforcementKind(cell, projectFileExists)];
+        const documented = enforcedBy(group.code, enforcedRows);
+        const self = !documented && group.source === "blocker" ? SELF_ENFORCED_BLOCKERS[group.code] || null : null;
+        const cell = documented || self;
+        const status = self ? "enforced" : STATUS_BY_KIND[enforcementKind(cell, projectFileExists)];
         const changes = [...group.changes].sort();
         return {
           code: group.code,

@@ -1,0 +1,76 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "typed-gate-and-unknown-change-blockers-consumer-quality-gate-fai",
+      "requirementKey": "typed-gate-and-unknown-change-blockers",
+      "scenario": "quality gate ไม่ผ่าน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "typed-gate-and-unknown-change-blockers-unknown-change-a",
+      "requirementKey": "typed-gate-and-unknown-change-blockers",
+      "scenario": "change ที่ยังไม่เริ่ม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "typed-gate-and-unknown-change-blockers-unclassified-stop",
+      "requirementKey": "typed-gate-and-unknown-change-blockers",
+      "scenario": "ข้อความไม่เข้าคลาสไหน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lessons-regroup-generic-history-change-row-policy-guard-reason-c",
+      "requirementKey": "lessons-regroup-generic-history",
+      "scenario": "ประวัติ gate เดิม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lessons-regroup-generic-history-change-row-policy-guard-reason-u",
+      "requirementKey": "lessons-regroup-generic-history",
+      "scenario": "ประวัติ unknown change เดิม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lessons-regroup-generic-history-row-contract-invalid-reason-cons",
+      "requirementKey": "lessons-regroup-generic-history",
+      "scenario": "รหัสอื่นไม่ถูกแตะ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/telemetry-append.test.mjs) && (node --test .claude/harness/tests/outcomes-lessons.test.mjs)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/telemetry-append.test.mjs",
+        "node --test .claude/harness/tests/outcomes-lessons.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

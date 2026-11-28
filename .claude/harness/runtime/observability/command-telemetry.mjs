@@ -40,6 +40,20 @@ const BLOCKER_KINDS = Object.freeze([
     pattern: /protocol|provider|adapter|criticalcase|critical case|evidence|claim|contract/i,
     summary: "The executable change or evidence contract is incomplete",
     recovery: (id) => `cloop change validate ${id}`
+  },
+  {
+    // The consumer quality gate found a product defect: a check doing its job.
+    code: "quality-gate", classification: "quality",
+    pattern: /\bquality gate\b/i,
+    summary: "A project quality check failed; repair the product and prove again",
+    recovery: (id) => `cloop advance ${id} --through proven`
+  },
+  {
+    // A lifecycle command named a change that was never started.
+    code: "unknown-change", classification: "input",
+    pattern: /\bunknown change\b/i,
+    summary: "The command named a change that has not been started",
+    recovery: (id) => `cloop change start .foundation/drafts/${id}`
   }
 ]);
 
@@ -93,6 +107,15 @@ function blockerKind(code, source) {
   return declared ||
     BLOCKER_KINDS.find((candidate) => candidate.pattern.test(source)) ||
     POLICY_GUARD_KIND;
+}
+
+// Rows recorded before a kind existed carry the generic policy guard; their
+// sanitized reason still names the cause, so readers can regroup them. Any
+// other recorded code is kept as is.
+/** @param {unknown} code @param {unknown} reason */
+export function reclassifiedBlockerCode(code, reason) {
+  if (code !== POLICY_GUARD_KIND.code) return code;
+  return blockerKind(null, String(reason || "")).code;
 }
 
 function safeChangeId(value) {

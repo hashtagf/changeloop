@@ -348,6 +348,49 @@ test("a blocker code recurring across three changes becomes a lesson", (t) => {
     "free-text reasons are never exported");
 });
 
+test("generic policy-guard history regroups as a quality-gate lesson enforced by the gate", (t) => {
+  const fixture = project(t);
+  for (const id of ["a", "b", "c"])
+    fixture.change(id, {}, { operations: [
+      { status: "blocked", blocker: { code: "policy-guard", reason: "consumer quality gate fail" } }
+    ] });
+  const value = lessons(fixture, 3);
+  assert.equal(value.lessons.length, 1);
+  const [lesson] = value.lessons;
+  assert.equal(lesson.code, "quality-gate");
+  assert.equal(lesson.changeCount, 3);
+  assert.equal(lesson.status, "enforced");
+  assert.equal(lesson.enforcedBy, "the consumer quality gate that raised it");
+  assert.equal(lesson.adoption.draft, null);
+  assert.equal(value.lessons.some((row) => row.code === "policy-guard"), false);
+});
+
+test("regrouped unknown-change and unmatched history stay below the lesson floor", (t) => {
+  const fixture = project(t);
+  for (const id of ["a", "b"])
+    fixture.change(id, {}, { operations: [
+      { status: "blocked", blocker: { code: "policy-guard", reason: `unknown change '${id}'` } }
+    ] });
+  fixture.change("c", {}, { operations: [
+    { status: "blocked", blocker: { code: "policy-guard", reason: "advance decision metadata requires --decision" } }
+  ] });
+  assert.deepEqual(lessons(fixture, 3).lessons, []);
+  const [lesson] = lessons(fixture, 2).lessons;
+  assert.equal(lesson.code, "unknown-change");
+  assert.equal(lesson.status, "open");
+});
+
+test("a recorded code other than the policy guard is never regrouped", (t) => {
+  const fixture = project(t);
+  for (const id of ["a", "b", "c"])
+    fixture.change(id, {}, { operations: [
+      { status: "blocked", blocker: { code: "contract-invalid", reason: "consumer quality gate fail" } }
+    ] });
+  const [lesson] = lessons(fixture, 3).lessons;
+  assert.equal(lesson.code, "contract-invalid");
+  assert.equal(lesson.status, "open");
+});
+
 test("a lesson recorded as enforced in openspec/lessons.md names its check", (t) => {
   const fixture = project(t);
   for (const id of ["a", "b"])
