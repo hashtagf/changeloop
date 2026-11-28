@@ -1,0 +1,6 @@
+# Tasks
+
+> This is the sole implementation ledger.
+
+- [x] **T001** workspaceSetupPlan และ dependency digest รู้จัก lockfile ของทุก ecosystem [key:polyglot-lockfile-install] [kind:implementation] [paths:.claude/harness/runtime/workflow/sandbox/sandbox-setup.mjs,.claude/harness/tests/sandbox-polyglot-setup.test.mjs,.claude/harness/lifecycle/build.md,.claude/harness/README.md,.claude/tests/run-all.sh,.claude/tests/README.md,CHANGELOG.md] [claims:polyglot-lockfile-install-setup,polyglot-lockfile-install-setup-2,polyglot-lockfile-install-setup-3,polyglot-lockfile-install-setup-4,polyglot-lockfile-install-setup-5,polyglot-lockfile-install-setup-6,polyglot-lockfile-install-dependency-digest] — verify: `node --test .claude/harness/tests/sandbox-polyglot-setup.test.mjs`
+- [x] **T002** repository ลูกที่เขียนได้ได้การติดตั้งที่ตรวจพบและ retry [key:sibling-repository-install] [kind:implementation] [paths:.claude/harness/runtime/workflow/sandbox/sandbox-repositories.mjs,.claude/harness/tests/sandbox-polyglot-setup.test.mjs,.claude/harness/README.md,CHANGELOG.md] [depends:T001] [claims:sibling-repository-install-sandbox,sibling-repository-install-sandbox-2,sibling-repository-install-lifecycle-resume] — verify: `node --test .claude/harness/tests/sandbox-polyglot-setup.test.mjs`

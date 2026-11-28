@@ -1,0 +1,257 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "runner-summary-counts-output-1-failed-5-passed-2-skipped-in-0-12",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "pytest",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-test-result-cargo-3-passed-0-failed",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "cargo หลาย crate",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-class-time-elapsed-tests-run-7-fail",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "Maven",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-ok-5-tests-10-assertions",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "PHPUnit",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-passed-failed-0-passed-5-skipped-0",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "dotnet",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-00-01-4-1-some-tests-failed",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "Dart",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-executed-6-tests-with-0-failures-0",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "Swift",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-1-doctest-5-tests-0-failures",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "ExUnit",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-5-examples-1-failure-5-runs-9-asser",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "RSpec และ Minitest",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-pass-fail-fail-package",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "go test -v",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-fail-pkg-build-failed",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "go build error",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-build-successful",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "ไม่มีบรรทัดสรุป",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "runner-summary-counts-output-footer-vitest-pytest",
+      "requirementKey": "runner-summary-counts",
+      "scenario": "parser เดิมมาก่อน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "junit-xml-counts-xml-testsuites-tests-4-failures-1-errors-0-skip",
+      "requirementKey": "junit-xml-counts",
+      "scenario": "testsuites",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "junit-xml-counts-report-test-a-xml-3-test-b-xml-2",
+      "requirementKey": "junit-xml-counts",
+      "scenario": "หลาย testsuite",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "junit-xml-counts-report",
+      "requirementKey": "junit-xml-counts",
+      "scenario": "ไฟล์เก่า",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "junit-xml-counts-testsuite-tests-many",
+      "requirementKey": "junit-xml-counts",
+      "scenario": "attribute ไม่ใช่ตัวเลข",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "test-provider-without-package-json-repo-package-json-quality-con",
+      "requirementKey": "test-provider-without-package-json",
+      "scenario": "จาก quality lane",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "test-provider-without-package-json-repo-cargo-toml-quality-confi",
+      "requirementKey": "test-provider-without-package-json",
+      "scenario": "จาก discovery",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "test-provider-without-package-json-quality-config-test-a-test-b",
+      "requirementKey": "test-provider-without-package-json",
+      "scenario": "หลาย lane",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "test-provider-without-package-json-repo-manifest-quality-config",
+      "requirementKey": "test-provider-without-package-json",
+      "scenario": "ไม่พบ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-path-kinds-src-test-java-footest-java-app-footest-kt",
+      "requirementKey": "polyglot-path-kinds",
+      "scenario": "เทสต์ JVM",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-path-kinds-billing-tests-invoicespec-cs",
+      "requirementKey": "polyglot-path-kinds",
+      "scenario": ".NET",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-path-kinds-pom-xml-app-build-gradle-kts-api-csproj-pubs",
+      "requirementKey": "polyglot-path-kinds",
+      "scenario": "manifest",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-path-kinds-src-contest-java-src-latest-cs",
+      "requirementKey": "polyglot-path-kinds",
+      "scenario": "คำที่ไม่ใช่เทสต์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-path-kinds-task-verify-gradlew-test-tests-src-test-java",
+      "requirementKey": "polyglot-path-kinds",
+      "scenario": "verify ไฟล์ที่ไม่มี",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/runner-summaries.test.mjs) && (node --test .claude/harness/tests/evidence-bootstrap.test.mjs) && (node --test .claude/harness/tests/polyglot-path-kinds.test.mjs)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/runner-summaries.test.mjs",
+        "node --test .claude/harness/tests/evidence-bootstrap.test.mjs",
+        "node --test .claude/harness/tests/polyglot-path-kinds.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

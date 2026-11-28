@@ -233,16 +233,14 @@ export function designBlueprintWarnings(draft) {
 // Known runners whose default output carries no test result Prove can read.
 // Advisory only: an unknown runner is never flagged, and a runner configured
 // for a readable report is left alone. `go test` prints `ok <package>` or
-// `ok <package> (cached)`; with -v each test prints `--- PASS`. Its -json
-// stream is one JSON object per line, which no Prove parser counts either.
+// `ok <package> (cached)`; with -v each test prints `--- PASS` and with -json
+// one event per line, and Prove counts both.
 const UNCOUNTED_RUNNERS = Object.freeze([{
   runner: "go test",
   detect: /(?:^|[\s;&|(])go\s+test\b/,
-  countable: /(?:^|\s)-(?:v|test\.v)(?:=true)?(?=\s|$)/,
+  countable: /(?:^|\s)-(?:v|test\.v|json)(?:=true)?(?=\s|$)/,
   advice: "it prints only 'ok <package>' (or '(cached)'), which carries no test result, so " +
-    "Prove's test discovery is inconclusive; use 'go test -v ./...' so each test prints " +
-    "'--- PASS' (the rapid lane accepts that), and for a counted result print TAP ('1..N') " +
-    "or a JSON totalTests summary"
+    "Prove's test discovery is inconclusive; use 'go test -v ./...' (or -json) so Prove counts each test"
 }]);
 
 export function verifyCountAdvisories(tasks) {
@@ -261,9 +259,12 @@ export function verifyCountAdvisories(tasks) {
 // A test path named in a task's verify command, e.g. `npx vitest
 // tests/unit/card.spec.js`. Only file-shaped tokens with a test marker count.
 const TEST_FILE = /(?:^|\s|["'=])((?:[\w.@-]+\/)*[\w.@-]+\.(?:spec|test)\.[a-z]+)(?=$|[\s"';:)])/gi;
+// Other languages' test files: FooTest.java, calc_test.go, calc_spec.rb, test_calc.py.
+const LANGUAGE_TEST_FILE = /(?:^|\s|["'=])((?:[\w.@-]+\/)*(?:[\w.-]*Tests?\.(?:java|kt|scala|groovy|cs|php|swift)|[\w.-]+_(?:test|spec)\.(?:go|py|rb|dart|exs)|test_[\w.-]+\.py))(?=$|[\s"';:)])/g;
 
 function verifyTestFiles(verify) {
-  return [...String(verify || "").matchAll(TEST_FILE)].map((match) => match[1]);
+  const text = String(verify || "");
+  return [...new Set([...text.matchAll(TEST_FILE), ...text.matchAll(LANGUAGE_TEST_FILE)].map((match) => match[1]))];
 }
 
 // A task that changes behavior must own the tests for it. A consumer plan kept

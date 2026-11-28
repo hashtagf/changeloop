@@ -855,6 +855,25 @@ each test's and subtest's last `pass`, `fail`, or `skip` counts once, test names
 are critical-case IDs, and a package that fails without a failing test (a build
 error) counts as a failure.
 
+When none of those count, the default summaries of other languages' runners
+do: pytest (`5 passed, 1 failed in 0.1s`), cargo test (every `test result:`
+line added up), Maven Surefire (the total `Tests run:` line), PHPUnit, dotnet
+test (every project line, or `Test summary:`), dart/flutter test
+(`+5 -1: Some tests failed.`), swift test (XCTest and swift-testing), ExUnit,
+RSpec, Minitest, and `go test -v` (each `--- PASS|FAIL|SKIP` line, with a
+package that fails without a failing test counted as a failure). JUnit XML is
+counted from `testsuites`, else summed `testsuite`, attributes, with each
+`testcase` as a critical case; a provider `report` may name one XML file or a
+report directory (`target/surefire-reports`, `build/test-results/test`), whose
+`.xml` files written by this run are added up (a directory is read, not kept
+as an artifact). Only these exact shapes count.
+
+A repository without `package.json` and without a configured test provider
+gets one from its test lane in `quality/foundation-quality.json` (several
+lanes are chained and proposed for review), else from the test command quality
+discovery detects for its language; a single-repository project wires it
+automatically.
+
 The configured structured JSON report must expose a non-negative integer such as
 `numTotalTests`, `totalTests`, `testCount`, or `expected`. If the command passes
 but no deterministic count is available, test evidence may pass while discovery

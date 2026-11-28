@@ -117,7 +117,7 @@ export function createChangeValidationRuntime({
   authorityPreflight = (..._args) => ({ status: "READY", blockers: [], decision: null }),
   executionContract = null,
   foundationPolicy = () => ({ quality: { changeGate: "off" } }),
-  fail: terminalFail
+  discoverTestCommand = undefined, fail: terminalFail // quality discovery: a test provider without package.json
 }) {
   let activeValidationCapture = null;
   const fail = (message) => {
@@ -608,7 +608,7 @@ export function createChangeValidationRuntime({
       knownProviders,
       commandExists,
       stableHash,
-      declaredSurface: state.declaredSurface || []
+      declaredSurface: state.declaredSurface || [], discoverTestCommand
     });
   }
 

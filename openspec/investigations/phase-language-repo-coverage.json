@@ -1,0 +1,85 @@
+{
+  "version": 2,
+  "id": "phase-language-repo-coverage",
+  "language": "th",
+  "purpose": "research",
+  "mode": "analyze",
+  "problem": "ทุก phase (Investigate, Change, Build, Prove, Land) รองรับทุกภาษาโปรแกรมและหลาย repository แล้วหรือยัง",
+  "intent": {
+    "goal": "รู้ว่าแต่ละ phase ทำงานกับภาษาและโครงสร้าง repo ใดได้เองโดยไม่ต้องตั้งค่า และตรงไหนที่ agent ต้องตั้งค่าเองหรือได้ผลลดลง",
+    "outcome": "ตารางช่องว่างตาม phase และภาษา พร้อมลำดับที่ควรแก้",
+    "actors": ["maintainer", "consumer agent"],
+    "scope": ["toolchain packs", "sandbox setup", "test evidence discovery", "test count parsing", "test discrimination", "path classification", "multi-repository setup"]
+  },
+  "requirements": [],
+  "conversation": [],
+  "questions": [],
+  "experiments": [],
+  "work": [],
+  "historyGaps": [],
+  "activeChange": null,
+  "sources": [
+    ".claude/harness/runtime/quality/toolchain-packs.json",
+    ".claude/harness/runtime/workflow/sandbox/sandbox-setup.mjs",
+    ".claude/harness/runtime/workflow/sandbox/sandbox-repositories.mjs",
+    ".claude/harness/runtime/evidence/evidence-bootstrap.mjs",
+    ".claude/harness/runtime/evidence/evidence-results.mjs",
+    ".claude/harness/runtime/evidence/adapter-runtime.mjs",
+    ".claude/harness/runtime/evidence/adapter-reports.mjs",
+    ".claude/harness/runtime/evidence/test-discrimination.mjs",
+    ".claude/harness/runtime/workflow/validation/dev-document.mjs",
+    ".claude/harness/runtime/workflow/validation/design-blueprints.mjs",
+    ".claude/harness/runtime/workflow/draft/amendment-verify.mjs",
+    "docs/reports/scenario-smoke-candidate-ee09e1c0-2026-11-28.md"
+  ],
+  "facts": [
+    {
+      "key": "packs",
+      "statement": "toolchain pack มี 18 ตัว: JS/TS, Go, Python, PHP, Bash, SQL, MongoDB, HTML, CSS แบบเต็ม capability และ Dart/Flutter, JVM Gradle, JVM Maven, Rust, Ruby (test+static), Terraform, Helm, Dockerfile, Kubernetes (static เท่านั้น); ไม่มี .NET, Swift, Elixir, C/C++, Scala",
+      "sources": [".claude/harness/runtime/quality/toolchain-packs.json"]
+    },
+    {
+      "key": "build-setup-js-only",
+      "statement": "Build ติดตั้ง dependency ให้เองเฉพาะ root workspace ที่มี package.json พร้อม lockfile ของ npm/pnpm/yarn/bun ภาษาอื่น (เช่น vendor/ ของ composer, .venv ของ Python) ต้องตั้ง sandbox.setupCommand เอง",
+      "sources": [".claude/harness/runtime/workflow/sandbox/sandbox-setup.mjs"]
+    },
+    {
+      "key": "sibling-setup-configured-only",
+      "statement": "repository อื่นนอกจาก root ใน topology หลาย repo ไม่มีการติดตั้งจาก lockfile อัตโนมัติ รันเฉพาะ setupCommand ที่ประกาศ แม้เป็น repo JS",
+      "sources": [".claude/harness/runtime/workflow/sandbox/sandbox-repositories.mjs"]
+    },
+    {
+      "key": "prove-test-discovery-js-only",
+      "statement": "Prove หา test provider เองได้เฉพาะ repo ที่มี package.json (vitest, jest, mocha, node --test) ภาษาอื่นได้ unresolved 'configure a project-owned test command in execution.yaml' ให้ agent ตั้งเอง ส่วน static-analysis ใช้ consumer quality gate ที่ครอบทุก pack",
+      "sources": [".claude/harness/runtime/evidence/evidence-bootstrap.mjs"]
+    },
+    {
+      "key": "test-count-parsers",
+      "statement": "receipt discovery ต้องการจำนวนเทสต์; parser นับได้จาก JSON (numTotalTests/totalTests/tests/testCount/expected), go test -json, TAP, node spec, vitest/jest footer, python unittest และ shell assertion; ไม่มี JUnit XML; นอก rapid lane ผลที่นับไม่ได้เป็น inconclusive ลองป้อนบรรทัดสรุปมาตรฐาน: pytest, cargo, rspec, go -v ได้แค่ marker แบบ rapid; maven, gradle, phpunit, dotnet, dart/flutter, swift, mix ไม่ได้ทั้งสองแบบ",
+      "sources": [".claude/harness/runtime/evidence/evidence-results.mjs", ".claude/harness/runtime/evidence/adapter-runtime.mjs", ".claude/harness/runtime/evidence/adapter-reports.mjs"]
+    },
+    {
+      "key": "discrimination-scoped-runners",
+      "statement": "test discrimination (เทสต์ต้อง fail ก่อนแก้) จำกัดไฟล์ได้เฉพาะ node --test, pytest และ go test; runner อื่นยังทำงานแต่รันทั้งคำสั่ง",
+      "sources": [".claude/harness/runtime/evidence/test-discrimination.mjs"]
+    },
+    {
+      "key": "test-path-kind",
+      "statement": "การจัดไฟล์ว่าเป็นเทสต์ใน Change/Prove รู้จักโฟลเดอร์ test/tests/spec/__tests__, *.test.*, *.spec.*, test_*.py, *_test.go/py; ไม่รู้จักโปรเจกต์ .NET แบบ Foo.Tests/ และไฟล์ FooTest.java นอกโฟลเดอร์ test; ไฟล์ dependency ไม่รวม pom.xml, build.gradle, pubspec, *.csproj, mix.exs, Package.swift; ตัวเตือน task ownership ใน design-blueprints จับเฉพาะ *.test.*/*.spec.*",
+      "sources": [".claude/harness/runtime/workflow/validation/dev-document.mjs", ".claude/harness/runtime/workflow/validation/design-blueprints.mjs", ".claude/harness/runtime/workflow/draft/amendment-verify.mjs"]
+    },
+    {
+      "key": "paid-lanes-js-heavy",
+      "statement": "paid smoke 10 lane ของ v3.7.10 เป็น JS/TS เกือบทั้งหมด มี python-api-validation หนึ่ง lane; workload 49 ชุดมี package.json 34 ชุด ไม่มี Go, JVM, PHP, Rust, Ruby, Dart",
+      "sources": ["docs/reports/scenario-smoke-candidate-ee09e1c0-2026-11-28.md"]
+    }
+  ],
+  "hypotheses": [],
+  "options": [],
+  "selection": null,
+  "decisions": [],
+  "conclusion": {
+    "summary": "ยังไม่ครบ Investigate และ Land ไม่ขึ้นกับภาษา Change ขึ้นกับภาษาแค่การจัดไฟล์เทสต์ quality gate (static/lint/test lane) ครอบ 18 pack แต่ Build ติดตั้ง dependency ให้เฉพาะ JS ที่ root และ Prove หา test provider และนับจำนวนเทสต์ได้เองเฉพาะ JS, Go -json, Python unittest; ภาษาอื่นต้องให้ agent ตั้ง setupCommand และ test provider เอง และ JVM, PHP, .NET, Dart, Swift, Elixir ยังได้ผลนับเป็น inconclusive จนกว่าจะใช้ reporter JSON/TAP ช่องที่คุ้มสุดคือ parser JUnit XML และ test provider จาก quality test lane"
+  },
+  "changeIntent": "Prove นับจำนวนเทสต์จาก JUnit XML และบรรทัดสรุปของ runner หลักทุก pack ใช้ test lane ใน quality config เป็น test provider เมื่อไม่มี package.json และ Build ติดตั้ง dependency จาก lockfile ของทุก pack ในทุก repository"
+}

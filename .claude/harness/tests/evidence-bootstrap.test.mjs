@@ -445,3 +445,71 @@ test("a provider environment drops the harness session state and keeps the provi
   assert.equal(providerExecutionEnvironment({}, { FOUNDATION_WORKSPACE_ROOT: "/declared" })
     .FOUNDATION_WORKSPACE_ROOT, "/declared");
 });
+
+
+// A repository without package.json: its quality test lane, else the
+// detected language runner; several lanes are proposed for review.
+function testFallback(root, { lanes = null, discovered = null, ids = ['root'] } = {}) {
+  if (lanes) {
+    mkdirSync(join(root, 'quality'), { recursive: true });
+    writeFileSync(join(root, 'quality/foundation-quality.json'), JSON.stringify({ version: 1,
+      repositories: [{ id: 'root', providers: lanes }] }));
+  }
+  const repositories = ids.map((id) => repository(root, id));
+  return discoverMissingEvidence({
+    missing: ['test'], providerConfig: () => null, providerCapability: (provider) => provider,
+    knownProviders: new Set(['test']), repositories, contract: { claims: [] },
+    tooling: new Map(ids.map((id) => [id, null])), declaredSurface: [], root,
+    discoverTestCommand: () => discovered
+  });
+}
+
+test('a repository without package.json takes its test provider from the quality test lane', () => {
+  const root = workspace();
+  try {
+    const result = testFallback(root, { lanes: { test: { kind: 'command', command: ['go', 'test', './...'] },
+      lint: { kind: 'command', command: ['go', 'vet'] } } });
+    assert.equal(result.unresolved.length, 0);
+    assert.equal(result.candidates.length, 1);
+    const [candidate] = result.candidates;
+    assert.equal(candidate.confidence, 'high');
+    assert.equal(candidate.recommended, true);
+    assert.deepEqual(candidate.config, { adapter: 'test-discovery', command: ['go', 'test', './...'],
+      minimum: 1, reportFormat: 'auto' });
+    assert.match(candidate.source, /foundation-quality\.json#test/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('without a quality lane the detected language runner is the test provider', () => {
+  const root = workspace();
+  try {
+    const result = testFallback(root, { discovered: { profiles: ['toolchain-rust'],
+      providers: { test: { kind: 'command', command: ['cargo', 'test'] } } } });
+    assert.deepEqual(result.candidates[0].config.command, ['cargo', 'test']);
+    assert.equal(result.candidates[0].confidence, 'high');
+    assert.match(result.candidates[0].source, /quality discovery \(toolchain-rust\)/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('several test lanes are chained for review and never wired automatically', () => {
+  const root = workspace();
+  try {
+    const result = testFallback(root, { lanes: {
+      'test:services/a': { kind: 'command', command: ['go', 'test', './...'], cwd: 'services/a' },
+      'test:services/b': { kind: 'command', command: ['go', 'test', './...'], cwd: 'services/b' } } });
+    const [candidate] = result.candidates;
+    assert.equal(candidate.confidence, 'review');
+    assert.equal(candidate.recommended, false);
+    assert.deepEqual(candidate.config.command, ['sh', '-c',
+      '(cd services/a && go test ./...) && (cd services/b && go test ./...)']);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test('a repository with no known test command stays unresolved', () => {
+  const root = workspace();
+  try {
+    const result = testFallback(root, { discovered: { profiles: [], providers: {} } });
+    assert.equal(result.candidates.length, 0);
+    assert.equal(result.unresolved[0].reason, 'no-safe-project-command');
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});

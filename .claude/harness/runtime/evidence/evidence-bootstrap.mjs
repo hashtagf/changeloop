@@ -4,6 +4,7 @@ import { checkNpmWorkspace } from "./npm-lockfile-check.mjs";
 import { isSharedProject, projectResource } from '../core/project-installation.mjs';
 import { aliasedTestProvider } from "./provider-catalog.mjs";
 import { ACCESSIBILITY_BUILT_IN } from "./accessibility-check.mjs";
+import { fallbackTestCandidates } from "./test-provider-fallback.mjs";
 
 const PROVIDER_SCRIPT_ALIASES = {
   "static-analysis": ["check", "typecheck", "type-check", "lint"],
@@ -266,7 +267,7 @@ export function evidenceCandidateRows(
 
 export function discoverMissingEvidence({
   missing, providerConfig, providerCapability, knownProviders, repositories, contract,
-  tooling, declaredSurface, root = process.cwd()
+  tooling, declaredSurface, root = process.cwd(), discoverTestCommand = undefined
 }) {
   const candidates = [];
   const unresolved = [];
@@ -303,8 +304,12 @@ export function discoverMissingEvidence({
     }
     let found = false;
     for (const repository of targets) {
-      const rows = evidenceCandidateRows(capability, tooling.get(repository.id), repository,
+      let rows = evidenceCandidateRows(capability, tooling.get(repository.id), repository,
         repositories.length, declaredSurface);
+      // No package.json: the quality test lane, else the detected language runner.
+      if (capability === "test" && !rows.length && !tooling.get(repository.id))
+        rows = fallbackTestCandidates(repository, repositories.length,
+          { root, discover: discoverTestCommand || null });
       if (!rows.length) continue;
       found = true;
       candidates.push(...rows.map((row) =>
@@ -350,7 +355,7 @@ export function evidenceWiringStatus(unavailable, unresolved, candidates) {
 
 export function detectEvidenceWiring({
   id, root, contract, repositories, required, providerConfig, providerCapability,
-  knownProviders, commandExists, stableHash, declaredSurface = []
+  knownProviders, commandExists, stableHash, declaredSurface = [], discoverTestCommand = undefined
 }) {
   const warnings = [];
   const tooling = new Map(repositories.map((repository) => [
@@ -367,7 +372,7 @@ export function detectEvidenceWiring({
   });
   const discovered = discoverMissingEvidence({
     missing, providerConfig, providerCapability, knownProviders, repositories, contract,
-    tooling, declaredSurface, root
+    tooling, declaredSurface, root, discoverTestCommand
   });
   const { candidates } = discovered;
   const unresolved = discovered.unresolved.map((row) => {

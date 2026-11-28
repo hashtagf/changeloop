@@ -9,6 +9,7 @@ import { createEvidenceContract } from "../evidence/evidence-contract.mjs";
 import { createHandoffRuntime } from "../workflow/authority/handoff-runtime.mjs";
 import { createHostExecutionImporter, createHostExecutionStore, resolveHostExecutionSource } from "../observability/host-execution-contract.mjs";
 import { createQualityRuntime } from "../quality/quality-runtime.mjs";
+import { discoverRepositoryQuality } from "../quality/quality-discovery.mjs";
 import { createRepositorySnapshot } from "../workflow/repository/repository-snapshot.mjs";
 import { createRepositoryTopology } from "../workflow/repository/repository-topology.mjs";
 import { createTelemetryRuntime } from "../observability/telemetry-runtime.mjs";
@@ -253,3 +254,6 @@ export function composeEvidenceState({
     syncClaudeTelemetry, telemetryReadiness, updateQualityBaseline, validateArtifact
   };
 }
+
+// Prove's test provider for a repository without package.json (evidence-bootstrap).
+export const discoverTestCommand = (repository) => discoverRepositoryQuality(repository);

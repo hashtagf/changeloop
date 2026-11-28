@@ -1,0 +1,72 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "polyglot-lifecycle-seam-subtract-sandbox-advance-archived",
+      "requirementKey": "polyglot-lifecycle-seam",
+      "scenario": "Go",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-lifecycle-seam-subtract-advance-archived",
+      "requirementKey": "polyglot-lifecycle-seam",
+      "scenario": "Rust",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-lifecycle-seam-subtract-advance-archived-2",
+      "requirementKey": "polyglot-lifecycle-seam",
+      "scenario": "Python",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-lifecycle-seam-subtract-advance-archived-3",
+      "requirementKey": "polyglot-lifecycle-seam",
+      "scenario": "Ruby",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-lifecycle-seam-advance-archived",
+      "requirementKey": "polyglot-lifecycle-seam",
+      "scenario": "เทสต์ล้ม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-lifecycle-seam-6",
+      "requirementKey": "polyglot-lifecycle-seam",
+      "scenario": "ไม่มี toolchain",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/polyglot-lifecycle-seam.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

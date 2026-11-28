@@ -67,8 +67,11 @@ restore notice names the files it put back and where the edit was saved. A
 workspace never borrows the checkout's dependencies. When no setup command is
 declared, the harness runs the workspace lockfile's pinned install itself
 (`npm ci`, `pnpm install --frozen-lockfile`, `yarn install --frozen-lockfile`,
-or `bun install --frozen-lockfile`) and records it like a configured setup;
-`sandbox.installDependencies: false` opts out. If that install fails or its
+or `bun install --frozen-lockfile`, then each other locked ecosystem whose tool
+is installed: composer, Bundler, uv, Poetry, Pipenv, Go modules, Cargo,
+dart/flutter pub, Mix) and records it like a configured setup, in the root
+workspace and in every writable sibling repository without its own
+`setupCommand`; `sandbox.installDependencies: false` opts out. If that install fails or its
 tool is missing, Build is not blocked ([blocking policy](../../../WORKFLOW.md#blocking-policy)):
 `advance` returns a `REPAIR` handoff with
 the command, workspace directory, and log tail for the agent to finish. When a

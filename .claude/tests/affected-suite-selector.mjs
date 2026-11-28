@@ -103,6 +103,9 @@ const RULES = [
     ["permission allowlist"]],
   [/evidence-contract|review-routing|change-lifecycle|install\.sh$|^foundation\.json$/,
     ["rapid fast path seam"]],
+  // Real Go, Rust, Python, and Ruby consumers read these counters, providers, and installs.
+  [/runner-summaries|test-provider-fallback|evidence-bootstrap|sandbox-setup|sandbox-repositories|validation\/dev-document|polyglot-lifecycle-seam/,
+    ["polyglot lifecycle seam"]],
   // State a published release left behind is read by these upgrade paths.
   [/^install\.sh$|validation\/draft-version|workflow\/authority\.mjs$/,
     ["upgrade compatibility", "upgrade from 3.7.0", "upgrade from 3.7.0 (legacy review)"]],

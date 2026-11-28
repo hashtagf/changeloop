@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, rmSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { transitionLifecycleState } from "../../core/lifecycle-reducer.mjs";
 import { isolatedRepositoryState, worktreeOwnedByTarget } from "../../core/repository-binding.mjs";
-import { runWorkspaceSetupPlan } from "./sandbox-setup.mjs";
+import { runWorkspaceSetupPlan, workspaceSetupPlan } from "./sandbox-setup.mjs";
 import { sandboxMovementLine } from "./sandbox-copy.mjs";
 
 export function recordSandboxBaseMove({ id, state, movement, preDiffIdentity,
@@ -199,11 +199,20 @@ export function repairSelectedRepositories(context, id, state, repositories) {
   }
 }
 
-function setupJob(repository, record, timeoutMs) {
-  return {
-    repository, record, command: repository.setupCommand,
-    cwd: record.path, timeoutMs
-  };
+function setupJob(repository, record, timeoutMs, command = repository.setupCommand) {
+  return { repository, record, command, cwd: record.path, timeoutMs };
+}
+
+// A writable sibling without its own setupCommand installs what its lockfiles
+// pin, like the root workspace; `sandbox.installDependencies: false` opts out
+// and a read-only repository is never installed into.
+function siblingSetupCommand(context, repository, record) {
+  if (repository.setupCommand) return repository.setupCommand;
+  if (repository.id === "root" || record?.mode !== "worktree" || record.access === "read" || !record.path)
+    return null;
+  const installDependencies = context.policy().sandbox?.installDependencies;
+  return workspaceSetupPlan({ sandbox: { installDependencies }, workspace: record.path,
+    pathExists: existsSync })?.command || null;
 }
 
 function verifyReadOnlySetup(context, repository, record, warn = false) {
@@ -239,8 +248,8 @@ export function setupSelectedRepositories(context, state, repositories) {
   const timeoutMs = context.policy().sandbox?.setupTimeoutMs;
   const eligible = repositories.flatMap((repository) => {
     const record = state.repositories[repository.id];
-    return repository.setupCommand && record?.mode === "worktree"
-      ? [setupJob(repository, record, timeoutMs)] : [];
+    const command = record?.mode === "worktree" ? siblingSetupCommand(context, repository, record) : null;
+    return command ? [setupJob(repository, record, timeoutMs, command)] : [];
   });
   if (!context.runSetupBatch) {
     for (const { repository, record, command } of eligible) {
@@ -283,14 +292,15 @@ export function retryFailedSandboxSetups(context, id,
   for (const repository of selected) {
     if (repository.id === "root") continue;
     const record = state.repositories?.[repository.id];
-    if (record?.setup?.status !== "failed" || !repository.setupCommand ||
-        !record.path) continue;
+    // A detected install retries the command it recorded.
+    const command = repository.setupCommand || record?.setup?.command;
+    if (record?.setup?.status !== "failed" || !command || !record.path) continue;
     if (!context.runSetupBatch) {
-      context.runSetupCommand(record, repository.setupCommand,
+      context.runSetupCommand(record, command,
         configured.setupTimeoutMs, record.path, repository.id);
       verifyReadOnlySetup(context, repository, record);
       attempted.push(repository.id);
-    } else jobs.push(setupJob(repository, record, configured.setupTimeoutMs));
+    } else jobs.push(setupJob(repository, record, configured.setupTimeoutMs, command));
   }
   for (const row of context.runSetupBatch ? context.runSetupBatch(jobs) : []) {
     applySetupResult(context, row);

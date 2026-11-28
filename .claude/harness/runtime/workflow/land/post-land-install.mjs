@@ -1,9 +1,9 @@
 import { join } from "node:path";
-import { DEPENDENCY_LOCKFILES, workspaceSetupPlan } from "../sandbox/sandbox-runtime.mjs";
+import { SETUP_DEPENDENCY_FILES, workspaceSetupPlan } from "../sandbox/sandbox-runtime.mjs";
 
 // The root files whose change means the target's installed dependencies no
 // longer match: the manifest and every lockfile the sandbox setup knows.
-export const DEPENDENCY_FILES = Object.freeze(["package.json", ...DEPENDENCY_LOCKFILES.map(([file]) => file)]);
+export const DEPENDENCY_FILES = SETUP_DEPENDENCY_FILES;
 
 export function dependencySnapshot(workspace, identity) {
   return Object.fromEntries(DEPENDENCY_FILES.map((file) => {

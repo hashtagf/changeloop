@@ -99,6 +99,7 @@ review overlap seam
 feedback review
 harness contracts (change policy)
 rapid fast path seam
+polyglot lifecycle seam
 harness contracts (sandbox land)
 command registry
 installed repository recovery
@@ -315,6 +316,7 @@ environment descriptor|node --test "$ROOT/.claude/harness/tests/environment-desc
 execution preparation|node --test "$ROOT/.claude/harness/tests/tool-preparation.test.mjs"
 review policy|node --test "$ROOT/.claude/harness/tests/review-policy.test.mjs"
 rapid fast path seam|node --test "$ROOT/.claude/harness/tests/rapid-fast-path-seam.test.mjs"
+polyglot lifecycle seam|node --test "$ROOT/.claude/harness/tests/polyglot-lifecycle-seam.test.mjs"
 review overlap seam|node --test "$ROOT/.claude/harness/tests/review-overlap-seam.test.mjs"
 concurrent changes seam|node --test "$ROOT/.claude/harness/tests/concurrent-different-files.test.mjs" "$ROOT/.claude/harness/tests/concurrent-same-file.test.mjs" "$ROOT/.claude/harness/tests/concurrent-same-lines.test.mjs" "$ROOT/.claude/harness/tests/concurrent-user-edit.test.mjs"
 landed carry sync seam|node --test "$ROOT/.claude/harness/tests/landed-carry-sync.test.mjs"
@@ -419,6 +421,7 @@ git-ignored surface|node --test "$ROOT/.claude/harness/tests/git-ignore.test.mjs
 git read memo|node --test "$ROOT/.claude/harness/tests/git-read-memo.test.mjs"
 workspace inspection|node --test "$ROOT/.claude/harness/tests/workspace-inspection.test.mjs"
 sandbox create phases|node --test "$ROOT/.claude/harness/tests/sandbox-create-phases.test.mjs"
+polyglot sandbox setup|node --test "$ROOT/.claude/harness/tests/sandbox-polyglot-setup.test.mjs"
 non-Git root sandbox scope|node --test "$ROOT/.claude/harness/tests/non-git-root-sandbox.test.mjs"
 change validation phases|node --test "$ROOT/.claude/harness/tests/change-validation-phases.test.mjs"
 semantic invariant validation|node --test "$ROOT/.claude/harness/tests/semantic-invariant-issues.test.mjs"
@@ -469,6 +472,7 @@ instruction provenance and host execution|sh "$HERE/harness/run-provenance-contr
 blocked decision contracts|node "$HERE/harness/run-blocked-decision-tests.mjs"
 next-step contracts|node "$HERE/harness/run-next-step-tests.mjs"
 land surface|node --test "$HERE/harness/run-land-surface-tests.mjs"
+polyglot evidence|node --test "$ROOT/.claude/harness/tests/runner-summaries.test.mjs" "$ROOT/.claude/harness/tests/polyglot-path-kinds.test.mjs"
 dag cycle diagnostics|node --test "$HERE/harness/run-dag-cycle-tests.mjs"
 proof fixit recovery|node --test "$HERE/harness/run-proof-fixit-tests.mjs"
 critical case readiness|node --test "$HERE/harness/run-critical-case-readiness-tests.mjs"

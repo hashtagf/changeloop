@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { delimiter, dirname, join, relative, resolve } from "node:path";
 import { evidenceResultValue, parseAssertionSummaryOutput, parseGoTestJsonOutput, parseLastJsonLine, parseRunnerSummaryOutput } from "./evidence-results.mjs";
 import { repositoryBaseHead } from "../core/repository-binding.mjs";
+import { configuredReportState, parseLanguageTestOutput } from "./runner-summaries.mjs";
 import { forceExitCommand, noticeLingeringProvider } from "../core/node-test-exit.mjs";
 import {
   environmentIdentity, readTaskCheckExecution, sameArgv, sameShellLine, taskCheckArgv,
@@ -545,18 +546,15 @@ export function createAdapterRuntime({
 
   function freshConfiguredReport(config, cwd, result) {
     const path = config.report ? resolve(cwd, config.report) : null;
-    const runStartedMs = Date.parse(result.startedAt) || 0;
-    const fresh = Boolean(path) && existsSync(path) &&
-      statSync(path).mtimeMs >= runStartedMs - 1000;
-    if (path && existsSync(path) && !fresh)
-      console.error(
-        `WARNING: ignoring '${relative(ROOT, path)}': it predates this run, so it is not its output`);
-    return { path, fresh };
+    const report = configuredReportState(path, Date.parse(result.startedAt) || 0);
+    if (report.stale)
+      console.error(`WARNING: ignoring '${relative(ROOT, path)}': it predates this run, so it is not its output`);
+    return { path, ...report };
   }
 
   function parsedAdapterReport(config, configuredReport, result) {
     const content = configuredReport.fresh
-      ? readFileSync(configuredReport.path, "utf8") : result.stdout;
+      ? configuredReport.content ?? readFileSync(configuredReport.path, "utf8") : result.stdout;
     const json = parseJsonOutput(content);
     const tap = ["tap", "auto"].includes(config.reportFormat || "auto")
       ? parseTapOutput(content) : null;
@@ -575,7 +573,9 @@ export function createAdapterRuntime({
       configuredReport.fresh ? content : `${content}\n${result.stderr || ""}`) : null;
     // `go test -json` is one event per line, so the whole-text JSON parse fails.
     const goTest = auto && !json ? parseGoTestJsonOutput(content) : null;
-    return json || goTest || tap || spec || assertions || runner;
+    const language = auto && !(json || goTest || tap || spec || assertions || runner) // other languages, JUnit XML
+      ? parseLanguageTestOutput(configuredReport.fresh ? content : `${content}\n${result.stderr || ""}`) : null;
+    return json || goTest || tap || spec || assertions || runner || language;
   }
 
   function adapterEvidence(id, provider, config, execution) {
@@ -583,7 +583,7 @@ export function createAdapterRuntime({
       id, provider, execution.commandExecutionId, execution.result);
     const artifacts = [logArtifact];
     const configuredReport = freshConfiguredReport(config, execution.cwd, execution.result);
-    if (configuredReport.fresh)
+    if (configuredReport.fresh && configuredReport.content === undefined) // a directory is read, not kept
       artifacts.push({
         path: relative(ROOT, configuredReport.path),
         type: "structured-report", required: true

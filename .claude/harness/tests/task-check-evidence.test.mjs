@@ -118,6 +118,32 @@ test("a python unittest summary on stderr is counted for fresh and reused runs",
   }
 });
 
+// Other languages' summaries count only after Prove's own parsers found nothing.
+test("Prove counts a cargo summary and keeps its own parser's count first", async (t) => {
+  const cargo = world(t, { ...TEST, command: ["cargo", "test"] });
+  cargo.live.stdout = "test result: ok. 4 passed; 0 failed; 1 ignored; 0 measured\n";
+  await cargo.prove();
+  assert.equal(cargo.receipts.find((row) => row.provider === "discovery").flags.discovered, 5);
+  const both = world(t, { ...TEST, command: ["npm", "test"] });
+  both.live.stdout = " Tests  7 passed (7)\n3 passed in 0.10s\n";
+  await both.prove();
+  assert.equal(both.receipts.find((row) => row.provider === "discovery").flags.discovered, 7,
+    "the vitest footer wins over a pytest-shaped line");
+});
+
+test("a JUnit report directory is counted from the files this run wrote", async (t) => {
+  const w = world(t, { ...TEST, command: ["./gradlew", "test"], report: "build/test-results/test" });
+  const reports = join(w.root, "build/test-results/test");
+  mkdirSync(reports, { recursive: true });
+  writeFileSync(join(reports, "TEST-A.xml"), '<testsuite name="A" tests="3" failures="0" errors="0"/>');
+  writeFileSync(join(reports, "TEST-B.xml"), '<testsuite name="B" tests="2" failures="0" errors="0"/>');
+  w.live.stdout = "BUILD SUCCESSFUL in 3s\n";
+  await w.prove();
+  const discovery = w.receipts.find((row) => row.provider === "discovery");
+  assert.equal(discovery.status, "pass");
+  assert.equal(discovery.flags.discovered, 5);
+});
+
 test("any later edit invalidates the prepared execution", async (t) => {
   const w = world(t);
   assert.equal(w.check().status, "pass");

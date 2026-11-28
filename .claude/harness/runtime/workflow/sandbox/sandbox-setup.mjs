@@ -3,8 +3,8 @@
 // when setup reruns. sandbox-runtime.mjs re-exports every symbol.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { delimiter, join } from "node:path";
 
 export function runSandboxSetupCommand(context, record, command, timeoutMs, cwd, label) {
   const result = context.spawn("sh", ["-c", command], {
@@ -124,21 +124,61 @@ export const DEPENDENCY_LOCKFILES = [
   ["bun.lockb", "bun install --frozen-lockfile"]
 ];
 
-// The root workspace's setup: the configured command, otherwise the install
-// the workspace's own lockfile pins. `sandbox.installDependencies: false` opts
+// Other ecosystems' locked installs, in run order: [manifest, lockfile,
+// command, executable]. Maven, Gradle, and dotnet resolve dependencies when
+// they test, and requirements.txt pins no lock, so none of them is here.
+export const ECOSYSTEM_LOCKFILES = Object.freeze([
+  ["composer.json", "composer.lock", "composer install --no-interaction --no-progress", "composer"],
+  ["Gemfile", "Gemfile.lock", "bundle install", "bundle"],
+  ["pyproject.toml", "uv.lock", "uv sync --frozen", "uv"],
+  ["pyproject.toml", "poetry.lock", "poetry install --no-interaction", "poetry"],
+  ["Pipfile", "Pipfile.lock", "pipenv sync --dev", "pipenv"],
+  ["go.mod", "go.sum", "go mod download", "go"],
+  ["Cargo.toml", "Cargo.lock", "cargo fetch --locked", "cargo"],
+  ["pubspec.yaml", "pubspec.lock", "dart pub get", "dart"],
+  ["mix.exs", "mix.lock", "mix deps.get", "mix"]
+]);
+
+const onPath = (name) => String(process.env.PATH || "").split(delimiter)
+  .some((directory) => directory && existsSync(join(directory, name)));
+const readText = (path) => { try { return readFileSync(path, "utf8"); } catch { return ""; } };
+
+// The workspace's detected installs: the JavaScript lockfile first, then each
+// ecosystem whose manifest and lockfile are both present and whose tool is on
+// PATH (a missing tool is skipped: its tests would name it). A Flutter package
+// (`sdk: flutter`) installs with flutter instead of dart.
+function detectedInstalls(workspace, pathExists, commandExists) {
+  const installs = [];
+  const javascript = pathExists(join(workspace, "package.json")) &&
+    DEPENDENCY_LOCKFILES.find(([file]) => pathExists(join(workspace, file)));
+  if (javascript) installs.push({ command: javascript[1], lockfile: javascript[0] });
+  const seen = new Set();
+  for (const [manifest, lockfile, command, executable] of ECOSYSTEM_LOCKFILES) {
+    if (seen.has(manifest) || !pathExists(join(workspace, manifest)) ||
+        !pathExists(join(workspace, lockfile))) continue;
+    const flutter = manifest === "pubspec.yaml" &&
+      /\bsdk:\s*flutter\b/.test(readText(join(workspace, manifest)));
+    const tool = flutter ? "flutter" : executable;
+    if (!commandExists(tool)) continue;
+    seen.add(manifest);
+    installs.push({ command: flutter ? "flutter pub get" : command, lockfile });
+  }
+  return installs;
+}
+
+// The workspace's setup: the configured command, otherwise the installs its
+// own lockfiles pin, joined with &&. `sandbox.installDependencies: false` opts
 // out of the detected install; a configured command always runs. Never links or
-// copies the checkout's node_modules — the install happens in the workspace.
-export function workspaceSetupPlan({ sandbox = /** @type {Record<string, any>} */ ({}), workspace, pathExists }) {
+// copies the checkout's dependencies — the install happens in the workspace.
+export function workspaceSetupPlan({ sandbox = /** @type {Record<string, any>} */ ({}), workspace, pathExists,
+  commandExists = onPath }) {
   if (sandbox.setupCommand)
     return { command: sandbox.setupCommand, source: "configured" };
   // A lockfile without its manifest is not an installable project.
-  if (sandbox.installDependencies === false || !workspace ||
-      !pathExists(join(workspace, "package.json"))) return null;
-  const lockfile = DEPENDENCY_LOCKFILES.find(([file]) =>
-    pathExists(join(workspace, file)));
-  return lockfile
-    ? { command: lockfile[1], source: "lockfile", lockfile: lockfile[0] }
-    : null;
+  if (sandbox.installDependencies === false || !workspace) return null;
+  const installs = detectedInstalls(workspace, pathExists, commandExists);
+  return installs.length ? { command: installs.map((row) => row.command).join(" && "),
+    source: "lockfile", lockfile: installs.map((row) => row.lockfile).join(", ") } : null;
 }
 
 export function sandboxSetupLine(setup) {
@@ -148,8 +188,9 @@ export function sandboxSetupLine(setup) {
 }
 
 // The manifest and lockfiles whose bytes decide what the setup installs.
-export const SETUP_DEPENDENCY_FILES = Object.freeze(
-  ["package.json", ...DEPENDENCY_LOCKFILES.map(([file]) => file)]);
+export const SETUP_DEPENDENCY_FILES = Object.freeze([...new Set(["package.json",
+  ...DEPENDENCY_LOCKFILES.map(([file]) => file),
+  ...ECOSYSTEM_LOCKFILES.flatMap(([manifest, lockfile]) => [manifest, lockfile])])]);
 
 export function dependencyDigest(workspace, readFile = readFileSync) {
   const hash = createHash("sha256");

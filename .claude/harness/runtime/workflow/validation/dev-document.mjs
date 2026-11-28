@@ -68,9 +68,12 @@ const PATH_TYPES = [
 // housekeeping. A change made only of these infers its kind from them.
 /** @type {Array<[string, RegExp]>} */
 const LIGHT_PATHS = [
-  ["dependency", /(?:^|\/)(?:package(?:-lock)?\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?|go\.(?:mod|sum)|Cargo\.(?:toml|lock)|requirements(?:[-.][\w-]+)?\.txt|Pipfile(?:\.lock)?|poetry\.lock|uv\.lock|Gemfile(?:\.lock)?|composer\.(?:json|lock))$/],
+  ["dependency", /(?:^|\/)(?:package(?:-lock)?\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|bun\.lockb?|go\.(?:mod|sum|work|work\.sum)|Cargo\.(?:toml|lock)|requirements(?:[-.][\w-]+)?\.txt|Pipfile(?:\.lock)?|poetry\.lock|uv\.lock|Gemfile(?:\.lock)?|composer\.(?:json|lock)|pom\.xml|(?:build|settings)\.gradle(?:\.kts)?|gradle\.lockfile|[^/]+\.csproj|packages\.lock\.json|Directory\.Packages\.props|pubspec\.(?:yaml|lock)|mix\.(?:exs|lock)|Package\.(?:swift|resolved))$/],
   ["docs", /\.(?:md|mdx|rst|txt)$|(?:^|\/)docs?\//i],
-  ["test", /(?:^|\/)(?:tests?|__tests__|spec)\/|\.(?:test|spec)\.[\w]+$|(?:^|\/)test_[^/]+\.py$|_test\.(?:go|py)$/i],
+  ["test", /(?:^|\/)(?:tests?|__tests__|spec)\/|\.(?:test|spec)\.[\w]+$|(?:^|\/)test_[^/]+\.py$|_test\.(?:go|py|dart|exs)$|_spec\.rb$/i],
+  // JVM, .NET, PHP, and Swift name test classes and projects with a capital Test.
+  // A lowercase `test` (Contest, Latest) is not one; UITest and APITest are.
+  ["test", /(?:^|\/)[\w.-]+\.Tests?\/|Tests?\.(?:java|kt|scala|groovy|cs|php|swift)$/],
   ["chore", /(?:^|\/)(?:\.gitignore|\.gitattributes|\.editorconfig|CODEOWNERS|LICENSE(?:\.\w+)?)$/]
 ];
 

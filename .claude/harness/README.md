@@ -744,12 +744,18 @@ runs it once inside every newly created sandbox:
 
 Without it, the harness runs the install the workspace lockfile pins
 (`package-lock.json`/`npm-shrinkwrap.json` → `npm ci`, `pnpm-lock.yaml`,
-`yarn.lock`, `bun.lock`/`bun.lockb` → their frozen-lockfile install) and
+`yarn.lock`, `bun.lock`/`bun.lockb` → their frozen-lockfile install), then
+every other ecosystem with both manifest and lockfile whose tool is on PATH
+(`composer.lock`, `Gemfile.lock`, `uv.lock`, `poetry.lock`, `Pipfile.lock`,
+`go.sum`, `Cargo.lock`, `pubspec.lock`, `mix.lock`), joined with `&&`, and
 records it on the workspace like a configured setup (`source: "lockfile"`).
+A writable sibling repository without its own `setupCommand` gets the same
+detected install in its worktree; a read-only one never does. Maven, Gradle,
+and dotnet resolve dependencies when they test.
 `{ "sandbox": { "installDependencies": false } }` opts out. A failed or missing
 install never blocks: preparation retries it, then `advance` hands it to the
 agent as a `REPAIR` with the command, directory, and log tail. Setup records a
-digest of `package.json` and the lockfiles; when a Build edit changes them, the
+digest of every listed manifest and lockfile; when a Build edit changes them, the
 next `exec`, task check, or proof run reruns the same setup first. The phase
 guard still refuses linking or copying the checkout's `node_modules` into the
 sandbox.

@@ -24,9 +24,11 @@ export function verifyCannotFail(command) {
 // A test source file named in a verify command. Build used to discover a
 // mistyped or never-created test path only when the check ran; the draft
 // already says which files exist and which files its tasks create.
-const TEST_SOURCE = /\.(?:[cm]?[jt]sx?|py|rb|go|rs|java|kts?|scala|php|cs|fs|swift|exs?|sh|bash|lua|dart|c|cc|cpp|clj)$/i;
+const TEST_SOURCE = /\.(?:[cm]?[jt]sx?|py|rb|go|rs|java|kts?|scala|groovy|php|cs|fs|swift|exs?|sh|bash|lua|dart|c|cc|cpp|clj)$/i;
 
 const TEST_NAME = /(?:^|[/._-])(?:tests?|specs?|__tests__|e2e)(?:[/._-]|$)/i;
+// JVM, .NET, PHP, and Swift test classes: FooTest.java, UITest.kt, InvoiceTests.cs.
+const TEST_CLASS = /Tests?\.[a-z]+$/;
 
 // A command that changes its working directory resolves paths elsewhere.
 const WORKING_DIRECTORY_CHANGE =
@@ -43,7 +45,7 @@ export function verifyTestFileReferences(command) {
     .replace(/^\.\//, ""))
     .filter((token) => token && !token.startsWith("-") && !token.startsWith("/") &&
       !token.includes("..") && !/[*?{}[\]$<>`~]/.test(token) && !/^[a-z]+:\/\//i.test(token) &&
-      TEST_SOURCE.test(token) && TEST_NAME.test(token)));
+      TEST_SOURCE.test(token) && (TEST_NAME.test(token) || TEST_CLASS.test(token))));
 }
 
 /**

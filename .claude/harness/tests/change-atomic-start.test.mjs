@@ -1030,7 +1030,8 @@ test("change start orders a root task after tasks in a nested repository", (t) =
   assert.equal(readFileSync(join(value.changes, "single-shot-change", "tasks.md"), "utf8"), ledger);
 });
 
-// `go test` prints `ok <package>` or `(cached)`: no test result Prove can read.
+// `go test` prints `ok <package>` or `(cached)`: no test result Prove can read;
+// -v and -json are counted.
 test("a verify whose known runner prints no countable result gets an advisory, not a block", (t) => {
   assert.deepEqual(verifyCountAdvisories([
     { semanticKey: "bare", verify: "go test ./..." },
@@ -1039,7 +1040,7 @@ test("a verify whose known runner prints no countable result gets an advisory, n
     { semanticKey: "verbose-flag", verify: "go test -count=1 -test.v=true ./pkg" },
     { semanticKey: "unknown", verify: "make check" },
     { semanticKey: "node", verify: "node --test" }
-  ]).map((row) => row.match(/^task '([^']+)'/)[1]), ["bare", "json"]);
+  ]).map((row) => row.match(/^task '([^']+)'/)[1]), ["bare"]);
   const value = fixture(t);
   writeJson(value.draftPath, minimalRapidV4({ tasks: [{
     key: "implement-bounded-result", outcome: "Implement the bounded result",

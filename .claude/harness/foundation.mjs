@@ -46,7 +46,7 @@ import { composeEvidenceExecution } from "./runtime/composition/evidence-executi
 import { composeStateRuntimes } from "./runtime/composition/state-wiring.mjs";
 import { composeEnvironment } from "./runtime/composition/environment-wiring.mjs";
 import { composeLifecycleRuntimes } from "./runtime/composition/lifecycle-wiring.mjs";
-import { composeEvidenceState } from "./runtime/composition/evidence-state-wiring.mjs";
+import { composeEvidenceState, discoverTestCommand } from "./runtime/composition/evidence-state-wiring.mjs";
 
 const VERSION = "3.7.10";
 const RUNTIME_API_VERSION = "42";
@@ -278,7 +278,7 @@ const { receiptValidity } = createReceiptValidity({
   currentReviewRulesHash: () => reviewRulesHash(ROOT)
 });
 const changeValidationRuntime = createChangeValidationRuntime({
-  policyProviderSetupActions,
+  discoverTestCommand, policyProviderSetupActions,
   relevantHash,
   markBlocked,
   root: ROOT,

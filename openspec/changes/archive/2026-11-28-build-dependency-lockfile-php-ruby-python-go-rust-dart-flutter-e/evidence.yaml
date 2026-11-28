@@ -1,0 +1,108 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "polyglot-lockfile-install-setup",
+      "requirementKey": "polyglot-lockfile-install",
+      "scenario": "PHP",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-lockfile-install-setup-2",
+      "requirementKey": "polyglot-lockfile-install",
+      "scenario": "สองภาษา",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-lockfile-install-setup-3",
+      "requirementKey": "polyglot-lockfile-install",
+      "scenario": "Flutter",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-lockfile-install-setup-4",
+      "requirementKey": "polyglot-lockfile-install",
+      "scenario": "ไม่มีเครื่องมือ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-lockfile-install-setup-5",
+      "requirementKey": "polyglot-lockfile-install",
+      "scenario": "manifest ไม่มี lockfile",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-lockfile-install-setup-6",
+      "requirementKey": "polyglot-lockfile-install",
+      "scenario": "ปิดการติดตั้ง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "polyglot-lockfile-install-dependency-digest",
+      "requirementKey": "polyglot-lockfile-install",
+      "scenario": "lockfile เปลี่ยน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "sibling-repository-install-sandbox",
+      "requirementKey": "sibling-repository-install",
+      "scenario": "repo ลูก JS",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "sibling-repository-install-sandbox-2",
+      "requirementKey": "sibling-repository-install",
+      "scenario": "repo อ่านอย่างเดียว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "sibling-repository-install-lifecycle-resume",
+      "requirementKey": "sibling-repository-install",
+      "scenario": "retry",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/sandbox-polyglot-setup.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

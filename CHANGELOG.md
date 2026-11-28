@@ -9,6 +9,22 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+### Added
+
+- Prove counts tests from JUnit XML (a report file or a report directory such
+  as `target/surefire-reports`) and from the default summaries of pytest,
+  cargo test, Maven Surefire, PHPUnit, dotnet test, dart/flutter test, swift
+  test, ExUnit, RSpec, Minitest, and `go test -v`, so standard changes in
+  these languages no longer stop at an inconclusive test count.
+- A repository without `package.json` gets its test provider from its quality
+  test lane or from quality discovery.
+- Test files and dependency manifests of JVM, .NET, Dart, Swift, and Elixir
+  projects are classified as tests and dependencies.
+- Build installs dependencies from composer, Bundler, uv, Poetry, Pipenv, Go
+  module, Cargo, dart/flutter pub, and Mix lockfiles as well as npm, pnpm,
+  yarn, and bun ones, skipping a tool the machine lacks, and does so in every
+  writable sibling repository without its own `setupCommand`.
+
 ### Fixed
 
 - A stop caused by a failing consumer quality gate is recorded as
