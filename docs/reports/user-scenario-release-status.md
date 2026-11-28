@@ -18,6 +18,14 @@ comparison: 2026-10-08, no-harness/v3.6.0/v3.6.1/v3.6.2.
 
 ## Current scenario checkpoint
 
+### v3.7.10 candidate — 2026-11-28 (ten-lane paid smoke)
+
+Clean `ee09e1c0` (CI `--full` green) ran the ten lanes recorded for v3.7.9 once
+each on Claude Code with Sonnet 5.5: 10/10 archived with a passing pre-Land
+oracle; 17.0 minutes and US$3.77 against 16.4 minutes and US$3.86 for 3.7.9
+(n=1, within noise). See the [2026-11-28 smoke](scenario-smoke-candidate-ee09e1c0-2026-11-28.md)
+and [`benchmarks/3.7.10.json`](benchmarks/3.7.10.json). Repeated assurance is not claimed.
+
 ### v3.7.9 candidate — 2026-11-27 (ten-lane paid smoke)
 
 Clean `845ce476` (CI `--full` green) ran the ten lanes recorded for v3.7.8 once
