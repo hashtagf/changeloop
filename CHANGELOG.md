@@ -9,6 +9,8 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
+## [3.7.10] - 2026-11-28
+
 ### Added
 
 - Onboarding carries a fast-checks guide (split fast and full suites,
@@ -2155,7 +2157,8 @@ project upgrades in place.
   older abandon or a Land undo left such bookkeeping behind, creating a change
   with that id moves it into the newest retirement record.
 
-[Unreleased]: https://github.com/hashtagf/changeloop/compare/v3.7.9...HEAD
+[Unreleased]: https://github.com/hashtagf/changeloop/compare/v3.7.10...HEAD
+[3.7.10]: https://github.com/hashtagf/changeloop/compare/v3.7.9...v3.7.10
 [3.7.9]: https://github.com/hashtagf/changeloop/compare/v3.7.8...v3.7.9
 [3.7.8]: https://github.com/hashtagf/changeloop/compare/v3.7.7...v3.7.8
 [3.7.7]: https://github.com/hashtagf/changeloop/compare/v3.7.6...v3.7.7
