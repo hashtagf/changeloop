@@ -11,6 +11,20 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SOURCE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
+
+// A host session exports its project, identity, phase, and guardrail mode into
+// agent shells. A suite run alone (or as a Build task check) would otherwise
+// point install.sh and every fixture command at the caller's project, which the
+// runtime refuses. Same list as .claude/tests/lib/assert.sh; run-all clears them too.
+export const HOST_SESSION_VARIABLES = Object.freeze([
+  "CLAUDE_PROJECT_DIR", "CLAUDE_FOUNDATION_PROJECT",
+  "FOUNDATION_HOST", "FOUNDATION_HOST_COMMAND", "FOUNDATION_HOST_ARGUMENTS",
+  "FOUNDATION_SESSION_ID", "FOUNDATION_MAIN_IDENTITY", "FOUNDATION_GUARDRAIL_MODE",
+  "FOUNDATION_MODEL_ID", "FOUNDATION_MAIN_PROVIDER_FAMILY",
+  "FOUNDATION_CLAUDE_SESSION_ID", "FOUNDATION_CLAUDE_TRANSCRIPT_PATH",
+  "FOUNDATION_ACTIVE_PHASE", "FOUNDATION_WORKSPACE_ROOT", "FOUNDATION_ALLOWED_PATHS_JSON"
+]);
+for (const name of HOST_SESSION_VARIABLES) delete process.env[name];
 const templates = new Map();
 let cacheRoot = null;
 

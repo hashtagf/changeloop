@@ -1,0 +1,6 @@
+# Tasks
+
+> This is the sole implementation ledger.
+
+- [x] **T001** replayLandedEdit รวมแบบ union ให้ path ที่ระบุและไฟล์ changelog [key:union-merge-landed-replay] [kind:implementation] [paths:.claude/harness/runtime/workflow/transaction/target-edits.mjs,.claude/harness/tests/landed-union-merge.test.mjs,.claude/harness/lifecycle/land.md,.claude/tests/run-all.sh,.claude/tests/README.md,.gitattributes,CHANGELOG.md] [claims:union-merge-landed-replay-sync-replay-a,union-merge-landed-replay-sync-replay,union-merge-landed-replay-sync-replay-2,union-merge-landed-replay-sync-replay-3] — verify: `node --test .claude/harness/tests/landed-union-merge.test.mjs`
+- [x] **T002** draftChangeId ใช้ชื่อ draft เมื่อ intent มีตัวอักษรนอก ASCII [key:change-id-from-draft-name] [kind:implementation] [paths:.claude/harness/runtime/workflow/draft/draft-packet-render.mjs,.claude/harness/runtime/workflow/change/change-start.mjs,.claude/harness/tests/change-id-from-draft.test.mjs,.claude/harness/tests/fixtures/installed-consumer.mjs,.claude/tests/run-all.sh,.claude/tests/README.md,CHANGELOG.md] [claims:change-id-from-draft-name-change-start,change-id-from-draft-name-change-start-2,change-id-from-draft-name-change-start-3,change-id-from-draft-name-change-start-4] — verify: `node --test .claude/harness/tests/change-id-from-draft.test.mjs`

@@ -139,6 +139,18 @@ export function validReview(review) {
 // only some, but then the result must be a verdict that says why: not a pass,
 // every verified ID a first-round ID, and a blocker or major finding reported.
 // The IDs it leaves out stay open. `status` absent keeps the exact rule.
+// Delta-review findings outside the dispatched correction paths that would
+// block: blocker or major. A minor one (or one without a path) is recorded with
+// the rest; it would not block a pass anyway.
+export function blockingOutsideDeltaScope(findings, scope) {
+  const paths = Array.isArray(scope) ? scope : [];
+  return (findings || []).filter((finding) => {
+    if (!["blocker", "major"].includes(finding?.severity)) return false;
+    const path = String(finding?.path || "").replace(/^\.\//, "");
+    return !path || !paths.some((candidate) => candidate === path || candidate.endsWith(`/${path}`));
+  });
+}
+
 export function deltaClosureIssue({ expected, verified, status, findings }) {
   const want = [...new Set((expected || []).map(String))].sort();
   const got = [...new Set((verified || []).map(String))].sort();

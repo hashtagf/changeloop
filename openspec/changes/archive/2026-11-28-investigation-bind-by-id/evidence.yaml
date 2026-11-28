@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "investigation-binding-by-id-draft-investigation-demo",
+      "requirementKey": "investigation-binding-by-id",
+      "scenario": "ผูกด้วย id",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "investigation-binding-by-id-draft-investigation-id-demo",
+      "requirementKey": "investigation-binding-by-id",
+      "scenario": "object มีแค่ id",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "investigation-binding-by-id-draft-investigation-demo-2",
+      "requirementKey": "investigation-binding-by-id",
+      "scenario": "ยังไม่เสร็จ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "investigation-binding-by-id-draft",
+      "requirementKey": "investigation-binding-by-id",
+      "scenario": "binding เต็มเดิม",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/investigation-bind-by-id.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

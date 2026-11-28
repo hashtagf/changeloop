@@ -750,7 +750,9 @@ normally. A result that is not a pass may list fewer when it also reports a
 blocker or major finding for what remains; that is a delivered `fail` verdict,
 and the IDs it leaves out stay open. A pass must list every first-round ID, an
 ID outside the first round is always refused, and a shortfall with no blocker or
-major finding to explain it is a closure binding error. Closure is owed to
+major finding to explain it is a closure binding error. A delta finding outside
+the dispatched correction paths stops the round only when it is a blocker or
+major; a minor one is recorded with the others. Closure is owed to
 whoever reported the finding: when the newest delivered verdict is a human
 review with blocker/major findings, the next review of either reviewer type and
 scope carries those IDs as `closureFindings` under the same rule, and

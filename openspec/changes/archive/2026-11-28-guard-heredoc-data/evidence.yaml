@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "heredoc-data-stays-data-cd-tmp-ws-cat-a-mjs-eof-body-sh-c-node-t",
+      "requirementKey": "heredoc-data-stays-data",
+      "scenario": "cat heredoc กับ sh -c",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "heredoc-data-stays-data-cd-tmp-ws-node-eof-body-x-sh-c-true",
+      "requirementKey": "heredoc-data-stays-data",
+      "scenario": "node heredoc",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "heredoc-data-stays-data-cd-tmp-ws-cat-out-txt-eof-sh-c-true",
+      "requirementKey": "heredoc-data-stays-data",
+      "scenario": "redirect ออกนอก",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/shell-heredoc-data.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

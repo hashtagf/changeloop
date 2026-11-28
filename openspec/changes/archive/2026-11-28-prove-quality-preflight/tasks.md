@@ -1,0 +1,6 @@
+# Tasks
+
+> This is the sole implementation ledger.
+
+- [x] **T001** advance รัน findings lane ก่อน Prove และคืน REPAIR เมื่อถดถอย [key:findings-preflight] [kind:implementation] [paths:.claude/harness/runtime/quality/quality-preflight.mjs,.claude/harness/runtime/composition/delivery-wiring.mjs,.claude/harness/runtime/composition/lifecycle-wiring.mjs,.claude/harness/foundation.mjs,.claude/harness/tests/quality-preflight.test.mjs,.claude/harness/CONSUMER-QUALITY.md,.claude/harness/lifecycle/prove.md,.claude/tests/run-all.sh,.claude/tests/README.md,CHANGELOG.md] [claims:findings-preflight-advance-through-proven,findings-preflight-advance-through-proven-2,findings-preflight-advance-through-proven-3,findings-preflight-advance-through-proven-4] — verify: `node --test .claude/harness/tests/quality-preflight.test.mjs`
+- [x] **T002** quality run ส่ง FOUNDATION_QUALITY_CHANGED_FILES ให้ lane [key:lane-changed-files] [kind:implementation] [paths:.claude/harness/runtime/quality/quality-runtime.mjs,.claude/harness/tests/quality-preflight.test.mjs,.claude/harness/CONSUMER-QUALITY.md,CHANGELOG.md] [claims:lane-changed-files-quality-run-change-a,lane-changed-files-quality-run] — verify: `node --test .claude/harness/tests/quality-preflight.test.mjs`

@@ -10,8 +10,8 @@ Start with `cloop investigate --template`; keep the record at
 `openspec/investigations/<id>.json`. After each evidence batch run
 `cloop investigate <record.json>`. Sources are hashed; facts cite
 them. Set status only for `not-worth-changing`; the harness derives the rest.
-Follow `EDIT`, `ASK_USER`, or `DONE` and its resume route. For Change, copy
-`handoff` into draft `investigation`, reject stale bindings, and map material
+Follow `EDIT`, `ASK_USER`, or `DONE` and its resume route. For Change, set
+draft `"investigation": "<id>"`, reject stale bindings, and map material
 requirements through `investigationCoverage`. Reporting never starts Change.
 
 For Build/Prove, set `activeChange`; follow the

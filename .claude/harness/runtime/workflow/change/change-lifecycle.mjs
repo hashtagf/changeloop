@@ -22,7 +22,7 @@ import {
 } from "../validation/semantic-intake-intelligence.mjs";
 import { reduceSemanticIntakeState, semanticDraftDigest } from "../draft/semantic-intake-state.mjs";
 import { semanticAmendmentTemplate } from "../draft/amendment-tasks.mjs";
-import { validateInvestigationBinding } from "../investigation/investigation-runtime.mjs";
+import { validateInvestigationBinding, withInvestigationBinding } from "../investigation/investigation-runtime.mjs";
 import {
   designBlueprintWarnings, verifyCountAdvisories
 } from "../validation/design-blueprints.mjs";
@@ -221,9 +221,9 @@ export function createChangeLifecycle({
     const context = { ...minimalDraftContext, ...prior };
     // Impact and coupling are derived from the draft's content, never lowered.
     if (!raw || typeof raw !== "object" || Array.isArray(raw) || !("minimalDraft" in raw))
-      return withDerivedRisk(expandMinimalSemanticDraft(raw, context));
+      return withDerivedRisk(expandMinimalSemanticDraft(withInvestigationBinding(root, raw), context));
     const { minimalDraft: _example, ...draft } = raw;
-    return withDerivedRisk(expandMinimalSemanticDraft(draft, context));
+    return withDerivedRisk(expandMinimalSemanticDraft(withInvestigationBinding(root, draft), context));
   }
 
   // A v5 draft folder: change.json plus authored proposal.md and design.md.

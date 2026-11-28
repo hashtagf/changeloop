@@ -1,0 +1,45 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "minor-outside-scope-recorded-1",
+      "requirementKey": "minor-outside-scope-recorded",
+      "scenario": "minor นอกขอบเขต",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "minor-outside-scope-recorded-2",
+      "requirementKey": "minor-outside-scope-recorded",
+      "scenario": "major นอกขอบเขต",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "minor-outside-scope-recorded-3",
+      "requirementKey": "minor-outside-scope-recorded",
+      "scenario": "minor ไม่มี path",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/workflow-policy.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

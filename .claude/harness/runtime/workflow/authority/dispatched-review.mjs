@@ -3,7 +3,7 @@
 // checking each finding's closure, and completing the attempt.
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { deltaClosureIssue } from "../../evidence/review-result-validation.mjs";
+import { blockingOutsideDeltaScope, deltaClosureIssue } from "../../evidence/review-result-validation.mjs";
 import { retiredCircuitReviewRequest } from "./authority.mjs";
 
 export function createDispatchedReview({
@@ -126,12 +126,7 @@ export function createDispatchedReview({
       fail("review verifiedFindingIds must exactly close the closureFindings IDs (first-round or prior human review) " +
         "(a failing review may close fewer only by also reporting a blocker or major finding)");
     if (request.dispatch.scope.mode !== "delta") return;
-    const outside = findings.filter((finding) => {
-      const path = String(finding?.path || "").replace(/^\.\//, "");
-      return !path || !dispatchedScope.some((candidate) =>
-        candidate === path || candidate.endsWith(`/${path}`));
-    });
-    if (outside.length)
+    if (blockingOutsideDeltaScope(findings, dispatchedScope).length)
       fail("delta review findings must stay inside the dispatched correction paths");
   }
 

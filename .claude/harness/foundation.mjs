@@ -640,7 +640,7 @@ const {
   policyCapabilityTrigger, policyRolloutCapabilities, prepareBuildSandbox,
   projectRootRepositories, proofPath, proofPreflight, proofReadinessValue, proofRunRoot,
   protocolDescriptor, providerConfig, providerRepository, providerWorkspace,
-  providerWorkspaceHash, qualityLaneStates, qualityReadiness, readJson, readJsonLines,
+  providerWorkspaceHash, qualityLaneStates, qualityReadiness, readJson, readJsonLines, runQuality,
   readJsonOrNull, rebindDiffBoundReceipt, rebindReusableReceipt, receiptPath, receiptValidity,
   recordAuthority, recordDeterministicReviewClosure, recordInstructionManifest,
   recordPhaseContext, recordReceipt, recordVerifiedCi, recoverReviewBindings,

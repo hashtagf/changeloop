@@ -1,0 +1,72 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "findings-preflight-advance-through-proven",
+      "requirementKey": "findings-preflight",
+      "scenario": "ไฟล์โตเกิน ratchet",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "findings-preflight-advance-through-proven-2",
+      "requirementKey": "findings-preflight",
+      "scenario": "ผ่านแล้วเข้า Prove",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "findings-preflight-advance-through-proven-3",
+      "requirementKey": "findings-preflight",
+      "scenario": "เนื้อหาเดิม",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "findings-preflight-advance-through-proven-4",
+      "requirementKey": "findings-preflight",
+      "scenario": "ไม่มี quality config",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lane-changed-files-quality-run-change-a",
+      "requirementKey": "lane-changed-files",
+      "scenario": "มี change",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "lane-changed-files-quality-run",
+      "requirementKey": "lane-changed-files",
+      "scenario": "ไม่มี change",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/quality-preflight.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

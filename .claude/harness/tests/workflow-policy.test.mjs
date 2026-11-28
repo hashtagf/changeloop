@@ -1440,6 +1440,24 @@ try {
   assert.throws(() => quiet(() => authority.runAuthorityReviewer(
     "change-delta-outside", { request: outsideRequest.requestId,
       "subject-actor": "human" })), /outside the dispatched correction scope/);
+
+  // A minor finding outside the scope, with or without a path, is recorded and
+  // never stops the round: it would not block a pass anyway.
+  for (const [id, path] of [["change-delta-minor-outside", "outside.txt"], ["change-delta-minor-pathless", undefined]]) {
+    seedDeltaFinding(id);
+    configuredReviewResults = { "codex-sol": {
+      status: "pass", summary: "closed; one small note elsewhere", findings: [{
+        id: "F-NOTE", severity: "minor", ...(path ? { path } : {}), message: "note"
+      }], verifiedFindingIds: ["F-SCOPE"], reportReference: `${id}.json`,
+      reviewer: { sessionId: `${id}-delta` }
+    } };
+    const minorRequest = quiet(() => authority.requestAuthority(id, { type: "review" }));
+    assert.doesNotThrow(() => quiet(() => authority.runAuthorityReviewer(id, {
+      request: minorRequest.requestId, "subject-actor": "human" })), id);
+    const minorAttempt = attemptStore.reviewAttemptByDigest(id, state.reviewHistory.chainHead);
+    assert.equal(minorAttempt.resultStatus, "pass", id);
+    assert.deepEqual(minorAttempt.findings.map((finding) => finding.id), ["F-NOTE"], id);
+  }
   configuredReviewResults = {};
 
   const stateBeforeRecordValidation = state;

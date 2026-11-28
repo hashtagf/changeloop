@@ -244,14 +244,15 @@ function workingBytes(path) {
 
 // Three-way merge of base→target into the sandbox bytes. `merged` is set only
 // for a clean merge; a conflict, binary input, or failure leaves it null.
-function mergeTargetInto({ sandbox, baseBytes, target, spawn, ours = false }) {
+function mergeTargetInto({ sandbox, baseBytes, target, spawn, ours = false, union = false }) {
   const scratch = mkdtempSync(join(tmpdir(), "foundation-carried-"));
   try {
     const files = ["sandbox", "base", "target"].map((name) => join(scratch, name));
     writeFileSync(files[0], sandbox);
     writeFileSync(files[1], baseBytes || Buffer.alloc(0));
     writeFileSync(files[2], target);
-    const merged = spawn("git", ["merge-file", "-p", ...(ours ? ["--ours"] : []), ...files], { maxBuffer: 64 * 1024 * 1024 });
+    const strategy = ours ? ["--ours"] : union ? ["--union"] : [];
+    const merged = spawn("git", ["merge-file", "-p", ...strategy, ...files], { maxBuffer: 64 * 1024 * 1024 });
     return merged.status === 0 && Buffer.isBuffer(merged.stdout) ? merged.stdout : null;
   } catch {
     return null;
@@ -283,6 +284,21 @@ export function resolutionKeepsLanded({ root, sandboxPath, path, baseBytes, spaw
   if (!target || !sandbox || baseBytes === undefined) return true;
   const merged = mergeTargetInto({ sandbox, baseBytes, target, spawn, ours: true });
   return merged ? merged.equals(sandbox) : true;
+}
+
+// Paths whose concurrent additions are all kept: `.gitattributes` says
+// `merge=union`, or a changelog without any merge attribute (two changes each
+// add an entry under the same heading). Any other merge attribute, including
+// `-merge`, keeps the ordinary 3-way merge.
+const CHANGELOG_FILE = /(?:^|\/)(?:CHANGELOG[^/]*\.md|CHANGES\.md)$/i;
+export function unionMergePath(root, path, spawn = spawnSync) {
+  let value = "unspecified";
+  try {
+    const result = spawn("git", ["check-attr", "merge", "--", path], { cwd: root, encoding: "utf8" });
+    if (result.status === 0) value = String(result.stdout || "").trim().split(": ").at(-1) || "unspecified";
+  } catch { value = "unspecified"; }
+  if (value === "union") return true;
+  return value === "unspecified" && CHANGELOG_FILE.test(path);
 }
 
 // Whether the harness's own replay produced the current sandbox bytes of
@@ -494,7 +510,8 @@ export function replayLandedEdit({ root, sandboxPath, path, baseBytes, spawn = s
   const sandbox = workingBytes(join(sandboxPath, path));
   if (!target || !sandbox || baseBytes === undefined) return { status: "conflict" };
   if (target.equals(sandbox)) return { status: "carried" };
-  const merged = mergeTargetInto({ sandbox, baseBytes, target, spawn });
+  const merged = mergeTargetInto({ sandbox, baseBytes, target, spawn,
+    union: unionMergePath(root, path, spawn) });
   if (!merged) return { status: "conflict" };
   return merged.equals(sandbox) ? { status: "carried" } : { status: "merged", bytes: merged };
 }

@@ -285,6 +285,28 @@ function bindingFor(state) {
   };
 }
 
+export const BIND_BY_ID = "; bind it by id instead (\"investigation\": \"<id>\"), and the harness " +
+  "fills the binding from the investigation's current state";
+
+// A draft may bind its investigation by id alone (`"investigation": "<id>"`
+// or `{ "id": "<id>" }`): the binding is the one the investigation's current
+// state hands off. A state that is missing or not ready-for-change yields a
+// minimal binding, so validation names the cause. A full binding is kept.
+export function withInvestigationBinding(projectRoot, draft) {
+  const value = draft?.investigation;
+  const id = typeof value === "string" ? value.trim()
+    : value && typeof value === "object" && !Array.isArray(value) &&
+      Object.keys(value).length === 1 ? text(value.id) : "";
+  if (!id || !ID_PATTERN.test(id)) return draft;
+  const statePath = `.foundation/investigations/${id}.json`;
+  let state = null;
+  try { state = JSON.parse(readFileSync(join(projectRoot, statePath), "utf8")); } catch { state = null; }
+  const ready = state?.status === "DONE" && state.conclusion?.status === "ready-for-change" &&
+    state.sourceInventory?.digest;
+  return { ...draft, investigation: ready ? bindingFor(state)
+    : { version: [1, 2].includes(state?.version) ? state.version : 2, id, statePath } };
+}
+
 function activeWorkspace(projectRoot, changeId, git = null) {
   if (!changeId) return { root: projectRoot, binding: null, issues: [] };
   const runtimePath = join(projectRoot, ".foundation", "runtime", `${changeId}.json`);
@@ -360,7 +382,8 @@ function repositoryPaths(git, excludedPaths, repositoryRoot) {
 export function validateInvestigationBinding(/** @type {{ projectRoot?: string, binding?: any, git?: any }} */ { projectRoot, binding, git = null } = {}) {
   const issues = [];
   const root = realpathSync(resolve(projectRoot));
-  if (!binding || ![1, 2].includes(binding.version)) return ["investigation binding version must be 1|2"];
+  if (!binding || ![1, 2].includes(binding.version))
+    return [`investigation binding version must be 1|2${BIND_BY_ID}`];
   const bindingId = text(binding.id);
   if (!ID_PATTERN.test(bindingId)) return ["investigation binding id is invalid"];
   const expectedPath = `.foundation/investigations/${bindingId}.json`;
@@ -447,7 +470,9 @@ export function validateInvestigationBinding(/** @type {{ projectRoot?: string, 
       }
     } catch { issues.push("investigation binding request is unreadable"); }
   }
-  return unique(issues);
+  // A hand-copied binding that drifted from the state: name the id-only form.
+  return unique(issues).map((issue) =>
+    /mismatched|does not match machine state/.test(issue) ? `${issue}${BIND_BY_ID}` : issue);
 }
 
 export function createInvestigationRuntime(/** @type {{ root?: string, readJson?: any, writeJson?: any, now?: any, fail?: any, git?: any, setOperationChangeId?: any }} */ {

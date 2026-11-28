@@ -540,3 +540,95 @@ quality doctor SHALL รายงาน info provider-slow สำหรับ la
 - **GIVEN** lane ไม่มี history
 - **WHEN** quality doctor รัน
 - **THEN** ไม่มี provider-slow
+
+### Requirement: quality-source-sandbox
+
+quality run, quality doctor และ quality baseline SHALL ใช้ quality/foundation-quality.json และ quality/baselines ใน root workspace ของ change ที่ active เมื่อ workspace นั้นยังไม่ apply และมีไฟล์ตั้งค่า
+
+- change ที่ active มาจาก --change หรือ FOUNDATION_CHANGE_ID
+- ไม่มี change, workspace apply แล้ว หรือ sandbox ไม่มีไฟล์ตั้งค่า ใช้ project root
+- quality baseline --write เขียน baseline และ manifest ลง sandbox ของ change จึง land ไปพร้อม change
+- ผลรันและ history ของ lane ยังเขียนที่ .foundation/quality ของ project root
+
+#### Scenario: lane ใหม่ใน sandbox
+
+- **GIVEN** sandbox ของ change a เพิ่ม lane lint ที่ project root ไม่มี
+- **WHEN** รัน quality run --change a --capability lint
+- **THEN** lane lint รันและผ่าน
+
+#### Scenario: baseline ลง sandbox
+
+- **GIVEN** lane lint ของ change a รันแล้ว
+- **WHEN** รัน quality baseline --write --change a
+- **THEN** baseline และ manifest อยู่ใน sandbox และ project root ไม่มี baseline นั้น
+
+#### Scenario: ไม่มี change
+
+- **GIVEN** sandbox ของ change a แก้ไฟล์ตั้งค่า
+- **WHEN** รัน quality run โดยไม่มี change
+- **THEN** ใช้ไฟล์ตั้งค่าของ project root
+
+#### Scenario: sandbox ไม่มีไฟล์ตั้งค่า
+
+- **GIVEN** change a อยู่ใน sandbox ที่ไม่มี quality/foundation-quality.json
+- **WHEN** รัน quality run --change a
+- **THEN** ใช้ไฟล์ตั้งค่าของ project root
+
+#### Scenario: baseline ใน sandbox ถดถอย
+
+- **GIVEN** baseline lint ใน sandbox ของ change a ไม่มี finding
+- **WHEN** lane lint ของ change a พบ finding ใหม่
+- **THEN** lane lint fail
+
+### Requirement: findings-preflight
+
+advance SHALL รัน findings lane ของ change ก่อน Prove รัน provider สำหรับเนื้อหา workspace ที่ยังไม่เคยตรวจ และคืน REPAIR เมื่อ lane ใดไม่ผ่าน
+
+- findings lane คือ lint, type-check, file-size, nesting-depth, duplication, workaround-comments และ module-boundaries ใน quality config ที่ change ใช้
+- ผลผ่านถูกจำไว้คู่กับ hash ของเนื้อหา change และไม่รันซ้ำจนกว่าเนื้อหาจะเปลี่ยน
+- REPAIR ระบุ lane และ finding ที่ถดถอยและ Prove ไม่เริ่ม
+- ไม่มี quality config หรือไม่มี findings lane ข้ามการตรวจนี้
+- Prove ยังรัน quality gate เต็มทุกครั้ง
+
+#### Scenario: ไฟล์โตเกิน ratchet
+
+- **GIVEN** quality config มี lane file-size และ change ทำให้ไฟล์ที่ติด ratchet โตขึ้น
+- **WHEN** advance --through proven
+- **THEN** ได้ REPAIR ที่ระบุ file-size และ Prove ไม่เริ่ม
+
+#### Scenario: ผ่านแล้วเข้า Prove
+
+- **GIVEN** findings lane ทุกตัวผ่าน
+- **WHEN** advance --through proven
+- **THEN** Prove รันและเนื้อหานี้ถูกจำว่าตรวจแล้ว
+
+#### Scenario: เนื้อหาเดิม
+
+- **GIVEN** เนื้อหานี้ผ่านการตรวจแล้ว
+- **WHEN** advance --through proven อีกครั้ง
+- **THEN** ไม่รัน findings lane ซ้ำ
+
+#### Scenario: ไม่มี quality config
+
+- **GIVEN** project ไม่มี quality/foundation-quality.json
+- **WHEN** advance --through proven
+- **THEN** ไม่มีการตรวจก่อน Prove
+
+### Requirement: lane-changed-files
+
+quality run SHALL ส่งรายชื่อ path ที่ change แก้ใน repository นั้นให้ทุก lane ผ่าน FOUNDATION_QUALITY_CHANGED_FILES
+
+- หนึ่ง path ต่อบรรทัด สัมพันธ์กับ repository
+- ไม่มี change ได้ค่าว่าง
+
+#### Scenario: มี change
+
+- **GIVEN** change a แก้ src/a.js และ test/a.test.js
+- **WHEN** quality run --change a
+- **THEN** lane เห็น FOUNDATION_QUALITY_CHANGED_FILES เป็น src/a.js และ test/a.test.js
+
+#### Scenario: ไม่มี change
+
+- **GIVEN** ไม่มี change ที่ active
+- **WHEN** quality run
+- **THEN** FOUNDATION_QUALITY_CHANGED_FILES ว่าง

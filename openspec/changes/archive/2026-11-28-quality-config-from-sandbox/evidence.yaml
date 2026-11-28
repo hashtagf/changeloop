@@ -1,0 +1,63 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "quality-source-sandbox-quality-run-change-a-capability-lint",
+      "requirementKey": "quality-source-sandbox",
+      "scenario": "lane ใหม่ใน sandbox",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-source-sandbox-quality-baseline-write-change-a",
+      "requirementKey": "quality-source-sandbox",
+      "scenario": "baseline ลง sandbox",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-source-sandbox-quality-run-change",
+      "requirementKey": "quality-source-sandbox",
+      "scenario": "ไม่มี change",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-source-sandbox-quality-run-change-a",
+      "requirementKey": "quality-source-sandbox",
+      "scenario": "sandbox ไม่มีไฟล์ตั้งค่า",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "quality-source-sandbox-lane-lint-change-a-finding",
+      "requirementKey": "quality-source-sandbox",
+      "scenario": "baseline ใน sandbox ถดถอย",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "node --test .claude/harness/tests/quality-source-sandbox.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

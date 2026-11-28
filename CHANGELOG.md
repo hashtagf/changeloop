@@ -11,6 +11,40 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Added
 
+- A draft binds its investigation as `"investigation": "<id>"`; the harness
+  fills the binding from the investigation's current state, and binding
+  repairs name this form.
+
+### Fixed
+
+- The shell guard no longer treats a path written inside a quoted heredoc fed
+  to `cat` or `tee` as a mutation target because another part of the command
+  runs `sh -c` or an interpreter. Fixture-installed test consumers drop the
+  host session's project and identity variables, so suites run directly from
+  an agent shell.
+
+- A delta review round whose only findings outside its correction scope are
+  `minor` is recorded with them instead of stopping Prove; a `blocker` or
+  `major` finding outside the scope still stops with the route to widen it.
+
+### Added
+
+- Before Prove runs its providers, `advance` runs the change's findings lanes
+  once per workspace content and returns a repair on a regression in seconds
+  instead of after the full gate; Prove still runs the complete gate. Quality
+  lanes receive the change's touched paths in `FOUNDATION_QUALITY_CHANGED_FILES`.
+
+- During a change's Build and Prove, `quality run`, `quality doctor`, and
+  `quality baseline` use the quality configuration and baselines of the
+  change's sandbox, so a change that edits its quality lanes or baselines is
+  measured against them and its baselines land with it.
+
+- Replaying another change's landed edit keeps both sides of a changelog
+  (`CHANGELOG*.md`, `CHANGES.md`) or a `.gitattributes` `merge=union` path, so
+  changes that each add a changelog entry no longer stop at a sync conflict.
+- A draft whose intent is not plain English is named after its draft folder
+  or file.
+
 - Prove counts tests from JUnit XML (a report file or a report directory such
   as `target/surefire-reports`) and from the default summaries of pytest,
   cargo test, Maven Surefire, PHPUnit, dotnet test, dart/flutter test, swift

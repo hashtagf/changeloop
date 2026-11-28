@@ -17,6 +17,7 @@ import { escapingImportIssue, escapingImports } from "../workflow/change/reposit
 import { createProjectFeaturesCommand } from "../workflow/validation/project-feature-map.mjs";
 import { createProductProgressCommand } from "../workflow/validation/product-progress.mjs";
 import { createPyramidReadinessCommand } from "./pyramid-readiness-command.mjs";
+import { createQualityPreflight, preflightRepairMessage } from "../quality/quality-preflight.mjs";
 import { createSessionLeaseRuntime, runTaskCheck } from "../workflow/authority/session-lease.mjs";
 import { currentDeliveryProof } from "../workflow/advance/advance-recovery.mjs";
 import { existsSync } from "node:fs";
@@ -38,13 +39,16 @@ export function composeDeliveryRuntimes({
   landCheck, landGrantRuntime, landPlanValue, loadRuntime, markBlocked, metricsValue, now,
   packetRuntime, parkAgentLease, pathIdentity, pathMode, prepareBuildSandbox,
   projectRootRepositories, proofAdvance, proofAudit, proofReadinessValue, providerConfig,
-  pullRequestRuntime, qualityLaneStates, readJson, readJsonLines, readJsonOrNull, receiptPath,
+  pullRequestRuntime, qualityLaneStates, readJson, readJsonLines, readJsonOrNull, receiptPath, runQuality,
   receiptValidity, recordPhaseContext, recoverLand, recoverReviewBindings, releaseAgentLease,
   relevantHash, repositoryById, repositoryCatalog, requiredProviders, reviewAttemptRecords,
   rollbackApplyTransaction, safeRootPath, sandboxRuntime, saveRuntime, selectedRepositories,
   stableHash, syncSandbox, transactionJournalPath, trapFailures, trapFailuresAsync, writeJson
 }) {
   const { showAdvance: showDeliveryAdvance } = pullRequestRuntime;
+  const qualityPreflight = createQualityPreflight({ root: ROOT, loadRuntime, contentHash: (id) => relevantHash(id),
+    run: (options) => trapFailures(() => runQuality(options)),
+    markerPath: (id) => join(LOGS, id, "quality-preflight.json") });
   const advanceLand = advanceLandOperation.bind(null, {
     loadRuntime, landCheck, archive, landPlanValue,
     selectedRepositories,
@@ -237,8 +241,13 @@ export function composeDeliveryRuntimes({
       runQuietly: runAdvanceQuietly, prepareBuildSandbox, prepareExecution
     }),
     runProof: runAdvanceProof.bind(null, {
-      measureAsync: commandPhaseRecorder.measureAsync,
-      runQuietly: runAdvanceQuietly, prepareExecution, proofAdvance
+      measureAsync: commandPhaseRecorder.measureAsync, runQuietly: runAdvanceQuietly, prepareExecution,
+      // The change's findings lanes run first; a regression is a repair before Prove starts.
+      proofAdvance: (id, flags) => {
+        const checked = commandPhaseRecorder.measure("prove.quality-preflight", () => qualityPreflight(id));
+        if (checked.status === "fail") throw new Error(preflightRepairMessage(checked.failures));
+        return proofAdvance(id, flags);
+      }
     }),
     recoverReviewBindings,
     runLand: (id) => runAdvanceQuietly(() => advanceLand(id)),

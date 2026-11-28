@@ -15,7 +15,7 @@ import { derivedByHarness, inferWorkTypes } from "../validation/dev-document.mjs
 import { coverageNoteLine } from "../validation/packet-overview.mjs";
 import { riskDerivationSummary } from "../validation/draft-risk.mjs";
 import {
-  approvalPackageLine, draftChangeId, semanticDraftKeepsDesign
+  approvalPackageLine, draftChangeId, draftNameFromPath, semanticDraftKeepsDesign
 } from "../draft/draft-packet-render.mjs";
 import { bestEffort } from "../../core/best-effort.mjs";
 import {
@@ -210,7 +210,7 @@ export function createChangeStart(ctx) {
     }
     const { draft, rapid, resolutionFlags } =
       preflightDraft(draftPath, source, { regressionRequired: true });
-    const id = draftChangeId(draft, slugify);
+    const id = draftChangeId(draft, slugify, { draftName: draftNameFromPath(draftPath) });
     assertChangeAvailable(id);
     try {
       trapFailures(() => {

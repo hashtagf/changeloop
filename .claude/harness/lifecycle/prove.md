@@ -16,6 +16,11 @@ A derived `test` provider runs the tasks' own `verify` commands, not the
 project's whole suite; a project that wants its full suite as release evidence
 runs it as a separate gate before release (this repository: `run-all.sh`), or
 declares it as a provider in the change's `execution`.
+With a quality configuration, `advance` first runs the change's findings lanes
+(lint, type-check, file-size, nesting-depth, duplication, workaround-comments,
+module-boundaries) once per workspace content: a regression returns a `REPAIR`
+naming the findings before any provider runs, and a pass is remembered for that
+content. Prove still runs the complete quality gate.
 Failed, missing, stale, erroneous, or inconclusive evidence remains visible as
 assurance status. It blocks a `PROVEN` result, and Land refuses it: an explicit
 `/land` proves the current workspace first and lands only once that proof

@@ -114,10 +114,13 @@ function heredocBodies(command) {
       const first = Math.max(i + 1, next);
       let j = first;
       while (j < lines.length && (strip ? lines[j].replace(/^\t+/, "") : lines[j]) !== word) j++;
+      // The command the body feeds: a shell or interpreter reads it as code.
+      const feeds = lines[i].slice(0, match.index).split(/[;&|(]/).at(-1) || "";
       bodies.push({
         start: first < lines.length ? starts[first] : command.length,
         end: j < lines.length ? starts[j] : command.length,
-        literal: match[5] === undefined
+        literal: match[5] === undefined,
+        code: CODE_READER.test(feeds)
       });
       next = j + 1;
     }
@@ -150,9 +153,15 @@ function expansionText(command) {
 // Where an operand may be named: the command line, never data the command
 // carries — unless that data is code an inner shell or a writing interpreter
 // will resolve paths from.
+// A heredoc fed to `cat` or `tee` behind a quoted delimiter stays data even
+// when another part of the command carries code (`sh -c`, `node -e`); one fed
+// to a shell or interpreter is that code and is read.
+const CODE_READER = /\b(?:sh|bash|zsh|ksh|dash|eval|node|python(?:3(?:\.\d+)?)?|ruby|perl|php|deno|bun)\b/;
+
 function operandText(command) {
   if (SHELL_CODE_CARRIER.test(command) ||
-      (INTERPRETER.test(command) && INTERPRETER_WRITE.test(command))) return command;
+      (INTERPRETER.test(command) && INTERPRETER_WRITE.test(command)))
+    return withoutHeredocBodies(command, (body) => !body.literal || body.code);
   return maskSingleQuoted(withoutHeredocBodies(command));
 }
 

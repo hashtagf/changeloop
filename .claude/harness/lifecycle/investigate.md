@@ -83,8 +83,10 @@ alternatives only at the `prototypePaths` such a record declares under
 selected one can bind the change's UI through `prototypeSelection`
 ([visual check](change.md#prototype-bound-visual-check)).
 
-A `ready-for-change` result emits a digest-bound handoff. The agent copies it
-into the semantic draft (v4 or later) as `investigation`; Change verifies the state and source
+A `ready-for-change` result emits a digest-bound handoff. The agent binds it
+in the semantic draft (v4 or later) as `"investigation": "<id>"` (the harness
+fills the handoff from the current state; a full copied binding is still
+accepted); Change verifies the state and source
 digests before compiling and retains the conclusion in the agreement. V2 also
 binds retained intent and requires `investigationCoverage` linking each active
 material user requirement to an actual requirement/scenario, non-goal, or design

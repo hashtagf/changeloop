@@ -163,6 +163,20 @@ tracked file, or a new file over `policy.findings.fileSizeCeiling` (default
 `reduced` assurance and names `cloop quality baseline --write`; a changed
 tool or configuration digest is never compared against the old baseline.
 
+During a change's Build and Prove (`--change`, or `FOUNDATION_CHANGE_ID` as
+`cloop exec` and Prove set it), `quality run`, `quality doctor`, and
+`quality baseline` use the `quality/foundation-quality.json` and
+`quality/baselines` of the change's sandbox, so a change that adds a lane or
+moves a baseline is proven with it and its baselines land with it. Without a
+change, once the sandbox is applied, or when the sandbox has no configuration,
+they use the project root. Lane results stay under the root's `.foundation`.
+
+Before Prove, `advance` runs only the findings lanes of the change (seconds)
+and returns a repair on a regression; the full gate still runs in Prove. Each
+lane receives the paths the change touched in its repository, one per line,
+in `FOUNDATION_QUALITY_CHANGED_FILES` (empty without a change), so a project
+test script can choose the tests those paths affect.
+
 Built-in adapters: `eslint-json`, `tsc-text`, `ruff-json` (`ruff check
 --output-format json`), `mypy-text`, `golangci-json` (golangci-lint v1 or v2
 JSON), `go-vet-text` (`go vet ./... 2>&1`), `generic-findings-json` (read a

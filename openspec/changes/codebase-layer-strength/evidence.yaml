@@ -1,0 +1,448 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "codebase-floors-quality-readiness-file-size",
+      "requirementKey": "codebase-floors",
+      "scenario": "เพดานหลวมกว่า floor",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "codebase-floors-quality-readiness-file-size-2",
+      "requirementKey": "codebase-floors",
+      "scenario": "เพดานเท่า floor",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "codebase-floors-quality-readiness-nesting-depth",
+      "requirementKey": "codebase-floors",
+      "scenario": "เพดานเข้มกว่า floor",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "codebase-floors-quality-readiness-duplication",
+      "requirementKey": "codebase-floors",
+      "scenario": "duplication window กว้างกว่า floor",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ordered-codebase-layer-quality-readiness-next-codebase",
+      "requirementKey": "ordered-codebase-layer",
+      "scenario": "domain ยังไม่ผ่านแต่ไฟล์ใหญ่ด้วย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "ordered-codebase-layer-quality-readiness-next-step",
+      "requirementKey": "ordered-codebase-layer",
+      "scenario": "ข้อเทสต์ยังไม่ผ่าน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "data-domains-src-billing-x-ts-import-src-orders-index-ts",
+      "requirementKey": "data-domains",
+      "scenario": "import ผ่าน API",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "data-domains-src-billing-x-ts-import-src-orders-repo-ts",
+      "requirementKey": "data-domains",
+      "scenario": "import ส่วนภายใน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "data-domains-src-billing-x-ts-sql-orders",
+      "requirementKey": "data-domains",
+      "scenario": "อ้างตารางของ domain อื่น",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "data-domains-feature-map",
+      "requirementKey": "data-domains",
+      "scenario": "ข้อมูลมีสองเจ้าของ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "data-domains-quality-readiness-data-domains",
+      "requirementKey": "data-domains",
+      "scenario": "ไม่มี domains",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "directed-architecture-lane-import-cycles",
+      "requirementKey": "directed-architecture",
+      "scenario": "โมดูลวนกัน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "directed-architecture-lane-import-cycles-2",
+      "requirementKey": "directed-architecture",
+      "scenario": "วงจรใน Python",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "directed-architecture-quality-readiness-module-boundaries",
+      "requirementKey": "directed-architecture",
+      "scenario": "allow ทุกทิศ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "directed-architecture-quality-readiness-import-cycles",
+      "requirementKey": "directed-architecture",
+      "scenario": "ภาษาไม่รู้จัก",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "feature-ownership-lane-feature-ownership-repo-src-b-x-ts",
+      "requirementKey": "feature-ownership",
+      "scenario": "ไฟล์ไม่มีเจ้าของ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "feature-ownership-repo-src-a-x-test-ts-test-y-ts",
+      "requirementKey": "feature-ownership",
+      "scenario": "ไฟล์เทสต์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "function-metrics-lane-function-size",
+      "requirementKey": "function-metrics",
+      "scenario": "ฟังก์ชันยาว",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "function-metrics-lane-function-size-2",
+      "requirementKey": "function-metrics",
+      "scenario": "ยาวพอดีเกณฑ์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "function-metrics-lane-cognitive-complexity",
+      "requirementKey": "function-metrics",
+      "scenario": "ซับซ้อนเกิน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "function-metrics-lane-function-size-3",
+      "requirementKey": "function-metrics",
+      "scenario": "object literal ไม่ใช่ฟังก์ชัน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "dead-code-lane-dead-code",
+      "requirementKey": "dead-code",
+      "scenario": "ไฟล์ไม่มีใครใช้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "dead-code-lane-dead-code-2",
+      "requirementKey": "dead-code",
+      "scenario": "entry point",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "dead-code-lane-dead-code-3",
+      "requirementKey": "dead-code",
+      "scenario": "ผลจาก knip",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "type2-duplication-lane-duplication",
+      "requirementKey": "type2-duplication",
+      "scenario": "เปลี่ยนชื่อตัวแปร",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "type2-duplication-lane-duplication-2",
+      "requirementKey": "type2-duplication",
+      "scenario": "โครงสร้างต่าง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approximate-languages-quality-discover",
+      "requirementKey": "approximate-languages",
+      "scenario": "มี knip ใน devDependencies",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "approximate-languages-quality-discover-2",
+      "requirementKey": "approximate-languages",
+      "scenario": "ไม่มีเครื่องมือ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "repository-scope-scripts-1000",
+      "requirementKey": "repository-scope",
+      "scenario": "ไฟล์ใน scripts โตเกิน",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "repository-scope-npm-run-quality-scorecard",
+      "requirementKey": "repository-scope",
+      "scenario": "readiness ของ repo",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "golden-fixture-readiness-codebase",
+      "requirementKey": "golden-fixture",
+      "scenario": "fixture สะอาด",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "golden-fixture-import",
+      "requirementKey": "golden-fixture",
+      "scenario": "ใส่วงจร",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "golden-fixture-source-feature",
+      "requirementKey": "golden-fixture",
+      "scenario": "ใส่ไฟล์ไม่มีเจ้าของ",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "domain-invariants-lane-domain-invariants",
+      "requirementKey": "domain-invariants",
+      "scenario": "กฎมีเทสต์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "domain-invariants-lane-domain-invariants-2",
+      "requirementKey": "domain-invariants",
+      "scenario": "กฎไม่มีเทสต์",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "domain-invariants-lane-domain-invariants-3",
+      "requirementKey": "domain-invariants",
+      "scenario": "เทสต์ที่อ้างไม่มีอยู่",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "api-contracts-lane-api-contracts",
+      "requirementKey": "api-contracts",
+      "scenario": "มี OpenAPI",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "api-contracts-lane-api-contracts-2",
+      "requirementKey": "api-contracts",
+      "scenario": "ไม่มีสัญญา",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "api-contracts-lane-api-contracts-3",
+      "requirementKey": "api-contracts",
+      "scenario": "สัญญาชี้ไฟล์หาย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "reference-implementations-lane-reference-implementations",
+      "requirementKey": "reference-implementations",
+      "scenario": "reference สะอาด",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "reference-implementations-lane-reference-implementations-2",
+      "requirementKey": "reference-implementations",
+      "scenario": "reference มีหนี้",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "reference-implementations-lane-reference-implementations-3",
+      "requirementKey": "reference-implementations",
+      "scenario": "reference หาย",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "shared-sdk-src-checkout-pay-ts-import-packages-payments",
+      "requirementKey": "shared-sdk",
+      "scenario": "เรียกผ่าน SDK",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "shared-sdk-src-checkout-pay-ts-import-stripe",
+      "requirementKey": "shared-sdk",
+      "scenario": "เรียก driver ตรง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "shared-sdk-packages-payments-client-ts-import-stripe",
+      "requirementKey": "shared-sdk",
+      "scenario": "ภายใน SDK",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "shared-sdk-internal-handler-x-go-import-go-mongodb-org-mongo-dri",
+      "requirementKey": "shared-sdk",
+      "scenario": "Go import ตรง",
+      "impact": "medium",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/codebase-floors.test.mjs .claude/harness/tests/pyramid-readiness.test.mjs) && (node --test .claude/harness/tests/data-domains.test.mjs) && (node --test .claude/harness/tests/import-graph.test.mjs) && (node --test .claude/harness/tests/feature-ownership.test.mjs) && (node --test .claude/harness/tests/function-metrics.test.mjs) && (node --test .claude/harness/tests/dead-code.test.mjs) && (node --test .claude/harness/tests/type2-duplication.test.mjs) && (node --test .claude/harness/tests/codebase-discovery.test.mjs) && (node --test .claude/harness/tests/domain-declarations.test.mjs) && (node --test .claude/harness/tests/reference-implementations.test.mjs) && (node --test .claude/harness/tests/shared-sdk.test.mjs) && (node --test .claude/harness/tests/codebase-golden.test.mjs) && (node --test scripts/quality/test/repository-findings.test.mjs scripts/quality/test/scorecard.test.mjs) && (bash .claude/tests/docs/run-doc-consistency.sh)"
+      ],
+      "segments": [
+        "node --test .claude/harness/tests/codebase-floors.test.mjs .claude/harness/tests/pyramid-readiness.test.mjs",
+        "node --test .claude/harness/tests/data-domains.test.mjs",
+        "node --test .claude/harness/tests/import-graph.test.mjs",
+        "node --test .claude/harness/tests/feature-ownership.test.mjs",
+        "node --test .claude/harness/tests/function-metrics.test.mjs",
+        "node --test .claude/harness/tests/dead-code.test.mjs",
+        "node --test .claude/harness/tests/type2-duplication.test.mjs",
+        "node --test .claude/harness/tests/codebase-discovery.test.mjs",
+        "node --test .claude/harness/tests/domain-declarations.test.mjs",
+        "node --test .claude/harness/tests/reference-implementations.test.mjs",
+        "node --test .claude/harness/tests/shared-sdk.test.mjs",
+        "node --test .claude/harness/tests/codebase-golden.test.mjs",
+        "node --test scripts/quality/test/repository-findings.test.mjs scripts/quality/test/scorecard.test.mjs",
+        "bash .claude/tests/docs/run-doc-consistency.sh"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

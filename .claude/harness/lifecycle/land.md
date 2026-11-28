@@ -171,6 +171,9 @@ verdict as before, and a moved base keeps its own contract below. The harness tr
 target: paths the later change left alone land beside it untouched, and for a
 path both changed it replays the landed edit into the later change's sandbox
 copy (a 3-way merge), proves again only what that invalidated, and applies.
+A path `.gitattributes` marks `merge=union`, and a changelog (`CHANGELOG*.md`,
+`CHANGES.md`) without a merge attribute, keeps both sides' lines instead of
+conflicting, so two changes that each add a changelog entry merge cleanly.
 When both rewrote the same lines, the later change's agent merges them in its
 sandbox copy, keeping the landed content; that edit is the resolution unless it drops
 landed edits, which keeps the conflict with the agent. Earlier

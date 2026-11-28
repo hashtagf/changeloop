@@ -583,11 +583,27 @@ export function renderDraftTasks(tasks) {
     tasks.map(renderDraftTask).join("\n") + "\n";
 }
 
+const GENERIC_DRAFT_NAMES = new Set(["draft", "change", "new", "tmp", "temp", "untitled"]);
+
+// The draft's own name: a folder, or the folder holding change.json, or a
+// .json file's base name.
+export function draftNameFromPath(draftPath) {
+  const parts = String(draftPath || "").replaceAll("\\", "/").replace(/\/+$/, "").split("/");
+  const last = parts.at(-1) || "";
+  if (/^change\.json$/i.test(last)) return parts.at(-2) || null;
+  return last.replace(/\.json$/i, "") || null;
+}
+
 // A draft without an id is named from its intent; an intent that slugs to
 // fewer than three words (a Thai intent slugs to "change") is named from its
 // first capability and requirement key so the id stays meaningful.
-export function draftChangeId(draft, slugify) {
+export function draftChangeId(draft, slugify, { draftName = null } = {}) {
   if (draft?.id) return slugify(String(draft.id));
+  // A non-English intent slugs to the few ASCII words it carries
+  // ("suite-suite-suite"); the draft's own folder or file name reads better.
+  const named = draftName ? slugify(String(draftName)) : "";
+  if (/[^\x00-\x7F]/.test(String(draft?.intent || "")) && named && !GENERIC_DRAFT_NAMES.has(named))
+    return named;
   const fromIntent = slugify(String(draft?.intent || ""));
   if (fromIntent.split("-").filter(Boolean).length >= 3) return fromIntent;
   const spec = Array.isArray(draft?.specs) ? draft.specs[0] : null;

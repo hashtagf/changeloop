@@ -17,6 +17,7 @@ import { forceExitCommand, lingeringTestRun } from "../core/node-test-exit.mjs";
 import { providerCommandHints, slowLaneHint } from "./quality-doctor-hints.mjs";
 import { durationPatterns } from "./language-profiles.mjs";
 import { laneDirectory, laneFile, laneLabel, lanesOf } from "./quality-lanes.mjs";
+import { qualitySourceRoot } from "./quality-source.mjs";
 import {
   FINDINGS_CAPABILITIES, FINDINGS_PROTOCOL, evaluateFindingsRatchet, normalizeFindingsReport
 } from "./findings-ratchet.mjs";
@@ -318,22 +319,26 @@ export function createQualityRuntime({
     return value;
   }
 
-  function configured() {
-    if (!existsSync(configPath))
+  // `source` is where the configuration and baselines live (quality-source.mjs).
+  const sourceFor = (change) => qualitySourceRoot({ root, change, loadRuntime });
+  function configured(source = root) {
+    const path = join(source, QUALITY_CONFIG_RELATIVE);
+    if (!existsSync(path))
       fail(`missing ${QUALITY_CONFIG_RELATIVE}; run 'cloop quality init --write'`);
-    const value = readJson(configPath);
+    const value = readJson(path);
     validateConsumerQualityConfig(value, new Set(repositoryCatalog().repositories.map((row) => row.id)));
     return value;
   }
 
   function doctor(options = {}) {
     const activeChange = options.change || process.env.FOUNDATION_CHANGE_ID || null;
+    const source = sourceFor(activeChange);
     const issues = [];
     let config = null;
-    if (!existsSync(configPath)) issues.push({ level: "error", code: "missing-config",
+    if (!existsSync(join(source, QUALITY_CONFIG_RELATIVE))) issues.push({ level: "error", code: "missing-config",
       message: `missing ${QUALITY_CONFIG_RELATIVE}` });
     else {
-      try { config = configured(); }
+      try { config = configured(source); }
       catch (error) { issues.push({ level: "error", code: "invalid-config", message: error.message }); }
     }
     // A per-repository configuration without a change checks what is onboarded.
@@ -414,10 +419,10 @@ export function createQualityRuntime({
 
   // Compare a lane's fresh result with its baseline: CRAP and mutation on the
   // changed surface (every path with --full), findings across the repository.
-  function evaluateLane(lane, { repository, capability, key = capability, full, configuredChanged, config }) {
+  function evaluateLane(lane, { repository, capability, key = capability, full, configuredChanged, config, source = root }) {
     const file = laneFile(key);
     writeJson(providerResultPath(root, repository.id, file), lane.result);
-    const basePath = baselinePath(root, repository.id, file);
+    const basePath = baselinePath(source, repository.id, file);
     const baseline = existsSync(basePath) ? readJsonFile(basePath) : null;
     if (capability === "crap") lane.evaluation = evaluateCrapRatchet({
       current: lane.result, baseline, changedPaths: full
@@ -447,7 +452,8 @@ export function createQualityRuntime({
   }
 
   function run(options = {}) {
-    const config = configured();
+    const source = sourceFor(options.change || process.env.FOUNDATION_CHANGE_ID || null);
+    const config = configured(source);
     const shardCount = options["shard-count"] === undefined ? 1 : Number(options["shard-count"]);
     const shardIndex = options["shard-index"] === undefined ? 0 : Number(options["shard-index"]);
     if (!Number.isInteger(shardCount) || shardCount < 1 || !Number.isInteger(shardIndex) ||
@@ -501,10 +507,11 @@ export function createQualityRuntime({
         if (skipped) { lanes.push({ ...skipped, ...laneLabel(key, capability) }); continue; }
         const laneStarted = performance.now();
         const lane = { ...runQualityProvider({ repository, capability, provider, git, pathInside,
-          environment: { FOUNDATION_QUALITY_CHANGE: activeChange || "" }, policy: config.policy,
+          environment: { FOUNDATION_QUALITY_CHANGE: activeChange || "",
+            FOUNDATION_QUALITY_CHANGED_FILES: [...(changed.get(repository.id) || [])].sort().join("\n") }, policy: config.policy,
           durations: config.toolchains, clock }), ...laneLabel(key, capability) };
         if (lane.result)
-          evaluateLane(lane, { repository, capability, key, full: options.full, configuredChanged, config });
+          evaluateLane(lane, { repository, capability, key, full: options.full, configuredChanged, config, source });
         lane.durationMs = performance.now() - laneStarted;
         lanes.push(lane);
         // The latest verdict per lane: readiness counts a test lane only while it passes.
@@ -550,8 +557,10 @@ export function createQualityRuntime({
     summary.change = activeChange;
     summary.shard = { index: shardIndex, count: shardCount };
     writeJson(join(root, QUALITY_RESULT_RELATIVE, "summary.json"), summary);
-    log(JSON.stringify(summary, null, 2));
-    if ((options.enforce || process.env.FOUNDATION_QUALITY_ENFORCE === "1" ||
+    // `reportOnly` (the pre-Prove preflight) prints nothing, since advance's stdout
+    // is its envelope alone, and returns the summary so its caller names each finding.
+    if (!options.reportOnly) log(JSON.stringify(summary, null, 2));
+    if (!options.reportOnly && (options.enforce || process.env.FOUNDATION_QUALITY_ENFORCE === "1" ||
         config.policy.mode === "enforce") && ["fail", "unavailable"].includes(summary.status))
       fail(`consumer quality gate ${summary.status}`);
     return summary;
@@ -566,7 +575,9 @@ export function createQualityRuntime({
   }
 
   function baseline(options = {}) {
-    const config = configured();
+    // A change's baselines are written into its sandbox and land with it.
+    const qualitySource = sourceFor(options.change || process.env.FOUNDATION_CHANGE_ID || null);
+    const config = configured(qualitySource);
     const changes = [];
     for (const repository of config.repositories) {
       if (options.repository && repository.id !== options.repository) continue;
@@ -575,17 +586,17 @@ export function createQualityRuntime({
         if (!ratcheted.has(capability) || (options.capability && capability !== options.capability)) continue;
         const source = providerResultPath(root, repository.id, laneFile(key));
         if (!existsSync(source)) continue;
-        const target = baselinePath(root, repository.id, laneFile(key));
+        const target = baselinePath(qualitySource, repository.id, laneFile(key));
         changes.push({ repository: repository.id, capability,
-          source: relative(root, source), target: relative(root, target), value: readJsonFile(source) });
+          source: relative(root, source), target: relative(qualitySource, target), value: readJsonFile(source) });
       }
     }
     if (!changes.length) fail("no quality reports are available to baseline");
     if (options.write) {
       if (!options["decision-ref"] || !options.reason)
         fail("quality baseline --write requires --decision-ref and --reason");
-      for (const change of changes) writeJson(join(root, change.target), change.value);
-      const manifestPath = join(root, "quality", "baselines", "manifest.json");
+      for (const change of changes) writeJson(join(qualitySource, change.target), change.value);
+      const manifestPath = join(qualitySource, "quality", "baselines", "manifest.json");
       const manifest = existsSync(manifestPath) ? readJson(manifestPath) : {
         protocol: "foundation-quality-baseline-manifest-v1", entries: []
       };

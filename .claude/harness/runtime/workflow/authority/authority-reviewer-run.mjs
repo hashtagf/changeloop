@@ -2,7 +2,7 @@ import { REVIEW_DISPATCH_TIMEOUT_MS } from "../../core/user-decisions.mjs";
 import { join } from "node:path";
 import { acquireProcessLock, isProcessAlive } from "../../core/process-lock.mjs";
 import { authorityRunCommand, authorityStatusCommand } from "../../core/authority-run-command.mjs";
-import { deltaClosureIssue } from "../../evidence/review-result-validation.mjs";
+import { blockingOutsideDeltaScope, deltaClosureIssue } from "../../evidence/review-result-validation.mjs";
 import {
   checkpointReviewResult, recoverReviewResult
 } from "../../evidence/review-result-recovery.mjs";
@@ -628,11 +628,7 @@ export function createAuthorityReviewerRun(ctx) {
     }
     if (scope === "delta" && !infrastructureError) {
       const scoped = dispatched.dispatch.scope.paths || [];
-      const outside = report.findings.filter((finding) => {
-        const path = String(finding.path || "").replace(/^\.\//, "");
-        return !path || !scoped.some((candidate) =>
-          candidate === path || candidate.endsWith(`/${path}`));
-      });
+      const outside = blockingOutsideDeltaScope(report.findings, scoped);
       if (outside.length)
         fail(`AI delta reviewer reported findings outside the dispatched correction scope: ${outside.map((finding) => finding.id).join(", ")}`);
     }

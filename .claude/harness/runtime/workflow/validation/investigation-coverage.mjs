@@ -29,7 +29,8 @@ export function investigationCoverageIssues(source) {
   if (source?.investigation?.version !== 2) return [];
   const issues = [];
   const intake = source.investigation.intake;
-  if (!intake || typeof intake !== "object") return ["investigation coverage needs bound intake"];
+  if (!intake || typeof intake !== "object")
+    return ["investigation coverage needs bound intake; bind the investigation by id (\"investigation\": \"<id>\") so the harness fills it"];
   const retained = new Map(rows(intake.requirements).map((r) => [sourceId(r), r]));
   const required = rows(intake.requirements).filter((r) => r?.material &&
     ["stated", "confirmed"].includes(r.status));

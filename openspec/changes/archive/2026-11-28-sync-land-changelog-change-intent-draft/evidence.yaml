@@ -1,0 +1,94 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "union-merge-landed-replay-sync-replay-a",
+      "requirementKey": "union-merge-landed-replay",
+      "scenario": "CHANGELOG สองรายการ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "union-merge-landed-replay-sync-replay",
+      "requirementKey": "union-merge-landed-replay",
+      "scenario": "gitattributes union",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "union-merge-landed-replay-sync-replay-2",
+      "requirementKey": "union-merge-landed-replay",
+      "scenario": "ไฟล์โค้ดชนยังเป็น conflict",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "union-merge-landed-replay-sync-replay-3",
+      "requirementKey": "union-merge-landed-replay",
+      "scenario": "ปิด union ด้วย attribute",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "change-id-from-draft-name-change-start",
+      "requirementKey": "change-id-from-draft-name",
+      "scenario": "intent ไทยปนอังกฤษ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "change-id-from-draft-name-change-start-2",
+      "requirementKey": "change-id-from-draft-name",
+      "scenario": "intent อังกฤษ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "change-id-from-draft-name-change-start-3",
+      "requirementKey": "change-id-from-draft-name",
+      "scenario": "ชื่อ draft ทั่วไป",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "change-id-from-draft-name-change-start-4",
+      "requirementKey": "change-id-from-draft-name",
+      "scenario": "id ระบุเอง",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/harness/tests/landed-union-merge.test.mjs) && (node --test .claude/harness/tests/change-id-from-draft.test.mjs)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "node --test .claude/harness/tests/landed-union-merge.test.mjs",
+        "node --test .claude/harness/tests/change-id-from-draft.test.mjs"
+      ]
+    }
+  }
+}
