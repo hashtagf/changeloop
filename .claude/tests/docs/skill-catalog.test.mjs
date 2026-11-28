@@ -521,3 +521,20 @@ test("pruned reference files stay deleted and references stay within 8,500 lines
   }
   assert.ok(lines <= 8500, `non-vendored references total ${lines} lines; limit 8500`);
 });
+
+// Onboarding teaches the agent how to make a project's checks fast, not only
+// that they are slow.
+test("onboard carries the fast-checks guide and points slow lanes at it", () => {
+  const root = new URL("../../skills/onboard/", import.meta.url);
+  const guide = readFileSync(new URL("references/fast-checks.md", root), "utf8");
+  for (const heading of ["## 1. Split fast and full suites", "## 2. One task, its own tests",
+    "## 3. Close what a test opens", "## 4. Run in parallel and cache",
+    "## 5. Fast linters and type checks", "## 6. Output the harness can read"])
+    assert.ok(guide.includes(heading), heading);
+  for (const language of ["JS/TS", "Go", "Python", "Rust", "JVM", "Ruby", "Dart"])
+    assert.match(guide, new RegExp(`\\| ${language} \\|`), language);
+  assert.match(guide, /\/change/, "fixes go through a change the user approves");
+  const skill = readFileSync(new URL("SKILL.md", root), "utf8");
+  assert.match(skill, /- `references\/fast-checks\.md`/);
+  assert.match(skill, /slow lanes per `references\/fast-checks\.md`/);
+});

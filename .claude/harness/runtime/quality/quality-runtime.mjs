@@ -14,7 +14,7 @@ import {
 } from "./quality-protocol.mjs";
 import { runBuiltinQualityAdapter } from "./adapter-registry.mjs";
 import { forceExitCommand, lingeringTestRun } from "../core/node-test-exit.mjs";
-import { providerCommandHints } from "./quality-doctor-hints.mjs";
+import { providerCommandHints, slowLaneHint } from "./quality-doctor-hints.mjs";
 import { durationPatterns } from "./language-profiles.mjs";
 import { laneDirectory, laneFile, laneLabel, lanesOf } from "./quality-lanes.mjs";
 import {
@@ -350,7 +350,8 @@ export function createQualityRuntime({
         if (!lanes.some((lane) => lane.capability === capability)) issues.push({ level: "warning",
           code: "provider-unsupported", repository: repository.id, capability,
           message: `no ${capability} provider; risk fallback policy applies` });
-      for (const { capability, provider } of [...lanes].sort((a, b) => a.key.localeCompare(b.key))) {
+      for (const { key, capability, provider } of [...lanes].sort((a, b) => a.key.localeCompare(b.key))) {
+        issues.push(...slowLaneHint(repository.id, capability, key, laneRecord(repository.id, key)));
         if (provider.command?.length && !executableExists(provider.command[0],
             provider.cwd ? join(actual.path, provider.cwd) : actual.path))
           issues.push({ level: "error", code: "tool-unavailable", repository: repository.id,
@@ -381,6 +382,11 @@ export function createQualityRuntime({
     log(JSON.stringify(report, null, 2));
     if (report.status === "fail" && options.enforce) fail("quality doctor failed");
     return report;
+  }
+
+  function laneRecord(repositoryId, key) {
+    const path = laneStatusPath(root, repositoryId, laneFile(key));
+    try { return existsSync(path) ? readJsonFile(path) : null; } catch { return null; }
   }
 
   function changedByRepository(change, repositories) {

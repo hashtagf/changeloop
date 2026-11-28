@@ -14,8 +14,8 @@ user decides what becomes binding.
 2. Quality: `cloop quality discover`, then `cloop quality init --write` when the
    config is missing (`references/multi-repository.md`); offer
    `test-commands`, or `test-setup` via `/change`.
-3. Baselines: `cloop quality run`, report each lane's finding count, ask once
-   whether today's findings become the baseline; after yes run
+3. Baselines: `cloop quality run`; ask once whether today's findings become
+   the baseline; after yes run
    `cloop quality baseline --write --decision-ref <answer> --reason <why>`.
 4. Feature map: draft 5–20 user-facing features per
    `references/feature-map-guide.md`; the user edits them.
@@ -28,8 +28,8 @@ user decides what becomes binding.
    `references/rule-registry-guide.md`; the user confirms each layer.
 9. UI and `verify` rows: `references/ui-readiness-guide.md`,
    `references/verify.md`.
-10. Check: `cloop features --strict`, `cloop quality doctor` (offer
-    hints), `cloop quality run`, `cloop quality readiness --pretty`.
+10. Check: `cloop features --strict`, `cloop quality doctor` (offer hints;
+    slow lanes per `references/fast-checks.md`), `cloop quality readiness --pretty`.
 
 ## Harness
 
@@ -45,3 +45,4 @@ Without `cloop init`: skip doctor and lessons; Prove enforces nothing until init
 - `references/multi-repository.md` — many repositories.
 - `references/guides.md` — project guides.
 - `references/verify.md` — verify skill.
+- `references/fast-checks.md` — fast checks.

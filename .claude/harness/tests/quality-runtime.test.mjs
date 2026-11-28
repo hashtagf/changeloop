@@ -471,3 +471,32 @@ test("quality doctor suggests every directory a command names, and none for a wh
     assert.deepEqual(hints.map((hint) => hint.paths), [["a/**", "b/**"]], "a lane with cwd is a module lane already");
   } finally { value.cleanup(); }
 });
+
+test("quality doctor names a lane whose latest run was slow, pointing at the fast-checks guide", () => {
+  const value = fixture();
+  try {
+    const config = value.runtime.draft();
+    config.repositories[0].profiles = [];
+    config.repositories[0].providers = {
+      test: { kind: "command", command: [process.execPath, "-e", "0"] },
+      lint: { kind: "command", command: [process.execPath, "-e", "0"] },
+      "static-analysis": { kind: "command", command: [process.execPath, "-e", "0"] }
+    };
+    value.writeJson(join(value.root, "quality", "foundation-quality.json"), config);
+    const results = join(value.root, ".foundation", "quality", "results", "root");
+    const run = (durationMs) => ({ status: "pass", durationMs, history: [{ status: "pass", durationMs: 1 }, { status: "pass", durationMs }] });
+    value.writeJson(join(results, "test.status.json"), run(300000));
+    value.writeJson(join(results, "lint.status.json"), run(30000));
+    const slow = value.runtime.doctor().issues.filter((issue) => issue.code === "provider-slow");
+    assert.deepEqual(slow.map((issue) => [issue.lane, issue.durationMs]), [["test", 300000]],
+      "a fast lane and a lane that never ran get no hint");
+    assert.equal(slow[0].level, "info");
+    assert.match(slow[0].message, /took 300s on its latest run \(limit 120s\).*references\/fast-checks\.md/);
+    value.writeJson(join(results, "test.status.json"), run(90000));
+    assert.equal(value.runtime.doctor().issues.some((issue) => issue.code === "provider-slow"), false,
+      "90s is within the test lane's limit");
+    value.writeJson(join(results, "lint.status.json"), run(90000));
+    assert.deepEqual(value.runtime.doctor().issues.filter((issue) => issue.code === "provider-slow")
+      .map((issue) => issue.lane), ["lint"], "another lane's limit is 60s");
+  } finally { value.cleanup(); }
+});

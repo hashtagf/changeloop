@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "fast-checks-guide-claude-skills-onboard-references-fast-checks-m",
+      "requirementKey": "fast-checks-guide",
+      "scenario": "คู่มือมีครบ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "fast-checks-guide-claude-skills-onboard-skill-md",
+      "requirementKey": "fast-checks-guide",
+      "scenario": "skill อ้างถึงคู่มือ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "slow-lane-hint-quality-doctor",
+      "requirementKey": "slow-lane-hint",
+      "scenario": "test lane ช้า",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "slow-lane-hint-quality-doctor-2",
+      "requirementKey": "slow-lane-hint",
+      "scenario": "lane เร็ว",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "slow-lane-hint-quality-doctor-3",
+      "requirementKey": "slow-lane-hint",
+      "scenario": "ยังไม่เคยรัน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(node --test .claude/tests/docs/skill-catalog.test.mjs) && (node --test .claude/harness/tests/quality-runtime.test.mjs)"
+      ],
+      "segments": [
+        "node --test .claude/tests/docs/skill-catalog.test.mjs",
+        "node --test .claude/harness/tests/quality-runtime.test.mjs"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared"
+    }
+  }
+}

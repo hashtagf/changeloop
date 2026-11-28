@@ -9,29 +9,13 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ## [Unreleased]
 
-### Fixed
-
-- A reviewer finding in an existing root file outside the dispatched review
-  scope is a repairable finding (its message notes it is outside the scope and
-  to widen the task's paths) instead of an unbindable result that needed a user
-  decision; missing, ambiguous, or other-repository paths (submodules, the
-  change's contract) are still refused.
-
-- A passing AI review wave that expired because the code moved on no longer
-  counts toward the review cap (up to three such waves), and the closure wave
-  follows the failing waves, so Prove reviews the new delta itself instead of
-  stopping the user. A passing wave is free only when there is new code since
-  the latest wave, so a repeated request on reviewed content stays capped.
-- Land no longer keeps a sandbox because its backup failed: `git add -A`
-  refused the `:(exclude)test-results/**` pathspec once a test had written
-  ignored output there.
-- "No tests" is claimed only after a complete count in a language whose test
-  files are recognised (now also Java, Kotlin, PHP, Dart, Rust, and
-  `__tests__/`), and a GitLab or Bitbucket `script:` list yields each test
-  command once.
-
 ### Added
 
+- Onboarding carries a fast-checks guide (split fast and full suites,
+  per-task verify, close test resources, parallel runs and caches, fast
+  linters, readable output) with commands for JS/TS, Go, Python, Rust, JVM,
+  Ruby, and Dart, and `quality doctor` names each lane whose latest run was
+  slow (`provider-slow`) with the guide's fixes.
 - Repositories without a test lane: `.vue`, `.svelte` and `.astro` count as
   JS/TS; test files without a test script use the runner the repository
   installed; test commands from a Makefile, CI workflow, or README are listed
@@ -60,6 +44,24 @@ For 3.5.30 and earlier releases, see [docs/changelog-history.md](docs/changelog-
 
 ### Fixed
 
+- A reviewer finding in an existing root file outside the dispatched review
+  scope is a repairable finding (its message notes it is outside the scope and
+  to widen the task's paths) instead of an unbindable result that needed a user
+  decision; missing, ambiguous, or other-repository paths (submodules, the
+  change's contract) are still refused.
+
+- A passing AI review wave that expired because the code moved on no longer
+  counts toward the review cap (up to three such waves), and the closure wave
+  follows the failing waves, so Prove reviews the new delta itself instead of
+  stopping the user. A passing wave is free only when there is new code since
+  the latest wave, so a repeated request on reviewed content stays capped.
+- Land no longer keeps a sandbox because its backup failed: `git add -A`
+  refused the `:(exclude)test-results/**` pathspec once a test had written
+  ignored output there.
+- "No tests" is claimed only after a complete count in a language whose test
+  files are recognised (now also Java, Kotlin, PHP, Dart, Rust, and
+  `__tests__/`), and a GitLab or Bitbucket `script:` list yields each test
+  command once.
 - A test run that passes and then waits on an open server no longer costs
   minutes per run unnoticed. A consumer's `npx tsx --test` suite passed in
   7s and then waited 360s, on each of seven Build and Prove runs. Task

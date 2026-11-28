@@ -54,6 +54,22 @@ function commandText(provider) {
   return Array.isArray(provider?.command) ? provider.command.join(" ") : "";
 }
 
+// A lane slower than this is skipped between edits; the onboard skill's
+// fast-checks guide names the fixes. The test lane may take longer.
+export const SLOW_LANE_MS = Object.freeze({ test: 120000, other: 60000 });
+
+/** `provider-slow` for a lane whose latest recorded run took longer than its limit. */
+export function slowLaneHint(repository, capability, lane, record) {
+  const latest = Array.isArray(record?.history) && record.history.length ? record.history.at(-1) : record;
+  const ms = Number(latest?.durationMs);
+  const limit = capability === "test" ? SLOW_LANE_MS.test : SLOW_LANE_MS.other;
+  if (!Number.isFinite(ms) || ms <= limit) return [];
+  return [{ level: "info", code: "provider-slow", repository, capability, lane, durationMs: Math.round(ms),
+    message: `the ${lane} lane took ${Math.round(ms / 1000)}s on its latest run (limit ${limit / 1000}s), so an agent ` +
+      "skips it between edits; propose a fix through /change from the onboard skill's references/fast-checks.md " +
+      "(split fast and full suites, per-task verify, close test resources, parallel runs, fast linters)" }];
+}
+
 export function providerCommandHints(repository, capability, provider) {
   const hints = [];
   const text = commandText(provider);

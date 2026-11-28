@@ -29,7 +29,9 @@ runs. `doctor` suggests paths for a lane whose command names one directory
 `go test ./<dir>/...`, `gradle -p`, `cargo --manifest-path`;
 `provider-paths-suggested`) and warns when a lane judged by its exit code
 (kind `command`, no `protocol`) swallows failure with `|| true`, `|| :`, or
-`; exit 0` (`provider-swallows-failure`). Hints never fail the doctor.
+`; exit 0` (`provider-swallows-failure`), and names a lane whose latest run
+took longer than 120s (test) or 60s (other lanes) with the onboard skill's
+`references/fast-checks.md` fixes (`provider-slow`). Hints never fail the doctor.
 
 A `node --test`, `tsx --test`, or `npx tsx --test` provider command gains
 `--test-force-exit`, also after node options such as `--import tsx`. A test
