@@ -1,0 +1,95 @@
+{
+  "version": 2,
+  "claims": [
+    {
+      "id": "run-all-skip-mutation-run-all-sh-skip-mutation-list",
+      "requirementKey": "run-all-skip-mutation",
+      "scenario": "ตัดเฉพาะ mutation",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "run-all-skip-mutation-mutation",
+      "requirementKey": "run-all-skip-mutation",
+      "scenario": "รายชื่อผิด",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "run-all-skip-mutation-suite-suite-installer-smoke",
+      "requirementKey": "run-all-skip-mutation",
+      "scenario": "child ไม่คำนวณซ้ำ",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "repository-mutation-report-row-result-killed-killedby-expectedki",
+      "requirementKey": "repository-mutation-report",
+      "scenario": "mutant ถูกฆ่า",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "repository-mutation-report-row-result-killed-killedby-expected-2",
+      "requirementKey": "repository-mutation-report",
+      "scenario": "ฆ่าผิดตัว",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "repository-mutation-report-row-applied-false",
+      "requirementKey": "repository-mutation-report",
+      "scenario": "ไม่ได้ใส่ fault",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "repository-mutation-report-suite",
+      "requirementKey": "repository-mutation-report",
+      "scenario": "suite ไม่มีรายงาน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    },
+    {
+      "id": "repository-quality-lanes",
+      "requirementKey": "repository-quality-lanes",
+      "scenario": "lane ผ่าน",
+      "impact": "low",
+      "capabilities": [
+        "test"
+      ]
+    }
+  ],
+  "providers": {
+    "test": {
+      "adapter": "test-discovery",
+      "command": [
+        "sh",
+        "-c",
+        "(sh .claude/tests/harness/run-run-all-control-tests.sh) && (node --test scripts/quality/test/repository-mutation.test.mjs) && (node --test scripts/quality/test/repository-quality-config.test.mjs scripts/quality/test/repository-findings.test.mjs)"
+      ],
+      "minimum": 1,
+      "reportFormat": "auto",
+      "claims": "declared",
+      "segments": [
+        "sh .claude/tests/harness/run-run-all-control-tests.sh",
+        "node --test scripts/quality/test/repository-mutation.test.mjs",
+        "node --test scripts/quality/test/repository-quality-config.test.mjs scripts/quality/test/repository-findings.test.mjs"
+      ]
+    }
+  }
+}

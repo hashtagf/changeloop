@@ -1,0 +1,345 @@
+{
+  "protocol": "foundation-automated-mutation-v1",
+  "repository": "root",
+  "repositoryCommit": "8aeb82ff2802d89057a5aa14cfa847dcb4c01fd1",
+  "workspaceDigest": "sha256:669a4c149dcb44082585a09567dda717053a7ff8797c7f0a281ba6722bed1c73",
+  "language": "javascript",
+  "tool": {
+    "name": "generic-mutation-json",
+    "version": "unknown",
+    "adapterVersion": "1",
+    "configDigest": "sha256:1c04783f3e701ed852f618ecf430827a8fa4b0dcf3335a3e1c4a3d7c46c33c50"
+  },
+  "mutants": [
+    {
+      "id": "land surface mutation:MUT-UNDECLARED-SURFACE-ALLOWED",
+      "path": ".claude/harness/runtime/core/state-runtime.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-LAND-SURFACE-SUITE"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "land surface mutation:MUT-UNDECLARED-DELETION-ALLOWED",
+      "path": ".claude/harness/runtime/workflow/transaction/apply-recovery.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-LAND-SURFACE-SUITE"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-LAND-GRANT-READINESS-SKIPPED",
+      "path": ".claude/harness/runtime/core/land-grant.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-LAND-GRANT-READINESS"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-LAND-DELIVERY-AUTHORITY-INFERRED",
+      "path": ".claude/harness/runtime/core/shell-mutation-policy.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-LAND-DELIVERY-AUTHORITY"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-BUILD-ABSOLUTE-OPERAND-ALLOWED",
+      "path": ".claude/harness/runtime/core/shell-mutation-policy.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-BUILD-SHELL-CONTAINMENT"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-EXEC-WORKSPACE-CWD-REMOVED",
+      "path": ".claude/harness/runtime/observability/exec-runtime.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-EXEC-WORKSPACE-CWD"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-AMENDMENT-TASK-CONTRACT-REPLACED",
+      "path": ".claude/harness/runtime/workflow/draft/semantic-amendment.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-AMENDMENT-TASK-CONTRACT"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-SEMANTIC-REFERENCE-REALPATH-DROPPED",
+      "path": ".claude/harness/runtime/workflow/change/semantic-references.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-SEMANTIC-REFERENCE-CONTAINMENT"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-SEMANTIC-REFERENCE-HTTPS-DROPPED",
+      "path": ".claude/harness/runtime/workflow/change/semantic-references.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-SEMANTIC-REFERENCE-HTTPS"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-ISOLATED-REPOSITORY-TARGET-FALLBACK",
+      "path": ".claude/harness/runtime/workflow/repository/repository-topology.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-ISOLATED-REPOSITORY-BINDING"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-MULTI-REPOSITORY-SNAPSHOT-COLLAPSED",
+      "path": ".claude/harness/runtime/workflow/repository/repository-snapshot.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-MULTI-REPOSITORY-SNAPSHOT"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-PROOF-REPOSITORY-INFRASTRUCTURE-SKIPPED",
+      "path": ".claude/harness/runtime/evidence/evidence-recovery.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-PROOF-REPOSITORY-INFRASTRUCTURE"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-REPOSITORY-WORKTREE-OWNER-INVERTED",
+      "path": ".claude/harness/runtime/core/repository-binding.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-REPOSITORY-WORKTREE-OWNERSHIP"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-PROOF-INCOMPLETE-REPOSITORY-BINDING-ALLOWED",
+      "path": ".claude/harness/runtime/evidence/evidence-recovery.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-PROOF-COMPLETE-REPOSITORY-BINDING"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-PROOF-PRIMARY-BINDING-RESULT-OVERWRITTEN",
+      "path": ".claude/harness/runtime/evidence/evidence-recovery.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-PROOF-PRIMARY-BINDING-ORDER"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-PROOF-PREHASH-INFRASTRUCTURE-RECOVERY-DROPPED",
+      "path": ".claude/harness/runtime/evidence/proof-readiness.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-PROOF-INFRASTRUCTURE-BEFORE-HASH"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-ADVANCE-FAILURE-ENVELOPE-GENERIC",
+      "path": ".claude/harness/runtime/workflow/advance/advance-runtime.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-ADVANCE-EXACT-FAILURE-ENVELOPE"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-ADVANCE-PREFLIGHT-HASH-REPEATED",
+      "path": ".claude/harness/runtime/workflow/advance/advance-runtime.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-ADVANCE-PREFLIGHT-HASH-OWNERSHIP"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-ADVANCE-FIXED-CYCLE-LIMIT",
+      "path": ".claude/harness/runtime/workflow/advance/advance-runtime.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-ADVANCE-SEMANTIC-CONVERGENCE"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-PARTIAL-SANDBOX-RECOVERY-SKIPPED",
+      "path": ".claude/harness/runtime/workflow/sandbox/sandbox-repositories.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-PARTIAL-SANDBOX-RECOVERY"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-REVIEW-PACKET-BASE-DIVERGED",
+      "path": ".claude/harness/runtime/workflow/packet/packet-runtime.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-REVIEW-PACKET-REPOSITORY-BASE"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-SINGLE-CHILD-LAND-DOWNGRADED",
+      "path": ".claude/harness/runtime/workflow/land/land-runtime.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-SINGLE-CHILD-LAND-SAGA"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-SINGLE-CHILD-LOCAL-APPLY-ALLOWED",
+      "path": ".claude/harness/runtime/workflow/land/apply-journal.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-SINGLE-CHILD-LOCAL-APPLY"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-REPOSITORY-INSPECTION-OMITS-MISSING",
+      "path": ".claude/harness/runtime/workflow/sandbox/sandbox-inspection.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-REPOSITORY-INSPECTION-COMPLETENESS"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "lifecycle safety mutation:MUT-EXTERNAL-NON-GIT-DIAGNOSTIC-PASSES",
+      "path": ".claude/harness/runtime/core/diagnostics-runtime.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-EXTERNAL-REPOSITORY-REQUIRES-GIT"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "shipping boundary mutation:MUT-CLI-RUNTIME-API-DRIFT",
+      "path": "cli.sh",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-SINGLE-SOURCE-RUNTIME-API"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "shipping boundary mutation:MUT-INSTALL-MANAGED-PATH-UNDECLARED",
+      "path": "install.sh",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-SINGLE-SOURCE-MANAGED"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "shipping boundary mutation:MUT-PROTOCOL-RUNTIME-API-DRIFT",
+      "path": ".claude/harness/protocol.json",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-SINGLE-SOURCE-PROTOCOL"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "shipping boundary mutation:MUT-REVIEW-SCHEMA-REQUIRED-WIDENED",
+      "path": ".claude/harness/runtime/evidence/review-result-validation.mjs",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-REVIEW-SCHEMA-REQUIRED"
+      ],
+      "changedSurface": "legacy-unrelated"
+    },
+    {
+      "id": "risk-tiered review mutation:MUT-KILLER-BINDING",
+      "path": "unknown",
+      "line": 1,
+      "operator": "semantic-fault",
+      "status": "killed",
+      "killedBy": [
+        "CASE-MUTANT-KILLER"
+      ],
+      "changedSurface": "legacy-unrelated"
+    }
+  ]
+}

@@ -33,3 +33,9 @@ shrink through `--tighten`; raising an entry is a reviewed manual edit.
 Semantic mutation of shipped boundaries is not run here: the registered suites
 in `.claude/tests/run-all.sh` own it, including
 `scripts/quality/run-shipping-semantic-mutation.mjs`.
+
+`foundation-quality.json` is this repository's own consumer quality config.
+Its `test` lane runs `run-all.sh --skip-mutation`; its `automated-mutation`
+lane runs the `MUTATION` suites of `run-all.sh` through
+`scripts/quality/repository-mutation.mjs` and ratchets against
+`baselines/root/automated-mutation-v1.json`.

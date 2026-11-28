@@ -145,7 +145,7 @@ grep -vxF -f "$WORK/full-list.out" "$WORK/default-list.out" > "$WORK/default-ext
 # Every SLOW and EARLY name is a registered row (a typo would silently move a
 # slow suite into the default gate or lose its early start), and EARLY rows
 # stay in the default gate.
-for tier in SLOW EARLY; do
+for tier in SLOW EARLY MUTATION; do
   awk -v tier="$tier" '
     index($0, tier "=\047") == 1 { on = 1; sub(/^[A-Z_]+=\047/, "") }
     on { line = $0; done = sub(/\047$/, "", line); print line; if (done) exit }
@@ -160,6 +160,32 @@ while IFS= read -r label; do
   grep -qFx -- "$label" "$WORK/default-list.out" || {
     echo "FAIL: EARLY suite is not in the default gate: $label"; exit 1; }
 done < "$WORK/tier-EARLY.out"
+# The test lane (`--skip-mutation`) is the default gate minus exactly the
+# MUTATION rows, which stay in the default gate and which
+# `--mutation-commands` prints for the automated-mutation lane.
+FOUNDATION_CHANGED_FILES= sh "$RUN_ALL" --skip-mutation --list > "$WORK/skip-mutation-list.out"
+grep -vxF -f "$WORK/skip-mutation-list.out" "$WORK/default-list.out" > "$WORK/skipped.out" || true
+sort "$WORK/skipped.out" > "$WORK/skipped-sorted.out"
+sort "$WORK/tier-MUTATION.out" > "$WORK/mutation-sorted.out"
+cmp -s "$WORK/skipped-sorted.out" "$WORK/mutation-sorted.out" || {
+  echo "FAIL: --skip-mutation did not drop exactly the MUTATION suites"; exit 1; }
+grep -vxF -f "$WORK/default-list.out" "$WORK/skip-mutation-list.out" > "$WORK/skip-extra.out" || true
+[ ! -s "$WORK/skip-extra.out" ] || { echo "FAIL: --skip-mutation added suites"; exit 1; }
+while IFS= read -r label; do
+  grep -qFx -- "$label" "$WORK/default-list.out" || {
+    echo "FAIL: MUTATION suite is not in the default gate: $label"; exit 1; }
+done < "$WORK/tier-MUTATION.out"
+sh "$RUN_ALL" --mutation-commands | sed 's/|.*//' | sort > "$WORK/mutation-commands.out"
+cmp -s "$WORK/mutation-commands.out" "$WORK/mutation-sorted.out" || {
+  echo "FAIL: --mutation-commands does not print the MUTATION rows"; exit 1; }
+# A suite child never asks the selector: only the top-level run reports the
+# suites a changed file promotes.
+mkdir "$WORK/child-work"
+FOUNDATION_CHANGED_FILES='.claude/harness/runtime/workflow/draft/semantic-draft-templates.mjs' \
+  sh "$RUN_ALL" --suite 9999 "$WORK/child-work" > /dev/null 2> "$WORK/child.err"
+if grep -q 'default gate: also running' "$WORK/child.err"; then
+  echo "FAIL: a suite child recomputed the promoted suites"; exit 1
+fi
 # A file only a slow suite checks locally promotes that suite into the default
 # gate (printed CLI output and the installer smoke); other edits do not.
 promoted="$(FOUNDATION_CHANGED_FILES='.claude/harness/runtime/workflow/draft/semantic-draft-templates.mjs' \

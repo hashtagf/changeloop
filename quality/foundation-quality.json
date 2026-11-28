@@ -172,8 +172,22 @@
           "isolation": "read-only",
           "command": [
             "sh",
-            ".claude/tests/run-all.sh"
+            ".claude/tests/run-all.sh",
+            "--skip-mutation"
           ]
+        },
+        "automated-mutation": {
+          "kind": "builtin",
+          "adapter": "generic-mutation-json",
+          "isolation": "tool",
+          "language": "javascript",
+          "command": [
+            "node",
+            "scripts/quality/repository-mutation.mjs"
+          ],
+          "inputs": {
+            "mutation": "-"
+          }
         }
       }
     }

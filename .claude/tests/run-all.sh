@@ -45,6 +45,8 @@ unset CLAUDE_FOUNDATION_PROJECT CLAUDE_PROJECT_DIR _host_var
 # files, slow rows included.
 selection_mode="fast"
 list_mode=0
+skip_mutation=0
+mutation_commands=0
 shard=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -61,6 +63,10 @@ while [ "$#" -gt 0 ]; do
     --full) selection_mode="full"; shift ;;
     --release) selection_mode="release"; shift ;;
     --list) list_mode=1; shift ;;
+    # The repository's test lane: the selected tier without the MUTATION rows,
+    # which the automated-mutation lane runs (scripts/quality/repository-mutation.mjs).
+    --skip-mutation) skip_mutation=1; shift ;;
+    --mutation-commands) mutation_commands=1; shift ;;
     *) break ;;
   esac
 done
@@ -135,6 +141,15 @@ root sandbox repository projection'
 # `--affected` still selects it for those edits and the release workflow and CI
 # run `--release`.
 RELEASE_ONLY='openspec native sentinel'
+
+# Semantic mutation suites of the default tier. `--skip-mutation` leaves them
+# out and `--mutation-commands` prints their rows for the repository's
+# automated-mutation quality lane. `phase mutation guard` tests a hook, not
+# mutants, so it is not one of them.
+MUTATION='land surface mutation
+lifecycle safety mutation
+shipping boundary mutation
+risk-tiered review mutation'
 
 # label|command — `!` prefixes a label that must run with the repository to
 # itself. Commands are expanded by the child with $HERE and $ROOT in scope.
@@ -470,11 +485,15 @@ nth() { suites | sed -n "${1}p"; }
 label_of() { _l="${1%%|*}"; printf '%s' "${_l#!}"; }
 exclusive() { case "$1" in !*) return 0 ;; *) return 1 ;; esac; }
 named_in() { printf '%s\n' "$1" | grep -qFx -- "$2"; }
+skipped_mutation() { [ "$skip_mutation" -eq 1 ] && named_in "$MUTATION" "$1"; }
 
 # Slow suites the default gate still runs because a changed file is something
 # only they check locally (affected-suite-selector.mjs PROMOTED).
 PROMOTED_LABELS=""
-if [ "$selection_mode" = "fast" ]; then
+# Internal re-entries (one suite, its status, the repository check) never
+# select suites, so only the top-level run asks the selector.
+case "${1:-}" in --suite|--suite-failed|--assert-repository-unchanged) internal_entry=1 ;; *) internal_entry=0 ;; esac
+if [ "$selection_mode" = "fast" ] && [ "$internal_entry" -eq 0 ]; then
   PROMOTED_LABELS="$(FOUNDATION_SUITE_LABELS="$(suites | while IFS='|' read -r label _command; do label_of "$label"; printf '\n'; done)" \
     node "$HERE/affected-suite-selector.mjs" "$ROOT" --promoted 2>/dev/null || true)"
   [ -z "$PROMOTED_LABELS" ] || printf 'default gate: also running %s for the changed files it alone checks\n' \
@@ -486,6 +505,7 @@ fi
 # suites, and `release` runs every row.
 in_mode() {
   _mode_label="$(label_of "$2")"
+  skipped_mutation "$_mode_label" && return 1
   case "$1" in
     fast) ! exclusive "$2" && ! named_in "$RELEASE_ONLY" "$_mode_label" &&
       { ! named_in "$SLOW" "$_mode_label" || named_in "$PROMOTED_LABELS" "$_mode_label"; } ;;
@@ -518,6 +538,13 @@ shard_indexes() {
     }' | sort -n
 }
 
+if [ "$mutation_commands" -eq 1 ]; then
+  suites | while IFS= read -r line; do
+    named_in "$MUTATION" "$(label_of "$line")" && printf '%s\n' "$line"
+  done
+  exit 0
+fi
+
 if [ "$list_mode" -eq 1 ]; then
   suite_registry="$(suites)"
   if [ -n "$shard" ] && [ "$selection_mode" != "affected" ]; then
@@ -538,7 +565,9 @@ EOF_SUITES
     FOUNDATION_SUITE_LABELS="$suite_labels" \
       FOUNDATION_SUITE_REGISTRY="$suite_registry" \
       FOUNDATION_RELEASE_ONLY_SUITES="$RELEASE_ONLY" \
-      node "$HERE/affected-suite-selector.mjs" "$ROOT"
+      node "$HERE/affected-suite-selector.mjs" "$ROOT" | while IFS= read -r _label; do
+        skipped_mutation "$_label" || printf '%s\n' "$_label"
+      done
   else
     printf '%s\n' "$suite_registry" | while IFS= read -r line; do
       in_mode "$selection_mode" "$line" || continue
@@ -813,8 +842,8 @@ index=1
 while [ "$index" -le "$TOTAL" ]; do
   line="$(nth "$index")"
   label="$(label_of "$line")"
-  if [ "$selection_mode" = "affected" ] &&
-     ! printf '%s\n' "$selected_labels" | grep -qFx -- "$label"; then
+  if skipped_mutation "$label" || { [ "$selection_mode" = "affected" ] &&
+     ! printf '%s\n' "$selected_labels" | grep -qFx -- "$label"; }; then
     index=$((index + 1))
     continue
   fi

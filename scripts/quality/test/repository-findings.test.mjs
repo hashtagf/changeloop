@@ -12,9 +12,10 @@ const config = JSON.parse(readFileSync(join(REPO_ROOT, "quality/foundation-quali
 const providers = config.repositories.find((row) => row.id === "root").providers;
 
 test("every findings lane runs the repository's own guard", () => {
-  for (const [capability, provider] of Object.entries(providers).filter(([name]) => name !== "test"))
+  // The test and automated-mutation lanes are checked in repository-quality-config.test.mjs.
+  for (const [capability, provider] of Object.entries(providers)
+    .filter(([name]) => !["test", "automated-mutation"].includes(name)))
     assert.deepEqual(provider.command, ["node", "scripts/quality/repository-findings.mjs", capability], capability);
-  assert.deepEqual(providers.test.command, ["sh", ".claude/tests/run-all.sh"]);
 });
 
 test("the consumer lanes count what the scorecard counts", async () => {

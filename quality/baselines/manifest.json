@@ -91,6 +91,25 @@
           "repositoryCommit": "0a1f7a3feaa089a743630c22810f1ba4ad00b1f9"
         }
       ]
+    },
+    {
+      "updatedAt": "2026-11-28T08:25:14.494Z",
+      "decisionRef": "user-answer-pyramid-verification-lanes-2026-11-28",
+      "reason": "The semantic mutation suites move from the test lane to their own lane; all 30 mutants are killed today",
+      "reports": [
+        {
+          "repository": "root",
+          "capability": "automated-mutation",
+          "target": "quality/baselines/root/automated-mutation-v1.json",
+          "tool": {
+            "name": "generic-mutation-json",
+            "version": "unknown",
+            "adapterVersion": "1",
+            "configDigest": "sha256:1c04783f3e701ed852f618ecf430827a8fa4b0dcf3335a3e1c4a3d7c46c33c50"
+          },
+          "repositoryCommit": "8aeb82ff2802d89057a5aa14cfa847dcb4c01fd1"
+        }
+      ]
     }
   ]
 }
